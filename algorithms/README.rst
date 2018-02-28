@@ -1,3 +1,4 @@
-dea-notebooks
+Algorithms
 =============
-Repository for Digital Earth Australia Jupyter Notebooks
+This folder contains examples of python code that demonstrates the use 
+of functions and tools suitable for use in the DEA environment.
