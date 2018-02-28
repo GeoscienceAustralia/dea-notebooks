@@ -7,4 +7,4 @@ This folder demonstrates the use of different platforms and products available w
 .. toctree::
    :maxdepth: 1
 
-   Sentinel2
+   GettingStartedWithSentinel2
