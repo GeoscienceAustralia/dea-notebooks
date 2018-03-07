@@ -1,0 +1,7 @@
+*.py~
+*~
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+*.tif
+*.xml
+__pycache__
