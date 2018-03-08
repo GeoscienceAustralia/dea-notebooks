@@ -139,7 +139,7 @@ def write_to_geotiff(filename, data):
               'width': data.sizes['x'], 'height': data.sizes['y'],
               'crs' : data.crs.crs_str,
               'transform':data.affine,
-              'dtype': data.green.values.dtype,
+              'dtype': list(data.data_vars.values())[0].values.dtype,
               'nodata': 0,
               'compress': 'deflate', 'zlevel': 4, 'predictor': 3 }
               #for ints use 2 for floats use 3}
