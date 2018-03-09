@@ -2,27 +2,19 @@ dea-notebooks
 =============
 Repository for Digital Earth Australia Jupyter Notebooks.
 
-The basic structure of this repository is designed to keep 'all' of the DEA Jupyter Notebooks
-in one place. The repository uses branches to manage individuals' notebooks, and to allow easy publishing
-of notebooks ready to be shared.
+The basic structure of this repository is designed to keep 'all' of the DEA Jupyter Notebooks in one place. The repository uses branches to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared.
 
 The structure of the repository is fairly simple:
 
 * master branch - where notebooks are put that are ready to be shared. Notebooks added to this branch will be published on the DEA documentation page in a notebook gallery.
 
-* working branches - these are named using the owner's name as the branch name (e.g. ``ClaireK``, ``BexDunn``). These are the working
-spaces for people and essentially your own place to play around with. The notebooks here do not need to be pretty or even finished. It's just a place to keep everything together. It also means that if you want to collaborate on a working version of a notebook, you can easily find and share notebooks.
+* working branches - these are named using the owner's name as the branch name (e.g. ``ClaireK``, ``BexDunn``). These are the working spaces for people and essentially your own place to play around with. The notebooks here do not need to be pretty or even finished. It's just a place to keep everything together. It also means that if you want to collaborate on a working version of a notebook, you can easily find and share notebooks.
 
-**Note**: The master branch is protected, and will require a pull request for changes to be made to this branch. This is simply to avoid 
-mistakes when pushing to this branch, and to allow a quick check of code before publishing. The check is basically just looking for 
-the existence of required metadata, and that the file name has been added to the .rst index so it can be published on the DEA documentation website.
+**Note**: The master branch is protected, and will require a pull request for changes to be made to this branch. This is simply to avoid mistakes when pushing to this branch, and to allow a quick check of code before publishing. The check is basically just looking for the existence of required metadata, and that the file name has been added to the .rst index so it can be published on the DEA documentation website.
 
 Getting Started
 ===============
-To get started, clone this repository to a suitable location. This will most likely be a location you can 
-access on the VDI, so you can easily work with your notebooks. Note that this repo is likely to become quite large,
-so make sure you have enough space in the location you clone the repository to (i.e. probably not your home directory, 
-but your directory on /g/data should be perfect). 
+To get started, clone this repository to a suitable location. This will most likely be a location you can  access on the VDI, so you can easily work with your notebooks. Note that this repo is likely to become quite large, so make sure you have enough space in the location you clone the repository to (i.e. probably not your home directory, but your directory on /g/data should be perfect). 
 
 To clone the repo (onto the VDI):
 -----------------------------------------------
@@ -36,32 +28,24 @@ To clone the repo (onto the VDI):
 
 Setting up your own version of the repo
 =======================================
-You will notice that your branch of the repo contains a copy of everything in the master branch. This probably isn't what you 
-actually want. You can feel free to delete everything that is automatically put in your own branch, and start from scratch with 
-your own directory structures. 
+You will notice that your branch of the repo contains a copy of everything in the master branch. This probably isn't what you actually want. You can feel free to delete everything that is automatically put in your own branch, and start from scratch with your own directory structures. 
 
 **Note**: Make sure you are on your own branch *before* deleting everything. You can check this with ``git status``. If you happen to delete everything from the master branch, it can be restored (that's the wonder of version control), but try to avoid this in the first place.
 
-To delete folders (or files) in a git managed repository, use ``git rm <file>``. This tells git you are deleting a file from the tracked
-repository, which makes things a lot cleaner when you go to commit those changes later on. If you would like to delete a whole directory, you need to add the `-r` (recursive) flag to the command; ``git rm -r algorithms``. 
+To delete folders (or files) in a git managed repository, use ``git rm <file>``. This tells git you are deleting a file from the tracked repository, which makes things a lot cleaner when you go to commit those changes later on. If you would like to delete a whole directory, you need to add the `-r` (recursive) flag to the command; ``git rm -r algorithms``. 
 
 Committing and pushing your changes back to the main repository
 ===============================================================
-The new branch you have created exists in your local version of the repository, but you wont yet see it on the git website because you 
-haven't told it about your new branch yet. To do this, you will need to commit and then push your changes. If you now type ``git status``
-you will see two groups of files; those git is tracking and has noticed have changed since the last commit, and those git is not tracking. 
+The new branch you have created exists in your local version of the repository, but you wont yet see it on the git website because you haven't told it about your new branch yet. To do this, you will need to commit and then push your changes. If you now type ``git status`` you will see two groups of files; those git is tracking and has noticed have changed since the last commit, and those git is not tracking. 
 To add the new files and folders you have created to the git tracked repo, type ``git add <file/folder>``. Go through all the folders you would like git to track and ``git add`` them. Once you are ready to commit your changes, type ``git commit -m "this is a short description of the changes you have made"``. 
 
 As there will be multiple people all working off the same repository, you should type ``git pull`` prior to pushing your commit. This will make sure you have the latest version of the repository, and will hopefully avoid any potential merge conflicts when you go to push. 
 
-Assuming the pull request didn't throw up any errors, you can now push your commit. To do this, type ``git push -u origin <your branch name>``. Git
-will now connect to the remote repository and add your commit to the GitHub repo. You should now be able to see your new branch on the online
-dea-notebooks repo. The ``-u`` switch will set up your branch to properly track the remote branch of the same name. If you do a ``git pull`` and get a message that says ``you have not told me which branch to merge with``, this is because the local and remote repos were not set up to talk to each other properly. Easy fix! Type ``git branch --set-upstream <branch> origin/<branch>``. Git should now be happy.
+Assuming the pull request didn't throw up any errors, you can now push your commit. To do this, type ``git push -u origin <your branch name>``. Git will now connect to the remote repository and add your commit to the GitHub repo. You should now be able to see your new branch on the online dea-notebooks repo. The ``-u`` switch will set up your branch to properly track the remote branch of the same name. If you do a ``git pull`` and get a message that says ``you have not told me which branch to merge with``, this is because the local and remote repos were not set up to talk to each other properly. Easy fix! Type ``git branch --set-upstream <branch> origin/<branch>``. Git should now be happy.
 
 Publishing finished notebooks
 =============================
-The master branch of dea-notebooks is where notebooks go that you are ready to share and publish. Note that even once the notebooks are published,
-you can still edit and update them - this does not close them off to you for further work. 
+The master branch of dea-notebooks is where notebooks go that you are ready to share and publish. Note that even once the notebooks are published, you can still edit and update them - this does not close them off to you for further work. 
 
 To publish a notebook to the master branch, you will need to complete a 'push request'. 
 
@@ -72,8 +56,7 @@ The notebook name should be descriptive and contain no spaces.
 The ensure that the published notebooks are actually searchable and useable, the first cell of the notebook must have the following metadata
 as a minumum:
 
-* **What does this notebook do?** Include a fairly detailled description of what the notebook does. This will allow someone looking
-for an example of a particular functionality to decide whether this notebook is likely to help them. 
+* **What does this notebook do?** Include a fairly detailled description of what the notebook does. This will allow someone looking for an example of a particular functionality to decide whether this notebook is likely to help them. 
 
 * **Date** That the notebook was finalised. This is just to give an indication of the currency of the notebook, and when it was last working.
 
@@ -85,9 +68,7 @@ As an example...
 
 # Getting started with Sentinel 2 data
 
-**Background** As of mid-February 2018, Sentinel 2 data is available to access within the a development environment on AWS. There are a 
-number of things that need to be done prior to gaining access to the Sentinel 2 archive. For the purpose of this notebook, we will assume 
-you have successfully gained access to the AWS environment where Sentinel 2 data is currently housed. 
+**Background** As of mid-February 2018, Sentinel 2 data is available to access within the a development environment on AWS. There are a number of things that need to be done prior to gaining access to the Sentinel 2 archive. For the purpose of this notebook, we will assume you have successfully gained access to the AWS environment where Sentinel 2 data is currently housed. 
 
 **What does this notebook do?** This notebook steps you through how to load in and plot up data from Sentinel 2. It explores the data that are available from the Sentinel 2 satellite, and briefly describes the Sentinel satellite bands. It then loads in the ``s2a_ard_granule`` product and plots it up in true and false colour. It uses the provided pixel quality data to filters the example scene based on ``clear`` pixels. 
 
@@ -103,8 +84,7 @@ Work in progress...
 
 Pushing files to the master branch for publishing
 -------------------------------------------------
-Protection measures put in place within the ``dea-notebooks`` repo mean that you can not simply ``push`` to the master branch. All code
-that you would like to publish on the ``master`` branch needs to go through a review process, which is done using a ``pull`` request. 
+Protection measures put in place within the ``dea-notebooks`` repo mean that you can not simply ``push`` to the master branch. All code that you would like to publish on the ``master`` branch needs to go through a review process, which is done using a ``pull`` request. 
 
 The process for completing a ``pull`` request may seem complicated, but is quite simple if you follow the following directions. If you are unsure, feel free to grab someone to walk you through it the first time. You will need to commit all the changes you have made to your local branch before following these steps. 
 
