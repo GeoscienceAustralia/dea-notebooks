@@ -8,3 +8,4 @@ This folder demonstrates the use of different platforms and products available w
    :maxdepth: 1
 
    GettingStartedWithSentinel2
+   RetrieveLandsat8ViewAndExport
