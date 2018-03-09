@@ -47,7 +47,7 @@ Publishing finished notebooks
 =============================
 The master branch of dea-notebooks is where notebooks go that you are ready to share and publish. Note that even once the notebooks are published, you can still edit and update them - this does not close them off to you for further work. 
 
-To publish a notebook to the master branch, you will need to complete a 'push request'. 
+To publish a notebook to the master branch, you will need to complete a ``pull`` request (see below). 
 
 Metadata requirements for publishing
 ------------------------------------
