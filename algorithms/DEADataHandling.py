@@ -71,10 +71,14 @@ def load_nbarx(sensor, query, bands_of_interest, product = 'nbart'):
             ds = ds.where(cloud_free)
             ds.attrs['crs'] = crs
             ds.attrs['affine'] = affine
-            print('masked {} with {} and filtered terrain'.format(product_name, 
+            
+        if product=='nbart':
+            print('masked {} with {} and filtered terrain'.format(product_name,
                                                                   mask_product))
             # nbarT is correctly used to correct terrain by replacing -999.0 with nan
             ds = ds.where(ds!=-999.0)
+        elif product=='nbar':
+             print('masked {} with {}'.format(product_name, mask_product))
         else: 
             print('did not mask {} with {}'.format(product_name, mask_product))
     else:
