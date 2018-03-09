@@ -8,13 +8,10 @@ of notebooks ready to be shared.
 
 The structure of the repository is fairly simple:
 
-* master branch - where notebooks are put that are ready to be shared. Notebooks added to this branch will be published
-on the DEA documentation page in a notebook gallery.
+* master branch - where notebooks are put that are ready to be shared. Notebooks added to this branch will be published on the DEA documentation page in a notebook gallery.
 
 * working branches - these are named using the owner's name as the branch name (e.g. ``ClaireK``, ``BexDunn``). These are the working
-spaces for people and essentially your own place to play around with. The notebooks here do not need to be pretty or even finished. It's just
-a place to keep everything together. It also means that if you want to collaborate on a working version of a notebook, you can easily
-find and share notebooks.
+spaces for people and essentially your own place to play around with. The notebooks here do not need to be pretty or even finished. It's just a place to keep everything together. It also means that if you want to collaborate on a working version of a notebook, you can easily find and share notebooks.
 
 **Note**: The master branch is protected, and will require a pull request for changes to be made to this branch. This is simply to avoid 
 mistakes when pushing to this branch, and to allow a quick check of code before publishing. The check is basically just looking for 
@@ -33,11 +30,9 @@ To clone the repo (onto the VDI):
 * Type ``git clone git@github.com:GeoscienceAustralia/dea-notebooks.git``
 * A new folder called ``dea-notebooks`` will be created, which is a copy of the code repo
 * ``cd dea-notebooks``
-* Use the command ``git status`` (at any time) to check which branch you are on and any changes you have made.
-You should see that you are automatically on the ``master`` branch. This is the published branched of the repository. 
+* Use the command ``git status`` (at any time) to check which branch you are on and any changes you have made. You should see that you are automatically on the ``master`` branch. This is the published branched of the repository. 
 * To create your own branch, type ``git checkout -b <yourname>`` (where <yourname> will be the name of the new branch.
-* You will automatically be changed to your new branch (you can use ``git status`` to check this). Any changes you make here will
-not affect the other branches of the repository. 
+* You will automatically be changed to your new branch (you can use ``git status`` to check this). Any changes you make here will not affect the other branches of the repository. 
 
 Setting up your own version of the repo
 =======================================
@@ -45,24 +40,19 @@ You will notice that your branch of the repo contains a copy of everything in th
 actually want. You can feel free to delete everything that is automatically put in your own branch, and start from scratch with 
 your own directory structures. 
 
-**Note**: Make sure you are on your own branch *before* deleting everything. You can check this with ``git status``. If you happen to delete
-everything from the master branch, it can be restored (that's the wonder of version control), but try to avoid this in the first place.
+**Note**: Make sure you are on your own branch *before* deleting everything. You can check this with ``git status``. If you happen to delete everything from the master branch, it can be restored (that's the wonder of version control), but try to avoid this in the first place.
 
 To delete folders (or files) in a git managed repository, use ``git rm <file>``. This tells git you are deleting a file from the tracked
-repository, which makes things a lot cleaner when you go to commit those changes later on. If you would like to delete a whole directory, 
-you need to add the `-r` (recursive) flag to the command; ``git rm -r algorithms``. 
+repository, which makes things a lot cleaner when you go to commit those changes later on. If you would like to delete a whole directory, you need to add the `-r` (recursive) flag to the command; ``git rm -r algorithms``. 
 
 Committing and pushing your changes back to the main repository
 ===============================================================
 The new branch you have created exists in your local version of the repository, but you wont yet see it on the git website because you 
 haven't told it about your new branch yet. To do this, you will need to commit and then push your changes. If you now type ``git status``
 you will see two groups of files; those git is tracking and has noticed have changed since the last commit, and those git is not tracking. 
-To add the new files and folders you have created to the git tracked repo, type ``git add <file/folder>``. Go through all the folders you would
-like git to track and ``git add`` them. Once you are ready to commit your changes, type ``git commit -m "this is a short description of 
-the changes you have made"``. 
+To add the new files and folders you have created to the git tracked repo, type ``git add <file/folder>``. Go through all the folders you would like git to track and ``git add`` them. Once you are ready to commit your changes, type ``git commit -m "this is a short description of the changes you have made"``. 
 
-As there will be multiple people all working off the same repository, you should type ``git pull`` prior to pushing your commit. This will
-make sure you have the latest version of the repository, and will hopefully avoid any potential merge conflicts when you go to push. 
+As there will be multiple people all working off the same repository, you should type ``git pull`` prior to pushing your commit. This will make sure you have the latest version of the repository, and will hopefully avoid any potential merge conflicts when you go to push. 
 
 Assuming the pull request didn't throw up any errors, you can now push your commit. To do this, type ``git push -u origin <your branch name>``. Git
 will now connect to the remote repository and add your commit to the GitHub repo. You should now be able to see your new branch on the online
@@ -99,10 +89,7 @@ As an example...
 number of things that need to be done prior to gaining access to the Sentinel 2 archive. For the purpose of this notebook, we will assume 
 you have successfully gained access to the AWS environment where Sentinel 2 data is currently housed. 
 
-**What does this notebook do?** This notebook steps you through how to load in and plot up data from Sentinel 2. It explores the data that 
-are available from the Sentinel 2 satellite, and briefly describes the Sentinel satellite bands. It then loads in the ``s2a_ard_granule`` 
-product and plots it up in true and false colour. It uses the provided pixel quality data to filters the example scene based on ``clear`` 
-pixels. 
+**What does this notebook do?** This notebook steps you through how to load in and plot up data from Sentinel 2. It explores the data that are available from the Sentinel 2 satellite, and briefly describes the Sentinel satellite bands. It then loads in the ``s2a_ard_granule`` product and plots it up in true and false colour. It uses the provided pixel quality data to filters the example scene based on ``clear`` pixels. 
 
 **Date**: February 2018.
 
@@ -119,8 +106,7 @@ Pushing files to the master branch for publishing
 Protection measures put in place within the ``dea-notebooks`` repo mean that you can not simply ``push`` to the master branch. All code
 that you would like to publish on the ``master`` branch needs to go through a review process, which is done using a ``pull`` request. 
 
-The process for completing a ``pull`` request may seem complicated, but is quite simple if you follow the following directions. If you are 
-unsure, feel free to grab someone to walk you through it the first time. You will need to commit all the changes you have made to your local branch before following these steps. 
+The process for completing a ``pull`` request may seem complicated, but is quite simple if you follow the following directions. If you are unsure, feel free to grab someone to walk you through it the first time. You will need to commit all the changes you have made to your local branch before following these steps. 
 
 * Open a terminal window, and navigate to the ``dea-notebooks`` folder
 * ``git checkout master``
@@ -129,10 +115,8 @@ unsure, feel free to grab someone to walk you through it the first time. You wil
 * ``git checkout -b <tempbranchname>`` - you can name the temp branch anything, but please include your name somewhere 
 * Now you need to move the files you want to publish from your branch to this new branch
 * ``git checkout <yourbranchname> -- <fileyouwanttopublish>`` This command will grab the file from your branch, and move it to this temp branch
-* Repeat this for all the files you want to publish. You may need to move files around so that they sit in the four folders designated in the
-master branch. You can just use the file browser to do this, or use ``mv <oldlocation> <newlocation>`` from the command line
-* ``git status``. You should see that you are on the temp branch, and the files you have moved across are listed in red as untracked. Double check
-that these files are in one of the four directories, and not in a folder of your own naming.
+* Repeat this for all the files you want to publish. You may need to move files around so that they sit in the four folders designated in the master branch. You can just use the file browser to do this, or use ``mv <oldlocation> <newlocation>`` from the command line
+* ``git status``. You should see that you are on the temp branch, and the files you have moved across are listed in red as untracked. Double check that these files are in one of the four directories, and not in a folder of your own naming.
 
 Updating the .rst file to point to your new files
 -------------------------------------------------
@@ -144,8 +128,7 @@ Back to the push workflow...
 * ``git add <file>``. Repeat this for every file that you want to publish. Make sure to add the ``README.rst`` files you have updated as well!
 * ``git status``. You should now see the list of files in green, ready to be committed.
 * ``git commit -m "Short explanation of the files being added"``
-* ``git push origin <tempbranchname>``. This will push the new branch, with the files to be published, to the remote repo. You can jump on the
-website and see your latest push show up on the repo in a light yellow banner below the solid red line.
+* ``git push origin <tempbranchname>``. This will push the new branch, with the files to be published, to the remote repo. You can jump on the website and see your latest push show up on the repo in a light yellow banner below the solid red line.
 * Click on ``compare & pull request`` to set up your pull request
 * The ``Open a pull request`` page will show the ``base`` as ``master`` and the ``compare`` as your temp branch. If you did a pull request right up
 at step three, this should mean that there are no conflicts, and you can automatically merge (hopefully). 
@@ -153,8 +136,7 @@ at step three, this should mean that there are no conflicts, and you can automat
 
 Approving pull requests
 =======================
-Anyone with admin access to the ``dea-notebooks`` repo can approve pull requests. You can see a list of the pull requests ready for review on the
-``pull requests`` tab at the top of the repo. Click this tab, then click on the open pull request. You will need to review the code before you can approve the request. You can view the changes proposed and make sure that they meet the minimum metadata requirements. You do not need to check the actual code, this review process is just to check for code documentation. If the documentation looks good, click the green ``review`` button and check ``approve``. You can also request changes here if you think some key info is missing. 
+Anyone with admin access to the ``dea-notebooks`` repo can approve pull requests. You can see a list of the pull requests ready for review on the ``pull requests`` tab at the top of the repo. Click this tab, then click on the open pull request. You will need to review the code before you can approve the request. You can view the changes proposed and make sure that they meet the minimum metadata requirements. You do not need to check the actual code, this review process is just to check for code documentation. If the documentation looks good, click the green ``review`` button and check ``approve``. You can also request changes here if you think some key info is missing. 
 
 Once the code has been approved, you can merge it into the ``master`` branch. Select the ``squash and merge`` option (you may need to find this in the drop down menu to the right of the green merge button. The squash and merge will squash all the commits on the temp branch into a single commit, and just make things neater. Once you have merged the new branch in, you need to **delete the branch**. There is a button on the push page that asks you if you would like to delete the now merged branch. Yes. Delete it. The changes from this branch have now been merged in, so there is no risk of losing someone's work. This will stop lots and lots of staging/temp branches from building up in the repo. 
 
@@ -165,19 +147,3 @@ Cleaning up your own repo
 You will receive an email to the address your github account is registered with to let you know when your pull request has been approved, and then merged. Although the temp branch was deleted from the github website (the remote repo), you will still have a local copy of this branch that you will want to remove. 
 
 ``git branch`` will show you all the branches your local repo is tracking. If there are staging branches you would like to clean up, use ``git branch -d <branchtobedeleted>``. This will stop you accumulating useless branches in your local git repo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
