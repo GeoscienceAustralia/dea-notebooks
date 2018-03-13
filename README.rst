@@ -23,7 +23,7 @@ To clone the repo (onto the VDI):
 * A new folder called ``dea-notebooks`` will be created, which is a copy of the code repo
 * ``cd dea-notebooks``
 * Use the command ``git status`` (at any time) to check which branch you are on and any changes you have made. You should see that you are automatically on the ``master`` branch. This is the published branched of the repository. 
-* To create your own branch, type ``git checkout -b <yourname>`` (where <yourname> will be the name of the new branch.
+* To create your own branch, type ``git checkout -b <yourname>`` (where <yourname> will be the name of the new branch).
 * You will automatically be changed to your new branch (you can use ``git status`` to check this). Any changes you make here will not affect the other branches of the repository. 
 
 Setting up your own version of the repo
