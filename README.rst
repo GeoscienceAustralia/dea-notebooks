@@ -1,5 +1,8 @@
-dea-notebooks
-=============
+.. Notebook Gallery Instructions:
+
+=============================
+Notebook Gallery Instructions
+=============================
 Repository for Digital Earth Australia Jupyter Notebooks.
 
 The basic structure of this repository is designed to keep 'all' of the DEA Jupyter Notebooks in one place. The repository uses branches to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared.
@@ -79,7 +82,7 @@ As an example...
 Tagging
 -------
 
-Work in progress...
+See the :doc:`Tagging Notebooks<tags>` page.
 
 
 Pushing files to the master branch for publishing
@@ -110,8 +113,7 @@ Back to the push workflow...
 * ``git commit -m "Short explanation of the files being added"``
 * ``git push origin <tempbranchname>``. This will push the new branch, with the files to be published, to the remote repo. You can jump on the website and see your latest push show up on the repo in a light yellow banner below the solid red line.
 * Click on ``compare & pull request`` to set up your pull request
-* The ``Open a pull request`` page will show the ``base`` as ``master`` and the ``compare`` as your temp branch. If you did a pull request right up
-at step three, this should mean that there are no conflicts, and you can automatically merge (hopefully). 
+* The ``Open a pull request`` page will show the ``base`` as ``master`` and the ``compare`` as your temp branch. If you did a pull request right up at step three, this should mean that there are no conflicts, and you can automatically merge (hopefully).
 * Add a comment to the pull request, and click ``create pull request``
 
 Approving pull requests
