@@ -31,10 +31,11 @@ def load_nbarx(dc, sensor, query, product = 'nbart', **bands_of_interest):
 	 if that have been imported into the environment.
     sensor - Options are 'ls5', 'ls7', 'ls8'
     query - A dict containing the query bounds. Can include lat/lon, time etc
-    bands_of_interest - List of strings containing the bands to be read in.
 
     optional
     product - 'nbar' or 'nbart'. Defaults to nbart unless otherwise specified
+    bands_of_interest - List of strings containing the bands to be read in. Options
+                       'red', 'green', 'blue', 'nir', 'swir1', 'swir2'
 
     outputs
     ds - Extracted and pq filtered dataset
@@ -108,8 +109,7 @@ def load_sentinel(dc, product, query, **bands_of_interest):
     query - A dict containing the query bounds. Can include lat/lon, time etc
 
     optional:
-    bands_of_interest - List of strings containing the bands to be read in. Options
-                       'red', 'green', 'blue', 'nir', 'swir1', 'swir2'
+    bands_of_interest - List of strings containing the bands to be read in. 
 
     outputs
     ds - Extracted and pq filtered dataset
