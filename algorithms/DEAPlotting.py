@@ -84,7 +84,7 @@ def three_band_image_subplots(ds, bands, num_cols, figsize = [10,10],
     '''
     # Find the number of rows/columns we need, based on the number of time steps in ds
     timesteps = ds.time.size
-    num_rows = int(ceil(timesteps/num_cols))
+    num_rows = int(np.ceil(timesteps/num_cols))
     fig, axes = plt.subplots(num_rows, num_cols, figsize = figsize)
     fig.subplots_adjust(left  = left, right = right, bottom = bottom, top = top, 
                         wspace = wspace, hspace = hspace)
