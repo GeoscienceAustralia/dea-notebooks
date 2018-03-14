@@ -3,6 +3,7 @@
 This file contains a set of python functions for handling data within DEA.
 Available functions:
 load_nbarx
+load_sentinel
 
 Last modified: March 2018
 Author: Claire Krause
@@ -12,9 +13,8 @@ Author: Claire Krause
 from datacube.helpers import ga_pq_fuser
 from datacube.storage import masking
 from datacube import Datacube
-dc = Datacube(app = 'test')
 
-def load_nbarx(sensor, query, bands_of_interest, product = 'nbart'): 
+def load_nbarx(dc, sensor, query, product = 'nbart', **bands_of_interest): 
     '''loads nbar or nbart data for a sensor, masks using pq, then filters 
     out terrain -999s
     Last modified: March 2018
@@ -25,9 +25,10 @@ def load_nbarx(sensor, query, bands_of_interest, product = 'nbart'):
     from datacube.helpers import ga_pq_fuser
     from datacube.storage import masking
     from datacube import Datacube
-    dc = Datacube(app = 'test')
     
     inputs
+    dc - handle for the Datacube to import from. This allows you to also use dev environments
+	 if that have been imported into the environment.
     sensor - Options are 'ls5', 'ls7', 'ls8'
     query - A dict containing the query bounds. Can include lat/lon, time etc
     bands_of_interest - List of strings containing the bands to be read in. Options
@@ -44,9 +45,11 @@ def load_nbarx(sensor, query, bands_of_interest, product = 'nbart'):
     dataset = []
     product_name = '{}_{}_albers'.format(sensor, product)
     print('loading {}'.format(product_name))
-    ds = dc.load(product = product_name, measurements = bands_of_interest,
-                 group_by = 'solar_day', **query)
-    #grab crs defs from loaded ds if ds exists
+    if bands_of_interest:
+    	ds = dc.load(product = product_name, measurements = bands_of_interest,
+                     group_by = 'solar_day', **query)
+    else:
+        ds = dc.load(product = product_name, group_by = 'solar_day', **query)  
     if ds.variables:
         crs = ds.crs
         affine = ds.affine
@@ -71,7 +74,7 @@ def load_nbarx(sensor, query, bands_of_interest, product = 'nbart'):
             ds = ds.where(cloud_free)
             ds.attrs['crs'] = crs
             ds.attrs['affine'] = affine
-            
+
         if product=='nbart':
             print('masked {} with {} and filtered terrain'.format(product_name,
                                                                   mask_product))
@@ -83,6 +86,55 @@ def load_nbarx(sensor, query, bands_of_interest, product = 'nbart'):
             print('did not mask {} with {}'.format(product_name, mask_product))
     else:
         print ('did not load {}'.format(product_name)) 
+
+    if len(ds.variables) > 0:
+        return ds, crs, affine
+    else:
+        return None
+
+def load_sentinel(dc, product, query, **bands_of_interest): 
+    '''loads a sentinel granule product and masks using pq
+    Last modified: March 2018
+    Claire Krause: Bex Dunn
+    
+    This function requires the following be loaded:
+    from datacube.helpers import ga_pq_fuser
+    from datacube.storage import masking
+    from datacube import Datacube
+    
+    inputs
+    dc - handle for the Datacube to import from. This allows you to also use dev environments
+	 if that have been imported into the environment.
+    product - string containing the name of the sentinel product to load
+    query - A dict containing the query bounds. Can include lat/lon, time etc
+
+    optional:
+    bands_of_interest - List of strings containing the bands to be read in. Options
+                       'red', 'green', 'blue', 'nir', 'swir1', 'swir2'
+
+    outputs
+    ds - Extracted and pq filtered dataset
+    crs - ds coordinate reference system
+    affine - ds affine
+    '''  
+    dataset = []
+    print('loading {}'.format(product))
+    if bands_of_interest:
+    	ds = dc.load(product = product, measurements = bands_of_interest,
+                     group_by = 'solar_day', **query)
+    else:
+        ds = dc.load(product = product, group_by = 'solar_day', **query)  
+    if ds.variables:
+        crs = ds.crs
+        affine = ds.affine
+        print('loaded {}'.format(product))
+        print('making mask')
+        clear_pixels = ds.pixel_quality == 1
+        ds = ds.where(clear_pixels)
+        ds.attrs['crs'] = crs
+        ds.attrs['affine'] = affine
+    else:
+        print ('did not load {}'.format(product)) 
 
     if len(ds.variables) > 0:
         return ds, crs, affine
