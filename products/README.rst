@@ -9,3 +9,4 @@ This folder demonstrates the use of different platforms and products available w
 
    GettingStartedWithSentinel2
    RetrieveLandsat8ViewAndExport
+   LandsatSentinelComparisonandPixelDrill
