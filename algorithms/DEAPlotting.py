@@ -2,19 +2,21 @@
 '''
 This file contains a set of python functions for plotting DEA data.
 Available functions:
-thre_band_image
-three_band_image_subplots
-write_to_geotiff
+
+    three_band_image
+    three_band_image_subplots
 
 Last modified: March 2018
 Author: Claire Krause
+Modified by: Robbi Bishop-Taylor
 
 '''
 
+# Load modules
 import numpy as np
 from skimage import exposure
 import matplotlib.pyplot as plt
-import rasterio
+
 
 def three_band_image(ds, bands, time = 0, figsize = [10,10], projection = 'projected'):
     '''
@@ -114,36 +116,4 @@ def three_band_image_subplots(ds, bands, num_cols, figsize = [10,10],
         fig.delaxes(ax)
         plt.draw()    
 
-def write_to_geotiff(filename, data):
-    '''
-    this function uses rasterio and numpy to write a multi-band geotiff for one 
-    timeslice, or for a single composite image. It assumes the input data is an 
-    xarray dataset (note, dataset not dataarray) and that you have crs and affine 
-    objects attached, and that you are using float data. future users
-    may wish to assert that these assumptions are correct.
 
-    inputs
-    filename - string containing filename to write out to
-    data - dataset to write out
-
-    Note: this function cuurrently requires the data have lat/lon only, i.e. no
-    time dimension
-
-    Last modified: March 2018
-    Authors: Bex Dunn and Josh Sixsmith
-    Modified by: Claire Krause
-    '''
-    
-    kwargs = {'driver': 'GTiff', 
-              'count': len(data.data_vars), #geomedian no time dim
-              'width': data.sizes['x'], 'height': data.sizes['y'],
-              'crs' : data.crs.crs_str,
-              'transform':data.affine,
-              'dtype': list(data.data_vars.values())[0].values.dtype,
-              'nodata': 0,
-              'compress': 'deflate', 'zlevel': 4, 'predictor': 3 }
-              #for ints use 2 for floats use 3}
-
-    with rasterio.open(filename, 'w', **kwargs) as src:
-        for i, band in enumerate(data.data_vars):
-            src.write(data[band].data, i+1)

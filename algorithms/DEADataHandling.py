@@ -2,21 +2,28 @@
 '''
 This file contains a set of python functions for handling data within DEA.
 Available functions:
-load_nbarx
-load_sentinel
+
+    load_nbarx
+    load_sentinel
+    dataset_to_geotiff
+    array_to_geotiff
 
 Last modified: March 2018
 Author: Claire Krause
+Modified by: Robbi Bishop-Taylor
 
 '''
 
+# Load modules
 from datacube.helpers import ga_pq_fuser
 from datacube.storage import masking
-from datacube import Datacube
+import gdal
+
 
 def load_nbarx(dc, sensor, query, product = 'nbart', **bands_of_interest): 
     '''loads nbar or nbart data for a sensor, masks using pq, then filters 
     out terrain -999s
+
     Last modified: March 2018
     Author: Bex Dunn
     Modified by: Claire Krause
@@ -94,6 +101,7 @@ def load_nbarx(dc, sensor, query, product = 'nbart', **bands_of_interest):
 
 def load_sentinel(dc, product, query, **bands_of_interest): 
     '''loads a sentinel granule product and masks using pq
+
     Last modified: March 2018
     Claire Krause: Bex Dunn
     
@@ -139,3 +147,75 @@ def load_sentinel(dc, product, query, **bands_of_interest):
         return ds, crs, affine
     else:
         return None
+
+
+def dataset_to_geotiff(filename, data):
+    '''
+    this function uses rasterio and numpy to write a multi-band geotiff for one
+    timeslice, or for a single composite image. It assumes the input data is an
+    xarray dataset (note, dataset not dataarray) and that you have crs and affine
+    objects attached, and that you are using float data. future users
+    may wish to assert that these assumptions are correct.
+
+    Last modified: March 2018
+    Authors: Bex Dunn and Josh Sixsmith
+    Modified by: Claire Krause, Robbi Bishop-Taylor
+
+    inputs
+    filename - string containing filename to write out to
+    data - dataset to write out
+
+    Note: this function cuurrently requires the data have lat/lon only, i.e. no
+    time dimension
+
+
+    '''
+
+    kwargs = {'driver': 'GTiff',
+              'count': len(data.data_vars),  # geomedian no time dim
+              'width': data.sizes['x'], 'height': data.sizes['y'],
+              'crs': data.crs.crs_str,
+              'transform': data.affine,
+              'dtype': list(data.data_vars.values())[0].values.dtype,
+              'nodata': 0,
+              'compress': 'deflate', 'zlevel': 4, 'predictor': 3}
+    # for ints use 2 for floats use 3}
+
+    with rasterio.open(filename, 'w', **kwargs) as src:
+        for i, band in enumerate(data.data_vars):
+            src.write(data[band].data, i + 1)
+
+
+
+def array_to_geotiff(fname, data, geo_transform, projection, nodata_val):
+    """
+    Create a single band GeoTIFF file with data from array. Because this
+    works with simple arrays rather than xarray datasets from DEA, it requires
+    the use to pass in geotransform and projection data for the output raster
+
+    Last modified: March 2018
+    Author: Robbi Bishop-Taylor
+
+    :attr fname: output file path
+    :attr data: input array
+    :attr geo_transform: geotransform for output raster
+    :attr projection: projection for output raster
+    :attr nodata_val: value to convert to nodata in output raster
+    """
+
+    # Set up driver
+    driver = gdal.GetDriverByName('GTiff')
+
+    # Create raster of given size and projection
+    rows, cols = data.shape
+    dataset = driver.Create(fname, cols, rows, 1, gdal.GDT_Byte)
+    dataset.SetGeoTransform(geo_transform)
+    dataset.SetProjection(projection)
+
+    # Write data to array and set nodata values
+    band = dataset.GetRasterBand(1)
+    band.WriteArray(data)
+    band.SetNoDataValue(nodata_val)
+
+    # Close file
+    dataset = None
