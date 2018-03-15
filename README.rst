@@ -79,6 +79,10 @@ As an example...
 
 **Author**: Claire Krause
 
+Note on using heading levels in the Jupyter Notebooks
+-----------------------------------------------------
+The code that publishes the notebooks to the website uses Heading levels to grab titles and set up hyperlinks. **Please only use heading level 1 (i.e. ``#``) for the overall notebook title**. Headings throughout the notebook should use headinglevel two or below (i.e. ``##``). 
+
 Tagging
 -------
 
