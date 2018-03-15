@@ -124,6 +124,10 @@ Once the code has been approved, you can merge it into the ``master`` branch. Se
 
 You are now done!
 
+Revising a pull request
+-----------------------
+If your reviewer suggests you make changes to code you submitted as a ``pull request``, it's easy to fix things up. Simply update your code on the same temporary branch you submitted the ``pull request`` from, commit the changes (``git commit -m "Short explanation``), push them back up to the remote repo (``git push origin <tempbranchname>``), and the new commit will automatically appear in the same ``pull request`` ready to be accepted!
+
 Cleaning up your own repo
 -------------------------
 You will receive an email to the address your github account is registered with to let you know when your pull request has been approved, and then merged. Although the temp branch was deleted from the github website (the remote repo), you will still have a local copy of this branch that you will want to remove. 
