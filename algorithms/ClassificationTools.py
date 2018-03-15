@@ -4,7 +4,6 @@ This file contains a set of python functions used for classifying remote sensing
 Currently includes functions for random forest classification, but additional classifiers to be
 added in near future. Available functions:
 
-    array_to_geotiff
     randomforest_train
     randomforest_classify
     randomforest_eval
@@ -28,35 +27,7 @@ from sklearn.ensemble import RandomForestClassifier
 sys.path.append(os.path.abspath('/g/data/r78/rt1527/dea-notebooks/algorithms'))
 from ShapefileTools import layer_extent
 from ShapefileTools import rasterize_vector
-
-
-def array_to_geotiff(fname, data, geo_transform, projection, nodata_val):
-    """
-    Create a single band GeoTIFF file with data from array.
-
-    :attr fname: output file path
-    :attr data: input array
-    :attr geo_transform: geotransform for output raster
-    :attr projection: projection for output raster
-    :attr nodata_val: value to convert to nodata in output raster
-    """
-
-    # Set up driver
-    driver = gdal.GetDriverByName('GTiff')
-
-    # Create raster of given size and projection
-    rows, cols = data.shape
-    dataset = driver.Create(fname, cols, rows, 1, gdal.GDT_Byte)
-    dataset.SetGeoTransform(geo_transform)
-    dataset.SetProjection(projection)
-
-    # Write data to array and set nodata values
-    band = dataset.GetRasterBand(1)
-    band.WriteArray(data)
-    band.SetNoDataValue(nodata_val)
-
-    # Close file
-    dataset = None
+from DEADataHandling import array_to_geotiff
 
 
 def randomforest_train(train_shps, train_field, data_func, data_func_params={},
