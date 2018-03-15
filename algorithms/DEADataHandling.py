@@ -19,6 +19,7 @@ Modified by: Robbi Bishop-Taylor
 from datacube.helpers import ga_pq_fuser
 from datacube.storage import masking
 import gdal
+import xarray as xr
 
 
 def load_nbarx(dc, sensor, query, product = 'nbart', **bands_of_interest): 
@@ -295,3 +296,5 @@ def array_to_geotiff(fname, data, geo_transform, projection,
 
     # Close file
     dataset = None
+
+
