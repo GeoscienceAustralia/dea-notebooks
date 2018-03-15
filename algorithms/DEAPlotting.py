@@ -18,15 +18,14 @@ from skimage import exposure
 import matplotlib.pyplot as plt
 
 
-def three_band_image(ds, bands, time = 0, figsize = [10,10], projection = 'projected'):
+def three_band_image(ds, bands, time = 0, figsize = [10,10], title = bands, projection = 'projected'):
     '''
     threeBandImage takes three spectral bands and plots them on the RGB bands of an 
     image. 
     
     Last modified: March 2018
     Author: Mike Barnes
-    Modified by: Claire Krause
-
+    Modified by: Claire Krause, Cate Kooymans
     Inputs: 
     ds -   Dataset containing the bands to be plotted
     bands - list of three bands to be plotted
@@ -34,19 +33,30 @@ def three_band_image(ds, bands, time = 0, figsize = [10,10], projection = 'proje
     Optional:
     time - Index value of the time dimension of ds to be plotted
     figsize - dimensions for the output figure
+    title - string for the plot title. If nothing is given, it will print the names of the
+            bands being plotted.
     projection - options are 'projected' or 'geographic'. To determine if the image is 
     in degrees or northings
     '''
-    t, y, x = ds[bands[0]].shape
-    rawimg = np.zeros((y,x,3), dtype = np.float32)
-    for i, colour in enumerate(bands):
-        rawimg[:,:,i] = ds[colour][time].values
+    try:
+    	t, y, x = ds[bands[0]].shape
+    	rawimg = np.zeros((y,x,3), dtype = np.float32)
+    	for i, colour in enumerate(bands):
+            rawimg[:,:,i] = ds[colour][time].values
+    except ValueError:
+        y, x = ds[bands[0]].shape
+        rawimg = np.zeros((y,x,3), dtype = np.float32)
+        for i, colour in enumerate(bands):
+       	    rawimg[:,:,i] = ds[colour].values
     rawimg[rawimg == -999] = np.nan
     img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
     fig = plt.figure(figsize = figsize)
     plt.imshow(img_toshow)
     ax = plt.gca()
-    ax.set_title(str(ds.time[time].values), fontweight = 'bold', fontsize = 16)
+    try:
+        ax.set_title(str(ds.time[time].values), fontweight = 'bold', fontsize = 16)
+    except ValueError:
+        ax.set_title(title, fontweight = 'bold', fontsize = 16)
     ax.set_xticklabels(ds.x.values)
     ax.set_yticklabels(ds.y.values)
     if projection == 'geographic':
