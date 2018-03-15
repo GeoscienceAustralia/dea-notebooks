@@ -18,7 +18,7 @@ from skimage import exposure
 import matplotlib.pyplot as plt
 
 
-def three_band_image(ds, bands, time = 0, figsize = [10,10], title = bands, projection = 'projected'):
+def three_band_image(ds, bands, time = 0, figsize = [10,10], title = 'My Plot', projection = 'projected'):
     '''
     threeBandImage takes three spectral bands and plots them on the RGB bands of an 
     image. 
@@ -26,6 +26,7 @@ def three_band_image(ds, bands, time = 0, figsize = [10,10], title = bands, proj
     Last modified: March 2018
     Author: Mike Barnes
     Modified by: Claire Krause, Cate Kooymans
+
     Inputs: 
     ds -   Dataset containing the bands to be plotted
     bands - list of three bands to be plotted
@@ -55,7 +56,7 @@ def three_band_image(ds, bands, time = 0, figsize = [10,10], title = bands, proj
     ax = plt.gca()
     try:
         ax.set_title(str(ds.time[time].values), fontweight = 'bold', fontsize = 16)
-    except ValueError:
+    except:
         ax.set_title(title, fontweight = 'bold', fontsize = 16)
     ax.set_xticklabels(ds.x.values)
     ax.set_yticklabels(ds.y.values)
