@@ -54,7 +54,7 @@ def three_band_image(ds, bands, time = 0, figsize = [10,10], title = bands, proj
     ax = plt.gca()
     try:
         ax.set_title(str(ds.time[time].values), fontweight = 'bold', fontsize = 16)
-    except ValueError:
+    except:
         ax.set_title(title, fontweight = 'bold', fontsize = 16)
     ax.set_xticklabels(ds.x.values)
     ax.set_yticklabels(ds.y.values)
