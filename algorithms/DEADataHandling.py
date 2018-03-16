@@ -260,18 +260,22 @@ def dataset_to_geotiff(filename, data):
 
 
 
-def array_to_geotiff(fname, data, geo_transform, projection, nodata_val):
+def array_to_geotiff(fname, data, geo_transform, projection,
+                     nodata_val=0, dtype=gdal.GDT_Float32):
     """
     Create a single band GeoTIFF file with data from array. Because this
     works with simple arrays rather than xarray datasets from DEA, it requires
     the use to pass in geotransform and projection data for the output raster
+    
     Last modified: March 2018
     Author: Robbi Bishop-Taylor
+    
     :attr fname: output file path
     :attr data: input array
     :attr geo_transform: geotransform for output raster
     :attr projection: projection for output raster
-    :attr nodata_val: value to convert to nodata in output raster
+    :attr nodata_val: value to convert to nodata in output raster; default 0
+    :attr dtype: value to convert to nodata in output raster; default gdal.GDT_Float32
     """
 
     # Set up driver
@@ -279,7 +283,7 @@ def array_to_geotiff(fname, data, geo_transform, projection, nodata_val):
 
     # Create raster of given size and projection
     rows, cols = data.shape
-    dataset = driver.Create(fname, cols, rows, 1, gdal.GDT_Byte)
+    dataset = driver.Create(fname, cols, rows, 1, dtype)
     dataset.SetGeoTransform(geo_transform)
     dataset.SetProjection(projection)
 
@@ -290,5 +294,4 @@ def array_to_geotiff(fname, data, geo_transform, projection, nodata_val):
 
     # Close file
     dataset = None
-
 
