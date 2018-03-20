@@ -19,9 +19,11 @@ from datacube.helpers import ga_pq_fuser
 from datacube.storage import masking
 import gdal
 import numpy as np
+import rasterio
 
 
-def load_nbarx(dc, sensor, query, product = 'nbart', filter_cloud = True, **bands_of_interest): 
+def load_nbarx(dc, sensor, query, product = 'nbart', filter_cloud = True, 
+	       bands_of_interest = ['red', 'green', 'blue', 'nir', 'swir1', 'swir2']): 
     '''loads nbar or nbart data for a sensor, masks using pq, then filters 
     out terrain -999s
 
