@@ -5,3 +5,10 @@
 *.tif
 *.xml
 __pycache__
+*.shp
+*.dbf
+*#
+*.prj
+*.qpj
+*.shx
+*.zip
