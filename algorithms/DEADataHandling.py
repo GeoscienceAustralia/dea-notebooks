@@ -21,7 +21,7 @@ from datacube.storage import masking
 import gdal
 import numpy as np
 import xarray as xr
-
+import rasterio
 
 def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_pq=True):
     """
