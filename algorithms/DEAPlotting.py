@@ -18,7 +18,7 @@ from skimage import exposure
 import matplotlib.pyplot as plt
 
 
-def three_band_image(ds, bands, time = 0, figsize = [10,10], title = 'My Plot', projection = 'projected'):
+def three_band_image(ds, bands, time = 0, figsize = [10,10], contrast_enhance = False, title = 'My Plot', projection = 'projected'):
     '''
     threeBandImage takes three spectral bands and plots them on the RGB bands of an 
     image. 
@@ -34,6 +34,9 @@ def three_band_image(ds, bands, time = 0, figsize = [10,10], title = 'My Plot', 
     Optional:
     time - Index value of the time dimension of ds to be plotted
     figsize - dimensions for the output figure
+    contrast_enhance - determines the transformation for plotting onto RGB. If contrast_enhance = true, 
+                       exposure.equalize_hist is used to trasnform the data. Else, the data are standardised relative
+                       to reflectance = 5000.
     title - string for the plot title. If nothing is given, it will print the names of the
             bands being plotted.
     projection - options are 'projected' or 'geographic'. To determine if the image is 
@@ -50,7 +53,10 @@ def three_band_image(ds, bands, time = 0, figsize = [10,10], title = 'My Plot', 
         for i, colour in enumerate(bands):
        	    rawimg[:,:,i] = ds[colour].values
     rawimg[rawimg == -999] = np.nan
-    img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
+    if contrast_enhance == True:
+    	img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
+    else:
+    	img_toshow = rawimg / 5000
     fig = plt.figure(figsize = figsize)
     plt.imshow(img_toshow)
     ax = plt.gca()
@@ -66,8 +72,9 @@ def three_band_image(ds, bands, time = 0, figsize = [10,10], title = 'My Plot', 
     else:
         ax.set_xlabel('Eastings', fontweight = 'bold')
         ax.set_ylabel('Northings', fontweight = 'bold')
+    return plt, fig
 
-def three_band_image_subplots(ds, bands, num_cols, figsize = [10,10], 
+def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, figsize = [10,10], 
                               projection = 'projected', left  = 0.125, 
                               right = 0.9, bottom = 0.1, top = 0.9, 
                               wspace = 0.2, hspace = 0.4):
@@ -85,6 +92,9 @@ def three_band_image_subplots(ds, bands, num_cols, figsize = [10,10],
     num_cols - number of columns for the subplot
     
     Optional:
+    contrast_enhance - determines the transformation for plotting onto RGB. If contrast_enhance = true, 
+                       exposure.equalize_hist is used to trasnform the data. Else, the data are standardised relative
+                       to reflectance = 5000.
     figsize - dimensions for the output figure
     projection - options are 'projected' or 'geographic'. To determine if the image 
                  is in degrees or northings
@@ -97,7 +107,7 @@ def three_band_image_subplots(ds, bands, num_cols, figsize = [10,10],
     '''
     # Find the number of rows/columns we need, based on the number of time steps in ds
     timesteps = ds.time.size
-    num_rows = int(np.ceil(timesteps/num_cols))
+    num_rows = int(np.ceil(timesteps//num_cols))
     fig, axes = plt.subplots(num_rows, num_cols, figsize = figsize)
     fig.subplots_adjust(left  = left, right = right, bottom = bottom, top = top, 
                         wspace = wspace, hspace = hspace)
@@ -109,7 +119,10 @@ def three_band_image_subplots(ds, bands, num_cols, figsize = [10,10],
             for i, colour in enumerate(bands):
                 rawimg[:,:,i] = ds[colour][numbers].values
             rawimg[rawimg == -999] = np.nan
-            img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
+	    if contrast_enhance == True:
+	    	img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
+	    else:
+	    	img_toshow = rawimg / 5000
             ax.imshow(img_toshow)
             ax.set_title(str(ds.time[numbers].values), fontweight = 'bold', fontsize = 12)
             ax.set_xticklabels(ds.x.values, fontsize = 8, rotation = 20)
