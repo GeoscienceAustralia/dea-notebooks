@@ -54,9 +54,9 @@ def three_band_image(ds, bands, time = 0, figsize = [10,10], contrast_enhance = 
        	    rawimg[:,:,i] = ds[colour].values
     rawimg[rawimg == -999] = np.nan
     if contrast_enhance == True:
-    	img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
+        img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
     else:
-    	img_toshow = rawimg / 5000
+        img_toshow = rawimg / 5000
     fig = plt.figure(figsize = figsize)
     plt.imshow(img_toshow)
     ax = plt.gca()
@@ -119,10 +119,10 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
             for i, colour in enumerate(bands):
                 rawimg[:,:,i] = ds[colour][numbers].values
             rawimg[rawimg == -999] = np.nan
-	    if contrast_enhance == True:
-	    	img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
-	    else:
-	    	img_toshow = rawimg / 5000
+            if contrast_enhance == True:
+                img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
+            else:
+                img_toshow = rawimg / 5000
             ax.imshow(img_toshow)
             ax.set_title(str(ds.time[numbers].values), fontweight = 'bold', fontsize = 12)
             ax.set_xticklabels(ds.x.values, fontsize = 8, rotation = 20)
