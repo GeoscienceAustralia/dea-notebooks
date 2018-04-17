@@ -139,5 +139,5 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
         # rows x columns, so we can safely ignore it
         fig.delaxes(ax)
         plt.draw()    
-
+    return plt, fig
 

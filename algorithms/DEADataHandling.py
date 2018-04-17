@@ -76,9 +76,10 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
 
         # If pixel quality filtering is enabled, extract PQ data to use as mask
         if filter_pq:
-
+            pq_query = query.copy()
+            pq_query['resampling'] = 'nearest'
             sensor_pq = dc.load(product=mask_product, fuse_func=ga_pq_fuser,
-                                group_by='solar_day', **query)
+                                group_by='solar_day', **pq_query)
 
             # If PQ call returns data, use to mask input data
             if sensor_pq.variables:
@@ -88,13 +89,14 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
                                                  cloud_shadow_acca='no_cloud_shadow',
                                                  cloud_shadow_fmask='no_cloud_shadow',
                                                  cloud_fmask='no_cloud',
-                                                 blue_saturated=False,
+                                                 #blue_saturated=False,
                                                  green_saturated=False,
-                                                 red_saturated=False,
+                                                 #red_saturated=False,
                                                  nir_saturated=False,
                                                  swir1_saturated=False,
-                                                 swir2_saturated=False,
-                                                 contiguous=True)
+                                                 #swir2_saturated=False,
+                                                 #contiguous=True
+                                                 )
 
                 # Apply mask to preserve only good data
                 ds = ds.where(good_quality)
@@ -126,7 +128,7 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
         return None, None, None
 
 
-def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
+def load_sentinel(dc, product, query, filter_cloud=True, bands_of_interest=''):
     '''loads a sentinel granule product and masks using pq
 
     Last modified: March 2018
