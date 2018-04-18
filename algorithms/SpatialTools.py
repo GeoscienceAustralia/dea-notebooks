@@ -338,6 +338,9 @@ def reproject_to_template(input_raster, template_raster, output_raster, resoluti
                       'None', or the cell size of template raster 
     :attr resampling: GDAL resampling method to use for reprojection; defaults to gdal.GRA_Average 
     :attr nodata_val: values in the output reprojected raster to set to nodata; defaults to 0
+    
+    :returns: GDAL dataset for further analysis, and raster written to output_raster (if this
+              dataset appears empty when loaded into a GIS, close the dataset like 'output_ds = None')
     """
     
     # Import raster to reproject
@@ -374,7 +377,7 @@ def reproject_to_template(input_raster, template_raster, output_raster, resoluti
     
     # Close datasets
     input_ds = None
-    output_ds = None
     template_ds = None    
     
     print("Reprojected raster exported to {}".format(output_raster))
+    return output_ds
