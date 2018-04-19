@@ -321,7 +321,7 @@ def array_to_geotiff(fname, data, geo_transform, projection,
     
     
 def reproject_to_template(input_raster, template_raster, output_raster, resolution=None,
-                         resampling=gdal.GRA_Average, nodata_val=0):
+                         resampling=gdal.GRA_Bilinear, nodata_val=0):
     
     """
     Reprojects a raster to the extent, cell size, projection and dimensions of a template 
@@ -336,7 +336,7 @@ def reproject_to_template(input_raster, template_raster, output_raster, resoluti
     :attr output_raster: output reprojected raster path with geotiff extension (.tif)
     :attr resolution: optionally set custom cell size for output reprojected raster; defaults to 
                       'None', or the cell size of template raster 
-    :attr resampling: GDAL resampling method to use for reprojection; defaults to gdal.GRA_Average 
+    :attr resampling: GDAL resampling method to use for reprojection; defaults to gdal.GRA_Bilinear 
     :attr nodata_val: values in the output reprojected raster to set to nodata; defaults to 0
     
     :returns: GDAL dataset for further analysis, and raster written to output_raster (if this
