@@ -19,7 +19,6 @@ def calculate_indices(ds, index):
     Available indices:
     - NDVI: Normalised Difference Vegetation Index
     - GNDVI: Green Normalised Difference Vegetation Index
-dified by 
     - NDWI: Normalised Difference Water Index
     - NDMI: Normalised Difference Moisture Index
 
