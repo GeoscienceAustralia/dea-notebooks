@@ -4,7 +4,7 @@ This code allows for the quick calculation of remote sensing band indices.
 
 Date: March 2018
 Author: Claire Krause
-Modified by AVS: 19 Apr, 2018 - 1
+Modified by AVS: 19 Apr, 2018 - 2
 '''
 
 def calculate_indices(ds, index):
