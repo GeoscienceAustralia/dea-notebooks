@@ -4,7 +4,7 @@ This code allows for the quick calculation of remote sensing band indices.
 
 Date: March 2018
 Author: Claire Krause
-
+Modified by Sivaprasad, Arapaut on 19 April 2018
 '''
 
 def calculate_indices(ds, index):
@@ -19,6 +19,7 @@ def calculate_indices(ds, index):
     Available indices:
     - NDVI: Normalised Difference Vegetation Index
     - GNDVI: Green Normalised Difference Vegetation Index
+dified by 
     - NDWI: Normalised Difference Water Index
     - NDMI: Normalised Difference Moisture Index
 
