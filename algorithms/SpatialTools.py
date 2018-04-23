@@ -11,6 +11,7 @@ Available functions:
     coords_to_indices
     raster_randomsample
     array_to_geotiff
+    reproject_to_template
 
 Last modified: April 2018
 Author: Robbi Bishop-Taylor
@@ -317,3 +318,66 @@ def array_to_geotiff(fname, data, geo_transform, projection,
 
     # Close file
     dataset = None
+    
+    
+def reproject_to_template(input_raster, template_raster, output_raster, resolution=None,
+                         resampling=gdal.GRA_Bilinear, nodata_val=0):
+    
+    """
+    Reprojects a raster to match the extent, cell size, projection and dimensions of a template 
+    raster using GDAL. Optionally, can set custom resolution for output reprojected raster using 
+    'resolution'; this will affect raster dimensions/width/columns.
+    
+    Last modified: April 2018
+    Author: Robbi Bishop-Taylor    
+    
+    :attr input_raster: path to input geotiff raster to be reprojected (.tif)
+    :attr template_raster: path to template geotiff raster (.tif) used to copy extent, projection etc
+    :attr output_raster: output reprojected raster path with geotiff extension (.tif)
+    :attr resolution: optionally set custom cell size for output reprojected raster; defaults to 
+                      'None', or the cell size of template raster 
+    :attr resampling: GDAL resampling method to use for reprojection; defaults to gdal.GRA_Bilinear 
+    :attr nodata_val: values in the output reprojected raster to set to nodata; defaults to 0
+    
+    :returns: GDAL dataset for further analysis, and raster written to output_raster (if this
+              dataset appears empty when loaded into a GIS, close the dataset like 'output_ds = None')
+    """
+    
+    # Import raster to reproject
+    print("Importing raster datasets")
+    input_ds = gdal.Open(input_raster)
+    input_proj = input_ds.GetProjection()
+    input_geotrans = input_ds.GetGeoTransform()
+    data_type = input_ds.GetRasterBand(1).DataType
+    n_bands = input_ds.RasterCount  
+    
+    # Import raster to use as template
+    template_ds = gdal.Open(template_raster)   
+    template_proj = template_ds.GetProjection()
+    template_geotrans = template_ds.GetGeoTransform()
+    template_w = template_ds.RasterXSize
+    template_h = template_ds.RasterYSize
+    
+    # Use custom resolution if supplied
+    if resolution:
+        
+        template_geotrans[1] = float(resolution)
+        template_geotrans[-1] = -float(resolution)
+
+    # Create new output dataset to reproject into
+    output_ds = gdal.GetDriverByName('Gtiff').Create(output_raster, template_w, 
+                                                     template_h, n_bands, data_type)  
+    output_ds.SetGeoTransform(template_geotrans)
+    output_ds.SetProjection(template_proj)
+    output_ds.GetRasterBand(1).SetNoDataValue(nodata_val)
+
+    # Reproject raster into output dataset
+    print("Reprojecting raster")
+    gdal.ReprojectImage(input_ds, output_ds, input_proj, template_proj, resampling)
+    
+    # Close datasets
+    input_ds = None
+    template_ds = None    
+    
+    print("Reprojected raster exported to {}".format(output_raster))
+    return output_ds
