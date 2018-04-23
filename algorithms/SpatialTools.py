@@ -324,9 +324,9 @@ def reproject_to_template(input_raster, template_raster, output_raster, resoluti
                          resampling=gdal.GRA_Bilinear, nodata_val=0):
     
     """
-    Reprojects a raster to the extent, cell size, projection and dimensions of a template 
-    raster using GDAL. Optionally, can set custom resolution for output reprojected raster
-    using 'resolution'; this will affect raster dimensions/width/columns.
+    Reprojects a raster to match the extent, cell size, projection and dimensions of a template 
+    raster using GDAL. Optionally, can set custom resolution for output reprojected raster using 
+    'resolution'; this will affect raster dimensions/width/columns.
     
     Last modified: April 2018
     Author: Robbi Bishop-Taylor    
