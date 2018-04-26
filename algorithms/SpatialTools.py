@@ -22,27 +22,72 @@ import gdal
 import numpy as np
 
 
-def rasterize_vector(input_data, cols, rows, geo_transform,
-                     projection, field, raster_path=None):
+def rasterize_vector(input_data, cols, rows, geo_transform, projection, 
+                     field=None, raster_path=None, array_dtype=gdal.GDT_UInt16):
     """
-    Rasterize a vector file and return as an array. If 'raster_path' is
-    provided, also export resulting array as a geotiff raster.
+    Rasterize a vector file and return an array with values for cells that occur within the 
+    shapefile. Can be used to obtain a binary array (shapefile vs no shapefile), or can create 
+    an array containing values from a shapefile field. If 'raster_path' is provided, the 
+    resulting array can also be output as a geotiff raster.
     
-    Last modified: March 2018
+    This function requires dimensions, projection data (in 'WKT' format) and geotransform info 
+    ('(upleft_x, x_size, x_rotation, upleft_y, y_rotation, y_size)') for the output array. 
+    These are typically obtained from an existing raster using the following GDAL calls:
+    
+    >>> import gdal
+    >>> gdal_dataset = gdal.Open(raster_path)
+    >>> out_array = gdal_dataset.GetRasterBand(1).ReadAsArray() 
+    >>> geo_transform = gdal_dataset.GetGeoTransform()
+    >>> projection = gdal_dataset.GetProjection()
+    >>> cols, rows = out_array.shape
+    
+    Last modified: April 2018
     Author: Robbi Bishop-Taylor
 
-    :attr input_data: input shapefile path or preloaded GDAL/OGR layer
-    :attr cols: desired width of output array in columns
-    :attr rows: desired height of output array in rows
-    :attr geo_transform: geotransform for rasterization
-    :attr projection: projection for rasterization
-    :attr field: shapefile field to rasterize values from
+    :param input_data: 
+        Input shapefile path or preloaded GDAL/OGR layer. This must be in the same 
+        projection system as the desired output raster (i.e. same as the 'projection'
+        parameter below)
+        
+    :param cols: 
+        Desired width of output array in columns. This can be obtained from 
+        an existing array using '.shape[0]'
+        
+    :param rows: 
+        Desired height of output array in rows. This can be obtained from 
+        an existing array using '.shape[1]'
+        
+    :param geo_transform: 
+        Geotransform for output raster; e.g. "(upleft_x, x_size, x_rotation, 
+        upleft_y, y_rotation, y_size)"
+        
+    :param projection: 
+        Projection for output raster (in "WKT" format). This must be the same as the 
+        input shapefile's projection system (i.e. same projection as used by 'input_data')
+        
+    :param field: 
+        Shapefile field to rasterize values from. If None (default), this assigns a 
+        value of 1 to all array cells within the shapefile, and 0 to areas outside 
+        the shapefile
+        
+    :param raster_path: 
+        If a path is supplied, the resulting array will also be output as a geotiff raster. 
+        (defaults to None, which returns only the output array and does not write a file) 
+        
+    :param array_dtype: 
+        Optionally set the dtype of the output array. This defaults to integers 
+        (gdal.GDT_UInt16), and should only be changed if rasterising float values from a 
+        shapefile field
 
-    :returns: a 'row x col' array containing values from vector
+    :return: 
+        A 'row x col' array containing values from vector (if Field is supplied), or binary 
+        values (1=shapefile data, 0=no shapefile)        
+        
     """
 
     # If input data is a string, import as shapefile layer
     if isinstance(input_data, str):
+        
         # Open vector with gdal
         data_source = gdal.OpenEx(input_data, gdal.OF_VECTOR)
         input_data = data_source.GetLayer(0)
@@ -53,20 +98,30 @@ def rasterize_vector(input_data, cols, rows, geo_transform,
         # Set up output raster
         print('Exporting raster to {}'.format(raster_path))
         driver = gdal.GetDriverByName('GTiff')
-        target_ds = driver.Create(raster_path, cols, rows, 1, gdal.GDT_UInt16)
+        target_ds = driver.Create(raster_path, cols, rows, 1, array_dtype)
 
     else:
 
         # If no raster path, create raster as memory object
         driver = gdal.GetDriverByName('MEM')  # In memory dataset
-        target_ds = driver.Create('', cols, rows, 1, gdal.GDT_UInt16)
+        target_ds = driver.Create('', cols, rows, 1, array_dtype)
 
     # Set geotransform and projection
     target_ds.SetGeoTransform(geo_transform)
     target_ds.SetProjection(projection)
 
-    # Rasterize shapefile and extract array
-    gdal.RasterizeLayer(target_ds, [1], input_data, options=["ATTRIBUTE=" + field])
+    # Rasterize shapefile and extract array using field if supplied; else produce binary array
+    if field:
+        
+        # Rasterise by taking attributes from supplied
+        gdal.RasterizeLayer(target_ds, [1], input_data, options=["ATTRIBUTE=" + field])
+        
+    else:
+        
+        # Rasterise into binary raster (1=shapefile data, 0=no shapefile)
+        gdal.RasterizeLayer(target_ds, [1], input_data)    
+    
+    # Return array from raster
     band = target_ds.GetRasterBand(1)
     out_array = band.ReadAsArray()
     target_ds = None
@@ -85,11 +140,13 @@ def layer_extent(layer):
     Last modified: March 2018
     Author: Robbi Bishop-Taylor
 
-    :attr layer: Shapefile imported as GDAL layer; e.g.:
-                "data_source = gdal.OpenEx(train_shp, gdal.OF_VECTOR)
-                 layer = data_source.GetLayer(0)"
+    :param layer: 
+        Shapefile imported as GDAL layer; e.g.        
+        >>> data_source = gdal.OpenEx(train_shp, gdal.OF_VECTOR)
+        >>> layer = data_source.GetLayer(0)
 
-    :returns: min and max extent in x and y direction
+    :return: 
+        Min and max extent in x and y direction
     """
 
     # Extract tuples of x, y, z coordinates for each point feature
@@ -113,23 +170,31 @@ def indices_to_coords(x_inds, y_inds, input_raster):
     This function can be used to identify the real-world spatial coordinates of raster cells meeting 
     certain criteria, i.e.:
     
-    # raster_path = "test.tif"    
-    # raster_ds = gdal.Open(raster_path)
-    # raster_array = raster_ds.GetRasterBand(1).ReadAsArray()
-    # y_inds, x_inds = np.nonzero(raster_array > 50)  # this computes indices of cells that are not 0
-    # indices_to_coords(x_inds=x_inds, x_inds=y_inds, input_raster=raster_path)
+    >>> raster_path = "test.tif"    
+    >>> raster_ds = gdal.Open(raster_path)
+    >>> raster_array = raster_ds.GetRasterBand(1).ReadAsArray()
+    >>> y_inds, x_inds = np.nonzero(raster_array > 50)  # this computes indices of cells that are not 0
+    >>> indices_to_coords(x_inds=x_inds, x_inds=y_inds, input_raster=raster_path)
     
     Last modified: April 2018
     Author: Robbi Bishop-Taylor
     
-    :attr x_inds: list of x indices corresponding to a set of raster array cells
-    :attr y_inds: list of y indices corresponding to a set of raster array cells
-    :attr input_raster: path to raster used to convert x and y indices from an array into spatial coordinates
+    :param x_inds: 
+        List of x indices corresponding to a set of raster array cells
+        
+    :param y_inds: 
+        List of y indices corresponding to a set of raster array cells
+        
+    :param input_raster: 
+        Path to raster used to convert x and y indices from an array into spatial coordinates
                             
-    :returns x_coords: list of spatial x coordinates corresponding to the location of raster array x cell 
-                       indices; coordinates will be in the projection system of input_raster
-    :returns y_coords: list of spatial y coordinates corresponding to the location of raster array y cell 
-                       indices; coordinates will be in the projection system of input_raster
+    :return x_coords: 
+        List of spatial x coordinates corresponding to the location of raster array x cell 
+        indices; coordinates will be in the projection system of input_raster
+        
+    :return y_coords: 
+        List of spatial y coordinates corresponding to the location of raster array y cell 
+        indices; coordinates will be in the projection system of input_raster
     """
     
     # Import raster
@@ -159,30 +224,37 @@ def coords_to_indices(x_coords, y_coords, input_raster, strip_outofrange=False):
     points; the resulting x and y indices can then be used to extract data from the input raster 
     (i.e. raster_array[y_inds, x_inds]):
     
-    # raster_path = "test.tif"    
-    # raster_ds = gdal.Open(raster_path)
-    # raster_array = raster_ds.GetRasterBand(1).ReadAsArray()
-    # x_inds, y_inds = coords_to_indices(x_coords=[152.2, 155.3], 
-    #                                    y_coords=[-17.5, -16.3], input_raster=raster_path)  
-    # raster_array[y_inds, x_inds]
+    >>> raster_path = "test.tif"    
+    >>> raster_ds = gdal.Open(raster_path)
+    >>> raster_array = raster_ds.GetRasterBand(1).ReadAsArray()
+    >>> x_inds, y_inds = coords_to_indices(x_coords=[152.2, 155.3], 
+    >>>                                    y_coords=[-17.5, -16.3], input_raster=raster_path)  
+    >>> raster_array[y_inds, x_inds]
     
     Last modified: April 2018
     Author: Robbi Bishop-Taylor
     
-    :attr x_coords: list of x coordinates (or longitudes) in the same projection system
-                    as input_raster
-    :attr y_coords: list of y coordinates (or latitudes) in the same projection system
-                    as input_raster
-    :attr input_raster: path to raster used to convert x and y coordinates into indices
-                        of raster cells
-    :attr strip_outofrange: if coordinates occur outside of the bounds of a raster, the resulting indices 
-                            will not exist within the raster and attempting to use these  indices to extract 
-                            data from the raster's array (i.e. raster_array[y_inds, x_inds]) will fail. 
-                            To prevent this, set strip_outofrange=True to drop all indices that occur outside 
-                            the input raster
+    :param x_coords: 
+        List of x coordinates (or longitudes) in the same projection system
+        as input_raster
+        
+    :param y_coords: 
+        List of y coordinates (or latitudes) in the same projection system as input_raster
+        
+    :param input_raster: 
+        Path to raster used to convert x and y coordinates into indices of raster cells
+        
+    :param strip_outofrange: 
+        If coordinates occur outside of the bounds of a raster, the resulting indices will not exist 
+        within the raster and attempting to use these  indices to extract data from the raster's array 
+        (i.e. raster_array[y_inds, x_inds]) will fail. To prevent this, set strip_outofrange=True to 
+        drop all indices that occur outside the input raster
                             
-    :returns x_inds: list of x indices of raster cells for each input x coordinate 
-    :returns y_inds: list of y indices of raster cells for each input y coordinate 
+    :return x_inds: 
+        List of x indices of raster cells for each input x coordinate 
+        
+    :return y_inds: 
+        List of y indices of raster cells for each input y coordinate 
     """
     
     # Import raster
@@ -218,17 +290,27 @@ def raster_randomsample(n_samples, input_raster, nodata=None, prob=False, replac
     Last modified: April 2018
     Author: Robbi Bishop-Taylor
 
-    :attr n_samples: number of points to generate
-    :attr input_raster: path of raster used to generate points
-    :attr nodata: optional nodata value if raster does not have nodata set automatically
-    :attr prob: if prob=True, generate samples using probabilities calculated from raster 
-                values; raster values are rescaled to sum to 1.0 with high values having a 
-                greater chance of producing random points
-    :attr replace: if replace=False, only generate one sample per input raster cell. 
-                   Alternatively, replace=True allows multiple samples to be randomly 
-                   generated within individual raster cells
+    :param n_samples: 
+        Number of points to generate
+        
+    :param input_raster: 
+        Path of raster used to generate points
+        
+    :param nodata: 
+        Optional nodata value if raster does not have nodata set automatically
+        
+    :param prob: 
+        If prob=True, generate samples using probabilities calculated from raster 
+        values; raster values are rescaled to sum to 1.0 with high values having a 
+        greater chance of producing random points
+        
+    :param replace: 
+        If replace=False, only generate one sample per input raster cell. 
+        Alternatively, replace=True allows multiple samples to be randomly 
+        generated within individual raster cells
 
-    :returns: lists of x coordinates and y coordinates in coordinate system of input_raster
+    :return: 
+        Lists of x coordinates and y coordinates in coordinate system of input_raster        
     """   
 
     # Read in data 
@@ -280,26 +362,39 @@ def array_to_geotiff(fname, data, geo_transform, projection,
     projection data (in "WKT" format) for the output raster. These are typically obtained from 
     an existing raster using the following GDAL calls:
     
-    # import gdal
-    # gdal_dataset = gdal.Open(raster_path)
-    # geotrans = gdal_dataset.GetGeoTransform()
-    # prj = gdal_dataset.GetProjection()
+    >>>  import gdal
+    >>>  gdal_dataset = gdal.Open(raster_path)
+    >>>  geotrans = gdal_dataset.GetGeoTransform()
+    >>>  prj = gdal_dataset.GetProjection()
     
     ...or alternatively, directly from an xarray dataset:
     
-    # geotrans = xarraydataset.geobox.transform.to_gdal()
-    # prj = xarraydataset.geobox.crs.wkt
+    >>>  geotrans = xarraydataset.geobox.transform.to_gdal()
+    >>>  prj = xarraydataset.geobox.crs.wkt
     
     Last modified: March 2018
     Author: Robbi Bishop-Taylor
     
-    :attr fname: output file path
-    :attr data: input array
-    :attr geo_transform: geotransform for output raster; 
-    			 e.g. "(upleft_x, x_size, x_rotation, upleft_y, y_rotation, y_size)"
-    :attr projection: projection for output raster (in "WKT" format)
-    :attr nodata_val: value to convert to nodata in output raster; default 0
-    :attr dtype: value to convert to nodata in output raster; default gdal.GDT_Float32
+    :param fname: 
+        Output geotiff file path including extension
+        
+    :param data: 
+        Input array to export as a geotiff
+        
+    :param geo_transform: 
+        Geotransform for output raster; e.g. "(upleft_x, x_size, x_rotation, 
+        upleft_y, y_rotation, y_size)"
+        
+    :param projection:
+        Projection for output raster (in "WKT" format)
+        
+    :param nodata_val: 
+        Value to convert to nodata in the output raster; default 0
+        
+    :param dtype: 
+        Optionally set the dtype of the output raster; can be useful when exporting 
+        an array of float or integer values. Defaults to gdal.GDT_Float32
+        
     """
 
     # Set up driver
@@ -331,16 +426,29 @@ def reproject_to_template(input_raster, template_raster, output_raster, resoluti
     Last modified: April 2018
     Author: Robbi Bishop-Taylor    
     
-    :attr input_raster: path to input geotiff raster to be reprojected (.tif)
-    :attr template_raster: path to template geotiff raster (.tif) used to copy extent, projection etc
-    :attr output_raster: output reprojected raster path with geotiff extension (.tif)
-    :attr resolution: optionally set custom cell size for output reprojected raster; defaults to 
-                      'None', or the cell size of template raster 
-    :attr resampling: GDAL resampling method to use for reprojection; defaults to gdal.GRA_Bilinear 
-    :attr nodata_val: values in the output reprojected raster to set to nodata; defaults to 0
+    :param input_raster: 
+        Path to input geotiff raster to be reprojected (.tif)
+        
+    :param template_raster: 
+        Path to template geotiff raster (.tif) used to copy extent, projection etc
+        
+    :param output_raster: 
+        Output reprojected raster path with geotiff extension (.tif)
+        
+    :param resolution: 
+        Optionally set custom cell size for output reprojected raster; defaults to 
+        'None', or the cell size of template raster 
+        
+    :param resampling: 
+        GDAL resampling method to use for reprojection; defaults to gdal.GRA_Bilinear 
+        
+    :param nodata_val: 
+        Values in the output reprojected raster to set to nodata; defaults to 0
     
-    :returns: GDAL dataset for further analysis, and raster written to output_raster (if this
-              dataset appears empty when loaded into a GIS, close the dataset like 'output_ds = None')
+    :return: 
+        GDAL dataset for further analysis, and raster written to output_raster (if this
+        dataset appears empty when loaded into a GIS, close the dataset like 'output_ds = None')
+        
     """
     
     # Import raster to reproject
