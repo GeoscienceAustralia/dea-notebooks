@@ -12,3 +12,9 @@ __pycache__
 *.qpj
 *.shx
 *.zip
+*.jpg
+*.sbn
+*.sbx
+*.qgs
+*.png
+*/SENSITIVE/*
