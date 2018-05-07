@@ -1,6 +1,7 @@
-==========
-Algorithms
-==========
+=============================
+Scripts
+=============================
+
 This folder contains examples of python code that demonstrates the use of functions and tools suitable for use in the DEA environment. The following functions are currently included in Python scripts for loading into notebooks:
 
 DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarrays)
@@ -37,6 +38,3 @@ ClassificationTools.py: classifying remote sensing imagery using classifiers and
 
 .. toctree::
    :maxdepth: 1
-
-   ProduceFalseColourGeotiffs
-   RandomForestClassification
