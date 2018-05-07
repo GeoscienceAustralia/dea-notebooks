@@ -10,7 +10,6 @@ added in near future. Available functions:
 
 Last modified: March 2018
 Author: Robbi Bishop-Taylor
-
 """
 
 # Load modules

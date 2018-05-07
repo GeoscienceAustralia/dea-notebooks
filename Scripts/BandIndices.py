@@ -1,14 +1,16 @@
-## BandIndices.py
-'''
+# BandIndices.py
+"""
 This code allows for the quick calculation of remote sensing band indices.
 
 Date: March 2018
 Author: Claire Krause
 
-'''
+"""
+
 
 def calculate_indices(ds, index):
-    '''
+
+    """
     Available indices are all calculated within the same function. If an
     index is requested that is not coded in the function, an error is
     raised.
@@ -29,7 +31,7 @@ def calculate_indices(ds, index):
     outputs:
     indexout - result of the index calculation
     
-    '''
+    """
 
     if index == 'NDWI-nir':
         print('The formula we are using is (green - nir)/(green + nir)')
@@ -38,7 +40,7 @@ def calculate_indices(ds, index):
         except AttributeError:
             try:
                 indexout = ((ds.green - ds.nir1)/(ds.green + ds.nir1))
-            except:
+            except AttributeError:
                 print('Error! NDWI requires green and nir bands')
     elif index == 'NDWI-swir1':
         print('The formula we are using is (green - swir1)/(green + swir1)')
@@ -85,8 +87,9 @@ def calculate_indices(ds, index):
         print('Hmmmmm. I don\'t recognise that index. '
               'Options I currently have are NDVI, GNDVI, NDMI-green, NDMI-nir and NDWI.')
 
+
 def geological_indices(ds, index):
-    '''
+    """
     Available indices are all calculated within the same function. If an
     index is requested that is not coded in the function, an error is
     raised.
@@ -107,7 +110,7 @@ def geological_indices(ds, index):
     indexout - result of the index calculation
 
     Reference: http://www.harrisgeospatial.com/docs/BackgroundGeologyIndices.html
-        '''
+    """
 
     if index == 'CMR':
         print('The formula we are using is (swir1 / swir2)')

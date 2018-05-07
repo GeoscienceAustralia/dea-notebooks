@@ -174,7 +174,7 @@ def indices_to_coords(x_inds, y_inds, input_raster):
     >>> raster_ds = gdal.Open(raster_path)
     >>> raster_array = raster_ds.GetRasterBand(1).ReadAsArray()
     >>> y_inds, x_inds = np.nonzero(raster_array > 50)  # this computes indices of cells that are not 0
-    >>> indices_to_coords(x_inds=x_inds, x_inds=y_inds, input_raster=raster_path)
+    >>> indices_to_coords(x_inds=x_inds, y_inds=y_inds, input_raster=raster_path)
     
     Last modified: April 2018
     Author: Robbi Bishop-Taylor

@@ -1,5 +1,5 @@
-## DEADataHandling.py
-'''
+# DEADataHandling.py
+"""
 This file contains a set of python functions for handling data within DEA. If a function does not use 
 DEA functionality (for example, dc.load or xarrays), it may be better suited for inclusion in SpatialTools.py.
 Available functions:
@@ -12,16 +12,15 @@ Available functions:
 Last modified: April 2018
 Author: Claire Krause
 Modified by: Robbi Bishop-Taylor
-
-'''
+"""
 
 # Load modules
 from datacube.helpers import ga_pq_fuser
 from datacube.storage import masking
-import gdal
 import numpy as np
 import xarray as xr
 import rasterio
+
 
 def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_pq=True):
     """
@@ -128,8 +127,8 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
 
 
 def load_sentinel(dc, product, query, filter_cloud=True, bands_of_interest=''):
-
-    '''loads a sentinel granule product and masks using pq
+    """
+    loads a sentinel granule product and masks using pq
 
     Last modified: March 2018
     Claire Krause: Bex Dunn
@@ -141,7 +140,7 @@ def load_sentinel(dc, product, query, filter_cloud=True, bands_of_interest=''):
 
     inputs
     dc - handle for the Datacube to import from. This allows you to also use dev environments
-	 if that have been imported into the environment.
+    if that have been imported into the environment.
     product - string containing the name of the sentinel product to load
     query - A dict containing the query bounds. Can include lat/lon, time etc
 
@@ -152,7 +151,8 @@ def load_sentinel(dc, product, query, filter_cloud=True, bands_of_interest=''):
     ds - Extracted and pq filtered dataset
     crs - ds coordinate reference system
     affine - ds affine
-    '''
+    """
+
     dataset = []
     print('loading {}'.format(product))
     if bands_of_interest:
@@ -251,7 +251,7 @@ def tasseled_cap(sensor_data, sensor, tc_bands=['greenness', 'brightness', 'wetn
 
 
 def dataset_to_geotiff(filename, data):
-    '''
+    """
     this function uses rasterio and numpy to write a multi-band geotiff for one
     timeslice, or for a single composite image. It assumes the input data is an
     xarray dataset (note, dataset not dataarray) and that you have crs and affine
@@ -263,9 +263,9 @@ def dataset_to_geotiff(filename, data):
     inputs
     filename - string containing filename to write out to
     data - dataset to write out
-    Note: this function cuurrently requires the data have lat/lon only, i.e. no
+    Note: this function currently requires the data have lat/lon only, i.e. no
     time dimension
-    '''
+    """
   
     try:
         test = data.crs.crs_str
@@ -292,4 +292,3 @@ def dataset_to_geotiff(filename, data):
     with rasterio.open(filename, 'w', **kwargs) as src:
         for i, band in enumerate(data.data_vars):
             src.write(data[band].data, i + 1)
-

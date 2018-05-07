@@ -1,5 +1,5 @@
-## DEAPlotting.py
-'''
+# DEAPlotting.py
+"""
 This file contains a set of python functions for plotting DEA data.
 Available functions:
 
@@ -10,7 +10,7 @@ Last modified: March 2018
 Author: Claire Krause
 Modified by: Robbi Bishop-Taylor
 
-'''
+"""
 
 # Load modules
 import numpy as np
@@ -18,8 +18,9 @@ from skimage import exposure
 import matplotlib.pyplot as plt
 
 
-def three_band_image(ds, bands, time = 0, figsize = [10,10], contrast_enhance = False, title = 'My Plot', projection = 'projected'):
-    '''
+def three_band_image(ds, bands, time = 0, figsize = [10, 10], contrast_enhance = False,
+                     title = 'My Plot', projection = 'projected'):
+    """
     threeBandImage takes three spectral bands and plots them on the RGB bands of an 
     image. 
     
@@ -35,25 +36,26 @@ def three_band_image(ds, bands, time = 0, figsize = [10,10], contrast_enhance = 
     time - Index value of the time dimension of ds to be plotted
     figsize - dimensions for the output figure
     contrast_enhance - determines the transformation for plotting onto RGB. If contrast_enhance = true, 
-                       exposure.equalize_hist is used to trasnform the data. Else, the data are standardised relative
-                       to reflectance = 5000.
+                       exposure.equalize_hist is used to trasnform the data. Else, the data are
+                       standardised relative to reflectance = 5000.
     title - string for the plot title. If nothing is given, it will print the names of the
             bands being plotted.
-    projection - options are 'projected' or 'geographic'. To determine if the image is 
-    in degrees or northings
-    '''
+    projection - options are 'projected' or 'geographic'. To determine if the image is
+                in degrees or northings
+    """
+
     try:
-    	t, y, x = ds[bands[0]].shape
-    	rawimg = np.zeros((y,x,3), dtype = np.float32)
-    	for i, colour in enumerate(bands):
-            rawimg[:,:,i] = ds[colour][time].values
+        t, y, x = ds[bands[0]].shape
+        rawimg = np.zeros((y, x, 3), dtype = np.float32)
+        for i, colour in enumerate(bands):
+            rawimg[:, :, i] = ds[colour][time].values
     except ValueError:
         y, x = ds[bands[0]].shape
-        rawimg = np.zeros((y,x,3), dtype = np.float32)
+        rawimg = np.zeros((y, x, 3), dtype = np.float32)
         for i, colour in enumerate(bands):
-       	    rawimg[:,:,i] = ds[colour].values
+            rawimg[:, :, i] = ds[colour].values
     rawimg[rawimg == -999] = np.nan
-    if contrast_enhance == True:
+    if contrast_enhance is True:
         img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
     else:
         img_toshow = rawimg / 5000
@@ -73,6 +75,7 @@ def three_band_image(ds, bands, time = 0, figsize = [10,10], contrast_enhance = 
         ax.set_xlabel('Eastings', fontweight = 'bold')
         ax.set_ylabel('Northings', fontweight = 'bold')
     return plt, fig
+
 
 def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, figsize = [10,10], 
                               projection = 'projected', left  = 0.125, 
@@ -108,7 +111,7 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
 
     # Find the number of rows/columns we need, based on the number of time steps in ds
     timesteps = ds.time.size
-    num_rows = int(np.ceil(timesteps//num_cols))
+    num_rows = int(np.ceil(timesteps / num_cols))
     fig, axes = plt.subplots(num_rows, num_cols, figsize = figsize)
     fig.subplots_adjust(left  = left, right = right, bottom = bottom, top = top, 
                         wspace = wspace, hspace = hspace)
@@ -116,9 +119,9 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
     try:
         for ax in axes.flat:
             t, y, x = ds[bands[0]].shape
-            rawimg = np.zeros((y,x,3), dtype = np.float32)
+            rawimg = np.zeros((y, x, 3), dtype = np.float32)
             for i, colour in enumerate(bands):
-                rawimg[:,:,i] = ds[colour][numbers].values
+                rawimg[:, :, i] = ds[colour][numbers].values
             rawimg[rawimg == -999] = np.nan
             if contrast_enhance == True:
                 img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
