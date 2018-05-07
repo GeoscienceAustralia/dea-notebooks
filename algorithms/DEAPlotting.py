@@ -78,33 +78,34 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
                               projection = 'projected', left  = 0.125, 
                               right = 0.9, bottom = 0.1, top = 0.9, 
                               wspace = 0.2, hspace = 0.4):
-    '''
+  
+    """
     threeBandImage_subplots takes three spectral bands and multiple time steps, 
     and plots them on the RGB bands of an image. 
 
     Last modified: March 2018
     Author: Mike Barnes
-    Modified by: Claire Krause
-    
+    Modified by: Claire Krause, Robbi Bishop-Taylor
+
     Inputs: 
-    ds -   Dataset containing the bands to be plotted
+    ds - dataset containing the bands to be plotted
     bands - list of three bands to be plotted
     num_cols - number of columns for the subplot
-    
+
     Optional:
     contrast_enhance - determines the transformation for plotting onto RGB. If contrast_enhance = true, 
-                       exposure.equalize_hist is used to trasnform the data. Else, the data are standardised relative
-                       to reflectance = 5000.
+                       exposure.equalize_hist is used to transform the data. Else, the data are 
+                       standardised relative to reflectance = 5000
     figsize - dimensions for the output figure
-    projection - options are 'projected' or 'geographic'. To determine if the image 
-                 is in degrees or northings
+    projection - options are 'projected' or 'geographic'; determines if image is in degrees or northings
     left  - the space on the left side of the subplots of the figure
     right - the space on the right side of the subplots of the figure
     bottom - the space on the bottom of the subplots of the figure
     top - the space on the top of the subplots of the figure
     wspace - the amount of width reserved for blank space between subplots
     hspace - the amount of height reserved for white space between subplots
-    '''
+    """
+
     # Find the number of rows/columns we need, based on the number of time steps in ds
     timesteps = ds.time.size
     num_rows = int(np.ceil(timesteps//num_cols))
@@ -140,4 +141,3 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
         fig.delaxes(ax)
         plt.draw()    
     return plt, fig
-

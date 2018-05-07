@@ -1,15 +1,15 @@
 ## DEADataHandling.py
 '''
-This file contains a set of python functions for handling data within DEA.
+This file contains a set of python functions for handling data within DEA. If a function does not use 
+DEA functionality (for example, dc.load or xarrays), it may be better suited for inclusion in SpatialTools.py.
 Available functions:
 
     load_nbarx
     load_sentinel
     tasseled_cap
     dataset_to_geotiff
-    array_to_geotiff
 
-Last modified: March 2018
+Last modified: April 2018
 Author: Claire Krause
 Modified by: Robbi Bishop-Taylor
 
@@ -89,14 +89,13 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
                                                  cloud_shadow_acca='no_cloud_shadow',
                                                  cloud_shadow_fmask='no_cloud_shadow',
                                                  cloud_fmask='no_cloud',
-                                                 #blue_saturated=False,
+                                                 blue_saturated=False,
                                                  green_saturated=False,
-                                                 #red_saturated=False,
+                                                 red_saturated=False,
                                                  nir_saturated=False,
                                                  swir1_saturated=False,
-                                                 #swir2_saturated=False,
-                                                 #contiguous=True
-                                                 )
+                                                 swir2_saturated=False,
+                                                 contiguous=True)
 
                 # Apply mask to preserve only good data
                 ds = ds.where(good_quality)
@@ -129,6 +128,7 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
 
 
 def load_sentinel(dc, product, query, filter_cloud=True, bands_of_interest=''):
+
     '''loads a sentinel granule product and masks using pq
 
     Last modified: March 2018
@@ -266,7 +266,7 @@ def dataset_to_geotiff(filename, data):
     Note: this function cuurrently requires the data have lat/lon only, i.e. no
     time dimension
     '''
-    
+  
     try:
         test = data.crs.crs_str
         kwargs = {'driver': 'GTiff',
@@ -292,40 +292,4 @@ def dataset_to_geotiff(filename, data):
     with rasterio.open(filename, 'w', **kwargs) as src:
         for i, band in enumerate(data.data_vars):
             src.write(data[band].data, i + 1)
-
-
-def array_to_geotiff(fname, data, geo_transform, projection,
-                     nodata_val=0, dtype=gdal.GDT_Float32):
-    """
-    Create a single band GeoTIFF file with data from array. Because this
-    works with simple arrays rather than xarray datasets from DEA, it requires
-    the use to pass in geotransform and projection data for the output raster
-
-    Last modified: March 2018
-    Author: Robbi Bishop-Taylor
-
-    :attr fname: output file path
-    :attr data: input array
-    :attr geo_transform: geotransform for output raster
-    :attr projection: projection for output raster
-    :attr nodata_val: value to convert to nodata in output raster; default 0
-    :attr dtype: value to convert to nodata in output raster; default gdal.GDT_Float32
-    """
-
-    # Set up driver
-    driver = gdal.GetDriverByName('GTiff')
-
-    # Create raster of given size and projection
-    rows, cols = data.shape
-    dataset = driver.Create(fname, cols, rows, 1, dtype)
-    dataset.SetGeoTransform(geo_transform)
-    dataset.SetProjection(projection)
-
-    # Write data to array and set nodata values
-    band = dataset.GetRasterBand(1)
-    band.WriteArray(data)
-    band.SetNoDataValue(nodata_val)
-
-    # Close file
-    dataset = None
 

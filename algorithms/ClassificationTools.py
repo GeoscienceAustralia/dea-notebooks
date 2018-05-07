@@ -42,7 +42,7 @@ def randomforest_train(train_shps, train_field, data_func, data_func_params={},
     excessively (e.g. 100 x 100km max)
     :attr train_field: shapefile field containing classification class
     :attr data_func: function to import xarray data for each shapefile. Should return
-    an xarray dataset with 'geo_transform' and 'proj' attributes
+    an xarray dataset with 'crs' and 'affine' attributes
     :attr data_func_params: optional dict of dc.load query inputs. Useful for defining
     time query for temporal datasets (spatial queries are set automatically from shapefiles)
     :attr classifier_params: optional dict of parameters for training random forest
@@ -80,8 +80,8 @@ def randomforest_train(train_shps, train_field, data_func, data_func_params={},
 
             # Import data  as xarray and extract projection/transform data
             training_xarray = data_func(query_train)
-            geo_transform_train = training_xarray.geo_transform
-            proj_train = training_xarray.proj
+            geo_transform_train = training_xarray.affine.to_gdal()
+            proj_train = training_xarray.crs.wkt
 
             # Covert to array and rearrange dimension order
             bands_array_train = training_xarray.to_array().values
@@ -139,7 +139,7 @@ def randomforest_classify(classifier, analysis_data, classification_output, clas
     probability raster (i.e. indicating fraction of samples of the predicted class in a leaf)
 
     :attr classifier: random forest classifier generated using randomforest_train
-    :attr analysis_data: xarray dataset with 'geo_transform' and 'proj' attributes
+    :attr analysis_data: xarray dataset with 'crs' and 'affine' attributes
     and the same number of bands as data used to train classifier
     :attr classification_output: file path to output geotiff classification
     :attr class_prob: if True, compute predicted class probability and export to
@@ -148,8 +148,8 @@ def randomforest_classify(classifier, analysis_data, classification_output, clas
     :returns: classified array and (optional) classification probability array
     '''
 
-    geo_transform = analysis_data.geo_transform
-    proj = analysis_data.proj
+    geo_transform = analysis_data.affine.to_gdal()
+    proj = analysis_data.crs.wkt
 
     # Covert to array and rearrange dimension order
     analysis_array = analysis_data.to_array().values
