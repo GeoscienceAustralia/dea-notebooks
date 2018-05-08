@@ -10,7 +10,7 @@ If you are interested in contributing to the Notebook Gallery, see the instructi
 .. toctree::
    :maxdepth: 1
 
-   User_guide/README
+   Getting_started/README
    DEA_datasets/README
    Integrating_external_data/README
    Index_calculation/README
