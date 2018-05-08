@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 
 def three_band_image(ds, bands, time = 0, figsize = [10, 10], contrast_enhance = False,
-                     title = 'My Plot', projection = 'projected'):
+                     title = 'Time', projection = 'projected'):
     """
     threeBandImage takes three spectral bands and plots them on the RGB bands of an 
     image. 
@@ -62,9 +62,12 @@ def three_band_image(ds, bands, time = 0, figsize = [10, 10], contrast_enhance =
     fig = plt.figure(figsize = figsize)
     plt.imshow(img_toshow)
     ax = plt.gca()
-    try:
-        ax.set_title(str(ds.time[time].values), fontweight = 'bold', fontsize = 16)
-    except:
+    if title == 'Time':
+        try:
+            ax.set_title(str(ds.time[time].values), fontweight = 'bold', fontsize = 16)
+        except:
+            ax.set_title('', fontweight = 'bold', fontsize = 16)
+    else:
         ax.set_title(title, fontweight = 'bold', fontsize = 16)
     ax.set_xticklabels(ds.x.values)
     ax.set_yticklabels(ds.y.values)
