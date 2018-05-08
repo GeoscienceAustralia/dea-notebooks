@@ -1,12 +1,12 @@
 .. Notebook Gallery Instructions:
 
 =====================
-About this repository
+About this documentation
 =====================
-This repository is designed to step the user through getting started with DEA, through to more complicated algorithms and workflows. 
+This documentation is designed to step the user through getting started with DEA, through to more complicated algorithms and workflows. 
 The intended order of these notebook folders are:
 
-1. User_guide
+1. Getting_started
 
 2. DEA_datasets
 
