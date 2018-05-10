@@ -6,7 +6,7 @@ Available functions:
     three_band_image
     three_band_image_subplots
 
-Last modified: March 2018
+Last modified: May 2018
 Author: Claire Krause
 Modified by: Robbi Bishop-Taylor
 
@@ -18,66 +18,152 @@ from skimage import exposure
 import matplotlib.pyplot as plt
 
 
-def three_band_image(ds, bands, time = 0, figsize = [10, 10], contrast_enhance = False,
-                     title = 'Time', projection = 'projected'):
-    """
-    threeBandImage takes three spectral bands and plots them on the RGB bands of an 
-    image. 
-    
-    Last modified: March 2018
-    Author: Mike Barnes
-    Modified by: Claire Krause, Cate Kooymans
+def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10), title='Time',
+                     projection='projected', contrast_enhance=False, reflect_stand=5000):
 
-    Inputs: 
-    ds -   Dataset containing the bands to be plotted
-    bands - list of three bands to be plotted
-    
-    Optional:
-    time - Index value of the time dimension of ds to be plotted
-    figsize - dimensions for the output figure
-    contrast_enhance - determines the transformation for plotting onto RGB. If contrast_enhance = true, 
-                       exposure.equalize_hist is used to trasnform the data. Else, the data are
-                       standardised relative to reflectance = 5000.
-    title - string for the plot title. If nothing is given, it will print the names of the
-            bands being plotted.
-    projection - options are 'projected' or 'geographic'. To determine if the image is
-                in degrees or northings
     """
+    This function takes three spectral bands and plots them as the RGB bands of an image.
+
+    Last modified: May 2018
+    Author: Mike Barnes
+    Modified by: Claire Krause, Cate Kooymans, Robbi Bishop-Taylor
+
+
+    :param ds:
+        An xarray dataset containing the bands to be plotted. For correct axis scales, the xarray
+        will ideally have spatial data (e.g. an `.extent` method)
+
+    :param bands:
+        Optional list of three bands to be plotted (defaults to `['red', 'green', 'blue']`)
+
+    :param time:
+        Optional index value of the time dimension of the xarray dataset to be plotted (defaults to 0)
+
+    :param figsize:
+        Optional tuple or list giving the dimensions of the output plot (defaults to `(10, 10)`)
+
+    :param title:
+        Optional string for the plot title. If left as the default 'Time', the title will be taken from
+        the timestep of the plotted image if available
+
+    :param projection:
+        Determines if the image is in degrees or northings (options are 'projected' or 'geographic')
+
+    :param contrast_enhance:
+        Optionally transform data using a histogram stretch. If `contrast_enhance = True`,
+        exposure.equalize_hist is used to transform the data. Else, the data are standardised relative
+        to a default reflectance = 5000 (this can be customised using `reflect_stand`)
+
+    :param reflect_stand:
+        Optionally allows you to have greater control over the contrast stretch by manually specifying a
+        reflectance standardisation value. Low values (< 5000) typically result in brighter images. Only
+        applies if `contrast_enhance=False` (defaults to 5000)
+
+
+    :return fig:
+        A matplotlib figure object for customised plotting
+
+    :return ax:
+        A matplotlib axis object for customised plotting
+
+
+    :example:
+        >>> # Import external functions from dea-notebooks
+        >>> sys.path.append(os.path.expanduser('~/dea-notebooks/Scripts'))
+        >>> import DEAPlotting
+        >>>
+        >>> # Load Landsat time series
+        >>> xarray_dataset = dc.load(product='ls8_nbart_albers', **query)
+        >>>
+        >>> # Plot as an RGB image
+        >>> DEAPlotting.three_band_image(ds=xarray_dataset)
+
+    """
+
+    # Use different approaches to data prep depending on whether dataset has temporal dimension
+    try:
+
+        # Create new numpy array matching shape of xarray
+        t, y, x = ds[bands[0]].shape
+        rawimg = np.zeros((y, x, 3), dtype=np.float32)
+
+        # Add xarray bands for a given time into three dimensional numpy array
+        for i, colour in enumerate(bands):
+
+            rawimg[:, :, i] = ds[colour][time].values
+            
+    except ValueError:
+
+        # Create new numpy array matching shape of xarray
+        y, x = ds[bands[0]].shape
+        rawimg = np.zeros((y, x, 3), dtype=np.float32)
+
+        # Add xarray bands into three dimensional numpy array
+        for i, colour in enumerate(bands):
+
+            rawimg[:, :, i] = ds[colour].values
+            
+    # Set nodata value to NaN
+    rawimg[rawimg == -999] = np.nan
+
+    # Optionally compute contrast based on histogram
+    if contrast_enhance:
+
+        # Stretch contrast using histogram
+        img_toshow = exposure.equalize_hist(rawimg, mask=np.isfinite(rawimg))
+        
+    else:
+
+        # Stretch contrast using defined reflectance standardisation; defaults to 5000
+        img_toshow = rawimg / reflect_stand
+
+    # Plot figure, setting x and y axes from extent of xarray dataset
+    fig, ax = plt.subplots(figsize=figsize)
 
     try:
-        t, y, x = ds[bands[0]].shape
-        rawimg = np.zeros((y, x, 3), dtype = np.float32)
-        for i, colour in enumerate(bands):
-            rawimg[:, :, i] = ds[colour][time].values
-    except ValueError:
-        y, x = ds[bands[0]].shape
-        rawimg = np.zeros((y, x, 3), dtype = np.float32)
-        for i, colour in enumerate(bands):
-            rawimg[:, :, i] = ds[colour].values
-    rawimg[rawimg == -999] = np.nan
-    if contrast_enhance is True:
-        img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
-    else:
-        img_toshow = rawimg / 5000
-    fig = plt.figure(figsize = figsize)
-    plt.imshow(img_toshow)
-    ax = plt.gca()
+
+        # Plot with correct coords by setting extent if dataset has spatial data (e.g. an `.extent` method).
+        # This also allows the resulting image to be overlaid with other spatial data (e.g. a polygon or point)
+        left, bottom, right, top = ds.extent.boundingbox
+        plt.imshow(img_toshow, extent=[left, right, top, bottom])
+
+    except:
+
+        # Plot without coords if dataset has no spatial data (e.g. an `.extent` method)
+        warnings.warn("xarray dataset has no spatial data; defaulting to plotting without coordinates. "
+                      "This can often be resolved by adding `keep_attrs = True` during an aggregation step")
+        plt.imshow(img_toshow)
+
+    # Set title by either time or defined title
     if title == 'Time':
+
         try:
-            ax.set_title(str(ds.time[time].values), fontweight = 'bold', fontsize = 16)
+
+            # Plot title using timestep
+            ax.set_title(str(ds.time[time].values), fontweight='bold', fontsize=14)
+
         except:
-            ax.set_title('', fontweight = 'bold', fontsize = 16)
+
+            # No title
+            ax.set_title('', fontweight='bold', fontsize=14)
+
     else:
-        ax.set_title(title, fontweight = 'bold', fontsize = 16)
-    ax.set_xticklabels(ds.x.values)
-    ax.set_yticklabels(ds.y.values)
+
+        # Manually defined title
+        ax.set_title(title, fontweight='bold', fontsize=14)
+
+    # Set x and y axis titles depending on projection
     if projection == 'geographic':
-        ax.set_xlabel('Longitude', fontweight = 'bold')
-        ax.set_ylabel('Latitude', fontweight = 'bold')
+
+        ax.set_xlabel('Longitude', fontweight='bold')
+        ax.set_ylabel('Latitude', fontweight='bold')
+        
     else:
-        ax.set_xlabel('Eastings', fontweight = 'bold')
-        ax.set_ylabel('Northings', fontweight = 'bold')
-    return plt, fig
+
+        ax.set_xlabel('Eastings', fontweight='bold')
+        ax.set_ylabel('Northings', fontweight='bold')
+        
+    return fig, ax
 
 
 def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, figsize = [10,10], 
