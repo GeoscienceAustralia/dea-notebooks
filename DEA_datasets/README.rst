@@ -17,3 +17,5 @@ Maybe add here?
 
 .. toctree::
    :maxdepth: 1
+
+   GettingStartedWithITEM.ipynb
