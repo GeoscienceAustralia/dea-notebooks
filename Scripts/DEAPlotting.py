@@ -125,7 +125,7 @@ def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10
         # Plot with correct coords by setting extent if dataset has spatial data (e.g. an `.extent` method).
         # This also allows the resulting image to be overlaid with other spatial data (e.g. a polygon or point)
         left, bottom, right, top = ds.extent.boundingbox
-        plt.imshow(img_toshow, extent=[left, right, top, bottom])
+        plt.imshow(img_toshow, extent=[left, right, bottom, top])
 
     except:
 
