@@ -116,6 +116,11 @@ Tagging
 
 See the :doc:`Tagging Notebooks<tags>` page.
 
+Referencing within Jupyter Notebooks
+------------------------------------
+Direct quotations and images from other published sources (papers, websites, textbooks) within published notebooks need to be referenced according to the GA style guide at <http://www.ga.gov.au/copyright/how-to-cite-geoscience-australia-source-of-information>
+
+Functions using published algorithms should contain references and hyperlinks to the algorithm and paper, so users can check the assumptions prior to running analyses. 
 
 Pushing files to the master branch for publishing
 -------------------------------------------------
