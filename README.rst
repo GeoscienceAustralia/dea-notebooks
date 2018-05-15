@@ -1,5 +1,33 @@
 .. Notebook Gallery Instructions:
 
+=====================
+About this documentation
+=====================
+This documentation is designed to step the user through getting started with DEA, through to more complicated algorithms and workflows. 
+The intended order of these notebook folders are:
+
+1. Getting_started
+
+2. DEA_datasets
+
+3. Integrating_external_data
+
+4. Index_calculation
+
+5. Temporal_analysis
+
+6. Composite_generation
+
+7. Image_classification
+
+8. Outputting_data
+
+9. Workflows
+
+10. Scripts
+
+If you are searching for a specific functionality, use the :doc:`Tags Index </genindex>` to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an `Issue` in the `dea-notebooks repository<https://github.com/GeoscienceAustralia/dea-notebooks>`_. 
+
 =============================
 Notebook Gallery Instructions
 =============================
@@ -88,6 +116,11 @@ Tagging
 
 See the :doc:`Tagging Notebooks<tags>` page.
 
+Referencing within Jupyter Notebooks
+------------------------------------
+Direct quotations and images from other published sources (papers, websites, textbooks) within published notebooks need to be referenced according to the GA style guide at <http://www.ga.gov.au/copyright/how-to-cite-geoscience-australia-source-of-information>
+
+Functions using published algorithms should contain references and hyperlinks to the algorithm and paper, so users can check the assumptions prior to running analyses. 
 
 Pushing files to the master branch for publishing
 -------------------------------------------------
