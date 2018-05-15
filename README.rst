@@ -1,5 +1,36 @@
-dea-notebooks
-=============
+.. Notebook Gallery Instructions:
+
+=====================
+About this documentation
+=====================
+This documentation is designed to step the user through getting started with DEA, through to more complicated algorithms and workflows. 
+The intended order of these notebook folders are:
+
+1. Getting_started
+
+2. DEA_datasets
+
+3. Integrating_external_data
+
+4. Index_calculation
+
+5. Temporal_analysis
+
+6. Composite_generation
+
+7. Image_classification
+
+8. Outputting_data
+
+9. Workflows
+
+10. Scripts
+
+If you are searching for a specific functionality, use the :doc:`Tags Index </genindex>` to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an `Issue` in the `dea-notebooks repository<https://github.com/GeoscienceAustralia/dea-notebooks>`_. 
+
+=============================
+Notebook Gallery Instructions
+=============================
 Repository for Digital Earth Australia Jupyter Notebooks.
 
 The basic structure of this repository is designed to keep 'all' of the DEA Jupyter Notebooks in one place. The repository uses branches to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared.
@@ -23,7 +54,7 @@ To clone the repo (onto the VDI):
 * A new folder called ``dea-notebooks`` will be created, which is a copy of the code repo
 * ``cd dea-notebooks``
 * Use the command ``git status`` (at any time) to check which branch you are on and any changes you have made. You should see that you are automatically on the ``master`` branch. This is the published branched of the repository. 
-* To create your own branch, type ``git checkout -b <yourname>`` (where <yourname> will be the name of the new branch.
+* To create your own branch, type ``git checkout -b <yourname>`` (where <yourname> will be the name of the new branch).
 * You will automatically be changed to your new branch (you can use ``git status`` to check this). Any changes you make here will not affect the other branches of the repository. 
 
 Setting up your own version of the repo
@@ -76,10 +107,14 @@ As an example...
 
 **Author**: Claire Krause
 
+Note on using heading levels in the Jupyter Notebooks
+-----------------------------------------------------
+The code that publishes the notebooks to the website uses Heading levels to grab titles and set up hyperlinks. **Please only use heading level 1 (i.e. ``#``) for the overall notebook title**. Headings throughout the notebook should use headinglevel two or below (i.e. ``##``). 
+
 Tagging
 -------
 
-Work in progress...
+See the :doc:`Tagging Notebooks<tags>` page.
 
 
 Pushing files to the master branch for publishing
@@ -110,8 +145,7 @@ Back to the push workflow...
 * ``git commit -m "Short explanation of the files being added"``
 * ``git push origin <tempbranchname>``. This will push the new branch, with the files to be published, to the remote repo. You can jump on the website and see your latest push show up on the repo in a light yellow banner below the solid red line.
 * Click on ``compare & pull request`` to set up your pull request
-* The ``Open a pull request`` page will show the ``base`` as ``master`` and the ``compare`` as your temp branch. If you did a pull request right up
-at step three, this should mean that there are no conflicts, and you can automatically merge (hopefully). 
+* The ``Open a pull request`` page will show the ``base`` as ``master`` and the ``compare`` as your temp branch. If you did a pull request right up at step three, this should mean that there are no conflicts, and you can automatically merge (hopefully).
 * Add a comment to the pull request, and click ``create pull request``
 
 Approving pull requests
@@ -121,6 +155,10 @@ Anyone with admin access to the ``dea-notebooks`` repo can approve pull requests
 Once the code has been approved, you can merge it into the ``master`` branch. Select the ``squash and merge`` option (you may need to find this in the drop down menu to the right of the green merge button. The squash and merge will squash all the commits on the temp branch into a single commit, and just make things neater. Once you have merged the new branch in, you need to **delete the branch**. There is a button on the push page that asks you if you would like to delete the now merged branch. Yes. Delete it. The changes from this branch have now been merged in, so there is no risk of losing someone's work. This will stop lots and lots of staging/temp branches from building up in the repo. 
 
 You are now done!
+
+Revising a pull request
+-----------------------
+If your reviewer suggests you make changes to code you submitted as a ``pull request``, it's easy to fix things up. Simply update your code on the same temporary branch you submitted the ``pull request`` from, commit the changes (``git commit -m "Short explanation``), push them back up to the remote repo (``git push origin <tempbranchname>``), and the new commit will automatically appear in the same ``pull request`` ready to be accepted!
 
 Cleaning up your own repo
 -------------------------
