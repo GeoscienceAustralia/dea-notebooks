@@ -27,7 +27,7 @@ from datacube.utils import geometry
 import fiona
 import shapely.geometry
 
-def load_nbarx(dc=dc, sensor, query, product='nbart', bands_of_interest='', filter_pq=True):
+def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_pq=True):
     """
     Loads NBAR (Nadir BRDF Adjusted Reflectance) or NBAR-T (terrain corrected NBAR) data for a
     sensor, masks using pixel quality (PQ), then optionally filters out terrain -999s (for NBAR-T).
@@ -39,9 +39,9 @@ def load_nbarx(dc=dc, sensor, query, product='nbart', bands_of_interest='', filt
 
     inputs
     dc - Handle for the Datacube to import from. This allows you to also use dev environments
-    if that have been imported into the environment. Defaults to dc.
+    if that have been imported into the environment.
     sensor - Options are 'ls5', 'ls7', 'ls8'
-    query - A dict containing the query bounds. Can include lat/lon, time etc. Defaults to query.
+    query - A dict containing the query bounds. Can include lat/lon, time etc. 
 
     optional
     product - 'nbar' or 'nbart'. Defaults to nbart unless otherwise specified
