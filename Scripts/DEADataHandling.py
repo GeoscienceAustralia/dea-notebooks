@@ -9,9 +9,9 @@ Available functions:
     tasseled_cap
     dataset_to_geotiff
 
-Last modified: April 2018
+Last modified: May 2018
 Author: Claire Krause
-Modified by: Robbi Bishop-Taylor
+Modified by: Robbi Bishop-Taylor, Bex Dunn
 
 '''
 
@@ -22,6 +22,10 @@ import gdal
 import numpy as np
 import xarray as xr
 import rasterio
+
+from datacube.utils import geometry
+import fiona
+import shapely.geometry
 
 def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_pq=True):
     """
@@ -261,7 +265,7 @@ def dataset_to_geotiff(filename, data):
     inputs
     filename - string containing filename to write out to
     data - dataset to write out
-    Note: this function cuurrently requires the data have lat/lon only, i.e. no
+    Note: this function currently requires the data have lat/lon only, i.e. no
     time dimension
     '''
 
@@ -278,3 +282,27 @@ def dataset_to_geotiff(filename, data):
     with rasterio.open(filename, 'w', **kwargs) as src:
         for i, band in enumerate(data.data_vars):
             src.write(data[band].data, i + 1)
+            
+def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
+    '''This function takes a shapefile, selects a polygon as per your selection, 
+    uses the datacube geometry object, along with shapely.geometry and fiona to 
+    get the geom for the datacube query . It will also make sure you have the correct crs object for the    DEA
+    Last modified May 2018
+    Author: Bex Dunn'''
+
+    # open all the shapes within the shape file
+    shapes = fiona.open(shapefile)
+    i =index_of_polygon_within_shapefile
+    #print('shapefile index is '+str(i))
+    if i > len(shapes):
+        print('index not in the range for the shapefile'+str(i)+' not in '+str(len(shapes)))
+        sys.exit(0)
+    #copy attributes from shapefile and define shape_name
+    geom_crs = geometry.CRS(shapes.crs_wkt)
+    geo = shapes[i]['geometry']
+    geom = geometry.Geometry(geo, crs=geom_crs)
+    geom_bs = shapely.geometry.shape(shapes[i]['geometry'])
+    shape_name = shapefile.split('/')[-1].split('.')[0]+'_'+str(i)
+    #print('the name of your shape is '+shape_name)
+    #get your polygon out as a geom to go into the query, and the shape name for file names later
+    return geom, shape_name          

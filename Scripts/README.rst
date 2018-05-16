@@ -9,6 +9,7 @@ DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarra
      - **load_sentinel**: Loads a Sentinel granule product and masks using PQ
      - **tasseled_cap**: Computes tasseled cap wetness, greenness and brightness bands from a six band xarray dataset
      - **dataset_to_geotiff**: Writes a multi-band geotiff for one xarray timeslice, or for a single composite image
+     - **open_polygon_from_shapefile**: Takes a shapefile, selects a polygon by index input, returns a DEA geom object and shape name for polygon drills
      
 DEAPlotting.py: plotting DEA data (e.g. xarrays)
      - **three_band_image**: Takes three spectral bands and plots them on the RGB bands of an image
