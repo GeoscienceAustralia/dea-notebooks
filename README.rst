@@ -122,17 +122,12 @@ Direct quotations and images from other published sources (papers, websites, tex
 
 Functions using published algorithms should contain references and hyperlinks to the algorithm and paper, so users can check the assumptions prior to running analyses. 
 
-
 Displaying widgets in Jupyter Notebooks
 ---------------------------------------
-When you publish a jupyter notebook with widgets in it to dea notebooks, there are two steps to getting your widgets to display.
-Firstly, before you push your notebook to the repo, go to the 'Widgets' drop down menu and 'Save Notebook Widget State'. Then save yyour notebook before pushing it to the repo. This preserves the widget state so that you can see what the results were when the notebook is published.
+When you publish a jupyter notebook with widgets in it to `dea-notebooks`, there are two steps to getting your widgets to display.
+Firstly, before you push your notebook to the repo, go to the 'Widgets' drop down menu and 'Save Notebook Widget State'. Then save your notebook before pushing it to the repo. This preserves the widget state so that you can see what the results were when the notebook is published.
 
-The second trick, if the first one doesn't wholly work, is to use jupyter NBviewer to display your notebook - maybe put a link in your notebook introductory cell. This is necessary because Github doesn't render all notebook widgets properly.
-
-__Hot Tip:__ go to <https://nbviewer.jupyter.org> and insert the address of your git notebook, and then put the address of the NBviewer page that is generated up top of your notebook so people can view your fancy widgets.
-
-It's also just a nice way to show people your notebooks, and loads WAY faster than github.
+**Hot Tip:** You can also use jupyter NBviewer as a nice way to show people your notebooks. This loads WAY faster than Github, and can be necessary because Github doesn't render all notebook widgets properly. Go to <https://nbviewer.jupyter.org> and insert the address of your git notebook, and then put the address of the NBviewer page that is generated up top of your notebook so people can view your fancy widgets. 
 
 e.g. <https://nbviewer.jupyter.org/github/GeoscienceAustralia/dea-notebooks/blob/master/Workflows/RetrieveLandsat8ViewAndExport.ipynb>
 
