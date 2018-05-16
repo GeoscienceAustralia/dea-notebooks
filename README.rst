@@ -122,6 +122,17 @@ Direct quotations and images from other published sources (papers, websites, tex
 
 Functions using published algorithms should contain references and hyperlinks to the algorithm and paper, so users can check the assumptions prior to running analyses. 
 
+Displaying widgets in Jupyter Notebooks
+---------------------------------------
+When you publish a jupyter notebook with widgets in it to `dea-notebooks`, there are two steps to getting your widgets to display.
+Firstly, before you push your notebook to the repo, go to the 'Widgets' drop down menu and 'Save Notebook Widget State'. Then save your notebook before pushing it to the repo. This preserves the widget state so that you can see what the results were when the notebook is published.
+
+**Hot Tip:** You can also use jupyter NBviewer as a nice way to show people your notebooks. This loads WAY faster than Github, and can be necessary because Github doesn't render all notebook widgets properly. Go to <https://nbviewer.jupyter.org> and insert the address of your git notebook, and then put the address of the NBviewer page that is generated up top of your notebook so people can view your fancy widgets. 
+
+e.g. <https://nbviewer.jupyter.org/github/GeoscienceAustralia/dea-notebooks/blob/master/Workflows/RetrieveLandsat8ViewAndExport.ipynb>
+
+To publish a notebook to the master branch, you will need to complete a ``pull`` request (see below). 
+
 Pushing files to the master branch for publishing
 -------------------------------------------------
 Protection measures put in place within the ``dea-notebooks`` repo mean that you can not simply ``push`` to the master branch. All code that you would like to publish on the ``master`` branch needs to go through a review process, which is done using a ``pull`` request. 
