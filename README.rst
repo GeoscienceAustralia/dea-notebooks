@@ -37,8 +37,8 @@ The basic structure of this repository is designed to keep 'all' of the DEA Jupy
 Test of internal links:
 
 
-`DEA notebooks using command-line git`_
-
+* `DEA notebooks using command-line git`_ (recommended)
+* `DEA notebooks using Github`_
 
 
 
@@ -187,6 +187,7 @@ You will receive an email to the address your github account is registered with 
 ``git branch`` will show you all the branches your local repo is tracking. If there are staging branches you would like to clean up, use ``git branch -D <branchtobedeleted>``. This will stop you accumulating useless branches in your local git repo.
 
 
+.. _`DEA notebooks using Github`:
 ==========================
 DEA notebooks using Github
 ==========================
