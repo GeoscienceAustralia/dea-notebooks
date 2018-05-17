@@ -34,14 +34,15 @@ The basic structure of this repository is designed to keep 'all' of the DEA Jupy
 
 * `Working branches <https://github.com/GeoscienceAustralia/dea-notebooks/branches>`_: these are named using the owner's name as the branch name (e.g. ``ClaireK``, ``BexDunn``). These are the working spaces for people and essentially your own place to play around with. The notebooks here do not need to be pretty or even finished. It's just a place to keep everything together. It also means that if you want to collaborate on a working version of a notebook, you can easily find and share notebooks.
 
-Test of internal links:
+Getting started with DEA notebooks
+==================================
 
+To start contributing to the DEA notebooks page, first read through the `Publishing finished notebooks`_ section to ensure that your notebook meets all the metadata and formatting requirements. This should only take a few minutes, and ensures that all notebooks are thoroughly documented so that they can be understood by all users, and rendered correctly on the `Digital Earth Australia User Guide page <http://geoscienceaustralia.github.io/digitalearthau/index.html>`_.
 
-* `DEA notebooks using command-line git`_ (recommended)
-* `DEA notebooks using Github`_
+Once you have checked that your notebook meets all the publishing requirements, there are two main options for interacting with ``dea-notebooks``:
 
-
-
+* `DEA notebooks using command-line git`_: This is the recommended workflow as it makes it easy to stay up to date with the latest versions of functions and code, and makes it impossible to lose your work. 
+* `DEA notebooks using Github`_: Alernatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly.
 
 =============================
 Publishing finished notebooks
@@ -78,7 +79,7 @@ The code that publishes the notebooks to the website uses Heading levels to grab
 Adding tags to notebooks
 ========================
 
-See the :doc:`Tagging Notebooks<tags>` page.
+See the `Tagging Notebooks <https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/tags.rst>`_ page.
 
 Updating the .rst file to point to your new files
 =================================================
