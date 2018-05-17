@@ -8,6 +8,8 @@ Available functions:
     load_sentinel
     tasseled_cap
     dataset_to_geotiff
+    open_polygon_from_shapefile
+    write_your_netcdf
 
 Last modified: May 2018
 Author: Claire Krause
@@ -26,6 +28,7 @@ import rasterio
 from datacube.utils import geometry
 import fiona
 import shapely.geometry
+from datacube.storage.storage import write_dataset_to_netcdf
 
 def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_pq=True):
     """
@@ -134,7 +137,7 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
     '''loads a sentinel granule product and masks using pq
 
     Last modified: March 2018
-    Claire Krause: Bex Dunn
+    Authors: Claire Krause, Bex Dunn
 
     This function requires the following be loaded:
     from datacube.helpers import ga_pq_fuser
@@ -306,3 +309,23 @@ def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
     #print('the name of your shape is '+shape_name)
     #get your polygon out as a geom to go into the query, and the shape name for file names later
     return geom, shape_name          
+
+def write_your_netcdf(data, dataset_name, filename, crs):
+    '''this function turns an xarray dataarray into a dataset so we can write it to netcdf. It adds on a crs definition
+    from the original array. data = your xarray dataset, dataset_name is a string describing your variable'''    
+    #turn array into dataset so we can write the netcdf
+    if isinstance(data,xr.DataArray):
+        dataset= data.to_dataset(name=dataset_name)
+    elif isinstance(data,xr.Dataset):
+        dataset = data
+    else:
+        print('your data might be the wrong type, it is: '+type(data))
+    #grab our crs attributes to write a spatially-referenced netcdf
+    dataset.attrs['crs'] = crs
+    #dataset.attrs['affine'] =affine
+
+    #dataset.dataset_name.attrs['crs'] = crs
+    try:
+        write_dataset_to_netcdf(dataset, filename)
+    except RuntimeError as err:
+        print("RuntimeError: {0}".format(err))    
