@@ -74,7 +74,7 @@ You can of course provide additional information if you choose, e.g. background,
     **Author**: Claire Krause
 
 Heading levels in Jupyter Notebooks
-=====================================================
+===================================
 
 The code that publishes the notebooks to the website uses Heading levels to grab titles and set up hyperlinks. **Please only use heading level 1 (i.e. `#`) for the overall notebook title**. Headings throughout the notebook should use heading level two or below (i.e. ``##``). 
 
@@ -165,7 +165,7 @@ The process for completing a ``pull`` request may seem complicated, so if you ar
 
 9. ``git status``. You should see that you are on the temp branch, and the files you have moved across are listed in red as untracked. Double check that these files are in one of the ten ``dea-notebook`` directories, and not in a folder of your own naming.
 
-10. ``git add <file>``. Repeat this for every file that you want to publish. Make sure to add the ``README.rst`` files you have updated as well! If you do a ``git status`` here, you should now see the list of files in green ready to be committed.
+10. ``git add <file>``. Repeat this for every file that you want to publish. Make sure to add the ``README.rst`` files you have updated as well (see the `Updating the .rst file to point to your new files section`_ above)! If you do a ``git status`` here, you should now see the list of files in green ready to be committed.
 
 11. ``git commit -m "Short explanation of the files being added"``
 
