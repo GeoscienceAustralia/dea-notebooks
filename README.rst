@@ -101,11 +101,11 @@ Firstly, before you push your notebook to the repo, go to the 'Widgets' drop dow
 `<https://nbviewer.jupyter.org/github/GeoscienceAustralia/dea-notebooks/blob/master/Workflows/RetrieveLandsat8ViewAndExport.ipynb>`_
 
 
+.. _`DEA notebooks using command-line git`:
 ====================================
 DEA notebooks using command-line git
 ====================================
 
-.. _`DEA notebooks using command-line git`:
 
 To get started with ``dea-notebooks`` using command line git, the first step is to clone this repository to a suitable location. This will most likely be a location you can access on the VDI, so you can easily work with your notebooks. Note that this repo is likely to become quite large, so make sure you have enough space in the location you clone the repository to (i.e. probably not your home directory, but your directory on ``/g/data`` should be perfect). 
 
