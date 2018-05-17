@@ -30,9 +30,17 @@ If you are searching for a specific functionality, use the :doc:`Tags Index </ge
 
 The basic structure of this repository is designed to keep 'all' of the DEA Jupyter Notebooks in one place. The repository uses branches to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared. There are two main types of branches:
 
-* Master branch: where notebooks are put that are ready to be shared. Notebooks added to this branch will be published on the DEA documentation page in a notebook gallery. The master branch is protected, and requires changes to be approved via a ``pull request`` before changes are made to the branch. This is simply to avoid mistakes when pushing to this branch, and to allow a quick check of code before publishing. The check is basically just looking for the existence of required metadata, and that the file name has been added to the .rst index so it can be published on the DEA documentation website.
+* Master branch: where notebooks are put that are ready to be shared. Notebooks added to this branch will be published on the `DEA documentation page<http://geoscienceaustralia.github.io/digitalearthau/index.html>`. The master branch is protected, and requires changes to be approved via a ``pull request`` before changes are made to the branch. This is simply to avoid mistakes when pushing to this branch, and to allow a quick check of code before publishing. The check is basically just looking for the existence of required metadata, and that the file name has been added to the .rst index so it can be published on the DEA documentation website.
 
 * Working branches: these are named using the owner's name as the branch name (e.g. ``ClaireK``, ``BexDunn``). These are the working spaces for people and essentially your own place to play around with. The notebooks here do not need to be pretty or even finished. It's just a place to keep everything together. It also means that if you want to collaborate on a working version of a notebook, you can easily find and share notebooks.
+
+Test of internal links:
+
+
+`DEA notebooks using command-line git`_
+
+
+
 
 
 =============================
@@ -62,7 +70,7 @@ You can of course provide additional information if you choose, e.g. background,
     
     **Author**: Claire Krause
 
-Heading levels in the Jupyter Notebooks
+Heading levels in Jupyter Notebooks
 =====================================================
 
 The code that publishes the notebooks to the website uses Heading levels to grab titles and set up hyperlinks. **Please only use heading level 1 (i.e. `#`) for the overall notebook title**. Headings throughout the notebook should use headinglevel two or below (i.e. ``##``). 
@@ -96,6 +104,8 @@ Firstly, before you push your notebook to the repo, go to the 'Widgets' drop dow
 ====================================
 DEA notebooks using command-line git
 ====================================
+
+.. _`DEA notebooks using command-line git`:
 
 To get started with ``dea-notebooks`` using command line git, the first step is to clone this repository to a suitable location. This will most likely be a location you can access on the VDI, so you can easily work with your notebooks. Note that this repo is likely to become quite large, so make sure you have enough space in the location you clone the repository to (i.e. probably not your home directory, but your directory on ``/g/data`` should be perfect). 
 
