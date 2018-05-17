@@ -16,6 +16,7 @@ Modified by: Robbi Bishop-Taylor
 import numpy as np
 from skimage import exposure
 import matplotlib.pyplot as plt
+import warnings
 
 
 def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10), title='Time',
