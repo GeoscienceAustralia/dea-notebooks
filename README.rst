@@ -28,19 +28,11 @@ The intended order of these notebook folders are:
 
 If you are searching for a specific functionality, use the :doc:`Tags Index </genindex>` to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an `Issue` in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks>`_
 
+The basic structure of this repository is designed to keep 'all' of the DEA Jupyter Notebooks in one place. The repository uses branches to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared. There are two main types of branches:
 
-The basic structure of this repository is designed to keep 'all' of the DEA Jupyter Notebooks in one place. The repository uses branches to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared.
+* Master branch: where notebooks are put that are ready to be shared. Notebooks added to this branch will be published on the DEA documentation page in a notebook gallery. The master branch is protected, and requires changes to be approved via a ``pull request`` before changes are made to the branch. This is simply to avoid mistakes when pushing to this branch, and to allow a quick check of code before publishing. The check is basically just looking for the existence of required metadata, and that the file name has been added to the .rst index so it can be published on the DEA documentation website.
 
-The structure of the repository is fairly simple:
-
-* master branch - where notebooks are put that are ready to be shared. Notebooks added to this branch will be published on the DEA documentation page in a notebook gallery.
-
-* working branches - these are named using the owner's name as the branch name (e.g. ``ClaireK``, ``BexDunn``). These are the working spaces for people and essentially your own place to play around with. The notebooks here do not need to be pretty or even finished. It's just a place to keep everything together. It also means that if you want to collaborate on a working version of a notebook, you can easily find and share notebooks.
-
-**Note**: The master branch is protected, and will require a pull request for changes to be made to this branch. This is simply to avoid mistakes when pushing to this branch, and to allow a quick check of code before publishing. The check is basically just looking for the existence of required metadata, and that the file name has been added to the .rst index so it can be published on the DEA documentation website.
-
-
-
+* Working branches: these are named using the owner's name as the branch name (e.g. ``ClaireK``, ``BexDunn``). These are the working spaces for people and essentially your own place to play around with. The notebooks here do not need to be pretty or even finished. It's just a place to keep everything together. It also means that if you want to collaborate on a working version of a notebook, you can easily find and share notebooks.
 
 
 =============================
