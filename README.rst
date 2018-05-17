@@ -199,18 +199,19 @@ Getting the entire dea-notebooks directory onto your PC/VDI:
 Adding a new notebook or file:
 ==============================
 
-* On Github, browse to the location you would like to upload your file (e.g. ``dea-notebooks/DEA_datasets``).
-* Click "Upload files" and drag and drop or select the notebook/file.
-* At the bottom of the page, add a commit title and description outlining what you have changed. Leave the commit as "Create a new branch for this commit and start a pull request", then hit "Commit changes".
-* Finally, add any extra info on the next "Open a pull request" screen, optionally assign a reviewer, and then "Create pull request". 
-* Your changes will be submitted for review, and will be added to the ``master`` branch once accepted.
+1. On Github, browse to the location you would like to upload your file (e.g. ``dea-notebooks/DEA_datasets``).
+2. Click "Upload files" and drag and drop or select the notebook/file.
+3. At the bottom of the page, add a commit title and description outlining what you have changed. Leave the commit as "Create a new branch for this commit and start a pull request", then hit "Commit changes".
+4. Finally, add any extra info on the next "Open a pull request" screen, optionally assign a reviewer, and then "Create pull request". 
+5. Your changes will be submitted for review, and will be added to the ``master`` branch once accepted.
 
 Modifying an existing notebook and update it in the repository:
 ===============================================================
 
-* Edit and save the notebook on your computer without renaming the file.
-* Follow the above instructions. Github should detect any changes, and will update the file on the ``master`` branch once the pull request has been reviewed.
-* Python scripts and plain text like readme files can be edited even more easily by opening the file on Github, then clicking "Edit this file" on the top-right. Add a commit message and submit a pull request as above, and the changes will be visible on the `master` branch after review.
+1. Edit and save the notebook on your computer without renaming the file.
+2. Follow the above "Adding a new notebook or file" instructions. Github should detect any changes to the file, and will update the file on the ``master`` branch once the pull request has been reviewed.
+3. If you want to make multiple commits before submitting a pull request, that's fine: at the "Create a new branch for this commit and start a pull request" stage, edit the branch name (usually something like ``robbibt-patch-1``) to something memorable, press "Commit changes", and then when the "Open a pull request" screen appears, click back to the main ``dea-notebooks`` page without creating the pull request. On the ``dea-notebooks`` page, make sure your new branch is selected using the drop-down "Branch:" menu, and continue to make and commit changes. When you're finally ready to submit a pull request, click the "New pull request" button!
+4. Python scripts and plain text like readme files can be edited even more easily by opening the file on Github, then clicking "Edit this file" on the top-right. Add a commit message and submit a pull request as above, and the changes will be visible on the `master` branch after review.
 
 Deleting existing files:
 =========================
