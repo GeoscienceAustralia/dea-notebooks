@@ -104,7 +104,6 @@ Firstly, before you push your notebook to the repo, go to the 'Widgets' drop dow
 `<https://nbviewer.jupyter.org/github/GeoscienceAustralia/dea-notebooks/blob/master/Workflows/RetrieveLandsat8ViewAndExport.ipynb>`_
 
 
-.. _`DEA notebooks using command-line git`:
 ====================================
 DEA notebooks using command-line git
 ====================================
@@ -189,7 +188,6 @@ You will receive an email to the address your Github account is registered with 
 ``git branch`` will show you all the branches your local repo is tracking. If there are staging branches you would like to clean up, use ``git branch -D <branchtobedeleted>``. This will stop you accumulating useless branches in your local ``git`` repo.
 
 
-.. _`DEA notebooks using Github`:
 ==========================
 DEA notebooks using Github
 ==========================
@@ -227,7 +225,6 @@ Deleting existing files:
 
 **Important note:** To keep your files up to date with the ``master`` branch, ensure that you regularly re-download the repository's zip file. Just make sure you upload or back-up any changed files so that they do not get overwritten by the new files!
 
-.. _`Approving pull requests`:
 =======================
 Approving pull requests
 =======================
