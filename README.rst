@@ -6,25 +6,25 @@ Overview of DEA Notebooks
 This documentation is designed to step the user through getting started with DEA, through to more complicated algorithms and workflows. 
 The intended order of these notebook folders are:
 
-1. Getting_started
+1. `Getting_started <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Getting_started>`_
 
-2. DEA_datasets
+2. `DEA_datasets <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/DEA_datasets>`_
 
-3. Integrating_external_data
+3. `Integrating_external_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Integrating_external_data>`_
 
-4. Index_calculation
+4. `Index_calculation <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Index_calculation>`_
 
-5. Temporal_analysis
+5. `Temporal_analysis <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Temporal_analysis>`_
 
-6. Composite_generation
+6. `Composite_generation <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Composite_generation>`_
 
-7. Image_classification
+7. `Image_classification <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Image_classification>`_
 
-8. Outputting_data
+8. `Outputting_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Outputting_data>`_
 
-9. Workflows
+9. `Workflows <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Workflows>`_
 
-10. Scripts
+10. `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Scripts>`_
 
 If you are searching for a specific functionality, use the `Tags Index <http://geoscienceaustralia.github.io/digitalearthau/genindex.html>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an `Issue` in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
 
