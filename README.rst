@@ -42,7 +42,10 @@ To start contributing to the DEA notebooks page, first read through the `Publish
 Once you have checked that your notebook meets all the publishing requirements, there are two main options for interacting with ``dea-notebooks``:
 
 * `DEA notebooks using command-line git`_: This is the recommended workflow as it makes it easy to stay up to date with the latest versions of functions and code, and makes it impossible to lose your work. 
-* `DEA notebooks using Github`_: Alernatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly.
+* `DEA notebooks using Github`_: Alernatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with ``dea-notebooks`` quickly.
+
+Finally, anyone with admin access can contribute to ``dea-notebooks`` by reviewing pull requests to ensure that changes meet minimum publishing reqquirements. The `Approving pull requests`_ section explains how! 
+
 
 =============================
 Publishing finished notebooks
@@ -226,6 +229,7 @@ Deleting existing files:
 
 **Important note:** To keep your files up to date with the ``master`` branch, ensure that you regularly re-download the repository's zip file. Just make sure you upload or back-up any changed files so that they do not get overwritten by the new files!
 
+.. _`Approving pull requests`:
 =======================
 Approving pull requests
 =======================
