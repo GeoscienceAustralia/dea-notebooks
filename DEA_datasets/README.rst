@@ -1,5 +1,5 @@
 =============================
-DEA Datasets
+DEA Datasets 
 =============================
 
 These pages will introduce the datasets currently available within DEA.
@@ -17,3 +17,8 @@ Maybe add here?
 
 .. toctree::
    :maxdepth: 1
+
+   GettingStartedWithITEM.ipynb
+   GettingStartedWithHLTC.ipynb
+   GettingStartedWithLandSats5-7-8.ipynb
+   Landsats5-7-8-PQ.ipynb

@@ -24,9 +24,9 @@ from sklearn.ensemble import RandomForestClassifier
 
 # Import DEA Notebooks scripts
 sys.path.append(os.path.abspath('/g/data/r78/rt1527/dea-notebooks/algorithms'))
-from ShapefileTools import layer_extent
-from ShapefileTools import rasterize_vector
-from DEADataHandling import array_to_geotiff
+from SpatialTools import layer_extent
+from SpatialTools import rasterize_vector
+from SpatialTools import array_to_geotiff
 
 
 def randomforest_train(train_shps, train_field, data_func, data_func_params={},

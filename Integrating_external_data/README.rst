@@ -10,3 +10,6 @@ To add here:
 
 .. toctree::
    :maxdepth: 1
+
+   CreateRasterMaskFromShapefile.ipynb
+   TidalModellingandTagging.ipynb

@@ -8,10 +8,13 @@ Available functions:
     load_sentinel
     tasseled_cap
     dataset_to_geotiff
+    open_polygon_from_shapefile
+    write_your_netcdf
 
-Last modified: April 2018
+Last modified: May 2018
 Author: Claire Krause
-Modified by: Robbi Bishop-Taylor
+Modified by: Robbi Bishop-Taylor, Bex Dunn
+
 """
 
 # Load modules
@@ -20,7 +23,10 @@ from datacube.storage import masking
 import numpy as np
 import xarray as xr
 import rasterio
-
+from datacube.utils import geometry
+import fiona
+import shapely.geometry
+from datacube.storage.storage import write_dataset_to_netcdf
 
 def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_pq=True):
     """
@@ -28,15 +34,15 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
     sensor, masks using pixel quality (PQ), then optionally filters out terrain -999s (for NBAR-T).
     Returns an xarray dataset and CRS and Affine objects defining map projection and geotransform
 
-    Last modified: March 2018
+    Last modified: May 2018
     Author: Bex Dunn
-    Modified by: Claire Krause, Robbi Bishop-Taylor
+    Modified by: Claire Krause, Robbi Bishop-Taylor, Bex Dunn
 
     inputs
     dc - Handle for the Datacube to import from. This allows you to also use dev environments
     if that have been imported into the environment.
     sensor - Options are 'ls5', 'ls7', 'ls8'
-    query - A dict containing the query bounds. Can include lat/lon, time etc
+    query - A dict containing the query bounds. Can include lat/lon, time etc. 
 
     optional
     product - 'nbar' or 'nbart'. Defaults to nbart unless otherwise specified
@@ -131,7 +137,7 @@ def load_sentinel(dc, product, query, filter_cloud=True, bands_of_interest=''):
     loads a sentinel granule product and masks using pq
 
     Last modified: March 2018
-    Claire Krause: Bex Dunn
+    Authors: Claire Krause, Bex Dunn
 
     This function requires the following be loaded:
     from datacube.helpers import ga_pq_fuser
@@ -257,38 +263,81 @@ def dataset_to_geotiff(filename, data):
     xarray dataset (note, dataset not dataarray) and that you have crs and affine
     objects attached, and that you are using float data. future users
     may wish to assert that these assumptions are correct.
+
     Last modified: March 2018
     Authors: Bex Dunn and Josh Sixsmith
     Modified by: Claire Krause, Robbi Bishop-Taylor
+
     inputs
     filename - string containing filename to write out to
     data - dataset to write out
     Note: this function currently requires the data have lat/lon only, i.e. no
     time dimension
     """
-  
-    try:
-        test = data.crs.crs_str
-        kwargs = {'driver': 'GTiff',
-                  'count': len(data.data_vars),  # geomedian no time dim
-                  'width': data.sizes['x'], 'height': data.sizes['y'],
-                  'crs': data.crs.crs_str,
-                  'affine': data.affine,
-                  'dtype': list(data.data_vars.values())[0].values.dtype,
-                  'nodata': 0,
-                  'compress': 'deflate', 'zlevel': 4, 'predictor': 3}
-        # for ints use 2 for floats use 3}
-    except:
-        kwargs = {'driver': 'GTiff',
-                  'count': len(data.data_vars),  # geomedian no time dim
-                  'width': data.sizes['x'], 'height': data.sizes['y'],
-                  'crs': data.crs,
-                  'affine': data.affine,
-                  'dtype': list(data.data_vars.values())[0].values.dtype,
-                  'nodata': 0,
-                  'compress': 'deflate', 'zlevel': 4, 'predictor': 3}
-        # for ints use 2 for floats use 3}
+    # Depreciation warning for write_geotiff
+    print("This function will be superceded by the 'write_geotiff' function from 'datacube.helpers'. "
+          "Please revise your notebooks to use this function instead")
+
+    kwargs = {'driver': 'GTiff',
+              'count': len(data.data_vars),  # geomedian no time dim
+              'width': data.sizes['x'], 'height': data.sizes['y'],
+              'crs': data.crs.crs_str,
+              'transform': data.affine,
+              'dtype': list(data.data_vars.values())[0].values.dtype,
+              'nodata': 0,
+              'compress': 'deflate', 'zlevel': 4, 'predictor': 3}
+    # for ints use 2 for floats use 3}
 
     with rasterio.open(filename, 'w', **kwargs) as src:
         for i, band in enumerate(data.data_vars):
             src.write(data[band].data, i + 1)
+            
+
+def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
+
+    '''This function takes a shapefile, selects a polygon as per your selection, 
+    uses the datacube geometry object, along with shapely.geometry and fiona to 
+    get the geom for the datacube query. It will also make sure you have the correct 
+    crs object for the DEA
+
+    Last modified May 2018
+    Author: Bex Dunn'''
+
+    # open all the shapes within the shape file
+    shapes = fiona.open(shapefile)
+    i =index_of_polygon_within_shapefile
+    #print('shapefile index is '+str(i))
+    if i > len(shapes):
+        print('index not in the range for the shapefile'+str(i)+' not in '+str(len(shapes)))
+        sys.exit(0)
+    #copy attributes from shapefile and define shape_name
+    geom_crs = geometry.CRS(shapes.crs_wkt)
+    geo = shapes[i]['geometry']
+    geom = geometry.Geometry(geo, crs=geom_crs)
+    geom_bs = shapely.geometry.shape(shapes[i]['geometry'])
+    shape_name = shapefile.split('/')[-1].split('.')[0]+'_'+str(i)
+    #print('the name of your shape is '+shape_name)
+    #get your polygon out as a geom to go into the query, and the shape name for file names later
+    return geom, shape_name          
+
+
+def write_your_netcdf(data, dataset_name, filename, crs):
+
+    '''this function turns an xarray dataarray into a dataset so we can write it to netcdf. 
+    It adds on a crs definition from the original array. data = your xarray dataset, dataset_name 
+    is a string describing your variable''' 
+   
+    #turn array into dataset so we can write the netcdf
+    if isinstance(data,xr.DataArray):
+        dataset= data.to_dataset(name=dataset_name)
+    elif isinstance(data,xr.Dataset):
+        dataset = data
+    else:
+        print('your data might be the wrong type, it is: '+type(data))
+    #grab our crs attributes to write a spatially-referenced netcdf
+    dataset.attrs['crs'] = crs
+
+    try:
+        write_dataset_to_netcdf(dataset, filename)
+    except RuntimeError as err:
+        print("RuntimeError: {0}".format(err))    
