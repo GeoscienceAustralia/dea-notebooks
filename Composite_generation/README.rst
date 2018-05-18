@@ -11,4 +11,5 @@ To add here:
 
 .. toctree::
    :maxdepth: 1
-   Landsat8_Geomedian_Composite.ipynb
+   
+   Landsat8_Geomedian_Dashboard.ipynb
