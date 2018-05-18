@@ -256,21 +256,28 @@ def tasseled_cap(sensor_data, sensor, tc_bands=['greenness', 'brightness', 'wetn
 
 
 def dataset_to_geotiff(filename, data):
+
     '''
     this function uses rasterio and numpy to write a multi-band geotiff for one
     timeslice, or for a single composite image. It assumes the input data is an
     xarray dataset (note, dataset not dataarray) and that you have crs and affine
     objects attached, and that you are using float data. future users
     may wish to assert that these assumptions are correct.
+
     Last modified: March 2018
     Authors: Bex Dunn and Josh Sixsmith
     Modified by: Claire Krause, Robbi Bishop-Taylor
+
     inputs
     filename - string containing filename to write out to
     data - dataset to write out
     Note: this function currently requires the data have lat/lon only, i.e. no
     time dimension
     '''
+
+    # Depreciation warning for write_geotiff
+    print("This function will be superceded by the 'write_geotiff' function from 'datacube.helpers'. "
+          "Please revise your notebooks to use this function instead")
 
     kwargs = {'driver': 'GTiff',
               'count': len(data.data_vars),  # geomedian no time dim
@@ -287,9 +294,12 @@ def dataset_to_geotiff(filename, data):
             src.write(data[band].data, i + 1)
             
 def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
+
     '''This function takes a shapefile, selects a polygon as per your selection, 
     uses the datacube geometry object, along with shapely.geometry and fiona to 
-    get the geom for the datacube query . It will also make sure you have the correct crs object for the    DEA
+    get the geom for the datacube query. It will also make sure you have the correct 
+    crs object for the DEA
+
     Last modified May 2018
     Author: Bex Dunn'''
 
@@ -311,8 +321,11 @@ def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
     return geom, shape_name          
 
 def write_your_netcdf(data, dataset_name, filename, crs):
-    '''this function turns an xarray dataarray into a dataset so we can write it to netcdf. It adds on a crs definition
-    from the original array. data = your xarray dataset, dataset_name is a string describing your variable'''    
+
+    '''this function turns an xarray dataarray into a dataset so we can write it to netcdf. 
+    It adds on a crs definition from the original array. data = your xarray dataset, dataset_name 
+    is a string describing your variable''' 
+   
     #turn array into dataset so we can write the netcdf
     if isinstance(data,xr.DataArray):
         dataset= data.to_dataset(name=dataset_name)
@@ -322,9 +335,7 @@ def write_your_netcdf(data, dataset_name, filename, crs):
         print('your data might be the wrong type, it is: '+type(data))
     #grab our crs attributes to write a spatially-referenced netcdf
     dataset.attrs['crs'] = crs
-    #dataset.attrs['affine'] =affine
 
-    #dataset.dataset_name.attrs['crs'] = crs
     try:
         write_dataset_to_netcdf(dataset, filename)
     except RuntimeError as err:
