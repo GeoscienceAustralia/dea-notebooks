@@ -114,8 +114,9 @@ def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10
         
     else:
 
-        # Stretch contrast using defined reflectance standardisation; defaults to 5000
-        img_toshow = rawimg / reflect_stand
+        # Stretch contrast using defined reflectance standardisation and clip to between 0 and 1
+        # to prevent warnings; defaults to reflect_stand = 5000
+        img_toshow = (rawimg / reflect_stand).clip(0, 1)
 
     # Plot figure, setting x and y axes from extent of xarray dataset
     fig, ax = plt.subplots(figsize=figsize)
