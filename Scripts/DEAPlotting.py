@@ -16,7 +16,6 @@ Modified by: Robbi Bishop-Taylor
 import numpy as np
 from skimage import exposure
 import matplotlib.pyplot as plt
-import warnings
 
 
 def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10), title='Time',
@@ -131,8 +130,8 @@ def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10
     except:
 
         # Plot without coords if dataset has no spatial data (e.g. an `.extent` method)
-        warnings.warn("xarray dataset has no spatial data; defaulting to plotting without coordinates. "
-                      "This can often be resolved by adding `keep_attrs = True` during an aggregation step")
+        print("xarray dataset has no spatial data; defaulting to plotting without coordinates. "
+              "This can often be resolved by adding `keep_attrs = True` during an aggregation step")
         plt.imshow(img_toshow)
 
     # Set title by either time or defined title
