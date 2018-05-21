@@ -5,6 +5,7 @@ Available functions:
 
     three_band_image
     three_band_image_subplots
+    animated_timeseries
 
 Last modified: May 2018
 Author: Claire Krause
@@ -16,6 +17,8 @@ Modified by: Robbi Bishop-Taylor
 import numpy as np
 from skimage import exposure
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import calendar
 
 
 def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10), title='Time',
@@ -234,3 +237,137 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
         fig.delaxes(ax)
         plt.draw()    
     return plt, fig
+
+
+def animated_timeseries(ds, output_path, interval=200, width_pixels=500, bands=['red', 'green', 'blue'], 
+                        reflect_stand=5000, font_size=25):
+    
+    """
+    Takes an xarray time series and exports a three band (e.g. true or false colour) GIF or MP4 animation showing 
+    changes in the landscape across time.
+    
+    Last modified: May 2018
+    Author: Robbi Bishop-Taylor
+    
+    :param ds: 
+        An xarray dataset with multiple time steps (i.e. multiple observations along the `time` dimension)
+        
+    :param output_path: 
+        A string giving the output location and filename of the resulting animation. File extensions of '.gif'
+        and '.mp4' are accepted.
+        
+    :param interval:
+        An integer defining the milliseconds between each animation frame used to control the speed of the output
+        animation. Higher values result in a slower animation. Defaults to 200 milliseconds between each frame.
+        
+    :param width_pixels:
+        An integer defining the output width in pixels for the resulting animation. The height of the animation is
+        set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 500 pixels wide.
+        
+    :param bands:
+        Optional list of exactly three bands to be plotted, all of which must exist in the input xarray dataset.
+        Defaults to `['red', 'green', 'blue']`.
+    
+    :param reflect_stand:
+        An integer that allows you to have greater control over the contrast stretch by manually specifying a
+        reflectance standardisation value. Low values (< 5000) result in brighter images. Defaults to 5000.     
+    
+    :param font_size:
+        An integer that allows you to set the font size for the animation's date annotation. Defaults to 25.   
+        
+    :example:
+    
+    >>> # Import modules
+    >>> import datacube     
+    >>> 
+    >>> # Set up datacube instance
+    >>> dc = datacube.Datacube(app='Time series animation')
+    >>> 
+    >>> # Set up spatial and temporal query.
+    >>> query = {'x': (-191399.7550998943, -183399.7550998943),
+    >>>          'y': (-1423459.1336905062, -1415459.1336905062),
+    >>>          'measurements': ['red', 'green', 'blue'],
+    >>>          'time': ('2013-01-01', '2018-01-01'),
+    >>>          'crs': 'EPSG:3577'}
+    >>> 
+    >>> # Load in only clear Landsat observations with < 1% unclear values
+    >>> combined_ds = load_clearlandsat(dc=dc, query=query, masked_prop=0.99)  
+    >>>
+    >>> # Produce animation of red, green and blue bands
+    >>> animated_timeseries(ds=combined_ds, output_path="output.mp4", 
+    >>>                     interval=80, width_pixels=600, reflect_stand=3000)   
+        
+    """
+    
+    # First test if there are three bands, and that all exist in dataset:
+    if (len(bands) == 3) & all([(band in ds.data_vars) for band in bands]):        
+
+        # Get height relative to a size of 10 inches width
+        width_ratio = float(ds.sizes['x']) / float(ds.sizes['y'])
+        height = 10 / width_ratio
+
+        # Set up plot
+        fig, ax1 = plt.subplots()
+        fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
+        fig.set_size_inches(10, height, forward=True)
+        plt.axis('off')
+
+        # Iterate through each timestep and add plot to list
+        ims = []
+        print('Generating animation with {} frames'.format(len(ds.time)))
+        for i, timestep in enumerate(ds.time):
+
+            # Get human-readable date info (e.g. "16 May 1990")
+            year = timestep.time.dt.year.item()
+            month = calendar.month_abbr[timestep.time.dt.month.item()]
+            day = timestep.time.dt.day.item()
+            date_desc = '{} {} {}'.format(day, month, year)
+
+            # Select single timestep from the data array
+            ds_i = ds.isel(time = i)
+
+            # Create new three band array
+            y, x = ds_i[bands[0]].shape
+            rawimg = np.zeros((y, x, 3), dtype=np.float32)
+
+            # Add xarray bands into three dimensional numpy array
+            for i, colour in enumerate(bands):
+
+                rawimg[:, :, i] = ds_i[colour].values
+
+            # Set terrain nodata value to NaN
+            rawimg[rawimg == -999] = np.nan
+
+            # Stretch contrast using defined reflectance standardisation; defaults to 5000
+            img_toshow = (rawimg / reflect_stand).clip(0, 1)
+
+            # Plot image for each timestep and append to list
+            im = ax1.imshow(img_toshow, animated=True)
+
+            # Set up text
+            t = ax1.annotate(date_desc, 
+                             xy=(1, 1), xycoords='axes fraction', 
+                             xytext=(-5, -5), textcoords='offset points', 
+                             horizontalalignment='right', verticalalignment='top', 
+                             fontsize=font_size, color = "white", family='monospace')
+
+            ims.append([im, t])
+
+        # Create and export animation of all plots in list
+        ani = animation.ArtistAnimation(fig, ims, interval=interval, blit=True, repeat_delay=interval)
+
+        # Export as either MP4 or GIF
+        if output_path[-3:] == 'mp4':
+            print('    Exporting animation to {}'.format(output_path))
+            ani.save(output_path, dpi=width_pixels / 10.0)
+
+        elif output_path[-3:] == 'gif':
+            print('    Exporting animation to {}'.format(output_path))
+            ani.save(output_path, dpi=width_pixels / 10.0, writer='imagemagick')
+
+        else:
+            print("    Output file type must be either .gif or .mp4")
+    
+    else:        
+            print("Please select exactly three bands that exist in the input dataset")
+    
