@@ -6,6 +6,7 @@ Available functions:
     three_band_image
     three_band_image_subplots
     animated_timeseries
+    animated_fade
 
 Last modified: May 2018
 Author: Claire Krause
@@ -239,8 +240,13 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
     return plt, fig
 
 
-def animated_timeseries(ds, output_path, interval=200, width_pixels=500, bands=['red', 'green', 'blue'], 
-                        reflect_stand=5000, font_size=25):
+def animated_fade(ds1, ds2, output_path, bands=['red', 'green', 'blue'], reflect_stand=5000, width_pixels=300, 
+                  interval=50, interval_steps=15, endpoint_steps=15, endpoint_text=['Before',  'After'],
+                  font_size=25):
+
+
+def animated_timeseries(ds, output_path, bands=['red', 'green', 'blue'], reflect_stand=5000, width_pixels=500,
+                        interval=200, font_size=25):
     
     """
     Takes an xarray time series and exports a three band (e.g. true or false colour) GIF or MP4 animation showing 
@@ -256,21 +262,21 @@ def animated_timeseries(ds, output_path, interval=200, width_pixels=500, bands=[
         A string giving the output location and filename of the resulting animation. File extensions of '.gif'
         and '.mp4' are accepted.
         
-    :param interval:
-        An integer defining the milliseconds between each animation frame used to control the speed of the output
-        animation. Higher values result in a slower animation. Defaults to 200 milliseconds between each frame.
+    :param bands:
+        Optional list of exactly three bands to be plotted, all of which must exist in the input xarray dataset.
+        Defaults to `['red', 'green', 'blue']`.
+        
+    :param reflect_stand:
+        An integer that allows you to have greater control over the contrast stretch by manually specifying a
+        reflectance standardisation value. Low values (< 5000) result in brighter images. Defaults to 5000. 
         
     :param width_pixels:
         An integer defining the output width in pixels for the resulting animation. The height of the animation is
         set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 500 pixels wide.
         
-    :param bands:
-        Optional list of exactly three bands to be plotted, all of which must exist in the input xarray dataset.
-        Defaults to `['red', 'green', 'blue']`.
-    
-    :param reflect_stand:
-        An integer that allows you to have greater control over the contrast stretch by manually specifying a
-        reflectance standardisation value. Low values (< 5000) result in brighter images. Defaults to 5000.     
+    :param interval:
+        An integer defining the milliseconds between each animation frame used to control the speed of the output
+        animation. Higher values result in a slower animation. Defaults to 200 milliseconds between each frame.    
     
     :param font_size:
         An integer that allows you to set the font size for the animation's date annotation. Defaults to 25.   
@@ -370,4 +376,173 @@ def animated_timeseries(ds, output_path, interval=200, width_pixels=500, bands=[
     
     else:        
             print("Please select exactly three bands that exist in the input dataset")
+
+
+def animated_fade(ds1, ds2, output_path, bands=['red', 'green', 'blue'], reflect_stand=5000, width_pixels=300, 
+                  interval=50, interval_steps=15, endpoint_steps=15, endpoint_text=['Before',  'After'],
+                  font_size=25):
     
+    """
+    Takes two single-timestep xarray datasets, and plots an animation of the two layers fading between each other. 
+    Possible applications include comparing an area before and after environmental change (i.e. flood, drought,
+    fire, development), or comparing two geographic areas.
+    
+    
+    Last modified: May 2018
+    Author: Robbi Bishop-Taylor
+    
+    :param ds1: 
+        An xarray dataset with a single time step (e.g. `xarray_dataset.isel(time=1)`).
+        
+    :param ds2: 
+        An xarray dataset with a single time step (e.g. `xarray_dataset.isel(time=30)`). Ensure that this dataset 
+        has the same dimensions/shape as ds1.
+        
+    :param output_path: 
+        A string giving the output location and filename of the resulting animation. File extensions of '.gif'
+        and '.mp4' are accepted.
+        
+    :param bands:
+        Optional list of exactly three bands to be plotted, all of which must exist in the input xarray datasets.
+        Defaults to `['red', 'green', 'blue']`.
+    
+    :param reflect_stand:
+        An integer that allows you to have greater control over the contrast stretch by manually specifying a
+        reflectance standardisation value. Low values (< 5000) result in brighter images. Defaults to 5000. 
+    
+    :param width_pixels:
+        An integer defining the output width in pixels for the resulting animation. The height of the animation is
+        set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 300 pixels wide.
+        
+    :param interval:
+        An integer defining the milliseconds between each animation frame used to control the speed of the output
+        animation. Higher values result in a slower animation. Defaults to 50 milliseconds between each frame.
+    
+    :param interval_steps:
+        An integer defining the number of fade steps or frames to compute between ds1 and ds2. A higher number of
+        steps results in smoother transitions, but can result in large file sizes for .gif animations. Defaults to 15.
+    
+    :param endpoint_steps:
+        An integer defining the number of steps or frames to insert that the animation should pause for at the beginning 
+        and end of each loop. Higher values causes ds1 and ds2 to remain on the screen for a longer period at the start 
+        and end of the animation, but can result in large file sizes for .gif animations. Defaults to 15.
+        
+    :param endpoint_text:
+        A list of two strings that match ds1 and ds2, and which are displayed at the start and end of the animation.
+        Defaults to `['Before',  'After']`; set to `['',  '']` to hide text.  
+        
+    :param font_size:
+        An integer that allows you to set the font size for the animation's date annotation. Defaults to 25.   
+        
+    :example:
+    
+    >>> # Import modules
+    >>> import datacube     
+    >>> 
+    >>> # Set up datacube instance
+    >>> dc = datacube.Datacube(app='Time series animation')
+    >>> 
+    >>> # Set up spatial and temporal query.
+    >>> query = {'x': (970476, 987476),
+    >>>          'y': (-3568950, -3551951),
+    >>>          'measurements': ['red', 'green', 'blue'],
+    >>>          'time': ('2013-01-01', '2018-01-01'),
+    >>>          'crs': 'EPSG:3577'}
+    >>> 
+    >>> # Load in only clear Landsat observations with < 1% unclear values
+    >>> combined_ds = load_clearlandsat(dc=dc, query=query, masked_prop=0.99)  
+    >>>
+    >>> # Produce animation that fades between ds1 and ds2
+    >>> animated_fade(ds1=combined_ds.isel(time=1), ds2=combined_ds.isel(time=30), 
+    >>>               output_path='animated_fade.gif', reflect_stand=2500, 
+    >>>               width_pixels=300, font_size = 40)
+        
+    """
+
+    # First test if there are three bands, and that all exist in dataset:
+    if (len(bands) == 3) & all([(band in ds1.data_vars) for band in bands]):  
+
+        # Get height relative to a size of 10 inches width
+        width_ratio = float(ds1.sizes['x']) / float(ds1.sizes['y'])
+        height = 10 / width_ratio
+
+        # Set up plot
+        fig, ax1 = plt.subplots()
+        fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
+        fig.set_size_inches(10, 10, forward=True)
+        plt.axis('off')
+
+        # Convert xarray datasets to numpy arrays
+        ds1_rgb = ds1[bands].to_array().values
+        ds2_rgb = ds2[bands].to_array().values
+
+        # Test that shapes are the same:
+        if ds1_rgb.shape == ds2_rgb.shape:
+
+            # Rearrange arrays to a x by y by bands arrays for RGB plotting using imshow
+            ds1_rgb = np.einsum('bxy->xyb', ds1_rgb)
+            ds2_rgb = np.einsum('bxy->xyb', ds2_rgb)
+
+            # Stretch contrast using defined reflectance standardisation; defaults to 5000
+            ds1_rgb = (ds1_rgb / reflect_stand).clip(0, 1)
+            ds2_rgb = (ds2_rgb / reflect_stand).clip(0, 1)
+
+            # Set terrain nodata value to NaN
+            ds1_rgb[ds1_rgb == -999] = np.nan
+            ds2_rgb[ds2_rgb == -999] = np.nan
+
+            # Compute spread of fade proportions in forward and reverse direction, with a
+            # specified pause (in steps/frames) at the start and finish of the sequence
+            fade_props = np.concatenate([np.linspace(0, 1, interval_steps, endpoint=True),
+                                         np.array([1] * endpoint_steps),  # pause at ds1
+                                         np.linspace(1, 0, interval_steps, endpoint=True),
+                                         np.array([0] * endpoint_steps)])  # pause at ds2
+
+            # Iterate through each timestep and add plot to list
+            ims = []
+            for fade_prop in fade_props:
+
+                # Fade between datasets using fade proportion
+                ds_merged = (ds1_rgb * fade_prop) + (ds2_rgb * (1.0 - fade_prop))  
+
+                # Plot image for each timestep and append to list
+                im = ax1.imshow(ds_merged, animated=True)
+
+                # If on first or last frame, add text
+                if fade_prop in [0, 1]:
+
+                    # Plot either first or second text annotation by indexing 
+                    text_index = int(fade_prop)
+                    t = ax1.annotate(endpoint_text[text_index], 
+                                     xy=(1, 1), xycoords='axes fraction', 
+                                     xytext=(-5, -5), textcoords='offset points', 
+                                     horizontalalignment='right', verticalalignment='top', 
+                                     fontsize=font_size, color='white', family='monospace')
+                else:
+
+                    # Set up text
+                    t = ax1.annotate("", xy=(1, 1), xycoords='axes fraction')
+
+
+                ims.append([im, t])
+
+            # Create and export animation of all plots in list
+            ani = animation.ArtistAnimation(fig, ims, interval=interval, repeat_delay=interval, blit=True)
+
+            # Export as either MP4 or GIF
+            if output_path[-3:] == 'mp4':
+                print('Exporting animation to {}'.format(output_path))
+                ani.save(output_path, dpi=width_pixels / 10.0)
+
+            elif output_path[-3:] == 'gif':
+                print('Exporting animation to {}'.format(output_path))
+                ani.save(output_path, dpi=width_pixels / 10.0, writer='imagemagick')
+
+            else:
+                print('Output file type must be either .gif or .mp4')
+
+        else:
+            print('ds1 has different dimensions {} to ds2 {}'.format(ds1_rgb.shape, ds2_rgb.shape))        
+
+    else:        
+        print("Please select exactly three bands that exist in the input dataset")
