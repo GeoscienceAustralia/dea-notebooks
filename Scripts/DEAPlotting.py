@@ -245,8 +245,8 @@ def animated_fade(ds1, ds2, output_path, bands=['red', 'green', 'blue'], reflect
                   font_size=25):
 
 
-def animated_timeseries(ds, output_path, bands=['red', 'green', 'blue'], reflect_stand=5000, width_pixels=500,
-                        interval=200, font_size=25):
+def animated_timeseries(ds, output_path, bands=['red', 'green', 'blue'], reflect_stand=5000, width_pixels=300,
+                        interval=100, font_size=25):
     
     """
     Takes an xarray time series and exports a three band (e.g. true or false colour) GIF or MP4 animation showing 
@@ -272,11 +272,11 @@ def animated_timeseries(ds, output_path, bands=['red', 'green', 'blue'], reflect
         
     :param width_pixels:
         An integer defining the output width in pixels for the resulting animation. The height of the animation is
-        set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 500 pixels wide.
+        set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 300 pixels wide.
         
     :param interval:
         An integer defining the milliseconds between each animation frame used to control the speed of the output
-        animation. Higher values result in a slower animation. Defaults to 200 milliseconds between each frame.    
+        animation. Higher values result in a slower animation. Defaults to 100 milliseconds between each frame.    
     
     :param font_size:
         An integer that allows you to set the font size for the animation's date annotation. Defaults to 25.   
