@@ -7,12 +7,17 @@ This folder contains examples of python code that demonstrates the use of functi
 DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarrays)
      - **load_nbarx**: Loads NBAR (Nadir BRDF Adjusted Reflectance) or NBAR-T (terrain corrected NBAR) data for a sensor, masks using pixel quality (PQ), then optionally filters out terrain -999s (for NBAR-T)
      - **load_sentinel**: Loads a Sentinel granule product and masks using PQ
+     - **load_clearlandsat**: Loads time series of clear Landsat observations from the entire archive
      - **tasseled_cap**: Computes tasseled cap wetness, greenness and brightness bands from a six band xarray dataset
      - **dataset_to_geotiff**: Writes a multi-band geotiff for one xarray timeslice, or for a single composite image
+     - **open_polygon_from_shapefile**: Imports a shapefile and converts to a datacube geometry object
+     - **write_your_netcdf**: Writes an xarray dataset or array to a NetCDF file
      
 DEAPlotting.py: plotting DEA data (e.g. xarrays)
      - **three_band_image**: Takes three spectral bands and plots them on the RGB bands of an image
      - **three_band_image_subplots**: Takes three spectral bands and multiple time steps, and plots them on the RGB bands of an image
+     - **animated_timeseries**: Takes an xarray time series and exports an animation showing landscape change across time
+     - **animated_fade**: Takes two single-timestep xarray datasets and exports a fading/transitioning animation
 
 BandIndices.py: calculating remote sensing band indices
      - **calculate_indices**: Computes a set of indices (including NDVI, GNDVI, NDWI, NDMI) from an xarray dataset
