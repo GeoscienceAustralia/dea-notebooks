@@ -239,7 +239,8 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
     return plt, fig
 
 
-def animated_timeseries(ds, output_path, interval=200, width_pixels=500, bands=['red', 'green', 'blue'], reflect_stand=5000):
+def animated_timeseries(ds, output_path, interval=200, width_pixels=500, bands=['red', 'green', 'blue'], 
+                        reflect_stand=5000, font_size=25):
     
     """
     Takes an xarray time series and exports a three band (e.g. true or false colour) GIF or MP4 animation showing 
@@ -269,7 +270,10 @@ def animated_timeseries(ds, output_path, interval=200, width_pixels=500, bands=[
     
     :param reflect_stand:
         An integer that allows you to have greater control over the contrast stretch by manually specifying a
-        reflectance standardisation value. Low values (< 5000) result in brighter images. Defaults to 5000.       
+        reflectance standardisation value. Low values (< 5000) result in brighter images. Defaults to 5000.     
+    
+    :param font_size:
+        An integer that allows you to set the font size for the animation's date annotation. Defaults to 25.   
         
     :example:
     
@@ -345,7 +349,7 @@ def animated_timeseries(ds, output_path, interval=200, width_pixels=500, bands=[
                              xy=(1, 1), xycoords='axes fraction', 
                              xytext=(-5, -5), textcoords='offset points', 
                              horizontalalignment='right', verticalalignment='top', 
-                             fontsize=12, color = "white", family='monospace')
+                             fontsize=font_size, color = "white", family='monospace')
 
             ims.append([im, t])
 
