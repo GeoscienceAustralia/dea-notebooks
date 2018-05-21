@@ -24,7 +24,7 @@ from os.path import splitext
 from sklearn.ensemble import RandomForestClassifier
 
 # Import DEA Notebooks scripts
-sys.path.append(os.path.abspath('/g/data/r78/rt1527/dea-notebooks/algorithms'))
+sys.path.append('../Scripts')
 from SpatialTools import layer_extent
 from SpatialTools import rasterize_vector
 from SpatialTools import array_to_geotiff
