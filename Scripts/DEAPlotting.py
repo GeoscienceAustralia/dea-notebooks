@@ -240,11 +240,6 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
     return plt, fig
 
 
-def animated_fade(ds1, ds2, output_path, bands=['red', 'green', 'blue'], reflect_stand=5000, width_pixels=300, 
-                  interval=50, interval_steps=15, endpoint_steps=15, endpoint_text=['Before',  'After'],
-                  font_size=25):
-
-
 def animated_timeseries(ds, output_path, bands=['red', 'green', 'blue'], reflect_stand=5000, width_pixels=300,
                         interval=100, font_size=25):
     
