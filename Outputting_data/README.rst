@@ -13,3 +13,4 @@ To add here:
    :maxdepth: 1
 
    ProduceFalseColourGeotiffs.ipynb
+   PlottingAnimatedGifs.ipynb
