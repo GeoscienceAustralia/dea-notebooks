@@ -185,7 +185,7 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8'], saturated=False):
+def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8'], mask_dict=None):
     
     """
     Loads Landsat observations and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a
@@ -213,10 +213,12 @@ def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8']
     :param sensors:
         A list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8', defaults to all.
         
-    :param saturated:
-        A boolean indicating whether to include saturated band values in the clear observation calculation.
-        Defaults to False, which includes saturated values as unclear observations. Set to True if you only
-        want to filter out cloudy images instead.      
+    :param mask_dict:
+        An optional dict of arguments to the `masking.make_mask` function that can be used to identify clear
+	observations from the PQ layer using alternative masking criteria. The default value of None masks out 
+	pixels flagged as cloud by either the ACCA or Fmask alogorithms, and that have values for every band 
+        (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
+        See the `Landsat5-7-8-PQ` notebook on DEA Notebooks for a list of all possible options.
     
     :returns:
         An xarray dataset containing only Landsat observations that contain greater than `masked_prop`
@@ -272,20 +274,20 @@ def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8']
             # Return only Landsat observations that have matching PQ data (this may
             # need to be improved, but seems to work in most cases)
             data = data.sel(time = pq.time, method='nearest')
+            
+            # If a custom dict is provided for mask_dict, use these values to make mask from PQ
+            if mask_dict:
+                
+                # Mask PQ using custom values by unpacking mask_dict **kwarg
+                good_quality = masking.make_mask(pq.pixelquality, **mask_dict)
+                
+            else:
 
-            # Identify pixels with clear data
-            good_quality = masking.make_mask(pq.pixelquality,
-                                             cloud_acca='no_cloud',
-                                             cloud_shadow_acca='no_cloud_shadow',
-                                             cloud_shadow_fmask='no_cloud_shadow',
-                                             cloud_fmask='no_cloud',
-                                             blue_saturated=saturated,
-                                             green_saturated=saturated,
-                                             red_saturated=saturated,
-                                             nir_saturated=saturated,
-                                             swir1_saturated=saturated,
-                                             swir2_saturated=saturated,
-                                             contiguous=True)
+                # Identify pixels with no clouds in either ACCA for Fmask
+                good_quality = masking.make_mask(pq.pixelquality,
+                                                 cloud_acca='no_cloud',
+                                                 cloud_fmask='no_cloud',
+                                                 contiguous=True)
 
             # Compute good data for each observation as a percentage of total array pixels
             data_perc = good_quality.sum(dim=['x', 'y']) / (good_quality.shape[1] * good_quality.shape[2])
@@ -308,7 +310,7 @@ def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8']
 
     # Concatenate all sensors into one big xarray dataset, and then sort by time
     print('Combining and sorting ls5, ls7 and ls8 data')
-    combined_ds = xr.concat(filtered_sensors, dim = 'time')
+    combined_ds = xr.concat(filtered_sensors, dim='time')
     combined_ds = combined_ds.sortby('time')
     
     # Return combined dataset
