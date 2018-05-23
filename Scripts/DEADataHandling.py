@@ -322,9 +322,6 @@ def write_your_netcdf(data, dataset_name, filename, crs):
         print('your data might be the wrong type, it is: '+type(data))
     #grab our crs attributes to write a spatially-referenced netcdf
     dataset.attrs['crs'] = crs
-    #dataset.attrs['affine'] =affine
-
-    #dataset.dataset_name.attrs['crs'] = crs
     try:
         write_dataset_to_netcdf(dataset, filename)
     except RuntimeError as err:
