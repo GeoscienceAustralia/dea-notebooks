@@ -185,34 +185,41 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8'], mask_dict=None):
+def load_clearlandsat(dc, sensors=['ls5', 'ls7', 'ls8'], query, product='nbart', masked_prop=0.99,  mask_dict=None):
     
     """
-    Loads Landsat observations and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a
-    single xarray dataset containing only observations that contain greater than a specified proportion
-    of clear pixels.
-    
-    This may be useful for extracting a visually appealing time series of observations that are not
+    Loads Landsat NBAR or NBART and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
+    xarray dataset containing only observations that contain greater than a given proportion of clear pixels.    
+  
+    This function was designed to extract visually appealing time series of observations that are not
     affected by cloud, for example as an input to the `animated_timeseries` function from `DEAPlotting`.
     
+    The proportion of clear pixels is calculated by summing the pixels that are flagged as being problematic
+    in the Landsat PQ25 layer. By default only cloudy pixels or pixels without valid data in every band 
+    are included in the calculation, but this can be customised using the `mask_dict` function.
+    
     Last modified: May 2018
-    Author: Robbi Bishop-Taylor
+    Author: Robbi Bishop-Taylor, Bex Dunn
     
     :param dc: 
-        A specific Datacube instance to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. 
-        This allows you to also use dev environments if thay have been imported into the environment.
+        A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This 
+	allows you to also use dev environments if thay have been imported into the environment.
+	
+    :param sensors:
+        A list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8', defaults to all.	
         
     :param query: 
         A dict containing the query bounds. Can include lat/lon, time, measurements etc. If no `time`
         query is given, the function defaults to all timesteps available to all sensors (e.g. 1987-2018)
-        
+	
+    :param product:
+        A string specifying 'nbar' or 'nbart'. Defaults to nbart unless otherwise specified. For information 
+	on the difference, see the 'GettingStartedWithLandsat5-7-8' notebook on DEA Notebooks.
+	
     :param masked_prop:
         A float giving the minimum percentage of clear pixels required for a Landsat observation to be 
         loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of unclear pixels).
-        
-    :param sensors:
-        A list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8', defaults to all.
-        
+            
     :param mask_dict:
         An optional dict of arguments to the `masking.make_mask` function that can be used to identify clear
 	observations from the PQ layer using alternative masking criteria. The default value of None masks out 
@@ -254,9 +261,9 @@ def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8']
         
         try:
 
-            # Lazily load Landsat data using dask
+            # Lazily load Landsat data using dask. 
             print('Loading {} PQ'.format(sensor))
-            data = dc.load(product = '{}_nbart_albers'.format(sensor),
+            data = dc.load(product = '{}_{}_albers'.format(sensor, product),
                         group_by = 'solar_day', 
                         dask_chunks={'time': 1},
                         **query)
@@ -313,6 +320,10 @@ def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8']
     combined_ds = xr.concat(filtered_sensors, dim='time')
     combined_ds = combined_ds.sortby('time')
     
+    if product == 'nbart':                                                              
+    #Filter nbart to replace no data values with nans
+        combined_ds = combined_ds.where(combined_ds != -999.0)
+
     # Return combined dataset
     return combined_ds
 
