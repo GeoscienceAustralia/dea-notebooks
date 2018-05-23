@@ -199,7 +199,7 @@ def load_clearlandsat(dc, sensors=['ls5', 'ls7', 'ls8'], query, product='nbart',
     are included in the calculation, but this can be customised using the `mask_dict` function.
     
     Last modified: May 2018
-    Author: Robbi Bishop-Taylor
+    Author: Robbi Bishop-Taylor, Bex Dunn
     
     :param dc: 
         A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This 
