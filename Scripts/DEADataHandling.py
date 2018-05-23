@@ -188,19 +188,22 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
 def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8'], mask_dict=None):
     
     """
-    Loads Landsat observations and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a
-    single xarray dataset containing only observations that contain greater than a specified proportion
-    of clear pixels.
-    
-    This may be useful for extracting a visually appealing time series of observations that are not
+    Loads Landsat NBAR and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single xarray 
+    dataset containing only observations that contain greater than a specified proportion of clear pixels.    
+  
+    This function was designed to extract visually appealing time series of observations that are not
     affected by cloud, for example as an input to the `animated_timeseries` function from `DEAPlotting`.
+    
+    The proportion of clear pixels is calculated by summing the pixels that are flagged as being problematic
+    in the Landsat PQ25 layer. By default only cloudy pixels or pixels without valid data in every band 
+    are included in the calculation, but this can be customised using the `mask_dict` function.
     
     Last modified: May 2018
     Author: Robbi Bishop-Taylor
     
     :param dc: 
-        A specific Datacube instance to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. 
-        This allows you to also use dev environments if thay have been imported into the environment.
+        A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This 
+	allows you to also use dev environments if thay have been imported into the environment.
         
     :param query: 
         A dict containing the query bounds. Can include lat/lon, time, measurements etc. If no `time`
@@ -254,9 +257,10 @@ def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8']
         
         try:
 
-            # Lazily load Landsat data using dask
+            # Lazily load Landsat data using dask. This uses NBAR rather than NBART, as this 
+            # produces a more visually appealing result without nodata gaps.
             print('Loading {} PQ'.format(sensor))
-            data = dc.load(product = '{}_nbart_albers'.format(sensor),
+            data = dc.load(product = '{}_nbar_albers'.format(sensor),
                         group_by = 'solar_day', 
                         dask_chunks={'time': 1},
                         **query)
