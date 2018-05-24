@@ -1,10 +1,13 @@
-
-# coding: utf-8
-
-# In[1]:
-
+# water_classifier_and_wofs.py
 
 def water_classifier(dataset_in):
+    '''This code runs the Australian Water Observations from Space (WOfS) algorithm after Mueller, et al. (2015). The water classifier is based on https://github.com/GeoscienceAustralia/eo-tools/blob/stable/eotools/water_classifier.py  
+    
+Date: May 2018
+
+Authors: Erin Telfer, Bex Dunn
+
+    '''
     def _band_ratio(a, b):
         """
         Calculates a normalized ratio index
@@ -13,7 +16,9 @@ def water_classifier(dataset_in):
 
     def _run_regression(blue, green, red, nir, swir1, swir2):
         """
-        Water classifier. Regression analysis based on Australia training data.
+        Water classifier. 
+        Regression analysis based on Australia training data.
+        Params are the bands
         """
 
         # Compute normalized ratio indices
