@@ -13,8 +13,7 @@ Available functions:
     write_your_netcdf
 
 Last modified: May 2018
-Author: Claire Krause
-Modified by: Robbi Bishop-Taylor, Bex Dunn
+Authors: Claire Krause, Robbi Bishop-Taylor, Bex Dunn
 
 '''
 
@@ -110,21 +109,9 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
             ds.attrs['crs'] = crs
             ds.attrs['affine'] = affine
 
-        # If product is NBAR-T, also correct terrain by replacing -999.0 with nan
-        if product == 'nbart':
+        # Replace nodata values with nans
 
-            print('Masked {} with {} and filtered terrain'.format(product_name,
-                                                                  mask_product))
-            ds = ds.where(ds != -999.0)
-
-        # If NBAR, simply print successful run
-        elif product == 'nbar':
-
-            print('Masked {} with {}'.format(product_name, mask_product))
-
-        else:
-
-            print('Failed to mask {} with {}'.format(product_name, mask_product))
+            ds = masking.mask_invalid_data(ds)
 
         return ds, crs, affine
 
@@ -172,7 +159,8 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         print('loaded {}'.format(product))
         if filter_cloud:
             print('making mask')
-            clear_pixels = np.logical_and(ds.pixel_quality != 2, ds.pixel_quality != 3)
+            clear_pixels = np.logical_and(ds.pixel_quality != 0, ds.pixel_quality != 2, 
+                                          ds.pixel_quality != 3)
             ds = ds.where(clear_pixels)
         ds.attrs['crs'] = crs
         ds.attrs['affine'] = affine
@@ -319,10 +307,9 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], product='nbart',
     print('Combining and sorting ls5, ls7 and ls8 data')
     combined_ds = xr.concat(filtered_sensors, dim='time')
     combined_ds = combined_ds.sortby('time')
-    
-    if product == 'nbart':                                                              
-    #Filter nbart to replace no data values with nans
-        combined_ds = combined_ds.where(combined_ds != -999.0)
+                                                               
+    #Filter to replace no data values with nans
+    combined_ds = masking.mask_invalid_data(combined_ds)
 
     # Return combined dataset
     return combined_ds
