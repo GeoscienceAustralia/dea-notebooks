@@ -6,6 +6,7 @@ Available functions:
 
     load_nbarx
     load_sentinel
+    load_clearlandsat
     tasseled_cap
     dataset_to_geotiff
     open_polygon_from_shapefile
@@ -184,6 +185,138 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
+def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8'], mask_dict=None):
+    
+    """
+    Loads Landsat observations and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a
+    single xarray dataset containing only observations that contain greater than a specified proportion
+    of clear pixels.
+    
+    This may be useful for extracting a visually appealing time series of observations that are not
+    affected by cloud, for example as an input to the `animated_timeseries` function from `DEAPlotting`.
+    
+    Last modified: May 2018
+    Author: Robbi Bishop-Taylor
+    
+    :param dc: 
+        A specific Datacube instance to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. 
+        This allows you to also use dev environments if thay have been imported into the environment.
+        
+    :param query: 
+        A dict containing the query bounds. Can include lat/lon, time, measurements etc. If no `time`
+        query is given, the function defaults to all timesteps available to all sensors (e.g. 1987-2018)
+        
+    :param masked_prop:
+        A float giving the minimum percentage of clear pixels required for a Landsat observation to be 
+        loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of unclear pixels).
+        
+    :param sensors:
+        A list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8', defaults to all.
+        
+    :param mask_dict:
+        An optional dict of arguments to the `masking.make_mask` function that can be used to identify clear
+	observations from the PQ layer using alternative masking criteria. The default value of None masks out 
+	pixels flagged as cloud by either the ACCA or Fmask alogorithms, and that have values for every band 
+        (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
+        See the `Landsat5-7-8-PQ` notebook on DEA Notebooks for a list of all possible options.
+    
+    :returns:
+        An xarray dataset containing only Landsat observations that contain greater than `masked_prop`
+        proportion of clear pixels.  
+        
+    :example:
+    
+    >>> # Import modules
+    >>> import datacube     
+    >>> 
+    >>> # Set up datacube instance
+    >>> dc = datacube.Datacube(app='Clear Landsat')
+    >>> 
+    >>> # Set up spatial and temporal query.
+    >>> query = {'x': (-191399.7550998943, -183399.7550998943),
+    >>>          'y': (-1423459.1336905062, -1415459.1336905062),
+    >>>          'measurements': ['red', 'green', 'blue'],
+    >>>          'time': ('2013-01-01', '2018-01-01'),
+    >>>          'crs': 'EPSG:3577'}
+    >>> 
+    >>> # Load in only clear Landsat observations with < 1% unclear values
+    >>> combined_ds = load_clearlandsat(dc=dc, query=query, masked_prop=0.99) 
+    >>> combined_ds
+        
+    """
+    
+
+    # List to save results from each sensor
+    filtered_sensors = []
+
+    # Iterate through all sensors, returning only observations with > mask_prop clear pixels
+    for sensor in sensors:
+        
+        try:
+
+            # Lazily load Landsat data using dask
+            print('Loading {} PQ'.format(sensor))
+            data = dc.load(product = '{}_nbart_albers'.format(sensor),
+                        group_by = 'solar_day', 
+                        dask_chunks={'time': 1},
+                        **query)
+
+            # Remove measurements variable from query so that PQ load doesn't fail
+            pq_query = query.copy()
+            if 'measurements' in pq_query: del pq_query['measurements']
+
+            # Load PQ data
+            pq = dc.load(product = '{}_pq_albers'.format(sensor),
+                         group_by = 'solar_day',
+                         fuse_func=ga_pq_fuser,
+                         **pq_query)
+
+            # Return only Landsat observations that have matching PQ data (this may
+            # need to be improved, but seems to work in most cases)
+            data = data.sel(time = pq.time, method='nearest')
+            
+            # If a custom dict is provided for mask_dict, use these values to make mask from PQ
+            if mask_dict:
+                
+                # Mask PQ using custom values by unpacking mask_dict **kwarg
+                good_quality = masking.make_mask(pq.pixelquality, **mask_dict)
+                
+            else:
+
+                # Identify pixels with no clouds in either ACCA for Fmask
+                good_quality = masking.make_mask(pq.pixelquality,
+                                                 cloud_acca='no_cloud',
+                                                 cloud_fmask='no_cloud',
+                                                 contiguous=True)
+
+            # Compute good data for each observation as a percentage of total array pixels
+            data_perc = good_quality.sum(dim=['x', 'y']) / (good_quality.shape[1] * good_quality.shape[2])
+            
+            # Add data_perc data to Landsat dataset as a new xarray variable
+            data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
+
+            # Filter and finally import data using dask
+            filtered = data.where(data.data_perc >= masked_prop, drop=True)
+            print('    Loading {} filtered {} timesteps'.format(len(filtered.time), sensor))
+            filtered = filtered.compute()
+            
+            # Append result to list
+            filtered_sensors.append(filtered)
+        
+        except:
+            
+            # If there is no data for sensor or if another error occurs:
+            print('    Skipping {}'.format(sensor))
+
+    # Concatenate all sensors into one big xarray dataset, and then sort by time
+    print('Combining and sorting ls5, ls7 and ls8 data')
+    combined_ds = xr.concat(filtered_sensors, dim='time')
+    combined_ds = combined_ds.sortby('time')
+    
+    # Return combined dataset
+    return combined_ds
+
+
 def tasseled_cap(sensor_data, sensor, tc_bands=['greenness', 'brightness', 'wetness'],
                  drop=True):
     """
@@ -256,21 +389,28 @@ def tasseled_cap(sensor_data, sensor, tc_bands=['greenness', 'brightness', 'wetn
 
 
 def dataset_to_geotiff(filename, data):
+
     '''
     this function uses rasterio and numpy to write a multi-band geotiff for one
     timeslice, or for a single composite image. It assumes the input data is an
     xarray dataset (note, dataset not dataarray) and that you have crs and affine
     objects attached, and that you are using float data. future users
     may wish to assert that these assumptions are correct.
+
     Last modified: March 2018
     Authors: Bex Dunn and Josh Sixsmith
     Modified by: Claire Krause, Robbi Bishop-Taylor
+
     inputs
     filename - string containing filename to write out to
     data - dataset to write out
     Note: this function currently requires the data have lat/lon only, i.e. no
     time dimension
     '''
+
+    # Depreciation warning for write_geotiff
+    print("This function will be superceded by the 'write_geotiff' function from 'datacube.helpers'. "
+          "Please revise your notebooks to use this function instead")
 
     kwargs = {'driver': 'GTiff',
               'count': len(data.data_vars),  # geomedian no time dim
@@ -287,9 +427,12 @@ def dataset_to_geotiff(filename, data):
             src.write(data[band].data, i + 1)
             
 def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
+
     '''This function takes a shapefile, selects a polygon as per your selection, 
     uses the datacube geometry object, along with shapely.geometry and fiona to 
-    get the geom for the datacube query . It will also make sure you have the correct crs object for the    DEA
+    get the geom for the datacube query. It will also make sure you have the correct 
+    crs object for the DEA
+
     Last modified May 2018
     Author: Bex Dunn'''
 
@@ -311,8 +454,11 @@ def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
     return geom, shape_name          
 
 def write_your_netcdf(data, dataset_name, filename, crs):
-    '''this function turns an xarray dataarray into a dataset so we can write it to netcdf. It adds on a crs definition
-    from the original array. data = your xarray dataset, dataset_name is a string describing your variable'''    
+
+    '''this function turns an xarray dataarray into a dataset so we can write it to netcdf. 
+    It adds on a crs definition from the original array. data = your xarray dataset, dataset_name 
+    is a string describing your variable''' 
+   
     #turn array into dataset so we can write the netcdf
     if isinstance(data,xr.DataArray):
         dataset= data.to_dataset(name=dataset_name)
@@ -322,6 +468,7 @@ def write_your_netcdf(data, dataset_name, filename, crs):
         print('your data might be the wrong type, it is: '+type(data))
     #grab our crs attributes to write a spatially-referenced netcdf
     dataset.attrs['crs'] = crs
+
     try:
         write_dataset_to_netcdf(dataset, filename)
     except RuntimeError as err:
