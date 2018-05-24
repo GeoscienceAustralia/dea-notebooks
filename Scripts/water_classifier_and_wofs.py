@@ -1,5 +1,11 @@
 # water_classifier_and_wofs.py
 
+#grab the dependencies
+import numpy as np
+import xarray as xr
+import gc
+
+
 def water_classifier(dataset_in):
     '''This code runs the Australian Water Observations from Space (WOfS) algorithm after Mueller, et al. (2015). The water classifier is based on https://github.com/GeoscienceAustralia/eo-tools/blob/stable/eotools/water_classifier.py  
     
