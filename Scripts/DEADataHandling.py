@@ -185,7 +185,7 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, sensors=['ls5', 'ls7', 'ls8'], query, product='nbart', masked_prop=0.99,  mask_dict=None):
+def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], product='nbart', masked_prop=0.99,  mask_dict=None):
     
     """
     Loads Landsat NBAR or NBART and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
@@ -204,20 +204,20 @@ def load_clearlandsat(dc, sensors=['ls5', 'ls7', 'ls8'], query, product='nbart',
     :param dc: 
         A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This 
 	allows you to also use dev environments if thay have been imported into the environment.
-	
-    :param sensors:
-        A list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8', defaults to all.	
-        
+    
     :param query: 
         A dict containing the query bounds. Can include lat/lon, time, measurements etc. If no `time`
         query is given, the function defaults to all timesteps available to all sensors (e.g. 1987-2018)
 	
+    :param sensors:
+        An optional list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8', defaults to all.	
+	
     :param product:
-        A string specifying 'nbar' or 'nbart'. Defaults to nbart unless otherwise specified. For information 
-	on the difference, see the 'GettingStartedWithLandsat5-7-8' notebook on DEA Notebooks.
+        An optional string specifying 'nbar' or 'nbart'. Defaults to nbart unless otherwise specified. For 
+	information on the difference, see the 'GettingStartedWithLandsat5-7-8' notebook on DEA Notebooks.
 	
     :param masked_prop:
-        A float giving the minimum percentage of clear pixels required for a Landsat observation to be 
+        An optional float giving the minimum percentage of clear pixels required for a Landsat observation to be 
         loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of unclear pixels).
             
     :param mask_dict:

@@ -336,9 +336,6 @@ def animated_timeseries(ds, output_path, bands=['red', 'green', 'blue'], reflect
 
                 rawimg[:, :, i] = ds_i[colour].values
 
-            # Set terrain nodata value to NaN
-            rawimg[rawimg == -999] = np.nan
-
             # Stretch contrast using defined reflectance standardisation; defaults to 5000
             img_toshow = (rawimg / reflect_stand).clip(0, 1)
 
@@ -481,10 +478,6 @@ def animated_fade(ds1, ds2, output_path, bands=['red', 'green', 'blue'], reflect
             # Stretch contrast using defined reflectance standardisation; defaults to 5000
             ds1_rgb = (ds1_rgb / reflect_stand).clip(0, 1)
             ds2_rgb = (ds2_rgb / reflect_stand).clip(0, 1)
-
-            # Set terrain nodata value to NaN
-            ds1_rgb[ds1_rgb == -999] = np.nan
-            ds2_rgb[ds2_rgb == -999] = np.nan
 
             # Compute spread of fade proportions in forward and reverse direction, with a
             # specified pause (in steps/frames) at the start and finish of the sequence
