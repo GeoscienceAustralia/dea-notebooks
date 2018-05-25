@@ -12,3 +12,4 @@ To add here:
    :maxdepth: 1
  
    RandomForestClassification.ipynb
+   DEA_WOfS_and_water_classifier.ipynb 
