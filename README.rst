@@ -1,6 +1,5 @@
 .. Notebook Gallery Instructions:
 
-=========================
 Overview of DEA Notebooks
 =========================
 This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. The intended order of these notebook folders are:
@@ -46,7 +45,6 @@ Once you have checked that your notebook meets all the publishing requirements, 
 Finally, anyone with admin access can contribute to ``dea-notebooks`` by reviewing pull requests to ensure that changes meet minimum publishing requirements. The `Approving pull requests`_ section explains how! 
 
 
-=============================
 Publishing finished notebooks
 =============================
 
@@ -104,7 +102,6 @@ Firstly, before you push your notebook to the repo, go to the 'Widgets' drop dow
 `<https://nbviewer.jupyter.org/github/GeoscienceAustralia/dea-notebooks/blob/master/Workflows/RetrieveLandsat8ViewAndExport.ipynb>`_
 
 
-====================================
 DEA notebooks using command-line git
 ====================================
 
@@ -188,7 +185,6 @@ You will receive an email to the address your Github account is registered with 
 ``git branch`` will show you all the branches your local repo is tracking. If there are staging branches you would like to clean up, use ``git branch -D <branchtobedeleted>``. This will stop you accumulating useless branches in your local ``git`` repo.
 
 
-==========================
 DEA notebooks using Github
 ==========================
 
@@ -225,7 +221,6 @@ Deleting existing files:
 
 **Important note:** To keep your files up to date with the ``master`` branch, ensure that you regularly re-download the repository's zip file. Just make sure you upload or back-up any changed files so that they do not get overwritten by the new files!
 
-=======================
 Approving pull requests
 =======================
 
