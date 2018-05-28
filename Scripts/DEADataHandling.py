@@ -13,8 +13,7 @@ Available functions:
     write_your_netcdf
 
 Last modified: May 2018
-Author: Claire Krause
-Modified by: Robbi Bishop-Taylor, Bex Dunn
+Authors: Claire Krause, Robbi Bishop-Taylor, Bex Dunn
 
 '''
 
@@ -110,21 +109,9 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
             ds.attrs['crs'] = crs
             ds.attrs['affine'] = affine
 
-        # If product is NBAR-T, also correct terrain by replacing -999.0 with nan
-        if product == 'nbart':
+        # Replace nodata values with nans
 
-            print('Masked {} with {} and filtered terrain'.format(product_name,
-                                                                  mask_product))
-            ds = ds.where(ds != -999.0)
-
-        # If NBAR, simply print successful run
-        elif product == 'nbar':
-
-            print('Masked {} with {}'.format(product_name, mask_product))
-
-        else:
-
-            print('Failed to mask {} with {}'.format(product_name, mask_product))
+            ds = masking.mask_invalid_data(ds)
 
         return ds, crs, affine
 
@@ -172,7 +159,8 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         print('loaded {}'.format(product))
         if filter_cloud:
             print('making mask')
-            clear_pixels = np.logical_and(ds.pixel_quality != 2, ds.pixel_quality != 3)
+            clear_pixels = np.logical_and(ds.pixel_quality != 0, ds.pixel_quality != 2, 
+                                          ds.pixel_quality != 3)
             ds = ds.where(clear_pixels)
         ds.attrs['crs'] = crs
         ds.attrs['affine'] = affine
@@ -185,38 +173,47 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8'], saturated=False):
+def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], product='nbart', masked_prop=0.99,  mask_dict=None):
     
     """
-    Loads Landsat observations and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a
-    single xarray dataset containing only observations that contain greater than a specified proportion
-    of clear pixels.
-    
-    This may be useful for extracting a visually appealing time series of observations that are not
+    Loads Landsat NBAR or NBART and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
+    xarray dataset containing only observations that contain greater than a given proportion of clear pixels.    
+  
+    This function was designed to extract visually appealing time series of observations that are not
     affected by cloud, for example as an input to the `animated_timeseries` function from `DEAPlotting`.
     
+    The proportion of clear pixels is calculated by summing the pixels that are flagged as being problematic
+    in the Landsat PQ25 layer. By default only cloudy pixels or pixels without valid data in every band 
+    are included in the calculation, but this can be customised using the `mask_dict` function.
+    
     Last modified: May 2018
-    Author: Robbi Bishop-Taylor
+    Author: Robbi Bishop-Taylor, Bex Dunn
     
     :param dc: 
-        A specific Datacube instance to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. 
-        This allows you to also use dev environments if thay have been imported into the environment.
-        
+        A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This 
+	allows you to also use dev environments if thay have been imported into the environment.
+    
     :param query: 
         A dict containing the query bounds. Can include lat/lon, time, measurements etc. If no `time`
         query is given, the function defaults to all timesteps available to all sensors (e.g. 1987-2018)
-        
-    :param masked_prop:
-        A float giving the minimum percentage of clear pixels required for a Landsat observation to be 
-        loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of unclear pixels).
-        
+	
     :param sensors:
-        A list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8', defaults to all.
-        
-    :param saturated:
-        A boolean indicating whether to include saturated band values in the clear observation calculation.
-        Defaults to False, which includes saturated values as unclear observations. Set to True if you only
-        want to filter out cloudy images instead.      
+        An optional list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8', defaults to all.	
+	
+    :param product:
+        An optional string specifying 'nbar' or 'nbart'. Defaults to nbart unless otherwise specified. For 
+	information on the difference, see the 'GettingStartedWithLandsat5-7-8' notebook on DEA Notebooks.
+	
+    :param masked_prop:
+        An optional float giving the minimum percentage of clear pixels required for a Landsat observation to be 
+        loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of unclear pixels).
+            
+    :param mask_dict:
+        An optional dict of arguments to the `masking.make_mask` function that can be used to identify clear
+	observations from the PQ layer using alternative masking criteria. The default value of None masks out 
+	pixels flagged as cloud by either the ACCA or Fmask alogorithms, and that have values for every band 
+        (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
+        See the `Landsat5-7-8-PQ` notebook on DEA Notebooks for a list of all possible options.
     
     :returns:
         An xarray dataset containing only Landsat observations that contain greater than `masked_prop`
@@ -252,9 +249,9 @@ def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8']
         
         try:
 
-            # Lazily load Landsat data using dask
+            # Lazily load Landsat data using dask. 
             print('Loading {} PQ'.format(sensor))
-            data = dc.load(product = '{}_nbart_albers'.format(sensor),
+            data = dc.load(product = '{}_{}_albers'.format(sensor, product),
                         group_by = 'solar_day', 
                         dask_chunks={'time': 1},
                         **query)
@@ -272,20 +269,20 @@ def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8']
             # Return only Landsat observations that have matching PQ data (this may
             # need to be improved, but seems to work in most cases)
             data = data.sel(time = pq.time, method='nearest')
+            
+            # If a custom dict is provided for mask_dict, use these values to make mask from PQ
+            if mask_dict:
+                
+                # Mask PQ using custom values by unpacking mask_dict **kwarg
+                good_quality = masking.make_mask(pq.pixelquality, **mask_dict)
+                
+            else:
 
-            # Identify pixels with clear data
-            good_quality = masking.make_mask(pq.pixelquality,
-                                             cloud_acca='no_cloud',
-                                             cloud_shadow_acca='no_cloud_shadow',
-                                             cloud_shadow_fmask='no_cloud_shadow',
-                                             cloud_fmask='no_cloud',
-                                             blue_saturated=saturated,
-                                             green_saturated=saturated,
-                                             red_saturated=saturated,
-                                             nir_saturated=saturated,
-                                             swir1_saturated=saturated,
-                                             swir2_saturated=saturated,
-                                             contiguous=True)
+                # Identify pixels with no clouds in either ACCA for Fmask
+                good_quality = masking.make_mask(pq.pixelquality,
+                                                 cloud_acca='no_cloud',
+                                                 cloud_fmask='no_cloud',
+                                                 contiguous=True)
 
             # Compute good data for each observation as a percentage of total array pixels
             data_perc = good_quality.sum(dim=['x', 'y']) / (good_quality.shape[1] * good_quality.shape[2])
@@ -308,9 +305,12 @@ def load_clearlandsat(dc, query, masked_prop=0.99, sensors=['ls5', 'ls7', 'ls8']
 
     # Concatenate all sensors into one big xarray dataset, and then sort by time
     print('Combining and sorting ls5, ls7 and ls8 data')
-    combined_ds = xr.concat(filtered_sensors, dim = 'time')
+    combined_ds = xr.concat(filtered_sensors, dim='time')
     combined_ds = combined_ds.sortby('time')
-    
+                                                               
+    #Filter to replace no data values with nans
+    combined_ds = masking.mask_invalid_data(combined_ds)
+
     # Return combined dataset
     return combined_ds
 
