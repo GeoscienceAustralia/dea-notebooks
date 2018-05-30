@@ -111,7 +111,7 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
 
         # Replace nodata values with nans
 
-            ds = ds.where(ds != -999.0)
+            ds = masking.mask_invalid_data(ds)
 
         return ds, crs, affine
 
@@ -309,7 +309,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], product='nbart',
     combined_ds = combined_ds.sortby('time')
                                                                
     #Filter to replace no data values with nans
-    combined_ds = combined_ds.where(combined_ds != -999.0)
+    combined_ds = masking.mask_invalid_data(combined_ds)
 
     # Return combined dataset
     return combined_ds
