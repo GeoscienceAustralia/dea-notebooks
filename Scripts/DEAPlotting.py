@@ -6,7 +6,7 @@ Available functions:
     three_band_image
     three_band_image_subplots
     animated_timeseries
-    animated_fade
+    animated_doubletimeseries
 
 Last modified: May 2018
 Author: Claire Krause
@@ -19,7 +19,9 @@ import numpy as np
 from skimage import exposure
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import matplotlib.patheffects as PathEffects
 import calendar
+
 
 
 def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10), title='Time',
@@ -240,297 +242,533 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
     return plt, fig
 
 
-def animated_timeseries(ds, output_path, bands=['red', 'green', 'blue'], reflect_stand=5000, width_pixels=300,
-                        interval=100, font_size=25):
+def animated_timeseries(ds, output_path, width_pixels=400, interval=100, bands=['red', 'green', 'blue'], 
+                        reflect_stand=5000, title=False, show_date=True, onebandplot_kwargs={}, annotation_kwargs={}):
     
     """
-    Takes an xarray time series and exports a three band (e.g. true or false colour) GIF or MP4 animation showing 
-    changes in the landscape across time.
+    Takes an xarray time series and animates the data as either a three-band (e.g. true or false colour) 
+    or single-band animation, allowing changes in the landscape to be compared across time.
+    
+    Animations can be exported as .mp4 (ideal for Twitter/social media), .wmv (ideal for Powerpoint) and .gif 
+    (ideal for all purposes, but can have large file sizes) format files, and customised to include titles and 
+    date annotations or use specific combinations of input bands. 
+    
+    This function can be used to produce visually appealing cloud-free animations when used in combination with 
+    the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
     Last modified: May 2018
-    Author: Robbi Bishop-Taylor
+    Author: Robbi Bishop-Taylor    
     
     :param ds: 
-        An xarray dataset with multiple time steps (i.e. multiple observations along the `time` dimension)
+        An xarray dataset with multiple time steps (i.e. multiple observations along the `time` dimension).
         
     :param output_path: 
-        A string giving the output location and filename of the resulting animation. File extensions of '.gif'
-        and '.mp4' are accepted.
-        
-    :param bands:
-        Optional list of exactly three bands to be plotted, all of which must exist in the input xarray dataset.
-        Defaults to `['red', 'green', 'blue']`.
-        
-    :param reflect_stand:
-        An integer that allows you to have greater control over the contrast stretch by manually specifying a
-        reflectance standardisation value. Low values (< 5000) result in brighter images. Defaults to 5000. 
-        
+        A string giving the output location and filename of the resulting animation. File extensions of '.mp4', 
+        '.wmv' and '.gif' are accepted.
+    
     :param width_pixels:
         An integer defining the output width in pixels for the resulting animation. The height of the animation is
-        set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 300 pixels wide.
+        set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 400 pixels wide.
         
     :param interval:
         An integer defining the milliseconds between each animation frame used to control the speed of the output
-        animation. Higher values result in a slower animation. Defaults to 100 milliseconds between each frame.    
-    
-    :param font_size:
-        An integer that allows you to set the font size for the animation's date annotation. Defaults to 25.   
+        animation. Higher values result in a slower animation. Defaults to 100 milliseconds between each frame. 
         
-    :example:
-    
-    >>> # Import modules
-    >>> import datacube     
-    >>> 
-    >>> # Set up datacube instance
-    >>> dc = datacube.Datacube(app='Time series animation')
-    >>> 
-    >>> # Set up spatial and temporal query.
-    >>> query = {'x': (-191399.7550998943, -183399.7550998943),
-    >>>          'y': (-1423459.1336905062, -1415459.1336905062),
-    >>>          'measurements': ['red', 'green', 'blue'],
-    >>>          'time': ('2013-01-01', '2018-01-01'),
-    >>>          'crs': 'EPSG:3577'}
-    >>> 
-    >>> # Load in only clear Landsat observations with < 1% unclear values
-    >>> combined_ds = load_clearlandsat(dc=dc, query=query, masked_prop=0.99)  
-    >>>
-    >>> # Produce animation of red, green and blue bands
-    >>> animated_timeseries(ds=combined_ds, output_path="output.mp4", 
-    >>>                     interval=80, width_pixels=600, reflect_stand=3000)   
+    :param bands:
+        An optional list of either one or three bands to be plotted, all of which must exist in `ds`.
+        Defaults to `['red', 'green', 'blue']`. 
         
+    :param reflect_stand:
+        An optional  integer controlling the brightness of the output image. Low values (< 5000) result in 
+        brighter images. Defaults to 5000.
+
+    :param title: 
+        An optional string or list of strings with a length equal to the number of timesteps in ds. This can be
+        used to display a static title (using a string), or a dynamic title (using a list) that displays different
+        text for each timestep. Defaults to False, which plots no title.
+        
+    :param show_date:
+        An optional boolean that defines whether or not to plot date annotations for each animation frame. Defaults 
+        to True, which plots date annotations based on ds.
+        
+    :param onebandplot_kwargs:
+        An optional dict of kwargs for controlling the appearance of one-band image arrays to pass to matplotlib 
+        `plt.imshow` (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.imshow.html for options).
+        This only applies if an xarray with a single band is passed to `ds`. For example, a green colour scheme and
+        custom stretch could be specified using: `onebandplot_kwargs={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}`. 
+        By default, one-band arrays are plotted using the 'Greys' cmap with a vmin of 0.0 and a vmax of 1.0.
+    
+    :param annotation_kwargs:
+        An optional dict of kwargs for controlling the appearance of text annotations to pass to the matplotlib 
+        `plt.annotate` function (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.annotate.html for options). 
+        For example, `annotation_kwargs={'fontsize':20, 'color':'red', 'family':'serif'}. By default, text annotations 
+        are plotted as white, size 25 mono-spaced font with a 4pt black outline in the top-right of the animation.   
     """
-    
-    # First test if there are three bands, and that all exist in dataset:
-    if (len(bands) == 3) & all([(band in ds.data_vars) for band in bands]):        
 
-        # Get height relative to a size of 10 inches width
-        width_ratio = float(ds.sizes['x']) / float(ds.sizes['y'])
-        height = 10 / width_ratio
+    # Define function to convert xarray dataset to list of three band numpy arrays
+    def _ds_to_arrraylist(ds, bands, reflect_stand):   
 
-        # Set up plot
-        fig, ax1 = plt.subplots()
-        fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
-        fig.set_size_inches(10, height, forward=True)
-        plt.axis('off')
-
-        # Iterate through each timestep and add plot to list
-        ims = []
-        print('Generating animation with {} frames'.format(len(ds.time)))
+        array_list = []
         for i, timestep in enumerate(ds.time):
-
-            # Get human-readable date info (e.g. "16 May 1990")
-            year = timestep.time.dt.year.item()
-            month = calendar.month_abbr[timestep.time.dt.month.item()]
-            day = timestep.time.dt.day.item()
-            date_desc = '{} {} {}'.format(day, month, year)
 
             # Select single timestep from the data array
             ds_i = ds.isel(time = i)
 
             # Create new three band array
             y, x = ds_i[bands[0]].shape
-            rawimg = np.zeros((y, x, 3), dtype=np.float32)
 
-            # Add xarray bands into three dimensional numpy array
-            for i, colour in enumerate(bands):
+            if len(bands) == 1:    
 
-                rawimg[:, :, i] = ds_i[colour].values
+                # Create new three band array
+                img_toshow = ds_i[bands[0]].values
 
-            # Stretch contrast using defined reflectance standardisation; defaults to 5000
-            img_toshow = (rawimg / reflect_stand).clip(0, 1)
+            else:
 
-            # Plot image for each timestep and append to list
-            im = ax1.imshow(img_toshow, animated=True)
+                rawimg = np.zeros((y, x, 3), dtype=np.float32)
 
-            # Set up text
-            t = ax1.annotate(date_desc, 
-                             xy=(1, 1), xycoords='axes fraction', 
-                             xytext=(-5, -5), textcoords='offset points', 
-                             horizontalalignment='right', verticalalignment='top', 
-                             fontsize=font_size, color = "white", family='monospace')
+                # Add xarray bands into three dimensional numpy array
+                for band, colour in enumerate(bands):
 
-            ims.append([im, t])
+                    rawimg[:, :, band] = ds_i[colour].values
 
-        # Create and export animation of all plots in list
-        ani = animation.ArtistAnimation(fig, ims, interval=interval, blit=True, repeat_delay=interval)
+                # Stretch contrast using defined reflectance standardisation; defaults to 5000
+                img_toshow = (rawimg / reflect_stand).clip(0, 1)
+
+            array_list.append(img_toshow)
+
+        return(array_list)
+    
+    
+    ###############
+    # Setup steps #
+    ############### 
+    
+    # Get number of timesteps for each dataset
+    timesteps = len(ds.time)
+    
+    # If title is supplied as a string, multiply out to a list with one string per timestep.
+    # Otherwise, use supplied list for plot titles.
+    if isinstance(title, str) or isinstance(title, bool):
+        title_list = [title] * timesteps 
+    else:
+        title_list = title
+    
+    # Set up annotation parameters that plt.imshow plotting for single band array images. 
+    # The nested dict structure sets default values which can be overwritten/customised by the 
+    # manually specified `onebandplot_kwargs`
+    onebandplot_kwargs = dict({'cmap':'Greys', 'vmin':0.0, 'vmax':1.0, 'interpolation':'bilinear'},
+                               **onebandplot_kwargs)         
+    
+    # Set up annotation parameters that control font etc. The nested dict structure sets default 
+    # values which can be overwritten/customised by the manually specified `annotation_kwargs`
+    annotation_kwargs = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
+                              'xytext':(-5, -5), 'textcoords':'offset points', 
+                              'horizontalalignment':'right', 'verticalalignment':'top', 
+                              'fontsize':25, 'color':'white', 'family':'monospace', 
+                              'path_effects':[PathEffects.withStroke(linewidth=4, foreground='black')]},
+                              **annotation_kwargs)
+   
+    
+    ###################
+    # Initialise plot #
+    ################### 
+    
+    # First test if there are three bands, and that all exist in both datasets:
+    if ((len(bands) == 3) | (len(bands) == 1)) & all([(b in ds.data_vars) for b in bands]): 
+        
+        # Get height relative to a size of 10 inches width
+        width_ratio = float(ds.sizes['x']) / float(ds.sizes['y'])
+        height = 10.0 / width_ratio
+
+        # Import xarrays as lists of three band numpy arrays
+        imagelist = _ds_to_arrraylist(ds, bands=bands, reflect_stand=reflect_stand)        
+
+        # Set up figure
+        fig, ax1 = plt.subplots(ncols=1) 
+        fig.patch.set_facecolor('black')
+        fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+        fig.set_size_inches(10.0, height, forward=True)
+        ax1.axis('off')
+
+        # Initialise axesimage objects to be updated during animation
+        left, bottom, right, top = ds.extent.boundingbox
+        im = ax1.imshow(imagelist[0], extent=[left, right, bottom, top], **onebandplot_kwargs)
+
+        # Initialise annotation objects to be updated during animation
+        t = ax1.annotate('', **annotation_kwargs)
+
+        # Function to update figure
+        def update_figure(frame_i):
+
+            ####################
+            # Plot first panel #
+            ####################  
+
+            # Get human-readable date info (e.g. "16 May 1990")
+            ts = ds.time.isel(time=frame_i).dt
+            year = ts.year.item()
+            month = ts.month.item()
+            day = ts.day.item()
+
+            # Create annotation string based on title and date specifications:
+            title = title_list[frame_i]
+            if title and show_date:
+                title_date = '{} {} {}\n{}'.format(day, calendar.month_abbr[month], year, title)
+            elif title1 and not show_date:
+                title_date = '{}'.format(title)
+            elif show_date and not title:
+                title_date = '{} {} {}'.format(day, calendar.month_abbr[month], year)           
+            else:
+                title_date = ''
+
+            # Update figure for frame
+            im.set_array(imagelist[frame_i])
+            t.set_text(title_date) 
+
+            # Return the artists set
+            return [im, t]
+
+
+        ##############################
+        # Generate and run animation #
+        ##############################
+
+        # Generate animation
+        print('Generating {} frame animation'.format(timesteps))
+        ani = animation.FuncAnimation(fig, update_figure, frames=timesteps, interval=interval, blit=True)
 
         # Export as either MP4 or GIF
         if output_path[-3:] == 'mp4':
             print('    Exporting animation to {}'.format(output_path))
             ani.save(output_path, dpi=width_pixels / 10.0)
 
+        elif output_path[-3:] == 'wmv':
+            print('    Exporting animation to {}'.format(output_path))
+            ani.save(output_path, dpi=width_pixels / 10.0, 
+                     writer=animation.FFMpegFileWriter(fps=1000 / interval, bitrate=6000, codec='wmv2'))
+
         elif output_path[-3:] == 'gif':
             print('    Exporting animation to {}'.format(output_path))
             ani.save(output_path, dpi=width_pixels / 10.0, writer='imagemagick')
 
         else:
-            print("    Output file type must be either .gif or .mp4")
-    
+            print('    Output file type must be either .mp4, .wmv or .gif')
+
     else:        
-            print("Please select exactly three bands that exist in the input dataset")
+        print('Please select exactly three bands that exist in the input datasets')   
 
 
-def animated_fade(ds1, ds2, output_path, bands=['red', 'green', 'blue'], reflect_stand=5000, width_pixels=300, 
-                  interval=50, interval_steps=15, endpoint_steps=15, endpoint_text=['Before',  'After'],
-                  font_size=25):
+def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=800, interval=100, 
+                              bands1=['red', 'green', 'blue'], bands2=['red', 'green', 'blue'], 
+                              reflect_stand1=5000, reflect_stand2=5000, 
+                              title1=False, title2=False,
+                              show_date1=True, show_date2=True,
+                              onebandplot_kwargs1={}, onebandplot_kwargs2={},
+                              annotation_kwargs1={}, annotation_kwargs2={}):
     
     """
-    Takes two single-timestep xarray datasets, and plots an animation of the two layers fading between each other. 
-    Possible applications include comparing an area before and after environmental change (i.e. flood, drought,
-    fire, development), or comparing two geographic areas.
+    Takes two xarray time series and animates both side-by-side as either three-band (e.g. true or false colour) 
+    or single-band animations, allowing changes in the landscape to be compared across time.
     
+    Animations can be exported as .mp4 (ideal for Twitter/social media), .wmv (ideal for Powerpoint) and .gif 
+    (ideal for all purposes, but can have large file sizes) format files, and customised to include titles and 
+    date annotations for each panel or use different input bands from each dataset. For example, true and false 
+    colour band combinations could be plotted at the same time, or different products (i.e. NBAR and NBART) or 
+    cloud masking algorithms could be compared. 
+    
+    This function can be used to produce visually appealing cloud-free animations when used in combination with 
+    the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
     Last modified: May 2018
-    Author: Robbi Bishop-Taylor
+    Author: Robbi Bishop-Taylor    
     
     :param ds1: 
-        An xarray dataset with a single time step (e.g. `xarray_dataset.isel(time=1)`).
+        An xarray dataset with multiple time steps (i.e. multiple observations along the `time` dimension) to be 
+        plotted in the left panel of the animation.
         
     :param ds2: 
-        An xarray dataset with a single time step (e.g. `xarray_dataset.isel(time=30)`). Ensure that this dataset 
-        has the same dimensions/shape as ds1.
+        A matching xarray dataset with the same number of pixels as ds1, to be plotted in the right panel of the
+        animation. ds1 and ds2 do not need to have exactly the same number of timesteps, but the animation will 
+        only continue up until the length of the shorted dataset (i.e. if ds1 has 10 timesteps and ds2 has 5, the 
+        animation will continue for 5 timesteps).
         
     :param output_path: 
-        A string giving the output location and filename of the resulting animation. File extensions of '.gif'
-        and '.mp4' are accepted.
+        A string giving the output location and filename of the resulting animation. File extensions of '.mp4', 
+        '.wmv' and '.gif' are accepted.
         
-    :param bands:
-        Optional list of exactly three bands to be plotted, all of which must exist in the input xarray datasets.
-        Defaults to `['red', 'green', 'blue']`.
-    
-    :param reflect_stand:
-        An integer that allows you to have greater control over the contrast stretch by manually specifying a
-        reflectance standardisation value. Low values (< 5000) result in brighter images. Defaults to 5000. 
-    
     :param width_pixels:
-        An integer defining the output width in pixels for the resulting animation. The height of the animation is
-        set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 300 pixels wide.
+        An optional integer defining the output width in pixels for the resulting animation. The height of the 
+        animation is set automatically based on the dimensions/ratio of `ds1`. Defaults to 
+        800 pixels wide.
         
     :param interval:
-        An integer defining the milliseconds between each animation frame used to control the speed of the output
-        animation. Higher values result in a slower animation. Defaults to 50 milliseconds between each frame.
-    
-    :param interval_steps:
-        An integer defining the number of fade steps or frames to compute between ds1 and ds2. A higher number of
-        steps results in smoother transitions, but can result in large file sizes for .gif animations. Defaults to 15.
-    
-    :param endpoint_steps:
-        An integer defining the number of steps or frames to insert that the animation should pause for at the beginning 
-        and end of each loop. Higher values causes ds1 and ds2 to remain on the screen for a longer period at the start 
-        and end of the animation, but can result in large file sizes for .gif animations. Defaults to 15.
+        An optional integer defining the milliseconds between each animation frame used to control the speed of 
+        the output animation. Higher values result in a slower animation. Defaults to 100 milliseconds between 
+        each frame.
         
-    :param endpoint_text:
-        A list of two strings that match ds1 and ds2, and which are displayed at the start and end of the animation.
-        Defaults to `['Before',  'After']`; set to `['',  '']` to hide text.  
-        
-    :param font_size:
-        An integer that allows you to set the font size for the animation's date annotation. Defaults to 25.   
-        
-    :example:
+    :param bands1:
+        An optional list of either one or three bands to be plotted, all of which must exist in `ds1`.
+        Defaults to `['red', 'green', 'blue']`.
     
-    >>> # Import modules
-    >>> import datacube     
-    >>> 
-    >>> # Set up datacube instance
-    >>> dc = datacube.Datacube(app='Time series animation')
-    >>> 
-    >>> # Set up spatial and temporal query.
-    >>> query = {'x': (970476, 987476),
-    >>>          'y': (-3568950, -3551951),
-    >>>          'measurements': ['red', 'green', 'blue'],
-    >>>          'time': ('2013-01-01', '2018-01-01'),
-    >>>          'crs': 'EPSG:3577'}
-    >>> 
-    >>> # Load in only clear Landsat observations with < 1% unclear values
-    >>> combined_ds = load_clearlandsat(dc=dc, query=query, masked_prop=0.99)  
-    >>>
-    >>> # Produce animation that fades between ds1 and ds2
-    >>> animated_fade(ds1=combined_ds.isel(time=1), ds2=combined_ds.isel(time=30), 
-    >>>               output_path='animated_fade.gif', reflect_stand=2500, 
-    >>>               width_pixels=300, font_size = 40)
+    :param bands2:
+        An optional list of either one or three bands to be plotted, all of which must exist in `ds2`.
+        Defaults to `['red', 'green', 'blue']`. 
+        
+    :param reflect_stand1:
+        An optional  integer controlling the brightness of the output `ds1` image. Low values (< 5000) result in 
+        brighter images. Defaults to 5000.
+    
+    :param reflect_stand2:
+        An optional integer controlling the brightness of the output `ds2` image. Low values (< 5000) result in 
+        brighter images. Defaults to 5000.
+
+    :param title1: 
+        An optional string or list of strings with a length equal to the number of timesteps in `ds1`. This can be
+        used to display a static title for the left panel (using a string), or a dynamic title (using a list)
+        that displays different text for each timestep. Defaults to False, which plots no title.
+        
+    :param title2: 
+        An optional string or list of strings with a length equal to the number of timesteps in `ds2`. This can be
+        used to display a static title for the left panel (using a string), or a dynamic title (using a list)
+        that displays different text for each timestep. Defaults to False, which plots no title.
+        
+    :param show_date1:
+        An optional boolean that defines whether or not to plot date annotations for each animation frame in the 
+        left panel. Defaults to True, which plots date annotations for `ds1`.
+    
+    :param show_date2:
+        An optional boolean that defines whether or not to plot date annotations for each animation frame in the 
+        right panel. Defaults to True, which plots date annotations for `ds2`.
+        
+    :param onebandplot_kwargs1:
+        An optional dict of kwargs for controlling the appearance of `ds1` one-band image arrays to pass to 
+        matplotlib `plt.imshow` (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.imshow.html for options).
+        This only applies if an xarray with a single band is passed to d1. For example, a green colour scheme and
+        custom stretch can be specified using: `onebandplot_kwargs1={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}`. 
+        By default, one-band arrays are plotted using the 'Greys' cmap with a vmin of 0.0 and a vmax of 1.0.
+    
+    :param onebandplot_kwargs2:
+        An optional dict of kwargs for controlling the appearance of `ds2` one-band image arrays to 
+        pass to matplotlib `plt.imshow`; only applies if an xarray with a single band is passed to d2 (see above).
+    
+    :param annotation_kwargs1:
+        An optional dict of kwargs for controlling the appearance of `ds1` text annotations to pass to 
+        matplotlib `plt.annotate`  (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.annotate.html). 
+        For example, `annotation_kwargs1={'fontsize':20, 'color':'red', 'family':'serif'}. By default, text 
+        annotations are white, size 15 mono-spaced font with a 3pt black outline in the panel's top-right. 
+    
+    :param annotation_kwargs2:
+        An optional dict of kwargs for controlling the appearance of the `ds2` text annotations to pass 
+        to matplotlib `plt.annotate` (see above).
         
     """
 
-    # First test if there are three bands, and that all exist in dataset:
-    if (len(bands) == 3) & all([(band in ds1.data_vars) for band in bands]):  
+    # Define function to convert xarray dataset to list of three band numpy arrays
+    def _ds_to_arrraylist(ds, bands, reflect_stand):   
 
-        # Get height relative to a size of 10 inches width
-        width_ratio = float(ds1.sizes['x']) / float(ds1.sizes['y'])
-        height = 10 / width_ratio
+        array_list = []
+        for i, timestep in enumerate(ds.time):
 
-        # Set up plot
-        fig, ax1 = plt.subplots()
-        fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
-        fig.set_size_inches(10, 10, forward=True)
-        plt.axis('off')
+            # Select single timestep from the data array
+            ds_i = ds.isel(time = i)
 
-        # Convert xarray datasets to numpy arrays
-        ds1_rgb = ds1[bands].to_array().values
-        ds2_rgb = ds2[bands].to_array().values
+            # Create new three band array
+            y, x = ds_i[bands[0]].shape
 
+            if len(bands) == 1:    
+
+                # Create new three band array
+                img_toshow = ds_i[bands[0]].values
+
+            else:
+
+                rawimg = np.zeros((y, x, 3), dtype=np.float32)
+
+                # Add xarray bands into three dimensional numpy array
+                for band, colour in enumerate(bands):
+
+                    rawimg[:, :, band] = ds_i[colour].values
+
+                # Stretch contrast using defined reflectance standardisation; defaults to 5000
+                img_toshow = (rawimg / reflect_stand).clip(0, 1)
+
+            array_list.append(img_toshow)
+
+        return(array_list)
+    
+    
+    ###############
+    # Setup steps #
+    ############### 
+    
+    # Get height relative to a size of 10 inches width
+    width_ratio = float(ds1.sizes['x']) / float(ds1.sizes['y'])
+    height = 10.0 / width_ratio
+    
+    # Get number of timesteps for each dataset
+    timesteps1 = len(ds1.time)
+    timesteps2 = len(ds2.time)
+    
+    # If title is supplied as a string, multiply out to a list with one string per timestep.
+    # Otherwise, use supplied list for plot titles.
+    if isinstance(title1, str) or isinstance(title1, bool):
+        title_list1 = [title1] * timesteps1   
+    else:
+        title_list1 = title1
+        
+    # If title is supplied as a string, multiply out to a list with one string per timestep
+    if isinstance(title2, str) or isinstance(title2, bool):
+        title_list2 = [title2] * timesteps2  
+    else:
+        title_list2 = title2       
+        
+    # Set up annotation parameters that plt.imshow plotting for single band array images. 
+    # The nested dict structure sets default values which can be overwritten/customised by the 
+    # manually specified `onebandplot_kwargs`
+    onebandplot_kwargs1 = dict({'cmap':'Greys', 'vmin':0.0, 'vmax':1.0, 'interpolation':'bilinear'},
+                                **onebandplot_kwargs1) 
+    
+    onebandplot_kwargs2 = dict({'cmap':'Greys', 'vmin':0.0, 'vmax':1.0, 'interpolation':'bilinear'},
+                                **onebandplot_kwargs2) 
+    
+    # Set up annotation parameters that control font etc. The nested dict structure sets default 
+    # values which can be overwritten/customised by the manually specified `annotation_kwargs`
+    annotation_kwargs1 = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
+                               'xytext':(-5, -5), 'textcoords':'offset points', 
+                               'horizontalalignment':'right', 'verticalalignment':'top', 
+                               'fontsize':15, 'color':'white', 'family':'monospace', 
+                               'path_effects':[PathEffects.withStroke(linewidth=3, foreground='black')]},
+                               **annotation_kwargs1)
+    
+    annotation_kwargs2 = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
+                               'xytext':(-5, -5), 'textcoords':'offset points', 
+                               'horizontalalignment':'right', 'verticalalignment':'top', 
+                               'fontsize':15, 'color':'white', 'family':'monospace', 
+                               'path_effects':[PathEffects.withStroke(linewidth=3, foreground='black')]},
+                               **annotation_kwargs2)
+   
+    
+    ###################
+    # Initialise plot #
+    ################### 
+    
+    # First test if there are three bands, and that all exist in both datasets:
+    if ((len(bands1) == 3) | (len(bands1) == 1)) & all([(b1 in ds1.data_vars) for b1 in bands1]) & \
+       ((len(bands2) == 3) | (len(bands2) == 1)) & all([(b2 in ds2.data_vars) for b2 in bands2]):  
+
+        # Import xarrays as lists of three band numpy arrays
+        imagelist1 = _ds_to_arrraylist(ds1, bands=bands1, reflect_stand=reflect_stand1)
+        imagelist2 = _ds_to_arrraylist(ds2, bands=bands2, reflect_stand=reflect_stand2)
+        
         # Test that shapes are the same:
-        if ds1_rgb.shape == ds2_rgb.shape:
+        if imagelist1[0].shape[0:1] == imagelist2[0].shape[0:1]:
+            
+            # Set up figure
+            fig, (ax1, ax2) = plt.subplots(ncols=2) 
+            fig.patch.set_facecolor('black')
+            fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+            fig.set_size_inches(10.0, height * 0.5, forward=True)
+            ax1.axis('off')
+            ax2.axis('off')
 
-            # Rearrange arrays to a x by y by bands arrays for RGB plotting using imshow
-            ds1_rgb = np.einsum('bxy->xyb', ds1_rgb)
-            ds2_rgb = np.einsum('bxy->xyb', ds2_rgb)
+            # Initialise axesimage objects to be updated during animation
+            left, bottom, right, top = ds1.extent.boundingbox
+            im1 = ax1.imshow(imagelist1[0], extent=[left, right, bottom, top], **onebandplot_kwargs1)
+            left, bottom, right, top = ds2.extent.boundingbox
+            im2 = ax2.imshow(imagelist2[0], extent=[left, right, bottom, top], **onebandplot_kwargs2)
 
-            # Stretch contrast using defined reflectance standardisation; defaults to 5000
-            ds1_rgb = (ds1_rgb / reflect_stand).clip(0, 1)
-            ds2_rgb = (ds2_rgb / reflect_stand).clip(0, 1)
+            # Initialise annotation objects to be updated during animation
+            t1 = ax1.annotate('', **annotation_kwargs1)   
+            t2 = ax2.annotate('', **annotation_kwargs2)  
 
-            # Compute spread of fade proportions in forward and reverse direction, with a
-            # specified pause (in steps/frames) at the start and finish of the sequence
-            fade_props = np.concatenate([np.linspace(0, 1, interval_steps, endpoint=True),
-                                         np.array([1] * endpoint_steps),  # pause at ds1
-                                         np.linspace(1, 0, interval_steps, endpoint=True),
-                                         np.array([0] * endpoint_steps)])  # pause at ds2
+            # Function to update figure
+            def update_figure(frame_i):
 
-            # Iterate through each timestep and add plot to list
-            ims = []
-            for fade_prop in fade_props:
+                ####################
+                # Plot first panel #
+                ####################  
 
-                # Fade between datasets using fade proportion
-                ds_merged = (ds1_rgb * fade_prop) + (ds2_rgb * (1.0 - fade_prop))  
+                # Get human-readable date info (e.g. "16 May 1990")
+                ts = ds1.time.isel(time=frame_i).dt
+                year = ts.year.item()
+                month = ts.month.item()
+                day = ts.day.item()
 
-                # Plot image for each timestep and append to list
-                im = ax1.imshow(ds_merged, animated=True)
-
-                # If on first or last frame, add text
-                if fade_prop in [0, 1]:
-
-                    # Plot either first or second text annotation by indexing 
-                    text_index = int(fade_prop)
-                    t = ax1.annotate(endpoint_text[text_index], 
-                                     xy=(1, 1), xycoords='axes fraction', 
-                                     xytext=(-5, -5), textcoords='offset points', 
-                                     horizontalalignment='right', verticalalignment='top', 
-                                     fontsize=font_size, color='white', family='monospace')
+                # Create annotation string based on title and date specifications:
+                title1 = title_list1[frame_i]
+                if title1 and show_date1:
+                    title_date1 = '{} {} {}\n{}'.format(day, calendar.month_abbr[month], year, title1)
+                elif title1 and not show_date1:
+                    title_date1 = '{}'.format(title1)
+                elif show_date1 and not title1:
+                    title_date1 = '{} {} {}'.format(day, calendar.month_abbr[month], year)           
                 else:
+                    title_date1 = ''
 
-                    # Set up text
-                    t = ax1.annotate("", xy=(1, 1), xycoords='axes fraction')
+                # Update figure for frame
+                im1.set_array(imagelist1[frame_i])
+                t1.set_text(title_date1) 
 
 
-                ims.append([im, t])
+                #####################
+                # Plot second panel #
+                ##################### 
 
-            # Create and export animation of all plots in list
-            ani = animation.ArtistAnimation(fig, ims, interval=interval, repeat_delay=interval, blit=True)
+                # Get human-readable date info (e.g. "16 May 1990")
+                ts = ds2.time.isel(time=frame_i).dt
+                year = ts.year.item()
+                month = ts.month.item()
+                day = ts.day.item()
+
+                # Create annotation string based on title and date specifications:
+                title2 = title_list2[frame_i]
+                if title2 and show_date2:
+                    title_date2 = '{} {} {}\n{}'.format(day, calendar.month_abbr[month], year, title2)
+                elif title2 and not show_date2:
+                    title_date2 = '{}'.format(title2)
+                elif show_date2 and not title2:
+                    title_date2 = '{} {} {}'.format(day, calendar.month_abbr[month], year)           
+                else:
+                    title_date2 = ''
+
+                # Update figure for frame
+                im2.set_array(imagelist2[frame_i])
+                t2.set_text(title_date2) 
+
+                # Return the artists set
+                return [im1, im2, t1, t2]
+
+
+            ##############################
+            # Generate and run animation #
+            ##############################
+
+            # Generate animation
+            frames_to_run = min(timesteps1, timesteps2)
+            print('Generating {} frame animation (i.e. timesteps in shortest dataset)'.format(frames_to_run))
+            ani = animation.FuncAnimation(fig, update_figure, frames=frames_to_run, interval=interval, blit=True)
 
             # Export as either MP4 or GIF
             if output_path[-3:] == 'mp4':
-                print('Exporting animation to {}'.format(output_path))
+                print('    Exporting animation to {}'.format(output_path))
                 ani.save(output_path, dpi=width_pixels / 10.0)
 
+            elif output_path[-3:] == 'wmv':
+                print('    Exporting animation to {}'.format(output_path))
+                ani.save(output_path, dpi=width_pixels / 10.0, 
+                         writer=animation.FFMpegFileWriter(fps=1000 / interval, bitrate=6000, codec='wmv2'))
+
             elif output_path[-3:] == 'gif':
-                print('Exporting animation to {}'.format(output_path))
+                print('    Exporting animation to {}'.format(output_path))
                 ani.save(output_path, dpi=width_pixels / 10.0, writer='imagemagick')
 
             else:
-                print('Output file type must be either .gif or .mp4')
-
+                print('    Output file type must be either .mp4, .wmv or .gif')
+        
         else:
-            print('ds1 has different dimensions {} to ds2 {}'.format(ds1_rgb.shape, ds2_rgb.shape))        
-
+            print('Ensure that ds1 {} has the same xy dimensions as ds2 {}'.format(imagelist1[0].shape[0:1], 
+                                                                                   imagelist2[0].shape[0:1])) 
     else:        
-        print("Please select exactly three bands that exist in the input dataset")
+        print('Please select exactly three bands that exist in the input datasets')  
+
+
