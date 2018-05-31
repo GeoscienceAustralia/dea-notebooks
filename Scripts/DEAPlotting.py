@@ -414,7 +414,7 @@ def animated_timeseries(ds, output_path, width_pixels=400, interval=100, bands=[
             title = title_list[frame_i]
             if title and show_date:
                 title_date = '{} {} {}\n{}'.format(day, calendar.month_abbr[month], year, title)
-            elif title1 and not show_date:
+            elif title and not show_date:
                 title_date = '{}'.format(title)
             elif show_date and not title:
                 title_date = '{} {} {}'.format(day, calendar.month_abbr[month], year)           
