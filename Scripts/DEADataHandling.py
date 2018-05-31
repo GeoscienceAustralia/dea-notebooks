@@ -173,11 +173,10 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interest=None,
-                      product='nbart', masked_prop=0.99, mask_dict=None, apply_mask=False):
+def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], product='nbart', masked_prop=0.99,  mask_dict=None):
     
     """
-    Loads Landsat NBAR or NBART and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
+    Loads Landsat NBAR, NBART or FC25 and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
     xarray dataset containing only observations that contain greater than a given proportion of clear pixels.    
   
     This function was designed to extract visually appealing time series of observations that are not
@@ -191,40 +190,29 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     Author: Robbi Bishop-Taylor, Bex Dunn
     
     :param dc: 
-        A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This allows you to 
-        also use development datacubes if they have been imported into the environment.
+        A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This 
+	allows you to also use dev environments if thay have been imported into the environment.
     
     :param query: 
-        A dict containing the query bounds. Can include lat/lon, time etc. If no `time` query is given, the 
-        function defaults to all timesteps available to all sensors (e.g. 1987-2018)
-
+        A dict containing the query bounds. Can include lat/lon, time, measurements etc. If no `time`
+        query is given, the function defaults to all timesteps available to all sensors (e.g. 1987-2018)
+	
     :param sensors:
-        An optional list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8'; defaults to all.
-
+        An optional list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8', defaults to all.	
+	
     :param product:
-        An optional string specifying 'nbar' or 'nbart'. Defaults to 'nbart'. For information on the difference, 
-        see the 'GettingStartedWithLandsat5-7-8' notebook on DEA-notebooks.
-        
-    :param bands_of_interest:
-        An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
-        'nir', 'swir1', 'swir2'; defaults to all available bands if no bands are specified.
-
+        An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to nbart unless otherwise specified. For 	information on the difference, see the 'GettingStartedWithLandsat5-7-8' or 'Introduction_to_Fractional_Cover' notebooks on DEA notebooks.
+	
     :param masked_prop:
         An optional float giving the minimum percentage of clear pixels required for a Landsat observation to be 
         loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of unclear pixels).
             
     :param mask_dict:
-        An optional dict of arguments to the `masking.make_mask` function that can be used to identify clear 
-        observations from the PQ layer using alternative masking criteria. The default value of None masks out 
-        pixels flagged as cloud by either the ACCA or Fmask alogorithms, and that have values for every band 
+        An optional dict of arguments to the `masking.make_mask` function that can be used to identify clear
+	observations from the PQ layer using alternative masking criteria. The default value of None masks out 
+	pixels flagged as cloud by either the ACCA or Fmask alogorithms, and that have values for every band 
         (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
         See the `Landsat5-7-8-PQ` notebook on DEA Notebooks for a list of all possible options.
-        
-    :param apply_mask:
-        An optional boolean indicating whether resulting observations should have the PQ mask applied to filter
-        out any remaining unclear cells. For example, if `masked_prop=0.99`, the filtered images may still contain
-        up to 1% unclear/cloudy pixels. The default of False simply returns the resulting observations without
-        masking out these pixels; True removes them using the mask. 
     
     :returns:
         An xarray dataset containing only Landsat observations that contain greater than `masked_prop`
@@ -235,19 +223,18 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     >>> # Import modules
     >>> import datacube     
     >>> 
-    >>> # Define datacube to import from
+    >>> # Set up datacube instance
     >>> dc = datacube.Datacube(app='Clear Landsat')
     >>> 
-    >>> # Set up spatial and temporal query
-    >>> query = {'x': (-191400.0, -183400.0),
-    >>>          'y': (-1423460.0, -1415460.0),
+    >>> # Set up spatial and temporal query.
+    >>> query = {'x': (-191399.7550998943, -183399.7550998943),
+    >>>          'y': (-1423459.1336905062, -1415459.1336905062),
+    >>>          'measurements': ['red', 'green', 'blue'],
     >>>          'time': ('2013-01-01', '2018-01-01'),
     >>>          'crs': 'EPSG:3577'}
     >>> 
-    >>> # Load in red, green and blue bands for all clear Landsat observations with < 1% unclear values. 
-    >>> combined_ds = load_clearlandsat(dc=dc, query=query, 
-    >>>                                 bands_of_interest=['red', 'green', 'blue'], 
-    >>>                                 masked_prop=0.99) 
+    >>> # Load in only clear Landsat observations with < 1% unclear values
+    >>> combined_ds = load_clearlandsat(dc=dc, query=query, masked_prop=0.99) 
     >>> combined_ds
         
     """
@@ -260,34 +247,23 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     for sensor in sensors:
         
         try:
-            
-            # If bands of interest are given, assign measurements in dc.load call. This is
-            # for compatibility with the existing dea-notebooks load_nbarx function.
-            if bands_of_interest:
-                
-                # Lazily load Landsat data using dask              
-                data = dc.load(product = '{}_{}_albers'.format(sensor, product),
-                               measurements=bands_of_interest,
-                               group_by = 'solar_day', 
-                               dask_chunks={'time': 1},
-                               **query)
 
-            # If no bands of interest given, run without specifying measurements, and 
-            # therefore return all available bands
-            else:
-                
-                # Lazily load Landsat data using dask  
-                data = dc.load(product = '{}_{}_albers'.format(sensor, product),
-                               group_by = 'solar_day', 
-                               dask_chunks={'time': 1},
-                               **query)             
+            # Lazily load Landsat data using dask. 
+            print('Loading {} data'.format(sensor))
+            data = dc.load(product = '{}_{}_albers'.format(sensor, product),
+                        group_by = 'solar_day', 
+                        dask_chunks={'time': 1},
+                        **query)
+
+            # Remove measurements variable from query so that PQ load doesn't fail
+            pq_query = query.copy()
+            if 'measurements' in pq_query: del pq_query['measurements']
 
             # Load PQ data
-            print('Loading {} PQ'.format(sensor))
             pq = dc.load(product = '{}_pq_albers'.format(sensor),
                          group_by = 'solar_day',
                          fuse_func=ga_pq_fuser,
-                         **query)
+                         **pq_query)
 
             # Return only Landsat observations that have matching PQ data (this may
             # need to be improved, but seems to work in most cases)
@@ -317,10 +293,6 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
             filtered = data.where(data.data_perc >= masked_prop, drop=True)
             print('    Loading {} filtered {} timesteps'.format(len(filtered.time), sensor))
             filtered = filtered.compute()
-            
-            # Optionally apply mask (instead of only filtering)
-            if apply_mask:
-                filtered = filtered.where(good_quality)
             
             # Append result to list
             filtered_sensors.append(filtered)
