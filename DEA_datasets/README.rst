@@ -23,3 +23,4 @@ Maybe add here?
    GettingStartedWithLandsat5-7-8.ipynb
    Landsat5-7-8-PQ.ipynb
    Landsat5-7-8-FC.ipynb
+   Introduction_to_Fractional_Cover.ipynb

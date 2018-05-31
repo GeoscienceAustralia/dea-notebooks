@@ -6,7 +6,7 @@ Available functions:
 
     load_nbarx
     load_sentinel
-    load_clearlandsat
+    load_clearlandsat (also does fractional cover)
     tasseled_cap
     dataset_to_geotiff
     open_polygon_from_shapefile
@@ -177,7 +177,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
                       product='nbart', masked_prop=0.99, mask_dict=None, apply_mask=False):
     
     """
-    Loads Landsat NBAR or NBART and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
+    Loads Landsat NBAR, NBART or FC25, and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
     xarray dataset containing only observations that contain greater than a given proportion of clear pixels.    
   
     This function was designed to extract visually appealing time series of observations that are not
@@ -202,8 +202,8 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
         An optional list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8'; defaults to all.
 
     :param product:
-        An optional string specifying 'nbar' or 'nbart'. Defaults to 'nbart'. For information on the difference, 
-        see the 'GettingStartedWithLandsat5-7-8' notebook on DEA-notebooks.
+        An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to 'nbart'. For information on the difference, 
+        see the 'GettingStartedWithLandsat5-7-8' or 'Introduction_to_Fractional_Cover' notebooks on DEA-notebooks.
         
     :param bands_of_interest:
         An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
