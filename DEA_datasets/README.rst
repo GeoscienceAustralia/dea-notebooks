@@ -2,13 +2,7 @@
 DEA Datasets 
 =============================
 
-These pages will introduce the datasets currently available within DEA.
-
-To add here:
-- Landsat 5, 7, 8
-- PQ
-- ITEM
-- FC
+These pages introduce the datasets currently available within DEA.
 
 Maybe add here?
 - WoFS
@@ -18,8 +12,9 @@ Maybe add here?
 .. toctree::
    :maxdepth: 1
 
-   GettingStartedWithITEM.ipynb
-   GettingStartedWithHLTC.ipynb
-   GettingStartedWithLandsat5-7-8.ipynb
-   Landsat5-7-8-PQ.ipynb
+   Introduction_to_Landsat5-7-8.ipynb
+   Introduction_to_LandsatPQ.ipynb
    Introduction_to_Fractional_Cover.ipynb
+   Introduction_to_HLTC.ipynb
+   Introduction_to_ITEM.ipynb
+
