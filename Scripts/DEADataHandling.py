@@ -6,11 +6,12 @@ Available functions:
 
     load_nbarx
     load_sentinel
-    load_clearlandsat
+    load_clearlandsat (also does fractional cover)
     tasseled_cap
     dataset_to_geotiff
     open_polygon_from_shapefile
     write_your_netcdf
+    zonal_timeseries
 
 Last modified: May 2018
 Authors: Claire Krause, Robbi Bishop-Taylor, Bex Dunn
@@ -24,6 +25,9 @@ import gdal
 import numpy as np
 import xarray as xr
 import rasterio
+import geopandas as gpd
+import dask
+# import rasterstats as rs
 
 from datacube.utils import geometry
 import fiona
@@ -173,10 +177,11 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], product='nbart', masked_prop=0.99,  mask_dict=None):
+def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interest=None,
+                      product='nbart', masked_prop=0.99, mask_dict=None, apply_mask=False):
     
     """
-    Loads Landsat NBAR, NBART or FC25 and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
+    Loads Landsat NBAR, NBART or FC25, and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
     xarray dataset containing only observations that contain greater than a given proportion of clear pixels.    
   
     This function was designed to extract visually appealing time series of observations that are not
@@ -190,29 +195,40 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], product='nbart',
     Author: Robbi Bishop-Taylor, Bex Dunn
     
     :param dc: 
-        A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This 
-	allows you to also use dev environments if thay have been imported into the environment.
+        A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This allows you to 
+        also use development datacubes if they have been imported into the environment.
     
     :param query: 
-        A dict containing the query bounds. Can include lat/lon, time, measurements etc. If no `time`
-        query is given, the function defaults to all timesteps available to all sensors (e.g. 1987-2018)
-	
+        A dict containing the query bounds. Can include lat/lon, time etc. If no `time` query is given, the 
+        function defaults to all timesteps available to all sensors (e.g. 1987-2018)
+
     :param sensors:
-        An optional list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8', defaults to all.	
-	
+        An optional list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8'; defaults to all.
+
     :param product:
-        An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to nbart unless otherwise specified. For 	information on the difference, see the 'GettingStartedWithLandsat5-7-8' or 'Introduction_to_Fractional_Cover' notebooks on DEA notebooks.
-	
+        An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to 'nbart'. For information on the difference, 
+        see the 'GettingStartedWithLandsat5-7-8' or 'Introduction_to_Fractional_Cover' notebooks on DEA-notebooks.
+        
+    :param bands_of_interest:
+        An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
+        'nir', 'swir1', 'swir2'; defaults to all available bands if no bands are specified.
+
     :param masked_prop:
         An optional float giving the minimum percentage of clear pixels required for a Landsat observation to be 
         loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of unclear pixels).
             
     :param mask_dict:
-        An optional dict of arguments to the `masking.make_mask` function that can be used to identify clear
-	observations from the PQ layer using alternative masking criteria. The default value of None masks out 
-	pixels flagged as cloud by either the ACCA or Fmask alogorithms, and that have values for every band 
+        An optional dict of arguments to the `masking.make_mask` function that can be used to identify clear 
+        observations from the PQ layer using alternative masking criteria. The default value of None masks out 
+        pixels flagged as cloud by either the ACCA or Fmask alogorithms, and that have values for every band 
         (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
         See the `Landsat5-7-8-PQ` notebook on DEA Notebooks for a list of all possible options.
+        
+    :param apply_mask:
+        An optional boolean indicating whether resulting observations should have the PQ mask applied to filter
+        out any remaining unclear cells. For example, if `masked_prop=0.99`, the filtered images may still contain
+        up to 1% unclear/cloudy pixels. The default of False simply returns the resulting observations without
+        masking out these pixels; True removes them using the mask. 
     
     :returns:
         An xarray dataset containing only Landsat observations that contain greater than `masked_prop`
@@ -223,18 +239,19 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], product='nbart',
     >>> # Import modules
     >>> import datacube     
     >>> 
-    >>> # Set up datacube instance
+    >>> # Define datacube to import from
     >>> dc = datacube.Datacube(app='Clear Landsat')
     >>> 
-    >>> # Set up spatial and temporal query.
-    >>> query = {'x': (-191399.7550998943, -183399.7550998943),
-    >>>          'y': (-1423459.1336905062, -1415459.1336905062),
-    >>>          'measurements': ['red', 'green', 'blue'],
+    >>> # Set up spatial and temporal query
+    >>> query = {'x': (-191400.0, -183400.0),
+    >>>          'y': (-1423460.0, -1415460.0),
     >>>          'time': ('2013-01-01', '2018-01-01'),
     >>>          'crs': 'EPSG:3577'}
     >>> 
-    >>> # Load in only clear Landsat observations with < 1% unclear values
-    >>> combined_ds = load_clearlandsat(dc=dc, query=query, masked_prop=0.99) 
+    >>> # Load in red, green and blue bands for all clear Landsat observations with < 1% unclear values. 
+    >>> combined_ds = load_clearlandsat(dc=dc, query=query, 
+    >>>                                 bands_of_interest=['red', 'green', 'blue'], 
+    >>>                                 masked_prop=0.99) 
     >>> combined_ds
         
     """
@@ -247,23 +264,34 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], product='nbart',
     for sensor in sensors:
         
         try:
+            
+            # If bands of interest are given, assign measurements in dc.load call. This is
+            # for compatibility with the existing dea-notebooks load_nbarx function.
+            if bands_of_interest:
+                
+                # Lazily load Landsat data using dask              
+                data = dc.load(product = '{}_{}_albers'.format(sensor, product),
+                               measurements=bands_of_interest,
+                               group_by = 'solar_day', 
+                               dask_chunks={'time': 1},
+                               **query)
 
-            # Lazily load Landsat data using dask. 
-            print('Loading {} data'.format(sensor))
-            data = dc.load(product = '{}_{}_albers'.format(sensor, product),
-                        group_by = 'solar_day', 
-                        dask_chunks={'time': 1},
-                        **query)
-
-            # Remove measurements variable from query so that PQ load doesn't fail
-            pq_query = query.copy()
-            if 'measurements' in pq_query: del pq_query['measurements']
+            # If no bands of interest given, run without specifying measurements, and 
+            # therefore return all available bands
+            else:
+                
+                # Lazily load Landsat data using dask  
+                data = dc.load(product = '{}_{}_albers'.format(sensor, product),
+                               group_by = 'solar_day', 
+                               dask_chunks={'time': 1},
+                               **query)             
 
             # Load PQ data
+            print('Loading {} PQ'.format(sensor))
             pq = dc.load(product = '{}_pq_albers'.format(sensor),
                          group_by = 'solar_day',
                          fuse_func=ga_pq_fuser,
-                         **pq_query)
+                         **query)
 
             # Return only Landsat observations that have matching PQ data (this may
             # need to be improved, but seems to work in most cases)
@@ -293,6 +321,10 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], product='nbart',
             filtered = data.where(data.data_perc >= masked_prop, drop=True)
             print('    Loading {} filtered {} timesteps'.format(len(filtered.time), sensor))
             filtered = filtered.compute()
+            
+            # Optionally apply mask (instead of only filtering)
+            if apply_mask:
+                filtered = filtered.where(good_quality)
             
             # Append result to list
             filtered_sensors.append(filtered)
@@ -470,3 +502,120 @@ def write_your_netcdf(data, dataset_name, filename, crs):
         write_dataset_to_netcdf(dataset, filename)
     except RuntimeError as err:
         print("RuntimeError: {0}".format(err))    
+
+
+# def zonal_timeseries(dataArray, shp_loc, results_loc, feature_name, stat='mean', csv=False, netcdf=False, plot=False):
+#     """
+#     Summary: 
+#     Given an xarray dataArray and a shapefile, generates a timeseries of zonal statistics across n number of 
+#     uniquely labelled polygons. The function exports a .csv of the stats, a netcdf containing the stats, and .pdf plots.
+#     Requires the installation of the rasterstats module: https://pythonhosted.org/rasterstats/installation.html
+    
+#     Inputs:
+#     data = xarray dataarray (note dataarray, not dataset - it is a requirement the data only have a single variable).
+#     shp_loc = string. Location of the shapefile used to extract the zonal timseries.
+#     results_loc = string. Location of the directory where results should export.
+#     feature_name = string. Name of attribute column in the shapefile that is of interest - used to label dataframe, plots etc.
+#     stat = string.  The statistic you want to extract. Options include 'count', 'max', 'median', 'min', 'std'.
+#     plot = Boolean. If True, function will produce pdfs of timeseries for each polygon in the shapefile.
+#     csv = Boolean. If True, function will export results as a .csv.
+#     netcdf = Boolean. If True, function will export results as a netcdf.
+    
+#     Last modified: May 2018
+#     Author: Chad Burton
+    
+#     """
+#     #use dask to chunk the data along the time axis in case its a very large dataset
+#     dataArray = dataArray.chunk(chunks = {'time':20})
+    
+#     #create 'transform' tuple to provide ndarray with geo-referencing data. 
+#     one = float(dataArray.x[0])
+#     two = float(dataArray.y[0] - dataArray.y[1])
+#     three = 0.0
+#     four = float(dataArray.y[0])
+#     five = 0.0
+#     six = float(dataArray.x[0] - dataArray.x[1])
+
+#     transform_zonal = (one, two, three, four, five, six)
+
+#     #import shapefile, make sure its in the right projection to match the dataArray
+#     #and set index to the feature_name
+#     project_area = gpd.read_file(shp_loc)               #get the shapefile
+#     reproj=int(str(dataArray.crs)[5:])                  #do a little hack to get EPSG from the dataArray 
+#     project_area = project_area.to_crs(epsg=reproj)     #reproject shapefile to match dataArray
+#     project_area = project_area.set_index(feature_name) #set the index
+    
+#     #define the general function
+#     def zonalStats(dataArray, stat=stat): 
+#         """extract the zonal statistics of all
+#         pixel values within each polygon"""
+#         stats = [] 
+#         for i in dataArray:
+#             x = rs.zonal_stats(project_area, i, transform=transform_zonal, stats=stat)    
+#             stats.append(x)
+#         #extract just the values from the results, and convert 'None' values to nan
+#         stats = [[t[stat] if t[stat] is not None else np.nan for t in feature] for feature in stats]
+#         stats = np.array(stats)
+#         return stats
+
+#     #use the zonal_stats functions to extract the stats:
+#     n = len(project_area) #number of polygons in the shapefile (defines the dimesions of the output)
+#     statistics = dataArray.data.map_blocks(zonalStats, chunks=(-1,n), drop_axis=1, dtype=np.float64).compute()
+
+#     #get unique identifier and timeseries data from the inputs 
+#     colnames = pd.Series(project_area.index.values)
+#     time = pd.Series(dataArray['time'].values)
+
+#     #define functions for cleaning up the results of the rasterstats operation
+#     def tidyresults(results):
+#         x = pd.DataFrame(results).T #transpose
+#         x = x.rename(colnames, axis='index') #rename the columns to the timestamp
+#         x = x.rename(columns = time)
+#         return x
+
+#     #place results into indexed dataframes using tidyresults function
+#     statistics_df = tidyresults(statistics)
+    
+#     #convert into xarray for merging into a dataset
+#     stat_xr = xr.DataArray(statistics_df, dims=[feature_name, 'time'], coords={feature_name: statistics_df.index, 'time': time}, name= stat)
+    
+#     #options for exporting results as csv, netcdf, pdf plots
+#     #export results as a .csv
+#     if csv:
+#         statistics_df.to_csv('{0}{1}.csv'.format(results_loc, stat))
+                             
+#     if netcdf:
+#         #export out results as netcdf
+#         stat_xr.to_netcdf('{0}zonalstats_{1}.nc'.format(results_loc, stat), mode='w',format='NETCDF4') 
+
+#     if plot:     
+#         #place the data from the xarray into a list
+#         plot_data = []
+#         for i in range(0,len(stat_xr[feature_name])):
+#             x = stat_xr.isel([stat], **{feature_name: i})
+#             plot_data.append(x)
+
+#         #extract the unique names of each polygon
+#         feature_names = list(stat_xr[feature_name].values)
+
+#         #zip the both the data and names together as a dictionary 
+#         monthly_dict = dict(zip(feature_names,plot_data))
+
+#         #create a function for generating the plots
+#         def plotResults(dataArray, title):
+#             """a function for plotting up the results of the
+#             fractional cover change and exporting it out as pdf """
+#             x = dataArray.time.values
+#             y = dataArray.data          
+
+#             plt.figure(figsize=(15,5))
+#             plt.plot(x, y,'k', color='#228b22', linewidth = 1)
+#             plt.grid(True, linestyle ='--')
+#             plt.title(title)
+#             plt.savefig('{0}{1}.pdf'.format(results_loc, title), bbox_inches='tight')
+
+#         #loop over the dictionaries and create the plots
+#         {key: plotResults(monthly_dict[key], key + "_"+ stat) for key in monthly_dict} 
+    
+#     #return the results as a dataframe
+#     return statistics_df
