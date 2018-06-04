@@ -1,4 +1,4 @@
-*.py~
+\*.py~
 *~
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
@@ -20,4 +20,4 @@ __pycache__
 SENSITIVE/
 Land_NSW_Landuse_2013/
 Land_NSW_Landuse2007/
-
+*.pkl
