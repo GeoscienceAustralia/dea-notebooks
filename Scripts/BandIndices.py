@@ -113,13 +113,13 @@ def geological_indices(ds, index):
     """
 
     if index == 'CMR':
-        print('The formula we are using is (swir1 / swir2)')
+        print('The formula we are using for Clay Minerals Ratio is (swir1 / swir2)')
         try:
             indexout = (ds.swir1 / ds.swir2)
         except AttributeError:
             print('Error! Clay Minerals Ratio requires swir1 and swir2 bands')
     elif index == 'FMR':
-        print('The formula we are using is (swir1 / nir)')
+        print('The formula we are using for Ferrous Minerals Ratio is (swir1 / nir)')
         try:
             indexout = (ds.swir1 / ds.nir)
         except AttributeError:
@@ -128,7 +128,7 @@ def geological_indices(ds, index):
             except:
                 print('Error! Ferrous Minerals Ratio requires swir1 and nir bands')  
     elif index == 'IOR':
-        print('The formula we are using is (red / blue)')
+        print('The formula we are using for Iron Oxide Ratio is (red / blue)')
         try:
             indexout = (ds.red / ds.blue)
         except AttributeError:

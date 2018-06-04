@@ -10,3 +10,5 @@ To add here:
 
 .. toctree::
    :maxdepth: 1
+   
+   Mineral_Indices_Calculation.ipynb

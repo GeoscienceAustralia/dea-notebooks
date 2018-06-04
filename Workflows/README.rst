@@ -8,4 +8,4 @@ These pages will demonstrate more complex examples of possible DEA workflows.
    :maxdepth: 1
 
    RetrieveLandsat8ViewAndExport.ipynb
-   IntertidalDEM.ipynb
+   Sun_glint_identification_and_removal.ipynb
