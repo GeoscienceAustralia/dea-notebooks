@@ -33,7 +33,7 @@ The basic structure of this repository is designed to keep 'all' of the DEA Jupy
 * `Working branches <https://github.com/GeoscienceAustralia/dea-notebooks/branches>`_: these are named using the owner's name as the branch name (e.g. ``ClaireK``, ``BexDunn``). These are the working spaces for people and essentially your own place to play around with. The notebooks here do not need to be pretty or even finished. It's just a place to keep everything together. It also means that if you want to collaborate on a working version of a notebook, you can easily find and share notebooks.
 
 Getting started with DEA notebooks
-==================================
+----------------------------------
 
 To start contributing to the DEA notebooks page, first read through the `Publishing finished notebooks`_ section to ensure that your notebook meets all the metadata and formatting requirements. This should only take a few minutes, and ensures that all notebooks are thoroughly documented so that they can be understood by all users, and rendered correctly on the `DEA User Guide page <http://geoscienceaustralia.github.io/digitalearthau/index.html>`_.
 
@@ -46,10 +46,10 @@ Finally, anyone with admin access can contribute to ``dea-notebooks`` by reviewi
 
 
 Publishing finished notebooks
-=============================
+-----------------------------
 
 Metadata requirements for publishing
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The notebook name should be descriptive and contain no spaces.
 
@@ -72,27 +72,27 @@ You can of course provide additional information if you choose, e.g. background,
     **Author**: Claire Krause
 
 Heading levels in Jupyter Notebooks
------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The code that publishes the notebooks to the website uses Heading levels to grab titles and set up hyperlinks. **Please only use heading level 1 (i.e. `#`) for the overall notebook title**. Headings throughout the notebook should use heading level two or below (i.e. ``##``). 
 
 Adding tags to notebooks
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 See the `Tagging Notebooks <https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/tags.rst>`_ page.
 
 Updating the .rst file to point to your new files
--------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Along with the code files in the repository, each folder has a ``README.rst`` file. This is the file that the DEA website uses to generate the webpage that these notebooks are being pulled in to. In order for the website to know that you have updated the repository, you need to also update the ``.rst`` file. This can be done in any text editor. Open the ``README.rst`` file for each directory where you have added a new file. Add your new file name to the bottom of the list of files in the folder, then save and close. 
 
 Referencing within Jupyter Notebooks
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Direct quotations and images from other published sources (papers, websites, textbooks) within published notebooks should be referenced according to the `GA style guide <http://www.ga.gov.au/copyright/how-to-cite-geoscience-australia-source-of-information>`_. Functions using published algorithms should contain references and hyperlinks to the algorithm and paper, so users can check the assumptions prior to running analyses. 
 
 Displaying widgets in Jupyter Notebooks
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When you publish a Jupyter notebook with widgets in it to `dea-notebooks`, there are two steps to getting your widgets to display.
 Firstly, before you push your notebook to the repo, go to the 'Widgets' drop down menu and 'Save Notebook Widget State'. Then save your notebook before pushing it to the repo. This preserves the widget state so that you can see what the results were when the notebook is published.
@@ -103,12 +103,12 @@ Firstly, before you push your notebook to the repo, go to the 'Widgets' drop dow
 
 
 DEA notebooks using command-line git
-====================================
+------------------------------------
 
 To get started with ``dea-notebooks`` using command line git, the first step is to clone this repository to a suitable location. This will most likely be a location you can access on the VDI, so you can easily work with your notebooks. Note that this repo is likely to become quite large, so make sure you have enough space in the location you clone the repository to (i.e. probably not your home directory, but your directory on ``/g/data`` should be perfect). 
 
 To clone the repo (on the VDI):
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Navigate to the directory you want the repository to sit using a Terminal window (``cd <directory>``)
 * Type ``git clone git@github.com:GeoscienceAustralia/dea-notebooks.git``
 * A new folder called ``dea-notebooks`` will be created, which is a copy of the code repo
@@ -118,7 +118,7 @@ To clone the repo (on the VDI):
 * You will automatically be changed to your new branch (you can use ``git status`` to check this). Any changes you make here will not affect the other branches of the repository. 
 
 Setting up your own version of the repo
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 You will notice that your branch of the repo contains a copy of everything in the master branch. This may not be what you actually want. You can feel free to delete everything that is automatically put in your own branch, and start from scratch with your own directory structures. 
 
 **Note**: Make sure you are on your own branch *before* deleting everything. You can check this with ``git status``. If you happen to delete everything from the master branch, it can be restored (that's the wonder of version control), but try to avoid this in the first place.
@@ -126,7 +126,7 @@ You will notice that your branch of the repo contains a copy of everything in th
 To delete folders (or files) in a ``git`` managed repository, use ``git rm <file>``. This tells ``git`` you are deleting a file from the tracked repository, which makes things a lot cleaner when you go to commit those changes later on. If you would like to delete a whole directory, you need to add the ``-r`` (recursive) flag to the command; ``git rm -r Getting_started``. 
 
 Committing and pushing changes to your personal branch on the online repository
--------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The new branch you have created exists in your local version of the repository, but you won't yet see it on Github because the website doesn't know about your new branch yet. To do this, you will need to commit and then "push" your changes. If you now type ``git status`` you will see two groups of files; those ``git`` is tracking and has noticed have changed since the last commit, and those ``git`` is not tracking. 
 
 To add the new files and folders you have created to the ``git`` tracked repo, type ``git add <file or folder>``. Go through all the folders you would like ``git`` to track and ``git add`` them. Once you are ready to commit your changes, type ``git commit -m "this is a short description of the changes you have made"``. 
@@ -136,7 +136,7 @@ Even though you will probably be the only person working on your personal branch
 Assuming ``git pull`` didn't throw up any errors, you can now push your commit. To do this, type ``git push -u origin <your branch name>``. ``git`` will now connect to the remote repository and add your commit to the Github repo. You should now be able to see your new branch on the online dea-notebooks repo. The ``-u`` switch will set up your branch to properly track the remote branch of the same name. If you do a ``git pull`` and get a message that says ``you have not told me which branch to merge with``, this is because the local and remote repos were not set up to talk to each other properly. Easy fix! Type ``git branch --set-upstream <branch> origin/<branch>``. ``git`` should now be happy.
 
 Publishing changes to the master branch using a pull request
-------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The master branch of ``dea-notebooks`` is where notebooks go that you are ready to share and publish. Note that even once the notebooks are published, you can still edit and update them - this does not close them off to you for further work. 
 
@@ -175,28 +175,28 @@ The process for completing a ``pull`` request may seem complicated, so if you ar
 15. Add a comment to the pull request, and click ``Create pull request``
 
 Revising a pull request
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 If your reviewer suggests you make changes to code you submitted as a ``pull request``, it's easy to fix things up. Simply update your code on the same temporary branch you submitted the ``pull request`` from, commit the changes (``git commit -m "Short explanation"``), push them back up to the remote repo (``git push origin <tempbranchname>``), and the new commit will automatically appear in the same ``pull request`` ready to be accepted!
 
 Cleaning up your own repo
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 You will receive an email to the address your Github account is registered with to let you know when your pull request has been approved, and then merged. Although the temp branch was deleted from the Github website (the remote repo), you will still have a local copy of this branch that you will want to remove. 
 
 ``git branch`` will show you all the branches your local repo is tracking. If there are staging branches you would like to clean up, use ``git branch -D <branchtobedeleted>``. This will stop you accumulating useless branches in your local ``git`` repo.
 
 
 DEA notebooks using Github
-==========================
+--------------------------
 
 Using ``git`` to manage files on ``dea-notebooks`` is highly recommended because it makes it easy to stay up to date with the latest versions of functions and code, and makes it impossible to lose your work. However, it is possible to do most tasks online on Github by uploading and modifying files directly. Just like the command line ``git`` workflow, all changes to files on the repository will need to be submitted as a “pull request” to be reviewed before being added to the ``master`` branch, but the Github will automatically guide you through this process in a reasonably straightforward way.
 
 Getting the entire dea-notebooks directory onto your PC/VDI:
-------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * On ``dea-notebooks``, click "Clone or download" on top-right.
 * Click "Download ZIP" and unzip to your desired location.
 
 Adding a new notebook or file:
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. On Github, browse to the location you would like to upload your file (e.g. ``dea-notebooks/DEA_datasets``).
 2. Click "Upload files" and drag and drop or select the notebook/file.
@@ -205,7 +205,7 @@ Adding a new notebook or file:
 5. Your changes will be submitted for review, and will be added to the ``master`` branch once accepted.
 
 Modifying an existing notebook and update it in the repository:
----------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. Edit and save the notebook on your computer without renaming the file.
 2. Follow the above "Adding a new notebook or file" instructions. Github should detect any changes to the file, and will update the file on the ``master`` branch once the “pull request” has been reviewed.
@@ -213,7 +213,7 @@ Modifying an existing notebook and update it in the repository:
 4. Python scripts and plain text like readme files can be edited even more easily by opening the file on Github, then clicking "Edit this file" on the top-right. Add a commit message and submit a “pull request” as above, and the changes will be visible on the `master` branch after review.
 
 Deleting existing files:
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Find the file you want to delete in Github, and open it by clicking on the name.
 * Up the top-right, select "Delete this file".
@@ -222,7 +222,7 @@ Deleting existing files:
 **Important note:** To keep your files up to date with the ``master`` branch, ensure that you regularly re-download the repository's zip file. Just make sure you upload or back-up any changed files so that they do not get overwritten by the new files!
 
 Approving pull requests
-=======================
+-----------------------
 
 Anyone with admin access to the ``dea-notebooks`` repo can approve “pull requests”. You can see a list of the “pull requests” ready for review on the "pull requests" tab at the top of the repo. Click this tab, then click on the open “pull request”. You will need to review the code before you can approve the request. You can view the changes proposed and make sure that they meet the minimum metadata requirements. You do not need to check the actual code: this review process is just to check for code documentation (see the `Publishing finished notebooks`_ section above). If the documentation looks good, click the green "Review" button and click "Approve". You can also request changes here if you think some key info is missing. 
 
