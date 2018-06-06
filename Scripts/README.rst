@@ -17,7 +17,7 @@ DEAPlotting.py: plotting DEA data (e.g. xarrays)
      - **three_band_image**: Takes three spectral bands and plots them on the RGB bands of an image
      - **three_band_image_subplots**: Takes three spectral bands and multiple time steps, and plots them on the RGB bands of an image
      - **animated_timeseries**: Takes an xarray time series and exports an animation showing landscape change across time
-     - **animated_fade**: Takes two single-timestep xarray datasets and exports a fading/transitioning animation
+     - **animated_doubletimeseries**: Takes two xarray datasets and exports a two panel animation
 
 BandIndices.py: calculating remote sensing band indices
      - **calculate_indices**: Computes a set of indices (including NDVI, GNDVI, NDWI, NDMI) from an xarray dataset
