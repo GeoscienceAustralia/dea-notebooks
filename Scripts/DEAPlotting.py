@@ -8,7 +8,7 @@ Available functions:
     animated_timeseries
     animated_doubletimeseries
 
-Last modified: May 2018
+Last modified: June 2018
 Author: Claire Krause
 Modified by: Robbi Bishop-Taylor
 
@@ -20,6 +20,7 @@ from skimage import exposure
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.patheffects as PathEffects
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import calendar
 
 
@@ -242,8 +243,9 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
     return plt, fig
 
 
-def animated_timeseries(ds, output_path, width_pixels=400, interval=100, bands=['red', 'green', 'blue'], 
-                        reflect_stand=5000, title=False, show_date=True, onebandplot_kwargs={}, annotation_kwargs={}):
+def animated_timeseries(ds, output_path, width_pixels=600, interval=100, bands=['red', 'green', 'blue'], 
+                        reflect_stand=5000, title=False, show_date=True, onebandplot_cbar=True,
+                        onebandplot_kwargs={}, annotation_kwargs={}):
     
     """
     Takes an xarray time series and animates the data as either a three-band (e.g. true or false colour) 
@@ -268,7 +270,7 @@ def animated_timeseries(ds, output_path, width_pixels=400, interval=100, bands=[
     
     :param width_pixels:
         An integer defining the output width in pixels for the resulting animation. The height of the animation is
-        set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 400 pixels wide.
+        set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 600 pixels wide.
         
     :param interval:
         An integer defining the milliseconds between each animation frame used to control the speed of the output
@@ -290,6 +292,9 @@ def animated_timeseries(ds, output_path, width_pixels=400, interval=100, bands=[
     :param show_date:
         An optional boolean that defines whether or not to plot date annotations for each animation frame. Defaults 
         to True, which plots date annotations based on ds.
+        
+    :param onebandplot_cbar:
+        An optional boolean indicating whether to include a colourbar for `ds1` one-band arrays. Defaults to True.
         
     :param onebandplot_kwargs:
         An optional dict of kwargs for controlling the appearance of one-band image arrays to pass to matplotlib 
@@ -338,6 +343,28 @@ def animated_timeseries(ds, output_path, width_pixels=400, interval=100, bands=[
 
         return(array_list)
     
+    
+    def _add_colourbar(ax, im, vmin, vmax, fontsize):
+        
+        """
+        Add a nicely formatted colourbar to an animation panel
+        """
+
+        # Add underlying bar
+        cbbox = inset_axes(ax, '100%', '7%', loc = 8, borderpad=0)
+        [cbbox.spines[k].set_visible(False) for k in cbbox.spines]
+        cbbox.tick_params(axis='both', left=False, top=False, right=False, bottom=False, 
+                          labelleft=False, labeltop=False, labelright=False, labelbottom=False)
+        cbbox.set_facecolor([0, 0, 0, 0.4])
+
+        # Add colourbar
+        axins2 = inset_axes(ax, width="90%", height="3%", loc=8) 
+        fig.colorbar(im, cax=axins2, orientation="horizontal", ticks=np.linspace(vmin, vmax, 3)) 
+        axins2.xaxis.set_ticks_position("top")
+        axins2.tick_params(axis='x', colors='white', labelsize=fontsize, pad=1, length=0)
+        axins2.get_xticklabels()[0].set_horizontalalignment('left')
+        axins2.get_xticklabels()[-1].set_horizontalalignment('right') 
+        
     
     ###############
     # Setup steps #
@@ -391,11 +418,16 @@ def animated_timeseries(ds, output_path, width_pixels=400, interval=100, bands=[
         ax1.axis('off')
 
         # Initialise axesimage objects to be updated during animation
-        left, bottom, right, top = ds.extent.boundingbox
-        im = ax1.imshow(imagelist[0], extent=[left, right, bottom, top], **onebandplot_kwargs)
+        im = ax1.imshow(imagelist[0], **onebandplot_kwargs)
 
         # Initialise annotation objects to be updated during animation
         t = ax1.annotate('', **annotation_kwargs)
+        
+        # Optionally add colourbar for one band images
+        if (len(bands) == 1) & onebandplot_cbar:                
+            _add_colourbar(ax1, im, fontsize=20,
+                           vmin=onebandplot_kwargs['vmin'], 
+                           vmax=onebandplot_kwargs['vmax'])
 
         # Function to update figure
         def update_figure(frame_i):
@@ -445,7 +477,7 @@ def animated_timeseries(ds, output_path, width_pixels=400, interval=100, bands=[
         elif output_path[-3:] == 'wmv':
             print('    Exporting animation to {}'.format(output_path))
             ani.save(output_path, dpi=width_pixels / 10.0, 
-                     writer=animation.FFMpegFileWriter(fps=1000 / interval, bitrate=6000, codec='wmv2'))
+                     writer=animation.FFMpegFileWriter(fps=1000 / interval, bitrate=4000, codec='wmv2'))
 
         elif output_path[-3:] == 'gif':
             print('    Exporting animation to {}'.format(output_path))
@@ -455,7 +487,8 @@ def animated_timeseries(ds, output_path, width_pixels=400, interval=100, bands=[
             print('    Output file type must be either .mp4, .wmv or .gif')
 
     else:        
-        print('Please select exactly three bands that exist in the input datasets')   
+        print('Please select either one or three bands that all exist in the input dataset')  
+
 
 
 def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=800, interval=100, 
@@ -463,6 +496,7 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=800, interval=
                               reflect_stand1=5000, reflect_stand2=5000, 
                               title1=False, title2=False,
                               show_date1=True, show_date2=True,
+                              onebandplot_cbar1=True, onebandplot_cbar2=True,
                               onebandplot_kwargs1={}, onebandplot_kwargs2={},
                               annotation_kwargs1={}, annotation_kwargs2={}):
     
@@ -540,6 +574,12 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=800, interval=
         An optional boolean that defines whether or not to plot date annotations for each animation frame in the 
         right panel. Defaults to True, which plots date annotations for `ds2`.
         
+    :param onebandplot_cbar1:
+        An optional boolean indicating whether to include a colourbar for `ds1` one-band arrays. Defaults to True.
+        
+    :param onebandplot_cbar2:
+        An optional boolean indicating whether to include a colourbar for `ds2` one-band arrays. Defaults to True.
+        
     :param onebandplot_kwargs1:
         An optional dict of kwargs for controlling the appearance of `ds1` one-band image arrays to pass to 
         matplotlib `plt.imshow` (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.imshow.html for options).
@@ -564,7 +604,12 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=800, interval=
     """
 
     # Define function to convert xarray dataset to list of three band numpy arrays
-    def _ds_to_arrraylist(ds, bands, reflect_stand):   
+    def _ds_to_arrraylist(ds, bands, reflect_stand):  
+        
+        """
+        This function converts xarray dataset time series into a list of numpy arrays.
+        Output arrays will be either one or three band arrays for input into plt.imshow
+        """
 
         array_list = []
         for i, timestep in enumerate(ds.time):
@@ -595,6 +640,27 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=800, interval=
             array_list.append(img_toshow)
 
         return(array_list)
+    
+    def _add_colourbar(ax, im, vmin, vmax, fontsize):
+        
+        """
+        Add a nicely formatted colourbar to an animation panel
+        """
+
+        # Add underlying bar
+        cbbox = inset_axes(ax, '100%', '9%', loc = 8, borderpad=0)
+        [cbbox.spines[k].set_visible(False) for k in cbbox.spines]
+        cbbox.tick_params(axis='both', left=False, top=False, right=False, bottom=False, 
+                          labelleft=False, labeltop=False, labelright=False, labelbottom=False)
+        cbbox.set_facecolor([0, 0, 0, 0.4])
+
+        # Add colourbar
+        axins2 = inset_axes(ax, width="90%", height="3%", loc=8) 
+        fig.colorbar(im, cax=axins2, orientation="horizontal", ticks=np.linspace(vmin, vmax, 3)) 
+        axins2.xaxis.set_ticks_position("top")
+        axins2.tick_params(axis='x', colors='white', labelsize=fontsize, pad=1, length=0)
+        axins2.get_xticklabels()[0].set_horizontalalignment('left')
+        axins2.get_xticklabels()[-1].set_horizontalalignment('right') 
     
     
     ###############
@@ -670,16 +736,25 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=800, interval=
             fig.set_size_inches(10.0, height * 0.5, forward=True)
             ax1.axis('off')
             ax2.axis('off')
-
+            
             # Initialise axesimage objects to be updated during animation
-            left, bottom, right, top = ds1.extent.boundingbox
-            im1 = ax1.imshow(imagelist1[0], extent=[left, right, bottom, top], **onebandplot_kwargs1)
-            left, bottom, right, top = ds2.extent.boundingbox
-            im2 = ax2.imshow(imagelist2[0], extent=[left, right, bottom, top], **onebandplot_kwargs2)
-
+            im1 = ax1.imshow(imagelist1[0], **onebandplot_kwargs1)
+            im2 = ax2.imshow(imagelist2[0], **onebandplot_kwargs2)
+            
             # Initialise annotation objects to be updated during animation
             t1 = ax1.annotate('', **annotation_kwargs1)   
             t2 = ax2.annotate('', **annotation_kwargs2)  
+            
+            # Optionally add colourbars for one band images
+            if (len(bands1) == 1) & onebandplot_cbar1:                
+                _add_colourbar(ax1, im1, fontsize=11,
+                               vmin=onebandplot_kwargs1['vmin'], 
+                               vmax=onebandplot_kwargs1['vmax'])
+                
+            if (len(bands2) == 1) & onebandplot_cbar2:                
+                _add_colourbar(ax2, im2, fontsize=11,
+                               vmin=onebandplot_kwargs2['vmin'], 
+                               vmax=onebandplot_kwargs2['vmax'])
 
             # Function to update figure
             def update_figure(frame_i):
@@ -756,7 +831,7 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=800, interval=
             elif output_path[-3:] == 'wmv':
                 print('    Exporting animation to {}'.format(output_path))
                 ani.save(output_path, dpi=width_pixels / 10.0, 
-                         writer=animation.FFMpegFileWriter(fps=1000 / interval, bitrate=6000, codec='wmv2'))
+                         writer=animation.FFMpegFileWriter(fps=1000 / interval, bitrate=4000, codec='wmv2'))
 
             elif output_path[-3:] == 'gif':
                 print('    Exporting animation to {}'.format(output_path))
@@ -769,6 +844,4 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=800, interval=
             print('Ensure that ds1 {} has the same xy dimensions as ds2 {}'.format(imagelist1[0].shape[0:1], 
                                                                                    imagelist2[0].shape[0:1])) 
     else:        
-        print('Please select exactly three bands that exist in the input datasets')  
-
-
+        print('Please select either one or three bands that all exist in the input datasets')  

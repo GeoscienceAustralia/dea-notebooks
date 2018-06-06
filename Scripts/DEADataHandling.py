@@ -13,8 +13,8 @@ Available functions:
     write_your_netcdf
     zonal_timeseries
 
-Last modified: May 2018
-Authors: Claire Krause, Robbi Bishop-Taylor, Bex Dunn
+Last modified: June 2018
+Authors: Claire Krause, Robbi Bishop-Taylor, Bex Dunn, Chad Burton
 
 '''
 
@@ -27,7 +27,6 @@ import xarray as xr
 import rasterio
 import geopandas as gpd
 import dask
-# import rasterstats as rs
 
 from datacube.utils import geometry
 import fiona
@@ -181,7 +180,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
                       product='nbart', masked_prop=0.99, mask_dict=None, apply_mask=False):
     
     """
-    Loads Landsat NBAR, NBART or FC25, and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
+    Loads Landsat NBAR, NBART or FC25 and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
     xarray dataset containing only observations that contain greater than a given proportion of clear pixels.    
   
     This function was designed to extract visually appealing time series of observations that are not
@@ -191,7 +190,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     in the Landsat PQ25 layer. By default only cloudy pixels or pixels without valid data in every band 
     are included in the calculation, but this can be customised using the `mask_dict` function.
     
-    Last modified: May 2018
+    Last modified: June 2018
     Author: Robbi Bishop-Taylor, Bex Dunn
     
     :param dc: 
@@ -207,7 +206,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
 
     :param product:
         An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to 'nbart'. For information on the difference, 
-        see the 'GettingStartedWithLandsat5-7-8' or 'Introduction_to_Fractional_Cover' notebooks on DEA-notebooks.
+        see the 'GettingStartedWithLandsat' or 'Introduction_to_Fractional_Cover' notebooks on DEA-notebooks.
         
     :param bands_of_interest:
         An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
@@ -328,7 +327,13 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
             
             # Append result to list
             filtered_sensors.append(filtered)
-        
+            
+            # Close datasets
+            filtered = None
+            good_quality = None
+            data = None
+            pq = None            
+                        
         except:
             
             # If there is no data for sensor or if another error occurs:
@@ -336,7 +341,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
 
     # Concatenate all sensors into one big xarray dataset, and then sort by time
     print('Combining and sorting ls5, ls7 and ls8 data')
-    combined_ds = xr.concat(filtered_sensors, dim='time')
+    combined_ds = xr.auto_combine(filtered_sensors)
     combined_ds = combined_ds.sortby('time')
                                                                
     #Filter to replace no data values with nans
@@ -357,7 +362,10 @@ def tasseled_cap(sensor_data, sensor, tc_bands=['greenness', 'brightness', 'wetn
     Landsat 5: https://doi.org/10.1016/0034-4257(85)90102-6
     Landsat 7: https://doi.org/10.1080/01431160110106113
     Landsat 8: https://doi.org/10.1080/2150704X.2014.915434
-
+    
+    Last modified: April 2018
+    Author: Robbi Bishop-Taylor
+    
     :attr sensor_data: input xarray dataset with six Landsat bands
     :attr tc_bands: list of tasseled cap bands to compute
     (valid options: 'wetness', 'greenness','brightness'
@@ -419,7 +427,7 @@ def tasseled_cap(sensor_data, sensor, tc_bands=['greenness', 'brightness', 'wetn
 
 def dataset_to_geotiff(filename, data):
 
-    '''
+    """
     this function uses rasterio and numpy to write a multi-band geotiff for one
     timeslice, or for a single composite image. It assumes the input data is an
     xarray dataset (note, dataset not dataarray) and that you have crs and affine
@@ -435,7 +443,7 @@ def dataset_to_geotiff(filename, data):
     data - dataset to write out
     Note: this function currently requires the data have lat/lon only, i.e. no
     time dimension
-    '''
+    """
 
     # Depreciation warning for write_geotiff
     print("This function will be superceded by the 'write_geotiff' function from 'datacube.helpers'. "
@@ -454,7 +462,8 @@ def dataset_to_geotiff(filename, data):
     with rasterio.open(filename, 'w', **kwargs) as src:
         for i, band in enumerate(data.data_vars):
             src.write(data[band].data, i + 1)
-            
+ 
+
 def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
 
     '''This function takes a shapefile, selects a polygon as per your selection, 
@@ -462,7 +471,7 @@ def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
     get the geom for the datacube query. It will also make sure you have the correct 
     crs object for the DEA
 
-    Last modified May 2018
+    Last modified: May 2018
     Author: Bex Dunn'''
 
     # open all the shapes within the shape file
@@ -482,11 +491,17 @@ def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
     #get your polygon out as a geom to go into the query, and the shape name for file names later
     return geom, shape_name          
 
+
 def write_your_netcdf(data, dataset_name, filename, crs):
 
-    '''this function turns an xarray dataarray into a dataset so we can write it to netcdf. 
+    """
+    This function turns an xarray dataarray into a dataset so we can write it to netcdf. 
     It adds on a crs definition from the original array. data = your xarray dataset, dataset_name 
-    is a string describing your variable''' 
+    is a string describing your variable
+    
+    Last modified: May 2018
+    Author: Bex Dunn    
+    """ 
    
     #turn array into dataset so we can write the netcdf
     if isinstance(data,xr.DataArray):
@@ -503,10 +518,10 @@ def write_your_netcdf(data, dataset_name, filename, crs):
     except RuntimeError as err:
         print("RuntimeError: {0}".format(err))    
 
-
+	
 # def zonal_timeseries(dataArray, shp_loc, results_loc, feature_name, stat='mean', csv=False, netcdf=False, plot=False):
+#
 #     """
-#     Summary: 
 #     Given an xarray dataArray and a shapefile, generates a timeseries of zonal statistics across n number of 
 #     uniquely labelled polygons. The function exports a .csv of the stats, a netcdf containing the stats, and .pdf plots.
 #     Requires the installation of the rasterstats module: https://pythonhosted.org/rasterstats/installation.html
@@ -522,9 +537,9 @@ def write_your_netcdf(data, dataset_name, filename, crs):
 #     netcdf = Boolean. If True, function will export results as a netcdf.
     
 #     Last modified: May 2018
-#     Author: Chad Burton
-    
+#     Author: Chad Burton    
 #     """
+#
 #     #use dask to chunk the data along the time axis in case its a very large dataset
 #     dataArray = dataArray.chunk(chunks = {'time':20})
     
