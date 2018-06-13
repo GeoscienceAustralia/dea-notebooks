@@ -13,3 +13,4 @@ To add here:
    :maxdepth: 1
    
    Landsat8_Geomedian_Dashboard.ipynb
+   Tidal_Geomedian_Filmstrips.ipynb
