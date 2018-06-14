@@ -8,7 +8,6 @@ DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarra
      - **load_nbarx**: Loads NBAR (Nadir BRDF Adjusted Reflectance) or NBAR-T (terrain corrected NBAR) data for a sensor, masks using pixel quality (PQ), then optionally filters out terrain -999s (for NBAR-T)
      - **load_sentinel**: Loads a Sentinel granule product and masks using PQ
      - **load_clearlandsat**: Loads time series of clear Landsat observations from the entire archive
-     - **tasseled_cap**: Computes tasseled cap wetness, greenness and brightness bands from a six band xarray dataset
      - **dataset_to_geotiff**: Writes a multi-band geotiff for one xarray timeslice, or for a single composite image
      - **open_polygon_from_shapefile**: Imports a shapefile and converts to a datacube geometry object
      - **write_your_netcdf**: Writes an xarray dataset or array to a NetCDF file
@@ -22,6 +21,7 @@ DEAPlotting.py: plotting DEA data (e.g. xarrays)
 BandIndices.py: calculating remote sensing band indices
      - **calculate_indices**: Computes a set of indices (including NDVI, GNDVI, NDWI, NDMI) from an xarray dataset
      - **geological_indices**: Computes a set of geological remote sensing indices (including CMR, FMR, IOR) from an xarray dataset
+     - **tasseled_cap**: Computes tasseled cap wetness, greenness and brightness bands from an xarray dataset
      
 SpatialTools.py: Rasters/shapefile manipulation functions that do not rely on DEA (i.e. no dc.load or xarrays)
      - **rasterize_vector**: Rasterize a vector file and return as an array
