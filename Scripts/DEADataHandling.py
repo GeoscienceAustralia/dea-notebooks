@@ -341,7 +341,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
 
     # Concatenate all sensors into one big xarray dataset, and then sort by time
     print('Combining and sorting ls5, ls7 and ls8 data')
-    combined_ds = xr.auto_combine(filtered_sensors)
+    combined_ds = xr.concat(filtered_sensors, dim='time')
     combined_ds = combined_ds.sortby('time')
                                                                
     #Filter to replace no data values with nans
