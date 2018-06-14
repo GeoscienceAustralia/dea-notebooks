@@ -2,8 +2,14 @@
 '''
 This code allows for the quick calculation of remote sensing band indices.
 
-Date: March 2018
-Author: Claire Krause
+Date: June 2018
+Authors: Claire Krause, Bex Dunn
+
+Available functions:
+    calculate indices  : NDVI, GNDVI, NDWI, NDMI
+    geological_indices : CMR, FMR, IOR
+    tasseled_cap       : Brightness, Greenness, Wetness
+
 
 '''
 
@@ -123,3 +129,62 @@ def geological_indices(ds, index):
     except:
         print('Hmmmmm. I don\'t recognise that index. '
               'Options I currently have are CMR, FMR and IOR.')
+        
+def tasseled_cap(sensor_data, tc_bands=['greenness', 'brightness', 'wetness'],
+                 drop=True):
+    """   
+    Computes tasseled cap wetness, greenness and brightness bands from a six
+    band xarray dataset, and returns a new xarray dataset with old bands
+    optionally dropped.
+    
+    Coefficients are from Crist and Cicone 1985 "A TM Tasseled Cap equivalent 
+    transformation for reflectance factor data"
+    https://doi.org/10.1016/0034-4257(85)90102-6
+    
+    Last modified: June 2018
+    Authors: Robbi Bishop-Taylor, Bex Dunn
+    
+    :attr sensor_data: input xarray dataset with six Landsat bands
+    :attr tc_bands: list of tasseled cap bands to compute
+    (valid options: 'wetness', 'greenness','brightness')
+    :attr drop: if 'drop = False', return all original Landsat bands
+    :returns: xarray dataset with newly computed tasseled cap bands
+    """
+
+    # Copy input dataset
+    output_array = sensor_data.copy(deep=True)
+
+    # Coefficients for each tasseled cap band
+    wetness_coeff = {'blue': 0.0315, 'green': 0.2021, 'red': 0.3102,
+                     'nir': 0.1594, 'swir1': -0.6806, 'swir2': -0.6109}
+    
+    greenness_coeff = {'blue': -0.1603, 'green': -0.2819, 'red': -0.4934,
+                       'nir': 0.7940, 'swir1': -0.0002, 'swir2': -0.1446}
+    
+    brightness_coeff = {'blue': 0.2043, 'green': 0.4158, 'red': 0.5524,
+                        'nir': 0.5741, 'swir1': 0.3124, 'swir2': 0.2303}
+    
+    # Dict to use correct coefficients for each tasseled cap band
+    analysis_coefficient = {'wetness': wetness_coeff,
+                            'greenness': greenness_coeff,
+                            'brightness': brightness_coeff}
+
+    # For each band, compute tasseled cap band and add to output dataset
+    for tc_band in tc_bands:
+        # Create xarray of coefficient values used to multiply each band of input
+        coeff = xr.Dataset(analysis_coefficient[tc_band])
+        sensor_coeff = sensor_data * coeff
+
+        # Sum all bands
+        output_array[tc_band] = sensor_coeff.blue + sensor_coeff.green + \
+                                sensor_coeff.red + sensor_coeff.nir + \
+                                sensor_coeff.swir1 + sensor_coeff.swir2
+
+    # If drop = True, remove original bands
+    if drop:
+        bands_to_drop = list(sensor_data.data_vars)
+        output_array = output_array.drop(bands_to_drop)
+
+    return output_array
+       
+       
