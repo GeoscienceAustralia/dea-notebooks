@@ -12,6 +12,10 @@ Available functions:
 
 
 '''
+#Load modules
+import dask
+import numpy as np
+import xarray as xr
 
 def calculate_indices(ds, index):
     '''
