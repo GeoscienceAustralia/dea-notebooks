@@ -83,3 +83,4 @@ def significance_tests(xarray_a, xarray_b, t_test=False, levene_test=False,
         p_val_levene_xr = xr.DataArray(levene_p, coords = [lat, long], dims = ['y', 'x'], name='p_value_levene') 
         print('finished levene test')
         return levene_stat_xr, p_val_levene_xr
+      
