@@ -37,7 +37,8 @@ ClassificationTools.py: classifying remote sensing imagery using classifiers and
      - **randomforest_classify**: Performs classification of xarray dataset using pre-trained random forest classifier, and export classified output to a geotiff
      - **randomforest_eval**: Takes a set of training labels and training samples, and plots OOB error against a range of classifier parameters to explore how parameters affect classification
     
-    
+significance_tests.py: per-pixel hypothesis testing  
+     - **significance_tests**: Given two xarray dataarrays from non-overlapping time-periods, conducts either a t-test or a Levene's test to determine if the mean or variance are equal, respectively    
     
 
 
