@@ -39,6 +39,10 @@ ClassificationTools.py: classifying remote sensing imagery using classifiers and
     
 SignificanceTests.py: per-pixel hypothesis testing  
      - **significance_tests**: Given two xarray dataarrays from non-overlapping time-periods, conducts either a t-test or a Levene's test to determine if the mean or variance are equal, respectively    
+     
+TasseledCapTools.py: a set of python functions to use with the outputs of tasseled cap transforms
+     - **thresholded_tasseled_cap**: Computes thresholded tasseled cap wetness, greenness and brightness bands from a six band xarray dataset
+     - **pct_exceedance_tasseled_cap**: Counts the number of thresholded tasseled cap scenes per pixel and divides by the number of tasseled cap scenes per pixel
     
 
 
