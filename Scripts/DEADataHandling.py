@@ -7,7 +7,6 @@ Available functions:
     load_nbarx
     load_sentinel
     load_clearlandsat (also does fractional cover)
-    tasseled_cap
     dataset_to_geotiff
     open_polygon_from_shapefile
     write_your_netcdf
@@ -341,7 +340,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
 
     # Concatenate all sensors into one big xarray dataset, and then sort by time
     print('Combining and sorting ls5, ls7 and ls8 data')
-    combined_ds = xr.auto_combine(filtered_sensors)
+    combined_ds = xr.concat(filtered_sensors, dim='time')
     combined_ds = combined_ds.sortby('time')
                                                                
     #Filter to replace no data values with nans
@@ -349,81 +348,6 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
 
     # Return combined dataset
     return combined_ds
-
-
-def tasseled_cap(sensor_data, sensor, tc_bands=['greenness', 'brightness', 'wetness'],
-                 drop=True):
-    """
-    Computes tasseled cap wetness, greenness and brightness bands from a six
-    band xarray dataset, and returns a new xarray dataset with old bands
-    optionally dropped.
-
-    Coefficients for demonstration purposes only; sourced from:
-    Landsat 5: https://doi.org/10.1016/0034-4257(85)90102-6
-    Landsat 7: https://doi.org/10.1080/01431160110106113
-    Landsat 8: https://doi.org/10.1080/2150704X.2014.915434
-    
-    Last modified: April 2018
-    Author: Robbi Bishop-Taylor
-    
-    :attr sensor_data: input xarray dataset with six Landsat bands
-    :attr tc_bands: list of tasseled cap bands to compute
-    (valid options: 'wetness', 'greenness','brightness'
-    :attr sensor: Landsat sensor used for coefficient values
-    (valid options: 'ls5', 'ls7', 'ls8')
-    :attr drop: if 'drop = False', return all original Landsat bands
-
-    :returns: xarray dataset with newly computed tasseled cap bands
-    """
-
-    # Copy input dataset
-    output_array = sensor_data.copy(deep=True)
-
-    # Coefficients for each tasseled cap band
-    wetness_coeff = {'ls5': {'blue': 0.0315, 'green': 0.2021, 'red': 0.3102,
-                             'nir': 0.1594, 'swir1': -0.6806, 'swir2': -0.6109},
-                     'ls7': {'blue': 0.2626, 'green': 0.2141, 'red': 0.0926,
-                             'nir': 0.0656, 'swir1': -0.7629, 'swir2': -0.5388},
-                     'ls8': {'blue': 0.1511, 'green': 0.1973, 'red': 0.3283,
-                             'nir': 0.3407, 'swir1': -0.7117, 'swir2': -0.4559}}
-
-    greenness_coeff = {'ls5': {'blue': -0.1603, 'green': -0.2819, 'red': -0.4934,
-                               'nir': 0.7940, 'swir1': -0.0002, 'swir2': -0.1446},
-                       'ls7': {'blue': -0.3344, 'green': -0.3544, 'red': -0.4556,
-                               'nir': 0.6966, 'swir1': -0.0242, 'swir2': -0.2630},
-                       'ls8': {'blue': -0.2941, 'green': -0.2430, 'red': -0.5424,
-                               'nir': 0.7276, 'swir1': -0.0713, 'swir2': -0.1608}}
-
-    brightness_coeff = {'ls5': {'blue': 0.2043, 'green': 0.4158, 'red': 0.5524,
-                                'nir': 0.5741, 'swir1': 0.3124, 'swir2': 0.2303},
-                        'ls7': {'blue': 0.3561, 'green': 0.3972, 'red': 0.3904,
-                                'nir': 0.6966, 'swir1': 0.2286, 'swir2': 0.1596},
-                        'ls8': {'blue': 0.3029, 'green': 0.2786, 'red': 0.4733,
-                                'nir': 0.5599, 'swir1': 0.508, 'swir2': 0.1872}}
-
-    # Dict to use correct coefficients for each tasseled cap band
-    analysis_coefficient = {'wetness': wetness_coeff,
-                            'greenness': greenness_coeff,
-                            'brightness': brightness_coeff}
-
-    # For each band, compute tasseled cap band and add to output dataset
-    for tc_band in tc_bands:
-        # Create xarray of coefficient values used to multiply each band of input
-        coeff = xr.Dataset(analysis_coefficient[tc_band][sensor])
-        sensor_coeff = sensor_data * coeff
-
-        # Sum all bands
-        output_array[tc_band] = sensor_coeff.blue + sensor_coeff.green + \
-                                sensor_coeff.red + sensor_coeff.nir + \
-                                sensor_coeff.swir1 + sensor_coeff.swir2
-
-    # If drop = True, remove original bands
-    if drop:
-        bands_to_drop = list(sensor_data.data_vars)
-        output_array = output_array.drop(bands_to_drop)
-
-    return output_array
-
 
 def dataset_to_geotiff(filename, data):
 
