@@ -12,7 +12,7 @@ Maybe add here?
 .. toctree::
    :maxdepth: 1
 
-   Introduction_to_Landsat5-7-8.ipynb
+   Introduction_to_Landsat.ipynb
    Introduction_to_LandsatPQ.ipynb
    Introduction_to_Fractional_Cover.ipynb
    Introduction_to_HLTC.ipynb
