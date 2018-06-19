@@ -8,7 +8,6 @@ DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarra
      - **load_nbarx**: Loads NBAR (Nadir BRDF Adjusted Reflectance) or NBAR-T (terrain corrected NBAR) data for a sensor, masks using pixel quality (PQ), then optionally filters out terrain -999s (for NBAR-T)
      - **load_sentinel**: Loads a Sentinel granule product and masks using PQ
      - **load_clearlandsat**: Loads time series of clear Landsat observations from the entire archive
-     - **tasseled_cap**: Computes tasseled cap wetness, greenness and brightness bands from a six band xarray dataset
      - **dataset_to_geotiff**: Writes a multi-band geotiff for one xarray timeslice, or for a single composite image
      - **open_polygon_from_shapefile**: Imports a shapefile and converts to a datacube geometry object
      - **write_your_netcdf**: Writes an xarray dataset or array to a NetCDF file
@@ -22,6 +21,7 @@ DEAPlotting.py: plotting DEA data (e.g. xarrays)
 BandIndices.py: calculating remote sensing band indices
      - **calculate_indices**: Computes a set of indices (including NDVI, GNDVI, NDWI, NDMI) from an xarray dataset
      - **geological_indices**: Computes a set of geological remote sensing indices (including CMR, FMR, IOR) from an xarray dataset
+     - **tasseled_cap**: Computes tasseled cap wetness, greenness and brightness bands from an xarray dataset
      
 SpatialTools.py: Rasters/shapefile manipulation functions that do not rely on DEA (i.e. no dc.load or xarrays)
      - **rasterize_vector**: Rasterize a vector file and return as an array
@@ -37,7 +37,12 @@ ClassificationTools.py: classifying remote sensing imagery using classifiers and
      - **randomforest_classify**: Performs classification of xarray dataset using pre-trained random forest classifier, and export classified output to a geotiff
      - **randomforest_eval**: Takes a set of training labels and training samples, and plots OOB error against a range of classifier parameters to explore how parameters affect classification
     
-    
+SignificanceTests.py: per-pixel hypothesis testing  
+     - **significance_tests**: Given two xarray dataarrays from non-overlapping time-periods, conducts either a t-test or a Levene's test to determine if the mean or variance are equal, respectively    
+     
+TasseledCapTools.py: a set of python functions to use with the outputs of tasseled cap transforms
+     - **thresholded_tasseled_cap**: Computes thresholded tasseled cap wetness, greenness and brightness bands from a six band xarray dataset
+     - **pct_exceedance_tasseled_cap**: Counts the number of thresholded tasseled cap scenes per pixel and divides by the number of tasseled cap scenes per pixel
     
 
 
