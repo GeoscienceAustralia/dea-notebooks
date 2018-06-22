@@ -387,7 +387,6 @@ def dataset_to_geotiff(filename, data):
         for i, band in enumerate(data.data_vars):
             src.write(data[band].data, i + 1)
  
-
 def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
 
     '''This function takes a shapefile, selects a polygon as per your selection, 
