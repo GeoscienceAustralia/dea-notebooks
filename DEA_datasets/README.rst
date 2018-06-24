@@ -4,11 +4,6 @@ DEA Datasets
 
 These pages introduce the datasets currently available within DEA.
 
-Maybe add here?
-- WoFS
-- BoM rainfall grids
-- Radiometrics
-
 .. toctree::
    :maxdepth: 1
 
