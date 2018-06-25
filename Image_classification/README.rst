@@ -2,9 +2,7 @@
 Image Classification
 =============================
 
-These pages will demonstrate some simple image classification techniques.
-
-To add here:
+These pages will demonstrate some simple image classification techniques, including
 - Decision tree
 - Image segmentation
 
