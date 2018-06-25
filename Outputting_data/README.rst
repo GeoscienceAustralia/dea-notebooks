@@ -2,12 +2,12 @@
 Outputting data
 =============================
 
-These pages will walk you through writing out data in various formats.
-
-To add here:
+These pages walk you through writing out data in various formats including
 - NetCDF
+- GeoTiff
 - Pickle
 - RGB composites
+- Gifs
 
 .. toctree::
    :maxdepth: 1
