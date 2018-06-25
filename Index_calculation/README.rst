@@ -2,11 +2,10 @@
 Index Calculation
 =============================
 
-These pages will demonstrate how to calculate indices with DEA datasets.
-
-To add here:
-- e.g. NDVI
+These pages demonstrate how to calculate indices with DEA datasets, such as
+- NDVI
 - Tasseled cap
+- Mineral indices
 
 .. toctree::
    :maxdepth: 1
