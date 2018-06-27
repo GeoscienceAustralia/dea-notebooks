@@ -12,3 +12,5 @@ These pages demonstrate how to perform simple analysis to take advantage of the 
    Interactive_phenology_plot_tagged.ipynb
    Hovmoller_TCI_Multi-site.ipynb
    Hovmoller_TCI_and_Rainfall.ipynb
+   Hovmoller_NDVI.ipynb
+   Hovmoller_NDVI_Multi-site.ipynb 
