@@ -14,3 +14,4 @@ These pages walk you through writing out data in various formats including
 
    ProduceFalseColourGeotiffs.ipynb
    PlottingAnimatedGifs.ipynb
+   ExportingCompliantNetCDFs.ipynb
