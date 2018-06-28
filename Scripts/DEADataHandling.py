@@ -1,5 +1,5 @@
-# DEADataHandling.py
-"""
+## DEADataHandling.py
+'''
 This file contains a set of python functions for handling data within DEA. If a function does not use 
 DEA functionality (for example, dc.load or xarrays), it may be better suited for inclusion in SpatialTools.py.
 Available functions:
@@ -16,14 +16,19 @@ Available functions:
 Last modified: May 2018
 Authors: Claire Krause, Robbi Bishop-Taylor, Bex Dunn
 
-"""
+'''
 
 # Load modules
 from datacube.helpers import ga_pq_fuser
 from datacube.storage import masking
+import gdal
 import numpy as np
 import xarray as xr
 import rasterio
+import geopandas as gpd
+import dask
+# import rasterstats as rs
+
 from datacube.utils import geometry
 import fiona
 import shapely.geometry
@@ -82,10 +87,9 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
 
         # If pixel quality filtering is enabled, extract PQ data to use as mask
         if filter_pq:
-            pq_query = query.copy()
-            pq_query['resampling'] = 'nearest'
+
             sensor_pq = dc.load(product=mask_product, fuse_func=ga_pq_fuser,
-                                group_by='solar_day', **pq_query)
+                                group_by='solar_day', **query)
 
             # If PQ call returns data, use to mask input data
             if sensor_pq.variables:
@@ -121,9 +125,8 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
         return None, None, None
 
 
-def load_sentinel(dc, product, query, filter_cloud=True, bands_of_interest=''):
-    """
-    loads a sentinel granule product and masks using pq
+def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
+    '''loads a sentinel granule product and masks using pq
 
     Last modified: March 2018
     Authors: Claire Krause, Bex Dunn
@@ -135,7 +138,7 @@ def load_sentinel(dc, product, query, filter_cloud=True, bands_of_interest=''):
 
     inputs
     dc - handle for the Datacube to import from. This allows you to also use dev environments
-    if that have been imported into the environment.
+	 if that have been imported into the environment.
     product - string containing the name of the sentinel product to load
     query - A dict containing the query bounds. Can include lat/lon, time etc
 
@@ -146,8 +149,7 @@ def load_sentinel(dc, product, query, filter_cloud=True, bands_of_interest=''):
     ds - Extracted and pq filtered dataset
     crs - ds coordinate reference system
     affine - ds affine
-    """
-
+    '''
     dataset = []
     print('loading {}'.format(product))
     if bands_of_interest:
@@ -416,7 +418,8 @@ def tasseled_cap(sensor_data, sensor, tc_bands=['greenness', 'brightness', 'wetn
 
 
 def dataset_to_geotiff(filename, data):
-    """
+
+    '''
     this function uses rasterio and numpy to write a multi-band geotiff for one
     timeslice, or for a single composite image. It assumes the input data is an
     xarray dataset (note, dataset not dataarray) and that you have crs and affine
@@ -432,7 +435,8 @@ def dataset_to_geotiff(filename, data):
     data - dataset to write out
     Note: this function currently requires the data have lat/lon only, i.e. no
     time dimension
-    """
+    '''
+
     # Depreciation warning for write_geotiff
     print("This function will be superceded by the 'write_geotiff' function from 'datacube.helpers'. "
           "Please revise your notebooks to use this function instead")
@@ -451,7 +455,6 @@ def dataset_to_geotiff(filename, data):
         for i, band in enumerate(data.data_vars):
             src.write(data[band].data, i + 1)
             
-
 def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
 
     '''This function takes a shapefile, selects a polygon as per your selection, 
@@ -478,7 +481,6 @@ def open_polygon_from_shapefile(shapefile, index_of_polygon_within_shapefile=0):
     #print('the name of your shape is '+shape_name)
     #get your polygon out as a geom to go into the query, and the shape name for file names later
     return geom, shape_name          
-
 
 def write_your_netcdf(data, dataset_name, filename, crs):
 
