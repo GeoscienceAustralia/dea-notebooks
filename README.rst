@@ -111,6 +111,9 @@ To get started with ``dea-notebooks`` using command line git, the first step is 
 
 To clone the repo (on the VDI):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+You need to have a GitHub account in order to clone the dea-notebooks repository. If you do not have one, you can sign up `here <https://github.com/>`_. If you haven't used GitHub on the VDI before, you will need to set up some SSH keys before you will be able to clone the repository. To set up the SSH keys, follow the instructions `here <https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/>`_, and then `add the newly generated key to your GitHub account <https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/>`_. 
+
+Once you have set up GitHub on the VDI, follow these steps:
 * Navigate to the directory you want the repository to sit using a Terminal window (``cd <directory>``)
 * Type ``git clone git@github.com:GeoscienceAustralia/dea-notebooks.git``
 * A new folder called ``dea-notebooks`` will be created, which is a copy of the code repo
