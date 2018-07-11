@@ -322,16 +322,17 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200, bands=[
             # Select single timestep from the data array
             ds_i = ds.isel(time = i)
 
-            # Create new three band array
+            # Get shape of array
             y, x = ds_i[bands[0]].shape
 
             if len(bands) == 1:    
 
-                # Create new three band array
+                # Create new one band array
                 img_toshow = ds_i[bands[0]].values
 
             else:
 
+                # Create new three band array                
                 rawimg = np.zeros((y, x, 3), dtype=np.float32)
 
                 # Add xarray bands into three dimensional numpy array
@@ -571,7 +572,7 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
             # Select single timestep from the data array
             ds_i = ds.isel(time = i)
 
-            # Create new three band array
+            # Get shape of array
             y, x = ds_i[bands[0]].shape
 
             if len(bands) == 1:    
@@ -581,6 +582,7 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
 
             else:
 
+                # Create new three band array
                 rawimg = np.zeros((y, x, 3), dtype=np.float32)
 
                 # Add xarray bands into three dimensional numpy array
@@ -890,7 +892,7 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
             # Select single timestep from the data array
             ds_i = ds.isel(time = i)
 
-            # Create new three band array
+            # Get shape of array
             y, x = ds_i[bands[0]].shape
 
             if len(bands) == 1:    
@@ -900,6 +902,7 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
 
             else:
 
+                # Create new three band array
                 rawimg = np.zeros((y, x, 3), dtype=np.float32)
 
                 # Add xarray bands into three dimensional numpy array
