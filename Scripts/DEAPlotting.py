@@ -672,7 +672,7 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
 
         # Initialise right panel and set y axis limits
         line_test = df.plot(ax=ax2)
-        ax2.axes.axis(ymin=df.values.min(), ymax=df.values.max() * 1.2)
+        ax2.axes.axis(ymin=np.nanmin(df.values), ymax=np.nanmax(df.values) * 1.2)
 
         # Legend to right panel
         ax2.legend(loc='upper left', bbox_to_anchor=(0, 1), ncol=1, frameon=False) 
