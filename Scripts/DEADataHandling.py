@@ -176,7 +176,7 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
 
 
 def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interest=None,
-                      product='nbart', masked_prop=0.99, mask_dict=None, apply_mask=False):
+                      product='nbart', masked_prop=0.99, mask_dict=None, apply_mask=False, ls7_slc_off=False):
     
     """
     Loads Landsat NBAR, NBART or FC25 and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
@@ -189,7 +189,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     in the Landsat PQ25 layer. By default only cloudy pixels or pixels without valid data in every band 
     are included in the calculation, but this can be customised using the `mask_dict` function.
     
-    Last modified: June 2018
+    Last modified: July 2018
     Author: Robbi Bishop-Taylor, Bex Dunn
     
     :param dc: 
@@ -227,6 +227,10 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
         out any remaining unclear cells. For example, if `masked_prop=0.99`, the filtered images may still contain
         up to 1% unclear/cloudy pixels. The default of False simply returns the resulting observations without
         masking out these pixels; True removes them using the mask. 
+
+    :param ls7_slc_off:
+        An optional boolean indicating whether to include data from after the Landsat 7 SLC failure (i.e. SLC-off).
+        Defaults to False, which removes all Landsat 7 observations after May 31 2003. 
     
     :returns:
         An xarray dataset containing only Landsat observations that contain greater than `masked_prop`
@@ -285,15 +289,26 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
                                **query)             
 
             # Load PQ data
-            print('Loading {} PQ'.format(sensor))
             pq = dc.load(product = '{}_pq_albers'.format(sensor),
                          group_by = 'solar_day',
                          fuse_func=ga_pq_fuser,
+                         dask_chunks={'time': 1},
                          **query)
 
-            # Return only Landsat observations that have matching PQ data (this may
-            # need to be improved, but seems to work in most cases)
-            data = data.sel(time = pq.time, method='nearest')
+            # Remove Landsat 7 SLC-off from PQ layer if ls7_slc_off=False
+            if not ls7_slc_off and sensor == 'ls7':
+
+                print('Ignoring SLC-off observations for ls7')
+                data = data.where(data.time < np.datetime64('2003-05-30'), drop=True) 
+
+            # Return only Landsat observations that have matching PQ data 
+            time = (data.time - pq.time).time
+            data = data.sel(time=time)
+            pq = pq.sel(time=time)
+
+            # Load PQ data using dask
+            print('Loading {} PQ'.format(sensor))
+            pq = pq.compute()
             
             # If a custom dict is provided for mask_dict, use these values to make mask from PQ
             if mask_dict:
@@ -348,6 +363,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
 
     # Return combined dataset
     return combined_ds
+
 
 def dataset_to_geotiff(filename, data):
 
