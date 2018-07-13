@@ -1,0 +1,10 @@
+*.py~
+*~
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+*.tif
+*.xml
+*.gif
+*.mp4
+*.wmv
+__pycache__
