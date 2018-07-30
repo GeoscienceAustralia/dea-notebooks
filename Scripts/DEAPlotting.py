@@ -29,7 +29,7 @@ import calendar
 
 
 def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10), title='Time',
-                     projection='projected', contrast_enhance=False, reflect_stand=5000):
+                     projection='projected', contrast_enhance=False, percentile_stretch = [1, 99]):
 
     """
     This function takes three spectral bands and plots them as the RGB bands of an image.
@@ -64,10 +64,11 @@ def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10
         exposure.equalize_hist is used to transform the data. Else, the data are standardised relative
         to a default reflectance = 5000 (this can be customised using `reflect_stand`)
 
-    :param reflect_stand:
-        Optionally allows you to have greater control over the contrast stretch by manually specifying a
-        reflectance standardisation value. Low values (< 5000) typically result in brighter images. Only
-        applies if `contrast_enhance=False` (defaults to 5000)
+    :param percentile_stretch:
+        Optionally allows you to have greater control over the contrast stretch by manually specifying 
+        min and max percentiles used to stretch the image colours. Defaults to [1, 99], which produces 
+        a vibrant image without extreme contrast sometimes produced using `contrast_enhance=True`. To
+        plot the image as-is without any stretch, use `percentile_stretch=[0, 100].
 
 
     :return fig:
@@ -124,9 +125,9 @@ def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10
         
     else:
 
-        # Stretch contrast using defined reflectance standardisation and clip to between 0 and 1
-        # to prevent warnings; defaults to reflect_stand = 5000
-        img_toshow = (rawimg / reflect_stand).clip(0, 1)
+        # Stretch contrast using percentiles
+        perc_low, perc_high = np.percentile(rawimg, percentile_stretch)
+        img_toshow = exposure.rescale_intensity(rawimg, in_range=(perc_low, perc_high))
 
     # Plot figure, setting x and y axes from extent of xarray dataset
     fig, ax = plt.subplots(figsize=figsize)
@@ -247,7 +248,8 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
 
 
 def animated_timeseries(ds, output_path, width_pixels=600, interval=200, bands=['red', 'green', 'blue'], 
-                        reflect_stand=5000, title=False, show_date=True, onebandplot_cbar=True,
+                        reflect_stand=5000, title=False, show_date=True, onebandplot_cbar=True, 
+                        time_dim = 'time', x_dim = 'x', y_dim = 'y',
                         onebandplot_kwargs={}, annotation_kwargs={}):
     
     """
@@ -299,6 +301,15 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200, bands=[
     :param onebandplot_cbar:
         An optional boolean indicating whether to include a colourbar for `ds1` one-band arrays. Defaults to True.
         
+    :param time_dim:
+        An optional string allowing you to override the xarray dimension used for time. Defaults to 'time'.
+    
+    :param x_dim:
+        An optional string allowing you to override the xarray dimension used for x coordinates. Defaults to 'x'.
+    
+    :param y_dim:
+        An optional string allowing you to override the xarray dimension used for y coordinates. Defaults to 'y'.
+        
     :param onebandplot_kwargs:
         An optional dict of kwargs for controlling the appearance of one-band image arrays to pass to matplotlib 
         `plt.imshow` (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.imshow.html for options).
@@ -312,18 +323,19 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200, bands=[
         For example, `annotation_kwargs={'fontsize':20, 'color':'red', 'family':'serif'}. By default, text annotations 
         are plotted as white, size 25 mono-spaced font with a 4pt black outline in the top-right of the animation.   
     """
-
+    
     # Define function to convert xarray dataset to list of one or three band numpy arrays
-    def _ds_to_arrraylist(ds, bands, reflect_stand):   
+    def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim):   
 
         array_list = []
-        for i, timestep in enumerate(ds.time):
+        for i, timestep in enumerate(ds[time_dim]):
 
             # Select single timestep from the data array
-            ds_i = ds.isel(time = i)
+            ds_i = ds[{time_dim: i}]
 
             # Get shape of array
-            y, x = ds_i[bands[0]].shape
+            x = len(ds[x_dim])
+            y = len(ds[y_dim])
 
             if len(bands) == 1:    
 
@@ -375,7 +387,9 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200, bands=[
     ############### 
     
     # Get time, x and y dimensions of dataset and calculate width vs height of plot
-    timesteps, width, height = ds.sizes.values()
+    timesteps = len(ds[time_dim])    
+    width = len(ds[x_dim])
+    height = len(ds[y_dim])
     width_ratio = float(width) / float(height)
     height = 10.0 / width_ratio
     
@@ -410,7 +424,8 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200, bands=[
     if ((len(bands) == 3) | (len(bands) == 1)) & all([(b in ds.data_vars) for b in bands]): 
 
         # Import xarrays as lists of three band numpy arrays
-        imagelist = _ds_to_arrraylist(ds, bands=bands, reflect_stand=reflect_stand)        
+        imagelist = _ds_to_arrraylist(ds, bands=bands, reflect_stand=reflect_stand,
+                                      time_dim=time_dim, x_dim=x_dim, y_dim=y_dim)        
 
         # Set up figure
         fig, ax1 = plt.subplots(ncols=1) 
@@ -431,22 +446,30 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200, bands=[
                            vmax=onebandplot_kwargs['vmax'])
 
         # Function to update figure
-        def update_figure(frame_i):
+        def update_figure(frame_i):            
+        
+            # If possible, extract dates from time dimension
+            try:
 
-            # Get human-readable date info (e.g. "16 May 1990")
-            ts = ds.time.isel(time=frame_i).dt
-            year = ts.year.item()
-            month = ts.month.item()
-            day = ts.day.item()
+                # Get human-readable date info (e.g. "16 May 1990")
+                ts = ds[time_dim][{time_dim:frame_i}].dt
+                year = ts.year.item()
+                month = ts.month.item()
+                day = ts.day.item()
+                date_string = '{} {} {}'.format(day, calendar.month_abbr[month], year)
+                
+            except:
+                
+                date_string = ds[time_dim][{time_dim:frame_i}].values.item()
 
             # Create annotation string based on title and date specifications:
             title = title_list[frame_i]
             if title and show_date:
-                title_date = '{} {} {}\n{}'.format(day, calendar.month_abbr[month], year, title)
+                title_date = '{}\n{}'.format(date_string, title)
             elif title and not show_date:
                 title_date = '{}'.format(title)
             elif show_date and not title:
-                title_date = '{} {} {}'.format(day, calendar.month_abbr[month], year)           
+                title_date = '{}'.format(date_string)           
             else:
                 title_date = ''
 
