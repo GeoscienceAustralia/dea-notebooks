@@ -1,8 +1,9 @@
-=============================
+=================
 Index Calculation
-=============================
+=================
 
 These pages demonstrate how to calculate indices with DEA datasets, such as
+
 - NDVI
 - Tasseled cap
 - Mineral indices

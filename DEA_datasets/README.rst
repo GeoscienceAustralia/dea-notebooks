@@ -1,6 +1,6 @@
-=============================
-DEA Datasets 
-=============================
+============
+DEA Datasets
+============
 
 These pages introduce the datasets currently available within DEA.
 

@@ -1,6 +1,9 @@
-================
+==========
 User Guide
-================
+==========
+
+.. notebook-gallery
+
 This notebook gallery provides examples of code for accessing and exploring Digital Earth Australia. The code examples here are provided as a starting point for further analysis, and are provided without warranty. 
 
 The notebooks have been tagged to provide an indication of the functions and products which they demonstrate. To search these tags, see the :doc:`Tags Index </genindex>`.
@@ -9,6 +12,7 @@ If you are interested in contributing to the Notebook Gallery, see the instructi
 
 .. toctree::
    :maxdepth: 1
+   :caption: Notebook Gallery
 
    Getting_started/README
    DEA_datasets/README

@@ -1,6 +1,6 @@
-=============================
+=======
 Scripts
-=============================
+=======
 
 This folder contains examples of python code that demonstrates the use of functions and tools suitable for use in the DEA environment. The following functions are currently included in Python scripts for loading into notebooks:
 
