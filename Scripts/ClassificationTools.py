@@ -22,37 +22,81 @@ from matplotlib import pyplot as plt
 from osgeo import gdal
 from os.path import splitext
 from sklearn.ensemble import RandomForestClassifier
+import geopandas as gpd
+import rasterio
+from rasterio import features
 
 # Import DEA Notebooks scripts
 sys.path.append('../Scripts')
-from SpatialTools import layer_extent
-from SpatialTools import rasterize_vector
 from SpatialTools import array_to_geotiff
 
 
 def randomforest_train(train_shps, train_field, data_func, data_func_params={},
                        classifier_params={}, train_reclass=None):
+    
     '''
-    Extracts training data from xarray dataset for multiple training shapefiles.
-    Loops through each each training shapefile, using shapefile extent for spatial
-    query. Outputs a trained classifier object and training label and data arrays.
-
-    :attr train_shps: list of training shapefile paths to import. Each file
-    should cover a small enough spatial area so as to not slow dc.load function
-    excessively (e.g. 100 x 100km max)
-    :attr train_field: shapefile field containing classification class
-    :attr data_func: function to import xarray data for each shapefile. Should return
-    an xarray dataset with 'crs' and 'affine' attributes
-    :attr data_func_params: optional dict of dc.load query inputs. Useful for defining
-    time query for temporal datasets (spatial queries are set automatically from shapefiles)
-    :attr classifier_params: optional dict of parameters for training random forest
-    :attr train_reclass: optional dict of from:to pairs to re-map shapefile field classes.
-    Useful for simplifying multiple classes into a simpler set of classes
-
-    :returns: trained classifier
-    :returns: array of training labels
-    :returns: array of training data
+    Extracts training data from xarray dataset for multiple training shapefiles. Loops through 
+    each each training shapefile, using shapefile extent for spatial query, and outputs a trained 
+    classifier object and training label and data arrays.
+    
+    Shapefiles must cover a relatively small spatial area so as to not slow dc.load function 
+    excessively or use excessive memory (e.g. 30 x 30km max). If this is not the case, break your 
+    shapefiles into smaller spatial subsets that can be run individually without using too much 
+    memory.
+    
+    :param train_shps: 
+        A list of training shapefile paths to import. Each file should cover a small enough spatial 
+        area so as to not slow dc.load function excessively (e.g. 30 x 30km max).
+    
+    :param train_field: 
+        A string giving the shapefile field name that contains the classification class. Classes
+        must be integers for the classification to work. If your classes are strings, use the 
+        `train_reclass` parameter to re-map strings to integers. 
+    
+    :param data_func: 
+        The function used to import xarray data for each shapefile. Must return an xarray dataset 
+        with 'crs' and 'affine' attributes.
+    
+    :param data_func_params: 
+        An optional dict of dc.load query inputs. Useful for defining time query for temporal 
+        datasets (spatial queries are set automatically from shapefiles).
+    
+    :param classifier_params: 
+        An optional dict of parameters for training the random forest model.
+    
+    :param train_reclass: 
+        An optional dict of from:to pairs to re-map shapefile field classes, which can be useful 
+        for simplifying multiple classes into a simpler set of classes, or converting categorical
+        /string classes into integers. For example, `train_reclass = {'water':1, 'nonwater':2}` 
+        will set every 'water' class to a value of 1, and every 'nonwater' class to a value of 2.
+    
+    :returns: 
+        A trained classifier object used as input to randomforest_classify
+        
+    :returns: 
+        An array of training labels
+        
+    :returns: 
+        An array of training data
+        
     '''
+    
+    def rasterize(convert_to_rast, out_rast, meta, field):
+    
+        '''Function for rasterising a Geopandas datadframe using Rasterio'''
+
+        with rasterio.open(out_rast, 'w', **meta) as out:
+            out_arr = out.read(1)
+
+            # this is where we create a generator of geom, value pairs to use in rasterizing
+            shapes = ((geom,value) for geom, value in zip(convert_to_rast.geometry, 
+                                                          convert_to_rast[field]))
+
+            burned = features.rasterize(shapes=shapes, fill=0, out=out_arr, transform=out.transform)
+            out.write_band(1, burned)    
+
+        return burned 
+    
 
     # Output training label and pixel arrays
     training_labels_list = list()
@@ -64,34 +108,58 @@ def randomforest_train(train_shps, train_field, data_func, data_func_params={},
 
         print("Importing training data from {}:".format(train_shp))
 
-        try:
+        # Open vector of training points with gdal
+        train_shp = train_shps[0]   
+        training_gpd = gpd.read_file(train_shp)
+        
+        # Test if train_field is an integer, and if not, whether train_reclass is specified
+        if training_gpd[train_field].dtype != np.int64 and not train_reclass:
+            
+            print("'train_field' is not an integer, and 'train_reclass' is not provided. Please use " \
+                  "'train_reclass' to re-map the class names in your shapefile to integers (e.g. " \
+                  "'train_reclass = {'water':1, 'nonwater':2}')")
+        
+        else:
+            
+            # If training_reclass is specified, convert values in field
+            if train_reclass:
+                training_gpd[train_field] = [train_reclass[i] for i in training_gpd[train_field]]
 
-            # Open vector of training points with gdal
-            data_source = gdal.OpenEx(train_shp, gdal.OF_VECTOR)
-            layer = data_source.GetLayer(0)
+            # Convert to EPSG 4326 to extract datacube data without having to accoutn for projection
+            training_gpd_latlong = training_gpd.to_crs({'init': 'epsg:4326'})
 
             # Compute extents and generate spatial query
-            xmin, xmax, ymin, ymax = layer_extent(layer)
-            query_train = {'x': (xmin + 2000, xmax - 2000),
-                           'y': (ymin + 2000, ymax - 2000),
-                           'crs': 'EPSG:3577',
+            xmin, ymin, xmax, ymax = training_gpd_latlong.total_bounds
+            query_train = {'x': (xmin, xmax),
+                           'y': (ymin, ymax),
+                           'crs': 'epsg:4326',
                            **data_func_params}
             print(query_train)
 
             # Import data  as xarray and extract projection/transform data
             training_xarray = data_func(query_train)
-            geo_transform_train = training_xarray.affine.to_gdal()
-            proj_train = training_xarray.crs.wkt
 
             # Covert to array and rearrange dimension order
             bands_array_train = training_xarray.to_array().values
             bands_array_train = np.einsum('bxy->xyb', bands_array_train)
             rows_train, cols_train, bands_n_train = bands_array_train.shape
 
-            # Import training data shapefiles and convert to matching raster pixels
-            training_pixels = rasterize_vector(layer, cols_train, rows_train,
-                                               geo_transform_train, proj_train,
-                                               field=train_field)
+            # update the relevant parts of the profile
+            meta = {'crs': str(training_xarray.crs),
+                    'transform': training_xarray.affine,
+                    'affine': training_xarray.affine,
+                    'width': cols_train,
+                    'height': rows_train,
+                    'driver': 'GTiff',
+                    'count': 1,
+                    'dtype': 'float32'}
+
+            # Rasterize shapefile features into an array and remove output geotiff
+            training_pixels = rasterize(convert_to_rast=training_gpd, 
+                                        out_rast='temp_raster.tif', 
+                                        meta=meta, 
+                                        field=train_field)
+            os.remove('temp_raster.tif')
 
             # Extract matching image sample data for each labelled pixel location
             is_train = np.nonzero(training_pixels)
@@ -106,29 +174,29 @@ def randomforest_train(train_shps, train_field, data_func, data_func_params={},
             training_labels_list.append(training_labels)
             training_samples_list.append(training_samples)
 
-        except AttributeError:
+        
+        if len(training_labels_list) > 0:
 
-            print("  Skipping training data from {}; check file path".format(train_shp))
+            # Combine polygon training data
+            training_labels = np.concatenate(training_labels_list, axis=0)
+            training_samples = np.concatenate(training_samples_list, axis=0)
 
-    # Combine polygon training data
-    training_labels = np.concatenate(training_labels_list, axis=0)
-    training_samples = np.concatenate(training_samples_list, axis=0)
+            # Set up classifier and train on training sample data and labels
+            # Options for tuning: https://www.analyticsvidhya.com/blog/2015/06/tuning-random-forest-model/
+            print("\nTraining random forest classifier...")
+            classifier = RandomForestClassifier(**classifier_params)
+            classifier.fit(training_samples, training_labels)
+            print("Model trained on {0} bands and "
+                  "{1} training samples".format(training_samples.shape[1],
+                                                str(len(training_samples))))
 
-    # Optionally re-map classes prior to classification training
-    if train_reclass:
-        # For each class in training labels, re-map to new values using train_reclass
-        training_labels[:] = [train_reclass[label] for label in training_labels]
+            return classifier, training_labels, training_samples
+        
+        else:
+            
+            print('No classifier object or output training labels and data exported')
+            
 
-    # Set up classifier and train on training sample data and labels
-    # Options for tuning: https://www.analyticsvidhya.com/blog/2015/06/tuning-random-forest-model/
-    print("\nTraining random forest classifier...")
-    classifier = RandomForestClassifier(**classifier_params)
-    classifier.fit(training_samples, training_labels)
-    print("Model trained on {0} bands and "
-          "{1} training samples".format(training_samples.shape[1],
-                                        str(len(training_samples))))
-
-    return classifier, training_labels, training_samples
 
 
 def randomforest_classify(classifier, analysis_data, classification_output, class_prob=False):
