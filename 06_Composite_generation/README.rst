@@ -1,8 +1,9 @@
-=============================
+====================
 Composite Generation
-=============================
+====================
 
 These pages demonstrate the production of composite datasets, such as
+
 - Statistics (percentiles, seasonal max etc)
 - Geomedian
 - dea-statistics
