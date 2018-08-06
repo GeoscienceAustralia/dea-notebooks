@@ -1,6 +1,6 @@
-=============================
+=========
 Workflows
-=============================
+=========
 
 These pages will demonstrate more complex examples of possible DEA workflows.
 
