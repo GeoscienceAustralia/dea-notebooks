@@ -286,7 +286,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
                 data = dc.load(product = '{}_{}_albers'.format(sensor, product),
                                group_by = 'solar_day', 
                                dask_chunks={'time': 1},
-                               **query) 
+                               **query)             
 
             # Load PQ data
             pq = dc.load(product = '{}_pq_albers'.format(sensor),

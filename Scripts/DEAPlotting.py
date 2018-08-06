@@ -1229,184 +1229,179 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
             imagelist2 = _ds_to_arrraylist(ds2, bands=bands2, reflect_stand=reflect_stand2,
                                            time_dim=time_dim2, x_dim=x_dim2, y_dim=y_dim2)
             
-            # Test that shapes are the same:
-            if width1 == width2 and height1 == height2:
-                
-                # Set up figure
-                fig, (ax1, ax2) = plt.subplots(ncols=2) 
-                fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
-                fig.set_size_inches(10.0, height * 0.5, forward=True)
-                ax1.axis('off')
-                ax2.axis('off')
-                
-                # Initialise axesimage objects to be updated during animation
-                extents1 = [float(ds1[x_dim1].min()), float(ds1[x_dim1].max()), 
-                            float(ds1[y_dim1].min()), float(ds1[y_dim1].max())]
-                extents2 = [float(ds2[x_dim2].min()), float(ds2[x_dim2].max()), 
-                            float(ds2[y_dim2].min()), float(ds2[y_dim2].max())]
-                im1 = ax1.imshow(imagelist1[0], extent=extents1, **onebandplot_kwargs1)
-                im2 = ax2.imshow(imagelist2[0], extent=extents2, **onebandplot_kwargs2)
-                
-                # Initialise annotation objects to be updated during animation
-                t1 = ax1.annotate('', **annotation_kwargs1)   
-                t2 = ax2.annotate('', **annotation_kwargs2)  
+            # Set up figure
+            fig, (ax1, ax2) = plt.subplots(ncols=2) 
+            fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+            fig.set_size_inches(10.0, height * 0.5, forward=True)
+            ax1.axis('off')
+            ax2.axis('off')
 
-                
-                #########################
-                # Add optional overlays #
-                #########################        
-            
-                # Optionally add shapefile overlay(s) from either string path or list of string paths
-                if isinstance(shapefile_path1, str):
-    
-                    shapefile = gpd.read_file(shapefile_path1)
-                    shapefile.plot(**shapefile_kwargs1, ax=ax1)
-                
-                elif isinstance(shapefile_path1, list):
-            
-                    # Iterate through list of string paths
-                    for shapefile in shapefile_path1:
-    
-                        shapefile = gpd.read_file(shapefile)
-                        shapefile.plot(**shapefile_kwargs1, ax=ax1) 
-                
-                # Optionally add shapefile overlay(s) from either string path or list of string paths
-                if isinstance(shapefile_path2, str):
-    
-                    shapefile = gpd.read_file(shapefile_path2)
-                    shapefile.plot(**shapefile_kwargs2, ax=ax2)
-                
-                elif isinstance(shapefile_path2, list):
-            
-                    # Iterate through list of string paths
-                    for shapefile in shapefile_path2:
-    
-                        shapefile = gpd.read_file(shapefile)
-                        shapefile.plot(**shapefile_kwargs2, ax=ax2) 
+            # Initialise axesimage objects to be updated during animation
+            extents1 = [float(ds1[x_dim1].min()), float(ds1[x_dim1].max()), 
+                        float(ds1[y_dim1].min()), float(ds1[y_dim1].max())]
+            extents2 = [float(ds2[x_dim2].min()), float(ds2[x_dim2].max()), 
+                        float(ds2[y_dim2].min()), float(ds2[y_dim2].max())]
+            im1 = ax1.imshow(imagelist1[0], extent=extents1, **onebandplot_kwargs1)
+            im2 = ax2.imshow(imagelist2[0], extent=extents2, **onebandplot_kwargs2)
 
-                # After adding shapefile, fix extents of plot
-                ax1.set_xlim(extents1[0], extents1[1])
-                ax1.set_ylim(extents1[2], extents1[3])
-                ax2.set_xlim(extents2[0], extents2[1])
-                ax2.set_ylim(extents2[2], extents2[3])
-                    
-                # Optionally add colourbars for one band images
-                if (len(bands1) == 1) & onebandplot_cbar1:                
-                    _add_colourbar(ax1, im1, fontsize=11,
-                                   vmin=onebandplot_kwargs1['vmin'], 
-                                   vmax=onebandplot_kwargs1['vmax'])
-                    
-                if (len(bands2) == 1) & onebandplot_cbar2:                
-                    _add_colourbar(ax2, im2, fontsize=11,
-                                   vmin=onebandplot_kwargs2['vmin'], 
-                                   vmax=onebandplot_kwargs2['vmax'])
-    
-                # Function to update figure
-                def update_figure(frame_i):
-    
-                    ####################
-                    # Plot first panel #
-                    ####################  
-    
-                    # If possible, extract dates from time dimension
-                    try:
-    
-                        # Get human-readable date info (e.g. "16 May 1990")
-                        ts = ds1[time_dim1][{time_dim1:frame_i}].dt
-                        year = ts.year.item()
-                        month = ts.month.item()
-                        day = ts.day.item()
-                        date_string = '{} {} {}'.format(day, calendar.month_abbr[month], year)
-                        
-                    except:
-                        
-                        date_string = ds1[time_dim1][{time_dim1:frame_i}].values.item()
-    
-                    # Create annotation string based on title and date specifications:
-                    title1 = title_list1[frame_i]
-                    if title1 and show_date1:
-                        title_date1 = '{}\n{}'.format(date_string, title1)
-                    elif title1 and not show_date1:
-                        title_date1 = '{}'.format(title1)
-                    elif show_date1 and not title1:
-                        title_date1 = '{}'.format(date_string)           
-                    else:
-                        title_date1 = ''
-    
-                    # Update figure for frame
-                    im1.set_array(imagelist1[frame_i])
-                    t1.set_text(title_date1) 
-    
-    
-                    #####################
-                    # Plot second panel #
-                    ##################### 
-    
-                    # If possible, extract dates from time dimension
-                    try:
-    
-                        # Get human-readable date info (e.g. "16 May 1990")
-                        ts = ds2[time_dim2][{time_dim2:frame_i}].dt
-                        year = ts.year.item()
-                        month = ts.month.item()
-                        day = ts.day.item()
-                        date_string = '{} {} {}'.format(day, calendar.month_abbr[month], year)
-                        
-                    except:
-                        
-                        date_string = ds2[time_dim2][{time_dim2:frame_i}].values.item()
-    
-                    # Create annotation string based on title and date specifications:
-                    title2 = title_list2[frame_i]
-                    if title2 and show_date2:
-                        title_date2 = '{}\n{}'.format(date_string, title2)
-                    elif title2 and not show_date2:
-                        title_date2 = '{}'.format(title2)
-                    elif show_date2 and not title2:
-                        title_date2 = '{}'.format(date_string)         
-                    else:
-                        title_date2 = ''
-    
-                    # Update figure for frame
-                    im2.set_array(imagelist2[frame_i])
-                    t2.set_text(title_date2) 
-    
-                    # Return the artists set
-                    return [im1, im2, t1, t2]
-    
-    
-                ##############################
-                # Generate and run animation #
-                ##############################
-    
-                # Generate animation
-                frames_to_run = min(timesteps1, timesteps2)
-                print('Generating {} frame animation (i.e. timesteps in shortest dataset)'.format(frames_to_run))
-                ani = animation.FuncAnimation(fig, update_figure, frames=frames_to_run, interval=interval, blit=True)
-    
-                # Export as either MP4 or GIF
-                if output_path[-3:] == 'mp4':
-                    print('    Exporting animation to {}'.format(output_path))
-                    ani.save(output_path, dpi=width_pixels / 10.0)
-    
-                elif output_path[-3:] == 'wmv':
-                    print('    Exporting animation to {}'.format(output_path))
-                    ani.save(output_path, dpi=width_pixels / 10.0, 
-                             writer=animation.FFMpegFileWriter(fps=1000 / interval, bitrate=4000, codec='wmv2'))
-    
-                elif output_path[-3:] == 'gif':
-                    print('    Exporting animation to {}'.format(output_path))
-                    ani.save(output_path, dpi=width_pixels / 10.0, writer='imagemagick')
-    
+            # Initialise annotation objects to be updated during animation
+            t1 = ax1.annotate('', **annotation_kwargs1)   
+            t2 = ax2.annotate('', **annotation_kwargs2)  
+
+
+            #########################
+            # Add optional overlays #
+            #########################        
+
+            # Optionally add shapefile overlay(s) from either string path or list of string paths
+            if isinstance(shapefile_path1, str):
+
+                shapefile = gpd.read_file(shapefile_path1)
+                shapefile.plot(**shapefile_kwargs1, ax=ax1)
+
+            elif isinstance(shapefile_path1, list):
+
+                # Iterate through list of string paths
+                for shapefile in shapefile_path1:
+
+                    shapefile = gpd.read_file(shapefile)
+                    shapefile.plot(**shapefile_kwargs1, ax=ax1) 
+
+            # Optionally add shapefile overlay(s) from either string path or list of string paths
+            if isinstance(shapefile_path2, str):
+
+                shapefile = gpd.read_file(shapefile_path2)
+                shapefile.plot(**shapefile_kwargs2, ax=ax2)
+
+            elif isinstance(shapefile_path2, list):
+
+                # Iterate through list of string paths
+                for shapefile in shapefile_path2:
+
+                    shapefile = gpd.read_file(shapefile)
+                    shapefile.plot(**shapefile_kwargs2, ax=ax2) 
+
+            # After adding shapefile, fix extents of plot
+            ax1.set_xlim(extents1[0], extents1[1])
+            ax1.set_ylim(extents1[2], extents1[3])
+            ax2.set_xlim(extents2[0], extents2[1])
+            ax2.set_ylim(extents2[2], extents2[3])
+
+            # Optionally add colourbars for one band images
+            if (len(bands1) == 1) & onebandplot_cbar1:                
+                _add_colourbar(ax1, im1, fontsize=11,
+                               vmin=onebandplot_kwargs1['vmin'], 
+                               vmax=onebandplot_kwargs1['vmax'])
+
+            if (len(bands2) == 1) & onebandplot_cbar2:                
+                _add_colourbar(ax2, im2, fontsize=11,
+                               vmin=onebandplot_kwargs2['vmin'], 
+                               vmax=onebandplot_kwargs2['vmax'])
+
+            # Function to update figure
+            def update_figure(frame_i):
+
+                ####################
+                # Plot first panel #
+                ####################  
+
+                # If possible, extract dates from time dimension
+                try:
+
+                    # Get human-readable date info (e.g. "16 May 1990")
+                    ts = ds1[time_dim1][{time_dim1:frame_i}].dt
+                    year = ts.year.item()
+                    month = ts.month.item()
+                    day = ts.day.item()
+                    date_string = '{} {} {}'.format(day, calendar.month_abbr[month], year)
+
+                except:
+
+                    date_string = ds1[time_dim1][{time_dim1:frame_i}].values.item()
+
+                # Create annotation string based on title and date specifications:
+                title1 = title_list1[frame_i]
+                if title1 and show_date1:
+                    title_date1 = '{}\n{}'.format(date_string, title1)
+                elif title1 and not show_date1:
+                    title_date1 = '{}'.format(title1)
+                elif show_date1 and not title1:
+                    title_date1 = '{}'.format(date_string)           
                 else:
-                    print('    Output file type must be either .mp4, .wmv or .gif')
-            
+                    title_date1 = ''
+
+                # Update figure for frame
+                im1.set_array(imagelist1[frame_i])
+                t1.set_text(title_date1) 
+
+
+                #####################
+                # Plot second panel #
+                ##################### 
+
+                # If possible, extract dates from time dimension
+                try:
+
+                    # Get human-readable date info (e.g. "16 May 1990")
+                    ts = ds2[time_dim2][{time_dim2:frame_i}].dt
+                    year = ts.year.item()
+                    month = ts.month.item()
+                    day = ts.day.item()
+                    date_string = '{} {} {}'.format(day, calendar.month_abbr[month], year)
+
+                except:
+
+                    date_string = ds2[time_dim2][{time_dim2:frame_i}].values.item()
+
+                # Create annotation string based on title and date specifications:
+                title2 = title_list2[frame_i]
+                if title2 and show_date2:
+                    title_date2 = '{}\n{}'.format(date_string, title2)
+                elif title2 and not show_date2:
+                    title_date2 = '{}'.format(title2)
+                elif show_date2 and not title2:
+                    title_date2 = '{}'.format(date_string)         
+                else:
+                    title_date2 = ''
+
+                # Update figure for frame
+                im2.set_array(imagelist2[frame_i])
+                t2.set_text(title_date2) 
+
+                # Return the artists set
+                return [im1, im2, t1, t2]
+
+
+            ##############################
+            # Generate and run animation #
+            ##############################
+
+            # Generate animation
+            frames_to_run = min(timesteps1, timesteps2)
+            print('Generating {} frame animation (i.e. timesteps in shortest dataset)'.format(frames_to_run))
+            ani = animation.FuncAnimation(fig, update_figure, frames=frames_to_run, interval=interval, blit=True)
+
+            # Export as either MP4 or GIF
+            if output_path[-3:] == 'mp4':
+                print('    Exporting animation to {}'.format(output_path))
+                ani.save(output_path, dpi=width_pixels / 10.0)
+
+            elif output_path[-3:] == 'wmv':
+                print('    Exporting animation to {}'.format(output_path))
+                ani.save(output_path, dpi=width_pixels / 10.0, 
+                         writer=animation.FFMpegFileWriter(fps=1000 / interval, bitrate=4000, codec='wmv2'))
+
+            elif output_path[-3:] == 'gif':
+                print('    Exporting animation to {}'.format(output_path))
+                ani.save(output_path, dpi=width_pixels / 10.0, writer='imagemagick')
+
             else:
-                print('Ensure that ds1 has the same xy dimension size as ds2') 
+                print('    Output file type must be either .mp4, .wmv or .gif')
 
         else:        
             print('Please select either one or three bands that all exist in the input datasets')  
             
     else:
         print('At least one x, y or time dimension does not exist in `ds1` or `ds2`. Please use the `time_dim`,' \
-              '`x_dim` or `y_dim` parameters to override the default dimension names used for plotting')         
+              '`x_dim` or `y_dim` parameters to override the default dimension names used for plotting') 
+        
