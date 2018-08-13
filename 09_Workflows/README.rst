@@ -10,3 +10,4 @@ These pages will demonstrate more complex examples of possible DEA workflows.
    RetrieveLandsat8ViewAndExport.ipynb
    Sun_glint_identification_and_removal.ipynb
    Fractional_Cover_Change_Detection.ipynb
+   Fractional_Cover_Percentiles.ipynb
