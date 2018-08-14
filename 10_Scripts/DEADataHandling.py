@@ -190,7 +190,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     in the Landsat PQ25 layer. By default only cloudy pixels or pixels without valid data in every band 
     are included in the calculation, but this can be customised using the `mask_dict` function.
     
-    Last modified: July 2018
+    Last modified: August 2018
     Author: Robbi Bishop-Taylor, Bex Dunn
     
     :param dc: 
@@ -240,7 +240,12 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     :example:
     
     >>> # Import modules
-    >>> import datacube     
+    >>> import datacube
+    >>> import sys
+    >>> 
+    >>> # Import dea-notebooks functions using relative link to Scripts directory
+    >>> sys.path.append('../10_Scripts')
+    >>> import DEADataHandling   
     >>> 
     >>> # Define datacube to import from
     >>> dc = datacube.Datacube(app='Clear Landsat')
@@ -248,13 +253,13 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     >>> # Set up spatial and temporal query
     >>> query = {'x': (-191400.0, -183400.0),
     >>>          'y': (-1423460.0, -1415460.0),
-    >>>          'time': ('2013-01-01', '2018-01-01'),
+    >>>          'time': ('1998-01-01', '2003-01-01'),
     >>>          'crs': 'EPSG:3577'}
     >>> 
     >>> # Load in red, green and blue bands for all clear Landsat observations with < 1% unclear values. 
-    >>> combined_ds = load_clearlandsat(dc=dc, query=query, 
-    >>>                                 bands_of_interest=['red', 'green', 'blue'], 
-    >>>                                 masked_prop=0.99) 
+    >>> combined_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, 
+    >>>                                                 bands_of_interest=['red', 'green', 'blue'], 
+    >>>                                                 masked_prop=0.99) 
     >>> combined_ds
         
     """
@@ -426,6 +431,32 @@ def load_clearsentinel(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['re
         An xarray dataset containing only Sentinel 2 observations that contain greater than `masked_prop`
         proportion of clear pixels.  
         
+    :example:
+    
+    >>> # Import modules
+    >>> import datacube
+    >>> import sys
+    >>> 
+    >>> # Import dea-notebooks functions using relative link to Scripts directory
+    >>> sys.path.append('../10_Scripts')
+    >>> import DEADataHandling
+    >>> 
+    >>> # Connect to a datacube containing Sentinel data
+    >>> s2dc = datacube.Datacube(config='/g/data/r78/dc_configs/sentinel2.conf')
+    >>> 
+    >>> # Set up spatial and temporal query; note that 'output_crs' and 'resolution' need to be set 
+    >>> query = {'x': (-191400.0, -183400.0),
+    >>>          'y': (-1423460.0, -1415460.0),
+    >>>          'time': ('2017-01-01', '2018-01-01'),
+    >>>          'crs': 'EPSG:3577',
+    >>>          'output_crs': 'EPSG:3577',
+    >>>          'resolution': (10, 10)}                
+    >>> 
+    >>> # Load in red, green, blue and NIR1 bands for Sentinel observations with < 1% unclear values. 
+    >>> # Here we use apply_mask=True to mask out any remaining unclear pixels with NaN.
+    >>> sentinel_ds = DEADataHandling.load_clearsentinel(dc=s2dc, query=query, 
+    >>>                                                  bands_of_interest=['red', 'green', 'blue', 'nir1'],
+    >>>                                                  masked_prop=0.01, apply_mask=True)         
       
     """
     
