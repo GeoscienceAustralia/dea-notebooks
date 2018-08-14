@@ -18,6 +18,8 @@ Authors: Claire Krause, Robbi Bishop-Taylor, Sean Chua, Mike Barnes, Cate Kooyma
 import numpy as np
 import pandas as pd
 from skimage import exposure
+import matplotlib
+# matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.patheffects as PathEffects
@@ -243,11 +245,12 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
 
 
 def animated_timeseries(ds, output_path, width_pixels=600, interval=200, 
-                        bands=['red', 'green', 'blue'], reflect_stand=5000, 
+                        bands=['red', 'green', 'blue'], percentile_stretch = [0.02, 0.98],
                         title=False, show_date=True, annotation_kwargs={},
                         onebandplot_cbar=True, onebandplot_kwargs={},
                         shapefile_path=None, shapefile_kwargs={},
-                        time_dim = 'time', x_dim = 'x', y_dim = 'y'):
+                        time_dim = 'time', x_dim = 'x', y_dim = 'y',
+                        reflect_stand=None):
     
     """
     Takes an xarray time series and animates the data as either a three-band (e.g. true or false colour) 
@@ -284,9 +287,9 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
         An optional list of either one or three bands to be plotted, all of which must exist in `ds`.
         Defaults to `['red', 'green', 'blue']`. 
         
-    :param reflect_stand:
-        An optional  integer controlling the brightness of the output image. Low values (< 5000) result in 
-        brighter images. Defaults to 5000.
+    :param percentile_stretch:
+        An optional list of two floats that can be used to clip three-band arrays by percentiles to produce a more 
+        vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivalent to xarray's `robust=True`.
 
     :param title: 
         An optional string or list of strings with a length equal to the number of timesteps in ds. This can be
@@ -330,10 +333,21 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
     
     :param y_dim:
         An optional string allowing you to override the xarray dimension used for y coordinates. Defaults to 'y'.
+        
+    :param reflect_stand:
+        DEPRECIATED: Please use `percentile_stretch` instead.
+        
     """
     
+    # Give depreciation warning
+    if reflect_stand:
+        print("'reflect_stand' is depreciated. Please use `percentile_stretch` instead.")
+    
     # Define function to convert xarray dataset to list of one or three band numpy arrays
-    def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim):   
+    def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim, percentile_stretch): 
+        
+        # Compute percents
+        p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
 
         array_list = []
         for i, timestep in enumerate(ds[time_dim]):
@@ -360,11 +374,11 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
 
                     rawimg[:, :, band] = ds_i[colour].values
 
-                # Stretch contrast using defined reflectance standardisation; defaults to 5000
-                img_toshow = (rawimg / reflect_stand).clip(0, 1)
+                # Stretch contrast using percentile values
+                img_toshow = exposure.rescale_intensity(rawimg, in_range=(p_low, p_high))
 
             array_list.append(img_toshow)
-
+            
         return(array_list)
     
     
@@ -443,7 +457,8 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
 
             # Import xarrays as lists of three band numpy arrays
             imagelist = _ds_to_arrraylist(ds, bands=bands, reflect_stand=reflect_stand,
-                                          time_dim=time_dim, x_dim=x_dim, y_dim=y_dim)
+                                          time_dim=time_dim, x_dim=x_dim, y_dim=y_dim, 
+                                          percentile_stretch=percentile_stretch)
 
             # Set up figure
             fig, ax1 = plt.subplots(ncols=1) 
@@ -563,11 +578,12 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
 
 
 def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200, 
-                            bands=['red', 'green', 'blue'], reflect_stand=5000, 
+                            bands=['red', 'green', 'blue'], percentile_stretch = [0.02, 0.98],
                             title=False, show_date=True, annotation_kwargs={},
                             onebandplot_cbar=True, onebandplot_kwargs={}, 
                             shapefile_path=None, shapefile_kwargs={}, pandasplot_kwargs={},
-                            time_dim = 'time', x_dim = 'x', y_dim = 'y'):
+                            time_dim = 'time', x_dim = 'x', y_dim = 'y',
+                            reflect_stand=None):
     
     """
     Takes an xarray time series and a pandas dataframe, and animates a line graph showing change in a variable 
@@ -577,7 +593,6 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
     Animations can be exported as .mp4 (ideal for Twitter/social media), .wmv (ideal for Powerpoint) and .gif 
     (ideal for all purposes, but can have large file sizes) format files, and customised to include titles and 
     date annotations or use specific combinations of input bands. 
-
     A shapefile boundary can be added to the output animation by providing a path to the shapefile.
     
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
@@ -613,9 +628,9 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
         An optional list of either one or three bands to be plotted in the left panel, all of which must exist in 
         `ds`. Defaults to `['red', 'green', 'blue']`. 
         
-    :param reflect_stand:
-        An optional  integer controlling the brightness of the output image. Low values (< 5000) result in 
-        brighter images. Defaults to 5000.
+    :param percentile_stretch:
+        An optional list of two floats that can be used to clip three-band arrays by percentiles to produce a more 
+        vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivalent to xarray's `robust=True`.
         
     :param title: 
         An optional string or list of strings with a length equal to the number of timesteps in `ds`. This can be
@@ -625,7 +640,6 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
     :param show_date:
         An optional boolean that defines whether or not to plot date annotations for each animation frame. Defaults 
         to True, which plots date annotations based on time steps in `ds`.
-
     :param annotation_kwargs:
         An optional dict of kwargs for controlling the appearance of text annotations in the left panel to pass to the 
         matplotlib `plt.annotate` function (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.annotate.html). 
@@ -641,7 +655,6 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
         This only applies if an xarray with a single band is passed to `ds`. For example, a green colour scheme and
         custom stretch could be specified using: `onebandplot_kwargs={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}`. 
         By default, one-band arrays are plotted using the 'Greys' cmap with bilinear interpolation.
-
     :param shapefile_path:
         An optional string or list of strings giving the file paths of shapefiles to overlay on the output animation. 
         The shapefiles must be in the same projection as the input xarray dataset.
@@ -650,12 +663,10 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
         An optional dict of kwargs to specify the appearance of the shapefile overlay to pass to `GeoSeries.plot`
         (see http://geopandas.org/reference.html#geopandas.GeoSeries.plot). For example: 
         `shapefile_kwargs = {'linewidth':2, 'edgecolor':'black', 'facecolor':"#00000000"}`
-
     :param pandasplot_kwargs:
         An optional dict of kwargs to specify the appearance of the right-hand plot to pass to `pandas.DataFrame.plot`
         (see https://pandas.pydata.org/pandas-docs/version/0.22/generated/pandas.DataFrame.plot.html). For example: 
         `pandasplot_kwargs = {'linewidth':2, 'cmap':'viridis', 'ylim':(0, 100)}`
-
     :param time_dim:
         An optional string allowing you to override the xarray dimension used for time. Defaults to 'time'.
     
@@ -664,10 +675,21 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
     
     :param y_dim:
         An optional string allowing you to override the xarray dimension used for y coordinates. Defaults to 'y'.  
+        
+    :param reflect_stand:
+        DEPRECIATED: Please use `percentile_stretch` instead.
+        
     """
+    
+    # Give depreciation warning
+    if reflect_stand:
+        print("'reflect_stand' is depreciated. Please use `percentile_stretch` instead.")
 
     # Define function to convert xarray dataset to list of one or three band numpy arrays
-    def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim):   
+    def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim, percentile_stretch): 
+        
+        # Compute percents
+        p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
 
         array_list = []
         for i, timestep in enumerate(ds[time_dim]):
@@ -694,11 +716,11 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
 
                     rawimg[:, :, band] = ds_i[colour].values
 
-                # Stretch contrast using defined reflectance standardisation; defaults to 5000
-                img_toshow = (rawimg / reflect_stand).clip(0, 1)
+                # Stretch contrast using percentile values
+                img_toshow = exposure.rescale_intensity(rawimg, in_range=(p_low, p_high))
 
             array_list.append(img_toshow)
-
+            
         return(array_list)
     
     
@@ -781,11 +803,12 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
             
             # Import xarrays as lists of three band numpy arrays
             imagelist = _ds_to_arrraylist(ds, bands=bands, reflect_stand=reflect_stand,
-                                          time_dim=time_dim, x_dim=x_dim, y_dim=y_dim)
+                                          time_dim=time_dim, x_dim=x_dim, y_dim=y_dim, 
+                                          percentile_stretch=percentile_stretch)
             
             # Set up figure 
             fig, (ax1, ax2) = plt.subplots(ncols=2) 
-            fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+            fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0.2, hspace=0)
             fig.set_size_inches(10.0, height * 0.5, forward=True)
             ax1.axis('off')
             ax2.margins(x=0.01)
@@ -886,8 +909,13 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
 
                 # Update right panel with temporal line subset, adding each new line into artist_list
                 for i, line in enumerate(line_test.lines):
-                    line.set_data(df[df.index <= datetime(year=year, month=month, day=day, hour=23, minute=59)].index,  
-                                  df[df.index <= datetime(year=year, month=month, day=day, hour=23, minute=59)].iloc[:,i])
+                    
+                    # Clip line data to current time, and get x and y values                   
+                    y = df[df.index <= datetime(year=year, month=month, day=day, hour=23, minute=59)].iloc[:,i]
+                    x = df[df.index <= datetime(year=year, month=month, day=day, hour=23, minute=59)].index 
+                    
+                    # Plot lines after stripping NaNs (this produces continuous, unbroken lines)
+                    line.set_data(x[y.notnull()], y[y.notnull()])
                     artist_list.extend([line])
                     
                 # Return the artists set
@@ -930,8 +958,8 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
 
 
 def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval=200, 
-                              bands1=['red', 'green', 'blue'], bands2=['red', 'green', 'blue'], 
-                              reflect_stand1=5000, reflect_stand2=5000, 
+                              bands1=['red', 'green', 'blue'], bands2=['red', 'green', 'blue'],                               
+                              percentile_stretch1 = [0.02, 0.98], percentile_stretch2 = [0.02, 0.98],
                               title1=False, title2=False,
                               show_date1=True, show_date2=True,
                               annotation_kwargs1={}, annotation_kwargs2={},
@@ -940,7 +968,8 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
                               shapefile_path1=None, shapefile_path2=None,
                               shapefile_kwargs1={}, shapefile_kwargs2={},
                               time_dim1 = 'time', x_dim1 = 'x', y_dim1 = 'y',
-                              time_dim2 = 'time', x_dim2 = 'x', y_dim2 = 'y'):
+                              time_dim2 = 'time', x_dim2 = 'x', y_dim2 = 'y',
+                              reflect_stand1=None, reflect_stand2=None):
     
     """
     Takes two xarray time series and animates both side-by-side as either three-band (e.g. true or false colour) 
@@ -990,15 +1019,17 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
     
     :param bands2:
         An optional list of either one or three bands to be plotted, all of which must exist in `ds2`.
-        Defaults to `['red', 'green', 'blue']`. 
-        
-    :param reflect_stand1:
-        An optional  integer controlling the brightness of the output `ds1` image. Low values (< 5000) result in 
-        brighter images. Defaults to 5000.
+        Defaults to `['red', 'green', 'blue']`.        
+      
+    :param percentile_stretch1:
+        An optional list of two floats that can be used to clip three-band arrays in the left `ds1` panel by 
+        percentiles to produce a more vibrant, visually attractive image. The default is `[0.02, 0.98]` which is 
+        equivalent to xarray's `robust=True` option.
     
-    :param reflect_stand2:
-        An optional integer controlling the brightness of the output `ds2` image. Low values (< 5000) result in 
-        brighter images. Defaults to 5000.
+    :param percentile_stretch2:
+        An optional list of two floats that can be used to clip three-band arrays in the right `ds2` panel by 
+        percentiles to produce a more vibrant, visually attractive image. The default is `[0.02, 0.98]` which is 
+        equivalent to xarray's `robust=True` option.
 
     :param title1: 
         An optional string or list of strings with a length equal to the number of timesteps in `ds1`. This can be
@@ -1085,11 +1116,28 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
     :param y_dim2:
         An optional string allowing you to override the xarray dimension used for y coordinates in `ds2`. 
         Defaults to 'y'
+    
+    :param reflect_stand1:
+        DEPRECIATED: Please use `percentile_stretch` instead.
+    
+    :param reflect_stand2:
+        DEPRECIATED: Please use `percentile_stretch` instead. 
         
     """
+    
+    # Give depreciation warning
+    if reflect_stand1:
+        print("'reflect_stand1' is depreciated. Please use `percentile_stretch1` instead.")
+        
+    # Give depreciation warning
+    if reflect_stand2:
+        print("'reflect_stand2' is depreciated. Please use `percentile_stretch2` instead.")
 
     # Define function to convert xarray dataset to list of one or three band numpy arrays
-    def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim):   
+    def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim, percentile_stretch): 
+        
+        # Compute percents
+        p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
 
         array_list = []
         for i, timestep in enumerate(ds[time_dim]):
@@ -1116,11 +1164,11 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
 
                     rawimg[:, :, band] = ds_i[colour].values
 
-                # Stretch contrast using defined reflectance standardisation; defaults to 5000
-                img_toshow = (rawimg / reflect_stand).clip(0, 1)
+                # Stretch contrast using percentile values
+                img_toshow = exposure.rescale_intensity(rawimg, in_range=(p_low, p_high))
 
             array_list.append(img_toshow)
-
+            
         return(array_list)
     
     def _add_colourbar(ax, im, vmin, vmax, fontsize):
@@ -1225,9 +1273,11 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
     
             # Import xarrays as lists of three band numpy arrays
             imagelist1 = _ds_to_arrraylist(ds1, bands=bands1, reflect_stand=reflect_stand1,
-                                           time_dim=time_dim1, x_dim=x_dim1, y_dim=y_dim1)
+                                           time_dim=time_dim1, x_dim=x_dim1, y_dim=y_dim1, 
+                                          percentile_stretch=percentile_stretch1)
             imagelist2 = _ds_to_arrraylist(ds2, bands=bands2, reflect_stand=reflect_stand2,
-                                           time_dim=time_dim2, x_dim=x_dim2, y_dim=y_dim2)
+                                           time_dim=time_dim2, x_dim=x_dim2, y_dim=y_dim2, 
+                                          percentile_stretch=percentile_stretch2)
             
             # Set up figure
             fig, (ax1, ax2) = plt.subplots(ncols=2) 
