@@ -13,7 +13,7 @@ Available functions:
     write_your_netcdf
     zonal_timeseries
 
-Last modified: June 2018
+Last modified: August 2018
 Authors: Claire Krause, Robbi Bishop-Taylor, Bex Dunn, Chad Burton
 
 '''
