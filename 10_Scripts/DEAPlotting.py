@@ -288,8 +288,8 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
         Defaults to `['red', 'green', 'blue']`. 
         
     :param percentile_stretch:
-        An optional list of two floats that can be used to clip the values by percentiles to produce a more vibrant, 
-        visually attractive image. The default is `[0.02, 0.98]` which is equivelent to xarray's `robust=True` option.
+        An optional list of two floats that can be used to clip three-band arrays by percentiles to produce a more 
+        vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivelent to xarray's `robust=True`.
 
     :param title: 
         An optional string or list of strings with a length equal to the number of timesteps in ds. This can be
@@ -347,7 +347,7 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
     def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim, percentile_stretch): 
         
         # Compute percents
-        p_low, p_high = ds.to_array().quantile(percentile_stretch).values
+        p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
 
         array_list = []
         for i, timestep in enumerate(ds[time_dim]):
@@ -629,8 +629,8 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
         `ds`. Defaults to `['red', 'green', 'blue']`. 
         
     :param percentile_stretch:
-        An optional list of two floats that can be used to clip the values by percentiles to produce a more vibrant, 
-        visually attractive image. The default is `[0.02, 0.98]` which is equivelent to xarray's `robust=True` option.
+        An optional list of two floats that can be used to clip three-band arrays by percentiles to produce a more 
+        vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivelent to xarray's `robust=True`.
         
     :param title: 
         An optional string or list of strings with a length equal to the number of timesteps in `ds`. This can be
@@ -689,7 +689,7 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
     def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim, percentile_stretch): 
         
         # Compute percents
-        p_low, p_high = ds.to_array().quantile(percentile_stretch).values
+        p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
 
         array_list = []
         for i, timestep in enumerate(ds[time_dim]):
@@ -1022,14 +1022,14 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
         Defaults to `['red', 'green', 'blue']`.        
       
     :param percentile_stretch1:
-        An optional list of two floats that can be used to clip values in the left `ds1` panel by percentiles to 
-        produce a more vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivelent to 
-        xarray's `robust=True` option.
+        An optional list of two floats that can be used to clip three-band arrays in the left `ds1` panel by 
+        percentiles to produce a more vibrant, visually attractive image. The default is `[0.02, 0.98]` which is 
+        equivelent to xarray's `robust=True` option.
     
     :param percentile_stretch2:
-        An optional list of two floats that can be used to clip values in the right `ds2` panel by percentiles to 
-        produce a more vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivelent to 
-        xarray's `robust=True` option.
+        An optional list of two floats that can be used to clip three-band arrays in the right `ds2` panel by 
+        percentiles to produce a more vibrant, visually attractive image. The default is `[0.02, 0.98]` which is 
+        equivelent to xarray's `robust=True` option.
 
     :param title1: 
         An optional string or list of strings with a length equal to the number of timesteps in `ds1`. This can be
@@ -1137,7 +1137,7 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
     def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim, percentile_stretch): 
         
         # Compute percents
-        p_low, p_high = ds.to_array().quantile(percentile_stretch).values
+        p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
 
         array_list = []
         for i, timestep in enumerate(ds[time_dim]):
