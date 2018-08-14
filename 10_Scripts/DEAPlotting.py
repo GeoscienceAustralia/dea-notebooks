@@ -289,7 +289,7 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
         
     :param percentile_stretch:
         An optional list of two floats that can be used to clip three-band arrays by percentiles to produce a more 
-        vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivelent to xarray's `robust=True`.
+        vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivalent to xarray's `robust=True`.
 
     :param title: 
         An optional string or list of strings with a length equal to the number of timesteps in ds. This can be
@@ -630,7 +630,7 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
         
     :param percentile_stretch:
         An optional list of two floats that can be used to clip three-band arrays by percentiles to produce a more 
-        vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivelent to xarray's `robust=True`.
+        vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivalent to xarray's `robust=True`.
         
     :param title: 
         An optional string or list of strings with a length equal to the number of timesteps in `ds`. This can be
@@ -1024,12 +1024,12 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
     :param percentile_stretch1:
         An optional list of two floats that can be used to clip three-band arrays in the left `ds1` panel by 
         percentiles to produce a more vibrant, visually attractive image. The default is `[0.02, 0.98]` which is 
-        equivelent to xarray's `robust=True` option.
+        equivalent to xarray's `robust=True` option.
     
     :param percentile_stretch2:
         An optional list of two floats that can be used to clip three-band arrays in the right `ds2` panel by 
         percentiles to produce a more vibrant, visually attractive image. The default is `[0.02, 0.98]` which is 
-        equivelent to xarray's `robust=True` option.
+        equivalent to xarray's `robust=True` option.
 
     :param title1: 
         An optional string or list of strings with a length equal to the number of timesteps in `ds1`. This can be
