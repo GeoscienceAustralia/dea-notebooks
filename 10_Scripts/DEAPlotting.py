@@ -8,6 +8,7 @@ Available functions:
     animated_timeseries
     animated_timeseriesline
     animated_doubletimeseries
+    plot_WOfS
 
 Last modified: August 2018
 Authors: Claire Krause, Robbi Bishop-Taylor, Sean Chua, Mike Barnes, Cate Kooymans, Bex Dunn
@@ -27,6 +28,8 @@ from datetime import datetime
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import calendar
 import geopandas as gpd
+from matplotlib.colors import ListedColormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 
@@ -1454,4 +1457,83 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
     else:
         print('At least one x, y or time dimension does not exist in `ds1` or `ds2`. Please use the `time_dim`,' \
               '`x_dim` or `y_dim` parameters to override the default dimension names used for plotting') 
+
+        
+def plot_WOfS(ds, figsize=(10,10), title='WOfS %', projection='projected'):
+    """Use the DEA WOfS color ramp to plot WOfS percentage data. 
+    
+    Last modified: August 2018
+    Authors: Bex Dunn, Mike Barnes, Claire Krause, Cate Kooymans and Robbi Bishop-Taylor
+    This function uses code from the 'three band image' function 
+    of DEAPlotting, authored by Mike Barnes, Claire Krause, Cate Kooymans and Robbi Bishop-Taylor
+    
+    :param ds:
+    An xarray dataset containing the bands to be plotted. For correct axis scales, the xarray
+    will ideally have spatial data (e.g. an `.extent` method)
+
+     :param figsize:
+    Optional tuple or list giving the dimensions of the output plot (defaults to `(10, 10)`)
+
+    :param title:
+    Optional string for the plot title. If left as the default 'Time', the title will be taken from
+    the timestep of the plotted image if available
+
+    :param projection:
+    Determines if the image is in degrees or northings (options are 'projected' or 'geographic')
+
+    :return fig:
+    A matplotlib figure object for customised plotting
+    
+    :return ax:
+    A matplotlib axis object for customised plotting    
+    """
+    
+    #hex definitions for the color map    
+    wofs_cmap = mpl.colors.ListedColormap(['#000000', '#e38400', '#e3df00', '#62e300',
+                                           '#00e384', '#00e3c8', '#00c5e3', '#0097e3', 
+                                           '#005fe3', '#000fe3', '#5700e3'])
+    #color steps
+    wofs_bounds = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    wofs_norm = mpl.colors.BoundaryNorm(wofs_bounds, wofs_cmap.N)
+      
+    #Create WOfS image with specified colour ramp details
+    # Plot figure, setting x and y axes from extent of xarray dataset
+    fig, ax = plt.subplots(figsize=figsize)
+    try:
+
+        # Plot with correct coords by setting extent if dataset has spatial data (e.g. an `.extent` method).
+        # This also allows the resulting image to be overlaid with other spatial data (e.g. a polygon or point)
+        left, bottom, right, top = ds.extent.boundingbox
+        i = ax.imshow(ds,cmap = wofs_cmap,norm=wofs_norm,vmin = 0, vmax = 100, extent=[left, right, bottom, top])
+
+    except:
+
+        # Plot without coords if dataset has no spatial data (e.g. an `.extent` method)
+        print("xarray dataset has no spatial data; defaulting to plotting without coordinates. "
+              "This can often be resolved by adding `keep_attrs = True` during an aggregation step")
+        i =ax.imshow(ds,cmap = wofs_cmap,norm=wofs_norm,vmin = 0, vmax = 100)    
+    
+    # Manually defined title
+    ax.set_title(title, fontweight='bold', fontsize=14)
+
+    # Set x and y axis titles depending on projection
+    if projection == 'geographic':
+
+        ax.set_xlabel('Longitude', fontweight='bold')
+        ax.set_ylabel('Latitude', fontweight='bold')
+        
+    else:
+
+        ax.set_xlabel('Eastings', fontweight='bold')
+        ax.set_ylabel('Northings', fontweight='bold')
+    
+    #set colorbar into axes on the right hand side of image ax at width of size %, pad of 0.15 inch from image
+    divider=make_axes_locatable(ax)  
+    cax=divider.append_axes("right", size = "4%", pad =0.15)
+    plt.colorbar(i, ticks=wofs_bounds, cax=cax).set_label(label='WOfS (%)',size=12) #Add definable colour bar
+    #fig.delaxes(fig.axes[1]) #Remove pre-defined colour bar
+    return fig,ax
+        
+        
+        
         
