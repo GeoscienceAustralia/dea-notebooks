@@ -28,6 +28,8 @@ from datetime import datetime
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import calendar
 import geopandas as gpd
+from matplotlib.colors import ListedColormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 
@@ -1485,9 +1487,6 @@ def plot_WOfS(ds, figsize=(10,10), title='WOfS %', projection='projected'):
     :return ax:
     A matplotlib axis object for customised plotting    
     """
-    
-    from matplotlib.colors import ListedColormap
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
     
     #hex definitions for the color map    
     wofs_cmap = mpl.colors.ListedColormap(['#000000', '#e38400', '#e3df00', '#62e300',
