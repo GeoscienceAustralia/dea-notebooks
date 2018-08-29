@@ -4,25 +4,25 @@ Overview of DEA Notebooks
 =========================
 This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. The intended order of these notebook folders are:
 
-1. `Getting_started <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Getting_started>`_
+1. `Getting_started <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/01_Getting_started>`_
 
-2. `DEA_datasets <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/DEA_datasets>`_
+2. `DEA_datasets <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/02_DEA_datasets>`_
 
-3. `Integrating_external_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Integrating_external_data>`_
+3. `Integrating_external_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/03_Integrating_external_data>`_
 
-4. `Index_calculation <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Index_calculation>`_
+4. `Index_calculation <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/04_Index_calculation>`_
 
-5. `Temporal_analysis <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Temporal_analysis>`_
+5. `Temporal_analysis <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/05_Temporal_analysis>`_
 
-6. `Composite_generation <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Composite_generation>`_
+6. `Composite_generation <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/06_Composite_generation>`_
 
-7. `Image_classification <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Image_classification>`_
+7. `Image_classification <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/07_Image_classification>`_
 
-8. `Outputting_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Outputting_data>`_
+8. `Outputting_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/08_Outputting_data>`_
 
-9. `Workflows <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Workflows>`_
+9. `Workflows <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/09_Workflows>`_
 
-10. `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Scripts>`_
+10. `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/10_Scripts>`_
 
 The *read-the-docs* version of this repository can be found at: `<http://geoscienceaustralia.github.io/digitalearthau/notebooks/index.html>`_
 
