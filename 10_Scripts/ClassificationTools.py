@@ -86,14 +86,15 @@ def randomforest_train(train_shps, train_field, data_func, data_func_params={},
         '''Function for rasterising a Geopandas datadframe using Rasterio'''
 
         with rasterio.open(out_rast, 'w', **meta) as out:
-            out_arr = out.read(1)
+        
+            out_arr = np.zeros(shape=(meta['height'], meta['height']))
 
             # this is where we create a generator of geom, value pairs to use in rasterizing
             shapes = ((geom,value) for geom, value in zip(convert_to_rast.geometry, 
                                                           convert_to_rast[field]))
 
             burned = features.rasterize(shapes=shapes, fill=0, out=out_arr, transform=out.transform)
-            out.write_band(1, burned)    
+            # out.write_band(1, burned)    
 
         return burned 
     
@@ -159,7 +160,7 @@ def randomforest_train(train_shps, train_field, data_func, data_func_params={},
                                         out_rast='temp_raster.tif', 
                                         meta=meta, 
                                         field=train_field)
-            os.remove('temp_raster.tif')
+            # os.remove('temp_raster.tif')
 
             # Extract matching image sample data for each labelled pixel location
             is_train = np.nonzero(training_pixels)
