@@ -2,7 +2,7 @@
 Scripts
 =======
 
-This folder contains examples of python code that demonstrates the use of functions and tools suitable for use in the DEA environment. The code examples provided here can be found in the `dea-notebooks Github repository<https://github.com/GeoscienceAustralia/dea-notebooks>`_. Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an Issue in the Github repository, or fix it yourself and create a Pull request to contribute the updated function back into the repository (See the repository README for instructions on creating a Pull request).
+This folder contains examples of python code that demonstrates the use of functions and tools suitable for use in the DEA environment. The code examples provided here can be found in the `dea-notebooks Github repository <https://github.com/GeoscienceAustralia/dea-notebooks>`_. Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an Issue in the Github repository, or fix it yourself and create a Pull request to contribute the updated function back into the repository (See the repository README for instructions on creating a Pull request).
 
 The following functions are currently included in Python scripts for loading into notebooks:
 
