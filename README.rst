@@ -2,7 +2,11 @@
 
 Overview of DEA Notebooks
 =========================
-This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. The intended order of these notebook folders are:
+This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. 
+
+Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an Issue in the Github repository, or fix it yourself and create a Pull request to contribute the updated function back into the repository (See the repository README for instructions on creating a Pull request).
+
+The intended order of these notebook folders are:
 
 1. `Getting_started <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/01_Getting_started>`_
 
@@ -25,6 +29,8 @@ This documentation is designed to step the user through getting started with Dig
 10. `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/10_Scripts>`_
 
 The *read-the-docs* version of this repository can be found at: `<http://geoscienceaustralia.github.io/digitalearthau/notebooks/index.html>`_
+
+The examples provided here can be found as Jupyter Notebooks in the `dea-notebooks Github repository<https://github.com/GeoscienceAustralia/dea-notebooks>`_. 
 
 If you are searching for a specific functionality, use the `Tags Index <http://geoscienceaustralia.github.io/digitalearthau/genindex.html>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an `Issue` in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
 
@@ -58,6 +64,15 @@ The notebook name should be descriptive and contain no spaces.
 To ensure that the published notebooks are actually searchable and useable, the first cell of the notebook must have the following metadata as a minimum:
 
 * **What does this notebook do?** Include a fairly detailed description of what the notebook does. This will allow someone looking for an example of a particular functionality to decide whether this notebook is likely to help them. 
+
+* **Requirements** Please put the following code block (plus any specific requirements for your notebook) under the requirements heading in every notebook:
+
+::
+ You need to run the following commands from the command line prior to launching jupyter notebook from the same terminal so that the required libraries and paths are set.
+
+``module use /g/data/v10/public/modules/modulefiles``
+
+``module load dea``
 
 * **Date:** Date when the notebook was last modified. This is just to give an indication of the currency of the notebook, and when it was last working.
 
