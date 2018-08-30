@@ -30,7 +30,7 @@ The intended order of these notebook folders are:
 
 The *read-the-docs* version of this repository can be found at: `<http://geoscienceaustralia.github.io/digitalearthau/notebooks/index.html>`_
 
-The examples provided here can be found as Jupyter Notebooks in the `dea-notebooks Github repository<https://github.com/GeoscienceAustralia/dea-notebooks>`_. 
+The examples provided here can be found as Jupyter Notebooks in the `dea-notebooks Github repository <https://github.com/GeoscienceAustralia/dea-notebooks>`_ . 
 
 If you are searching for a specific functionality, use the `Tags Index <http://geoscienceaustralia.github.io/digitalearthau/genindex.html>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an `Issue` in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
 
