@@ -22,3 +22,5 @@ Land_NSW_Landuse_2013/
 Land_NSW_Landuse2007/
 *.pkl
 *.cpg
+Crop_mapping/NamoiPilotProject/Summer*
+Dams/AllNSW*
