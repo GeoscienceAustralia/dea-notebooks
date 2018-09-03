@@ -28,11 +28,8 @@ from datetime import datetime
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import calendar
 import geopandas as gpd
-<<<<<<< HEAD
-=======
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
->>>>>>> master
 
 
 
@@ -1491,19 +1488,13 @@ def plot_WOfS(ds, figsize=(10,10), title='WOfS %', projection='projected'):
     A matplotlib axis object for customised plotting    
     """
     
-<<<<<<< HEAD
-    from matplotlib.colors import ListedColormap
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
-    
-=======
->>>>>>> master
     #hex definitions for the color map    
-    wofs_cmap = mpl.colors.ListedColormap(['#000000', '#e38400', '#e3df00', '#62e300',
+    wofs_cmap = matplotlib.colors.ListedColormap(['#000000', '#e38400', '#e3df00', '#62e300',
                                            '#00e384', '#00e3c8', '#00c5e3', '#0097e3', 
                                            '#005fe3', '#000fe3', '#5700e3'])
     #color steps
     wofs_bounds = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    wofs_norm = mpl.colors.BoundaryNorm(wofs_bounds, wofs_cmap.N)
+    wofs_norm = matplotlib.colors.BoundaryNorm(wofs_bounds, wofs_cmap.N)
       
     #Create WOfS image with specified colour ramp details
     # Plot figure, setting x and y axes from extent of xarray dataset

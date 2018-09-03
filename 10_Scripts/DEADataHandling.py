@@ -7,20 +7,13 @@ Available functions:
     load_nbarx
     load_sentinel
     load_clearlandsat (also does fractional cover)
-<<<<<<< HEAD
-=======
     load_clearsentinel
->>>>>>> master
     dataset_to_geotiff
     open_polygon_from_shapefile
     write_your_netcdf
     zonal_timeseries
 
-<<<<<<< HEAD
-Last modified: June 2018
-=======
 Last modified: August 2018
->>>>>>> master
 Authors: Claire Krause, Robbi Bishop-Taylor, Bex Dunn, Chad Burton
 
 '''
@@ -197,11 +190,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     in the Landsat PQ25 layer. By default only cloudy pixels or pixels without valid data in every band 
     are included in the calculation, but this can be customised using the `mask_dict` function.
     
-<<<<<<< HEAD
-    Last modified: July 2018
-=======
     Last modified: August 2018
->>>>>>> master
     Author: Robbi Bishop-Taylor, Bex Dunn
     
     :param dc: 
@@ -251,16 +240,12 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     :example:
     
     >>> # Import modules
-<<<<<<< HEAD
-    >>> import datacube     
-=======
     >>> import datacube
     >>> import sys
     >>> 
     >>> # Import dea-notebooks functions using relative link to Scripts directory
     >>> sys.path.append('../10_Scripts')
     >>> import DEADataHandling   
->>>>>>> master
     >>> 
     >>> # Define datacube to import from
     >>> dc = datacube.Datacube(app='Clear Landsat')
@@ -268,15 +253,6 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     >>> # Set up spatial and temporal query
     >>> query = {'x': (-191400.0, -183400.0),
     >>>          'y': (-1423460.0, -1415460.0),
-<<<<<<< HEAD
-    >>>          'time': ('2013-01-01', '2018-01-01'),
-    >>>          'crs': 'EPSG:3577'}
-    >>> 
-    >>> # Load in red, green and blue bands for all clear Landsat observations with < 1% unclear values. 
-    >>> combined_ds = load_clearlandsat(dc=dc, query=query, 
-    >>>                                 bands_of_interest=['red', 'green', 'blue'], 
-    >>>                                 masked_prop=0.99) 
-=======
     >>>          'time': ('1998-01-01', '2003-01-01'),
     >>>          'crs': 'EPSG:3577'}
     >>> 
@@ -284,7 +260,6 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     >>> combined_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, 
     >>>                                                 bands_of_interest=['red', 'green', 'blue'], 
     >>>                                                 masked_prop=0.99) 
->>>>>>> master
     >>> combined_ds
         
     """
@@ -396,8 +371,6 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     return combined_ds
 
 
-<<<<<<< HEAD
-=======
 def load_clearsentinel(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['red', 'green', 'blue'],
                        product='ard', masked_prop=0.99, mask_values=[0, 2, 3], apply_mask=False, 
                        pixel_quality_band='pixel_quality'):
@@ -566,7 +539,6 @@ def load_clearsentinel(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['re
     return combined_ds
 
 
->>>>>>> master
 def dataset_to_geotiff(filename, data):
 
     """
