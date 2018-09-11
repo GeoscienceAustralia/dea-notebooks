@@ -748,3 +748,15 @@ def write_your_netcdf(data, dataset_name, filename, crs):
     
 #     #return the results as a dataframe
 #     return statistics_df
+
+# If the module is being run, not being imported! 
+# to do this, do the following
+# run {modulename}.py)
+
+if __name__=='__main__':
+#print that we are running the testing
+    print('Testing..')
+#import doctest to test our module for documentation
+    import doctest
+    doctest.testmod()
+    print('Testing done')
