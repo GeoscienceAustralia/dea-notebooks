@@ -371,9 +371,9 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     return combined_ds
 
 
-def load_clearsentinel(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['red', 'green', 'blue'],
+def load_clearsentinel(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['nbart_red', 'nbart_green', 'nbart_blue'],
                        product='ard', masked_prop=0.99, mask_values=[0, 2, 3], apply_mask=False, 
-                       pixel_quality_band='pixel_quality'):
+                       pixel_quality_band='fmask'):
     
     """
     Loads Sentinel 2 data for multiple sensors (i.e. s2a, s2b), and returns a single xarray dataset containing 
