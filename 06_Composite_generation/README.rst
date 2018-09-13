@@ -14,3 +14,4 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
    Tidal_Geomedian_Filmstrips.ipynb
    MultiChoice_Dashboard.ipynb
    BasicGeomedianExample.ipynb
+   Create_a_spectral_plot_for_Sentinel2.ipynb
