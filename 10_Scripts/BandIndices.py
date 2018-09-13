@@ -191,4 +191,15 @@ def tasseled_cap(sensor_data, tc_bands=['greenness', 'brightness', 'wetness'],
 
     return output_array
        
-       
+
+# If the module is being run, not being imported! 
+# to do this, do the following
+# run {modulename}.py)
+
+if __name__=='__main__':
+#print that we are running the testing
+    print('Testing..')
+#import doctest to test our module for documentation
+    import doctest
+    doctest.testmod()
+    print('Testing done')       
