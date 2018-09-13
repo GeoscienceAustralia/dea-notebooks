@@ -361,7 +361,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
     in the Sentinel pixel quality array. By default pixels flagged as nodata, cloud or shadow are used to 
     calculate the number of unclear pixels, but this can be customised using the `mask_values` function.
     
-    Last modified: August 2018
+    Last modified: September 2018
     Author: Robbi Bishop-Taylor
     
     :param dc: 
@@ -380,8 +380,8 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
         e.g. `s2a_ard_granule`. 
         
     :param bands_of_interest:
-        An optional list of strings containing the bands to be read in; options can include 'red', 'green', 'blue', 
-        'nir1', etc, but these may vary depending on the database. Defaults to `['red', 'green', 'blue']`.
+        An optional list of strings containing the bands to be read in; to view full list run the following:
+	`dc.list_measurements().loc['s2b_ard_granule']`. Defaults to `['nbart_red', 'nbart_green', 'nbart_blue']`.
 
     :param masked_prop:
         An optional float giving the minimum percentage of clear pixels required for a Sentinel 2 observation to be 
@@ -400,7 +400,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
     
     :param pixel_quality_band:
         An optional string giving the name of the pixel quality band contained in the Sentinel 2 dataset. The default
-        value is 'pixel_quality', however the same band may also be referred to as 'fmask' in some databases.
+        value is 'fmask'.
     
     :returns:
         An xarray dataset containing only Sentinel 2 observations that contain greater than `masked_prop`
