@@ -317,3 +317,16 @@ def randomforest_eval(training_labels, training_samples, classifier_scenario,
     plt.yscale('log')
     plt.savefig(output_path, bbox_inches='tight')
     plt.show()
+
+# If the module is being run, not being imported! 
+# to do this, do the following
+# run {modulename}.py)
+
+if __name__=='__main__':
+#print that we are running the testing
+    print('Testing..')
+#import doctest to test our module for documentation
+    import doctest
+    doctest.testmod()
+    print('Testing done')
+
