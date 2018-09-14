@@ -7,13 +7,13 @@ Available functions:
     load_nbarx
     load_sentinel
     load_clearlandsat (also does fractional cover)
-    load_clearsentinel
+    load_clearsentinel2
     dataset_to_geotiff
     open_polygon_from_shapefile
     write_your_netcdf
     zonal_timeseries
 
-Last modified: August 2018
+Last modified: September 2018
 Authors: Claire Krause, Robbi Bishop-Taylor, Bex Dunn, Chad Burton
 
 '''
@@ -236,32 +236,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     :returns:
         An xarray dataset containing only Landsat observations that contain greater than `masked_prop`
         proportion of clear pixels.  
-        
-    :example:
-    
-    >>> # Import modules
-    >>> import datacube
-    >>> import sys
-    >>> 
-    >>> # Import dea-notebooks functions using relative link to Scripts directory
-    >>> sys.path.append('../10_Scripts')
-    >>> import DEADataHandling   
-    >>> 
-    >>> # Define datacube to import from
-    >>> dc = datacube.Datacube(app='Clear Landsat')
-    >>> 
-    >>> # Set up spatial and temporal query
-    >>> query = {'x': (-191400.0, -183400.0),
-    >>>          'y': (-1423460.0, -1415460.0),
-    >>>          'time': ('1998-01-01', '2003-01-01'),
-    >>>          'crs': 'EPSG:3577'}
-    >>> 
-    >>> # Load in red, green and blue bands for all clear Landsat observations with < 1% unclear values. 
-    >>> combined_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, 
-    >>>                                                 bands_of_interest=['red', 'green', 'blue'], 
-    >>>                                                 masked_prop=0.99) 
-    >>> combined_ds
-        
+                
     """
     
 
@@ -371,9 +346,9 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     return combined_ds
 
 
-def load_clearsentinel(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['red', 'green', 'blue'],
-                       product='ard', masked_prop=0.99, mask_values=[0, 2, 3], apply_mask=False, 
-                       pixel_quality_band='pixel_quality'):
+def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['nbart_red', 'nbart_green', 'nbart_blue'],
+                        product='ard', masked_prop=0.99, mask_values=[0, 2, 3], apply_mask=False, 
+                        pixel_quality_band='fmask'):
     
     """
     Loads Sentinel 2 data for multiple sensors (i.e. s2a, s2b), and returns a single xarray dataset containing 
@@ -436,27 +411,35 @@ def load_clearsentinel(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['re
     >>> # Import modules
     >>> import datacube
     >>> import sys
-    >>> 
+    ...
     >>> # Import dea-notebooks functions using relative link to Scripts directory
     >>> sys.path.append('../10_Scripts')
     >>> import DEADataHandling
-    >>> 
+    ...
     >>> # Connect to a datacube containing Sentinel data
-    >>> s2dc = datacube.Datacube(config='/g/data/r78/dc_configs/sentinel2.conf')
-    >>> 
-    >>> # Set up spatial and temporal query; note that 'output_crs' and 'resolution' need to be set 
+    >>> dc = datacube.Datacube(app='load_clearsentinel')
+    ...
+    >>> # Set up spatial and temporal query; note that 'output_crs' and 'resolution' need to be set
     >>> query = {'x': (-191400.0, -183400.0),
-    >>>          'y': (-1423460.0, -1415460.0),
-    >>>          'time': ('2017-01-01', '2018-01-01'),
-    >>>          'crs': 'EPSG:3577',
-    >>>          'output_crs': 'EPSG:3577',
-    >>>          'resolution': (10, 10)}                
-    >>> 
-    >>> # Load in red, green, blue and NIR1 bands for Sentinel observations with < 1% unclear values. 
-    >>> # Here we use apply_mask=True to mask out any remaining unclear pixels with NaN.
-    >>> sentinel_ds = DEADataHandling.load_clearsentinel(dc=s2dc, query=query, 
-    >>>                                                  bands_of_interest=['red', 'green', 'blue', 'nir1'],
-    >>>                                                  masked_prop=0.01, apply_mask=True)         
+    ...          'y': (-1423460.0, -1415460.0),
+    ...          'time': ('2018-01-01', '2018-03-01'),
+    ...          'crs': 'EPSG:3577',
+    ...          'output_crs': 'EPSG:3577',
+    ...          'resolution': (10, 10)}   
+    ...
+    >>> # Load observations with less than 70% cloud from both S2A and S2B as a single combined dataset
+    >>> sentinel_ds = DEADataHandling.load_clearsentinel2(dc=dc, query=query, sensors=['s2a', 's2b'], 
+    ...                                    bands_of_interest=['nbart_red', 'nbart_green', 'nbart_blue'], 
+    ...                                    masked_prop=0.3, apply_mask=True)
+    Loading s2a PQ
+        Loading 2 filtered s2a timesteps
+    Loading s2b PQ
+        Loading 2 filtered s2b timesteps
+    Combining and sorting Sentinel 2 data
+
+    >>> # Test that function returned data
+    >>> len(sentinel_ds.time) > 0
+    True 
       
     """
     
@@ -528,7 +511,7 @@ def load_clearsentinel(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['re
                         
 
     # Concatenate all sensors into one big xarray dataset, and then sort by time
-    print('Combining and sorting ls5, ls7 and ls8 data')
+    print('Combining and sorting Sentinel 2 data')
     combined_ds = xr.concat(filtered_sensors, dim='time')
     combined_ds = combined_ds.sortby('time')
                                                                
@@ -748,3 +731,16 @@ def write_your_netcdf(data, dataset_name, filename, crs):
     
 #     #return the results as a dataframe
 #     return statistics_df
+
+
+# If the module is being run, not being imported! 
+# to do this, do the following
+# run {modulename}.py)
+
+if __name__=='__main__':
+#print that we are running the testing
+    print('Testing..')
+#import doctest to test our module for documentation
+    import doctest
+    doctest.testmod(optionflags=doctest.ELLIPSIS)
+    print('Testing done')
