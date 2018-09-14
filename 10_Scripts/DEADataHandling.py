@@ -293,9 +293,9 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
             if bands_of_interest:
                 
                 # Lazily load Landsat data using dask              
-                data = dc.load(product = '{}_{}_albers'.format(sensor, product),
+                data = dc.load(product='{}_{}_albers'.format(sensor, product),
                                measurements=bands_of_interest,
-                               group_by = 'solar_day', 
+                               group_by='solar_day', 
                                dask_chunks={'time': 1},
                                **query)
 
@@ -304,14 +304,14 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
             else:
                 
                 # Lazily load Landsat data using dask  
-                data = dc.load(product = '{}_{}_albers'.format(sensor, product),
-                               group_by = 'solar_day', 
+                data = dc.load(product='{}_{}_albers'.format(sensor, product),
+                               group_by='solar_day', 
                                dask_chunks={'time': 1},
                                **query)             
 
             # Load PQ data
-            pq = dc.load(product = '{}_pq_albers'.format(sensor),
-                         group_by = 'solar_day',
+            pq = dc.load(product='{}_pq_albers'.format(sensor),
+                         group_by='solar_day',
                          fuse_func=ga_pq_fuser,
                          dask_chunks={'time': 1},
                          **query)
@@ -391,7 +391,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
 
 
 def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['nbart_red', 'nbart_green', 'nbart_blue'],
-                        product='ard', masked_prop=0.99, mask_values=[0, 2, 3], apply_mask=False, 
+                        product='ard', masked_prop=0.90, mask_values=[0, 2, 3], apply_mask=False, 
                         pixel_quality_band='fmask', satellite_metadata=False):
     
     """
@@ -429,7 +429,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
 
     :param masked_prop:
         An optional float giving the minimum percentage of clear pixels required for a Sentinel 2 observation to be 
-        loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of unclear pixels).  
+        loaded. Defaults to 0.90 (i.e. only return observations with less than 10% of unclear pixels).  
     
     :param mask_values:
         An optional list of pixel quality values to treat as invalid or unclear observations in the above `masked_prop`
@@ -521,7 +521,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
         # Load PQ data
         pq = dc.load(product = '{}_{}_granule'.format(sensor, product),
                      measurements=[pixel_quality_band],
-                     group_by = 'solar_day',
+                     group_by='solar_day',
                      dask_chunks={'time': 1},
                      **query)
 
@@ -530,7 +530,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
         pq = pq.compute()
         
         # Identify pixels with valid data
-        good_quality = np.isin(pq[pixel_quality_band], test_elements = mask_values, invert=True)
+        good_quality = np.isin(pq[pixel_quality_band], test_elements=mask_values, invert=True)
         good_quality = pq[pixel_quality_band].where(good_quality).notnull()
 
         # Compute good data for each observation as a percentage of total array pixels
