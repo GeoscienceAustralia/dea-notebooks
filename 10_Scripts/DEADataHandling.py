@@ -250,14 +250,14 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     >>> import datacube
     >>> import sys
 
-    >>> # Import dea-notebooks functions using relative link to Scripts directory
+    >>> # Import dea-notebooks functions using relative link to 10_Scripts directory
     >>> sys.path.append('../10_Scripts')
     >>> import DEADataHandling
 
     >>> # Connect to a datacube containing Landsat data
     >>> dc = datacube.Datacube(app='load_clearlandsat')
 
-    >>> # Set up spatial and temporal query; note that 'output_crs' and 'resolution' need to be set
+    >>> # Set up spatial and temporal query
     >>> query = {'x': (954163, 972163),
     ...          'y': (-3573891, -3555891),
     ...          'time': ('2011-06-01', '2013-06-01'),
@@ -462,7 +462,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
     >>> import datacube
     >>> import sys
 
-    >>> # Import dea-notebooks functions using relative link to Scripts directory
+    >>> # Import dea-notebooks functions using relative link to 10_Scripts directory
     >>> sys.path.append('../10_Scripts')
     >>> import DEADataHandling
 
