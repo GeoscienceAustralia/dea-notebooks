@@ -252,7 +252,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     >>> sys.path.append('../10_Scripts')
     >>> import DEADataHandling
 
-    >>> # Connect to a datacube containing Sentinel data
+    >>> # Connect to a datacube containing Landsat data
     >>> dc = datacube.Datacube(app='load_clearlandsat')
 
     >>> # Set up spatial and temporal query; note that 'output_crs' and 'resolution' need to be set
@@ -501,7 +501,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
         # for compatibility with the existing dea-notebooks load_nbarx function.
         if bands_of_interest:
 
-            # Lazily load Landsat data using dask               
+            # Lazily load Sentinel data using dask               
             data = dc.load(product='{}_{}_granule'.format(sensor, product), 
                            measurements=bands_of_interest,
                            group_by='solar_day', 
@@ -512,7 +512,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
         # therefore return all available bands
         else:
 
-            # Lazily load Landsat data using dask  
+            # Lazily load Sentinel data using dask  
             data = dc.load(product='{}_{}_granule'.format(sensor, product),
                            group_by='solar_day', 
                            dask_chunks={'time': 1},
