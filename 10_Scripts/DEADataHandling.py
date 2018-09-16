@@ -207,7 +207,8 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
 
     :param product:
         An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to 'nbart'. For information on the difference, 
-        see the 'GettingStartedWithLandsat' or 'Introduction_to_Fractional_Cover' notebooks on DEA-notebooks.
+        see the '02_DEA_datasets/Introduction_to_Landsat' or '02_DEA_datasets/Introduction_to_Fractional_Cover' 
+	notebooks from DEA-notebooks.
         
     :param bands_of_interest:
         An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
@@ -222,7 +223,8 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
         observations from the PQ layer using alternative masking criteria. The default value of None masks out 
         pixels flagged as cloud by either the ACCA or Fmask alogorithms, and that have values for every band 
         (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
-        See the `Landsat5-7-8-PQ` notebook on DEA Notebooks for a list of all possible options.
+        See the `02_DEA_datasets/Introduction_to_LandsatPQ.ipynb` notebook on DEA Notebooks for a list of all 
+	possible options.
         
     :param apply_mask:
         An optional boolean indicating whether resulting observations should have the PQ mask applied to filter
