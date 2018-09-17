@@ -2,13 +2,15 @@
 Scripts
 =======
 
-This folder contains examples of python code that demonstrates the use of functions and tools suitable for use in the DEA environment. The following functions are currently included in Python scripts for loading into notebooks:
+This folder contains examples of python code that demonstrates the use of functions and tools suitable for use in the DEA environment. The code examples provided here can be found in the `dea-notebooks Github repository <https://github.com/GeoscienceAustralia/dea-notebooks>`_. Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an Issue in the Github repository, or fix it yourself and create a Pull request to contribute the updated function back into the repository (See the repository README for instructions on creating a Pull request).
+
+The following functions are currently included in Python scripts for loading into notebooks:
 
 DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarrays)
      - **load_nbarx**: Loads NBAR (Nadir BRDF Adjusted Reflectance) or NBAR-T (terrain corrected NBAR) data for a sensor, masks using pixel quality (PQ), then optionally filters out terrain -999s (for NBAR-T)
      - **load_sentinel**: Loads a Sentinel granule product and masks using PQ
      - **load_clearlandsat**: Loads a time series of Landsat observations from multiple sensors (ls5, ls7, ls8) with less than xx% cloud or nodata
-     - **load_clearsentinel**: Loads a time series of Sentinel 2 observations from multiple sensors (s2a, s2b) with less than xx% cloud or nodata
+     - **load_clearsentinel2**: Loads a time series of Sentinel 2 observations from multiple sensors (s2a, s2b) with less than xx% cloud or nodata
      - **dataset_to_geotiff**: Writes a multi-band geotiff for one xarray timeslice, or for a single composite image
      - **open_polygon_from_shapefile**: Imports a shapefile and converts to a datacube geometry object
      - **write_your_netcdf**: Writes an xarray dataset or array to a NetCDF file
