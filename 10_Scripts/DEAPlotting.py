@@ -1534,6 +1534,16 @@ def plot_WOfS(ds, figsize=(10,10), title='WOfS %', projection='projected'):
     #fig.delaxes(fig.axes[1]) #Remove pre-defined colour bar
     return fig,ax
         
-        
+# If the module is being run, not being imported! 
+# to do this, do the following
+# run {modulename}.py)
+
+if __name__=='__main__':
+#print that we are running the testing
+    print('Testing..')
+#import doctest to test our module for documentation
+    import doctest
+    doctest.testmod()
+    print('Testing done')        
         
         

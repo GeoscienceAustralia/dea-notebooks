@@ -10,7 +10,7 @@ DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarra
      - **load_nbarx**: Loads NBAR (Nadir BRDF Adjusted Reflectance) or NBAR-T (terrain corrected NBAR) data for a sensor, masks using pixel quality (PQ), then optionally filters out terrain -999s (for NBAR-T)
      - **load_sentinel**: Loads a Sentinel granule product and masks using PQ
      - **load_clearlandsat**: Loads a time series of Landsat observations from multiple sensors (ls5, ls7, ls8) with less than xx% cloud or nodata
-     - **load_clearsentinel**: Loads a time series of Sentinel 2 observations from multiple sensors (s2a, s2b) with less than xx% cloud or nodata
+     - **load_clearsentinel2**: Loads a time series of Sentinel 2 observations from multiple sensors (s2a, s2b) with less than xx% cloud or nodata
      - **dataset_to_geotiff**: Writes a multi-band geotiff for one xarray timeslice, or for a single composite image
      - **open_polygon_from_shapefile**: Imports a shapefile and converts to a datacube geometry object
      - **write_your_netcdf**: Writes an xarray dataset or array to a NetCDF file

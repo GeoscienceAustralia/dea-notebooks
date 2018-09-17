@@ -489,3 +489,15 @@ def reproject_to_template(input_raster, template_raster, output_raster, resoluti
     
     print("Reprojected raster exported to {}".format(output_raster))
     return output_ds
+
+# If the module is being run, not being imported! 
+# to do this, do the following
+# run {modulename}.py)
+
+if __name__=='__main__':
+#print that we are running the testing
+    print('Testing..')
+#import doctest to test our module for documentation
+    import doctest
+    doctest.testmod()
+    print('Testing done')
