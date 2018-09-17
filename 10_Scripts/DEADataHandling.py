@@ -207,7 +207,8 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
 
     :param product:
         An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to 'nbart'. For information on the difference, 
-        see the 'GettingStartedWithLandsat' or 'Introduction_to_Fractional_Cover' notebooks on DEA-notebooks.
+        see the '02_DEA_datasets/Introduction_to_Landsat' or '02_DEA_datasets/Introduction_to_Fractional_Cover' 
+	notebooks from DEA-notebooks.
         
     :param bands_of_interest:
         An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
@@ -222,7 +223,8 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
         observations from the PQ layer using alternative masking criteria. The default value of None masks out 
         pixels flagged as cloud by either the ACCA or Fmask alogorithms, and that have values for every band 
         (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
-        See the `Landsat5-7-8-PQ` notebook on DEA Notebooks for a list of all possible options.
+        See the `02_DEA_datasets/Introduction_to_LandsatPQ.ipynb` notebook on DEA Notebooks for a list of all 
+	possible options.
         
     :param apply_mask:
         An optional boolean indicating whether resulting observations should have the PQ mask applied to filter
@@ -248,14 +250,14 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     >>> import datacube
     >>> import sys
 
-    >>> # Import dea-notebooks functions using relative link to Scripts directory
+    >>> # Import dea-notebooks functions using relative link to 10_Scripts directory
     >>> sys.path.append('../10_Scripts')
     >>> import DEADataHandling
 
-    >>> # Connect to a datacube containing Sentinel data
+    >>> # Connect to a datacube containing Landsat data
     >>> dc = datacube.Datacube(app='load_clearlandsat')
 
-    >>> # Set up spatial and temporal query; note that 'output_crs' and 'resolution' need to be set
+    >>> # Set up spatial and temporal query
     >>> query = {'x': (954163, 972163),
     ...          'y': (-3573891, -3555891),
     ...          'time': ('2011-06-01', '2013-06-01'),
@@ -293,9 +295,9 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
             if bands_of_interest:
                 
                 # Lazily load Landsat data using dask              
-                data = dc.load(product = '{}_{}_albers'.format(sensor, product),
+                data = dc.load(product='{}_{}_albers'.format(sensor, product),
                                measurements=bands_of_interest,
-                               group_by = 'solar_day', 
+                               group_by='solar_day', 
                                dask_chunks={'time': 1},
                                **query)
 
@@ -304,14 +306,14 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
             else:
                 
                 # Lazily load Landsat data using dask  
-                data = dc.load(product = '{}_{}_albers'.format(sensor, product),
-                               group_by = 'solar_day', 
+                data = dc.load(product='{}_{}_albers'.format(sensor, product),
+                               group_by='solar_day', 
                                dask_chunks={'time': 1},
                                **query)             
 
             # Load PQ data
-            pq = dc.load(product = '{}_pq_albers'.format(sensor),
-                         group_by = 'solar_day',
+            pq = dc.load(product='{}_pq_albers'.format(sensor),
+                         group_by='solar_day',
                          fuse_func=ga_pq_fuser,
                          dask_chunks={'time': 1},
                          **query)
@@ -460,7 +462,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
     >>> import datacube
     >>> import sys
 
-    >>> # Import dea-notebooks functions using relative link to Scripts directory
+    >>> # Import dea-notebooks functions using relative link to 10_Scripts directory
     >>> sys.path.append('../10_Scripts')
     >>> import DEADataHandling
 
@@ -496,70 +498,76 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
 
     # Iterate through all sensors, returning only observations with > mask_prop clear pixels
     for sensor in sensors:
+
+        try:
         
-        # If bands of interest are given, assign measurements in dc.load call. This is
-        # for compatibility with the existing dea-notebooks load_nbarx function.
-        if bands_of_interest:
+            # If bands of interest are given, assign measurements in dc.load call. This is
+            # for compatibility with the existing dea-notebooks load_nbarx function.
+            if bands_of_interest:
 
-            # Lazily load Landsat data using dask               
-            data = dc.load(product='{}_{}_granule'.format(sensor, product), 
-                           measurements=bands_of_interest,
-                           group_by='solar_day', 
-                           dask_chunks={'time': 1},
-                           **query )
+                # Lazily load Landsat data using dask               
+                data = dc.load(product='{}_{}_granule'.format(sensor, product), 
+                               measurements=bands_of_interest,
+                               group_by='solar_day', 
+                               dask_chunks={'time': 1},
+                               **query )
 
-        # If no bands of interest given, run without specifying measurements, and 
-        # therefore return all available bands
-        else:
+            # If no bands of interest given, run without specifying measurements, and 
+            # therefore return all available bands
+            else:
 
-            # Lazily load Landsat data using dask  
-            data = dc.load(product='{}_{}_granule'.format(sensor, product),
-                           group_by='solar_day', 
-                           dask_chunks={'time': 1},
-                           **query )              
+                # Lazily load Landsat data using dask  
+                data = dc.load(product='{}_{}_granule'.format(sensor, product),
+                               group_by='solar_day', 
+                               dask_chunks={'time': 1},
+                               **query )              
+            
+            # Load PQ data
+            pq = dc.load(product = '{}_{}_granule'.format(sensor, product),
+                         measurements=[pixel_quality_band],
+                         group_by = 'solar_day',
+                         dask_chunks={'time': 1},
+                         **query)
+
+            # Load PQ data using dask
+            print('Loading {} PQ'.format(sensor))
+            pq = pq.compute()
+            
+            # Identify pixels with valid data
+            good_quality = np.isin(pq[pixel_quality_band], test_elements = mask_values, invert=True)
+            good_quality = pq[pixel_quality_band].where(good_quality).notnull()
+
+            # Compute good data for each observation as a percentage of total array pixels
+            data_perc = good_quality.sum(dim=['x', 'y']) / (good_quality.shape[1] * good_quality.shape[2])
+
+            # Add data_perc data to Sentinel dataset as a new xarray variable
+            data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
+
+            # Filter and finally import data using dask
+            filtered = data.where(data.data_perc >= masked_prop, drop=True)
+            print('    Loading {} filtered {} timesteps'.format(len(filtered.time), sensor))
+            filtered = filtered.compute()
+
+            # Optionally apply mask (instead of only filtering)
+            if apply_mask:
+                filtered = filtered.where(good_quality)
+
+            # Optionally add satellite name
+            if satellite_metadata:
+                filtered['satellite'] = xr.DataArray([sensor] * len(filtered.time), [('time', filtered.time)])
+
+            # Append result to list
+            filtered_sensors.append(filtered)
+
+            # Close datasets
+            filtered = None
+            good_quality = None
+            data = None  
+     
+        except:
         
-        # Load PQ data
-        pq = dc.load(product = '{}_{}_granule'.format(sensor, product),
-                     measurements=[pixel_quality_band],
-                     group_by = 'solar_day',
-                     dask_chunks={'time': 1},
-                     **query)
-
-        # Load PQ data using dask
-        print('Loading {} PQ'.format(sensor))
-        pq = pq.compute()
-        
-        # Identify pixels with valid data
-        good_quality = np.isin(pq[pixel_quality_band], test_elements = mask_values, invert=True)
-        good_quality = pq[pixel_quality_band].where(good_quality).notnull()
-
-        # Compute good data for each observation as a percentage of total array pixels
-        data_perc = good_quality.sum(dim=['x', 'y']) / (good_quality.shape[1] * good_quality.shape[2])
-
-        # Add data_perc data to Sentinel dataset as a new xarray variable
-        data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
-
-        # Filter and finally import data using dask
-        filtered = data.where(data.data_perc >= masked_prop, drop=True)
-        print('    Loading {} filtered {} timesteps'.format(len(filtered.time), sensor))
-        filtered = filtered.compute()
-
-        # Optionally apply mask (instead of only filtering)
-        if apply_mask:
-            filtered = filtered.where(good_quality)
-
-        # Optionally add satellite name
-        if satellite_metadata:
-            filtered['satellite'] = xr.DataArray([sensor] * len(filtered.time), [('time', filtered.time)])
-
-        # Append result to list
-        filtered_sensors.append(filtered)
-
-        # Close datasets
-        filtered = None
-        good_quality = None
-        data = None       
-                        
+            # If there is no data for sensor or if another error occurs:
+            print('    Skipping {}'.format(sensor))                    
 
     # Concatenate all sensors into one big xarray dataset, and then sort by time
     print('Combining and sorting Sentinel 2 data')
