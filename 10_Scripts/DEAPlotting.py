@@ -10,7 +10,7 @@ Available functions:
     animated_doubletimeseries
     plot_WOfS
 
-Last modified: August 2018
+Last modified: September 2018
 Authors: Claire Krause, Robbi Bishop-Taylor, Sean Chua, Mike Barnes, Cate Kooymans, Bex Dunn
 
 """
@@ -248,7 +248,7 @@ def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, fig
 
 
 def animated_timeseries(ds, output_path, width_pixels=600, interval=200, 
-                        bands=['red', 'green', 'blue'], percentile_stretch = [0.02, 0.98],
+                        bands=['red', 'green', 'blue'], percentile_stretch = (0.02, 0.98),
                         title=False, show_date=True, annotation_kwargs={},
                         onebandplot_cbar=True, onebandplot_kwargs={},
                         shapefile_path=None, shapefile_kwargs={},
@@ -268,7 +268,7 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
     the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
-    Last modified: August 2018
+    Last modified: September 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn    
     
     :param ds: 
@@ -291,8 +291,9 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
         Defaults to `['red', 'green', 'blue']`. 
         
     :param percentile_stretch:
-        An optional list of two floats that can be used to clip three-band arrays by percentiles to produce a more 
-        vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivalent to xarray's `robust=True`.
+        An optional tuple of two floats that can be used to clip one or three-band arrays by percentiles to produce 
+        a more vibrant, visually attractive image that is not affected by outliers/extreme values. The default is 
+        `(0.02, 0.98)` which is equivalent to xarray's `robust=True`.
 
     :param title: 
         An optional string or list of strings with a length equal to the number of timesteps in ds. This can be
@@ -344,10 +345,14 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
     
     # Give depreciation warning
     if reflect_stand:
-        print("'reflect_stand' is depreciated. Please use `percentile_stretch` instead.")
+        print("'reflect_stand' is depreciated and has no effect. Please use `percentile_stretch` instead.")
     
     # Define function to convert xarray dataset to list of one or three band numpy arrays
-    def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim, percentile_stretch): 
+    def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch): 
+        
+        """
+        Converts an xarray dataset to a list of numpy arrays for plt.imshow plotting
+        """
         
         # Compute percents
         p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
@@ -365,7 +370,8 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
             if len(bands) == 1:    
 
                 # Create new one band array
-                img_toshow = ds_i[bands[0]].values
+                img_toshow = exposure.rescale_intensity(ds_i[bands[0]].values, 
+                                                        in_range=(p_low, p_high))
 
             else:
 
@@ -382,7 +388,7 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
 
             array_list.append(img_toshow)
             
-        return(array_list)
+        return array_list, p_low, p_high
     
     
     def _add_colourbar(ax, im, vmin, vmax, fontsize):
@@ -412,57 +418,56 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
     ############### 
 
     # Test if all dimensions exist in dataset
-    if time_dim in ds and x_dim in ds and y_dim in ds:
-        
-        # Get time, x and y dimensions of dataset and calculate width vs height of plot
-        timesteps = len(ds[time_dim])    
-        width = len(ds[x_dim])
-        height = len(ds[y_dim])
-        width_ratio = float(width) / float(height)
-        height = 10.0 / width_ratio
-        
-        # If title is supplied as a string, multiply out to a list with one string per timestep.
-        # Otherwise, use supplied list for plot titles.
-        if isinstance(title, str) or isinstance(title, bool):
-            title_list = [title] * timesteps 
-        else:
-            title_list = title
-        
-        # Set up annotation parameters that plt.imshow plotting for single band array images. 
-        # The nested dict structure sets default values which can be overwritten/customised by the 
-        # manually specified `onebandplot_kwargs`
-        onebandplot_kwargs = dict({'cmap':'Greys', 'interpolation':'bilinear', 
-                                   'vmin': ds[bands].min().to_array()[0].item(), 
-                                   'vmax': ds[bands].max().to_array()[0].item()},
-                                   **onebandplot_kwargs)         
-        
-        # Set up annotation parameters that control font etc. The nested dict structure sets default 
-        # values which can be overwritten/customised by the manually specified `annotation_kwargs`
-        annotation_kwargs = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
-                                  'xytext':(-5, -5), 'textcoords':'offset points', 
-                                  'horizontalalignment':'right', 'verticalalignment':'top', 
-                                  'fontsize':25, 'color':'white', 
-                                  'path_effects':[PathEffects.withStroke(linewidth=4, foreground='black')]},
-                                  **annotation_kwargs)
-                                  
-        # Define default plotting parameters for the overlaying shapefile(s). The nested dict structure sets 
-        # default values which can be overwritten/customised by the manually specified `shapefile_kwargs`
-        shapefile_kwargs = dict({'linewidth': 2, 'edgecolor': 'black', 'facecolor': "#00000000"}, 
-                                 **shapefile_kwargs) 
-       
-        
-        ###################
-        # Initialise plot #
-        ################### 
+    if time_dim in ds and x_dim in ds and y_dim in ds:        
         
         # First test if there are three bands, and that all exist in both datasets:
         if ((len(bands) == 3) | (len(bands) == 1)) & all([(b in ds.data_vars) for b in bands]): 
 
             # Import xarrays as lists of three band numpy arrays
-            imagelist = _ds_to_arrraylist(ds, bands=bands, reflect_stand=reflect_stand,
-                                          time_dim=time_dim, x_dim=x_dim, y_dim=y_dim, 
-                                          percentile_stretch=percentile_stretch)
+            imagelist, vmin, vmax = _ds_to_arrraylist(ds, bands=bands, 
+                                                      time_dim=time_dim, x_dim=x_dim, y_dim=y_dim, 
+                                                      percentile_stretch=percentile_stretch)
+        
+            # Get time, x and y dimensions of dataset and calculate width vs height of plot
+            timesteps = len(ds[time_dim])    
+            width = len(ds[x_dim])
+            height = len(ds[y_dim])
+            width_ratio = float(width) / float(height)
+            height = 10.0 / width_ratio
 
+            # If title is supplied as a string, multiply out to a list with one string per timestep.
+            # Otherwise, use supplied list for plot titles.
+            if isinstance(title, str) or isinstance(title, bool):
+                title_list = [title] * timesteps 
+            else:
+                title_list = title
+
+            # Set up annotation parameters that plt.imshow plotting for single band array images. 
+            # The nested dict structure sets default values which can be overwritten/customised by the 
+            # manually specified `onebandplot_kwargs`
+            onebandplot_kwargs = dict({'cmap':'Greys', 'interpolation':'bilinear',
+                                       'vmin': vmin, 'vmax': vmax},
+                                       **onebandplot_kwargs)         
+
+            # Set up annotation parameters that control font etc. The nested dict structure sets default 
+            # values which can be overwritten/customised by the manually specified `annotation_kwargs`
+            annotation_kwargs = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
+                                      'xytext':(-5, -5), 'textcoords':'offset points', 
+                                      'horizontalalignment':'right', 'verticalalignment':'top', 
+                                      'fontsize':25, 'color':'white', 
+                                      'path_effects':[PathEffects.withStroke(linewidth=4, foreground='black')]},
+                                      **annotation_kwargs)
+
+            # Define default plotting parameters for the overlaying shapefile(s). The nested dict structure sets 
+            # default values which can be overwritten/customised by the manually specified `shapefile_kwargs`
+            shapefile_kwargs = dict({'linewidth': 2, 'edgecolor': 'black', 'facecolor': "#00000000"}, 
+                                     **shapefile_kwargs)  
+            
+            
+            ###################
+            # Initialise plot #
+            ################### 
+            
             # Set up figure
             fig, ax1 = plt.subplots(ncols=1) 
             fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
@@ -581,7 +586,7 @@ def animated_timeseries(ds, output_path, width_pixels=600, interval=200,
 
 
 def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200, 
-                            bands=['red', 'green', 'blue'], percentile_stretch = [0.02, 0.98],
+                            bands=['red', 'green', 'blue'], percentile_stretch = (0.02, 0.98),
                             title=False, show_date=True, annotation_kwargs={},
                             onebandplot_cbar=True, onebandplot_kwargs={}, 
                             shapefile_path=None, shapefile_kwargs={}, pandasplot_kwargs={},
@@ -601,7 +606,7 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
     the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
-    Last modified: August 2018
+    Last modified: September 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn    
     
     :param ds: 
@@ -632,8 +637,9 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
         `ds`. Defaults to `['red', 'green', 'blue']`. 
         
     :param percentile_stretch:
-        An optional list of two floats that can be used to clip three-band arrays by percentiles to produce a more 
-        vibrant, visually attractive image. The default is `[0.02, 0.98]` which is equivalent to xarray's `robust=True`.
+        An optional tuple of two floats that can be used to clip one or three-band arrays by percentiles to produce 
+        a more vibrant, visually attractive image that is not affected by outliers/extreme values. The default is 
+        `(0.02, 0.98)` which is equivalent to xarray's `robust=True`.
         
     :param title: 
         An optional string or list of strings with a length equal to the number of timesteps in `ds`. This can be
@@ -686,10 +692,14 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
     
     # Give depreciation warning
     if reflect_stand:
-        print("'reflect_stand' is depreciated. Please use `percentile_stretch` instead.")
+        print("'reflect_stand' is depreciated and has no effect. Please use `percentile_stretch` instead.")
 
     # Define function to convert xarray dataset to list of one or three band numpy arrays
-    def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim, percentile_stretch): 
+    def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch): 
+        
+        """
+        Converts an xarray dataset to a list of numpy arrays for plt.imshow plotting
+        """
         
         # Compute percents
         p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
@@ -707,7 +717,8 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
             if len(bands) == 1:    
 
                 # Create new one band array
-                img_toshow = ds_i[bands[0]].values
+                img_toshow = exposure.rescale_intensity(ds_i[bands[0]].values, 
+                                                        in_range=(p_low, p_high))
 
             else:
 
@@ -724,7 +735,7 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
 
             array_list.append(img_toshow)
             
-        return(array_list)
+        return array_list, p_low, p_high
     
     
     def _add_colourbar(ax, im, vmin, vmax, fontsize):
@@ -756,58 +767,57 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
     # Test if all dimensions exist in dataset
     if time_dim in ds and x_dim in ds and y_dim in ds:
         
-        # Get time, x and y dimensions of dataset and calculate width vs height of plot
-        timesteps = len(ds[time_dim])    
-        width = len(ds[x_dim])
-        height = len(ds[y_dim])
-        width_ratio = float(width) / float(height)
-        height = 10.0 / width_ratio   
-        
-        # If title is supplied as a string, multiply out to a list with one string per timestep.
-        # Otherwise, use supplied list for plot titles.
-        if isinstance(title, str) or isinstance(title, bool):
-            title_list = [title] * timesteps 
-        else:
-            title_list = title
-            
-        # Set up annotation parameters that plt.imshow plotting for single band array images. 
-        # The nested dict structure sets default values which can be overwritten/customised by the 
-        # manually specified `onebandplot_kwargs`
-        onebandplot_kwargs = dict({'cmap':'Greys', 'interpolation':'bilinear',
-                                   'vmin': ds[bands].min().to_array()[0].item(), 
-                                   'vmax': ds[bands].max().to_array()[0].item()},
-                                   **onebandplot_kwargs)         
-        
-        # Set up annotation parameters that control font etc. The nested dict structure sets default 
-        # values which can be overwritten/customised by the manually specified `annotation_kwargs`
-        annotation_kwargs = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
-                                  'xytext':(-5, -5), 'textcoords':'offset points', 
-                                  'horizontalalignment':'right', 'verticalalignment':'top', 
-                                  'fontsize':15, 'color':'white', 
-                                  'path_effects':[PathEffects.withStroke(linewidth=3, foreground='black')]},
-                                  **annotation_kwargs)
-
-        # Define default plotting parameters for the overlaying shapefile(s). The nested dict structure sets 
-        # default values which can be overwritten/customised by the manually specified `shapefile_kwargs`
-        shapefile_kwargs = dict({'linewidth': 2, 'edgecolor': 'black', 'facecolor': "#00000000"}, 
-                                 **shapefile_kwargs) 
-
-        # Define default plotting parameters for the right-hand line plot. The nested dict structure sets 
-        # default values which can be overwritten/customised by the manually specified `pandasplot_kwargs`
-        pandasplot_kwargs = dict({}, **pandasplot_kwargs) 
-        
-
-        ###################
-        # Initialise plot #
-        ###################
-        
-        # First test if there is one or three bands, and that all exist in both datasets:
+        # Test if there is one or three bands, and that all exist in both datasets:
         if ((len(bands) == 3) | (len(bands) == 1)) & all([(b in ds.data_vars) for b in bands]):         
             
             # Import xarrays as lists of three band numpy arrays
-            imagelist = _ds_to_arrraylist(ds, bands=bands, reflect_stand=reflect_stand,
-                                          time_dim=time_dim, x_dim=x_dim, y_dim=y_dim, 
-                                          percentile_stretch=percentile_stretch)
+            imagelist, vmin, vmax = _ds_to_arrraylist(ds, bands=bands, 
+                                                      time_dim=time_dim, x_dim=x_dim, y_dim=y_dim, 
+                                                      percentile_stretch=percentile_stretch)
+        
+            # Get time, x and y dimensions of dataset and calculate width vs height of plot
+            timesteps = len(ds[time_dim])    
+            width = len(ds[x_dim])
+            height = len(ds[y_dim])
+            width_ratio = float(width) / float(height)
+            height = 10.0 / width_ratio   
+
+            # If title is supplied as a string, multiply out to a list with one string per timestep.
+            # Otherwise, use supplied list for plot titles.
+            if isinstance(title, str) or isinstance(title, bool):
+                title_list = [title] * timesteps 
+            else:
+                title_list = title            
+
+            # Set up annotation parameters that plt.imshow plotting for single band array images. 
+            # The nested dict structure sets default values which can be overwritten/customised by the 
+            # manually specified `onebandplot_kwargs`
+            onebandplot_kwargs = dict({'cmap':'Greys', 'interpolation':'bilinear',
+                                       'vmin': vmin, 'vmax': vmax},
+                                       **onebandplot_kwargs)         
+
+            # Set up annotation parameters that control font etc. The nested dict structure sets default 
+            # values which can be overwritten/customised by the manually specified `annotation_kwargs`
+            annotation_kwargs = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
+                                      'xytext':(-5, -5), 'textcoords':'offset points', 
+                                      'horizontalalignment':'right', 'verticalalignment':'top', 
+                                      'fontsize':15, 'color':'white', 
+                                      'path_effects': [PathEffects.withStroke(linewidth=3, foreground='black')]},
+                                      **annotation_kwargs)
+
+            # Define default plotting parameters for the overlaying shapefile(s). The nested dict structure sets 
+            # default values which can be overwritten/customised by the manually specified `shapefile_kwargs`
+            shapefile_kwargs = dict({'linewidth': 2, 'edgecolor': 'black', 'facecolor': "#00000000"}, 
+                                     **shapefile_kwargs) 
+
+            # Define default plotting parameters for the right-hand line plot. The nested dict structure sets 
+            # default values which can be overwritten/customised by the manually specified `pandasplot_kwargs`
+            pandasplot_kwargs = dict({}, **pandasplot_kwargs) 
+            
+
+            ###################
+            # Initialise plot #
+            ###################
             
             # Set up figure 
             fig, (ax1, ax2) = plt.subplots(ncols=2) 
@@ -962,7 +972,7 @@ def animated_timeseriesline(ds, df, output_path, width_pixels=1000, interval=200
 
 def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval=200, 
                               bands1=['red', 'green', 'blue'], bands2=['red', 'green', 'blue'],                               
-                              percentile_stretch1 = [0.02, 0.98], percentile_stretch2 = [0.02, 0.98],
+                              percentile_stretch1 = (0.02, 0.98), percentile_stretch2 = (0.02, 0.98),
                               title1=False, title2=False,
                               show_date1=True, show_date2=True,
                               annotation_kwargs1={}, annotation_kwargs2={},
@@ -989,7 +999,7 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
     the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
-    Last modified: August 2018
+    Last modified: September 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn
     
     :param ds1: 
@@ -1024,15 +1034,15 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
         An optional list of either one or three bands to be plotted, all of which must exist in `ds2`.
         Defaults to `['red', 'green', 'blue']`.        
       
-    :param percentile_stretch1:
-        An optional list of two floats that can be used to clip three-band arrays in the left `ds1` panel by 
-        percentiles to produce a more vibrant, visually attractive image. The default is `[0.02, 0.98]` which is 
-        equivalent to xarray's `robust=True` option.
+    :param percentile_stretch1:        
+        An optional tuple of two floats that can be used to clip one or three-band arrays  in the left `ds1` panel
+        by percentiles to produce a more vibrant, visually attractive image that is not affected by outliers/extreme 
+        values. The default is `(0.02, 0.98)` which is equivalent to xarray's `robust=True`.
     
     :param percentile_stretch2:
-        An optional list of two floats that can be used to clip three-band arrays in the right `ds2` panel by 
-        percentiles to produce a more vibrant, visually attractive image. The default is `[0.02, 0.98]` which is 
-        equivalent to xarray's `robust=True` option.
+        An optional tuple of two floats that can be used to clip one or three-band arrays  in the right `ds2` panel
+        by percentiles to produce a more vibrant, visually attractive image that is not affected by outliers/extreme 
+        values. The default is `(0.02, 0.98)` which is equivalent to xarray's `robust=True`.
 
     :param title1: 
         An optional string or list of strings with a length equal to the number of timesteps in `ds1`. This can be
@@ -1130,14 +1140,18 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
     
     # Give depreciation warning
     if reflect_stand1:
-        print("'reflect_stand1' is depreciated. Please use `percentile_stretch1` instead.")
+        print("'reflect_stand1' is depreciated and has no effect. Please use `percentile_stretch1` instead.")
         
     # Give depreciation warning
     if reflect_stand2:
-        print("'reflect_stand2' is depreciated. Please use `percentile_stretch2` instead.")
+        print("'reflect_stand2' is depreciated and has no effect. Please use `percentile_stretch2` instead.")
 
     # Define function to convert xarray dataset to list of one or three band numpy arrays
-    def _ds_to_arrraylist(ds, bands, reflect_stand, time_dim, x_dim, y_dim, percentile_stretch): 
+    def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch): 
+        
+        """
+        Converts an xarray dataset to a list of numpy arrays for plt.imshow plotting
+        """
         
         # Compute percents
         p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
@@ -1155,7 +1169,8 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
             if len(bands) == 1:    
 
                 # Create new one band array
-                img_toshow = ds_i[bands[0]].values
+                img_toshow = exposure.rescale_intensity(ds_i[bands[0]].values, 
+                                                        in_range=(p_low, p_high))
 
             else:
 
@@ -1172,7 +1187,8 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
 
             array_list.append(img_toshow)
             
-        return(array_list)
+        return array_list, p_low, p_high
+    
     
     def _add_colourbar(ax, im, vmin, vmax, fontsize):
         
@@ -1202,86 +1218,85 @@ def animated_doubletimeseries(ds1, ds2, output_path, width_pixels=1000, interval
     
     # Test if all dimensions exist in dataset
     if time_dim1 in ds1 and x_dim1 in ds1 and y_dim1 in ds1 and time_dim2 in ds2 and x_dim2 in ds2 and y_dim2 in ds2:
-    
-        # Get time, x and y dimensions of dataset 
-        timesteps1 = len(ds1[time_dim1])  
-        timesteps2 = len(ds2[time_dim2])
-        width1 = len(ds1[x_dim1])
-        width2 = len(ds2[x_dim2])
-        height1 = len(ds1[y_dim1])
-        height2 = len(ds2[y_dim2])
-        
-        # Calculate width vs height of plot
-        width_ratio = float(width1) / float(height1)
-        width = width1
-        height = 10.0 / width_ratio
-        
-        # If title is supplied as a string, multiply out to a list with one string per timestep.
-        # Otherwise, use supplied list for plot titles.
-        if isinstance(title1, str) or isinstance(title1, bool):
-            title_list1 = [title1] * timesteps1   
-        else:
-            title_list1 = title1
-            
-        # If title is supplied as a string, multiply out to a list with one string per timestep
-        if isinstance(title2, str) or isinstance(title2, bool):
-            title_list2 = [title2] * timesteps2  
-        else:
-            title_list2 = title2       
-            
-        # Set up annotation parameters that plt.imshow plotting for single band array images. 
-        # The nested dict structure sets default values which can be overwritten/customised by the 
-        # manually specified `onebandplot_kwargs`
-        onebandplot_kwargs1 = dict({'cmap':'Greys', 'interpolation':'bilinear',                                  
-                                    'vmin':ds1[bands1].min().to_array()[0].item(), 
-                                    'vmax':ds1[bands1].max().to_array()[0].item()},
-                                    **onebandplot_kwargs1) 
-        
-        onebandplot_kwargs2 = dict({'cmap':'Greys', 'interpolation':'bilinear',
-                                    'vmin':ds2[bands2].min().to_array()[0].item(), 
-                                    'vmax':ds2[bands2].max().to_array()[0].item()},
-                                    **onebandplot_kwargs2) 
-        
-        # Set up annotation parameters that control font etc. The nested dict structure sets default 
-        # values which can be overwritten/customised by the manually specified `annotation_kwargs`
-        annotation_kwargs1 = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
-                                   'xytext':(-5, -5), 'textcoords':'offset points', 
-                                   'horizontalalignment':'right', 'verticalalignment':'top', 
-                                   'fontsize':15, 'color':'white', 
-                                   'path_effects':[PathEffects.withStroke(linewidth=3, foreground='black')]},
-                                   **annotation_kwargs1)
-        
-        annotation_kwargs2 = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
-                                   'xytext':(-5, -5), 'textcoords':'offset points', 
-                                   'horizontalalignment':'right', 'verticalalignment':'top', 
-                                   'fontsize':15, 'color':'white', 
-                                   'path_effects':[PathEffects.withStroke(linewidth=3, foreground='black')]},
-                                   **annotation_kwargs2)
-                                   
-        # Define default plotting parameters for the overlaying shapefile(s). The nested dict structure sets 
-        # default values which can be overwritten/customised by the manually specified `shapefile_kwargs`
-        shapefile_kwargs1 = dict({'linewidth': 2, 'edgecolor': 'black', 'facecolor': "#00000000"}, 
-                                 **shapefile_kwargs1) 
-                                 
-        shapefile_kwargs2 = dict({'linewidth': 2, 'edgecolor': 'black', 'facecolor': "#00000000"}, 
-                                 **shapefile_kwargs2) 
-        
-        ###################
-        # Initialise plot #
-        ################### 
         
         # First test if there are three bands, and that all exist in both datasets:
         if ((len(bands1) == 3) | (len(bands1) == 1)) & all([(b1 in ds1.data_vars) for b1 in bands1]) & \
            ((len(bands2) == 3) | (len(bands2) == 1)) & all([(b2 in ds2.data_vars) for b2 in bands2]):  
     
             # Import xarrays as lists of three band numpy arrays
-            imagelist1 = _ds_to_arrraylist(ds1, bands=bands1, reflect_stand=reflect_stand1,
-                                           time_dim=time_dim1, x_dim=x_dim1, y_dim=y_dim1, 
-                                          percentile_stretch=percentile_stretch1)
-            imagelist2 = _ds_to_arrraylist(ds2, bands=bands2, reflect_stand=reflect_stand2,
-                                           time_dim=time_dim2, x_dim=x_dim2, y_dim=y_dim2, 
-                                          percentile_stretch=percentile_stretch2)
+            imagelist1, vmin1, vmax1 = _ds_to_arrraylist(ds1, bands=bands1, 
+                                                         time_dim=time_dim1, x_dim=x_dim1, y_dim=y_dim1, 
+                                                         percentile_stretch=percentile_stretch1)
+            imagelist2, vmin2, vmax2 = _ds_to_arrraylist(ds2, bands=bands2, 
+                                                         time_dim=time_dim2, x_dim=x_dim2, y_dim=y_dim2, 
+                                                         percentile_stretch=percentile_stretch2)
+    
+            # Get time, x and y dimensions of dataset 
+            timesteps1 = len(ds1[time_dim1])  
+            timesteps2 = len(ds2[time_dim2])
+            width1 = len(ds1[x_dim1])
+            width2 = len(ds2[x_dim2])
+            height1 = len(ds1[y_dim1])
+            height2 = len(ds2[y_dim2])
+
+            # Calculate width vs height of plot
+            width_ratio = float(width1) / float(height1)
+            width = width1
+            height = 10.0 / width_ratio
+
+            # If title is supplied as a string, multiply out to a list with one string per timestep.
+            # Otherwise, use supplied list for plot titles.
+            if isinstance(title1, str) or isinstance(title1, bool):
+                title_list1 = [title1] * timesteps1   
+            else:
+                title_list1 = title1
+
+            # If title is supplied as a string, multiply out to a list with one string per timestep
+            if isinstance(title2, str) or isinstance(title2, bool):
+                title_list2 = [title2] * timesteps2  
+            else:
+                title_list2 = title2       
+
+            # Set up annotation parameters that plt.imshow plotting for single band array images. 
+            # The nested dict structure sets default values which can be overwritten/customised by the 
+            # manually specified `onebandplot_kwargs`
+            onebandplot_kwargs1 = dict({'cmap':'Greys', 'interpolation':'bilinear',                                  
+                                        'vmin':vmin1, 'vmax':vmax1},
+                                        **onebandplot_kwargs1) 
+
+            onebandplot_kwargs2 = dict({'cmap':'Greys', 'interpolation':'bilinear',
+                                        'vmin':vmin2, 'vmax':vmax2},
+                                        **onebandplot_kwargs2) 
+
+            # Set up annotation parameters that control font etc. The nested dict structure sets default 
+            # values which can be overwritten/customised by the manually specified `annotation_kwargs`
+            annotation_kwargs1 = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
+                                       'xytext':(-5, -5), 'textcoords':'offset points', 
+                                       'horizontalalignment':'right', 'verticalalignment':'top', 
+                                       'fontsize':15, 'color':'white', 
+                                       'path_effects':[PathEffects.withStroke(linewidth=3, foreground='black')]},
+                                       **annotation_kwargs1)
+
+            annotation_kwargs2 = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
+                                       'xytext':(-5, -5), 'textcoords':'offset points', 
+                                       'horizontalalignment':'right', 'verticalalignment':'top', 
+                                       'fontsize':15, 'color':'white', 
+                                       'path_effects':[PathEffects.withStroke(linewidth=3, foreground='black')]},
+                                       **annotation_kwargs2)
+
+            # Define default plotting parameters for the overlaying shapefile(s). The nested dict structure sets 
+            # default values which can be overwritten/customised by the manually specified `shapefile_kwargs`
+            shapefile_kwargs1 = dict({'linewidth': 2, 'edgecolor': 'black', 'facecolor': "#00000000"}, 
+                                     **shapefile_kwargs1) 
+
+            shapefile_kwargs2 = dict({'linewidth': 2, 'edgecolor': 'black', 'facecolor': "#00000000"}, 
+                                     **shapefile_kwargs2) 
             
+
+            ###################
+            # Initialise plot #
+            ################### 
+        
             # Set up figure
             fig, (ax1, ax2) = plt.subplots(ncols=2) 
             fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
