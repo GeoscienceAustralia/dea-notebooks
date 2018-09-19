@@ -19,3 +19,4 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
    ProduceFalseColourGeotiffs.ipynb
    PlottingAnimatedGifs.ipynb
    ExportingCompliantNetCDFs.ipynb
+   ExtractingContourLines.ipynb
