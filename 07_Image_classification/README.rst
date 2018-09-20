@@ -13,6 +13,9 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
 .. toctree::
    :maxdepth: 1
  
-   RandomForestClassification.ipynb
+
    DEA_WOfS_and_water_classifier.ipynb 
+   ExtractingContourLines.ipynb
    FindDamsUsingWOFLs.ipynb
+   RandomForestClassification.ipynb
+   
