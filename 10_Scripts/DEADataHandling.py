@@ -112,8 +112,7 @@ def load_nbarx(dc, sensor, query, product='nbart', bands_of_interest='', filter_
             ds.attrs['crs'] = crs
             ds.attrs['affine'] = affine
 
-        # Replace nodata values with nans
-
+            # Replace nodata values with nans
             ds = masking.mask_invalid_data(ds)
 
         return ds, crs, affine
@@ -149,6 +148,7 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
     crs - ds coordinate reference system
     affine - ds affine
     '''
+
     dataset = []
     print('loading {}'.format(product))
     if bands_of_interest:
@@ -162,7 +162,8 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         print('loaded {}'.format(product))
         if filter_cloud:
             print('making mask')
-            clear_pixels = np.logical_and(ds.pixel_quality != 0, ds.pixel_quality != 2, 
+            clear_pixels = np.logical_and(ds.pixel_quality != 0, 
+					  ds.pixel_quality != 2, 
                                           ds.pixel_quality != 3)
             ds = ds.where(clear_pixels)
         ds.attrs['crs'] = crs
@@ -505,7 +506,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
             # for compatibility with the existing dea-notebooks load_nbarx function.
             if bands_of_interest:
 
-                # Lazily load Landsat data using dask               
+                # Lazily load Sentinel 2 data using dask               
                 data = dc.load(product='{}_{}_granule'.format(sensor, product), 
                                measurements=bands_of_interest,
                                group_by='solar_day', 
@@ -516,13 +517,13 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
             # therefore return all available bands
             else:
 
-                # Lazily load Landsat data using dask  
+                # Lazily load Sentinel 2 data using dask  
                 data = dc.load(product='{}_{}_granule'.format(sensor, product),
                                group_by='solar_day', 
                                dask_chunks={'time': 1},
                                **query )              
             
-            # Load PQ data
+            # Lazily load Sentinel 2 PQ/fmask data
             pq = dc.load(product = '{}_{}_granule'.format(sensor, product),
                          measurements=[pixel_quality_band],
                          group_by = 'solar_day',
@@ -540,7 +541,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
             # Compute good data for each observation as a percentage of total array pixels
             data_perc = good_quality.sum(dim=['x', 'y']) / (good_quality.shape[1] * good_quality.shape[2])
 
-            # Add data_perc data to Sentinel dataset as a new xarray variable
+            # Add data_perc data to Sentinel 2 dataset as a new xarray variable
             data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
 
             # Filter and finally import data using dask
