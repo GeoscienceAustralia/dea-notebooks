@@ -30,7 +30,7 @@ BandIndices.py: calculating remote sensing band indices
      
 SpatialTools.py: Rasters/shapefile manipulation functions that do not rely on DEA (i.e. no dc.load or xarrays)
      - **rasterize_vector**: Rasterize a vector file and return as an array
-     - **layer_extent**: Computes min and max extents from GDAL layer features
+     - **contour_extract**: Extract contour lines from a two-dimensional array and optionally export contour line shapefile
      - **indices_to_coords**: Takes lists of x and y array indices and converts them to equivelent spatial x and y coordinates
      - **coords_to_indices**: Takes lists of x and y coordinates and converts to equivelent raster array cell indices
      - **raster_randomsample**: Generate a set of n random points within cells of a raster that contain data
