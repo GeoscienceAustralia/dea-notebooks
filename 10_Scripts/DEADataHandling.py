@@ -176,20 +176,24 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interest=None,
-                      product='nbart', masked_prop=0.99, mask_dict=None, apply_mask=False,
-                      ls7_slc_off=False, satellite_metadata=False):
+def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
+                      bands_of_interest=None, masked_prop=0.99, mask_dict=None,
+                      mask_pixel_quality=False, mask_invalid_data=True, ls7_slc_off=False, satellite_metadata=False):
     
     """
     Loads Landsat NBAR, NBART or FC25 and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
-    xarray dataset containing only observations that contain greater than a given proportion of clear pixels.    
-  
-    This function was designed to extract visually appealing time series of observations that are not
-    affected by cloud, for example as an input to the `animated_timeseries` function from `DEAPlotting`.
+    xarray dataset containing only observations that contain greater than a given proportion of good quality pixels.
+    This function can be used to extract visually appealing time series of observations that are not affected by cloud,
+    for example as an input to the `animated_timeseries` function from `DEAPlotting`.
     
-    The proportion of clear pixels is calculated by summing the pixels that are flagged as being problematic
-    in the Landsat PQ25 layer. By default only cloudy pixels or pixels without valid data in every band 
-    are included in the calculation, but this can be customised using the `mask_dict` function.
+    The proportion of clear pixels is calculated by summing the pixels that are not flagged as being poor quality
+    in the Landsat PQ25 layer. By default only cloudy pixels or pixels that are missing data in any band are
+    used to calculate the number of poor quality pixels, but this can be customised using the `mask_dict` parameter.
+    
+    MEMORY ISSUES: For large data extractions, it is recommended that you set both `mask_pixel_quality=False` and 
+    `mask_invalid_data=False`. Otherwise, all output variables will be coerced to float64 when NaN values are 
+    inserted into the array, potentially causing your data to use 4x as much memory. Be aware that the resulting
+    arrays will contain invalid -999 values which should be considered in analyses.
     
     Last modified: September 2018
     Author: Robbi Bishop-Taylor, Bex Dunn
@@ -207,30 +211,37 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
 
     :param product:
         An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to 'nbart'. For information on the difference, 
-        see the '02_DEA_datasets/Introduction_to_Landsat' or '02_DEA_datasets/Introduction_to_Fractional_Cover' 
-	notebooks from DEA-notebooks.
-        
+        see the '02_DEA_datasets/Introduction_to_Landsat' or '02_DEA_datasets/Introduction_to_Fractional_Cover'
+        notebooks from DEA-notebooks.
+
     :param bands_of_interest:
         An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
         'nir', 'swir1', 'swir2'; defaults to all available bands if no bands are specified.
 
     :param masked_prop:
         An optional float giving the minimum percentage of clear pixels required for a Landsat observation to be 
-        loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of unclear pixels).
+        loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of poor quality pixels).
             
     :param mask_dict:
-        An optional dict of arguments to the `masking.make_mask` function that can be used to identify clear 
-        observations from the PQ layer using alternative masking criteria. The default value of None masks out 
-        pixels flagged as cloud by either the ACCA or Fmask alogorithms, and that have values for every band 
-        (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
-        See the `02_DEA_datasets/Introduction_to_LandsatPQ.ipynb` notebook on DEA Notebooks for a list of all 
-	possible options.
+        An optional dict of arguments to the `masking.make_mask` function that can be used to identify good/poor
+        quality pixels from the PQ layer using alternative masking criteria. The default value of None masks
+        out pixels flagged as cloud by either the ACCA or Fmask algorithms, or pixels that are missing data in any
+        band (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
+        See the `02_DEA_datasets/Introduction_to_LandsatPQ.ipynb` notebook on DEA Notebooks for a list of all
+        possible options.
         
-    :param apply_mask:
-        An optional boolean indicating whether resulting observations should have the PQ mask applied to filter
-        out any remaining unclear cells. For example, if `masked_prop=0.99`, the filtered images may still contain
-        up to 1% unclear/cloudy pixels. The default of False simply returns the resulting observations without
-        masking out these pixels; True removes them using the mask. 
+    :param mask_pixel_quality:
+        An optional boolean indicating whether to apply the pixel quality mask to all observations that were not
+        filtered out for having less good quality pixels that `masked_prop`. For example, if `masked_prop=0.99`, the
+        filtered images may still contain up to 1% poor quality pixels. The default of False simply returns the
+        resulting observations without masking out these pixels; True masks them out and sets them to NaN using the
+        pixel quality mask, but has the side effect of changing the data type of the output arrays from int16 to
+        float64 which can cause memory issues. To reduce memory usage, set to False.
+        
+    :param mask_invalid_data:
+        An optional boolean indicating whether invalid -999 nodata values should be replaced with NaN. Defaults to
+        True; this has the side effect of changing the data type of the output arrays from int16 to float64 which
+        can cause memory issues. To reduce memory usage, set to False.
 
     :param ls7_slc_off:
         An optional boolean indicating whether to include data from after the Landsat 7 SLC failure (i.e. SLC-off).
@@ -238,11 +249,11 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
         
     :param satellite_metadata:
         An boolean indicating whether to return the dataset with a `satellite` variable that gives the name of
-        the satellite that made each observation in the timeseries (i.e. ls5, ls7, ls8). Defaults to False.
+        the satellite that made each observation in the timeseries (i.e. ls5, ls7, ls8). Defaults to False. 
     
     :returns:
         An xarray dataset containing only Landsat observations that contain greater than `masked_prop`
-        proportion of clear pixels.  
+        proportion of clear pixels.         
         
     :example:
     
@@ -266,7 +277,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     >>> # Load observations with less than 25% cloud from ls5, ls7 and ls8 as a single combined dataset
     >>> landsat_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, sensors=['ls5', 'ls7', 'ls8'], 
     ...                                    bands_of_interest=['red', 'green', 'blue'], 
-    ...                                    masked_prop=0.75, apply_mask=True, ls7_slc_off=True)
+    ...                                    masked_prop=0.75, mask_pixel_quality=True, ls7_slc_off=True)
     Loading ls5 PQ
         Loading 4 filtered ls5 timesteps
     Loading ls7 PQ
@@ -279,11 +290,11 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
     >>> len(landsat_ds.time) > 0
     True
                 
-    """
-    
+    """    
 
-    # List to save results from each sensor
+    # List to save results from each sensor and list to keep names of successfully processed sensors
     filtered_sensors = []
+    successfully_returned = []
 
     # Iterate through all sensors, returning only observations with > mask_prop clear pixels
     for sensor in sensors:
@@ -295,7 +306,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
             if bands_of_interest:
                 
                 # Lazily load Landsat data using dask              
-                data = dc.load(product='{}_{}_albers'.format(sensor, product),
+                data = dc.load(product=f'{sensor}_{product}_albers',
                                measurements=bands_of_interest,
                                group_by='solar_day', 
                                dask_chunks={'time': 1},
@@ -306,13 +317,13 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
             else:
                 
                 # Lazily load Landsat data using dask  
-                data = dc.load(product='{}_{}_albers'.format(sensor, product),
+                data = dc.load(product=f'{sensor}_{product}_albers',
                                group_by='solar_day', 
                                dask_chunks={'time': 1},
                                **query)             
 
             # Load PQ data
-            pq = dc.load(product='{}_pq_albers'.format(sensor),
+            pq = dc.load(product=f'{sensor}_pq_albers',
                          group_by='solar_day',
                          fuse_func=ga_pq_fuser,
                          dask_chunks={'time': 1},
@@ -330,7 +341,7 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
             pq = pq.sel(time=time)
 
             # Load PQ data using dask
-            print('Loading {} PQ'.format(sensor))
+            print('Loading {} pixel quality'.format(sensor))
             pq = pq.compute()
             
             # If a custom dict is provided for mask_dict, use these values to make mask from PQ
@@ -353,21 +364,22 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
             # Add data_perc data to Landsat dataset as a new xarray variable
             data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
 
-            # Filter and finally import data using dask
-            filtered = data.where(data.data_perc >= masked_prop, drop=True)
-            print('    Loading {} filtered {} timesteps'.format(len(filtered.time), sensor))
+            # Filter by data_perc to drop low quality observations and finally import data using dask
+            filtered = data.sel(time=data.data_perc >= masked_prop)
+            print(f'    Loading {len(filtered.time)} filtered {sensor} timesteps')
             filtered = filtered.compute()
             
-            # Optionally apply mask (instead of only filtering)
-            if apply_mask:
+            # Optionally apply pixel quality mask to all observations that were not dropped in previous step
+            if mask_pixel_quality:
                 filtered = filtered.where(good_quality)
 
-            # Optionally add satellite name
+            # Optionally add satellite name variable
             if satellite_metadata:
                 filtered['satellite'] = xr.DataArray([sensor] * len(filtered.time), [('time', filtered.time)])
 
-            # Append result to list
+            # Append result to list and add sensor name to list of successfully sensors
             filtered_sensors.append(filtered)
+            successfully_returned.append(sensor)
             
             # Close datasets
             filtered = None
@@ -378,34 +390,42 @@ def load_clearlandsat(dc, query, sensors=['ls5', 'ls7', 'ls8'], bands_of_interes
         except:
             
             # If there is no data for sensor or if another error occurs:
-            print('    Skipping {}'.format(sensor))
+            print(f'Loading {sensor} pixel quality\n    Skipping {sensor}; no valid data for query')
 
-    # Concatenate all sensors into one big xarray dataset, and then sort by time
-    print('Combining and sorting ls5, ls7 and ls8 data')
+    # Concatenate all sensors into one big xarray dataset, and then sort by time 
+    sensor_string = ", ".join(successfully_returned)
+    print(f'Combining and sorting {sensor_string} data')
     combined_ds = xr.concat(filtered_sensors, dim='time')
-    combined_ds = combined_ds.sortby('time')
-                                                               
-    # Filter to replace no data values with nans
-    combined_ds = masking.mask_invalid_data(combined_ds)
+    combined_ds = combined_ds.sortby('time')                                                               
+       
+    # Optionally filter to replace no data values with nans
+    if mask_invalid_data:
+        print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
+        combined_ds = masking.mask_invalid_data(combined_ds)
 
     # Return combined dataset
     return combined_ds
 
 
-def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['nbart_red', 'nbart_green', 'nbart_blue'],
-                        product='ard', masked_prop=0.99, mask_values=[0, 2, 3], apply_mask=False, 
-                        pixel_quality_band='fmask', satellite_metadata=False):
+def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
+                        bands_of_interest=('nbart_red', 'nbart_green', 'nbart_blue'),
+                        masked_prop=0.99, mask_values=(0, 2, 3), pixel_quality_band='fmask',
+                        mask_pixel_quality=False, mask_invalid_data=True, satellite_metadata=False):
     
     """
     Loads Sentinel 2 data for multiple sensors (i.e. s2a, s2b), and returns a single xarray dataset containing 
-    only observations that contain greater than a given proportion of clear pixels.    
-  
-    This can be used to extract visually appealing time series of observations that are not affected by cloud, 
-    for example as an input to the `animated_timeseries` function from `DEAPlotting`.
+    only observations that contain greater than a given proportion of good quality pixels. This can be used to extract
+    visually appealing time series of observations that are not affected by cloud, for example as an input to the
+    `animated_timeseries` function from `DEAPlotting`.
     
-    The proportion of clear pixels is calculated by summing the pixels that are flagged as being problematic
+    The proportion of good quality pixels is calculated by summing the pixels that are not flagged as poor quality
     in the Sentinel pixel quality array. By default pixels flagged as nodata, cloud or shadow are used to 
-    calculate the number of unclear pixels, but this can be customised using the `mask_values` function.
+    calculate the number of poor quality pixels, but this can be customised using the `mask_values` parameter.
+    
+    MEMORY ISSUES: For large data extractions, it is recommended that you set both `mask_pixel_quality=False` and 
+    `mask_invalid_data=False`. Otherwise, all output variables will be coerced to float64 when NaN values are 
+    inserted into the array, potentially causing your data to use 4x as much memory. Be aware that the resulting
+    arrays will contain invalid -999 values which should be considered in analyses.
     
     Last modified: September 2018
     Author: Robbi Bishop-Taylor
@@ -416,13 +436,13 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
     
     :param query: 
         A dict containing the query bounds. Can include lat/lon, time etc. If no `time` query is given, the 
-        function defaults to all timesteps available to all sensors (e.g. 2015 onward)
+        function defaults to all time steps available to all sensors (e.g. 2015 onward)
 
     :param sensors:
         An optional list of Sentinel 2 sensors to load data for. Options are 's2a', and 's2b'; defaults to both.
 
     :param product:
-        An optional string specifying the product to load. Defaults to 'ard', which is equivelent to loading
+        An optional string specifying the product to load. Defaults to 'ard', which is equivalent to loading
         e.g. `s2a_ard_granule`. 
         
     :param bands_of_interest:
@@ -430,28 +450,35 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
         `dc.list_measurements().loc['s2b_ard_granule']`. Defaults to `['nbart_red', 'nbart_green', 'nbart_blue']`.
 
     :param masked_prop:
-        An optional float giving the minimum percentage of clear pixels required for a Sentinel 2 observation to be 
-        loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of unclear pixels).  
+        An optional float giving the minimum percentage of good quality pixels required for a Sentinel 2 observation
+        to be loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of poor quality pixels).
     
     :param mask_values:
-        An optional list of pixel quality values to treat as invalid or unclear observations in the above `masked_prop`
-        calculation. The default is `[0, 2, 3]` which treats nodata, cloud and cloud shadow as unclear observations. 
+        An optional list of pixel quality values to treat as poor quality observations in the above `masked_prop`
+        calculation. The default is `[0, 2, 3]` which treats nodata, cloud and cloud shadow as poor quality.
         Choose from: `{'0': 'nodata', '1': 'valid', '2': 'cloud', '3': 'shadow', '4': 'snow', '5': 'water'}`.
-      
-    :param apply_mask:
-        An optional boolean indicating whether resulting observations should have the pixel_quality mask applied to 
-        mask out any remaining unclear cells. For example, if `masked_prop=0.99`, the filtered images may still 
-        contain up to 1% unclear/cloudy pixels. The default of False simply returns the resulting observations 
-        without masking out these pixels; True removes them using the mask so they appear as black pixels in the output. 
-    
+        
     :param pixel_quality_band:
         An optional string giving the name of the pixel quality band contained in the Sentinel 2 dataset. The default
         value is 'fmask'.
+      
+    :param mask_pixel_quality:
+        An optional boolean indicating whether to apply the pixel quality mask to all observations that were not
+        filtered out for having less good quality pixels that `masked_prop`. For example, if `masked_prop=0.99`, the
+        filtered images may still contain up to 1% poor quality pixels. The default of False simply returns the
+        resulting observations without masking out these pixels; True masks them out and sets them to NaN using the
+        pixel quality mask, but has the side effect of changing the data type of the output arrays from int16 to
+        float64 which can cause memory issues. To reduce memory usage, set to False.
+        
+    :param mask_invalid_data:
+        An optional boolean indicating whether invalid -999 nodata values should be replaced with NaN. Defaults to
+        True; this has the side effect of changing the data type of the output arrays from int16 to float64 which can
+        cause memory issues. To reduce memory usage, set to False.
         
     :param satellite_metadata:
-        An boolean indicating whether to return the dataset with a `satellite` variable that gives the name of
-        the satellite that made each observation in the timeseries (i.e. s2a, s2b). Defaults to False.
-    
+        An optional boolean indicating whether to return the dataset with a `satellite` variable that gives the name
+        of the satellite that made each observation in the time series (i.e. s2a, s2b). Defaults to False.
+        
     :returns:
         An xarray dataset containing only Sentinel 2 observations that contain greater than `masked_prop`
         proportion of clear pixels.  
@@ -480,7 +507,7 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
     >>> # Load observations with less than 70% cloud from both S2A and S2B as a single combined dataset
     >>> sentinel_ds = DEADataHandling.load_clearsentinel2(dc=dc, query=query, sensors=['s2a', 's2b'], 
     ...                                    bands_of_interest=['nbart_red', 'nbart_green', 'nbart_blue'], 
-    ...                                    masked_prop=0.3, apply_mask=True)
+    ...                                    masked_prop=0.3, mask_pixel_quality=True)
     Loading s2a PQ
         Loading 2 filtered s2a timesteps
     Loading s2b PQ
@@ -493,8 +520,9 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
       
     """
 
-    # List to save results from each sensor
+    # List to save results from each sensor and list to keep names of successfully processed sensors
     filtered_sensors = []
+    successfully_returned = []
 
     # Iterate through all sensors, returning only observations with > mask_prop clear pixels
     for sensor in sensors:
@@ -505,77 +533,77 @@ def load_clearsentinel2(dc, query, sensors=['s2a', 's2b'], bands_of_interest=['n
             # for compatibility with the existing dea-notebooks load_nbarx function.
             if bands_of_interest:
 
-                # Lazily load Landsat data using dask               
-                data = dc.load(product='{}_{}_granule'.format(sensor, product), 
+                # Lazily load Sentinel 2 data using dask
+                data = dc.load(product=f'{sensor}_{product}_granule',
                                measurements=bands_of_interest,
-                               group_by='solar_day', 
+                               group_by='solar_day',
                                dask_chunks={'time': 1},
-                               **query )
+                               **query)
 
-            # If no bands of interest given, run without specifying measurements, and 
+            # If no bands of interest given, run without specifying measurements, and
             # therefore return all available bands
             else:
 
-                # Lazily load Landsat data using dask  
-                data = dc.load(product='{}_{}_granule'.format(sensor, product),
-                               group_by='solar_day', 
+                # Lazily load Sentinel 2 data using dask
+                data = dc.load(product=f'{sensor}_{product}_granule',
+                               group_by='solar_day',
                                dask_chunks={'time': 1},
-                               **query )              
-            
+                               **query)
+
             # Load PQ data
-            pq = dc.load(product = '{}_{}_granule'.format(sensor, product),
+            print(f'Loading {sensor} pixel quality')
+            pq = dc.load(product=f'{sensor}_{product}_granule',
                          measurements=[pixel_quality_band],
-                         group_by = 'solar_day',
-                         dask_chunks={'time': 1},
+                         group_by='solar_day',
                          **query)
 
-            # Load PQ data using dask
-            print('Loading {} PQ'.format(sensor))
-            pq = pq.compute()
-            
             # Identify pixels with valid data
-            good_quality = np.isin(pq[pixel_quality_band], test_elements = mask_values, invert=True)
+            good_quality = np.isin(pq[pixel_quality_band], test_elements=mask_values, invert=True)
             good_quality = pq[pixel_quality_band].where(good_quality).notnull()
 
             # Compute good data for each observation as a percentage of total array pixels
             data_perc = good_quality.sum(dim=['x', 'y']) / (good_quality.shape[1] * good_quality.shape[2])
 
-            # Add data_perc data to Sentinel dataset as a new xarray variable
+            # Add data_perc data to Sentinel 2 dataset as a new xarray variable
             data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
 
-            # Filter and finally import data using dask
-            filtered = data.where(data.data_perc >= masked_prop, drop=True)
-            print('    Loading {} filtered {} timesteps'.format(len(filtered.time), sensor))
+            # Filter by data_perc to drop low quality observations and finally import data using dask
+            filtered = data.sel(time=data.data_perc >= masked_prop)
+            print(f'    Loading {len(filtered.time)} filtered {sensor} timesteps')
             filtered = filtered.compute()
 
-            # Optionally apply mask (instead of only filtering)
-            if apply_mask:
+            # Optionally apply pixel quality mask to all observations that were not dropped in previous step
+            if mask_pixel_quality:
                 filtered = filtered.where(good_quality)
 
             # Optionally add satellite name
             if satellite_metadata:
                 filtered['satellite'] = xr.DataArray([sensor] * len(filtered.time), [('time', filtered.time)])
 
-            # Append result to list
+            # Append result to list and add sensor name to list of successfully sensors
             filtered_sensors.append(filtered)
+            successfully_returned.append(sensor)
 
             # Close datasets
             filtered = None
             good_quality = None
-            data = None  
+            data = None
      
         except:
-        
+
             # If there is no data for sensor or if another error occurs:
-            print('    Skipping {}'.format(sensor))                    
+            print(f'    Skipping {sensor}; no valid data for query')
 
     # Concatenate all sensors into one big xarray dataset, and then sort by time
-    print('Combining and sorting Sentinel 2 data')
+    sensor_string = ", ".join(successfully_returned)
+    print(f'Combining and sorting {sensor_string} data')
     combined_ds = xr.concat(filtered_sensors, dim='time')
     combined_ds = combined_ds.sortby('time')
                                                                
-    # Filter to replace no data values with nans
-    combined_ds = masking.mask_invalid_data(combined_ds)
+    # Optionally filter to replace invalid data values with nans
+    if mask_invalid_data:
+        print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
+        combined_ds = masking.mask_invalid_data(combined_ds)
 
     # Return combined dataset
     return combined_ds
