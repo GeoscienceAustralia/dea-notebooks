@@ -278,13 +278,14 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     >>> landsat_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, sensors=['ls5', 'ls7', 'ls8'], 
     ...                                    bands_of_interest=['red', 'green', 'blue'], 
     ...                                    masked_prop=0.75, mask_pixel_quality=True, ls7_slc_off=True)
-    Loading ls5 PQ
+    Loading ls5 pixel quality
         Loading 4 filtered ls5 timesteps
-    Loading ls7 PQ
+    Loading ls7 pixel quality
         Loading 29 filtered ls7 timesteps
-    Loading ls8 PQ
+    Loading ls8 pixel quality
         Loading 3 filtered ls8 timesteps
-    Combining and sorting ls5, ls7 and ls8 data
+    Combining and sorting ls5, ls7, ls8 data
+        Replacing invalid -999 values with NaN (data will be coerced to float64)
 
     >>> # Test that function returned data
     >>> len(landsat_ds.time) > 0
@@ -508,11 +509,12 @@ def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
     >>> sentinel_ds = DEADataHandling.load_clearsentinel2(dc=dc, query=query, sensors=['s2a', 's2b'], 
     ...                                    bands_of_interest=['nbart_red', 'nbart_green', 'nbart_blue'], 
     ...                                    masked_prop=0.3, mask_pixel_quality=True)
-    Loading s2a PQ
-        Loading 2 filtered s2a timesteps
-    Loading s2b PQ
+    Loading s2a pixel quality
+        Loading 3 filtered s2a timesteps
+    Loading s2b pixel quality
         Loading 2 filtered s2b timesteps
-    Combining and sorting Sentinel 2 data
+    Combining and sorting s2a, s2b data
+        Replacing invalid -999 values with NaN (data will be coerced to float64)
 
     >>> # Test that function returned data
     >>> len(sentinel_ds.time) > 0
