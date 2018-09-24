@@ -54,7 +54,7 @@ def calculate_indices(ds, index):
                     indexout = ((ds.nbar_green - ds.nbar_nir_1)/(ds.nbar_green + ds.nbar_nir_1))
                 except:
                     print('Error! NDWI requires green and nir bands')
-    elif index == 'NDWI-swir1':
+    elif index == 'ModifiedNDWI':
         print('The formula we are using is (green - swir1)/(green + swir1)')
         try:
             indexout = ((ds.green - ds.swir1)/(ds.green + ds.swir1))
@@ -123,7 +123,7 @@ def calculate_indices(ds, index):
         return indexout
     except:
         print('Hmmmmm. I don\'t recognise that index. '
-              'Options I currently have are NDVI, GNDVI, NDMI-green, NDMI-nir and NDWI.')
+              'Options I currently have are NDVI, GNDVI, NDMI-green, NDMI-nir, NDWI and ModifiedNDWI.')
 
 
 def geological_indices(ds, index):
