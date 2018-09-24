@@ -10,10 +10,11 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
 .. toctree::
    :maxdepth: 1
 
-   PolygonDrill.ipynb
-   PixelDrillWithWidgets.ipynb
-   Interactive_phenology_plot_tagged.ipynb
    Hovmoller_TCI_Multi-site.ipynb
    Hovmoller_TCI_and_Rainfall.ipynb
    Hovmoller_NDVI.ipynb
    Hovmoller_NDVI_Multi-site.ipynb 
+   Interactive_phenology_plot_tagged.ipynb
+   LoadingCloudfreeSentinel2andLandsat.ipynb
+   PolygonDrill.ipynb
+   PixelDrillWithWidgets.ipynb
