@@ -162,8 +162,8 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         print('loaded {}'.format(product))
         if filter_cloud:
             print('making mask')
-            clear_pixels = np.logical_and(ds.pixel_quality != 0, ds.pixel_quality != 2, 
-                                          ds.pixel_quality != 3)
+            clear_pixels = np.logical_and(np.logical_and(ds.fmask != 0, ds.fmask != 2),
+                              ds.fmask != 3)
             ds = ds.where(clear_pixels)
         ds.attrs['crs'] = crs
         ds.attrs['affine'] = affine
