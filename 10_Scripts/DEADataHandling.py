@@ -334,7 +334,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
             if not ls7_slc_off and sensor == 'ls7':
 
                 print('Ignoring SLC-off observations for ls7')
-                data = data.where(data.time < np.datetime64('2003-05-30'), drop=True) 
+                data = data.sel(time=data.time < np.datetime64('2003-05-30'))
 
             # Return only Landsat observations that have matching PQ data 
             time = (data.time - pq.time).time
