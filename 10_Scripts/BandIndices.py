@@ -1,5 +1,5 @@
-## BandIndices.py
-'''
+# BandIndices.py
+"""
 This code allows for the quick calculation of remote sensing band indices.
 
 Date: June 2018
@@ -10,15 +10,15 @@ Available functions:
     geological_indices : CMR, FMR, IOR
     tasseled_cap       : Brightness, Greenness, Wetness
 
-
-'''
+"""
 #Load modules
 import dask
 import numpy as np
 import xarray as xr
 
 def calculate_indices(ds, index):
-    '''
+
+    """
     Available indices are all calculated within the same function. If an
     index is requested that is not coded in the function, an error is
     raised.
@@ -39,52 +39,95 @@ def calculate_indices(ds, index):
     outputs:
     indexout - result of the index calculation
     
-    '''
+    """
 
-    if index == 'NDWI':
+    if index == 'NDWI-nir':
         print('The formula we are using is (green - nir)/(green + nir)')
         try:
             indexout = ((ds.green - ds.nir)/(ds.green + ds.nir))
         except AttributeError:
             try:
-                indexout = ((ds.green - ds.nir1)/(ds.green + ds.nir1))
-            except:
-                print('Error! NDWI requires green and nir bands')
+                # Assume the user wants to use nbart unless they explicity state otherwise
+                indexout = ((ds.nbart_green - ds.nbart_nir_1)/(ds.nbart_green + ds.nbart_nir_1))
+            except AttributeError:
+                try:
+                    indexout = ((ds.nbar_green - ds.nbar_nir_1)/(ds.nbar_green + ds.nbar_nir_1))
+                except:
+                    print('Error! NDWI requires green and nir bands')
+    elif index == 'NDWI-swir1':
+        print('The formula we are using is (green - swir1)/(green + swir1)')
+        try:
+            indexout = ((ds.green - ds.swir1)/(ds.green + ds.swir1))
+        except AttributeError:
+            try:
+                # Assume the user wants to use nbart unless they explicity state otherwise
+                indexout = ((nbart_green - ds.nbart_swir_1)/(nbart_green + ds.nbart_swir_1))
+            except AttributeError:
+                try:
+                    indexout = ((nbar_green - ds.nbar_swir_1)/(nbar_green + ds.nbar_swir_1))
+                except:
+                    print('Error! NDWI requires green and swir1 bands')
     elif index == 'NDVI':
         print('The formula we are using is (nir - red)/(nir + red)')
         try:
             indexout = ((ds.nir - ds.red)/(ds.nir + ds.red))
         except AttributeError:
             try:
-                indexout = ((ds.nir1 - ds.red)/(ds.nir1 + ds.red))
-            except:
-                print('Error! NDVI requires red and nir bands')  
+                # Assume the user wants to use nbart unless they explicity state otherwise
+                indexout = ((ds.nbart_nir_1 - ds.nbart_red)/(ds.nbart_nir_1 + ds.nbart_red))
+            except AttributeError:
+                try:
+                    indexout = ((ds.nbar_nir_1 - ds.nbar_red)/(ds.nbar_nir_1 + ds.nbar_red))
+                except:
+                    print('Error! NDVI requires red and nir bands')  
     elif index == 'GNDVI':
         print('The formula we are using is (nir - green)/(nir + green)')
         try:
             indexout = ((ds.nir - ds.green)/(ds.nir + ds.green))
         except AttributeError:
             try:
-                indexout = ((ds.nir1 - ds.green)/(ds.nir1 + ds.green))
-            except:
-                print('Error! GNDVI requires green and nir bands')
-    elif index == 'NDMI':
+                # Assume the user wants to use nbart unless they explicity state otherwise
+                indexout = ((ds.nbart_nir_1 - ds.nbart_green)/(ds.nbart_nir_1 + ds.nbart_green))
+            except AttributeError:
+                try:
+                    indexout = ((ds.nbar_nir_1 - ds.nbar_green)/(ds.nbar_nir_1 + ds.nbar_green))
+                except:
+                    print('Error! GNDVI requires green and nir bands')
+    elif index == 'NDMI-green':
+        print('The formula we are using is (swir1 - green)/(swir1 + green)')
+        try:
+            indexout = ((ds.swir1 - ds.green)/(ds.swir1 + ds.green))
+        except AttributeError:
+            try:
+                # Assume the user wants to use nbart unless they explicity state otherwise
+                indexout = ((ds.nbart_swir_1 - ds.nbart_green)/(ds.nbart_swir_1 + ds.nbart_green))
+            except AttributeError:
+                try:
+                    indexout = ((ds.nbar_swir_1 - ds.nbar_green)/(ds.nbar_swir_1 + ds.nbar_green))
+                except:
+                    print('Error! NDMI-green requires green and swir1 bands')
+    elif index == 'NDMI-nir':
         print('The formula we are using is (nir - swir1)/(nir + swir1)')
         try:
             indexout = ((ds.nir - ds.swir1)/(ds.nir + ds.swir1))
         except AttributeError:
             try:
-                indexout = ((ds.nir1 - ds.swir1)/(ds.nir1 + ds.swir1))
-            except:
-                print('Error! NDVI requires swir1 and nir bands')  
+                # Assume the user wants to use nbart unless they explicity state otherwise
+                indexout = ((ds.nbart_nir_1 - ds.nbart_swir_1)/(ds.nbart_nir_1 + ds.nbart_swir_1))
+            except AttributeError:
+               try: 
+                   indexout = ((ds.nbar_nir_1 - ds.nbar_swir_1)/(ds.nbar_nir_1 + ds.nbar_swir_1))
+               except:
+                   print('Error! NDMI-nir requires nir and swir1 bands')
     try:
         return indexout
     except:
         print('Hmmmmm. I don\'t recognise that index. '
-              'Options I currently have are NDVI, GNDVI, NDMI and NDWI.')
+              'Options I currently have are NDVI, GNDVI, NDMI-green, NDMI-nir and NDWI.')
+
 
 def geological_indices(ds, index):
-    '''
+    """
     Available indices are all calculated within the same function. If an
     index is requested that is not coded in the function, an error is
     raised.
@@ -105,29 +148,44 @@ def geological_indices(ds, index):
     indexout - result of the index calculation
 
     Reference: http://www.harrisgeospatial.com/docs/BackgroundGeologyIndices.html
-        '''
+    """
 
     if index == 'CMR':
         print('The formula we are using for Clay Minerals Ratio is (swir1 / swir2)')
         try:
             indexout = (ds.swir1 / ds.swir2)
         except AttributeError:
-            print('Error! Clay Minerals Ratio requires swir1 and swir2 bands')
+            try:
+                indexout = (ds.nbart_swir_1 / ds.nbart_swir_2)
+            except AttributeError:
+                try:
+                    indexout = (ds.nbar_swir_1 / ds.nbar_swir_2)
+                except:
+                    print('Error! Clay Minerals Ratio requires swir1 and swir2 bands')
     elif index == 'FMR':
         print('The formula we are using for Ferrous Minerals Ratio is (swir1 / nir)')
         try:
             indexout = (ds.swir1 / ds.nir)
         except AttributeError:
             try:
-                indexout = (ds.swir1 / ds.nir1)
-            except:
-                print('Error! Ferrous Minerals Ratio requires swir1 and nir bands')  
+                indexout = (ds.nbart_swir_1 / ds.nbart_nir_1)
+            except AttributeError:
+                try:
+                    indexout = (ds.nbar_swir_1 / ds.nbar_nir_1)
+                except:
+                    print('Error! Ferrous Minerals Ratio requires swir1 and nir bands')  
     elif index == 'IOR':
         print('The formula we are using for Iron Oxide Ratio is (red / blue)')
         try:
             indexout = (ds.red / ds.blue)
         except AttributeError:
-            print('Error! Iron Oxide Ratio requires red and blue bands')
+            try:
+                indexout = (ds.nbart_red / ds.nbart_blue)
+            except AttributeError:
+                try:
+                    indexout = (ds.nbar_red / ds.nbar_blue)
+                except:
+                    print('Error! Iron Oxide Ratio requires red and blue bands')
     try:
         return indexout
     except:
