@@ -18,3 +18,4 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
    LoadingCloudfreeSentinel2andLandsat.ipynb
    PolygonDrill.ipynb
    PixelDrillWithWidgets.ipynb
+   InterrogateCropPolygonForPhenology.ipynb
