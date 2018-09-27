@@ -286,7 +286,7 @@ def contour_extract(z_values, ds_array, ds_crs, ds_affine, output_shp=None, min_
             # Set up output multiline shapefile properties
             schema = {'geometry': 'MultiLineString',
                       'properties': attribute_dtypes}
-
+            
             # Create output shapefile for writing
             with fiona.open(output_shp, 'w',
                             crs={'init': str(ds_crs), 'no_defs': True},
