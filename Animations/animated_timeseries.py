@@ -9,6 +9,7 @@ import datacube
 import numpy as np
 import pandas as pd
 import xarray as xr
+from functools import partial
 from datacube.utils import geometry
 from datacube.utils.geometry import CRS
 from datacube import Datacube
@@ -77,7 +78,7 @@ def hsv_image_processing(rgb_array,
     # Apply unsharp mask and take average
     a = unsharp_mask(hsv_array[:, :, 2], radius=unsharp_radius1, amount=unsharp_amount1)
     b = unsharp_mask(hsv_array[:, :, 2], radius=unsharp_radius2, amount=unsharp_amount2)
-    hsv_array[:, :, 2] = np.mean( np.array([ a, b ]), axis=0)
+    hsv_array[:, :, 2] = np.mean(np.array([a, b]), axis=0)
     
     # Convert back to RGB
     return hsv2rgb(hsv_array.clip(0, 1))
@@ -87,24 +88,80 @@ def hsv_image_processing(rgb_array,
 # Set up analysis variables #
 #############################
 
-# Channel country
-lat, lon, buffer_m = -25.63, 142.449760, 20000
-time_range = ('2008-06-01', '2018-12-01')
-resolution = (-50, 50)
-landsat_clearprop = 0.98
+# # Channel country
+# study_area = 'channelcountry'
+# lat, lon, buffer_m = -25.63, 142.449760, 20000
+# time_range = ('1986-06-01', '2018-12-01')
+# resolution = (-50, 50)
+# landsat_clearprop = 0.98
+# sentinel_clearprop = 0.8
+# landsat_sensors = ['ls5', 'ls7', 'ls8']
+# sentinel_sensors = None  # ['s2a', 's2b']
+# bands = ['swir1', 'nir', 'green']  # ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels=1200
+# interval = 30
+# rolling_median = 13
+# interpolation_freq = '12D'
+# image_proc_func = hsv_image_processing
+
+# # Canberra
+# study_area = 'canberra'
+# lat, lon, buffer_m = -35.3082, 149.1244, 18000
+# time_range = ('1986-06-01', '2018-12-01')
+# resolution = (-25, 25)
+# landsat_clearprop = 0.96
+# sentinel_clearprop = 0.8
+# landsat_sensors = ['ls5', 'ls7', 'ls8']
+# sentinel_sensors = None  # ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.01, 0.99]
+# width_pixels = 2560
+# interval = 100
+# rolling_median = 25
+# interpolation_freq = None
+# image_proc_func = partial(hsv_image_processing, val_mult=1.01,
+#                           unsharp_radius1=20, unsharp_amount1=0.3,
+#                           unsharp_radius2=1, unsharp_amount2=0)
+
+# # Gungahlin
+# study_area = 'gungahlin'
+# lat, lon, buffer_m = -35.191608, 149.132524, 7500
+# time_range = ('1986-06-01', '2018-12-01')
+# resolution = (-25, 25)
+# landsat_clearprop = 0.96
+# sentinel_clearprop = 0.8
+# landsat_sensors = ['ls5', 'ls7', 'ls8']
+# sentinel_sensors = None  # ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels = 2560
+# interval = 80
+# rolling_median = 31
+# interpolation_freq = None
+# image_proc_func = partial(hsv_image_processing, val_mult=1.01,
+#                           unsharp_radius1=20, unsharp_amount1=0.4,
+#                           unsharp_radius2=1, unsharp_amount2=0)
+
+# Molonglo
+study_area = 'molonglo'
+lat, lon, buffer_m = -35.307688, 149.032756, 5500
+time_range = ('1999-01-01', '2018-12-01')
+resolution = (-25, 25)
+landsat_clearprop = 0.96
 sentinel_clearprop = 0.8
 landsat_sensors = ['ls5', 'ls7', 'ls8']
 sentinel_sensors = None  # ['s2a', 's2b']
-bands = ['nir', 'swir1', 'green']  # ['red', 'green', 'blue']
+bands = ['red', 'green', 'blue']
 percentile_stretch = [0.005, 0.995]
-rolling_median = 13
-interpolation_freq = '7D'
+width_pixels = 2560
+interval = 120
+rolling_median = 7
+interpolation_freq = None #'14D'
+image_proc_func = partial(hsv_image_processing, val_mult=1.01,
+                          unsharp_radius1=20, unsharp_amount1=0.4,
+                          unsharp_radius2=1, unsharp_amount2=0)
 
-# # Canberra
-# lat, lon, buffer_m = -35.314986397, 149.084948595, 18000
-# time_range = ('1986-06-01', '2019-06-01')
-# resolution = (-50, 50)
-# landsat_clearprop, sentinel_clearprop = 0.96, 0.8
 
 
 ##############################
@@ -132,7 +189,6 @@ landsat_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query,
                                                mask_pixel_quality=False,
                                                mask_invalid_data=False,
                                                ls7_slc_off=False)
-
 
 #################################
 # Load in Sentinel 2 timeseries #
@@ -192,12 +248,12 @@ if interpolation_freq:
 # Produce an RGB animation that includes both Sentinel and Landsat observations, using
 # the `title` parameter to print satellite names for each observation
 DEAPlotting.animated_timeseries(ds=combined_ds,
-                                output_path='combined_Landsat_Sentinel2_channelcountry.mp4', 
+                                output_path=f'animated_timeseries_{study_area}.mp4',
                                 bands=bands,
-                                interval=30,
-                                width_pixels=1280,
+                                interval=interval,
+                                width_pixels=width_pixels,
                                 percentile_stretch=percentile_stretch,
                                 show_date=False,
                                 title=combined_ds.time.dt.year.values.tolist(),
-                                image_proc_func=hsv_image_processing)
+                                image_proc_func=image_proc_func)
 

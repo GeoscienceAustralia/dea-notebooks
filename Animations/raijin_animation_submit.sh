@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PBS="#!/bin/bash\n\
-#PBS -N landsat_sentinel\n\
+#PBS -N animated_timeseries\n\
 #PBS -o PBS_output/animations.out\n\
 #PBS -e PBS_output/animations.err\n\
 #PBS -P r78\n\
