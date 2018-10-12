@@ -5,12 +5,18 @@ within the water body classifed as wet at each time step is recorded and written
 To run this workflow, you will need to use the following notebooks:
 (Note that the WOFS frequency netCDF files need to be produced using the datacube-stats code prior to 
 using these notebooks). 
-1. FindLotsofDamsUsingWOFLs.ipynb
+
+1. FindLotsofDamsUsingWOFLsInaLoop.ipynb
     * Requires a folder of netCDF tiles of WOFS summaries for the chosen time and spatial area
 2. GetDamTimeHistoryParallel.ipynb
     * This code requires that you assign a record attribute called 'ID' to the shapefile
     * Uses the shape file written out by notebook one, and generates csv files of the polygon water history
     * Note that this code is parallelised to run on the VDI
-3. QuickPlotofWaterBodyTimeseries.ipynb
+3. ../WaterLevelSnapshot[Latest/PickTime].ipynb
+    * Loops through each text file created in step 2 and grabs either the latest observation, or observation
+    closest to a given date to create a time snapshot of water body conditions. This is then appended to the shapefile
+    created in step 2.
+
+4. QuickPlotofWaterBodyTimeseries.ipynb
     * This quick and dirty notebook takes in a water body ID (you can find this by pulling the shapefile from 
     notebook one into QGIS) and quickly plots up the water timeseries. 
