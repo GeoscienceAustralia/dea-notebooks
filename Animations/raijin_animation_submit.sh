@@ -14,9 +14,7 @@ PBS="#!/bin/bash\n\
 module use /g/data/v10/public/modules/modulefiles\n\
 module load dea/20180926\n\
 module load ffmpeg\n\
-python /g/data/r78/rt1527/dea-notebooks/Animations/animated_timeseries.py"
+python /g/data/r78/rt1527/dea-notebooks/Animations/animated_geomedian.py"
 
 echo -e ${PBS} | qsub
 echo "Submitting data"
-
-

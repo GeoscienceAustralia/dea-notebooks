@@ -93,6 +93,7 @@ def hsv_image_processing(rgb_array,
 # lat, lon, buffer_m = -25.63, 142.449760, 20000
 # time_range = ('1986-06-01', '2018-12-01')
 # resolution = (-50, 50)
+# ratio = (1280/720.0)
 # landsat_clearprop = 0.98
 # sentinel_clearprop = 0.8
 # landsat_sensors = ['ls5', 'ls7', 'ls8']
@@ -110,6 +111,7 @@ def hsv_image_processing(rgb_array,
 # lat, lon, buffer_m = -35.3082, 149.1244, 18000
 # time_range = ('1986-06-01', '2018-12-01')
 # resolution = (-25, 25)
+# ratio = (1280/720.0)
 # landsat_clearprop = 0.96
 # sentinel_clearprop = 0.8
 # landsat_sensors = ['ls5', 'ls7', 'ls8']
@@ -129,6 +131,7 @@ def hsv_image_processing(rgb_array,
 # lat, lon, buffer_m = -35.191608, 149.132524, 7500
 # time_range = ('1986-06-01', '2018-12-01')
 # resolution = (-25, 25)
+# ratio = (1280/720.0)
 # landsat_clearprop = 0.96
 # sentinel_clearprop = 0.8
 # landsat_sensors = ['ls5', 'ls7', 'ls8']
@@ -143,25 +146,45 @@ def hsv_image_processing(rgb_array,
 #                           unsharp_radius1=20, unsharp_amount1=0.4,
 #                           unsharp_radius2=1, unsharp_amount2=0)
 
-# Molonglo
-study_area = 'molonglo'
-lat, lon, buffer_m = -35.307688, 149.032756, 5500
-time_range = ('1999-01-01', '2018-12-01')
-resolution = (-25, 25)
-landsat_clearprop = 0.96
+# # Molonglo
+# study_area = 'molonglo'
+# lat, lon, buffer_m = -35.307688, 149.032756, 5500
+# time_range = ('1999-01-01', '2018-12-01')
+# resolution = (-25, 25)
+# ratio = (1280/720.0)
+# landsat_clearprop = 0.96
+# sentinel_clearprop = 0.8
+# landsat_sensors = ['ls5', 'ls7', 'ls8']
+# sentinel_sensors = None  # ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels = 2560
+# interval = 120
+# rolling_median = 7
+# interpolation_freq = None #'14D'
+# image_proc_func = partial(hsv_image_processing, val_mult=1.01,
+#                           unsharp_radius1=20, unsharp_amount1=0.4,
+#                           unsharp_radius2=1, unsharp_amount2=0)
+
+# Sydney
+study_area = 'melbourne'
+lat, lon, buffer_m = -37.9067852366, 144.953384712, 38000
+time_range = ('2016-01-01', '2018-12-01')
+resolution = (-100, 100)
+ratio = 1.0
+landsat_clearprop = 0.5
 sentinel_clearprop = 0.8
 landsat_sensors = ['ls5', 'ls7', 'ls8']
 sentinel_sensors = None  # ['s2a', 's2b']
 bands = ['red', 'green', 'blue']
-percentile_stretch = [0.005, 0.995]
-width_pixels = 2560
-interval = 120
-rolling_median = 7
-interpolation_freq = None #'14D'
+percentile_stretch = [0.01, 0.99]
+width_pixels = 700
+interval = 100
+rolling_median = 50
+interpolation_freq = None
 image_proc_func = partial(hsv_image_processing, val_mult=1.01,
-                          unsharp_radius1=20, unsharp_amount1=0.4,
+                          unsharp_radius1=20, unsharp_amount1=0.3,
                           unsharp_radius2=1, unsharp_amount2=0)
-
 
 
 ##############################
@@ -172,7 +195,7 @@ image_proc_func = partial(hsv_image_processing, val_mult=1.01,
 # This simply converts a lat long to Australian Albers, then creates a square analysis region
 # by creating a square buffer around the point.
 x, y = geometry.point(lon, lat, CRS('WGS84')).to_crs(CRS('EPSG:3577')).points[0]
-query = {'x': (x - buffer_m * (1280/720.0), x + buffer_m * (1280/720.0)),
+query = {'x': (x - buffer_m * ratio, x + buffer_m * ratio),
          'y': (y - buffer_m, y + buffer_m),    
          'time': time_range,
          'crs': 'EPSG:3577',
@@ -188,6 +211,7 @@ landsat_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query,
                                                masked_prop=landsat_clearprop, 
                                                mask_pixel_quality=False,
                                                mask_invalid_data=False,
+                                               mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud'},
                                                ls7_slc_off=False)
 
 #################################

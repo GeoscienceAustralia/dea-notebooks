@@ -614,6 +614,9 @@ def reproject_to_template(input_raster, template_raster, output_raster, resoluti
     data_type = input_ds.GetRasterBand(1).DataType
     n_bands = input_ds.RasterCount  
     
+    # Set nodata
+    input_ds.GetRasterBand(1).SetNoDataValue(nodata_val)    
+    
     # Import raster to use as template
     template_ds = gdal.Open(template_raster)   
     template_proj = template_ds.GetProjection()

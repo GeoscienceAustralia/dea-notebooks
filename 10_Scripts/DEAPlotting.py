@@ -389,8 +389,8 @@ def animated_timeseries(ds, output_path,
             annotation_kwargs = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
                                       'xytext':(-5, -5), 'textcoords':'offset points', 
                                       'horizontalalignment':'right', 'verticalalignment':'top', 
-                                      'fontsize':25, 'color':'white', 
-                                      'path_effects':[PathEffects.withStroke(linewidth=4, foreground='black')]},
+                                      'fontsize':28, 'color':'black', 
+                                      'path_effects':[PathEffects.withStroke(linewidth=3, foreground='white')]},
                                       **annotation_kwargs)
             
             ###################
@@ -456,9 +456,10 @@ def animated_timeseries(ds, output_path,
             
             # Optionally add colourbar for one band images
             if (len(bands) == 1) & onebandplot_cbar:                
-                _add_colourbar(ax1, im, fontsize=20,
+                _add_colourbar(ax1, im, fontsize=15,
                                vmin=onebandplot_kwargs['vmin'], 
-                               vmax=onebandplot_kwargs['vmax'])
+                               vmax=onebandplot_kwargs['vmax'],
+                               cmap=onebandplot_kwargs['cmap'])
 
 
             ########################################
@@ -1399,7 +1400,8 @@ def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch, ima
 
             # Create new one band array
             img_toshow = exposure.rescale_intensity(ds_i[bands[0]].values, 
-                                                    in_range=(p_low, p_high))
+                                                    in_range=(p_low, p_high),
+                                                    out_range='image')
 
         else:
 
@@ -1412,7 +1414,8 @@ def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch, ima
                 rawimg[:, :, band] = ds_i[colour].values
 
             # Stretch contrast using percentile values
-            img_toshow = exposure.rescale_intensity(rawimg, in_range=(p_low, p_high),
+            img_toshow = exposure.rescale_intensity(rawimg, 
+                                                    in_range=(p_low, p_high),
                                                     out_range=(0, 1.0))
 
             # Optionally image processing
@@ -1425,19 +1428,44 @@ def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch, ima
     return array_list, p_low, p_high
 
 
-def _add_colourbar(ax, im, vmin, vmax, fontsize):
+def _add_colourbar(ax, im, vmin, vmax, fontsize, cmap='Greys'):
 
     """
     Add a nicely formatted colourbar to an animation panel
     """
+    import matplotlib
+    cmap = matplotlib.cm.get_cmap(cmap)
+    rgb = cmap([0])[:, 0:3] * 255
+    brightness1 = rgb[:, 0] * 0.299 + rgb[:, 1] * 0.587 + rgb[:, 2] * 0.114
+    rgb = cmap([0.5])[:, 0:3] * 255
+    brightness2 = rgb[:, 0] * 0.299 + rgb[:, 1] * 0.587 + rgb[:, 2] * 0.114
+    rgb = cmap([1.0])[:, 0:3] * 255
+    brightness3 = rgb[:, 0] * 0.299 + rgb[:, 1] * 0.587 + rgb[:, 2] * 0.114
+    print(brightness1, brightness2, brightness3)
 
     # Add colourbar
-    axins2 = inset_axes(ax, width="90%", height="3%", loc=8) 
-    plt.gcf().colorbar(im, cax=axins2, orientation="horizontal", ticks=np.linspace(vmin, vmax, 3)) 
-    axins2.xaxis.set_ticks_position("top")
-    axins2.tick_params(axis='x', colors='white', labelsize=fontsize, pad=1, length=0)
+    axins2 = inset_axes(ax, width='97%', height='4%', loc=8, borderpad=1) 
+    plt.gcf().colorbar(im, cax=axins2, orientation='horizontal', ticks=np.linspace(vmin, vmax, 3)) 
+    axins2.xaxis.set_ticks_position('top')
+    axins2.tick_params(axis='x', colors='white', labelsize=fontsize, pad=-23, length=0)
+    
+    # Justify left and right labels to edge of plot
     axins2.get_xticklabels()[0].set_horizontalalignment('left')
-    axins2.get_xticklabels()[-1].set_horizontalalignment('right') 
+    axins2.get_xticklabels()[-1].set_horizontalalignment('right')
+    labels = [item.get_text() for item in axins2.get_xticklabels()]
+    labels[0] = '  ' + labels[0]
+    labels[-1] = labels[-1] + '  '
+    
+    if brightness1 > 120:
+        axins2.get_xticklabels()[0].set_color('black')
+        
+    if brightness2 > 120:
+        axins2.get_xticklabels()[1].set_color('black')
+        
+    if brightness3 > 120:
+        axins2.get_xticklabels()[2].set_color('black')        
+
+    axins2.set_xticklabels(labels)
     
         
 # If the module is being run, not being imported! 
