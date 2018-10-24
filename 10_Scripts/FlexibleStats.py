@@ -1,14 +1,14 @@
 # flexiblestats.py
 
 """
-This code allows statistical processes from DEA stats to be calculated using non-sequential dates. 
+This code allows statistical processes from DEA stats to be calculated using non-sequential dates.
+
+Date: September 2018
+Authors: Imam Alam, Sean Chua
 
 In this configuration it finds all the observations within the same months as the list of dates you provide, this can be modified.
 
 Example: Calculate the dates where drought intensity is highest using an index such as the Standardised Precipitation Evapotranspiration Index (SPEI) and create a geomedian from this list of dates.
-
-Date: September 2018
-Authors: Imam Alam, Sean Chua
 
 Inputs: 
 
@@ -17,6 +17,20 @@ Inputs:
 - Config file (.yaml) that details the input products (LS8, Sentinel 2) and output products (geomedian). The 'date_ranges' should be the first and last times of the date list you provide above.
 
 - Datacube conf file (.conf) that points to the database hostname, port etc.
+
+
+NOTE:
+
+This script produces tiled geomedians of the input area that can be combined using the following lines in your pbs script.
+
+# Combine tiles into a single tif for each band
+for BAND in blue green red nir swir1 swir2; do
+   for i in *.nc; do echo NETCDF:$i:$BAND; done | xargs -n 1000 -x gdalbuildvrt $BAND.vrt
+   gdal_translate -of GTiff $BAND.vrt $BAND.tif
+ done
+
+# Merge bands together to make the final Geomedian
+gdal_merge.py -init 255 -o geomedian.tif blue.tif green.tif red.tif nir.tif swir1.tif swir2.tif -separate
 
 """ 
 
