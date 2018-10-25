@@ -1,0 +1,65 @@
+sources:
+    - product: ls8_usgs_sr_scene
+      measurements: [blue, green, red, nir, swir1, swir2]
+      group_by: solar_day
+      masks:
+          - product: ls8_usgs_sr_scene
+            measurement: pixel_qa
+            group_by: solar_day
+            flags:
+                cloud_shadow: no_cloud_shadow
+                cloud: no_cloud
+    - product: ls5_usgs_sr_scene
+      measurements: [blue, green, red, nir, swir1, swir2]
+      group_by: solar_day
+      masks:
+          - product: ls5_usgs_sr_scene
+            measurement: pixel_qa
+            group_by: solar_day
+            flags:
+                cloud_shadow: no_cloud_shadow
+                cloud: no_cloud
+
+computation:
+   chunking:
+       x: 512
+       y: 512
+
+date_ranges:
+    start_date: 1998-01-01
+    end_date: 2017-01-01
+
+storage:
+  driver: NetCDF CF
+
+  crs: EPSG:32648
+  tile_size:
+    x: 30720.0
+    y: 30720.0
+  resolution:
+    x: 30
+    y: -30
+  chunking:
+    x: 256
+    y: 256
+    time: 1
+  dimension_order: [time, y, x]
+
+output_products:
+  - name: ls_level2_geomedian_annual
+    product_type: surface_reflectance_statistical_summary
+    statistic: new_geomedian
+    statistic_args:
+       # assuming 8 workers per node
+       num_threads: 1
+    metadata:
+       format:
+           name: NetCDF
+       platform:
+           code: LANDSAT_5,LANDSAT_8
+       instrument:
+           name: TM,OLI_TIRS
+    output_params:
+      zlib: True
+      fletcher32: True
+    file_path_template: 'nbart_geomedian_{x}_{y}.nc'
