@@ -20,7 +20,11 @@ Author: Robbi Bishop-Taylor
 
 import gdal
 import numpy as np
-
+from scipy import ndimage
+import numba
+from skimage.morphology import disk
+# compile python codes using the JIT compiler to achieve higher performance
+@numba.jit(nopython=True)
 
 def rasterize_vector(input_data, cols, rows, geo_transform, projection, 
                      field=None, raster_path=None, array_dtype=gdal.GDT_UInt16):
@@ -489,3 +493,93 @@ def reproject_to_template(input_raster, template_raster, output_raster, resoluti
     
     print("Reprojected raster exported to {}".format(output_raster))
     return output_ds
+
+
+def my_mean_filter(data,nodata):
+    """
+    A custom spatial filter to calculate spatial mean of a input data array
+     (or a raster dataset). This custom filter is used as a input to 'ndimage.generic_filter' 
+     method. This is used in the 'calculate_tpi' method defined below.
+     
+     The method could not handle the 'nan' value properly. As such, the 'nan' value must be
+     first converted into a data value such as '-999' in the 'calculate_tpi' method.
+     
+     Last modified: September 2018
+     Author: Zhi Huang
+     
+     : param data:
+         Input array-like data. 
+     : param nodata:
+         Nodata value of the input data. Must be one of the numeric data types (e.g., float).
+     : return:
+         Output the mean value for the input array, nodata has been ignored
+     """
+
+    j=0
+    k=0
+    for i in data:
+        if i != nodata:
+            j = j + i
+            k = k + 1
+        
+    if k == 0: # if all elements of the input are nodata, return nodata
+        val = nodata
+    else: # else return the mean value ignoring the nodata
+
+        val =  j/k
+        
+    
+    return val
+    
+    
+    
+
+        
+def calculte_tpi(data,neighborhood='Rectangle',size=[3,3],radius=3,nodata=-999):
+    """
+    Calculate topographic position index (TPI) (Weiss, 2001) for a raster dataset.
+    TPI is a local spatial statistic. It requires specifications of a neighborhood shape
+     and size. The current method allows only two neighborhood shapes: Rectangle and Circle.
+    The method calls the 'ndimage.generic_filter' method to calculate local (focal) mean 
+    within the specified neighborhood using the 'my_mean_filter' method defined above, similar 
+    to ArcGIS' 'focal statistics' tool. Note that the unit for the neighborhood size is the 
+    same as that indicated by the coordinate system of the input data. 
+    
+    Last modified: September 2018
+    Author: Zhi Huang
+    
+    :param data:
+        Input data array. Must be a xarray.DataArray.
+    :param neighborhood:
+        A text string specify the neighborhood shape. Currently, only two values are allowed: 
+        'Rectangle' and 'Circle'.
+    :param size:
+        This parameter specifies the size of the 'Rectangle' neighborhood. The value must be a 
+        list in the form of [width,height], where width is the width of the rectangle' and height 
+        is the height of the rectangle. If not specified, the default value is [3,3], indicating 
+        a 3 by 3 square window.
+    :param radius:
+        This parameter specifies the size of the 'Circle' neighborhood. The value must a integer value 
+        specifying the radius of the circle. If not specified, the default value is 3.
+    :param nodata:
+        Nodata value of the input data. Must be one of the numeric data types (e.g., float).
+     
+    :return:
+        Output xarray.DataArray
+        
+    """
+    data = data.fillna(nodata) # convert 'nan' to the nodata value
+    if neighborhood == 'Rectangle':
+        width = size[0]
+        height = size[1]
+        footprint = np.ones(width*height).reshape(height,width)
+        
+    elif neighborhood == 'Circle':
+        footprint = disk(radius)
+        
+    extra_keywords = {'nodata':nodata}
+    # call ndimage.generic_filter method, passing in the my_mean_filter function
+    data_mean = ndimage.generic_filter(data,my_mean_filter,footprint=footprint,
+                                       extra_keywords=extra_keywords)
+    data = data.where(data!=nodata) # convert the nondata value back to 'nan'
+    return data - data_mean

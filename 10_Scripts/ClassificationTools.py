@@ -27,7 +27,7 @@ import rasterio
 from rasterio import features
 
 # Import DEA Notebooks scripts
-sys.path.append('../Scripts')
+sys.path.append('../10_Scripts')
 from SpatialTools import array_to_geotiff
 
 
@@ -85,9 +85,10 @@ def randomforest_train(train_shps, train_field, data_func, data_func_params={},
     
         '''Function for rasterising a Geopandas datadframe using Rasterio'''
 
-        with rasterio.open(out_rast, 'w', **meta) as out:
+        with rasterio.open(out_rast, 'w+', **meta) as out:
+            
             out_arr = out.read(1)
-
+            print(out_arr.shape)
             # this is where we create a generator of geom, value pairs to use in rasterizing
             shapes = ((geom,value) for geom, value in zip(convert_to_rast.geometry, 
                                                           convert_to_rast[field]))
@@ -156,10 +157,10 @@ def randomforest_train(train_shps, train_field, data_func, data_func_params={},
 
             # Rasterize shapefile features into an array and remove output geotiff
             training_pixels = rasterize(convert_to_rast=training_gpd, 
-                                        out_rast='temp_raster.tif', 
+                                        out_rast='/home/547/zxh547/dea-notebooks/temp_raster.tif', 
                                         meta=meta, 
                                         field=train_field)
-            os.remove('temp_raster.tif')
+            os.remove('/home/547/zxh547/dea-notebooks/temp_raster.tif')
 
             # Extract matching image sample data for each labelled pixel location
             is_train = np.nonzero(training_pixels)
