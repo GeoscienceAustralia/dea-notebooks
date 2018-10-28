@@ -55,13 +55,13 @@ def interpolate_timeseries(ds, freq='7D', method='linear'):
     """    
     
     # Use pandas to generate dates from start to end of ds at a given frequency
-    start_time = combined_ds.isel(time=0).time.values.item() 
-    end_time = combined_ds.isel(time=-1).time.values.item()    
+    start_time = ds.isel(time=0).time.values.item() 
+    end_time = ds.isel(time=-1).time.values.item()    
     from_to = pd.date_range(start=start_time, end=end_time, freq=freq)
     
     # Use these dates to linearly interpolate new data for each new date
-    print(f'Interpolating {len(from_to)} time-steps at {freq} intervals')
-    return ds.interp(coords={'time': from_to})
+    print('Interpolating {} time-steps at {} intervals'.format(len(from_to), freq))
+    return ds.interp(coords={'time': from_to}, method=method)
 
 
 def hsv_image_processing(rgb_array,
