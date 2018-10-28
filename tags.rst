@@ -1,7 +1,7 @@
 Tagging Notebooks
 =================
 
-To add tags to a notebook so it is listed in the :doc:`Tags Index </genindex>`, do the following:
+To add tags to a notebook so it is listed in the `Tags Index <http://geoscienceaustralia.github.io/digitalearthau/genindex.html>`_, do the following:
 
  * Create a new cell
  * Above the cell, change **Code** to **Raw NBConvert**
@@ -11,4 +11,4 @@ To add tags to a notebook so it is listed in the :doc:`Tags Index </genindex>`, 
 
      Tags: :index:`tag1`, :index:`tag2`
 
-Please make your tags consistant with existing ones in the :doc:`Tags Index </genindex>`.
+Please make your tags consistant with existing ones in the `Tags Index <http://geoscienceaustralia.github.io/digitalearthau/genindex.html>`_.
