@@ -13,3 +13,4 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
    Sun_glint_identification_and_removal.ipynb
    Fractional_Cover_Change_Detection.ipynb
    Fractional_Cover_Percentiles.ipynb
+   CumulativeMassResidualRainfall.ipynb
