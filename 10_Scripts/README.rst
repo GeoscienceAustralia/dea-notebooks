@@ -51,5 +51,7 @@ TasseledCapTools.py: a set of python functions to use with the outputs of tassel
      - **thresholded_tasseled_cap**: Computes thresholded tasseled cap wetness, greenness and brightness bands from a six band xarray dataset
      - **pct_exceedance_tasseled_cap**: Counts the number of thresholded tasseled cap scenes per pixel and divides by the number of tasseled cap scenes per pixel
 
+RainfallTools.py: load rainfall from BoM rainfall grids
+     - **load_rainfall**: Loads gridded rainfall data and fixes offset in underlying BoM data
 .. toctree::
    :maxdepth: 1
