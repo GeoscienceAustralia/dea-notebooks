@@ -251,7 +251,7 @@ def animated_timeseries(ds, output_path,
                         width_pixels=600, interval=200, bands=['red', 'green', 'blue'], 
                         percentile_stretch = (0.02, 0.98), image_proc_func=None,
                         title=False, show_date=True, annotation_kwargs={},
-                        onebandplot_cbar=True, onebandplot_kwargs={},
+                        onebandplot_cbar=True, onebandplot_kwargs={}, 
                         shapefile_path=None, shapefile_kwargs={},
                         time_dim = 'time', x_dim = 'x', y_dim = 'y'):
     
@@ -327,14 +327,19 @@ def animated_timeseries(ds, output_path,
         custom stretch could be specified using: `onebandplot_kwargs={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}`. 
         By default, one-band arrays are plotted using the 'Greys' cmap with bilinear interpolation.
         
+        Two special kwargs (`tick_fontsize`, `tick_colour`) can also be passed to control the tick labels on the 
+        colourbar. This can be useful for example when the tick labels are difficult to see against a dark background.
+        
     :param shapefile_path:
-        An optional string or list of strings giving the file paths of shapefiles to overlay on the output animation. 
-        The shapefiles must be in the same projection as the input xarray dataset.
+        An optional string or list of strings giving the file paths of one or multiple shapefiles to overlay on the 
+        output animation. The shapefiles must be in the same projection as the input xarray dataset.
         
     :param shapefile_kwargs:
-        An optional dict of kwargs to specify the appearance of the shapefile overlay to pass to `GeoSeries.plot`
-        (see http://geopandas.org/reference.html#geopandas.GeoSeries.plot). For example: 
-         `shapefile_kwargs = {'linewidth':2, 'edgecolor':'black', 'facecolor':"#00000000"}`
+        An optional dictionary of kwargs or list of dictionaries to specify the appearance of the shapefile overlay 
+        by passing to `GeoSeries.plot` (see http://geopandas.org/reference.html#geopandas.GeoSeries.plot). For example: 
+        `shapefile_kwargs = {'linewidth':2, 'edgecolor':'black', 'facecolor':"#00000000"}`. If multiple shapefiles
+        were provided to `shapefile_path`, each shapefile can be plotted with a different colour style by passing in
+        a list of kwarg dicts of the same length as `shapefile_path`.
         
     :param time_dim:
         An optional string allowing you to override the xarray dimension used for time. Defaults to 'time'.
@@ -380,18 +385,22 @@ def animated_timeseries(ds, output_path,
             # Set up annotation parameters that plt.imshow plotting for single band array images. 
             # The nested dict structure sets default values which can be overwritten/customised by the 
             # manually specified `onebandplot_kwargs`
-            onebandplot_kwargs = dict({'cmap':'Greys', 'interpolation':'bilinear',
-                                       'vmin': vmin, 'vmax': vmax},
-                                       **onebandplot_kwargs)         
+            onebandplot_kwargs = dict({'cmap': 'Greys', 'interpolation': 'bilinear',
+                                       'vmin': vmin, 'vmax': vmax, 'tick_colour': 'black', 'tick_fontsize': 15},
+                                       **onebandplot_kwargs)   
+            
+            # Use pop to remove the two special tick kwargs from the onebandplot_kwargs dict, and save individually
+            onebandplot_tick_colour = onebandplot_kwargs.pop('tick_colour')
+            onebandplot_tick_fontsize = onebandplot_kwargs.pop('tick_fontsize')
 
             # Set up annotation parameters that control font etc. The nested dict structure sets default 
             # values which can be overwritten/customised by the manually specified `annotation_kwargs`
-            annotation_kwargs = dict({'xy': (1, 1), 'xycoords':'axes fraction', 
-                                      'xytext':(-5, -5), 'textcoords':'offset points', 
-                                      'horizontalalignment':'right', 'verticalalignment':'top', 
-                                      'fontsize':28, 'color':'black', 
-                                      'path_effects':[PathEffects.withStroke(linewidth=3, foreground='white')]},
-                                      **annotation_kwargs)
+            annotation_kwargs = dict({'xy': (1, 1), 'xycoords': 'axes fraction', 
+                                      'xytext': (-5, -5), 'textcoords': 'offset points', 
+                                      'horizontalalignment': 'right', 'verticalalignment':'top', 
+                                      'fontsize': 28, 'color': 'white', 
+                                      'path_effects': [PathEffects.withStroke(linewidth=3, foreground='black')]},
+                                      **annotation_kwargs)  
             
             ###################
             # Initialise plot #
@@ -455,8 +464,11 @@ def animated_timeseries(ds, output_path,
             ax1.set_ylim(extents[2], extents[3])
             
             # Optionally add colourbar for one band images
-            if (len(bands) == 1) & onebandplot_cbar:                
-                _add_colourbar(ax1, im, fontsize=15,
+            if (len(bands) == 1) & onebandplot_cbar:   
+                
+                _add_colourbar(ax1, im, 
+                               tick_fontsize=onebandplot_tick_fontsize,
+                               tick_colour=onebandplot_tick_colour,
                                vmin=onebandplot_kwargs['vmin'], 
                                vmax=onebandplot_kwargs['vmax'],
                                cmap=onebandplot_kwargs['cmap'])
@@ -623,6 +635,9 @@ def animated_timeseriesline(ds, df, output_path,
         custom stretch could be specified using: `onebandplot_kwargs={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}`. 
         By default, one-band arrays are plotted using the 'Greys' cmap with bilinear interpolation.
         
+        Two special kwargs (`tick_fontsize`, `tick_colour`) can also be passed to control the tick labels on the 
+        colourbar. This can be useful for example when the tick labels are difficult to see against a dark background.
+        
     :param shapefile_path:
         An optional string or list of strings giving the file paths of shapefiles to overlay on the output animation. 
         The shapefiles must be in the same projection as the input xarray dataset.
@@ -682,8 +697,12 @@ def animated_timeseriesline(ds, df, output_path,
             # The nested dict structure sets default values which can be overwritten/customised by the 
             # manually specified `onebandplot_kwargs`
             onebandplot_kwargs = dict({'cmap':'Greys', 'interpolation':'bilinear',
-                                       'vmin': vmin, 'vmax': vmax},
-                                       **onebandplot_kwargs)         
+                                       'vmin': vmin, 'vmax': vmax, 'tick_colour': 'black', 'tick_fontsize': 11}, 
+                                       **onebandplot_kwargs)  
+            
+            # Use pop to remove the two special tick kwargs from the onebandplot_kwargs dict, and save individually
+            onebandplot_tick_colour = onebandplot_kwargs.pop('tick_colour')
+            onebandplot_tick_fontsize = onebandplot_kwargs.pop('tick_fontsize')
 
             # Set up annotation parameters that control font etc. The nested dict structure sets default 
             # values which can be overwritten/customised by the manually specified `annotation_kwargs`
@@ -755,7 +774,9 @@ def animated_timeseriesline(ds, df, output_path,
 
             # Optionally add colourbar for one band images
             if (len(bands) == 1) & onebandplot_cbar:                
-                _add_colourbar(ax1, im, fontsize=11,
+                _add_colourbar(ax1, im, 
+                               tick_fontsize=onebandplot_tick_fontsize,
+                               tick_colour=onebandplot_tick_colour,
                                vmin=onebandplot_kwargs['vmin'], 
                                vmax=onebandplot_kwargs['vmax'])
 
@@ -988,6 +1009,9 @@ def animated_doubletimeseries(ds1, ds2, output_path,
         This only applies if an xarray with a single band is passed to d1. For example, a green colour scheme and
         custom stretch can be specified using: `onebandplot_kwargs1={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}`. 
         By default, one-band arrays are plotted using the 'Greys' cmap with bilinear interpolation.
+        
+        Two special kwargs (`tick_fontsize`, `tick_colour`) can also be passed to control the tick labels on the 
+        colourbar. This can be useful for example when the tick labels are difficult to see against a dark background.
     
     :param onebandplot_kwargs2:
         An optional dict of kwargs for controlling the appearance of `ds2` one-band image arrays to 
@@ -1087,12 +1111,20 @@ def animated_doubletimeseries(ds1, ds2, output_path,
             # The nested dict structure sets default values which can be overwritten/customised by the 
             # manually specified `onebandplot_kwargs`
             onebandplot_kwargs1 = dict({'cmap':'Greys', 'interpolation':'bilinear',                                  
-                                        'vmin':vmin1, 'vmax':vmax1},
+                                        'vmin':vmin1, 'vmax':vmax1, 'tick_colour': 'black', 'tick_fontsize': 11},
                                         **onebandplot_kwargs1) 
+            
+            # Use pop to remove the two special tick kwargs from the onebandplot_kwargs dict, and save individually
+            onebandplot_tick_colour1 = onebandplot_kwargs1.pop('tick_colour')
+            onebandplot_tick_fontsize1 = onebandplot_kwargs1.pop('tick_fontsize')
 
             onebandplot_kwargs2 = dict({'cmap':'Greys', 'interpolation':'bilinear',
-                                        'vmin':vmin2, 'vmax':vmax2},
+                                        'vmin':vmin2, 'vmax':vmax2, 'tick_colour': 'black', 'tick_fontsize': 11},
                                         **onebandplot_kwargs2) 
+            
+            # Use pop to remove the two special tick kwargs from the onebandplot_kwargs dict, and save individually
+            onebandplot_tick_colour2 = onebandplot_kwargs2.pop('tick_colour')
+            onebandplot_tick_fontsize2 = onebandplot_kwargs2.pop('tick_fontsize')
 
             # Set up annotation parameters that control font etc. The nested dict structure sets default 
             # values which can be overwritten/customised by the manually specified `annotation_kwargs`
@@ -1183,12 +1215,16 @@ def animated_doubletimeseries(ds1, ds2, output_path,
 
             # Optionally add colourbars for one band images
             if (len(bands1) == 1) & onebandplot_cbar1:                
-                _add_colourbar(ax1, im1, fontsize=11,
+                _add_colourbar(ax1, im1, 
+                               tick_fontsize=onebandplot_tick_fontsize1,
+                               tick_colour=onebandplot_tick_colour1,
                                vmin=onebandplot_kwargs1['vmin'], 
                                vmax=onebandplot_kwargs1['vmax'])
 
             if (len(bands2) == 1) & onebandplot_cbar2:                
-                _add_colourbar(ax2, im2, fontsize=11,
+                _add_colourbar(ax2, im2, 
+                               tick_fontsize=onebandplot_tick_fontsize2,
+                               tick_colour=onebandplot_tick_colour2,
                                vmin=onebandplot_kwargs2['vmin'], 
                                vmax=onebandplot_kwargs2['vmax'])
 
@@ -1428,26 +1464,17 @@ def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch, ima
     return array_list, p_low, p_high
 
 
-def _add_colourbar(ax, im, vmin, vmax, fontsize, cmap='Greys'):
+def _add_colourbar(ax, im, vmin, vmax, cmap='Greys', tick_fontsize=15, tick_colour='black'):
 
     """
     Add a nicely formatted colourbar to an animation panel
     """
-    import matplotlib
-    cmap = matplotlib.cm.get_cmap(cmap)
-    rgb = cmap([0])[:, 0:3] * 255
-    brightness1 = rgb[:, 0] * 0.299 + rgb[:, 1] * 0.587 + rgb[:, 2] * 0.114
-    rgb = cmap([0.5])[:, 0:3] * 255
-    brightness2 = rgb[:, 0] * 0.299 + rgb[:, 1] * 0.587 + rgb[:, 2] * 0.114
-    rgb = cmap([1.0])[:, 0:3] * 255
-    brightness3 = rgb[:, 0] * 0.299 + rgb[:, 1] * 0.587 + rgb[:, 2] * 0.114
-    print(brightness1, brightness2, brightness3)
 
     # Add colourbar
     axins2 = inset_axes(ax, width='97%', height='4%', loc=8, borderpad=1) 
     plt.gcf().colorbar(im, cax=axins2, orientation='horizontal', ticks=np.linspace(vmin, vmax, 3)) 
     axins2.xaxis.set_ticks_position('top')
-    axins2.tick_params(axis='x', colors='white', labelsize=fontsize, pad=-23, length=0)
+    axins2.tick_params(axis='x', colors=tick_colour, labelsize=tick_fontsize) 
     
     # Justify left and right labels to edge of plot
     axins2.get_xticklabels()[0].set_horizontalalignment('left')
@@ -1455,18 +1482,7 @@ def _add_colourbar(ax, im, vmin, vmax, fontsize, cmap='Greys'):
     labels = [item.get_text() for item in axins2.get_xticklabels()]
     labels[0] = '  ' + labels[0]
     labels[-1] = labels[-1] + '  '
-    
-    if brightness1 > 120:
-        axins2.get_xticklabels()[0].set_color('black')
-        
-    if brightness2 > 120:
-        axins2.get_xticklabels()[1].set_color('black')
-        
-    if brightness3 > 120:
-        axins2.get_xticklabels()[2].set_color('black')        
 
-    axins2.set_xticklabels(labels)
-    
         
 # If the module is being run, not being imported! 
 # to do this, do the following
@@ -1478,6 +1494,4 @@ if __name__=='__main__':
 #import doctest to test our module for documentation
     import doctest
     doctest.testmod()
-    print('Testing done')        
-        
-        
+    print('Testing done') 
