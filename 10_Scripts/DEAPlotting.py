@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from skimage import exposure
 import matplotlib
-matplotlib.use('agg')
+# matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.patheffects as PathEffects
