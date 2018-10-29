@@ -13,7 +13,7 @@ Available functions:
     write_your_netcdf
     zonal_timeseries
 
-Last modified: September 2018
+Last modified: October 2018
 Authors: Claire Krause, Robbi Bishop-Taylor, Bex Dunn, Chad Burton
 
 '''
@@ -27,6 +27,7 @@ import xarray as xr
 import rasterio
 import geopandas as gpd
 import dask
+import rasterstats as rs
 
 from datacube.utils import geometry
 import fiona
@@ -180,8 +181,9 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                       bands_of_interest=None, masked_prop=0.99, mask_dict=None,
                       mask_pixel_quality=False, mask_invalid_data=True, ls7_slc_off=False, satellite_metadata=False):
     
-    """
-    Loads Landsat NBAR, NBART or FC25 and PQ data for multiple sensors (i.e. ls5, ls7, ls8), and returns a single 
+    """Load cloud-free data from multiple Landsat satellites as an xarray dataset
+    
+    Loads Landsat NBAR, NBART or FC25 and PQ data for multiple sensors (i.e. ls5, ls7, ls8) and returns a single 
     xarray dataset containing only observations that contain greater than a given proportion of good quality pixels.
     This function can be used to extract visually appealing time series of observations that are not affected by cloud,
     for example as an input to the `animated_timeseries` function from `DEAPlotting`.
@@ -190,73 +192,69 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     in the Landsat PQ25 layer. By default only cloudy pixels or pixels that are missing data in any band are
     used to calculate the number of poor quality pixels, but this can be customised using the `mask_dict` parameter.
     
-    MEMORY ISSUES: For large data extractions, it is recommended that you set both `mask_pixel_quality=False` and 
-    `mask_invalid_data=False`. Otherwise, all output variables will be coerced to float64 when NaN values are 
-    inserted into the array, potentially causing your data to use 4x as much memory. Be aware that the resulting
-    arrays will contain invalid -999 values which should be considered in analyses.
+    Last modified: October 2018
+    Author: Robbi Bishop-Taylor, Bex Dunn    
     
-    Last modified: September 2018
-    Author: Robbi Bishop-Taylor, Bex Dunn
-    
-    :param dc: 
+    Parameters
+    ----------    
+    dc : datacube Datacube object
         A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This allows you to 
-        also use development datacubes if they have been imported into the environment.
-    
-    :param query: 
+        also use development datacubes if they have been imported into the environment.    
+    query : dict
         A dict containing the query bounds. Can include lat/lon, time etc. If no `time` query is given, the 
         function defaults to all timesteps available to all sensors (e.g. 1987-2018)
-
-    :param sensors:
+    sensors : list, optional
         An optional list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8'; defaults to all.
-
-    :param product:
+    product : str, optional
         An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to 'nbart'. For information on the difference, 
         see the '02_DEA_datasets/Introduction_to_Landsat' or '02_DEA_datasets/Introduction_to_Fractional_Cover'
         notebooks from DEA-notebooks.
-
-    :param bands_of_interest:
+    bands_of_interest : list, optional
         An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
         'nir', 'swir1', 'swir2'; defaults to all available bands if no bands are specified.
-
-    :param masked_prop:
+    masked_prop : float, optional
         An optional float giving the minimum percentage of clear pixels required for a Landsat observation to be 
         loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of poor quality pixels).
-            
-    :param mask_dict:
+    mask_dict : dict, optional
         An optional dict of arguments to the `masking.make_mask` function that can be used to identify good/poor
         quality pixels from the PQ layer using alternative masking criteria. The default value of None masks
         out pixels flagged as cloud by either the ACCA or Fmask algorithms, or pixels that are missing data in any
         band (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
         See the `02_DEA_datasets/Introduction_to_LandsatPQ.ipynb` notebook on DEA Notebooks for a list of all
         possible options.
-        
-    :param mask_pixel_quality:
+    mask_pixel_quality : bool, optional
         An optional boolean indicating whether to apply the pixel quality mask to all observations that were not
         filtered out for having less good quality pixels that `masked_prop`. For example, if `masked_prop=0.99`, the
         filtered images may still contain up to 1% poor quality pixels. The default of False simply returns the
         resulting observations without masking out these pixels; True masks them out and sets them to NaN using the
         pixel quality mask, but has the side effect of changing the data type of the output arrays from int16 to
         float64 which can cause memory issues. To reduce memory usage, set to False.
-        
-    :param mask_invalid_data:
+    mask_invalid_data : bool, optional
         An optional boolean indicating whether invalid -999 nodata values should be replaced with NaN. Defaults to
         True; this has the side effect of changing the data type of the output arrays from int16 to float64 which
         can cause memory issues. To reduce memory usage, set to False.
-
-    :param ls7_slc_off:
+    ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from after the Landsat 7 SLC failure (i.e. SLC-off).
         Defaults to False, which removes all Landsat 7 observations after May 31 2003. 
-        
-    :param satellite_metadata:
-        An boolean indicating whether to return the dataset with a `satellite` variable that gives the name of
-        the satellite that made each observation in the timeseries (i.e. ls5, ls7, ls8). Defaults to False. 
+    satellite_metadata : bool, optional
+        An optional boolean indicating whether to return the dataset with a `satellite` variable that gives the name 
+        of the satellite that made each observation in the timeseries (i.e. ls5, ls7, ls8). Defaults to False. 
     
-    :returns:
+    Returns
+    -------
+    combined_ds : xarray Dataset
         An xarray dataset containing only Landsat observations that contain greater than `masked_prop`
-        proportion of clear pixels.         
+        proportion of clear pixels.   
         
-    :example:
-    
+    Notes
+    -----
+    Memory issues: For large data extractions, it is recommended that you set both `mask_pixel_quality=False` and 
+    `mask_invalid_data=False`. Otherwise, all output variables will be coerced to float64 when NaN values are 
+    inserted into the array, potentially causing your data to use 4x as much memory. Be aware that the resulting
+    arrays will contain invalid -999 values which should be considered in analyses.
+        
+    Example
+    -------    
     >>> # Import modules
     >>> import datacube
     >>> import sys
@@ -428,7 +426,7 @@ def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
     inserted into the array, potentially causing your data to use 4x as much memory. Be aware that the resulting
     arrays will contain invalid -999 values which should be considered in analyses.
     
-    Last modified: September 2018
+    Last modified: October 2018
     Author: Robbi Bishop-Taylor
     
     :param dc: 
