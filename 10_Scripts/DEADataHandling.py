@@ -163,8 +163,8 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         print('loaded {}'.format(product))
         if filter_cloud:
             print('making mask')
-            clear_pixels = np.logical_and(ds.pixel_quality != 0, ds.pixel_quality != 2, 
-                                          ds.pixel_quality != 3)
+            clear_pixels = np.logical_and(np.logical_and(ds.fmask != 0, ds.fmask != 2),
+                              ds.fmask != 3)
             ds = ds.where(clear_pixels)
         ds.attrs['crs'] = crs
         ds.attrs['affine'] = affine
@@ -715,7 +715,7 @@ def zonal_timeseries(dataArray, shp_loc, results_loc, feature_name, stat='mean',
     shp_loc = string. Location of the shapefile used to extract the zonal timseries.
     results_loc = string. Location of the directory where results should export.
     feature_name = string. Name of attribute column in the shapefile that is of interest - used to label dataframe, plots etc.
-    stat = string.  The statistic you want to extract. Options include 'count', 'max', 'median', 'min', 'std'.
+    stat = string.  The statistic you want to extract. Options include 'count', 'max', 'median', 'min', 'std', 'mean'.
     plot = Boolean. If True, function will produce pdfs of timeseries for each polygon in the shapefile.
     csv = Boolean. If True, function will export results as a .csv.
     netcdf = Boolean. If True, function will export results as a netcdf.
