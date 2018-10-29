@@ -10,7 +10,7 @@ Available functions:
     animated_doubletimeseries
     plot_WOfS
 
-Last modified: September 2018
+Last modified: October 2018
 Authors: Claire Krause, Robbi Bishop-Taylor, Sean Chua, Mike Barnes, Cate Kooymans, Bex Dunn
 
 """
@@ -268,7 +268,7 @@ def animated_timeseries(ds, output_path,
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
     the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
-    Last modified: September 2018
+    Last modified: October 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn    
     
     :param ds: 
@@ -568,7 +568,7 @@ def animated_timeseriesline(ds, df, output_path,
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
     the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
-    Last modified: September 2018
+    Last modified: October 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn    
     
     :param ds: 
@@ -910,7 +910,7 @@ def animated_doubletimeseries(ds1, ds2, output_path,
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
     the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
-    Last modified: September 2018
+    Last modified: October 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn
     
     :param ds1: 
