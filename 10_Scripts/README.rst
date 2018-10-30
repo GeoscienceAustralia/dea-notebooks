@@ -53,5 +53,10 @@ TasseledCapTools.py: a set of python functions to use with the outputs of tassel
 
 RainfallTools.py: load rainfall from BoM rainfall grids
      - **load_rainfall**: Loads gridded rainfall data and fixes offset in underlying BoM data
+
+FileDialogs.py: A set of file dialog widgets for file paths for opening or saving files.
+     - **SaveFileButton**:creates a button to save your file
+     - **SelectFileButton**:creates a button to select one file
+     - **SelectFilesButton**:SelectFilesButton returns a list of file paths (strings)
 .. toctree::
    :maxdepth: 1
