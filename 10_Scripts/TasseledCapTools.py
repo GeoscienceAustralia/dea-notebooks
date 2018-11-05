@@ -150,7 +150,7 @@ def pct_exceedance_tasseled_cap(sensor_data, tc_bands=['greenness', 'brightness'
 
     return pct_exceedance_array
    
-f the module is being run, not being imported! 
+#if the module is being run, not being imported! 
 # to do this, do the following
 # run {modulename}.py)
 
