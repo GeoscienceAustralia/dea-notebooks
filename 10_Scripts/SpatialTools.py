@@ -23,6 +23,7 @@ import affine
 import fiona
 import collections
 import numpy as np
+import geopandas as gpd
 from skimage.measure import find_contours
 from shapely.geometry import MultiLineString, mapping
 
@@ -134,65 +135,78 @@ def rasterize_vector(input_data, cols, rows, geo_transform, projection,
     return out_array
 
 
-def contour_extract(z_values, ds_array, ds_crs, ds_affine, output_shp=None, min_vertices=2,
-                    attribute_data=None, attribute_dtypes=None):
+def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_vertices=2,
+                    attribute_data=None, attribute_dtypes=None, dim='time', verbose=True):
 
     """
-    Uses `skimage.measure.find_contours` to extract contour lines from a two-dimensional array.
-    Contours are extracted as a dictionary of xy point arrays for each contour z-value, and optionally as
-    line shapefile with one feature per contour z-value.
+    Uses `skimage.measure.find_contours` to extract multiple z-value contour lines from a two-dimensional array
+    (e.g. multiple elevations from a single DEM), or one z-value for each array along a specified dimension of a 
+    multi-dimensional array (e.g. to map waterlines across time by extracting a 0 NDVI contour from each individual 
+    timestep in an xarray timeseries).    
+    
+    Contours are exported to file as a shapefile and returned as a geopandas geodataframe with one row per
+    z-value or one row per array along a specified dimension. The `attribute_data` and `attribute_dtypes` parameters 
+    can be used to pass custom attributes to the output contour features.
 
-    The `attribute_data` and `attribute_dtypes` parameters can be used to pass custom attributes to the output
-    shapefile.
-
-    Last modified: September 2018
+    Last modified: November 2018
     Author: Robbi Bishop-Taylor
-
-    :param z_values:
-        A list of numeric contour values to extract from the array.
-
-    :param ds_array:
-        A two-dimensional array from which contours are extracted. This can be a numpy array or xarray DataArray.
-        If an xarray DataArray is used, ensure that the array has one two dimensions (e.g. remove the time dimension
-        using either `.isel(time=0)` or `.squeeze('time')`).
-
-    :param ds_crs:
+    
+    Parameters
+    ----------  
+    ds_array : xarra DataArray
+        A two-dimensional or multi-dimensional array from which contours are extracted. If a two-dimensional array
+        is provided, the analysis will run in 'single array, multiple z-values' mode which allows you to specify 
+        multiple `z_values` to be extracted. If a multi-dimensional array is provided, the analysis will run in 
+        'single z-value, multiple arrays' mode allowing you to extract contours for each array along the dimension
+        specified by the `dim` parameter.  
+    z_values : int, float or list of ints, floats
+        An individual z-value or list of multiple z-values to extract from the array. If operating in 'single 
+        z-value, multiple arrays' mode specify only a single z-value.
+    ds_crs : string or CRS object
         Either a EPSG string giving the coordinate system of the array (e.g. 'EPSG:3577'), or a crs
         object (e.g. from an xarray dataset: `xarray_ds.geobox.crs`).
-
-    :param ds_affine:
+    ds_affine : affine.Affine object or GDAL geotransform
         Either an affine object from a rasterio or xarray object (e.g. `xarray_ds.geobox.affine`), or a gdal-derived
         geotransform object (e.g. `gdal_ds.GetGeoTransform()`) which will be converted to an affine.
-
-    :param min_vertices:
-        An optional integer giving the minimum number of vertices required for a contour to be extracted. The default
-        (and minimum) value is 2, which is the smallest number required to produce a contour line (i.e. a start and
-        end point). Higher values remove smaller contours, potentially removing noise from the output dataset.
-
-    :param output_shp:
-        An optional string giving a path and filename for the output shapefile. Defaults to None, which
-        does not generate a shapefile.
-
-    :param attribute_data:
-        An optional dictionary of lists used to define attributes/fields to add to the shapefile. Dict keys give
-        the name of the shapefile attribute field, while dict values must be lists of the same length as `z_values`.
-        For example, if `z_values=[0, 10, 20]`, then `attribute_data={'type: [1, 2, 3]}` can be used to create a
-        shapefile field called 'type' with a value for each contour in the shapefile. The default is None, which
-        produces a default shapefile field called 'z_value' with values taken directly from the `z_values` parameter
-        and formatted as a 'float:9.2'.
-
-    :param attribute_dtypes:
-        An optional dictionary giving the output dtype for each shapefile attribute field that is specified by
+    output_shp : string
+        The path and filename for the output shapefile.
+    min_vertices : int, optional
+        The minimum number of vertices required for a contour to be extracted. The default (and minimum) value is 2,
+        which is the smallest number required to produce a contour line (i.e. a start and end point). Higher values
+        remove smaller contours, potentially removing noise from the output dataset.
+    attribute_data : dict of lists, optional
+        An optional dictionary of lists used to define custom attributes/fields to add to the shapefile. Dict keys 
+        give the name of the shapefile field, while dict values must be lists of the same length as `z_values`
+        (for 'single array, multiple z-values' mode) or the number of arrays along the dimension specified by the `dim`
+        parameter (for 'single z-value, multiple arrays' mode). For example, if `z_values=[0, 10, 20]`, then 
+        `attribute_data={'type: [1, 2, 3]}` can be used to create a shapefile field called 'type' with a value for
+        each contour in the shapefile. The default is None, which produces a default shapefile field called 'z_value'
+        with values taken directly from the `z_values` parameter and formatted as a 'float:9.2' ('single array, 
+        multiple z-values' mode), or a field named after `dim` numbered from 0 to the total number of arrays along 
+        the `dim` dimension ('single z-value, multiple arrays' mode).
+    attribute_dtypes : dict, optional
+        An optional dictionary giving the output dtype for each custom shapefile attribute field specified by
         `attribute_data`. For example, `attribute_dtypes={'type: 'int'}` can be used to set the 'type' field to an
         integer dtype. The dictionary should have the same keys/field names as declared in `attribute_data`.
         Valid values include 'int', 'str', 'datetime, and 'float:X.Y', where X is the minimum number of characters
         before the decimal place, and Y is the number of characters after the decimal place.
+    dim : string, optional
+        The name of the dimension along which to extract contours when operating in 'single z-value, multiple arrays'
+        mode. The default is 'time', which extracts contours for each array along the time dimension.
+    verbose: bool, optional
+        Whether to print the result of each contour extraction to the console. The default is True which prints all
+        results; set to False for a cleaner output, particularly when extracting large numbers of contours.
 
-    :return:
-        A dictionary with contour z-values as the dict key, and a list of xy point arrays as dict values.
+    Returns
+    -------
+    output_gdf : geopandas geodataframe
+        A geopandas geodataframe object with one feature per z-value ('single array, multiple z-values' mode), or one
+        row per array along the dimension specified by the `dim` parameter ('single z-value, multiple arrays' mode). 
+        If `attribute_data` and `ttribute_dtypes` are provided, these values will be included in the shapefile's 
+        attribute table.
 
-    :example:
-
+    Example
+    -------   
     >>> # Import modules
     >>> import sys
     >>> import datacube
@@ -204,6 +218,10 @@ def contour_extract(z_values, ds_array, ds_crs, ds_affine, output_shp=None, min_
     >>> # Set up datacube instance
     >>> dc = datacube.Datacube(app='Contour extraction')
 
+    ########################################
+    # Single array, multiple z-values mode #
+    ########################################
+    
     >>> # Define an elevation query
     >>> elevation_query = {'lat': (-35.25, -35.35),
     ...                    'lon': (149.05, 149.17),
@@ -213,44 +231,110 @@ def contour_extract(z_values, ds_array, ds_crs, ds_affine, output_shp=None, min_
     >>> # Import sample elevation data
     >>> elevation_data = dc.load(product='srtm_dem1sv1_0', **elevation_query)
 
-    >>> # Remove the time dimension so that array is two-dimensional
-    >>> elevation_2d = elevation_data.dem_h.squeeze('time')
+    >>> # Extract contours
+    >>> contour_gdf = SpatialTools.contour_extract(z_values=[600, 700, 800],
+    ...                                            ds_array=elevation_data.dem_h,
+    ...                                            ds_crs=elevation_data.geobox.crs,
+    ...                                            ds_affine=elevation_data.geobox.affine,
+    ...                                            output_shp='extracted_contours.shp')
+    Dimension 'time' has length of 1; removing from array
+    Operating in single array, multiple z-values mode
+        Extracting contour 600
+        Extracting contour 700
+        Extracting contour 800
+    Exporting contour shapefile to extracted_contours.shp
+    
+    ########################################
+    # Single z-value, multiple arrays mode #
+    ########################################
+    
+    >>> # Define a Landsat query
+    >>> landsat_query = {'lat': (-35.25, -35.35),
+    ...                  'lon': (149.05, 149.17),
+    ...                  'time': ('2016-02-15', '2016-03-01'),
+    ...                  'output_crs': 'EPSG:3577',
+    ...                  'resolution': (-25, 25)}
+
+    >>> # Import sample Landsat data
+    >>> landsat_data = dc.load(product='ls8_nbart_albers', 
+    ...                        group_by='solar_day',
+    ...                        **landsat_query)
+    
+    >>> # Test that there are multiple arrays along the 'time' dimension
+    >>> print(len(landsat_data.time))
+    2
+
+    >>> # Set up custom attributes to be added as shapefile fields
+    >>> attribute_data = {'value': ['first_contour', 'second_contour']}
+    >>> attribute_dtypes = {'value': 'str'}
 
     >>> # Extract contours
-    >>> contour_dict = SpatialTools.contour_extract(z_values=[600, 700, 800],
-    ...                                             ds_array=elevation_2d,
-    ...                                             ds_crs=elevation_2d.geobox.crs,
-    ...                                             ds_affine=elevation_2d.geobox.affine,
-    ...                                             output_shp='extracted_contours.shp')
-    Extracting contour 600
-    Extracting contour 700
-    Extracting contour 800
-    <BLANKLINE>
+    >>> contour_gdf = SpatialTools.contour_extract(z_values=3000,
+    ...                                            ds_array=landsat_data.red,
+    ...                                            ds_crs=landsat_data.geobox.crs,
+    ...                                            ds_affine=landsat_data.geobox.affine,
+    ...                                            output_shp='extracted_contours.shp',
+    ...                                            attribute_data=attribute_data,
+    ...                                            attribute_dtypes=attribute_dtypes,
+    ...                                            dim='time')
+    Operating in single z-value, multiple arrays mode
+        Extracting contour 0
+        Extracting contour 1
     Exporting contour shapefile to extracted_contours.shp
 
     """
 
-    # First test that input array has only two dimensions:
+    # Obtain affine object from either rasterio/xarray affine or a gdal geotransform:
+    if type(ds_affine) != affine.Affine:
+        ds_affine = affine.Affine.from_gdal(*ds_affine)
+        
+    # If z_values is supplied is not a list, convert to list before proceeding:      
+    z_values = z_values if isinstance(z_values, list) else [z_values]
+    
+    # If array has only one layer along the `dim` dimension (e.g. time), remove the dim:
+    try:
+        ds_array = ds_array.squeeze(dim=dim)
+        print(f"Dimension '{dim}' has length of 1; removing from array")
+        
+    except: pass
+
+    
+    ########################################
+    # Single array, multiple z-values mode #
+    ########################################
+    
+    # Output dict to hold contours for each offset
+    contours_dict = collections.OrderedDict()
+    
+    # If array has only two dimensions, run in single array, multiple z-values mode:
     if len(ds_array.shape) == 2:
+        
+        print(f'Operating in single array, multiple z-values mode')   
+        
+        # If no custom attributes given, default to including a single z-value field based on `z_values`
+        if not attribute_data:
 
-        # Obtain affine object from either rasterio/xarray affine or a gdal geotransform:
-        if type(ds_affine) != affine.Affine:
-
-            ds_affine = affine.Affine.from_gdal(*ds_affine)
-
-        ####################
-        # Extract contours #
-        ####################
-
-        # Output dict to hold contours for each offset
-        contours_dict = collections.OrderedDict()
+            # Default field uses two decimal points by default
+            attribute_data = {'z_value': z_values}
+            attribute_dtypes = {'z_value': 'float:9.2'}
+        
+        # If custom attributes are provided, test that they are equal in length to the number of `z-values`:
+        else:
+            
+            for key, values in attribute_data.items():
+                
+                if len(values) != len(z_values): 
+                    
+                    raise Exception(f"Supplied attribute '{key}' has length of {len(values)} while z_values has "
+                                    f"length of {len(z_values)}; please supply the same number of attribute values "
+                                    "as z_values")
 
         for z_value in z_values:
 
-            # Extract contours and convert output array pixel coordinates into arrays of real world Albers coordinates.
+            # Extract contours and convert output array cell coords into arrays of coordinate reference system coords.
             # We need to add (0.5 x the pixel size) to x values and subtract (-0.5 * pixel size) from y values to
             # correct coordinates to give the centre point of pixels, rather than the top-left corner
-            print(f'Extracting contour {z_value}')
+            if verbose: print(f'    Extracting contour {z_value}')
             ps = ds_affine[0]  # Compute pixel size
             contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps, -0.5 * ps]) for i in
                             find_contours(ds_array, z_value)]
@@ -264,54 +348,105 @@ def contour_extract(z_values, ds_array, ds_crs, ds_affine, output_shp=None, min_
             # If there is data for the contour, add to dict:
             if len(contours_withdata) > 0:
                 contours_dict[z_value] = contours_withdata
+                
             else:
-                print(f'    No data for contour {z_value}; skipping')
+                if verbose: print(f'    No data for contour {z_value}; skipping')
+                contours_dict[z_value] = None
+            
+            
+    ########################################
+    # Single z-value, multiple arrays mode #
+    ########################################
+    
+    # For inputs with more than two dimensions, run in single z-value, multiple arrays mode:
+    else:
+        
+        # Test if only a single z-value is given when operating in single z-value, multiple arrays mode
+        print(f'Operating in single z-value, multiple arrays mode')        
+        if len(z_values) > 1: raise Exception('Please provide a single z-value when operating '
+                                              'in single z-value, multiple arrays mode')
+            
+        # If no custom attributes given, default to including one field based on the `dim` dimension:
+        if not attribute_data:
 
-        #######################
-        # Export to shapefile #
-        #######################
+            # Default field is numbered from 0 to the number of arrays along the `dim` dimension:
+            attribute_data = {dim: range(0, len(ds_array[dim]))}
+            attribute_dtypes = {dim: 'int'}
+        
+        # If custom attributes are provided, test that they are equal in length to the number of arrays along `dim`:
+        else:
+            
+            for key, values in attribute_data.items():
+                
+                if len(values) != len(ds_array[dim]): 
+                    
+                    raise Exception(f"Supplied attribute '{key}' has length of {len(values)} while there are "
+                                    f"{len(ds_array[dim])} arrays along the '{dim}' dimension. Please supply "
+                                    f"the same number of attribute values as arrays along the '{dim}' dimension")
+        
+        for z_value, _ in enumerate(ds_array[dim]): 
 
-        # If a shapefile path is given, generate shapefile
-        if output_shp:
+            # Extract contours and convert output array cell coords into arrays of coordinate reference system coords.
+            # We need to add (0.5 x the pixel size) to x values and subtract (-0.5 * pixel size) from y values to
+            # correct coordinates to give the centre point of pixels, rather than the top-left corner
+            if verbose: print(f'    Extracting contour {z_value}')
+            ps = ds_affine[0]  # Compute pixel size
+            contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps, -0.5 * ps]) for i in
+                            find_contours(ds_array.isel({dim: z_value}), z_values[0])]
 
-            print(f'\nExporting contour shapefile to {output_shp}')
+            # For each array of coordinates, drop any xy points that have NA
+            contours_nona = [i[~np.isnan(i).any(axis=1)] for i in contours_geo]
 
-            # If attribute fields are left empty, default to including a single z-value field based on `z_values`
-            if not attribute_data:
+            # Drop 0 length and add list of contour arrays to dict
+            contours_withdata = [i for i in contours_nona if len(i) >= min_vertices]
 
-                # Default field uses two decimal points by default
-                attribute_data = {'z_value': z_values}
-                attribute_dtypes = {'z_value': 'float:9.2'}
+            # If there is data for the contour, add to dict:
+            if len(contours_withdata) > 0:
+                contours_dict[z_value] = contours_withdata
+                
+            else:
+                if verbose: print(f'    No data for contour {z_value}; skipping')
+                contours_dict[z_value] = None
+                
 
-            # Set up output multiline shapefile properties
-            schema = {'geometry': 'MultiLineString',
-                      'properties': attribute_dtypes}
+    #######################
+    # Export to shapefile #
+    #######################
 
-            # Create output shapefile for writing
-            with fiona.open(output_shp, 'w',
-                            crs={'init': str(ds_crs), 'no_defs': True},
-                            driver='ESRI Shapefile',
-                            schema=schema) as output:
+    # If a shapefile path is given, generate shapefile
+    if output_shp:
 
-                # Write each shapefile to the dataset one by one
-                for i, (z_value, contours) in enumerate(contours_dict.items()):
+        print(f'Exporting contour shapefile to {output_shp}')
+
+        # Set up output multiline shapefile properties
+        schema = {'geometry': 'MultiLineString',
+                  'properties': attribute_dtypes}
+
+        # Create output shapefile for writing
+        with fiona.open(output_shp, 'w',
+                        crs={'init': str(ds_crs), 'no_defs': True},
+                        driver='ESRI Shapefile',
+                        schema=schema) as output:
+
+            # Write each shapefile to the dataset one by one
+            for i, (z_value, contours) in enumerate(contours_dict.items()):
+
+                if contours:
 
                     # Create multi-string object from all contour coordinates
                     contour_multilinestring = MultiLineString(contours)
 
                     # Get attribute values for writing
-                    attribute_vals = {field_name: field_vals[i] for field_name, field_vals in attribute_data.items()}
+                    attribute_vals = {field_name: field_vals[i] for field_name, field_vals in 
+                                      attribute_data.items()}
 
                     # Write output shapefile to file with z-value field
                     output.write({'properties': attribute_vals,
                                   'geometry': mapping(contour_multilinestring)})
 
-        # Return dict of contour arrays
-        return contours_dict
-
-    else:
-        print(f'The input `ds_array` has shape {ds_array.shape}. Please input a two-dimensional array (if your '
-              f'input array has a time dimension, remove it using `.isel(time=0)` or `.squeeze(\'time\')`)')
+    # Return dict of contour arrays
+    output_gdf = gpd.read_file(output_shp)
+    return output_gdf
 
 
 def indices_to_coords(x_inds, y_inds, input_raster):
@@ -613,6 +748,9 @@ def reproject_to_template(input_raster, template_raster, output_raster, resoluti
     input_geotrans = input_ds.GetGeoTransform()
     data_type = input_ds.GetRasterBand(1).DataType
     n_bands = input_ds.RasterCount  
+    
+    # Set nodata
+    input_ds.GetRasterBand(1).SetNoDataValue(nodata_val)    
     
     # Import raster to use as template
     template_ds = gdal.Open(template_raster)   
