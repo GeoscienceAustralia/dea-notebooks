@@ -9,8 +9,9 @@ Available functions:
     animated_timeseriesline
     animated_doubletimeseries
     plot_WOfS
+    display_map
 
-Last modified: September 2018
+Last modified: November 2018
 Authors: Claire Krause, Robbi Bishop-Taylor, Sean Chua, Mike Barnes, Cate Kooymans, Bex Dunn
 
 """
@@ -20,7 +21,7 @@ import numpy as np
 import pandas as pd
 from skimage import exposure
 import matplotlib
-matplotlib.use('agg')
+# matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.patheffects as PathEffects
@@ -30,6 +31,10 @@ import calendar
 import geopandas as gpd
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import folium
+import itertools    
+import math
+from pyproj import Proj, transform
 
 
 
@@ -268,7 +273,7 @@ def animated_timeseries(ds, output_path,
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
     the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
-    Last modified: September 2018
+    Last modified: October 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn    
     
     :param ds: 
@@ -568,7 +573,7 @@ def animated_timeseriesline(ds, df, output_path,
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
     the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
-    Last modified: September 2018
+    Last modified: October 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn    
     
     :param ds: 
@@ -910,7 +915,7 @@ def animated_doubletimeseries(ds1, ds2, output_path,
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
     the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
     
-    Last modified: September 2018
+    Last modified: October 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn
     
     :param ds1: 
@@ -1410,6 +1415,90 @@ def plot_WOfS(ds, figsize=(10,10), title='WOfS %', projection='projected'):
     plt.colorbar(i, ticks=wofs_bounds, cax=cax).set_label(label='WOfS (%)',size=12) #Add definable colour bar
     #fig.delaxes(fig.axes[1]) #Remove pre-defined colour bar
     return fig,ax
+
+
+def display_map(y, x, crs='EPSG:3577', margin=-0.5, zoom_bias=0):
+    
+    """ 
+    Given a set of x and y coordinates, this function generates an interactive map with a bounded 
+    rectangle overlayed on Google Maps imagery.        
+    
+    Last modified: November 2018
+    Author: Robbi Bishop-Taylor
+    
+    Modified from function written by Otto Wagner available here: 
+    https://github.com/ceos-seo/data_cube_utilities/tree/master/data_cube_utilities
+    
+    Parameters
+    ----------  
+    x : (float, float)
+        A tuple of x coordinates in (min, max) format. 
+    y : (float, float)
+        A tuple of y coordinates in (min, max) format.
+    crs : string, optional
+        A string giving the EPSG CRS code of the supplied coordinates. The default is 'EPSG:3577'.
+    margin : float
+        A numeric value giving the number of degrees lat-long to pad the edges of the rectangular overlay 
+        polygon. A larger value results more space between the edge of the plot and the sides of the polygon.
+        Defaults to -0.5.
+    zoom_bias : float or int
+        A numeric value allowing you to increase or decrease the zoom level by one step. Defaults to 0; set
+        to greater than 0 to zoom in, and less than 0 to zoom out.
+        
+    Returns
+    -------
+    folium.Map : A map centered on the supplied coordinate bounds. A rectangle is drawn on this map detailing 
+    the perimeter of the x, y bounds.  A zoom level is calculated such that the resulting viewport is the
+    closest it can possibly get to the centered bounding rectangle without clipping it. 
+    """
+    
+    # Convert each corner coordinates to lat-lon
+    all_x = (x[0], x[1], x[0], x[1])
+    all_y = (y[0], y[0], y[1], y[1])        
+    all_longitude, all_latitude = transform(Proj(init=crs), Proj(init='EPSG:4326'), all_x, all_y) 
+
+    # Calculate zoom level based on coordinates 
+    lat_zoom_level = _degree_to_zoom_level(min(all_latitude), max(all_latitude), margin = margin) + zoom_bias
+    lon_zoom_level = _degree_to_zoom_level(min(all_longitude), max(all_longitude), margin = margin) + zoom_bias
+    zoom_level = min(lat_zoom_level, lon_zoom_level) 
+
+    # Identify centre point for plotting
+    center = [np.mean(all_latitude), np.mean(all_longitude)]
+
+    # Create map
+    interactive_map = folium.Map(location=center,
+                                 zoom_start=zoom_level,
+                                 tiles="http://mt1.google.com/vt/lyrs=y&z={z}&x={x}&y={y}",
+                                 attr="Google") 
+
+    # Create bounding box coordinates to overlay on map
+    line_segments = [(all_latitude[0], all_longitude[0]),
+                     (all_latitude[1], all_longitude[1]),
+                     (all_latitude[3], all_longitude[3]),
+                     (all_latitude[2], all_longitude[2]),
+                     (all_latitude[0], all_longitude[0])] 
+    
+    # Add bounding box as an overlay
+    interactive_map.add_child(folium.features.PolyLine(locations=line_segments,
+                                                       color='red', opacity=0.8))
+
+    # Add clickable lat-lon popup box
+    interactive_map.add_child(folium.features.LatLngPopup())        
+
+    return interactive_map
+
+
+# Define function to assist `display_map` in selecting a zoom level for plotting
+def _degree_to_zoom_level(l1, l2, margin = 0.0):
+    
+    degree = abs(l1 - l2) * (1 + margin)
+    zoom_level_int = 0
+    if degree != 0:
+        zoom_level_float = math.log(360 / degree) / math.log(2)
+        zoom_level_int = int(zoom_level_float)
+    else:
+        zoom_level_int = 18
+    return zoom_level_int
 
 
 # Define function to convert xarray dataset to list of one or three band numpy arrays
