@@ -18,12 +18,12 @@ DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarra
      - **write_your_netcdf**: Writes an xarray dataset or array to a NetCDF file
      
 DEAPlotting.py: plotting DEA data (e.g. xarrays)
-     - **three_band_image**: Takes three spectral bands and plots them on the RGB bands of an image
-     - **three_band_image_subplots**: Takes three spectral bands and multiple time steps, and plots them on the RGB bands of an image
+     - **rgb**: Takes an xarray dataset and plots RGB images using three imagery bands
      - **animated_timeseries**: Takes an xarray time series and exports an animation showing landscape change across time
      - **animated_doubletimeseries**: Takes two xarray datasets and exports a two panel animation
      - **animated_timeseriesline**: Plots a pandas dataframe as a line graph next to an xarray dataset
      - **plot_WOfS**: Use the DEA WOfS color ramp to plot WOfS percentage data
+     - **display_map**: Generates an interactive map with a bounded rectangle overlayed on Google Maps imagery from a set of x and y coordinates.
 
 BandIndices.py: calculating remote sensing band indices
      - **calculate_indices**: Computes a set of indices (including NDVI, GNDVI, NDWI, NDMI) from an xarray dataset
