@@ -3,19 +3,22 @@
 This file contains a set of python functions for plotting DEA data.
 Available functions:
 
-    three_band_image
-    three_band_image_subplots
+    rgb
     animated_timeseries
     animated_timeseriesline
     animated_doubletimeseries
     plot_WOfS
+    display_map
+    three_band_image (depreciate)
+    three_band_image_subplots (depreciated)
 
-Last modified: October 2018
+Last modified: November 2018
 Authors: Claire Krause, Robbi Bishop-Taylor, Sean Chua, Mike Barnes, Cate Kooymans, Bex Dunn
 
 """
 
 # Load modules
+import warnings
 import numpy as np
 import pandas as pd
 from skimage import exposure
@@ -30,223 +33,180 @@ import calendar
 import geopandas as gpd
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import folium
+import itertools    
+import math
+from pyproj import Proj, transform
 
 
-
-def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10), title='Time',
-                     projection='projected', contrast_enhance=False, reflect_stand=5000):
-
+def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time', 
+        robust=True, percentile_stretch = None, col_wrap=4, size=6,
+        savefig_path=None, savefig_kwargs={}, **kwargs):
+    
     """
-    This function takes three spectral bands and plots them as the RGB bands of an image.
+    Takes an xarray dataset and plots RGB images using three imagery bands (e.g true colour ['red', 'green', 'blue']
+    or false colour ['swir1', 'nir', 'green']). The `index` parameter allows easily selecting individual or multiple
+    images for RGB plotting. Images can be saved to file by specifying an output path using `image_path`.
+    
+    This function was designed to work as an easy-to-use wrapper around xarray's `.plot.imshow()` functionality.
 
-    Last modified: May 2018
-    Author: Mike Barnes
-    Modified by: Claire Krause, Cate Kooymans, Robbi Bishop-Taylor
+    Last modified: November 2018
+    Author: Robbi Bishop-Taylor
+    
+    Parameters
+    ----------  
+    ds : xarray Dataset
+        A two-dimensional or multi-dimensional array to plot as an RGB image. If the array has more than two 
+        dimensions (e.g. multiple observations along a 'time' dimension), either use `index` to select one (`index=0`) 
+        or multiple observations (`index=[0, 1]`), or create a custom faceted plot using e.g. `col="time", col_wrap=4`.       
+    bands : list of strings, optional
+        A list of three strings giving the band names to plot. Defaults to '['red', 'green', 'blue']'.
+    index : integer or list of integers, optional
+        For convenience `index` can be used to select one (`index=0`) or multiple observations (`index=[0, 1]`) from
+        the input dataset for plotting. If multiple images are requested these will be plotted as a faceted plot.
+    index_dim : string, optional
+        The dimension along which observations should be plotted if multiple observations are requested using `index`.
+        Defaults to `time`.
+    robust : bool, optional
+        Produces an enhanced image where the colormap range is computed with 2nd and 98th percentiles instead of the 
+        extreme values. Defaults to True.
+    percentile_stretch : tuple of floats
+        An tuple of two floats (between 0.00 and 1.00) that can be used to clip the colormap range to manually 
+        specified percentiles to get more control over the brightness and contrast of the image. The default is None; 
+        '(0.02, 0.98)' is equivelent to `robust=True`. If this parameter is used, `robust` will have no effect.
+    col_wrap : integer, optional
+        The maximum number of columns allowed in faceted plots. Defaults to 4.
+    size : integer, optional
+        The height (in inches) of each plot. Defaults to 6.
+    savefig_path : string, optional
+        Path to export image file for the RGB plot. Defaults to None, which does not export an image file.
+    savefig_kwargs : dict, optional
+        A dict of keyword arguments to pass to `matplotlib.pyplot.savefig` when exporting an image file. For options, 
+        see: https://matplotlib.org/api/_as_gen/matplotlib.pyplot.savefig.html        
+    **kwargs : optional
+        Additional keyword arguments to pass to `xarray.plot.imshow()`. For more options, see:
+        http://xarray.pydata.org/en/stable/generated/xarray.plot.imshow.html  
 
-    :param ds:
-        An xarray dataset containing the bands to be plotted. For correct axis scales, the xarray
-        will ideally have spatial data (e.g. an `.extent` method)
+    Returns
+    -------
+    An RGB plot of one or multiple observations, and optionally an image file written to file.
+    
+    Example
+    -------
+    >>> # Import modules
+    >>> import sys
+    >>> import datacube
 
-    :param bands:
-        Optional list of three bands to be plotted (defaults to `['red', 'green', 'blue']`)
+    >>> # Import external dea-notebooks functions using relative link to Scripts directory
+    >>> sys.path.append('../10_Scripts')
+    >>> import DEAPlotting
 
-    :param time:
-        Optional index value of the time dimension of the xarray dataset to be plotted (defaults to 0)
+    >>> # Set up datacube instance
+    >>> dc = datacube.Datacube(app='RGB plotting')
 
-    :param figsize:
-        Optional tuple or list giving the dimensions of the output plot (defaults to `(10, 10)`)
+    >>> # Define a Landsat query
+    >>> landsat_query = {'lat': (-35.25, -35.35),
+    ...                  'lon': (149.05, 149.17),
+    ...                  'time': ('2016-02-15', '2016-03-01'),
+    ...                  'output_crs': 'EPSG:3577',
+    ...                  'resolution': (-25, 25)}
 
-    :param title:
-        Optional string for the plot title. If left as the default 'Time', the title will be taken from
-        the timestep of the plotted image if available
+    >>> # Import sample Landsat data
+    >>> landsat_data = dc.load(product='ls8_nbart_albers', 
+    ...                        group_by='solar_day',
+    ...                        **landsat_query)
 
-    :param projection:
-        Determines if the image is in degrees or northings (options are 'projected' or 'geographic')
+    >>> # Plot a single observation (option 1)
+    >>> DEAPlotting.rgb(ds=landsat_data.isel(time=0))
 
-    :param contrast_enhance:
-        Optionally transform data using a histogram stretch. If `contrast_enhance = True`,
-        exposure.equalize_hist is used to transform the data. Else, the data are standardised relative
-        to a default reflectance = 5000 (this can be customised using `reflect_stand`)
+    >>> # Plot a single observation using `index` (option 2)
+    >>> DEAPlotting.rgb(ds=landsat_data, index=0)
 
-    :param reflect_stand:
-        Optionally allows you to have greater control over the contrast stretch by manually specifying a
-        reflectance standardisation value. Low values (< 5000) typically result in brighter images. Only
-        applies if `contrast_enhance=False` (defaults to 5000)
+    >>> # Plot multiple observations as a facet plot (option 1)
+    >>> DEAPlotting.rgb(ds=landsat_data, col='time')
 
-    :return fig:
-        A matplotlib figure object for customised plotting
+    >>> # Plot multiple observations as a facet plot using `index` (option 2)
+    >>> DEAPlotting.rgb(ds=landsat_data, index=[0, 1])
 
-    :return ax:
-        A matplotlib axis object for customised plotting
+    >>> # Increase contrast by specifying percentile thresholds using `percentile_stretch`
+    >>> DEAPlotting.rgb(ds=landsat_data, index=[0, 1], 
+    ...                 percentile_stretch=(0.02, 0.9))
 
-    :example:
-        >>> # Import external functions from dea-notebooks
-        >>> sys.path.append(os.path.expanduser('~/dea-notebooks/Scripts'))
-        >>> import DEAPlotting
-        >>>
-        >>> # Load Landsat time series
-        >>> xarray_dataset = dc.load(product='ls8_nbart_albers', **query)
-        >>>
-        >>> # Plot as an RGB image
-        >>> DEAPlotting.three_band_image(ds=xarray_dataset)
-    """
+    >>> # Pass in any keyword argument to `xarray.plot.imshow()` (e.g. `aspect`). For more 
+    >>> # options, see: http://xarray.pydata.org/en/stable/generated/xarray.plot.imshow.html  
+    >>> DEAPlotting.rgb(ds=landsat_data, index=[0, 1], 
+    ...                 percentile_stretch=(0.02, 0.9), aspect=1.2)
 
-    # Use different approaches to data prep depending on whether dataset has temporal dimension
-    try:
+    >>> # Export the RGB image to file using `savefig_path`
+    >>> DEAPlotting.rgb(ds=landsat_data, index=[0, 1], 
+    ...                 percentile_stretch=(0.02, 0.9), aspect=1.2, 
+    ...                 savefig_path='output_image_test.png')
+    Exporting image to output_image_test.png
+    
+    """   
 
-        # Create new numpy array matching shape of xarray
-        t, y, x = ds[bands[0]].shape
-        rawimg = np.zeros((y, x, 3), dtype=np.float32)
-
-        # Add xarray bands for a given time into three dimensional numpy array
-        for i, colour in enumerate(bands):
-
-            rawimg[:, :, i] = ds[colour][time].values
-            
-    except ValueError:
-
-        # Create new numpy array matching shape of xarray
-        y, x = ds[bands[0]].shape
-        rawimg = np.zeros((y, x, 3), dtype=np.float32)
-
-        # Add xarray bands into three dimensional numpy array
-        for i, colour in enumerate(bands):
-
-            rawimg[:, :, i] = ds[colour].values
-            
-    # Set nodata value to NaN
-    rawimg[rawimg == -999] = np.nan
-
-    # Optionally compute contrast based on histogram
-    if contrast_enhance:
-
-        # Stretch contrast using histogram
-        img_toshow = exposure.equalize_hist(rawimg, mask=np.isfinite(rawimg))
+    # If no value is supplied for `index` (the default), plot using default values and arguments passed via `**kwargs`
+    if index is None:
         
+        if len(ds.dims) > 2 and 'col' not in kwargs:
+            raise Exception(f'The input dataset `ds` has more than two dimensions: {list(ds.dims.keys())}. ' 
+                             'Please select a single observation using e.g. `index=0`, or enable faceted '
+                             'plotting by adding the arguments e.g. `col="time", col_wrap=4` to the function call')
+
+        # Select bands and convert to DataArray
+        da = ds[bands].to_array()
+        
+        # If percentile_stretch is provided, clip plotting to percentile vmin, vmax
+        if percentile_stretch:
+            vmin, vmax = da.quantile(percentile_stretch).values
+            kwargs.update({'vmin': vmin, 'vmax': vmax})
+            
+        img = da.plot.imshow(robust=robust, col_wrap=col_wrap, size=size, **kwargs)        
+ 
+    # If values provided for `index`, extract corresponding observations and plot as either single image or facet plot
     else:
+        
+        # If a float is supplied instead of an integer index, raise exception
+        if isinstance(index, float):
+            raise Exception(f'Please supply `index` as either an integer or a list of integers')
+        
+        # If col argument is supplied as well as `index`, raise exception
+        if 'col' in kwargs:
+            raise Exception(f'Cannot supply both `index` and `col`; please remove one and try again')
+            
+        # Convert index to generic type list so that number of indices supplied can be computed
+        index = index if isinstance(index, list) else [index]
+        
+        # Select bands and observations and convert to DataArray
+        da = ds[bands].isel(**{index_dim: index}).to_array()
+        
+        # If percentile_stretch is provided, clip plotting to percentile vmin, vmax
+        if percentile_stretch:
+            vmin, vmax = da.quantile(percentile_stretch).values
+            kwargs.update({'vmin': vmin, 'vmax': vmax})
+            
+        # If multiple index values are supplied, plot as a faceted plot 
+        if len(index) > 1:
+            
+            img = da.plot.imshow(robust=robust, col=index_dim, col_wrap=col_wrap, size=size, **kwargs)
+        
+        # If only one index is supplied, squeeze out index_dim and plot as a single panel
+        else:
 
-        # Stretch contrast using defined reflectance standardisation and clip to between 0 and 1
-        # to prevent warnings; defaults to reflect_stand = 5000
-        img_toshow = (rawimg / reflect_stand).clip(0, 1)
-
-    # Plot figure, setting x and y axes from extent of xarray dataset
-    fig, ax = plt.subplots(figsize=figsize)
-
-    try:
-
-        # Plot with correct coords by setting extent if dataset has spatial data (e.g. an `.extent` method).
-        # This also allows the resulting image to be overlaid with other spatial data (e.g. a polygon or point)
-        left, bottom, right, top = ds.extent.boundingbox
-        plt.imshow(img_toshow, extent=[left, right, bottom, top])
-
-    except:
-
-        # Plot without coords if dataset has no spatial data (e.g. an `.extent` method)
-        print("xarray dataset has no spatial data; defaulting to plotting without coordinates. "
-              "This can often be resolved by adding `keep_attrs = True` during an aggregation step")
-        plt.imshow(img_toshow)
-
-    # Set title by either time or defined title
-    if title == 'Time':
-
+            img = da.squeeze(dim=index_dim).plot.imshow(robust=robust, size=size, **kwargs)
+    
+    # If an export path is provided, save image to file. Individual and faceted plots have a different API (figure
+    # vs fig) so we get around this using a try statement:
+    if savefig_path: 
+        
+        print(f'Exporting image to {savefig_path}')
+        
         try:
-
-            # Plot title using timestep
-            ax.set_title(str(ds.time[time].values), fontweight='bold', fontsize=14)
-
+            img.fig.savefig(savefig_path, **savefig_kwargs)
         except:
+            img.figure.savefig(savefig_path, **savefig_kwargs)
 
-            # No title
-            ax.set_title('', fontweight='bold', fontsize=14)
-
-    else:
-
-        # Manually defined title
-        ax.set_title(title, fontweight='bold', fontsize=14)
-
-    # Set x and y axis titles depending on projection
-    if projection == 'geographic':
-
-        ax.set_xlabel('Longitude', fontweight='bold')
-        ax.set_ylabel('Latitude', fontweight='bold')
-        
-    else:
-
-        ax.set_xlabel('Eastings', fontweight='bold')
-        ax.set_ylabel('Northings', fontweight='bold')
-        
-    return fig, ax
-
-
-def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, figsize = [10,10], 
-                              projection = 'projected', left  = 0.125, 
-                              right = 0.9, bottom = 0.1, top = 0.9, 
-                              wspace = 0.2, hspace = 0.4):
-  
-    """
-    threeBandImage_subplots takes three spectral bands and multiple time steps, 
-    and plots them on the RGB bands of an image. 
-
-    Last modified: March 2018
-    Author: Mike Barnes
-    Modified by: Claire Krause, Robbi Bishop-Taylor
-
-    Inputs: 
-    ds - dataset containing the bands to be plotted
-    bands - list of three bands to be plotted
-    num_cols - number of columns for the subplot
-
-    Optional:
-    contrast_enhance - determines the transformation for plotting onto RGB. If contrast_enhance = true, 
-                       exposure.equalize_hist is used to transform the data. Else, the data are 
-                       standardised relative to reflectance = 5000
-    figsize - dimensions for the output figure
-    projection - options are 'projected' or 'geographic'; determines if image is in degrees or northings
-    left  - the space on the left side of the subplots of the figure
-    right - the space on the right side of the subplots of the figure
-    bottom - the space on the bottom of the subplots of the figure
-    top - the space on the top of the subplots of the figure
-    wspace - the amount of width reserved for blank space between subplots
-    hspace - the amount of height reserved for white space between subplots
-    """
-
-    # Find the number of rows/columns we need, based on the number of time steps in ds
-    timesteps = ds.time.size
-    num_rows = int(np.ceil(timesteps / num_cols))
-    fig, axes = plt.subplots(num_rows, num_cols, figsize = figsize)
-    fig.subplots_adjust(left  = left, right = right, bottom = bottom, top = top, 
-                        wspace = wspace, hspace = hspace)
-    numbers = 0
-    try:
-        for ax in axes.flat:
-            t, y, x = ds[bands[0]].shape
-            rawimg = np.zeros((y, x, 3), dtype = np.float32)
-            for i, colour in enumerate(bands):
-                rawimg[:, :, i] = ds[colour][numbers].values
-            rawimg[rawimg == -999] = np.nan
-            if contrast_enhance == True:
-                img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
-            else:
-                img_toshow = rawimg / 5000
-            ax.imshow(img_toshow)
-            ax.set_title(str(ds.time[numbers].values), fontweight = 'bold', fontsize = 12)
-            ax.set_xticklabels(ds.x.values, fontsize = 8, rotation = 20)
-            ax.set_yticklabels(ds.y.values, fontsize = 8)
-            if projection == 'geographic':
-                ax.set_xlabel('Longitude', fontweight = 'bold', fontsize = 10)
-                ax.set_ylabel('Latitude', fontweight = 'bold', fontsize = 10)
-            else:
-                ax.set_xlabel('Eastings', fontweight = 'bold', fontsize = 10)
-                ax.set_ylabel('Northings', fontweight = 'bold', fontsize = 10)
-            numbers = numbers + 1
-    except IndexError:
-        # This error will pop up if there are not enough scenes to fill the number of 
-        # rows x columns, so we can safely ignore it
-        fig.delaxes(ax)
-        plt.draw()    
-    return plt, fig
-
-
+            
 def animated_timeseries(ds, output_path, 
                         width_pixels=600, interval=200, bands=['red', 'green', 'blue'], 
                         percentile_stretch = (0.02, 0.98), image_proc_func=None,
@@ -1412,6 +1372,322 @@ def plot_WOfS(ds, figsize=(10,10), title='WOfS %', projection='projected'):
     return fig,ax
 
 
+def display_map(y, x, crs='EPSG:3577', margin=-0.5, zoom_bias=0):
+    
+    """ 
+    Given a set of x and y coordinates, this function generates an interactive map with a bounded 
+    rectangle overlayed on Google Maps imagery.        
+    
+    Last modified: November 2018
+    Author: Robbi Bishop-Taylor
+    
+    Modified from function written by Otto Wagner available here: 
+    https://github.com/ceos-seo/data_cube_utilities/tree/master/data_cube_utilities
+    
+    Parameters
+    ----------  
+    x : (float, float)
+        A tuple of x coordinates in (min, max) format. 
+    y : (float, float)
+        A tuple of y coordinates in (min, max) format.
+    crs : string, optional
+        A string giving the EPSG CRS code of the supplied coordinates. The default is 'EPSG:3577'.
+    margin : float
+        A numeric value giving the number of degrees lat-long to pad the edges of the rectangular overlay 
+        polygon. A larger value results more space between the edge of the plot and the sides of the polygon.
+        Defaults to -0.5.
+    zoom_bias : float or int
+        A numeric value allowing you to increase or decrease the zoom level by one step. Defaults to 0; set
+        to greater than 0 to zoom in, and less than 0 to zoom out.
+        
+    Returns
+    -------
+    folium.Map : A map centered on the supplied coordinate bounds. A rectangle is drawn on this map detailing 
+    the perimeter of the x, y bounds.  A zoom level is calculated such that the resulting viewport is the
+    closest it can possibly get to the centered bounding rectangle without clipping it. 
+    """
+    
+    # Convert each corner coordinates to lat-lon
+    all_x = (x[0], x[1], x[0], x[1])
+    all_y = (y[0], y[0], y[1], y[1])        
+    all_longitude, all_latitude = transform(Proj(init=crs), Proj(init='EPSG:4326'), all_x, all_y) 
+
+    # Calculate zoom level based on coordinates 
+    lat_zoom_level = _degree_to_zoom_level(min(all_latitude), max(all_latitude), margin = margin) + zoom_bias
+    lon_zoom_level = _degree_to_zoom_level(min(all_longitude), max(all_longitude), margin = margin) + zoom_bias
+    zoom_level = min(lat_zoom_level, lon_zoom_level) 
+
+    # Identify centre point for plotting
+    center = [np.mean(all_latitude), np.mean(all_longitude)]
+
+    # Create map
+    interactive_map = folium.Map(location=center,
+                                 zoom_start=zoom_level,
+                                 tiles="http://mt1.google.com/vt/lyrs=y&z={z}&x={x}&y={y}",
+                                 attr="Google") 
+
+    # Create bounding box coordinates to overlay on map
+    line_segments = [(all_latitude[0], all_longitude[0]),
+                     (all_latitude[1], all_longitude[1]),
+                     (all_latitude[3], all_longitude[3]),
+                     (all_latitude[2], all_longitude[2]),
+                     (all_latitude[0], all_longitude[0])] 
+    
+    # Add bounding box as an overlay
+    interactive_map.add_child(folium.features.PolyLine(locations=line_segments,
+                                                       color='red', opacity=0.8))
+
+    # Add clickable lat-lon popup box
+    interactive_map.add_child(folium.features.LatLngPopup())        
+
+    return interactive_map
+
+
+def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10), title='Time',
+                     projection='projected', contrast_enhance=False, reflect_stand=5000):
+
+    """
+    UPDATE Nov 2018: This function has been retired; please use the `rgb` function instead!
+    
+    This function takes three spectral bands and plots them as the RGB bands of an image.
+
+    Last modified: May 2018
+    Author: Mike Barnes
+    Modified by: Claire Krause, Cate Kooymans, Robbi Bishop-Taylor
+
+    :param ds:
+        An xarray dataset containing the bands to be plotted. For correct axis scales, the xarray
+        will ideally have spatial data (e.g. an `.extent` method)
+
+    :param bands:
+        Optional list of three bands to be plotted (defaults to `['red', 'green', 'blue']`)
+
+    :param time:
+        Optional index value of the time dimension of the xarray dataset to be plotted (defaults to 0)
+
+    :param figsize:
+        Optional tuple or list giving the dimensions of the output plot (defaults to `(10, 10)`)
+
+    :param title:
+        Optional string for the plot title. If left as the default 'Time', the title will be taken from
+        the timestep of the plotted image if available
+
+    :param projection:
+        Determines if the image is in degrees or northings (options are 'projected' or 'geographic')
+
+    :param contrast_enhance:
+        Optionally transform data using a histogram stretch. If `contrast_enhance = True`,
+        exposure.equalize_hist is used to transform the data. Else, the data are standardised relative
+        to a default reflectance = 5000 (this can be customised using `reflect_stand`)
+
+    :param reflect_stand:
+        Optionally allows you to have greater control over the contrast stretch by manually specifying a
+        reflectance standardisation value. Low values (< 5000) typically result in brighter images. Only
+        applies if `contrast_enhance=False` (defaults to 5000)
+
+    :return fig:
+        A matplotlib figure object for customised plotting
+
+    :return ax:
+        A matplotlib axis object for customised plotting
+
+    :example:
+        # Import external functions from dea-notebooks
+        sys.path.append(os.path.expanduser('~/dea-notebooks/Scripts'))
+        import DEAPlotting
+        
+        # Load Landsat time series
+        xarray_dataset = dc.load(product='ls8_nbart_albers', **query)
+        
+        # Plot as an RGB image
+        DEAPlotting.three_band_image(ds=xarray_dataset)
+    """
+    
+    # THIS FUNCTION HAS BEEN RETIRED; please use the `rgb` function instead!
+    warnings.warn('`three_band_image` has been retired and is no longer supported. Please use '
+                  'the updated `rgb` function from `DEAPlotting.py` instead.', 
+                  DeprecationWarning, stacklevel=2)
+
+    # Use different approaches to data prep depending on whether dataset has temporal dimension
+    try:
+
+        # Create new numpy array matching shape of xarray
+        t, y, x = ds[bands[0]].shape
+        rawimg = np.zeros((y, x, 3), dtype=np.float32)
+
+        # Add xarray bands for a given time into three dimensional numpy array
+        for i, colour in enumerate(bands):
+
+            rawimg[:, :, i] = ds[colour][time].values
+            
+    except ValueError:
+
+        # Create new numpy array matching shape of xarray
+        y, x = ds[bands[0]].shape
+        rawimg = np.zeros((y, x, 3), dtype=np.float32)
+
+        # Add xarray bands into three dimensional numpy array
+        for i, colour in enumerate(bands):
+
+            rawimg[:, :, i] = ds[colour].values
+            
+    # Set nodata value to NaN
+    rawimg[rawimg == -999] = np.nan
+
+    # Optionally compute contrast based on histogram
+    if contrast_enhance:
+
+        # Stretch contrast using histogram
+        img_toshow = exposure.equalize_hist(rawimg, mask=np.isfinite(rawimg))
+        
+    else:
+
+        # Stretch contrast using defined reflectance standardisation and clip to between 0 and 1
+        # to prevent warnings; defaults to reflect_stand = 5000
+        img_toshow = (rawimg / reflect_stand).clip(0, 1)
+
+    # Plot figure, setting x and y axes from extent of xarray dataset
+    fig, ax = plt.subplots(figsize=figsize)
+
+    try:
+
+        # Plot with correct coords by setting extent if dataset has spatial data (e.g. an `.extent` method).
+        # This also allows the resulting image to be overlaid with other spatial data (e.g. a polygon or point)
+        left, bottom, right, top = ds.extent.boundingbox
+        plt.imshow(img_toshow, extent=[left, right, bottom, top])
+
+    except:
+
+        # Plot without coords if dataset has no spatial data (e.g. an `.extent` method)
+        print("xarray dataset has no spatial data; defaulting to plotting without coordinates. "
+              "This can often be resolved by adding `keep_attrs = True` during an aggregation step")
+        plt.imshow(img_toshow)
+
+    # Set title by either time or defined title
+    if title == 'Time':
+
+        try:
+
+            # Plot title using timestep
+            ax.set_title(str(ds.time[time].values), fontweight='bold', fontsize=14)
+
+        except:
+
+            # No title
+            ax.set_title('', fontweight='bold', fontsize=14)
+
+    else:
+
+        # Manually defined title
+        ax.set_title(title, fontweight='bold', fontsize=14)
+
+    # Set x and y axis titles depending on projection
+    if projection == 'geographic':
+
+        ax.set_xlabel('Longitude', fontweight='bold')
+        ax.set_ylabel('Latitude', fontweight='bold')
+        
+    else:
+
+        ax.set_xlabel('Eastings', fontweight='bold')
+        ax.set_ylabel('Northings', fontweight='bold')
+        
+    return fig, ax
+
+
+def three_band_image_subplots(ds, bands, num_cols, contrast_enhance = False, figsize = [10,10], 
+                              projection = 'projected', left  = 0.125, 
+                              right = 0.9, bottom = 0.1, top = 0.9, 
+                              wspace = 0.2, hspace = 0.4):
+  
+    """
+    UPDATE Nov 2018: This function has been retired; please use the `rgb` function instead!
+    
+    threeBandImage_subplots takes three spectral bands and multiple time steps, 
+    and plots them on the RGB bands of an image. 
+
+    Last modified: March 2018
+    Author: Mike Barnes
+    Modified by: Claire Krause, Robbi Bishop-Taylor
+
+    Inputs: 
+    ds - dataset containing the bands to be plotted
+    bands - list of three bands to be plotted
+    num_cols - number of columns for the subplot
+
+    Optional:
+    contrast_enhance - determines the transformation for plotting onto RGB. If contrast_enhance = true, 
+                       exposure.equalize_hist is used to transform the data. Else, the data are 
+                       standardised relative to reflectance = 5000
+    figsize - dimensions for the output figure
+    projection - options are 'projected' or 'geographic'; determines if image is in degrees or northings
+    left  - the space on the left side of the subplots of the figure
+    right - the space on the right side of the subplots of the figure
+    bottom - the space on the bottom of the subplots of the figure
+    top - the space on the top of the subplots of the figure
+    wspace - the amount of width reserved for blank space between subplots
+    hspace - the amount of height reserved for white space between subplots
+    """
+    
+    # THIS FUNCTION HAS BEEN RETIRED; please use the `rgb` function instead!
+    warnings.warn('`three_band_image_subplots` has been retired and is no longer supported. Please use '
+                  'the updated `rgb` function from `DEAPlotting.py` instead.', 
+                  DeprecationWarning, stacklevel=2)
+
+    # Find the number of rows/columns we need, based on the number of time steps in ds
+    timesteps = ds.time.size
+    num_rows = int(np.ceil(timesteps / num_cols))
+    fig, axes = plt.subplots(num_rows, num_cols, figsize = figsize)
+    fig.subplots_adjust(left  = left, right = right, bottom = bottom, top = top, 
+                        wspace = wspace, hspace = hspace)
+    numbers = 0
+    try:
+        for ax in axes.flat:
+            t, y, x = ds[bands[0]].shape
+            rawimg = np.zeros((y, x, 3), dtype = np.float32)
+            for i, colour in enumerate(bands):
+                rawimg[:, :, i] = ds[colour][numbers].values
+            rawimg[rawimg == -999] = np.nan
+            if contrast_enhance == True:
+                img_toshow = exposure.equalize_hist(rawimg, mask = np.isfinite(rawimg))
+            else:
+                img_toshow = rawimg / 5000
+            ax.imshow(img_toshow)
+            ax.set_title(str(ds.time[numbers].values), fontweight = 'bold', fontsize = 12)
+            ax.set_xticklabels(ds.x.values, fontsize = 8, rotation = 20)
+            ax.set_yticklabels(ds.y.values, fontsize = 8)
+            if projection == 'geographic':
+                ax.set_xlabel('Longitude', fontweight = 'bold', fontsize = 10)
+                ax.set_ylabel('Latitude', fontweight = 'bold', fontsize = 10)
+            else:
+                ax.set_xlabel('Eastings', fontweight = 'bold', fontsize = 10)
+                ax.set_ylabel('Northings', fontweight = 'bold', fontsize = 10)
+            numbers = numbers + 1
+    except IndexError:
+        # This error will pop up if there are not enough scenes to fill the number of 
+        # rows x columns, so we can safely ignore it
+        fig.delaxes(ax)
+        plt.draw()    
+    return plt, fig
+
+
+# Define function to assist `display_map` in selecting a zoom level for plotting
+def _degree_to_zoom_level(l1, l2, margin = 0.0):
+    
+    """
+    Helper function to set zoom level for `display_map`
+    """
+    
+    degree = abs(l1 - l2) * (1 + margin)
+    zoom_level_int = 0
+    if degree != 0:
+        zoom_level_float = math.log(360 / degree) / math.log(2)
+        zoom_level_int = int(zoom_level_float)
+    else:
+        zoom_level_int = 18
+    return zoom_level_int
+
+
 # Define function to convert xarray dataset to list of one or three band numpy arrays
 def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch, image_proc_func=None): 
 
@@ -1457,7 +1733,7 @@ def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch, ima
             # Optionally image processing
             if image_proc_func:
                 
-                img_toshow = image_proc_func(img_toshow)
+                img_toshow = image_proc_func(img_toshow).clip(0, 1)
 
         array_list.append(img_toshow)
 
@@ -1484,14 +1760,14 @@ def _add_colourbar(ax, im, vmin, vmax, cmap='Greys', tick_fontsize=15, tick_colo
     labels[-1] = labels[-1] + '  '
 
         
-# If the module is being run, not being imported! 
-# to do this, do the following
-# run {modulename}.py)
+# The following tests are run if the module is called directly (not when being imported).
+# To do this, run the following: `python {modulename}.py`
 
-if __name__=='__main__':
-#print that we are running the testing
-    print('Testing..')
-#import doctest to test our module for documentation
+if __name__ == '__main__':
+    # Import doctest to test our module for documentation
     import doctest
-    doctest.testmod()
-    print('Testing done') 
+
+    # Run all reproducible examples in the module and test against expected outputs
+    print('Testing...')
+    doctest.testmod(optionflags=doctest.ELLIPSIS)
+    print('Testing complete')
