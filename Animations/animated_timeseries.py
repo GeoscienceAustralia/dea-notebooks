@@ -2,6 +2,9 @@
 # coding: utf-8
 
 # Loading cloud-free Sentinel 2 and Landsat from multiple satellites into one dataset
+# Run using: 
+# cd /g/data/r78/rt1527/dea-notebooks/Animations
+# sh raijin_animation_submit.sh
 
 import os
 import sys
@@ -166,13 +169,33 @@ def hsv_image_processing(rgb_array,
 #                           unsharp_radius1=20, unsharp_amount1=0.4,
 #                           unsharp_radius2=1, unsharp_amount2=0)
 
-# Sydney
-study_area = 'melbourne'
-lat, lon, buffer_m = -37.9067852366, 144.953384712, 38000
-time_range = ('2016-01-01', '2018-12-01')
-resolution = (-100, 100)
+# # Melbourne
+# study_area = 'melbourne'
+# lat, lon, buffer_m = -37.9067852366, 144.953384712, 38000
+# time_range = ('2016-01-01', '2018-12-01')
+# resolution = (-100, 100)
+# ratio = 1.0
+# landsat_clearprop = 0.5
+# sentinel_clearprop = 0.8
+# landsat_sensors = ['ls5', 'ls7', 'ls8']
+# sentinel_sensors = None  # ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.01, 0.99]
+# width_pixels = 700
+# interval = 100
+# rolling_median = 50
+# interpolation_freq = None
+# image_proc_func = partial(hsv_image_processing, val_mult=1.01,
+#                           unsharp_radius1=20, unsharp_amount1=0.3,
+#                           unsharp_radius2=1, unsharp_amount2=0)
+
+# Murray Mouth
+study_area = 'murraymouth'
+lat, lon, buffer_m = -35.555767, 138.881697, 10000
+time_range = ('1987-01-01', '2018-12-01')
+resolution = (-25, 25)
 ratio = 1.0
-landsat_clearprop = 0.5
+landsat_clearprop = 0.95
 sentinel_clearprop = 0.8
 landsat_sensors = ['ls5', 'ls7', 'ls8']
 sentinel_sensors = None  # ['s2a', 's2b']
@@ -180,11 +203,9 @@ bands = ['red', 'green', 'blue']
 percentile_stretch = [0.01, 0.99]
 width_pixels = 700
 interval = 100
-rolling_median = 50
+rolling_median = 3
 interpolation_freq = None
-image_proc_func = partial(hsv_image_processing, val_mult=1.01,
-                          unsharp_radius1=20, unsharp_amount1=0.3,
-                          unsharp_radius2=1, unsharp_amount2=0)
+image_proc_func = None
 
 
 ##############################
