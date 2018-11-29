@@ -9,7 +9,7 @@ Available functions:
     animated_doubletimeseries
     plot_WOfS
     display_map
-    three_band_image (depreciate)
+    three_band_image (depreciated)
     three_band_image_subplots (depreciated)
 
 Last modified: November 2018
@@ -46,7 +46,7 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
     """
     Takes an xarray dataset and plots RGB images using three imagery bands (e.g true colour ['red', 'green', 'blue']
     or false colour ['swir1', 'nir', 'green']). The `index` parameter allows easily selecting individual or multiple
-    images for RGB plotting. Images can be saved to file by specifying an output path using `image_path`.
+    images for RGB plotting. Images can be saved to file by specifying an output path using `savefig_path`.
     
     This function was designed to work as an easy-to-use wrapper around xarray's `.plot.imshow()` functionality.
 
