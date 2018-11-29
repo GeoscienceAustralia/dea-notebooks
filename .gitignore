@@ -4,4 +4,14 @@
 */.ipynb_checkpoints/*
 *.tif
 *.xml
+*.shp
+*.prj
+*.shx
+*.dbf
+*.cpg
+*.qgs
+*.gif
+*.mp4
+*.wmv
+*.png
 __pycache__
