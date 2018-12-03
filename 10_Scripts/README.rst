@@ -4,6 +4,8 @@ Scripts
 
 This folder contains examples of python code that demonstrates the use of functions and tools suitable for use in the DEA environment. The code examples provided here can be found in the `dea-notebooks Github repository <https://github.com/GeoscienceAustralia/dea-notebooks>`_. Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an Issue in the Github repository, or fix it yourself and create a Pull request to contribute the updated function back into the repository (See the repository README for instructions on creating a Pull request).
 
+The **FlexibleStats.py** script is for use in conjunction with DEA stats to create products using non-sequential dates, further information is located within the file.
+
 The following functions are currently included in Python scripts for loading into notebooks:
 
 DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarrays)
@@ -16,12 +18,12 @@ DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarra
      - **write_your_netcdf**: Writes an xarray dataset or array to a NetCDF file
      
 DEAPlotting.py: plotting DEA data (e.g. xarrays)
-     - **three_band_image**: Takes three spectral bands and plots them on the RGB bands of an image
-     - **three_band_image_subplots**: Takes three spectral bands and multiple time steps, and plots them on the RGB bands of an image
+     - **rgb**: Takes an xarray dataset and plots RGB images using three imagery bands
      - **animated_timeseries**: Takes an xarray time series and exports an animation showing landscape change across time
      - **animated_doubletimeseries**: Takes two xarray datasets and exports a two panel animation
      - **animated_timeseriesline**: Plots a pandas dataframe as a line graph next to an xarray dataset
      - **plot_WOfS**: Use the DEA WOfS color ramp to plot WOfS percentage data
+     - **display_map**: Generates an interactive map with a bounded rectangle overlayed on Google Maps imagery from a set of x and y coordinates.
 
 BandIndices.py: calculating remote sensing band indices
      - **calculate_indices**: Computes a set of indices (including NDVI, GNDVI, NDWI, NDMI) from an xarray dataset
@@ -30,7 +32,7 @@ BandIndices.py: calculating remote sensing band indices
      
 SpatialTools.py: Rasters/shapefile manipulation functions that do not rely on DEA (i.e. no dc.load or xarrays)
      - **rasterize_vector**: Rasterize a vector file and return as an array
-     - **layer_extent**: Computes min and max extents from GDAL layer features
+     - **contour_extract**: Extract contour lines from a two- or multi-dimensional array and return as a shapefile/geopandas dataframe
      - **indices_to_coords**: Takes lists of x and y array indices and converts them to equivelent spatial x and y coordinates
      - **coords_to_indices**: Takes lists of x and y coordinates and converts to equivelent raster array cell indices
      - **raster_randomsample**: Generate a set of n random points within cells of a raster that contain data
@@ -48,8 +50,13 @@ SignificanceTests.py: per-pixel hypothesis testing
 TasseledCapTools.py: a set of python functions to use with the outputs of tasseled cap transforms
      - **thresholded_tasseled_cap**: Computes thresholded tasseled cap wetness, greenness and brightness bands from a six band xarray dataset
      - **pct_exceedance_tasseled_cap**: Counts the number of thresholded tasseled cap scenes per pixel and divides by the number of tasseled cap scenes per pixel
-    
 
+RainfallTools.py: load rainfall from BoM rainfall grids
+     - **load_rainfall**: Loads gridded rainfall data and fixes offset in underlying BoM data
 
+FileDialogs.py: A set of file dialog widgets for file paths for opening or saving files.
+     - **SaveFileButton**:creates a button to save your file
+     - **SelectFileButton**:creates a button to select one file
+     - **SelectFilesButton**:SelectFilesButton returns a list of file paths (strings)
 .. toctree::
    :maxdepth: 1

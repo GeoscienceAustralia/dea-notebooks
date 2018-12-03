@@ -14,4 +14,7 @@
 *.mp4
 *.wmv
 *.png
+*.nc
+*.nfs*
+*.DS_Store
 __pycache__
