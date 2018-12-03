@@ -17,4 +17,5 @@
 *.nc
 *.nfs*
 *.DS_Store
+Advanced_coastal/output_data/*
 __pycache__
