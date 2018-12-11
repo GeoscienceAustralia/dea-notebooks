@@ -100,6 +100,7 @@ def hsv_image_processing(rgb_array,
 # landsat_clearprop = 0.98
 # sentinel_clearprop = 0.8
 # landsat_sensors = ['ls5', 'ls7', 'ls8']
+# landsat_product = 'nbart'
 # sentinel_sensors = None  # ['s2a', 's2b']
 # bands = ['swir1', 'nir', 'green']  # ['red', 'green', 'blue']
 # percentile_stretch = [0.005, 0.995]
@@ -118,6 +119,7 @@ def hsv_image_processing(rgb_array,
 # landsat_clearprop = 0.96
 # sentinel_clearprop = 0.8
 # landsat_sensors = ['ls5', 'ls7', 'ls8']
+# landsat_product = 'nbart'
 # sentinel_sensors = None  # ['s2a', 's2b']
 # bands = ['red', 'green', 'blue']
 # percentile_stretch = [0.01, 0.99]
@@ -138,6 +140,7 @@ def hsv_image_processing(rgb_array,
 # landsat_clearprop = 0.96
 # sentinel_clearprop = 0.8
 # landsat_sensors = ['ls5', 'ls7', 'ls8']
+# landsat_product = 'nbart'
 # sentinel_sensors = None  # ['s2a', 's2b']
 # bands = ['red', 'green', 'blue']
 # percentile_stretch = [0.005, 0.995]
@@ -158,6 +161,7 @@ def hsv_image_processing(rgb_array,
 # landsat_clearprop = 0.96
 # sentinel_clearprop = 0.8
 # landsat_sensors = ['ls5', 'ls7', 'ls8']
+# landsat_product = 'nbart'
 # sentinel_sensors = None  # ['s2a', 's2b']
 # bands = ['red', 'green', 'blue']
 # percentile_stretch = [0.005, 0.995]
@@ -178,6 +182,7 @@ def hsv_image_processing(rgb_array,
 # landsat_clearprop = 0.5
 # sentinel_clearprop = 0.8
 # landsat_sensors = ['ls5', 'ls7', 'ls8']
+# landsat_product = 'nbart'
 # sentinel_sensors = None  # ['s2a', 's2b']
 # bands = ['red', 'green', 'blue']
 # percentile_stretch = [0.01, 0.99]
@@ -189,24 +194,46 @@ def hsv_image_processing(rgb_array,
 #                           unsharp_radius1=20, unsharp_amount1=0.3,
 #                           unsharp_radius2=1, unsharp_amount2=0)
 
-# Murray Mouth
-study_area = 'murraymouth'
-lat, lon, buffer_m = -35.555767, 138.881697, 10000
+# # Murray Mouth
+# study_area = 'murraymouth'
+# lat, lon, buffer_m = -35.555767, 138.881697, 10000
+# time_range = ('1987-01-01', '2018-12-01')
+# resolution = (-25, 25)
+# ratio = 1.0
+# landsat_clearprop = 0.95
+# sentinel_clearprop = 0.8
+# landsat_sensors = ['ls5', 'ls7', 'ls8']
+# landsat_product = 'nbart'
+# sentinel_sensors = None  # ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.01, 0.99]
+# width_pixels = 700
+# interval = 100
+# rolling_median = 3
+# interpolation_freq = None
+# image_proc_func = None
+
+# Kosciuszko
+study_area = 'kosciuszko'
+lat, lon, buffer_m = -36.4224, 148.315, 11000  
 time_range = ('1987-01-01', '2018-12-01')
 resolution = (-25, 25)
-ratio = 1.0
-landsat_clearprop = 0.95
+ratio = 1
+landsat_clearprop = 0.75
 sentinel_clearprop = 0.8
 landsat_sensors = ['ls5', 'ls7', 'ls8']
+landsat_product = 'nbar'
 sentinel_sensors = None  # ['s2a', 's2b']
 bands = ['red', 'green', 'blue']
-percentile_stretch = [0.01, 0.99]
-width_pixels = 700
-interval = 100
-rolling_median = 3
+percentile_stretch = [0.04, 0.999] 
+width_pixels = 1200
+interval = 60
+rolling_median = 13
 interpolation_freq = None
-image_proc_func = None
-
+image_proc_func = partial(hsv_image_processing, val_mult=1.03, sat_mult=1.25,
+                          unsharp_radius1=20, unsharp_amount1=1.2,
+                          unsharp_radius2=1, unsharp_amount2=0)
+# image_proc_func = None
 
 ##############################
 # Load in Landsat timeseries #
@@ -228,11 +255,13 @@ query = {'x': (x - buffer_m * ratio, x + buffer_m * ratio),
 # of the satellite that made the observation
 landsat_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query,
                                                sensors=landsat_sensors,
+                                               product=landsat_product,
                                                bands_of_interest=bands,
                                                masked_prop=landsat_clearprop, 
-                                               mask_pixel_quality=False,
-                                               mask_invalid_data=False,
-                                               mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud'},
+                                               mask_pixel_quality=True,
+                                               mask_invalid_data=True,
+                                               mask_dict={'contiguous': True, 'cloud_fmask': 'no_cloud'},
+#                                                mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud'},
                                                ls7_slc_off=False)
 
 #################################
@@ -292,7 +321,7 @@ if interpolation_freq:
 
 # Produce an RGB animation that includes both Sentinel and Landsat observations, using
 # the `title` parameter to print satellite names for each observation
-DEAPlotting.animated_timeseries(ds=combined_ds,
+DEAPlotting.animated_timeseries(ds=(combined_ds ** 0.02).isel(time=slice(5, -5)).fillna(0),
                                 output_path=f'animated_timeseries_{study_area}.mp4',
                                 bands=bands,
                                 interval=interval,
