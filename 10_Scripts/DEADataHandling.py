@@ -407,7 +407,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
 
 
 def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
-                        bands_of_interest=('nbart_red', 'nbart_green', 'nbart_blue'),
+                        bands_of_interest=('nbart_red', 'nbart_green', 'nbart_blue', 'nbart_nir_1', 'nbart_swir_2', 'nbart_swir_3'),
                         masked_prop=0.99, mask_values=(0, 2, 3), pixel_quality_band='fmask',
                         mask_pixel_quality=False, mask_invalid_data=True, satellite_metadata=False):
     
@@ -426,7 +426,7 @@ def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
     inserted into the array, potentially causing your data to use 4x as much memory. Be aware that the resulting
     arrays will contain invalid -999 values which should be considered in analyses.
     
-    Last modified: October 2018
+    Last modified: November 2018
     Author: Robbi Bishop-Taylor
     
     :param dc: 
@@ -446,7 +446,8 @@ def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
         
     :param bands_of_interest:
         An optional list of strings containing the bands to be read in; to view full list run the following:
-        `dc.list_measurements().loc['s2b_ard_granule']`. Defaults to `['nbart_red', 'nbart_green', 'nbart_blue']`.
+        `dc.list_measurements().loc['s2b_ard_granule']`. Defaults to `('nbart_red', 'nbart_green', 'nbart_blue', 
+        'nbart_nir_1', 'nbart_swir_2', 'nbart_swir_3')`.
 
     :param masked_prop:
         An optional float giving the minimum percentage of good quality pixels required for a Sentinel 2 observation
