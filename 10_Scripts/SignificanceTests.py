@@ -83,4 +83,15 @@ def significance_tests(xarray_a, xarray_b, t_test=False, levene_test=False,
         p_val_levene_xr = xr.DataArray(levene_p, coords = [lat, long], dims = ['y', 'x'], name='p_value_levene') 
         print('finished levene test')
         return levene_stat_xr, p_val_levene_xr
-      
+
+# If the module is being run, not being imported! 
+# to do this, do the following
+# run {modulename}.py)
+
+if __name__=='__main__':
+#print that we are running the testing
+    print('Testing..')
+#import doctest to test our module for documentation
+    import doctest
+    doctest.testmod()
+    print('Testing done')      
