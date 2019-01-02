@@ -40,7 +40,7 @@ from pyproj import Proj, transform
 
 
 def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time', 
-        robust=True, percentile_stretch = None, col_wrap=4, size=6,
+        robust=True, percentile_stretch = None, col_wrap=4, size=6, aspect=1,
         savefig_path=None, savefig_kwargs={}, **kwargs):
     
     """
@@ -144,6 +144,8 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
     Exporting image to output_image_test.png
     
     """   
+    # Update kwargs with default or supplied aspect value
+    kwargs.update({'aspect':aspect})   
 
     # If no value is supplied for `index` (the default), plot using default values and arguments passed via `**kwargs`
     if index is None:
