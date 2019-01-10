@@ -358,7 +358,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                                                  contiguous=True)
 
             # Compute good data for each observation as a percentage of total array pixels
-            data_perc = good_quality.sum(dim=['x', 'y']) / (good_quality.shape[1] * good_quality.shape[2])
+            data_perc = good_quality.sum(axis=1).sum(axis=1) / (good_quality.shape[1] * good_quality.shape[2])
             
             # Add data_perc data to Landsat dataset as a new xarray variable
             data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
@@ -563,7 +563,7 @@ def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
             good_quality = pq[pixel_quality_band].where(good_quality).notnull()
 
             # Compute good data for each observation as a percentage of total array pixels
-            data_perc = good_quality.sum(dim=['x', 'y']) / (good_quality.shape[1] * good_quality.shape[2])
+            data_perc = good_quality.sum(axis=1).sum(axis=1) / (good_quality.shape[1] * good_quality.shape[2])
 
             # Add data_perc data to Sentinel 2 dataset as a new xarray variable
             data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
