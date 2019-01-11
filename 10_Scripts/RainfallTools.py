@@ -21,6 +21,6 @@ def load_rainfall(query):
     dc_rf =datacube.Datacube(config='/g/data/r78/bom_grids/rainfall.conf')
     
     rf_data = dc_rf.load(product = 'rainfall_grids_1901_2017',align=(0.025,0.027), **query)
-    print('These rainfall grids have been realigned by the load_rainfall function - if you think this' 
-          ' may be incorrect then check your data and metadata then contact BDunn or VNewey')
+    print('These rainfall grids have been realigned by the load_rainfall function - if you think this ',
+          ' may be incorrect then check your data and metadata then contact BDunn or VNewey'
     return rf_data

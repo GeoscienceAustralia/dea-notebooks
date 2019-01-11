@@ -18,12 +18,12 @@ DEADataHandling.py: handling data using DEA functionality (i.e. dc.load or xarra
      - **write_your_netcdf**: Writes an xarray dataset or array to a NetCDF file
      
 DEAPlotting.py: plotting DEA data (e.g. xarrays)
-     - **three_band_image**: Takes three spectral bands and plots them on the RGB bands of an image
-     - **three_band_image_subplots**: Takes three spectral bands and multiple time steps, and plots them on the RGB bands of an image
+     - **rgb**: Takes an xarray dataset and plots RGB images using three imagery bands
      - **animated_timeseries**: Takes an xarray time series and exports an animation showing landscape change across time
      - **animated_doubletimeseries**: Takes two xarray datasets and exports a two panel animation
      - **animated_timeseriesline**: Plots a pandas dataframe as a line graph next to an xarray dataset
      - **plot_WOfS**: Use the DEA WOfS color ramp to plot WOfS percentage data
+     - **display_map**: Generates an interactive map with a bounded rectangle overlayed on Google Maps imagery from a set of x and y coordinates.
 
 BandIndices.py: calculating remote sensing band indices
      - **calculate_indices**: Computes a set of indices (including NDVI, GNDVI, NDWI, NDMI) from an xarray dataset
@@ -32,7 +32,7 @@ BandIndices.py: calculating remote sensing band indices
      
 SpatialTools.py: Rasters/shapefile manipulation functions that do not rely on DEA (i.e. no dc.load or xarrays)
      - **rasterize_vector**: Rasterize a vector file and return as an array
-     - **contour_extract**: Extract contour lines from a two-dimensional array and optionally export contour line shapefile
+     - **contour_extract**: Extract contour lines from a two- or multi-dimensional array and return as a shapefile/geopandas dataframe
      - **indices_to_coords**: Takes lists of x and y array indices and converts them to equivelent spatial x and y coordinates
      - **coords_to_indices**: Takes lists of x and y coordinates and converts to equivelent raster array cell indices
      - **raster_randomsample**: Generate a set of n random points within cells of a raster that contain data
