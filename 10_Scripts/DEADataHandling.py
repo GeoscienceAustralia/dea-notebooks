@@ -182,6 +182,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                       bands_of_interest=None, masked_prop=0.99, mask_dict=None,
                       mask_pixel_quality=False, mask_invalid_data=True, 
                       ls7_slc_off=False, satellite_metadata=False):
+
     
     """Load cloud-free data from multiple Landsat satellites as an xarray dataset
     

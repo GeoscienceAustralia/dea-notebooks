@@ -40,7 +40,7 @@ from pyproj import Proj, transform
 
 
 def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time', 
-        robust=True, percentile_stretch = None, col_wrap=4, size=6,
+        robust=True, percentile_stretch = None, col_wrap=4, size=6, aspect=1,
         savefig_path=None, savefig_kwargs={}, **kwargs):
     
     """
@@ -78,6 +78,8 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
         The maximum number of columns allowed in faceted plots. Defaults to 4.
     size : integer, optional
         The height (in inches) of each plot. Defaults to 6.
+    aspect : integer, optional
+        Aspect ratio of each facet in the plot, so that aspect * size gives width of each facet in inches. Defaults to 1.
     savefig_path : string, optional
         Path to export image file for the RGB plot. Defaults to None, which does not export an image file.
     savefig_kwargs : dict, optional
