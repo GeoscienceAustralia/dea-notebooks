@@ -6,6 +6,10 @@
 # cd /g/data/r78/rt1527/dea-notebooks/Animations
 # sh raijin_animation_submit.sh
 
+# Set matplotlib backend for Raijin
+import matplotlib
+matplotlib.use('agg')
+
 import os
 import sys
 import datacube
@@ -268,27 +272,27 @@ def hsv_image_processing(rgb_array,
 #                           unsharp_radius1=20, unsharp_amount1=1.2,
 #                           unsharp_radius2=1, unsharp_amount2=0)
 
-study_area = 'mclarenvale'
-lat, lon, buffer_m = -35.224768512, 138.542068038, 13000
-time_range = ('1987-01-01', '2018-12-01')
-resolution = (-25, 25)
-ratio = 1.0  # (1280/720.0)
-landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
-landsat_clearprop = 0.70
-sentinel_clearprop = 0.8
-landsat_product = 'nbart'
-landsat_sensors = ['ls5', 'ls7', 'ls8']  
-sentinel_sensors = None  # ['s2a', 's2b']
-bands = ['red', 'green', 'blue']
-percentile_stretch = [0.005, 0.995]
-width_pixels = 1200
-interval = 50
-rolling_median = 17
-interpolation_freq = 1
-power = 1.0
-image_proc_func = partial(hsv_image_processing, val_mult=1.01,
-                          unsharp_radius1=20, unsharp_amount1=0.4,
-                          unsharp_radius2=1, unsharp_amount2=0)
+# study_area = 'mclarenvale'
+# lat, lon, buffer_m = -35.224768512, 138.542068038, 13000
+# time_range = ('1987-01-01', '2018-12-01')
+# resolution = (-25, 25)
+# ratio = 1.0  # (1280/720.0)
+# landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
+# landsat_clearprop = 0.70
+# sentinel_clearprop = 0.8
+# landsat_product = 'nbart'
+# landsat_sensors = ['ls5', 'ls7', 'ls8']  
+# sentinel_sensors = None  # ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels = 1200
+# interval = 50
+# rolling_median = 17
+# interpolation_freq = 1
+# power = 1.0
+# image_proc_func = partial(hsv_image_processing, val_mult=1.01,
+#                           unsharp_radius1=20, unsharp_amount1=0.4,
+#                           unsharp_radius2=1, unsharp_amount2=0)
 
 # study_area = 'mtbarker'
 # lat, lon, buffer_m = -35.0609078937, 138.865425388, 9000
@@ -311,6 +315,26 @@ image_proc_func = partial(hsv_image_processing, val_mult=1.01,
 # image_proc_func = partial(hsv_image_processing, val_mult=1.01,
 #                           unsharp_radius1=20, unsharp_amount1=0.4,
 #                           unsharp_radius2=1, unsharp_amount2=0)
+
+study_area = 'lakealbert'
+lat, lon, buffer_m = -35.6221419633, 139.279207077, 15000
+time_range = ('1987-01-01', '2018-12-01')
+resolution = (-25, 25)
+ratio = 1.0  # (1280/720.0)
+landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
+landsat_clearprop = 0.85
+sentinel_clearprop = 0.7
+landsat_product = 'nbart'
+landsat_sensors = ['ls5', 'ls7', 'ls8']   
+sentinel_sensors = ['s2a', 's2b']
+bands = ['red', 'green', 'blue']
+percentile_stretch = [0.005, 0.995]
+width_pixels = 1200
+interval = 40
+rolling_median = 9
+interpolation_freq = 1  #None # '28D'
+power = 0.5
+image_proc_func = None
 
 ##############################
 # Load in Landsat timeseries #
@@ -347,8 +371,9 @@ landsat_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query,
 if sentinel_sensors:
 
     # Before Sentinel 2 data can be combined with Landsat, create dicts to rename band names to match Landsat:
-    bands_s2_to_ls = {'nbart_red': 'red', 'nbart_green': 'green', 'nbart_blue': 'blue',
-                      'nbart_nir_1': 'nir', 'nbart_swir_2': 'swir1'}
+    bands_ard = {'nbart_red': 'red', 'nbart_green': 'green', 'nbart_blue': 'blue',
+                 'nbart_nir_1': 'nir', 'nbart_swir_2': 'swir1'}
+    bands_s2_to_ls = {k: v for k, v in bands_ard.items() if v in bands}
     bands_ls_to_s2 = {v: k for k, v in bands_s2_to_ls.items()}
 
     # Load cloud free Sentinel data for all sensors (S2A, S2B) for the above query.
@@ -356,8 +381,8 @@ if sentinel_sensors:
                                                       sensors=sentinel_sensors,
                                                       bands_of_interest=[bands_ls_to_s2[band] for band in bands],
                                                       masked_prop=sentinel_clearprop,
-                                                      mask_pixel_quality=False,
-                                                      mask_invalid_data=False)
+                                                      mask_pixel_quality=True,
+                                                      mask_invalid_data=True)
 
     # Rename bands to match Landsat to allow combining/concatenating
     sentinel_ds.rename(bands_s2_to_ls, inplace=True)
