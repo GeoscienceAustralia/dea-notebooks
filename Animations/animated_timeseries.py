@@ -316,25 +316,71 @@ def hsv_image_processing(rgb_array,
 #                           unsharp_radius1=20, unsharp_amount1=0.4,
 #                           unsharp_radius2=1, unsharp_amount2=0)
 
-study_area = 'lakealbert'
-lat, lon, buffer_m = -35.6221419633, 139.279207077, 15000
-time_range = ('1987-01-01', '2018-12-01')
-resolution = (-25, 25)
-ratio = 1.0  # (1280/720.0)
+# study_area = 'lakealbert'
+# lat, lon, buffer_m = -35.6221419633, 139.279207077, 15000
+# time_range = ('1987-01-01', '2018-12-01')
+# resolution = (-25, 25)
+# ratio = 1.0  # (1280/720.0)
+# landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
+# landsat_clearprop = 0.85
+# sentinel_clearprop = 0.7
+# landsat_product = 'nbart'
+# landsat_sensors = ['ls5', 'ls7', 'ls8']   
+# sentinel_sensors = ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels = 1200
+# interval = 40
+# rolling_median = 9
+# interpolation_freq = 1  #None # '28D'
+# power = 0.5
+# image_proc_func = None
+
+# study_area = 'northernadelaide'
+# lat, lon, buffer_m = -34.652, 138.607, 12000
+# time_range = ('1987-01-01', '2019-02-01')
+# resolution = (-25, 25)
+# ratio = 1.5
+# landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
+# landsat_clearprop = 0.70
+# sentinel_clearprop = 0.8
+# landsat_product = 'nbart'
+# landsat_sensors = ['ls5', 'ls7', 'ls8']   
+# sentinel_sensors = None  # ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels = 1200
+# interval = 50
+# rolling_median = 21
+# interpolation_freq = 1
+# power = 0.5
+# image_proc_func = partial(hsv_image_processing, val_mult=1.01,
+#                           unsharp_radius1=20, unsharp_amount1=0.4,
+#                           unsharp_radius2=1, unsharp_amount2=0)
+
+study_area = 'sharkbay'
+lat, lon, buffer_m = -25.88, 113.980678, 23000
+time_range = ('1987-01-01', '2019-12-31')
+resolution = (-50, 50)
+ratio = 1.5
 landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
-landsat_clearprop = 0.85
-sentinel_clearprop = 0.7
+landsat_clearprop = 0.70
+sentinel_clearprop = 0.8
 landsat_product = 'nbart'
 landsat_sensors = ['ls5', 'ls7', 'ls8']   
-sentinel_sensors = ['s2a', 's2b']
+sentinel_sensors = None  # ['s2a', 's2b']
 bands = ['red', 'green', 'blue']
 percentile_stretch = [0.005, 0.995]
-width_pixels = 1200
-interval = 40
-rolling_median = 9
-interpolation_freq = 1  #None # '28D'
+width_pixels = 1000
+interval = 80
+rolling_median = 21
+interpolation_freq = None
 power = 0.5
-image_proc_func = None
+image_proc_func = partial(hsv_image_processing, 
+                          hue_mult=1, sat_mult=1.05, val_mult=1.0,
+                          unsharp_radius1=20, unsharp_amount1=0.3,
+                          unsharp_radius2=1, unsharp_amount2=0)
+
 
 ##############################
 # Load in Landsat timeseries #
@@ -372,7 +418,7 @@ if sentinel_sensors:
 
     # Before Sentinel 2 data can be combined with Landsat, create dicts to rename band names to match Landsat:
     bands_ard = {'nbart_red': 'red', 'nbart_green': 'green', 'nbart_blue': 'blue',
-                 'nbart_nir_1': 'nir', 'nbart_swir_2': 'swir1'}
+                 'nbart_nir_1': 'nir', 'nbart_swir_2': 'swir1', 'nbart_swir_3': 'swir2'}
     bands_s2_to_ls = {k: v for k, v in bands_ard.items() if v in bands}
     bands_ls_to_s2 = {v: k for k, v in bands_s2_to_ls.items()}
 
@@ -392,7 +438,7 @@ if sentinel_sensors:
 # Combine Landsat and Sentinel 2 #
 ##################################
 
-try:
+if landsat_sensors and sentinel_sensors:
 
     # Combine into one dataset
     combined_ds = xr.auto_combine([landsat_ds, sentinel_ds])
@@ -400,10 +446,15 @@ try:
     # Sort by time
     combined_ds = combined_ds.sortby('time')
 
-except:
+elif landsat_sensors and not sentinel_sensors:
 
     # If no Sentinel, just use Landsat as combined dataset
     combined_ds = landsat_ds
+    
+else:
+    
+    # If no Landsat, just use Sentinel as combined dataset
+    combined_ds = sentinel_ds
 
 
 ###########
