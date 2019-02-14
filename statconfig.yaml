@@ -1,0 +1,50 @@
+sources:
+  - product: s1_gamma0_scene
+    #name: s1_gamma0_scene
+    measurements: [vv, vh]
+    #group_by: solar_day
+
+date_ranges:
+  start_date: 2000-01-01
+  end_date: 2040-01-01
+  #stats_duration: 1m
+  #step_size: 1m
+
+computation:
+    chunking:
+        x: 500
+        y: 500
+
+storage:
+  driver: GeoTIFF
+
+  crs: EPSG:3577
+  tile_size:
+      x: 100000.0
+      y: 100000.0
+  resolution:
+      x: 25
+      y: -25
+  chunking:
+      x: 256
+      y: 256
+      time: 1
+  dimension_order: [time, y, x]
+
+location: ./output
+
+
+output_products:
+ - name: radar_wofs_summary
+   product_type: radar_wofs_summary
+   metadata:
+     format:
+       name: GeoTIFF
+   statistic: external
+   statistic_args:
+     impl: radarstat.radarwofs
+   output_params:
+     zlib: True
+     fletcher32: True
+   file_path_template: 'SAR_WOFS_{var_name}_{x}_{y}.tif'
+
