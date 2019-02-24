@@ -14,3 +14,4 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
    :maxdepth: 1
    
    Mineral_Indices_Calculation.ipynb
+   Tasselled_Cap_Wetness_Index_Calculation.ipynb
