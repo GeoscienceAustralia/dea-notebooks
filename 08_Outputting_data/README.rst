@@ -5,7 +5,7 @@ Outputting data
 These pages walk you through writing out data in various formats including:
 
 - NetCDF
-- GeoTiff
+- GeoTIFF
 - Pickle
 - RGB composites
 - Gifs
@@ -17,5 +17,6 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
    :maxdepth: 1
 
    ProduceFalseColourGeotiffs.ipynb
+   Sentinel2ScenesToGeoTIFF.ipynb   
    PlottingAnimatedGifs.ipynb
    ExportingCompliantNetCDFs.ipynb
