@@ -318,11 +318,11 @@ def hsv_image_processing(rgb_array,
 
 # study_area = 'lakealbert'
 # lat, lon, buffer_m = -35.6221419633, 139.279207077, 15000
-# time_range = ('1987-01-01', '2018-12-01')
+# time_range = ('1987-01-01', '2019-03-01')
 # resolution = (-25, 25)
 # ratio = 1.0  # (1280/720.0)
 # landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
-# landsat_clearprop = 0.85
+# landsat_clearprop = 0.82
 # sentinel_clearprop = 0.7
 # landsat_product = 'nbart'
 # landsat_sensors = ['ls5', 'ls7', 'ls8']   
@@ -330,8 +330,8 @@ def hsv_image_processing(rgb_array,
 # bands = ['red', 'green', 'blue']
 # percentile_stretch = [0.005, 0.995]
 # width_pixels = 1200
-# interval = 40
-# rolling_median = 9
+# interval = 60
+# rolling_median = 15
 # interpolation_freq = 1  #None # '28D'
 # power = 0.5
 # image_proc_func = None
@@ -358,28 +358,88 @@ def hsv_image_processing(rgb_array,
 #                           unsharp_radius1=20, unsharp_amount1=0.4,
 #                           unsharp_radius2=1, unsharp_amount2=0)
 
-study_area = 'sharkbay'
-lat, lon, buffer_m = -25.88, 113.980678, 23000
-time_range = ('1987-01-01', '2019-12-31')
-resolution = (-50, 50)
-ratio = 1.5
+# study_area = 'sharkbay'
+# lat, lon, buffer_m = -25.88, 113.980678, 23000
+# time_range = ('1987-01-01', '2019-12-31')
+# resolution = (-50, 50)
+# ratio = 1.5
+# landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
+# landsat_clearprop = 0.70
+# sentinel_clearprop = 0.8
+# landsat_product = 'nbart'
+# landsat_sensors = ['ls5', 'ls7', 'ls8']   
+# sentinel_sensors = None  # ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels = 1000
+# interval = 80
+# rolling_median = 21
+# interpolation_freq = None
+# power = 0.5
+# image_proc_func = partial(hsv_image_processing, 
+#                           hue_mult=1, sat_mult=1.05, val_mult=1.0,
+#                           unsharp_radius1=20, unsharp_amount1=0.3,
+#                           unsharp_radius2=1, unsharp_amount2=0)
+
+# study_area = 'barossavalley'
+# lat, lon, buffer_m = -34.53139159, 138.95821437, 18000
+# time_range = ('1987-01-01', '2019-02-01')
+# resolution = (-50, 50)
+# ratio = 1
+# landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
+# landsat_clearprop = 0.70
+# sentinel_clearprop = 0.8
+# landsat_product = 'nbart'
+# landsat_sensors = ['ls5', 'ls7', 'ls8']   
+# sentinel_sensors = None  # ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels = 800
+# interval = 50
+# rolling_median = 25
+# interpolation_freq = 1
+# power = 0.9
+# image_proc_func = None
+
+# study_area = 'murraymouth'
+# lat, lon, buffer_m = -35.55798788, 138.88525863, 3000
+# time_range = ('1987-01-01', '2019-03-01')
+# resolution = (-25, 25)
+# ratio = 1
+# landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
+# landsat_clearprop = 0.70
+# sentinel_clearprop = 0.70
+# landsat_product = 'nbart'
+# landsat_sensors = ['ls5', 'ls7', 'ls8']   
+# sentinel_sensors = ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels = 700
+# interval = 50
+# rolling_median = 25
+# interpolation_freq = 1
+# power = 0.8
+# image_proc_func = None
+
+study_area = 'murraymouthwide'
+lat, lon, buffer_m = -35.55798788, 138.88525863, 6000
+time_range = ('1987-01-01', '2019-03-01')
+resolution = (-25, 25)
+ratio = 1
 landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
 landsat_clearprop = 0.70
-sentinel_clearprop = 0.8
+sentinel_clearprop = 0.70
 landsat_product = 'nbart'
 landsat_sensors = ['ls5', 'ls7', 'ls8']   
-sentinel_sensors = None  # ['s2a', 's2b']
+sentinel_sensors = ['s2a', 's2b']
 bands = ['red', 'green', 'blue']
 percentile_stretch = [0.005, 0.995]
-width_pixels = 1000
-interval = 80
-rolling_median = 21
-interpolation_freq = None
-power = 0.5
-image_proc_func = partial(hsv_image_processing, 
-                          hue_mult=1, sat_mult=1.05, val_mult=1.0,
-                          unsharp_radius1=20, unsharp_amount1=0.3,
-                          unsharp_radius2=1, unsharp_amount2=0)
+width_pixels = 700
+interval = 50
+rolling_median = 25
+interpolation_freq = 1
+power = 0.8
+image_proc_func = None
 
 
 ##############################
@@ -395,6 +455,7 @@ query = {'x': (x - buffer_m * ratio, x + buffer_m * ratio),
          'time': time_range,
          'crs': 'EPSG:3577',
          'output_crs': 'EPSG:3577',
+#          'resampling': 'bilinear',
          'resolution': resolution} 
 
 # Load cloud free Landsat data for all sensors (LS5, LS7, LS8) for the above query. Setting 
@@ -480,6 +541,7 @@ DEAPlotting.animated_timeseries(ds=combined_ds ** power,     # (combined_ds ** 0
                                 width_pixels=width_pixels,
                                 percentile_stretch=percentile_stretch,
                                 show_date=False,
+                                onebandplot_kwargs={'interpolation': 'nearest'},
                                 title=combined_ds.time.dt.year.values.tolist(),
                                 image_proc_func=image_proc_func)
 
