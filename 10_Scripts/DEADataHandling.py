@@ -472,16 +472,16 @@ def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
     visually appealing time series of observations that are not affected by cloud, for example as an input to the
     `animated_timeseries` function from `DEAPlotting`.
     
-    The proportion of good quality pixels is calculated by summing the pixels that are not flagged as poor quality
+    The proportion of good quality pixels is calculated by summing the pixels flagged as good quality
     in the Sentinel pixel quality array. By default pixels flagged as nodata, cloud or shadow are used to 
-    calculate the number of poor quality pixels, but this can be customised using the `mask_values` parameter.
+    calculate the number of good quality quality pixels, but this can be customised using the `mask_values` parameter.
     
     MEMORY ISSUES: For large data extractions, it is recommended that you set both `mask_pixel_quality=False` and 
     `mask_invalid_data=False`. Otherwise, all output variables will be coerced to float64 when NaN values are 
     inserted into the array, potentially causing your data to use 4x as much memory. Be aware that the resulting
     arrays will contain invalid -999 values which should be considered in analyses.
     
-    Last modified: November 2018
+    Last modified: March 2019
     Author: Robbi Bishop-Taylor
     
     :param dc: 
@@ -506,7 +506,8 @@ def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
 
     :param masked_prop:
         An optional float giving the minimum percentage of good quality pixels required for a Sentinel 2 observation
-        to be loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of poor quality pixels).
+        to be loaded. Defaults to 0.0 which will return all observations regardless of pixel quality (set to e.g. 0.99 
+        to return only observations with more than 99% good quality pixels).
     
     :param mask_values:
         An optional list of pixel quality values to treat as poor quality observations in the above `masked_prop`
@@ -520,10 +521,9 @@ def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
     :param mask_pixel_quality:
         An optional boolean indicating whether to apply the pixel quality mask to all observations that were not
         filtered out for having less good quality pixels that `masked_prop`. For example, if `masked_prop=0.99`, the
-        filtered images may still contain up to 1% poor quality pixels. The default of False simply returns the
-        resulting observations without masking out these pixels; True masks them out and sets them to NaN using the
-        pixel quality mask, but has the side effect of changing the data type of the output arrays from int16 to
-        float64 which can cause memory issues. To reduce memory usage, set to False.
+        filtered images may still contain up to 1% poor quality pixels. The default of True masks poor quality pixeks 
+        out and sets them to NaN using the pixel quality mask. This has the side effect of changing the data type of 
+        the output arrays from int16 to float64 which can cause memory issues. To reduce memory usage, set to False.
         
     :param mask_invalid_data:
         An optional boolean indicating whether invalid -999 nodata values should be replaced with NaN. Defaults to
