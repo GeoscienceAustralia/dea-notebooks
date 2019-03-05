@@ -7,7 +7,7 @@ Thresholded tasseled cap is an intermediate step in tasseled cap percentage exce
 but is useful in its own right for producing hovmoller plots.
 TasseledCapTools is also useful in situations where speed and memory are issues. 
 
-This file requires the BandIndices.py python script from dea-notebooks/Scripts
+This file requires the BandIndices.py python script from dea-notebooks/10_Scripts
 
 datacube-stats includes the function TCWStats.TCW stats calculates mean brightness, wetness,
 and greenness, percentage exceedances and standard deviations. It allows thresholds and 
@@ -32,7 +32,7 @@ import xarray as xr
 
 
 # Import external functions from dea-notebooks
-sys.path.append(os.path.expanduser('~/dea-notebooks/Scripts/'))
+sys.path.append(os.path.expanduser('~/dea-notebooks/10_Scripts/'))
 from BandIndices import tasseled_cap
 
 
