@@ -27,7 +27,7 @@ import rasterio
 from rasterio import features
 
 # Import DEA Notebooks scripts
-sys.path.append('../Scripts')
+sys.path.append('../10_Scripts')
 from SpatialTools import array_to_geotiff
 
 
