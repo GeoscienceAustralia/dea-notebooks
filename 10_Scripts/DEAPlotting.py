@@ -12,7 +12,7 @@ Available functions:
     three_band_image (depreciated)
     three_band_image_subplots (depreciated)
 
-Last modified: November 2018
+Last modified: March 2019
 Authors: Claire Krause, Robbi Bishop-Taylor, Sean Chua, Mike Barnes, Cate Kooymans, Bex Dunn
 
 """
@@ -227,7 +227,7 @@ def animated_timeseries(ds, output_path,
     A shapefile boundary can be added to the output animation by providing a path to the shapefile.
     
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
-    the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
+    the `load_clearlandsat` function from `dea-notebooks/10_Scripts/DEADataHandling`.
     
     Last modified: October 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn    
