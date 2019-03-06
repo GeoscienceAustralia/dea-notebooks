@@ -12,7 +12,7 @@ Available functions:
     three_band_image (depreciated)
     three_band_image_subplots (depreciated)
 
-Last modified: November 2018
+Last modified: March 2019
 Authors: Claire Krause, Robbi Bishop-Taylor, Sean Chua, Mike Barnes, Cate Kooymans, Bex Dunn
 
 """
@@ -23,7 +23,6 @@ import numpy as np
 import pandas as pd
 from skimage import exposure
 import matplotlib
-# matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.patheffects as PathEffects
@@ -78,6 +77,8 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
         The maximum number of columns allowed in faceted plots. Defaults to 4.
     size : integer, optional
         The height (in inches) of each plot. Defaults to 6.
+    aspect : integer, optional
+        Aspect ratio of each facet in the plot, so that aspect * size gives width of each facet in inches. Defaults to 1.
     savefig_path : string, optional
         Path to export image file for the RGB plot. Defaults to None, which does not export an image file.
     savefig_kwargs : dict, optional
@@ -144,8 +145,6 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
     Exporting image to output_image_test.png
     
     """   
-    # Update kwargs with default or supplied aspect value
-    kwargs.update({'aspect':aspect})   
 
     # If no value is supplied for `index` (the default), plot using default values and arguments passed via `**kwargs`
     if index is None:
@@ -228,7 +227,7 @@ def animated_timeseries(ds, output_path,
     A shapefile boundary can be added to the output animation by providing a path to the shapefile.
     
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
-    the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
+    the `load_clearlandsat` function from `dea-notebooks/10_Scripts/DEADataHandling`.
     
     Last modified: October 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn    
@@ -528,7 +527,7 @@ def animated_timeseriesline(ds, df, output_path,
     A shapefile boundary can be added to the output animation by providing a path to the shapefile.
     
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
-    the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
+    the `load_clearlandsat` function from `dea-notebooks/10_Scripts/DEADataHandling`.
     
     Last modified: October 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn    
@@ -870,7 +869,7 @@ def animated_doubletimeseries(ds1, ds2, output_path,
     A shapefile boundary can be added to the output animation by providing a path to the shapefile.
     
     This function can be used to produce visually appealing cloud-free animations when used in combination with 
-    the `load_clearlandsat` function from `dea-notebooks/Scripts/DEADataHandling`.
+    the `load_clearlandsat` function from `dea-notebooks/10_Scripts/DEADataHandling`.
     
     Last modified: October 2018
     Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn
@@ -1495,7 +1494,7 @@ def three_band_image(ds, bands=['red', 'green', 'blue'], time=0, figsize=(10, 10
 
     :example:
         # Import external functions from dea-notebooks
-        sys.path.append(os.path.expanduser('~/dea-notebooks/Scripts'))
+        sys.path.append(os.path.expanduser('~/dea-notebooks/10_Scripts'))
         import DEAPlotting
         
         # Load Landsat time series

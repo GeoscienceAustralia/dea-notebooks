@@ -185,7 +185,7 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
+def load_clearlandsat(dc, query,sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                       bands_of_interest=None, masked_prop=0.0, mask_dict=None,
                       mask_pixel_quality=True, mask_invalid_data=True, 
                       ls7_slc_off=False, satellite_metadata=False):
@@ -251,6 +251,8 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     satellite_metadata : bool, optional
         An optional boolean indicating whether to return the dataset with a `satellite` variable that gives the name 
         of the satellite that made each observation in the timeseries (i.e. ls5, ls7, ls8). Defaults to False. 
+    * : pass a list of additional arguments as in 
+        https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html   
     
     Returns
     -------
@@ -537,6 +539,8 @@ def load_clearsentinel2(dc, query, sensors=('s2a', 's2b'), product='ard',
     :returns:
         An xarray dataset containing only Sentinel 2 observations that contain greater than `masked_prop`
         proportion of clear pixels.  
+    * : pass a list of additional arguments as in 
+        https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html    
         
     :example:
     
