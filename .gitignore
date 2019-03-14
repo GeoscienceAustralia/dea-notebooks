@@ -13,4 +13,9 @@
 *.qgs
 *.nc
 *.lyr
+*.qpj
+*.yaml
+*.csv
+*.jsonl
+*.lock
 __pycache__
