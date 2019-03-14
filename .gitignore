@@ -9,6 +9,8 @@
 *.prj
 *.dbf
 *.cpg
+*.sbn
+*.sbx
 *.kea
 *.qgs
 *.nc
@@ -18,4 +20,5 @@
 *.csv
 *.jsonl
 *.lock
+*.nfs2ac003add000433800000d36
 __pycache__
