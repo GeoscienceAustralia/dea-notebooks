@@ -1,27 +1,27 @@
 #!/bin/bash
 #PBS -P r78 
-#PBS -q express 
-#PBS -N ramsar
+#PBS -q megamem 
+#PBS -N ramsar1
 #PBS -l walltime=24:00:00
-#PBS -l mem=64GB
-#PBS -l jobfs=1GB
-#PBS -l ncpus=32
+#PBS -l mem=6TB
+#PBS -l jobfs=1600GB
+#PBS -l ncpus=64
 #PBS -l wd
 #PBS -M bex.dunn@ga.gov.au
 #PBS -m abe
 
 
-#NNODES=16
+#NNODES=2
 NNODES=$(cat $PBS_NODEFILE | uniq | wc -l)
-NCPUS=16
+NCPUS=32
 JOBDIR=$PWD
 
 for i in $(seq 0 $(($NNODES-1))); do
     if [ $i -lt 1 ]
     then
-        PARAMF="{1..16}"
+        PARAMF="{1..32}"
     else
-        PARAMF="{17..32}"
+        PARAMF="{33..64}"
     fi
     pbsdsh -n $(( $NCPUS*$i )) -- \
     bash -l -c "\
