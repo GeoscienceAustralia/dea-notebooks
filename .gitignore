@@ -4,4 +4,13 @@
 */.ipynb_checkpoints/*
 *.tif
 *.xml
+*.shp
+*.shx
+*.prj
+*.dbf
+*.cpg
+*.kea
+*.qgs
+*.nc
+*.lyr
 __pycache__
