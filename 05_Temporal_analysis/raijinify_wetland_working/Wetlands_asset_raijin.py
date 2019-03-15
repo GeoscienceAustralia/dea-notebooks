@@ -204,6 +204,8 @@ def BigFunkyFunction(lilshape,crs):
         ### mask FC with wetness
 
         fc_ds_noTCW=fc_ds.where(tcw==False)
+        #match the fractional cover time stamps to the wofs time stamps
+        fc_ds_noTCW=fc_ds_noTCW.where(fc_ds_noTCW.time==wofls.time)
 
         ### Calculate number of pixels in area of interest
 
