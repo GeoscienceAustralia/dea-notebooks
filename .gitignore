@@ -20,5 +20,8 @@
 *.csv
 *.jsonl
 *.lock
+*.npy
+*.joblib
+*.log
 *.nfs2ac003add000433800000d36
 __pycache__
