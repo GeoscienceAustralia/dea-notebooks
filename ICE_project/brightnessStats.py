@@ -1,4 +1,13 @@
-class Brightness(Statistic):
+import xarray
+from datacube_stats.statistics import Percentile, Statistic
+from datacube_stats.statistics.uncategorized import PerBandIndexStat
+from collections import Sequence
+from datacube.model import Measurement
+import numpy as np
+import pandas as pd
+
+
+class brightness(Statistic):
     """
        Summary statistics on a 4 band 'Brightness' index: 
                
@@ -14,8 +23,6 @@ class Brightness(Statistic):
         self.band3 = band3
         self.band4 = band4
         self.name = name
-        self.clamp_outputs = clamp_outputs
-
 
     def compute(self, data):
         nd = (data[self.band1]**2 + data[self.band2]**2 + data[self.band3]**2 + data[self.band4]**2)**(1/2.0)
@@ -24,7 +31,8 @@ class Brightness(Statistic):
             name = '_'.join([self.name, stat])
             outputs[name] = getattr(nd, stat)(dim='time', keep_attrs=True)
         return xarray.Dataset(outputs, attrs=dict(crs=data.crs))   
-
+    
+    @staticmethod
     def measurements(self):
         return [Measurement(name='_'.join([self.name, stat]), dtype='float32', nodata=-1, units='1')
                 for stat in self.stats] 
