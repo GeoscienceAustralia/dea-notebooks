@@ -22,6 +22,7 @@ def reproject_image_to_master ( master, slave, res=None ):
     The reprojected filename
     TODO Have a way of controlling output filename
     """
+    from osgeo import gdal
     slave_ds = gdal.Open( slave )
     slave_proj = slave_ds.GetProjection()
     slave_geotrans = slave_ds.GetGeoTransform()

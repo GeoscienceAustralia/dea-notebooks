@@ -32,7 +32,7 @@ class brightness(Statistic):
             outputs[name] = getattr(nd, stat)(dim='time', keep_attrs=True)
         return xarray.Dataset(outputs, attrs=dict(crs=data.crs))   
     
-    @staticmethod
-    def measurements(self):
-        return [Measurement(name='_'.join([self.name, stat]), dtype='float32', nodata=-1, units='1')
+    def measurements(self, input_measurements):
+        return [Measurement(name='_'.join([self.name, stat]), dtype='float32', nodata=np.nan, units='1')
                 for stat in self.stats] 
+    
