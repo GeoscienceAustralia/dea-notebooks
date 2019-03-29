@@ -58,7 +58,7 @@ class rate_of_change(Statistic):
         timeofmin = nanarg(ndvi,dim ='time', stat='min')
 
         rate = (ndvi_max-ndvi_min)/(timeofmax - timeofmin)
-        rate = rate.where(~np.isnan(rate<=3), other=3) #remove any unreasonable values
+        rate = rate.where(~np.isinf(rate), other=3) #remove any unreasonable values
         
         results = xarray.Dataset(data_vars={'rate':rate,
                                         'timeofmax': timeofmax,
