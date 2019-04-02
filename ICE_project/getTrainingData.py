@@ -52,20 +52,20 @@ dc = datacube.Datacube(app='load_clearsentinel')
 #landsat
 landsat = DEADataHandling.load_clearlandsat(dc=dc, query=query,sensors=['ls8'], 
                         bands_of_interest=['red', 'green', 'blue'],
-                        masked_prop=0.2, mask_pixel_quality=True)
+                        masked_prop=0.2)
 
-with fiona.open(shp_fpath) as shapes:
-        crs = geometry.CRS(shapes.crs_wkt)
-        first_geometry = next(iter(shapes))['geometry']
-        geom = geometry.Geometry(first_geometry, crs=crs)
+# with fiona.open(shp_fpath) as shapes:
+#         crs = geometry.CRS(shapes.crs_wkt)
+#         first_geometry = next(iter(shapes))['geometry']
+#         geom = geometry.Geometry(first_geometry, crs=crs)
 
-mask = rasterio.features.geometry_mask([geom.to_crs(landsat.geobox.crs) for geoms in [geom]],
-                                           out_shape=landsat.geobox.shape,
-                                           transform=landsat.geobox.affine,
-                                           all_touched=False,
-                                           invert=True)
+# mask = rasterio.features.geometry_mask([geom.to_crs(landsat.geobox.crs) for geoms in [geom]],
+#                                            out_shape=landsat.geobox.shape,
+#                                            transform=landsat.geobox.affine,
+#                                            all_touched=False,
+#                                            invert=True)
 # Mask the xarrays
-landsat = landsat.where(mask)
+# landsat = landsat.where(mask)
 
 landsat = landsat.drop('data_perc') 
 
