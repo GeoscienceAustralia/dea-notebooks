@@ -51,6 +51,8 @@ results = results + AOI + "_" + year + "/"
 
 
 #Bring in Gtiff from datcube stats results
+print('loading and preparing all the data')
+
 ndmi_stats = xr.open_rasterio(data + "ndmi_stats_" + year + ".tif")
 ndmi_stats = ndmi_stats.where(ndmi_stats>0, np.nan) #change nodata value to np.nan to be consistent
 ndvi_stats = xr.open_rasterio(data + "ndvi_stats_" + year + ".tif")
@@ -72,7 +74,7 @@ NDVI_min = ndvi_stats[0]
 NDVI_max = ndvi_stats[1]
 NDVI_mean = ndvi_stats[2]
 NDVI_std = ndvi_stats[3]
-NDMI_range = NDVI_max - NDVI_min
+NDVI_range = NDVI_max - NDVI_min
 
 brightness_min = brightness_stats[0]
 brightness_max = brightness_stats[1]

@@ -1,9 +1,4 @@
 
-# coding: utf-8
-
-# In[1]:
-
-
 import numpy as np
 import xarray as xr
 import geopandas as gpd
@@ -43,7 +38,7 @@ data = "/g/data1a/r78/cb3058/dea-notebooks/ICE_project/data/datacube_stats/Murru
 AOI = 'Murrum_RF_scaled'
 year = "20170501"
 
-ncpus=32
+ncpus=24
 
 #-----------------------------------------
 
@@ -56,14 +51,16 @@ results = results + AOI + "_" + year + "/"
 
 
 #Bring in GTiffs generated using datacube stats
+print('loading and preparing all the data')
 ndmi_stats = xr.open_rasterio(data + "ndmi_stats_" + year + ".tif")
 ndmi_stats = ndmi_stats.where(ndmi_stats>0, np.nan) #change nodata value to np.nan to be consistent
+print('ndmi')
 ndvi_stats = xr.open_rasterio(data + "ndvi_stats_" + year + ".tif")
 ndvi_stats = ndmi_stats.where(ndvi_stats>0, np.nan) 
-
+print('brightness')
 brightness_stats = xr.open_rasterio(data + "brightness_stats_" + year + ".tif")
 brightness_stats = brightness_stats.where(brightness_stats>0, np.nan)
-
+print('rate')
 rate_stats = xr.open_rasterio(data + "rate_" + year + ".tif")
 rate_stats = rate_stats.where(rate_stats!= -9999.0, np.nan)
 
@@ -71,13 +68,15 @@ NDMI_min = ndmi_stats[0]
 NDMI_max = ndmi_stats[1]
 NDMI_mean = ndmi_stats[2]
 NDMI_std = ndmi_stats[3]
+print('ndmi range')
 NDMI_range = NDMI_max - NDMI_min
 
 NDVI_min = ndvi_stats[0]
 NDVI_max = ndvi_stats[1]
 NDVI_mean = ndvi_stats[2]
 NDVI_std = ndvi_stats[3]
-NDMI_range = NDVI_max - NDVI_min
+print('ndvi range')
+NDVI_range = NDVI_max - NDVI_min
 
 brightness_min = brightness_stats[0]
 brightness_max = brightness_stats[1]
@@ -100,9 +99,10 @@ names = ['NDVI_max', 'NDVI_mean', 'NDVI_std', 'NDVI_min', 'NDVI_range',
 # ### Image segmentation for use in masking AFTER the RF classifier
 
 #export Gtiff for use in Image segmentation
+print('exporting NDVImax gtiff')
 transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
 SpatialTools.array_to_geotiff(results + AOI + "_" + year + "_NDVI_max.tif",
-              green_max.values, geo_transform = transform, 
+              NDVI_max.values, geo_transform = transform, 
               projection = projection, nodata_val=np.nan)
 
 
@@ -111,9 +111,11 @@ KEAFile = results + AOI + '_' + year + '.kea'
 SegmentedKEAFile = results + AOI + '_' + year + '_sheperdSEG.kea'
 SegmentedTiffFile = results + AOI + '_' + year + '_sheperdSEG.tif'
 SegmentedPolygons = results + AOI + '_' + year + '_SEGpolygons.shp'
+print('imageseging')
 imageSeg(InputNDVIStats, KEAFile, SegmentedKEAFile, SegmentedTiffFile, SegmentedPolygons, minPxls = 100)
 
 #grab the training data and prepare it
+print('prepare training data')
 trainingSet = gpd.read_file("/g/data1a/r78/cb3058/dea-notebooks/ICE_project/data/spatial/murrumbidgee_randomTraining_samples.shp")
 trainingSet = trainingSet.to_crs(epsg=3577)
 trainingSet = trainingSet[['Id', 'geometry']]
@@ -125,6 +127,7 @@ transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg
 #find the width and height of the xarray dataset we want to mask
 width,height = NDVI_max.shape
 # rasterize vector
+print('rasterizing training data')
 training_set = SpatialTools.rasterize_vector(results + "trainingset_ready.shp",
                height, width, transform, projection, field='Id',raster_path= results + AOI + "_" + year +'training_raster.tif')
 
