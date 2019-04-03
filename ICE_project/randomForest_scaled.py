@@ -38,7 +38,7 @@ warnings.filterwarnings('ignore')
 results = "results/"
 data = "/g/data1a/r78/cb3058/dea-notebooks/ICE_project/data/datacube_stats/Murrumbidgee/stats/winter_1990_2018/"
 
-#Input your area of interest's name, coords, and 
+#Input your area of interest's name
 #the year you're interested in?
 AOI = 'Murrum_RF_scaled'
 year = "20170501"
@@ -114,14 +114,8 @@ SegmentedPolygons = results + AOI + '_' + year + '_SEGpolygons.shp'
 imageSeg(InputNDVIStats, KEAFile, SegmentedKEAFile, SegmentedTiffFile, SegmentedPolygons, minPxls = 100)
 
 #grab the training data and prepare it
-trainingSet = gpd.read_file(results + "hand_trainingSet.shp")
-trainingSet = peel_landuse.to_crs(epsg=3577)
-
-trainingSet = peel_landuse[(trainingSet.Id == 430)| # irrigated cropping
-                        (trainingSet.Id == 330) |      #cropping
-                        (trainingSet.Id == 133) |      #native cover (bushland)
-                        (trainingSet.Id == 541)]       #urban
-
+trainingSet = gpd.read_file("/g/data1a/r78/cb3058/dea-notebooks/ICE_project/data/spatial/murrumbidgee_randomTraining_samples.shp")
+trainingSet = trainingSet.to_crs(epsg=3577)
 trainingSet = trainingSet[['Id', 'geometry']]
 trainingSet = trainingSet.replace([330,133,541], 10) #reclasss so we can do a binary classification
 trainingSet.to_file(results + "trainingset_ready.shp")
@@ -161,7 +155,7 @@ np.save(results + 'img.npy', img) #save it as binary file
 # use this cell if importing .npy file
 # img = np.load(results + 'img.npy')
 
-# Find how many non-zero entries we have -- i.e. how many training data samples?
+# Find how many non-zero entries we have
 n_samples = (roi > 0).sum()
 print('We have {n} samples'.format(n=n_samples))
 

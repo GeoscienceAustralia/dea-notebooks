@@ -132,7 +132,7 @@ SpatialTools.array_to_geotiff(results + AOI + "_" + year + "classpredict.tif",
               class_prediction, geo_transform = transform, 
               projection = projection, nodata_val=0)
 
-#export eroded classified image
+#export eroded classified image for comparison
 from scipy.ndimage import morphology
 x=np.where(class_prediction==10, 0, 1)
 y = morphology.binary_erosion(x)
