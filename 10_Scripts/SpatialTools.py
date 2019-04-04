@@ -332,11 +332,12 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
         for z_value in z_values:
 
             # Extract contours and convert output array cell coords into arrays of coordinate reference system coords.
-            # We need to add (0.5 x the pixel size) to x values and subtract (-0.5 * pixel size) from y values to
-            # correct coordinates to give the centre point of pixels, rather than the top-left corner
+            # We need to add (0.5 x the pixel size) to the x and y values to correct coordinates to give the centre 
+            # point of pixels, rather than the top-left corner
             if verbose: print(f'    Extracting contour {z_value}')
-            ps = ds_affine[0]  # Compute pixel size
-            contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps, -0.5 * ps]) for i in
+            ps_x = ds_affine[0]  # Compute pixel x size
+            ps_y = ds_affine[4]  # Compute pixel y size
+            contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps_x, 0.5 * ps_y]) for i in
                             find_contours(ds_array, z_value)]
 
             # For each array of coordinates, drop any xy points that have NA
@@ -387,11 +388,12 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
         for z_value, _ in enumerate(ds_array[dim]): 
 
             # Extract contours and convert output array cell coords into arrays of coordinate reference system coords.
-            # We need to add (0.5 x the pixel size) to x values and subtract (-0.5 * pixel size) from y values to
-            # correct coordinates to give the centre point of pixels, rather than the top-left corner
+            # We need to add (0.5 x the pixel size) to the x and y values to correct coordinates to give the centre 
+            # point of pixels, rather than the top-left corner
             if verbose: print(f'    Extracting contour {z_value}')
-            ps = ds_affine[0]  # Compute pixel size
-            contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps, -0.5 * ps]) for i in
+            ps_x = ds_affine[0]  # Compute pixel x size
+            ps_y = ds_affine[4]  # Compute pixel y size
+            contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps_x, 0.5 * ps_y]) for i in
                             find_contours(ds_array.isel({dim: z_value}), z_values[0])]
 
             # For each array of coordinates, drop any xy points that have NA
