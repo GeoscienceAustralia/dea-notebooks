@@ -33,14 +33,14 @@ warnings.filterwarnings('ignore')
 results = "results/"
 data = "/g/data1a/r78/cb3058/dea-notebooks/ICE_project/data/datacube_stats/Murrumbidgee/stats/winter_1990_2018/"
 
-#Input your area of interest's name, coords, and 
+#Input your area of interest's name, and 
 #the year you're interested in?
 AOI = 'Murrum_RF_scaled'
-year = '20170501'
+year = '20150501'
 
-rfmodel = "murrumbidgee_rfModel_binary.joblib"
+rfmodel = "/g/data1a/r78/cb3058/dea-notebooks/ICE_project/results/Murrum_RF_scaled_20160501/20160501_murrumbidgee_rfModel_binary.joblib"
+
 #-----------------------------------------
-
 
 #Creating a folder to keep things neat
 directory = results + AOI + "_" + year
@@ -48,10 +48,9 @@ if not os.path.exists(directory):
     os.mkdir(directory)
 
 results = results + AOI + "_" + year + "/"
-
-
+    
 #Bring in Gtiff from datcube stats results
-print('loading and preparing all the data')
+print('loading and preparing new data')
 
 ndmi_stats = xr.open_rasterio(data + "ndmi_stats_" + year + ".tif")
 ndmi_stats = ndmi_stats.where(ndmi_stats>0, np.nan) #change nodata value to np.nan to be consistent
@@ -87,12 +86,17 @@ timeofmin = rate_stats[2]
 
 #add to a list 
 xray_list = [NDVI_max, NDVI_mean, NDVI_std, NDVI_min, NDVI_range,
-             NDMI_max, NDMI_mean, NDMI_std, NDMI_min,timeofmax, timeofmin, rate,
+             NDMI_max, NDMI_mean, NDMI_std, NDMI_min, NDVI_range, timeofmax, timeofmin, rate,
              brightness_max, brightness_mean, brightness_std, brightness_std]
 names = ['NDVI_max', 'NDVI_mean', 'NDVI_std', 'NDVI_min', 'NDVI_range',
-         'NDMI_max', 'NDMI_mean', 'NDMI_std', 'NDMI_min','timeofmax', 'timeofmin','rate',
-            'brightness_max', 'brightness_mean', 'brightness_std', 'brightness_std']
+         'NDMI_max', 'NDMI_mean', 'NDMI_std', 'NDMI_min','NDMI_range',
+         'timeofmax', 'timeofmin','rate', 'brightness_max', 'brightness_mean', 'brightness_std', 'brightness_std']
 
+print('exporting NDVImax gtiff')
+transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
+SpatialTools.array_to_geotiff(results + AOI + "_" + year + "_NDVI_max.tif",
+              NDVI_max.values, geo_transform = transform, 
+              projection = projection, nodata_val=np.nan)
 
 #convert to numpy arrays
 x,y = NDVI_max.shape
@@ -104,17 +108,22 @@ for b,c in zip(xray_list, range(img.shape[2])):
     progress = round((count/z) * 100, 3)
     print("\r", "adding slice: " + str(count) + ", " + str(progress) + "%" + " complete. ", end = '')
     img[:, :, c] = b.values 
-    
+
 img[np.isnan(img)]=-999. #remove nans as they f/w classifier
-np.save(results + 'img.npy', img) #save it as binary file
+np.save(results + 'img_' + year + '.npy', img) #save it as binary file
+
+# else:    
+#     print('loading in previously exported .npy')
+#     img = np.load(results + 'img_' + year + '.npy')
 
 # load back in the trained RF model:
+print('loading in random forest model')
 from joblib import load
-rf = load(results + rf_model)
+rf = load(rfmodel)
 
 # Take our full image, and reshape into long 2d array (nrow * ncol, nband) for classification
 new_shape = (img.shape[0] * img.shape[1], img.shape[2])
-
+z = img.shape[2]
 img_as_array = img[:, :, :z].reshape(new_shape)
 print('Reshaped from {o} to {n}'.format(o=img.shape,
                                         n=img.shape))
@@ -125,10 +134,11 @@ class_prediction = rf.predict(img_as_array)
 
 # Reshape our classification map
 class_prediction = class_prediction.reshape(img[:, :, 0].shape)
-# class_prediction=np.where(class_prediction==10, 0, 1) #turn into a binary
 
 #export out the results
 print('exporting class_predict GTiff')
+NDVI_max = xr.open_rasterio(results + AOI + "_" + year + "_NDVI_max.tif")
+NDVI_max = NDVI_max.squeeze()
 transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
 SpatialTools.array_to_geotiff(results + AOI + "_" + year + "classpredict.tif",
               class_prediction, geo_transform = transform, 
@@ -142,10 +152,19 @@ SpatialTools.array_to_geotiff(results + AOI + "_" + year + "classpredict_binarye
               y, geo_transform = transform, 
               projection = projection, nodata_val=0)
 
+## Image segmentation for use in masking
+InputNDVIStats = results + AOI + "_" + year + "_NDVI_max.tif"
+KEAFile = results + AOI + '_' + year + '.kea'
+SegmentedKEAFile = results + AOI + '_' + year + '_sheperdSEG.kea'
+SegmentedTiffFile = results + AOI + '_' + year + '_sheperdSEG.tif'
+SegmentedPolygons = results + AOI + '_' + year + '_SEGpolygons.shp'
+print('imageseging')
+imageSeg(InputNDVIStats, KEAFile, SegmentedKEAFile, SegmentedTiffFile, SegmentedPolygons, minPxls = 100)
+
 #using image seg to mask
 class_predict = xr.open_rasterio(results + AOI + "_" + year + "classpredict.tif")
 class_predict = class_predict.squeeze()
-
+print('calculating zonal stats')
 gdf = gpd.read_file(results + AOI + '_' + year + '_SEGpolygons.shp')
 gdf['majority'] = pd.DataFrame(zonal_stats(vectors=gdf['geometry'], raster=results + AOI + "_" + year + "classpredict.tif", stats='majority'))['majority']
 gdf['area'] = gdf['geometry'].area

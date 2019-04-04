@@ -35,10 +35,10 @@ data = "/g/data1a/r78/cb3058/dea-notebooks/ICE_project/data/datacube_stats/Murru
 
 #Input your area of interest's name
 #the year you're interested in?
-AOI = 'Murrum_RF_scaled'
-year = "20170501"
+AOI = 'Murrum_RF_scaled_allclasses'
+year = "20160501"
 
-ncpus=24
+ncpus=14
 
 #-----------------------------------------
 
@@ -95,31 +95,19 @@ names = ['NDVI_max', 'NDVI_mean', 'NDVI_std', 'NDVI_min', 'NDVI_range',
          'NDMI_max', 'NDMI_mean', 'NDMI_std', 'NDMI_min','NDMI_range',
          'timeofmax', 'timeofmin','rate', 'brightness_max', 'brightness_mean', 'brightness_std', 'brightness_std']
 
-
-# ### Image segmentation for use in masking AFTER the RF classifier
-
-#export Gtiff for use in Image segmentation
+#export Gtiff for use in Image segmentation later on
 print('exporting NDVImax gtiff')
 transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
 SpatialTools.array_to_geotiff(results + AOI + "_" + year + "_NDVI_max.tif",
               NDVI_max.values, geo_transform = transform, 
               projection = projection, nodata_val=np.nan)
 
-
-InputNDVIStats = results + AOI + "_" + year + "_NDVI_max.tif"
-KEAFile = results + AOI + '_' + year + '.kea'
-SegmentedKEAFile = results + AOI + '_' + year + '_sheperdSEG.kea'
-SegmentedTiffFile = results + AOI + '_' + year + '_sheperdSEG.tif'
-SegmentedPolygons = results + AOI + '_' + year + '_SEGpolygons.shp'
-print('imageseging')
-imageSeg(InputNDVIStats, KEAFile, SegmentedKEAFile, SegmentedTiffFile, SegmentedPolygons, minPxls = 100)
-
 #grab the training data and prepare it
 print('prepare training data')
 trainingSet = gpd.read_file("/g/data1a/r78/cb3058/dea-notebooks/ICE_project/data/spatial/murrumbidgee_randomTraining_samples.shp")
 trainingSet = trainingSet.to_crs(epsg=3577)
 trainingSet = trainingSet[['Id', 'geometry']]
-trainingSet = trainingSet.replace([330,133,541], 10) #reclasss so we can do a binary classification
+# trainingSet = trainingSet.replace([330,133,541], 10) #reclasss so we can do a binary classification
 trainingSet.to_file(results + "trainingset_ready.shp")
 
 #get the transform and projection of our gtiff
@@ -153,10 +141,10 @@ for b,c in zip(xray_list, range(img.shape[2])):
     img[:, :, c] = b.values 
     
 img[np.isnan(img)]=-999. #remove nans as they f/w classifier
-np.save(results + 'img.npy', img) #save it as binary file
+np.save(results + 'img_' + year + '.npy', img) #save it as binary file
 
 # use this cell if importing .npy file
-# img = np.load(results + 'img.npy')
+# img = np.load(results + 'img_' + year + '.npy')
 
 # Find how many non-zero entries we have
 n_samples = (roi > 0).sum()
@@ -182,7 +170,7 @@ rf = rf.fit(x, y)
 
 #save the model
 from joblib import dump, load
-dump(rf, results + 'murrumbidgee_rfModel_binary.joblib')
+dump(rf, results + year +'_murrumbidgee_rfModel_binary.joblib')
 
 print('Our OOB prediction of accuracy is: {oob}%'.format(oob=rf.oob_score_ * 100))
 
@@ -198,4 +186,65 @@ df['predict'] = rf.predict(x)
 # Cross-tabulate predictions
 print(pd.crosstab(df['truth'], df['predict'], margins=True))
 
+# Take our full image, and reshape into long 2d array (nrow * ncol, nband) for classification
+new_shape = (img.shape[0] * img.shape[1], img.shape[2])
+z = img.shape[2]
+img_as_array = img[:, :, :z].reshape(new_shape)
+print('Reshaped from {o} to {n}'.format(o=img.shape,
+                                        n=img.shape))
 
+# Now predict for each pixel
+print('generating prediction')
+class_prediction = rf.predict(img_as_array)
+
+# Reshape our classification map
+class_prediction = class_prediction.reshape(img[:, :, 0].shape)
+
+#export out the results
+print('exporting class_predict GTiff')
+NDVI_max = xr.open_rasterio(results + AOI + "_" + year + "_NDVI_max.tif")
+NDVI_max = NDVI_max.squeeze()
+transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
+SpatialTools.array_to_geotiff(results + AOI + "_" + year + "classpredict.tif",
+              class_prediction, geo_transform = transform, 
+              projection = projection, nodata_val=0)
+
+#export eroded classified image for comparison
+from scipy.ndimage import morphology
+x=np.where(class_prediction==10, 0, 1)
+y = morphology.binary_erosion(x)
+SpatialTools.array_to_geotiff(results + AOI + "_" + year + "classpredict_binaryeroded.tif",
+              y, geo_transform = transform, 
+              projection = projection, nodata_val=0)
+
+## Image segmentation for use in masking
+InputNDVIStats = results + AOI + "_" + year + "_NDVI_max.tif"
+KEAFile = results + AOI + '_' + year + '.kea'
+SegmentedKEAFile = results + AOI + '_' + year + '_sheperdSEG.kea'
+SegmentedTiffFile = results + AOI + '_' + year + '_sheperdSEG.tif'
+SegmentedPolygons = results + AOI + '_' + year + '_SEGpolygons.shp'
+print('imageseging')
+imageSeg(InputNDVIStats, KEAFile, SegmentedKEAFile, SegmentedTiffFile, SegmentedPolygons, minPxls = 100)
+
+#using image seg to mask
+class_predict = xr.open_rasterio(results + AOI + "_" + year + "classpredict.tif")
+class_predict = class_predict.squeeze()
+print('calculating zonal stats')
+gdf = gpd.read_file(results + AOI + '_' + year + '_SEGpolygons.shp')
+gdf['majority'] = pd.DataFrame(zonal_stats(vectors=gdf['geometry'], raster=results + AOI + "_" + year + "classpredict.tif", stats='majority'))['majority']
+gdf['area'] = gdf['geometry'].area
+smallArea = gdf['area'] <= 5500000
+irrigated = gdf['majority'] == 430.0 #filtering for irrigated areas only
+gdf = gdf[smallArea&irrigated]
+#export shapefile
+gdf.to_file(results + AOI + "_" + year + "_Irrigated.shp")
+
+# #get the transform and projection of our gtiff
+# transform, projection = transform_tuple(class_predict, (class_predict.x, class_predict.y), epsg=3577)
+# #find the width and height of the xarray dataset we want to mask
+# width,height = class_predict.shape
+# # rasterize vector
+# gdf_raster = SpatialTools.rasterize_vector(results + AOI + "_" + year + "_Irrigated.shp",
+#                                            height, width, transform, projection, raster_path=results + AOI + "_" + year + "_Irrigated.tif")
+
+print('success')

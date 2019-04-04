@@ -7,12 +7,12 @@ module load dea
 
 export PYTHONPATH="/g/data1a/r78/datacube_stats/":"$PYTHONPATH"
 
-datacube-stats --qsub="project=r78,nodes=3,walltime=48h,mem=large,queue=normal" murrumbidgee_DCstats.yaml --workers-per-node=5
+datacube-stats --qsub="project=r78,nodes=3,walltime=12h,mem=medium,queue=normal" murrumbidgee_DCstats.yaml --workers-per-node=5
 
 
 
 
-
+#qsub -I -P r78 -q express -l walltime=2:00:00,mem=64GB,ncpus=16
 
 
 
