@@ -13,4 +13,4 @@ module load dea/20181213
 
 # python randomForest_scaled.py > RFscaled_allClasses.log
 
-python applyRFmodel_scaled.py > applyRF_2015.log
+python applyRFmodel_scaled.py > applyRF_2017.log

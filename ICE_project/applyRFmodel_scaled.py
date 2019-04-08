@@ -36,7 +36,7 @@ data = "/g/data1a/r78/cb3058/dea-notebooks/ICE_project/data/datacube_stats/Murru
 #Input your area of interest's name, and 
 #the year you're interested in?
 AOI = 'Murrum_RF_scaled'
-year = '20150501'
+year = '20170501'
 
 rfmodel = "/g/data1a/r78/cb3058/dea-notebooks/ICE_project/results/Murrum_RF_scaled_20160501/20160501_murrumbidgee_rfModel_binary.joblib"
 
