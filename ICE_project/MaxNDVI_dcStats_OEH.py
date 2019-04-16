@@ -22,37 +22,35 @@ from transform_tuple import transform_tuple
 from imageSeg import imageSeg
 from query_from_shp import query_from_shp
 
-
 ############
 #User Inputs
 ############
 
 # where are the dcStats MaxNDVI tifs?
-MaxNDVItiffs = "/g/data1a/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/New folder/maxndvi/"
+MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/previous_run/testing_mosaics/ndvi_max/"
 
 # where are the dcStats NDVIArgMaxMin tifs?
-NDVIArgMaxMintiffs = "/g/data1a/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/New folder/argmaxndvi/"
+NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/previous_run/testing_mosaics/NDVIArgMaxMin/"
 
 #Is there an irrigatable area shapefile we're using for masking?
 irrigatable_area = False
-irrigatable_area_shp_fpath = "/g/data1a/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSW_OEH_irrigated_2013.shp"
+irrigatable_area_shp_fpath = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSW_OEH_irrigated_2013.shp"
 
-#is there a shapefile we're using for clipping the extent?
+#is there a shapefile we're using for clipping the extent? e.g. just the northern basins
 clip_extent = True
 northernBasins_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
 
 # where should I put the results?
-results = 'results/mdbNSW_test/'
+results = '/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/previous_run/testing_mosaics/results/'
 
-#what season are we processing?
+#what season are we processing (Must be 'Summmer' or 'Winter')?
 season = 'Summer'
 
 #Input your area of interest's name
-AOI = 'mdbNSW_test'
+AOI = 'largetest'
 
 #What thresholds should I use for NDVI?
 threshold = 0.8
-
 
 #-----------------------------------------
 
@@ -60,9 +58,9 @@ threshold = 0.8
 
 #loop through raster files and do the analysis
 maxNDVItiffFiles = os.listdir(MaxNDVItiffs)
-NDVIArgMaxMintiffFiles = os.listdir(NDVIArgMaxMintiffs)
+# NDVIArgMaxMintiffFiles = os.listdir(NDVIArgMaxMintiffs)
 
-for tif,argmaxmintiff in zip(maxNDVItiffFiles, NDVIArgMaxMintiffFiles):
+for tif in maxNDVItiffFiles:
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print("starting processing of " + tif)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -70,11 +68,13 @@ for tif,argmaxmintiff in zip(maxNDVItiffFiles, NDVIArgMaxMintiffFiles):
     if season == 'Summer':
         year = tif[9:13]
         nextyear = str(int(year) + 1)[2:] 
-        year = year + "-" + nextyear
+        year = year + "_" + nextyear
         year = season + year
+        argmaxminyear = "NDVIArgMaxMin_" + year[6:10] + "1101.tif" 
     if season == 'Winter':
         year = tif[7:11]
         year = season + year
+        argmaxminyear = "NDVIArgMaxMin_" + year[6:10] + "0501.tif" 
 
     #Creating a folder to keep things neat
     directory = results_ + AOI + "_" + year
@@ -91,7 +91,7 @@ for tif,argmaxmintiff in zip(maxNDVItiffFiles, NDVIArgMaxMintiffFiles):
     SegmentedPolygons = results_ + AOI + '_' + year + '_SEGpolygons.shp'
     
     print("calculating imageSegmentation")
-    imageSeg(InputNDVIStats, KEAFile, SegmentedKEAFile, SegmentedTiffFile, SegmentedPolygons, minPxls=100)
+    imageSeg(InputNDVIStats, KEAFile, SegmentedKEAFile, SegmentedTiffFile, SegmentedPolygons, minPxls=100, epsg = '3577')
 
     gdf = gpd.read_file(results_ + AOI + '_' + year + '_SEGpolygons.shp')
     
@@ -129,11 +129,35 @@ for tif,argmaxmintiff in zip(maxNDVItiffFiles, NDVIArgMaxMintiffFiles):
                   projection = projection, 
                   nodata_val=-9999)
     
+    # import timeofmax and timeofmin rasters
+    argmaxmin = xr.open_rasterio(NDVIArgMaxMintiffs+argmaxminyear)
+    timeofmax = argmaxmin[0] 
+    timeofmin = argmaxmin[1]
+
+    # mask timeof layers by irrigated extent
+    timeofmax = timeofmax.where(~np.isnan(NDVI_max_Irrigated))
+    timeofmin = timeofmin.where(~np.isnan(NDVI_max_Irrigated))
+
+    # export masked timeof layers.
+    print('exporting the timeofmaxmin Gtiffs')
+    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofmaxNDVI.tif",
+                  timeofmax.values,
+                  geo_transform = transform, 
+                  projection = projection, 
+                  nodata_val=-9999)
+
+    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofminNDVI.tif",
+                  timeofmin.values,
+                  geo_transform = transform, 
+                  projection = projection, 
+                  nodata_val=-9999)
+    
     if irrigatable_area == True:
-        # rasterize OEH Irrigated 2013 vector
+        print('limiting analysis to the irrigatable area polygon')
+        # rasterize Irrigatable vector file
         oeh_raster = SpatialTools.rasterize_vector(irrigatable_area_shp_fpath,height, width, 
                                                    transform, projection, raster_path=None)
-        #mask areas outside of OEH layer
+        #mask
         NDVI_max_Irrigated_oeh = NDVI_max_Irrigated.where(oeh_raster)
 
         #export as GTiff
@@ -143,62 +167,32 @@ for tif,argmaxmintiff in zip(maxNDVItiffFiles, NDVIArgMaxMintiffFiles):
                   projection = projection, 
                   nodata_val=-9999)
     
-        # import timeofmax and timeofmin rasters
-        argmaxmin = xr.open_rasterio(argmaxmintiff)
-        timeofmax = argmaxmin[0] 
-        timeofmin = argmaxmin[1]
-
         # mask timeof layers by irrigated extent
-        timeofmax = timeofmax.where(NDVI_max_Irrigated_oeh)
-        timeofmin = timeofmin.where(NDVI_max_Irrigated_oeh)
-
+        timeofmax_oeh = timeofmax.where(~np.isnan(NDVI_max_Irrigated_oeh))
+        timeofmin_oeh = timeofmin.where(~np.isnan(NDVI_max_Irrigated_oeh))
 
         # export masked timeof layers.
         print('exporting the timeofmaxmin Gtiff')
-        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofmaxNDVI.tif",
-                      timeofmax.values,
+        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_OEHMasked_timeofmaxNDVI.tif",
+                      timeofmax_oeh.values,
                       geo_transform = transform, 
                       projection = projection, 
                       nodata_val=-9999)
 
-        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofminNDVI.tif",
-                      timeofmin.values,
-                      geo_transform = transform, 
-                      projection = projection, 
-                      nodata_val=-9999)
-
-        print("Finished processing of " + tif)
-
-    if irrigatable_area == False:
-        
-        # import timeofmax and timeofmin rasters
-        argmaxmin = xr.open_rasterio(argmaxmintiff)
-        timeofmax = argmaxmin[0] 
-        timeofmin = argmaxmin[1]
-
-        # mask timeof layers by irrigated extent
-        timeofmax = timeofmax.where(NDVI_max_Irrigated)
-        timeofmin = timeofmin.where(NDVI_max_Irrigated)
-                # export masked timeof layers.
-        
-        print('exporting the timeofmaxmin Gtiffs')
-        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofmaxNDVI.tif",
-                      timeofmax.values,
-                      geo_transform = transform, 
-                      projection = projection, 
-                      nodata_val=-9999)
-
-        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofminNDVI.tif",
-                      timeofmin.values,
+        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_OEHMasked_timeofminNDVI.tif",
+                      timeofmin_oeh.values,
                       geo_transform = transform, 
                       projection = projection, 
                       nodata_val=-9999)
         
     if clip_extent == True:
+        print('clipping extent to provided polygon')
         clip_raster = SpatialTools.rasterize_vector(northernBasins_shp,
                                                height, width, transform, projection, raster_path=None)
-        
+        #mask all outputs to the clip extent
         NDVI_max_Irrigated_clipped  = NDVI_max_Irrigated.where(clip_raster)
+        timeofmax_clipped = timeofmax.where(~np.isnan(NDVI_max_Irrigated_clipped))
+        timeofmin_clipped = timeofmin.where(~np.isnan(NDVI_max_Irrigated_clipped))
         
         SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_Irrigated_clipped.tif",
               NDVI_max_Irrigated_clipped.values,
@@ -206,8 +200,21 @@ for tif,argmaxmintiff in zip(maxNDVItiffFiles, NDVIArgMaxMintiffFiles):
               projection = projection, 
               nodata_val=-9999)
         
-print("Success!")
+        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofmaxNDVI_clipped.tif",
+                      timeofmax_clipped.values,
+                      geo_transform = transform, 
+                      projection = projection, 
+                      nodata_val=-9999)
 
+        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofminNDVI_clipped.tif",
+                      timeofmin_clipped.values,
+                      geo_transform = transform, 
+                      projection = projection, 
+                      nodata_val=-9999)
+    
+    print("Finished processing of " + tif)
+    
+print("Success!")
 
 
     
