@@ -402,3 +402,23 @@ def BigBadFunkyFunction(lilshape,crs):
         return 1
     except:
         print(f'did not run for {polyName}')
+        
+ # Mainline
+    #-----------------------------------------------------------------------#
+
+# Launch a process for each polygon.
+
+### for each shapefile in our subset of shapefiles:
+for shapes in shapessubset:
+    ### try to run the function once, for the shapefile and given crs
+    result = BigBadFunkyFunction(shapes, crs)
+    ### if result is False ie. doesn't run
+    if not result: 
+        print('first go did not succeed')
+        ### Try to run the function again
+        result = BigBadFunkyFunction(shapes, crs)
+        ### if that didn't work:    
+        if not result:
+            print('second go did not succeed, running for last time')
+            ### try for a third and last time
+            result = BigBadFunkyFunction(shapes, crs)   
