@@ -36,8 +36,7 @@ NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/s
 irrigatable_area = False
 irrigatable_area_shp_fpath = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSW_OEH_irrigated_2013.shp"
 
-#is there a shapefile we're using for clipping the extent? e.g. just the northern basins
-clip_extent = True
+#Shapefile we're using for clipping the extent? e.g. just the northern basins
 northernBasins_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
 
 # where should I put the results?
@@ -47,7 +46,7 @@ results = '/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/previ
 season = 'Summer'
 
 #Input your area of interest's name
-AOI = 'largetest'
+AOI = 'largetest_NorthMDB'
 
 #What thresholds should I use for NDVI?
 threshold = 0.8
@@ -82,9 +81,27 @@ for tif in maxNDVItiffFiles:
         os.mkdir(directory)
 
     results_ = results_ + AOI + "_" + year + "/"
+    
+    #limiting the extent to the northern basins
+    print('clipping extent to provided polygon')
+    NDVI_max = xr.open_rasterio(MaxNDVItiffs + tif).squeeze()
 
+    transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
+    width,height = NDVI_max.shape
+
+    clip_raster = SpatialTools.rasterize_vector(northernBasins_shp,
+                                                   height, width, transform, projection, raster_path=None)
+
+    NDVI_max = NDVI_max.where(clip_raster)
+
+    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_NDVI_max.tif",
+          NDVI_max.values,
+          geo_transform = transform, 
+          projection = projection, 
+          nodata_val = 0)
+    
     # set up input filename
-    InputNDVIStats = MaxNDVItiffs + tif
+    InputNDVIStats = results_ + AOI + "_" + year + "_NDVI_max.tif"
     KEAFile = results_ + AOI + '_' + year + '.kea'
     SegmentedKEAFile = results_ + AOI + '_' + year + '_sheperdSEG.kea'
     SegmentedTiffFile = results_ + AOI + '_' + year + '_sheperdSEG.tif'
@@ -109,11 +126,6 @@ for tif in maxNDVItiffFiles:
     
     print('performing masking and raster math')
     NDVI_max = xr.open_rasterio(InputNDVIStats).squeeze()
-    #get the transform and projection of our gtiff
-    transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
-    #find the width and height of the xarray dataset we want to mask
-    width,height = NDVI_max.shape
-    # rasterize vector
     gdf_raster = SpatialTools.rasterize_vector(results_ + AOI + "_" + year + "_Irrigated.shp",
                                                height, width, transform, projection, raster_path=None)
     # Mask the xarray
@@ -185,32 +197,6 @@ for tif in maxNDVItiffFiles:
                       projection = projection, 
                       nodata_val=-9999)
         
-    if clip_extent == True:
-        print('clipping extent to provided polygon')
-        clip_raster = SpatialTools.rasterize_vector(northernBasins_shp,
-                                               height, width, transform, projection, raster_path=None)
-        #mask all outputs to the clip extent
-        NDVI_max_Irrigated_clipped  = NDVI_max_Irrigated.where(clip_raster)
-        timeofmax_clipped = timeofmax.where(~np.isnan(NDVI_max_Irrigated_clipped))
-        timeofmin_clipped = timeofmin.where(~np.isnan(NDVI_max_Irrigated_clipped))
-        
-        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_Irrigated_clipped.tif",
-              NDVI_max_Irrigated_clipped.values,
-              geo_transform = transform, 
-              projection = projection, 
-              nodata_val=-9999)
-        
-        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofmaxNDVI_clipped.tif",
-                      timeofmax_clipped.values,
-                      geo_transform = transform, 
-                      projection = projection, 
-                      nodata_val=-9999)
-
-        SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofminNDVI_clipped.tif",
-                      timeofmin_clipped.values,
-                      geo_transform = transform, 
-                      projection = projection, 
-                      nodata_val=-9999)
     
     print("Finished processing of " + tif)
     
