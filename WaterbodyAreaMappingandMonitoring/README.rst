@@ -5,6 +5,17 @@ This repository outlines the documentation and discussion for the Waterbody Area
 
 This README will step you through the accompanying documents, and outline how to navigate this folder.
 
+Contents
+--------
+`Background`_
+`Aims`_
+`Intended Methods`_
+`Sensitivity Analysis`_
+`Waterbody Generation`_
+`Quality Assessment and Checking`_
+`Known Limitations`_
+`Conclusion`_
+
 
 Background
 ----------
@@ -24,11 +35,11 @@ Waterbody Generation
 Quality Assessment and Checking
 -------------------------------
 
-Conclusion
-----------
-
 Known Limitations
 -----------------
+
+Conclusion
+----------
 
 
 --- work in progress ---
