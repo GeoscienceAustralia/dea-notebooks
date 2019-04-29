@@ -17,7 +17,7 @@ Contents
 * `Quality Assessment and Checking`_
 * `Known Limitations`_
 * `Conclusion`_
-* `Licencing and Useage`_
+* `Licensing and Useage`_
 
 Background
 ----------
@@ -30,6 +30,7 @@ Aims
 * Provide support for environmental monitoring and conservation projects, including environmental watering activities.
 
 Any tool developed to respond to these needs had to: 
+
 * Process and simplify the full spatial and temporal coverage of satellite data over the Basin into an interpreted product that identifies water;
 * Be able to see when waterbodies were filling and emptying;
 * Be able to combine the information above with water licence information; and
@@ -41,12 +42,12 @@ Intended Methods
 Sensitivity Analysis
 --------------------
 
-`https://nbviewer.jupyter.org/github/GeoscienceAustralia/dea-notebooks/blob/ClaireK/WaterbodyAreaMappingandMonitoring/WAMMSensitivityAnalysis.ipynb`_
+`See here<https://nbviewer.jupyter.org/github/GeoscienceAustralia/dea-notebooks/blob/ClaireK/WaterbodyAreaMappingandMonitoring/WAMMSensitivityAnalysis.ipynb>`_
 
 Waterbody Generation
 --------------------
 
-`https://nbviewer.jupyter.org/github/GeoscienceAustralia/dea-notebooks/blob/ClaireK/WaterbodyAreaMappingandMonitoring/GenerateWaterBodyPolygons.ipynb`_
+`See here<https://nbviewer.jupyter.org/github/GeoscienceAustralia/dea-notebooks/blob/ClaireK/WaterbodyAreaMappingandMonitoring/GenerateWaterBodyPolygons.ipynb>`_
 
 Quality Assessment and Checking
 -------------------------------
