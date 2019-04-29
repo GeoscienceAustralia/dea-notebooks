@@ -15,7 +15,7 @@ python build_mosaic.py
 
 
 #starting an interactive node
-#qsub -I -P r78 -q express -l walltime=2:00:00,mem=64GB,ncpus=16
+#qsub -I -P r78 -q express -l walltime=1:00:00,mem=64GB,ncpus=8
     
 # BELLE'S STUFF FOR RUNNING TASK FIRST ON THE VDI AND THEN RUNNING THE QUERY ON RAIJIN
 # set which stats config to use & a tasks file to save to

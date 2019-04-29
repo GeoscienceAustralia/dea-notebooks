@@ -2,29 +2,28 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 import pandas as pd
-import dask
+from osgeo import gdal, ogr
+import os
+from multiprocessing import Pool, cpu_count
+from rsgislib.segmentation import segutils
+
 import datacube 
 from datacube.helpers import ga_pq_fuser
 from datacube.storage import masking
 from datacube.utils import geometry
-import rasterio.features
-from osgeo import gdal, ogr
-import os
-from rsgislib.segmentation import segutils
-from rasterstats import zonal_stats
 
 #import custom functions
 import sys
 sys.path.append('src')
-import DEAPlotting, SpatialTools, BandIndices
-from load_data import load_data
+import DEAPlotting, SpatialTools
 from transform_tuple import transform_tuple
-from imageSeg import imageSeg
-from query_from_shp import query_from_shp
 
 ############
 #User Inputs
 ############
+
+#how many cpus should the job be distrubuted over?
+cpus = 2
 
 # where are the dcStats MaxNDVI tifs?
 MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/previous_run/testing_mosaics/ndvi_max/"
@@ -33,8 +32,8 @@ MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/
 NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/previous_run/testing_mosaics/NDVIArgMaxMin/"
 
 #Is there an irrigatable area shapefile we're using for masking?
-irrigatable_area = False
-irrigatable_area_shp_fpath = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSW_OEH_irrigated_2013.shp"
+# irrigatable_area = False
+# irrigatable_area_shp_fpath = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSW_OEH_irrigated_2013.shp"
 
 #Shapefile we're using for clipping the extent? e.g. just the northern basins
 northernBasins_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
@@ -46,20 +45,11 @@ results = '/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/previ
 season = 'Summer'
 
 #Input your area of interest's name
-AOI = 'largetest_NorthMDB_newSegMethod'
+AOI = 'largetest_nmdb_parallel'
 
-#What thresholds should I use for NDVI?
-threshold = 0.8
+# script porper-----------------------------
 
-#-----------------------------------------
-
-#script proper------------------------------
-
-#loop through raster files and do the analysis
-maxNDVItiffFiles = os.listdir(MaxNDVItiffs)
-# NDVIArgMaxMintiffFiles = os.listdir(NDVIArgMaxMintiffs)
-
-for tif in maxNDVItiffFiles:
+def irrigated_extent(tif):
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print("starting processing of " + tif)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -89,8 +79,8 @@ for tif in maxNDVItiffFiles:
     transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
     width,height = NDVI_max.shape
 
-    clip_raster = SpatialTools.rasterize_vector(northernBasins_shp,
-                                                   height, width, transform, projection, raster_path=None)
+    clip_raster = SpatialTools.rasterize_vector(northernBasins_shp, height, width,
+                                                transform, projection, raster_path=None)
 
     NDVI_max = NDVI_max.where(clip_raster)
 
@@ -107,21 +97,21 @@ for tif in maxNDVItiffFiles:
     meanImage = results_ + AOI + '_' + year + "_ClumpMean.kea"
      
     # Change the tiff to a kea file
+    print("converting tiff to kea")
     gdal.Translate(KEAFile, InputNDVIStats, format='KEA', outputSRS='EPSG:3577')
     
     # Run segmentation, with creation of clump means
-    segutils.runShepherdSegmentation(KEAFile, SegmentedKEAFile,
-                        meanImage, numClusters=20, minPxls=100)
+    print('running image seg')
+    segutils.runShepherdSegmentation(KEAFile, SegmentedKEAFile, meanImage,
+                        numClusters=20, minPxls=100)
 
-    segment_means= xr.open_rasterio(meanImage).squeeze()
+    segment_means = xr.open_rasterio(meanImage).squeeze()
     
     #reclassify and threshold by different values
     a = np.where(segment_means.values>=0.8, 80, segment_means)
     b = np.where((a>=0.75) & (a<0.8), 75, a)
     c = np.where((b>=0.70) & (b<0.75), 70, b)
     d = np.where(c>=70, c, np.nan)
-    #rebuild xarray
-    d_xr = xr.DataArray(d, coords = [segment_means.y, segment_means.x], dims = ['y', 'x'], attrs = segment_means.attrs)
     
     print('exporting the multithreshold as Gtiff')
     transform, projection = transform_tuple(segment_means, (segment_means.x, segment_means.y), epsg=3577)
@@ -175,4 +165,9 @@ for tif in maxNDVItiffFiles:
                   projection = projection, 
                   nodata_val=-9999)
 
-print('Success!')    
+maxNDVItiffFiles = os.listdir(MaxNDVItiffs)
+
+if __name__ == '__main__':
+    pool = Pool(cpus)  
+    pool.map(irrigated_extent, maxNDVItiffFiles)
+
