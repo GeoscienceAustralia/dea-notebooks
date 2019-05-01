@@ -23,13 +23,13 @@ from transform_tuple import transform_tuple
 ############
 
 #how many cpus should the job be distrubuted over?
-cpus = 2
+cpus = 14
 
 # where are the dcStats MaxNDVI tifs?
-MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/previous_run/testing_mosaics/ndvi_max/"
+MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndvi_max/mosaics/"
 
 # where are the dcStats NDVIArgMaxMin tifs?
-NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/previous_run/testing_mosaics/NDVIArgMaxMin/"
+NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndviArgMaxMin/mosaics"
 
 #Is there an irrigatable area shapefile we're using for masking?
 # irrigatable_area = False
@@ -39,31 +39,32 @@ NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/s
 northernBasins_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
 
 # where should I put the results?
-results = '/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/previous_run/testing_mosaics/results/'
+results = '/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb/'
 
 #what season are we processing (Must be 'Summmer' or 'Winter')?
 season = 'Summer'
 
 #Input your area of interest's name
-AOI = 'largetest_nmdb_parallel'
+AOI = 'nmdb'
 
-# script porper-----------------------------
+# script proper-----------------------------
 
 def irrigated_extent(tif):
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print("starting processing of " + tif)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     results_ = results
+    
     if season == 'Summer':
         year = tif[9:13]
         nextyear = str(int(year) + 1)[2:] 
         year = year + "_" + nextyear
         year = season + year
-        argmaxminyear = "NDVIArgMaxMin_" + year[6:10] + "1101_mosaic.tif" 
+        argmaxminyear = "ndviArgMaxMin_" + year[6:10] + "1101_mosaic.tif" 
     if season == 'Winter':
         year = tif[7:11]
         year = season + year
-        argmaxminyear = "NDVIArgMaxMin_" + year[6:10] + "0501_mosaic.tif" 
+        argmaxminyear = "ndviArgMaxMin_" + year[6:10] + "0501_mosaic.tif" 
 
     #Creating a folder to keep things neat
     directory = results_ + AOI + "_" + year
