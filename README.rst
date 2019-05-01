@@ -28,7 +28,7 @@ The intended order of these notebook folders are:
 
 10. `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/10_Scripts>`_
 
-The *read-the-docs* version of this repository can be found at: `<http://geoscienceaustralia.github.io/digitalearthau/notebooks/index.html>`_
+The *read-the-docs* version of this repository can be found at: `<http://geoscienceaustralia.github.io/digitalearthau/notebooks/01_Getting_started/README.html>`_
 
 The examples provided here can be found as Jupyter Notebooks in the `dea-notebooks Github repository <https://github.com/GeoscienceAustralia/dea-notebooks>`_ . 
 
