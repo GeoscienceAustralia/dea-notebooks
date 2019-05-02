@@ -90,7 +90,7 @@ if len(sys.argv)<3:
 DesiredChunks = int(sys.argv[2])
 
 global Output_dir
-Output_dir = '/g/data/r78/rjd547/Ramsar_Wetlands/Ramsar_Outputs_3_v2/'
+Output_dir = '/g/data/r78/rjd547/Ramsar_Wetlands/Ramsar_Outputs_4_v2/'
 
 # add in a delay between dc.load calls to avoid overloading the database - 5 seconds in this case
 time.sleep(5*part)
@@ -347,7 +347,6 @@ def BigBadFunkyFunction(lilshape,crs):
 
         #add a legend and a tight plot box
         plt.legend(loc='lower left', framealpha=0.6)
-        plt.tight_layout()
 
         #create rectangle borders for no-data times (SLC-off only)
         LS5_8_gap_start = datetime(2011,11,1)
@@ -376,7 +375,7 @@ def BigBadFunkyFunction(lilshape,crs):
                      edgecolor=sns.xkcd_rgb['white'], hatch="////",linewidth=2)
         ax.add_patch(slc_rectangle)
         #fig.autofmt_xdate()
-
+        plt.tight_layout()
         #save the figure
         plt.savefig(f'{Output_dir}{polyName}.png')#, transparent=True)
         plt.show()
