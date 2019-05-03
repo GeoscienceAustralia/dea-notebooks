@@ -23,7 +23,7 @@ from transform_tuple import transform_tuple
 ############
 
 #how many cpus should the job be distrubuted over?
-cpus = 14
+# cpus = 8
 
 # where are the dcStats MaxNDVI tifs?
 MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndvi_max/mosaics/"
@@ -166,9 +166,10 @@ def irrigated_extent(tif):
                   projection = projection, 
                   nodata_val=-9999)
 
-maxNDVItiffFiles = os.listdir(MaxNDVItiffs)
-
 if __name__ == '__main__':
-    pool = Pool(cpus)  
-    pool.map(irrigated_extent, maxNDVItiffFiles)
+    irrigated_extent(sys.argv[1])
+    
+# maxNDVItiffFiles = os.listdir(MaxNDVItiffs)    
+#     pool = Pool(cpus)  
+#     pool.map(irrigated_extent, maxNDVItiffFiles)
 

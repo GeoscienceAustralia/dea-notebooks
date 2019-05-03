@@ -15,7 +15,7 @@ python3 vrt_and_mosaic_tiff.py
 
 
 #starting an interactive node
-#qsub -I -P r78 -q express -l walltime=2:00:00,mem=64GB,ncpus=16
+#qsub -I -P r78 -q express -l walltime=2:00:00,mem=96GB,ncpus=8
     
 # BELLE'S STUFF FOR RUNNING TASK FIRST ON THE VDI AND THEN RUNNING THE QUERY ON RAIJIN
 # set which stats config to use & a tasks file to save to
