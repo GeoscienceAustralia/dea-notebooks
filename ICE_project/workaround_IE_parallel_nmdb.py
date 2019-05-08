@@ -40,7 +40,7 @@ NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/s
 # northernBasins_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
 
 # where should I put the results?
-results = '/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb_test/'
+results ='/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb_test/'
 
 #what season are we processing (Must be 'Summmer' or 'Winter')?
 season = 'Summer'
@@ -73,26 +73,7 @@ def irrigated_extent(tif):
         os.mkdir(directory)
 
     results_ = results_ + AOI + "_" + year + "/"
-    
-#     #limiting the extent to the northern basins
-#     print('clipping extent to provided polygon')
-#     NDVI_max = xr.open_rasterio(MaxNDVItiffs + tif).squeeze()
 
-#     transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
-#     width,height = NDVI_max.shape
-
-#     clip_raster = SpatialTools.rasterize_vector(northernBasins_shp, height, width,
-#                                                 transform, projection, raster_path=None)
-
-#     NDVI_max = NDVI_max.where(clip_raster)
-    
-#     clip_raster =  None
-    
-#     SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_NDVI_max.tif",
-#           NDVI_max.values,
-#           geo_transform = transform, 
-#           projection = projection, 
-#           nodata_val = 0)
           
     #inputs to GDAL and RSGISlib
     InputNDVIStats = MaxNDVItiffs + tif
@@ -144,31 +125,31 @@ def irrigated_extent(tif):
     #export shapefile
     gdf.to_file(results_ + AOI + "_" + year + "_Irrigated.shp")
     
-    gdf_raster = SpatialTools.rasterize_vector(results_ + AOI + "_" + year + "_Irrigated.shp",
-                                               height, width, transform, projection, raster_path=None)
+#     gdf_raster = SpatialTools.rasterize_vector(results_ + AOI + "_" + year + "_Irrigated.shp",
+#                                                height, width, transform, projection, raster_path=None)
     
-    print('loading, then masking timeof rasters')
-    argmaxmin = xr.open_rasterio(NDVIArgMaxMintiffs+argmaxminyear)
-    timeofmax = argmaxmin[0] 
-    timeofmin = argmaxmin[1]
+#     print('loading, then masking timeof rasters')
+#     argmaxmin = xr.open_rasterio(NDVIArgMaxMintiffs+argmaxminyear)
+#     timeofmax = argmaxmin[0] 
+#     timeofmin = argmaxmin[1]
 
-    # mask timeof layers by irrigated extent
-    timeofmax = timeofmax.where(gdf_raster)
-    timeofmin = timeofmin.where(gdf_raster)
+#     # mask timeof layers by irrigated extent
+#     timeofmax = timeofmax.where(gdf_raster)
+#     timeofmin = timeofmin.where(gdf_raster)
 
-    # export masked timeof layers.
-    print('exporting the timeofmaxmin Gtiffs')
-    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofmaxNDVI.tif",
-                  timeofmax.values,
-                  geo_transform = transform, 
-                  projection = projection, 
-                  nodata_val=-9999)
+#     # export masked timeof layers.
+#     print('exporting the timeofmaxmin Gtiffs')
+#     SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofmaxNDVI.tif",
+#                   timeofmax.values,
+#                   geo_transform = transform, 
+#                   projection = projection, 
+#                   nodata_val=-9999)
 
-    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofminNDVI.tif",
-                  timeofmin.values,
-                  geo_transform = transform, 
-                  projection = projection, 
-                  nodata_val=-9999)
+#     SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofminNDVI.tif",
+#                   timeofmin.values,
+#                   geo_transform = transform, 
+#                   projection = projection, 
+#                   nodata_val=-9999)
 
 if __name__ == '__main__':
     irrigated_extent(sys.argv[1])
@@ -176,4 +157,20 @@ if __name__ == '__main__':
 # maxNDVItiffFiles = os.listdir(MaxNDVItiffs)    
 #     pool = Pool(cpus)  
 #     pool.map(irrigated_extent, maxNDVItiffFiles)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

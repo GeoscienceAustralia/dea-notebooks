@@ -5,12 +5,6 @@ import pandas as pd
 from osgeo import gdal, ogr
 import os
 from multiprocessing import Pool, cpu_count
-from rsgislib.segmentation import segutils
-
-import datacube 
-from datacube.helpers import ga_pq_fuser
-from datacube.storage import masking
-from datacube.utils import geometry
 
 #import custom functions
 import sys
@@ -36,16 +30,16 @@ NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/s
 # irrigatable_area_shp_fpath = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSW_OEH_irrigated_2013.shp"
 
 #Shapefile we're using for clipping the extent? e.g. just the northern basins
-northernBasins_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
+northernBasins_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/renmark.shp"
 
 # where should I put the results?
-results = '/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb_test/'
+results = '/g/data/r78/cb3058/dea-notebooks/ICE_project/results/renmark/'
 
 #what season are we processing (Must be 'Summmer' or 'Winter')?
 season = 'Summer'
 
 #Input your area of interest's name
-AOI = 'nmdb'
+AOI = 'renmark'
 
 # script proper-----------------------------
 
