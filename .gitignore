@@ -19,6 +19,7 @@
 *.yaml
 *.img
 *.hdr
+*.gif
 *.csv
 *.jsonl
 *.lock
