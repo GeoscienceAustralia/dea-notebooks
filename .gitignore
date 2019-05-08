@@ -17,6 +17,8 @@
 *.lyr
 *.qpj
 *.yaml
+*.img
+*.hdr
 *.csv
 *.jsonl
 *.lock
