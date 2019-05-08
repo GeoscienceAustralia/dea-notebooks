@@ -27,7 +27,7 @@ from transform_tuple import transform_tuple
 # cpus = 8
 
 # where are the dcStats MaxNDVI tifs?
-MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndvi_max/mosaics/"
+MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/nmdb/"
 
 # where are the dcStats NDVIArgMaxMin tifs?
 NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndviArgMaxMin/mosaics"
@@ -37,10 +37,10 @@ NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/s
 # irrigatable_area_shp_fpath = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSW_OEH_irrigated_2013.shp"
 
 #Shapefile we're using for clipping the extent? e.g. just the northern basins
-northernBasins_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
+# northernBasins_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
 
 # where should I put the results?
-results = '/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb/'
+results = '/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb_test/'
 
 #what season are we processing (Must be 'Summmer' or 'Winter')?
 season = 'Summer'
@@ -57,7 +57,7 @@ def irrigated_extent(tif):
     results_ = results
     
     if season == 'Summer':
-        year = tif[9:13]
+        year = tif[11:15]
         nextyear = str(int(year) + 1)[2:] 
         year = year + "_" + nextyear
         year = season + year
@@ -74,32 +74,32 @@ def irrigated_extent(tif):
 
     results_ = results_ + AOI + "_" + year + "/"
     
-    #limiting the extent to the northern basins
-    print('clipping extent to provided polygon')
-    NDVI_max = xr.open_rasterio(MaxNDVItiffs + tif).squeeze()
+#     #limiting the extent to the northern basins
+#     print('clipping extent to provided polygon')
+#     NDVI_max = xr.open_rasterio(MaxNDVItiffs + tif).squeeze()
 
-    transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
-    width,height = NDVI_max.shape
+#     transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
+#     width,height = NDVI_max.shape
 
-    clip_raster = SpatialTools.rasterize_vector(northernBasins_shp, height, width,
-                                                transform, projection, raster_path=None)
+#     clip_raster = SpatialTools.rasterize_vector(northernBasins_shp, height, width,
+#                                                 transform, projection, raster_path=None)
 
-    NDVI_max = NDVI_max.where(clip_raster)
+#     NDVI_max = NDVI_max.where(clip_raster)
     
-    clip_raster =  None
+#     clip_raster =  None
     
-    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_NDVI_max.tif",
-          NDVI_max.values,
-          geo_transform = transform, 
-          projection = projection, 
-          nodata_val = 0)
+#     SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_NDVI_max.tif",
+#           NDVI_max.values,
+#           geo_transform = transform, 
+#           projection = projection, 
+#           nodata_val = 0)
           
     #inputs to GDAL and RSGISlib
-    InputNDVIStats = results_ + AOI + "_" + year + "_NDVI_max.tif"
-    KEAFile = results_ + AOI + '_' + year + '.kea'
+    InputNDVIStats = MaxNDVItiffs + tif
     SegmentedKEAFile = results_ + AOI + '_' + year + '_sheperdSEG.kea'
     meanImage = results_ + AOI + '_' + year + "_ClumpMean.kea"
-     
+    KEAFile = results_ + AOI + '_' + year + '.kea'
+    
     # Change the tiff to a kea file
     print("converting tiff to kea")
     gdal.Translate(KEAFile, InputNDVIStats, format='KEA', outputSRS='EPSG:3577')

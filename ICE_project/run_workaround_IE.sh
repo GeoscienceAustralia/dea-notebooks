@@ -17,7 +17,7 @@ module load parallel
 #parallel python irrigatedExtent_NMDB_parallel.py ::: maxNDVItiffFiles.txt
 #wait;
 
-parallel -a maxNDVItiffFiles.txt python3 -u -vv irrigatedExtent_NMDB_parallel.py
+parallel --delay 10 -a nmdb_maxNDVItiffFiles.txt python3 workaround_IE_parallel.py
 wait;
 
 # python irrigatedExtent_NMDB_parallel.py > irrigatedExtent_NMDB_parallel.log
