@@ -8,11 +8,6 @@ import os
 #from multiprocessing import Pool, cpu_count
 from rsgislib.segmentation import segutils
 
-import datacube 
-from datacube.helpers import ga_pq_fuser
-from datacube.storage import masking
-from datacube.utils import geometry
-
 #import custom functions
 import sys
 sys.path.append('src')
@@ -28,16 +23,6 @@ from transform_tuple import transform_tuple
 
 # where are the dcStats MaxNDVI tifs?
 MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/nmdb/"
-
-# where are the dcStats NDVIArgMaxMin tifs?
-NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndviArgMaxMin/mosaics"
-
-#Is there an irrigatable area shapefile we're using for masking?
-# irrigatable_area = False
-# irrigatable_area_shp_fpath = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSW_OEH_irrigated_2013.shp"
-
-#Shapefile we're using for clipping the extent? e.g. just the northern basins
-# northernBasins_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
 
 # where should I put the results?
 results ='/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb_test/'
@@ -61,11 +46,9 @@ def irrigated_extent(tif):
         nextyear = str(int(year) + 1)[2:] 
         year = year + "_" + nextyear
         year = season + year
-        argmaxminyear = "ndviArgMaxMin_" + year[6:10] + "1101_mosaic.tif" 
     if season == 'Winter':
         year = tif[7:11]
         year = season + year
-        argmaxminyear = "ndviArgMaxMin_" + year[6:10] + "0501_mosaic.tif" 
 
     #Creating a folder to keep things neat
     directory = results_ + AOI + "_" + year
@@ -73,8 +56,7 @@ def irrigated_extent(tif):
         os.mkdir(directory)
 
     results_ = results_ + AOI + "_" + year + "/"
-
-          
+    
     #inputs to GDAL and RSGISlib
     InputNDVIStats = MaxNDVItiffs + tif
     SegmentedKEAFile = results_ + AOI + '_' + year + '_sheperdSEG.kea'
@@ -90,11 +72,11 @@ def irrigated_extent(tif):
     segutils.runShepherdSegmentation(KEAFile, SegmentedKEAFile, meanImage,
                         tmpath='/g/data1a/r78/cb3058/dea-notebooks/ICE_project/tmps/'+tif,
                         numClusters=20, minPxls=100)
-
+    #open the segment means file
     segment_means = xr.open_rasterio(meanImage).squeeze()
     
     #reclassify and threshold by different values
-    a = np.where(segment_means.values>=0.8, 80, segment_means)
+    a = np.where((segment_means.values>=0.8) & (segment_means.values<0.94), 80, segment_means)
     b = np.where((a>=0.75) & (a<0.8), 75, a)
     c = np.where((b>=0.70) & (b<0.75), 70, b)
     d = np.where(c>=70, c, np.nan)
@@ -130,32 +112,6 @@ def irrigated_extent(tif):
     print('finished processing ' + tif)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     
-#     gdf_raster = SpatialTools.rasterize_vector(results_ + AOI + "_" + year + "_Irrigated.shp",
-#                                                height, width, transform, projection, raster_path=None)
-    
-#     print('loading, then masking timeof rasters')
-#     argmaxmin = xr.open_rasterio(NDVIArgMaxMintiffs+argmaxminyear)
-#     timeofmax = argmaxmin[0] 
-#     timeofmin = argmaxmin[1]
-
-#     # mask timeof layers by irrigated extent
-#     timeofmax = timeofmax.where(gdf_raster)
-#     timeofmin = timeofmin.where(gdf_raster)
-
-#     # export masked timeof layers.
-#     print('exporting the timeofmaxmin Gtiffs')
-#     SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofmaxNDVI.tif",
-#                   timeofmax.values,
-#                   geo_transform = transform, 
-#                   projection = projection, 
-#                   nodata_val=-9999)
-
-#     SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofminNDVI.tif",
-#                   timeofmin.values,
-#                   geo_transform = transform, 
-#                   projection = projection, 
-#                   nodata_val=-9999)
-
 if __name__ == '__main__':
     irrigated_extent(sys.argv[1])
     
