@@ -57,7 +57,7 @@ def irrigated_extent(tif):
     results_ = results
     
     if season == 'Summer':
-        year = tif[11:15]
+        year = tif[14:18]
         nextyear = str(int(year) + 1)[2:] 
         year = year + "_" + nextyear
         year = season + year
@@ -94,24 +94,25 @@ def irrigated_extent(tif):
     
     #reclassify and threshold by different values
     a = np.where(segment_means.values>=0.8, 80, segment_means)
-    b = np.where((a>=0.75) & (a<0.8), 75, a)
-    c = np.where((b>=0.70) & (b<0.75), 70, b)
-    d = np.where(c>=70, c, np.nan)
+    b = np.where((a>=0.70) & (a<0.8), 70, a)
+    c = np.where((b>=0.60) & (b<0.70), 60, b)
+    d = np.where((c>=0.55) & (c<0.60), 55, c)
+    e = np.where(d>=55, d, np.nan)
     
     print('exporting the multithreshold as Gtiff')
     transform, projection = transform_tuple(segment_means, (segment_means.x, segment_means.y), epsg=3577)
     #find the width and height of the xarray dataset we want to mask
     width,height = segment_means.shape
     
-    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_multithreshold.tif",
-                  d, geo_transform = transform, 
+    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_multithreshold_irrigated.tif",
+                  e, geo_transform = transform, 
                   projection = projection, 
                   nodata_val=np.nan)
     
     #converting irrigated areas results to polygons
     print('converting multithreshold tiff to polygons...')
-    multithresholdTIFF = results_ + AOI + "_" + year + "_multithreshold.tif"
-    multithresholdPolygons = results_ + AOI + '_' + year + '_multithreshold.shp'
+    multithresholdTIFF = results_ + AOI + "_" + year + "_multithreshold_irrigated.tif"
+    multithresholdPolygons = results_ + AOI + '_' + year + '_multithreshold_irrigated.shp'
     
     os.system('gdal_polygonize.py ' + multithresholdTIFF + ' -f' + ' ' + '"ESRI Shapefile"' + ' ' + multithresholdPolygons)
     
@@ -119,10 +120,15 @@ def irrigated_extent(tif):
     print('filtering polygons by size, exporting, then rasterizing')
     gdf = gpd.read_file(multithresholdPolygons)
     gdf['area'] = gdf['geometry'].area
-    smallArea = gdf['area'] <= 10000000
+    smallArea = gdf['area'] <= 7500000
     gdf = gdf[smallArea]
+    
     #export shapefile
-    gdf.to_file(results_ + AOI + "_" + year + "_Irrigated.shp")
+    gdf.to_file(results_ + AOI + "_" + year + "_Irrigated_smallarea.shp")
+    
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print('finished processing ' + tif)
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     
 #     gdf_raster = SpatialTools.rasterize_vector(results_ + AOI + "_" + year + "_Irrigated.shp",
 #                                                height, width, transform, projection, raster_path=None)

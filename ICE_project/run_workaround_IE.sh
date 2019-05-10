@@ -1,9 +1,9 @@
 
 #!/bin/bash
 #PBS -P r78
-#PBS -l walltime=12:00:00
-#PBS -l mem=256GB
-#PBS -l ncpus=8
+#PBS -l walltime=1:00:00
+#PBS -l mem=64GB
+#PBS -l ncpus=14
 #PBS -q expressbw
 #PBS -m abe
 #PBS -M chad.burton@ga.gov.au
@@ -14,7 +14,7 @@ module load dea
 
 module load parallel
 
-parallel --delay 10 -a renmark_maxNDVItiffFiles.txt python3 workaround_IE_parallel_renmark.py
+parallel --delay 5 -a renmark_maxNDVItiffFiles.txt python3 workaround_IE_parallel_renmark.py
 wait;
 
 # python irrigatedExtent_NMDB_parallel.py > irrigatedExtent_NMDB_parallel.log

@@ -120,10 +120,15 @@ def irrigated_extent(tif):
     print('filtering polygons by size, exporting, then rasterizing')
     gdf = gpd.read_file(multithresholdPolygons)
     gdf['area'] = gdf['geometry'].area
-    smallArea = gdf['area'] <= 10000000
+    smallArea = gdf['area'] <= 7500000
     gdf = gdf[smallArea]
     #export shapefile
+    print('exporting irrigated shapefile')
     gdf.to_file(results_ + AOI + "_" + year + "_Irrigated.shp")
+    
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print('finished processing ' + tif)
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     
 #     gdf_raster = SpatialTools.rasterize_vector(results_ + AOI + "_" + year + "_Irrigated.shp",
 #                                                height, width, transform, projection, raster_path=None)
