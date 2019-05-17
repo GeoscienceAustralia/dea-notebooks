@@ -67,7 +67,8 @@ def irrigated_extent(tif):
                                                 transform, projection, raster_path=None)
     #mask and remove nans
     NDVI_max = NDVI_max.where(clip_raster)
-    NDVI_max = NDVI_max.dropna(dim='x', how='all').dropna(dim='y', how='all') #get rid of all-nan rows,cols
+#     NDVI_max = NDVI_max.where(NDVI_max<0.94, other = np.nan)
+    NDVI_max = NDVI_max.dropna(dim='x', how='all').dropna(dim='y', how='all') #get rid of all-nan
     
     #get new transform info
     transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)

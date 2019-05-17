@@ -4,13 +4,7 @@ import geopandas as gpd
 import pandas as pd
 from osgeo import gdal, ogr
 import os
-#from multiprocessing import Pool, cpu_count
-from rsgislib.segmentation import segutils
-
-import datacube 
-from datacube.helpers import ga_pq_fuser
-from datacube.storage import masking
-from datacube.utils import geometry
+from multiprocessing import Pool, cpu_count
 
 #import custom functions
 import sys

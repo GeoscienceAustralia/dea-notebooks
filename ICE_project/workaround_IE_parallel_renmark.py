@@ -93,7 +93,7 @@ def irrigated_extent(tif):
     segment_means = xr.open_rasterio(meanImage).squeeze()
     
     #reclassify and threshold by different values
-    a = np.where(segment_means.values>=0.8, 80, segment_means)
+    a = np.where(segment_means.values>=0.8, 80, segment_means.values)
     b = np.where((a>=0.70) & (a<0.8), 70, a)
     c = np.where((b>=0.60) & (b<0.70), 60, b)
     d = np.where((c>=0.55) & (c<0.60), 55, c)

@@ -1,7 +1,6 @@
-
 #!/bin/bash
 #PBS -P r78
-#PBS -l walltime=12:00:00
+#PBS -l walltime=8:00:00
 #PBS -l mem=3TB
 #PBS -l ncpus=32
 #PBS -q megamem
@@ -21,4 +20,3 @@ wait;
 
 #parallel python irrigatedExtent_NMDB_parallel.py ::: maxNDVItiffFiles.txt
 #wait;
-

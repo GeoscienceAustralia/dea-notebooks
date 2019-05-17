@@ -25,7 +25,7 @@ from transform_tuple import transform_tuple
 MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/nmdb/"
 
 # where should I put the results?
-results ='/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb_test/'
+results ='/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb/'
 
 #what season are we processing (Must be 'Summmer' or 'Winter')?
 season = 'Summer'
@@ -76,10 +76,11 @@ def irrigated_extent(tif):
     segment_means = xr.open_rasterio(meanImage).squeeze()
     
     #reclassify and threshold by different values
-    a = np.where((segment_means.values>=0.8) & (segment_means.values<0.94), 80, segment_means)
+    a = np.where(segment_means.values>=0.8, 80, segment_means.values)
     b = np.where((a>=0.75) & (a<0.8), 75, a)
     c = np.where((b>=0.70) & (b<0.75), 70, b)
     d = np.where(c>=70, c, np.nan)
+    
     
     print('exporting the multithreshold as Gtiff')
     transform, projection = transform_tuple(segment_means, (segment_means.x, segment_means.y), epsg=3577)
@@ -102,12 +103,16 @@ def irrigated_extent(tif):
     print('filtering polygons by size, exporting, then rasterizing')
     gdf = gpd.read_file(multithresholdPolygons)
     gdf['area'] = gdf['geometry'].area
-    smallArea = gdf['area'] <= 7500000
+    smallArea = gdf['area'] <= 50000000
     gdf = gdf[smallArea]
     #export shapefile
     print('exporting irrigated shapefile')
     gdf.to_file(results_ + AOI + "_" + year + "_Irrigated.shp")
     
+    z = gdf[gdf.DN==80]
+    z = z[z.area>100000]
+    z.to_file(results_ + AOI + "_" + year + "_80polys_>10ha.shp")
+        
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print('finished processing ' + tif)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
