@@ -31,6 +31,6 @@ for i in $(seq 0 $(($NNODES-1))); do
     module load parallel;\
     echo $i:\
     cd $JOBDIR;\
-    parallel --delay 5 --retries 3 --load 100%  --colsep ',' python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v1/LRA_WIT_raijin22.py ::: $PARAMF"&
+    parallel --delay 5 --retries 3 --load 100%  --colsep ',' python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v1/LRA_WIT_raijin2.py ::: $PARAMF"&
 done;
 wait;
