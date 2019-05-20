@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -P r78 
 #PBS -q megamem 
-#PBS -N LRA-2
+#PBS -N LRA-3
 #PBS -l walltime=24:00:00
 #PBS -l mem=6TB
 #PBS -l jobfs=1800GB
@@ -24,7 +24,7 @@ for i in $(seq 0 $(($NNODES-1))); do
     else 
         PARAMF="{135..270},$NCHUNKS" 
     fi
-    pbsdsh -n $(( $NCPUS*$i )) -- \
+    pbsdsh -n $(( $NCPUS*$i )) -- 
     bash -l -c "\
     module use /g/data/v10/public/modules/modulefiles/;\
     module load dea;\
