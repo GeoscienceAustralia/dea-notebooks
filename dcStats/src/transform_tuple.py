@@ -10,9 +10,9 @@ def transform_tuple(ds, coords, epsg=3577, rotation=0.0):
     rotation = the degrees of rotation of the image. If North up, rotation = 0.0
     
     """
-    east = float(coords[0][0])
+    east = float(coords[0][0]) - 12.5
     EW_pixelRes = float(coords[1][0] - coords[1][1])
-    north = float(coords[1][0])
+    north = float(coords[1][0]) + 12.5
     NS_pixelRes = float(coords[0][0] - coords[0][1])        
 
     transform = (east, EW_pixelRes, rotation, north, rotation, NS_pixelRes)

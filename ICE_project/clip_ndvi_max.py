@@ -1,7 +1,11 @@
+
+
+
 import numpy as np
 import xarray as xr
 import os
 from multiprocessing import Pool, cpu_count
+from osgeo import gdal, ogr
 
 #import custom functions
 import sys
@@ -14,26 +18,27 @@ from transform_tuple import transform_tuple
 ############
 
 #how many cpus should the job be distrubuted over?
-cpus = 4
+cpus = 2
 
 # where are the dcStats MaxNDVI tifs?
 MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndvi_max/mosaics/"
 
 #Shapefile we're using for clipping the extent? e.g. just the northern basins
-clip_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
+clip_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/renmark.shp"
+#"/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/northern_basins.shp"
 
 # where should I put the results?
-results = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/nmdb/"
+results = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/renmark/"
 
 #what season are we processing (Must be 'Summmer' or 'Winter')?
 season = 'Summer'
 
 #Input your area of interest's name
-AOI = 'nmdb'
+AOI = 'renmark'
 
 # script proper-----------------------------
 
-def irrigated_extent(tif):
+def clip_extent(tif):
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print("starting processing of " + tif)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -65,10 +70,10 @@ def irrigated_extent(tif):
 
     clip_raster = SpatialTools.rasterize_vector(clip_shp, height, width,
                                                 transform, projection, raster_path=None)
+    
     #mask and remove nans
     NDVI_max = NDVI_max.where(clip_raster)
-#     NDVI_max = NDVI_max.where(NDVI_max<0.94, other = np.nan)
-    NDVI_max = NDVI_max.dropna(dim='x', how='all').dropna(dim='y', how='all') #get rid of all-nan
+    NDVI_max = NDVI_max.dropna(dim='x', how='all').dropna(dim='y', how='all') #get rid of all-nans
     
     #get new transform info
     transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
@@ -84,4 +89,4 @@ def irrigated_extent(tif):
 
 maxNDVItiffFiles = os.listdir(MaxNDVItiffs)    
 pool = Pool(cpus)  
-pool.map(irrigated_extent, maxNDVItiffFiles)
+pool.map(clip_extent, maxNDVItiffFiles)

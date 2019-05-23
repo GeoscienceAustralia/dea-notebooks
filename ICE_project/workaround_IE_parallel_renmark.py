@@ -5,7 +5,7 @@ import geopandas as gpd
 import pandas as pd
 from osgeo import gdal, ogr
 import os
-#from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 from rsgislib.segmentation import segutils
 
 import datacube 
@@ -24,13 +24,13 @@ from transform_tuple import transform_tuple
 ############
 
 #how many cpus should the job be distrubuted over?
-# cpus = 8
+cpus = 2
 
 # where are the dcStats MaxNDVI tifs?
 MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/renmark/"
 
 # where are the dcStats NDVIArgMaxMin tifs?
-NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndviArgMaxMin/mosaics"
+# NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndviArgMaxMin/mosaics"
 
 #Is there an irrigatable area shapefile we're using for masking?
 # irrigatable_area = False
@@ -61,11 +61,11 @@ def irrigated_extent(tif):
         nextyear = str(int(year) + 1)[2:] 
         year = year + "_" + nextyear
         year = season + year
-        argmaxminyear = "ndviArgMaxMin_" + year[6:10] + "1101_mosaic.tif" 
+#         argmaxminyear = "ndviArgMaxMin_" + year[6:10] + "1101_mosaic.tif" 
     if season == 'Winter':
         year = tif[7:11]
         year = season + year
-        argmaxminyear = "ndviArgMaxMin_" + year[6:10] + "0501_mosaic.tif" 
+#         argmaxminyear = "ndviArgMaxMin_" + year[6:10] + "0501_mosaic.tif" 
 
     #Creating a folder to keep things neat
     directory = results_ + AOI + "_" + year
@@ -156,10 +156,10 @@ def irrigated_extent(tif):
 #                   projection = projection, 
 #                   nodata_val=-9999)
 
-if __name__ == '__main__':
-    irrigated_extent(sys.argv[1])
+# if __name__ == '__main__':
+#     irrigated_extent(sys.argv[1])
     
-# maxNDVItiffFiles = os.listdir(MaxNDVItiffs)    
-#     pool = Pool(cpus)  
-#     pool.map(irrigated_extent, maxNDVItiffFiles)
+maxNDVItiffFiles = os.listdir(MaxNDVItiffs)    
+pool = Pool(cpus)  
+pool.map(irrigated_extent, maxNDVItiffFiles)
 

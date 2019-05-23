@@ -19,8 +19,6 @@ from transform_tuple import transform_tuple
 #how many cpus should the job be distrubuted over?
 cpus = 4
 
-# where are the dcStats MaxNDVI tifs?
-MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/renmark/"
 
 # where are the dcStats NDVIArgMaxMin tifs?
 NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndviArgMaxMin/mosaics"
@@ -63,7 +61,6 @@ def irrigated_extent(tif):
     #grab a tiff to get the transform tuple from
     multithresholdTIFF = results_ + AOI + "_" + year + "_multithreshold.tif"
     t = xr.open_rasterio(multithresholdTIFF).squeeze()
-#     t = t.dropna(dim='x', how='all').dropna(dim='y', how='all') #get rid of all nans row,cols
        
     #find the transform etc of the xarray dataarray
     transform, projection = transform_tuple(t, (t.x, t.y), epsg=3577)
@@ -75,12 +72,15 @@ def irrigated_extent(tif):
     print('loading, then masking timeof rasters')
     argmaxmin = xr.open_rasterio(NDVIArgMaxMintiffs+argmaxminyear)
     timeofmax = argmaxmin[0] 
-    timeofmin = argmaxmin[1]
 
     # mask timeof layers by irrigated extent
     timeofmax = timeofmax.where(gdf_raster)
-    timeofmin = timeofmin.where(gdf_raster)
-
+    NDVI_max = NDVI_max.dropna(dim='x', how='all').dropna(dim='y', how='all') #get rid of all-nans
+    
+    #get new transform info
+    transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
+    width,height = NDVI_max.shape
+    
     # export masked timeof layers.
     print('exporting the timeofmaxmin Gtiffs')
     SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofmaxNDVI.tif",
@@ -89,14 +89,6 @@ def irrigated_extent(tif):
                   projection = projection, 
                   nodata_val=-9999)
 
-    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofminNDVI.tif",
-                  timeofmin.values,
-                  geo_transform = transform, 
-                  projection = projection, 
-                  nodata_val=-9999)
-
-# if __name__ == '__main__':
-#     irrigated_extent(sys.argv[1])
     
 maxNDVItiffFiles = os.listdir(MaxNDVItiffs)    
 pool = Pool(cpus)  

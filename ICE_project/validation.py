@@ -23,14 +23,14 @@ from transform_tuple import transform_tuple
 ## User Inputs
 
 #provide the filepaths to the irrigated cropping extent tif and the validation shapefile
-irrigated = "/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb/nmdb_Summer1993_94/nmdb_Summer1993_94_multithreshold_masked.tif"
+irrigated = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/NSW_nmdb_mask_allDryYears 
 
-validation = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/merged_IrrigatedCrop_1993110.shp"
+validation = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/nmdb_OEH2017_irrigated.shp
 
-clip_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/validation_boundary.shp"
+# clip_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/nmdb_individual_catchments/NAMOI RIVER.shp"
 
 #what year are we validating
-year = '1993-94'
+year = '1999-00'
 
 
 #----------script proper-----------------------------------------------------------
@@ -45,6 +45,7 @@ boundary = SpatialTools.rasterize_vector(clip_shp, height, width,
                                          transform, projection, raster_path=None)
 #clip extent to the catchment boundaries
 irr = irr.where(boundary)
+# num_of_nans_pred = np.isnan(irr.values).sum()
 #convert to a boolean array of irr/not-irr
 AutomaticCropBoolean  = np.isfinite(irr.values)
 
@@ -54,6 +55,21 @@ ValidationMaskBoolean  = SpatialTools.rasterize_vector(validation, height, width
                                             transform, projection, raster_path=None)
 # ValidationMaskBoolean = np.where(boundary, ValidationMaskBoolean, 0
 ValidationMaskBoolean = ValidationMaskBoolean.astype(bool)
+
+
+validation_area = np.count_nonzero(ValidationMaskBoolean) *(25*25) / 10000
+irrigated_area = np.count_nonzero(AutomaticCropBoolean)*(25*25) / 10000
+print("The area under irrigation in the validation dataset is: " + str(validation_area) + " ha")
+print("The area under irrigation in the irrigated area dataset is: " + str(irrigated_area) + " ha")
+print("irrigated vs validation % is : " + str(round((irrigated_area/validation_area*100), 1)))
+
+from sklearn.metrics import accuracy_score, jaccard_similarity_score
+
+jss = jaccard_similarity_score(ValidationMaskBoolean, AutomaticCropBoolean, normalize=True)
+ac = accuracy_score(ValidationMaskBoolean, AutomaticCropBoolean, normalize=True)
+
+print("The Normalised Jaccard Similarity Score is: "+ str(round(jss, 3)))
+print("The Normalised Accuracy Score is: "+ str(round(ac, 3)))
 
 
 # #### Compare the boolean arrays to create a confusion matrix
@@ -67,10 +83,10 @@ NoRealYesAuto = np.logical_and(~AutomaticCropBoolean, ValidationMaskBoolean)
 
 Correct_positives = YesRealYesAuto.sum()
 Incorrect_positives = NoRealYesAuto.sum()
-Correct_negatives = NoRealNoAuto.sum()
+Correct_negatives = NoRealNoAuto.sum() 
 Incorrect_negatives = YesRealNoAuto.sum()
 
-Totalpixels = (width * height)
+Totalpixels = (width * height) 
 
 Accuracy = (Correct_positives + Correct_negatives) / Totalpixels
 Misclassification_rate = (Incorrect_positives + Incorrect_negatives) / Totalpixels

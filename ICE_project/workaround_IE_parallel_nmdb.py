@@ -18,8 +18,6 @@ from transform_tuple import transform_tuple
 #User Inputs
 ############
 
-#how many cpus should the job be distrubuted over?
-# cpus = 8
 
 # where are the dcStats MaxNDVI tifs?
 MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/nmdb/"
@@ -79,8 +77,8 @@ def irrigated_extent(tif):
     a = np.where(segment_means.values>=0.8, 80, segment_means.values)
     b = np.where((a>=0.75) & (a<0.8), 75, a)
     c = np.where((b>=0.70) & (b<0.75), 70, b)
-    d = np.where(c>=70, c, np.nan)
-    
+    d = np.where((c>=0.60) & (c<0.70), 60, c)
+    e = np.where(d>=60, d, np.nan)
     
     print('exporting the multithreshold as Gtiff')
     transform, projection = transform_tuple(segment_means, (segment_means.x, segment_means.y), epsg=3577)
@@ -88,7 +86,7 @@ def irrigated_extent(tif):
     width,height = segment_means.shape
     
     SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_multithreshold.tif",
-                  d, geo_transform = transform, 
+                  e, geo_transform = transform, 
                   projection = projection, 
                   nodata_val=np.nan)
     
@@ -105,13 +103,12 @@ def irrigated_extent(tif):
     gdf['area'] = gdf['geometry'].area
     smallArea = gdf['area'] <= 50000000
     gdf = gdf[smallArea]
-    #export shapefile
-    print('exporting irrigated shapefile')
-    gdf.to_file(results_ + AOI + "_" + year + "_Irrigated.shp")
     
-    z = gdf[gdf.DN==80]
-    z = z[z.area>100000]
-    z.to_file(results_ + AOI + "_" + year + "_80polys_>10ha.shp")
+    gdf = gdf[gdf.DN==80]
+    gdf = gdf[gdf.area>100000]
+    
+    print('exporting _80polys_10ha shapefile')
+    gdf.to_file(results_ + AOI + "_" + year + "_80polys_10ha.shp")
         
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print('finished processing ' + tif)
