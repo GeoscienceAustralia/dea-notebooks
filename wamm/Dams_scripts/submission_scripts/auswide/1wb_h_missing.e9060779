@@ -1,0 +1,10 @@
+/g/data/v10/public/modules/dea/20190329/lib/python3.6/site-packages/datacube/utils/math.py:105: RuntimeWarning: invalid value encountered in double_scalars
+  res = (data[data.size - 1] - data[0]) / (data.size - 1.0)
+/g/data/v10/public/modules/dea/20190329/lib/python3.6/site-packages/datacube/utils/math.py:105: RuntimeWarning: invalid value encountered in double_scalars
+  res = (data[data.size - 1] - data[0]) / (data.size - 1.0)
+/g/data/v10/public/modules/dea/20190329/lib/python3.6/site-packages/datacube/utils/math.py:105: RuntimeWarning: invalid value encountered in double_scalars
+  res = (data[data.size - 1] - data[0]) / (data.size - 1.0)
+/g/data/v10/public/modules/dea/20190329/lib/python3.6/site-packages/datacube/utils/math.py:105: RuntimeWarning: invalid value encountered in double_scalars
+  res = (data[data.size - 1] - data[0]) / (data.size - 1.0)
+/jobfs/local/pbs/mom_priv/jobs/9060779.r-man2.SC: line 26: syntax error near unexpected token `done'
+/jobfs/local/pbs/mom_priv/jobs/9060779.r-man2.SC: line 26: `done;'

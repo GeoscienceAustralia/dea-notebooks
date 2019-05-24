@@ -1,0 +1,21 @@
+
+#!/bin/bash
+#PBS -P r78
+#PBS -N huge_ls
+#PBS -q hugemem
+#PBS -l ncpus=7
+#PBS -l mem=1024GB
+#PBS -l walltime=24:00:00
+#PBS -l wd
+#PBS -M vanessa.newey@ga.gov.au
+#PBS -m abe
+
+module use /g/data/v10/public/modules/modulefiles
+module load parallel
+module load dea
+PYTHONPATH=/g/data/r78/datacube_stats:$PYTHONPATH
+
+export LC_ALL=en_AU.utf8
+export LANG=en_AU.utf8
+
+python delwp_ls_downloader.py

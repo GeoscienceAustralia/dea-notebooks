@@ -1,0 +1,3 @@
+rio cogeo create --overview-resampling nearest --overview-level 8 --nodata 8388607 NSWMDBWaterBodiesRaster.tif water_bodies_rc.tif
+
+
