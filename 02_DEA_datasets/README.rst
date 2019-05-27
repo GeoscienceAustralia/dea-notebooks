@@ -15,4 +15,4 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
    Introduction_to_Sentinel2.ipynb
    Introduction_to_HLTC.ipynb
    Introduction_to_ITEM.ipynb
-
+   Introduction_to_WOfS.ipynb
