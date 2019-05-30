@@ -23,14 +23,14 @@ from transform_tuple import transform_tuple
 ## User Inputs
 
 #provide the filepaths to the irrigated cropping extent tif and the validation shapefile
-irrigated = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/NSW_nmdb_mask_allDryYears 
+irrigated = "/g/data1a/r78/cb3058/dea-notebooks/ICE_project/results/nmdb/nmdb_Summer1999_00/nmdb_Summer1999_00_multithreshold_60Thres_OEHonly_masked.tif"
 
-validation = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/nmdb_OEH2017_irrigated.shp
+validation = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/namoi_validation_19991101.shp"
 
-# clip_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/nmdb_individual_catchments/NAMOI RIVER.shp"
+clip_shp = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/nmdb_individual_catchments/NAMOI RIVER.shp"
 
 #what year are we validating
-year = '1999-00'
+year = 'Namoi, Threshold=0.60, 1999-00'
 
 
 #----------script proper-----------------------------------------------------------
@@ -59,6 +59,9 @@ ValidationMaskBoolean = ValidationMaskBoolean.astype(bool)
 
 validation_area = np.count_nonzero(ValidationMaskBoolean) *(25*25) / 10000
 irrigated_area = np.count_nonzero(AutomaticCropBoolean)*(25*25) / 10000
+print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+print('\033[1m' + '{0} Irrigated Crop Extent'.format(year) + '\033[0m')
+print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 print("The area under irrigation in the validation dataset is: " + str(validation_area) + " ha")
 print("The area under irrigation in the irrigated area dataset is: " + str(irrigated_area) + " ha")
 print("irrigated vs validation % is : " + str(round((irrigated_area/validation_area*100), 1)))
@@ -96,7 +99,7 @@ Specificity = Correct_negatives / ((~ValidationMaskBoolean).sum())
 Precision = Correct_positives / AutomaticCropBoolean.sum()
 Prevalence = (ValidationMaskBoolean.sum() ) / Totalpixels
 
-print('\033[1m' + '{0} Irrigated Crop Extent'.format(year) + '\033[0m')
+
 print('Accuracy = %.5f' % Accuracy)
 print('Misclassification_rate = %.5f' % Misclassification_rate)
 print('True_Positive_Rate = %.5f' % True_Positive_Rate)
@@ -104,6 +107,10 @@ print('False_Positive_Rate = %.5f' % False_Positive_Rate)
 print('Specificity = %.5f' % Specificity)
 print('Precision = %.5f' % Precision)
 print('Prevalence = %.5f' % Prevalence)
+print("#################")
+print("The area (ha) of incorrect positives is " + str(Incorrect_positives * (25*25)/10000))
+print("The area (ha) of correct positives is " + str(Correct_positives * (25*25)/10000))
+print("The area (ha) of incorrect negatives is " + str(Incorrect_negatives * (25*25)/10000))
 
 # plt.figure()
 # plt.scatter(False_Positive_Rate, True_Positive_Rate)
