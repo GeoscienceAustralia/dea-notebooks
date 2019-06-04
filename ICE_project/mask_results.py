@@ -9,19 +9,19 @@ sys.path.append('src')
 import SpatialTools
 from transform_tuple import transform_tuple
 
-cpus=1
+cpus=5
 mask_dir = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSWmask_and_LSmask.shp"
 #nmdb_mask_allDryYears_merged.shp
 #NSWmask_and_LSmask.shp
 #nmdb_OEH2017_irrigated.shp
 directory = "/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb/"
-input_suffix = "_multithreshold_60Thres"
+input_suffix = "_multithreshold_65Thres"
 output_suffix = "_OEHandLS_masked"
 #_OEHandLS_masked
 #_LS80_masked
 #_OEHonly_masked
 
-x = range(2013,2014,1)
+x = range(1987,2019,1)
 years = []
 for i in x:
     nextyear = str(i + 1)[2:]
@@ -32,7 +32,6 @@ years.sort()
      
 folders = os.listdir(directory)
 folders.sort()
-folders = folders[24]
 
 inputs=[]
 for year, folder in zip(years, folders):
@@ -54,12 +53,12 @@ def clip_tiff(tif):
               projection = projection, 
               nodata_val=np.nan)
     
-#     os.system('gdal_polygonize.py ' + tif[:-4]+"_60Thres_masked.tif" + ' -f' + ' ' + '"ESRI Shapefile"' + ' ' + tif[:-4]+"_60Thres_masked.shp")
+    os.system('gdal_polygonize.py ' + tif[:-4]+output_suffix+".tif" + ' -f' + ' ' + '"ESRI Shapefile"' + ' ' + tif[:-4]+output_suffix+ ".shp")
 
-#     gdf = gpd.read_file(tif[:-4]+"_60Thres_masked.shp")
-#     gdf['area'] = gdf['geometry'].area
-#     gdf.to_file(tif[:-19]+"_60Thres_IrrigatedMasked.shp")
-#     print("finished processing: "+tif[88:-19])
+    gdf = gpd.read_file(tif[:-4]+output_suffix+ ".shp")
+    gdf['area'] = gdf['geometry'].area
+    gdf.to_file(tif[:-27]+ "_Irrigated" +output_suffix+ ".shp")
+    print("finished processing: "+tif[88:-19])
     
 pool = Pool(cpus)    
 pool.map(clip_tiff, inputs) 
