@@ -10,7 +10,7 @@ import SpatialTools
 from transform_tuple import transform_tuple
 
 cpus=5
-mask_dir = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSWmask_and_LSmask.shp"
+mask_dir = "/g/data/r78/cb3058/dea-notebooks/ICE_project/data/spatial/NSWmask_and_LSmask_albers.shp"
 #nmdb_mask_allDryYears_merged.shp
 #NSWmask_and_LSmask.shp
 #nmdb_OEH2017_irrigated.shp
@@ -29,12 +29,9 @@ for i in x:
     years.append(str(y))
 years =  [e for e in years if e not in ('2011_12', '2012_13')]
 years.sort()
-     
-folders = os.listdir(directory)
-folders.sort()
 
 inputs=[]
-for year, folder in zip(years, folders):
+for year in years:
     inputs.append(directory+"nmdb_Summer"+year+"/nmdb_Summer" + year + input_suffix + ".tif")
 
 def clip_tiff(tif):
@@ -57,6 +54,7 @@ def clip_tiff(tif):
 
     gdf = gpd.read_file(tif[:-4]+output_suffix+ ".shp")
     gdf['area'] = gdf['geometry'].area
+    gdf = gdf[gdf.area>100000]
     gdf.to_file(tif[:-27]+ "_Irrigated" +output_suffix+ ".shp")
     print("finished processing: "+tif[88:-19])
     

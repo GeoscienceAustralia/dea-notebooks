@@ -31,6 +31,8 @@ season = 'Summer'
 #Input your area of interest's name
 AOI = 'nmdb'
 
+output_suffix = '_multithreshold_65Thres'
+
 # script proper-----------------------------
 
 def irrigated_extent(tif):
@@ -77,23 +79,23 @@ def irrigated_extent(tif):
     a = np.where(segment_means.values>=0.8, 80, segment_means.values)
     b = np.where((a>=0.75) & (a<0.8), 75, a)
     c = np.where((b>=0.70) & (b<0.75), 70, b)
-    d = np.where((c>=0.60) & (c<0.70), 60, c)
-    e = np.where(d>=60, d, np.nan)
+    d = np.where((c>=0.65) & (c<0.70), 65, c)
+    e = np.where(d>=65, d, np.nan)
     
     print('exporting the multithreshold as Gtiff')
     transform, projection = transform_tuple(segment_means, (segment_means.x, segment_means.y), epsg=3577)
     #find the width and height of the xarray dataset we want to mask
     width,height = segment_means.shape
     
-    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_multithreshold.tif",
+    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + output_suffix +".tif",
                   e, geo_transform = transform, 
                   projection = projection, 
                   nodata_val=np.nan)
     
     #converting irrigated areas results to polygons
     print('converting multithreshold tiff to polygons...')
-    multithresholdTIFF = results_ + AOI + "_" + year + "_multithreshold.tif"
-    multithresholdPolygons = results_ + AOI + '_' + year + '_multithreshold.shp'
+    multithresholdTIFF = results_ + AOI + "_" + year + output_suffix +".tif"
+    multithresholdPolygons = results_ + AOI + '_' + year + output_suffix +".shp"
     
     os.system('gdal_polygonize.py ' + multithresholdTIFF + ' -f' + ' ' + '"ESRI Shapefile"' + ' ' + multithresholdPolygons)
     

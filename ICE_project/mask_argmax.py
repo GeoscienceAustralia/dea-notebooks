@@ -17,39 +17,32 @@ from transform_tuple import transform_tuple
 ############
 
 #how many cpus should the job be distrubuted over?
-cpus = 4
-
+cpus = 5
 
 # where are the dcStats NDVIArgMaxMin tifs?
-NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/summer/ndviArgMaxMin/mosaics"
-
+NDVIArgMaxMintiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/nmdb/ndvi_argmax/"
 # where should I put the results?
-results ='/g/data/r78/cb3058/dea-notebooks/ICE_project/results/renmark/'
-
+results ='/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb/'
 #what season are we processing (Must be 'Summmer' or 'Winter')?
 season = 'Summer'
-
 #Input your area of interest's name
-AOI = 'renmark'
+AOI = 'nmdb'
+#suffix of the 'irrigation polygons'
+input_suffix = "_Irrigated_OEHandLS_masked"
 
-# script proper-----------------------------
+#-------------------------------------------------------------
 
-def irrigated_extent(tif):
+def maskArgMax(tif):
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print("starting processing of " + tif)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     results_ = results
     
-    if season == 'Summer':
-        year = tif[14:19]
-        nextyear = str(int(year) + 1)[2:] 
-        year = year + "_" + nextyear
-        year = season + year
-        argmaxminyear = "ndviArgMaxMin_" + year[6:10] + "1101_mosaic.tif" 
-    if season == 'Winter':
-        year = tif[7:11]
-        year = season + year
-        argmaxminyear = "ndviArgMaxMin_" + year[6:10] + "0501_mosaic.tif" 
+    year = tif[11:15]
+    nextyear = str(int(year) + 1)[2:] 
+    year = year + "_" + nextyear
+    year = season + year
+    argmaxminyear = AOI+"_"+ year + "_ndviArgMax.tif" 
 
     #Creating a folder to keep things neat
     directory = results_ + AOI + "_" + year
@@ -58,38 +51,26 @@ def irrigated_extent(tif):
 
     results_ = results_ + AOI + "_" + year + "/"
     
-    #grab a tiff to get the transform tuple from
-    multithresholdTIFF = results_ + AOI + "_" + year + "_multithreshold.tif"
-    t = xr.open_rasterio(multithresholdTIFF).squeeze()
-       
-    #find the transform etc of the xarray dataarray
-    transform, projection = transform_tuple(t, (t.x, t.y), epsg=3577)
-    width,height = t.shape
-
-    gdf_raster = SpatialTools.rasterize_vector(results_ + AOI + "_" + year + "_Irrigated.shp",
-                                               height, width, transform, projection, raster_path=None)
-    
-    print('loading, then masking timeof rasters')
-    argmaxmin = xr.open_rasterio(NDVIArgMaxMintiffs+argmaxminyear)
-    timeofmax = argmaxmin[0] 
+    timeofmax = xr.open_rasterio(NDVIArgMaxMintiffs+argmaxminyear).squeeze()
+    transform, projection = transform_tuple(timeofmax, (timeofmax.x, timeofmax.y), epsg=3577)
+    width,height = timeofmax.shape
+    print("creating mask from shapefile...")
+    mask_shp = results_ + AOI + "_" + year + input_suffix +".shp"
+    mask = SpatialTools.rasterize_vector(mask_shp,height, width,
+                                         transform, projection, raster_path=None)
 
     # mask timeof layers by irrigated extent
-    timeofmax = timeofmax.where(gdf_raster)
-    NDVI_max = NDVI_max.dropna(dim='x', how='all').dropna(dim='y', how='all') #get rid of all-nans
-    
-    #get new transform info
-    transform, projection = transform_tuple(NDVI_max, (NDVI_max.x, NDVI_max.y), epsg=3577)
-    width,height = NDVI_max.shape
-    
+    timeofmax = timeofmax.where(mask)
+
     # export masked timeof layers.
     print('exporting the timeofmaxmin Gtiffs')
-    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_timeofmaxNDVI.tif",
+    SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + "_Irrigated_timeofMaxNDVI.tif",
                   timeofmax.values,
                   geo_transform = transform, 
                   projection = projection, 
                   nodata_val=-9999)
 
-    
-maxNDVItiffFiles = os.listdir(MaxNDVItiffs)    
+NDVIArgMaxMintiffFiles = os.listdir(NDVIArgMaxMintiffs) 
+NDVIArgMaxMintiffFiles.sort()
 pool = Pool(cpus)  
-pool.map(irrigated_extent, maxNDVItiffFiles)
+pool.map(maskArgMax, NDVIArgMaxMintiffFiles)
