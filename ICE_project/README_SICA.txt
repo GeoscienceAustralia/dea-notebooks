@@ -43,8 +43,8 @@ Readme for Summer Irrigated Cropping Area workflow (tailored for NMDB analysis, 
 	It therefore requires you generate a text file of the input geotiff filenames which is then called
 	in the qsub submission script.
 	
-		/g/data/r78/cb3058/dea-notebooks/ICE_project/workaround_IE_parallel_nmdb.py
-		/g/data/r78/cb3058/dea-notebooks/ICE_project/run_workaround_IE.sh
+		/g/data/r78/cb3058/dea-notebooks/ICE_project/SICA_parallel_nmdb.py
+		/g/data/r78/cb3058/dea-notebooks/ICE_project/runwSICA.sh
 
 6. The results of step 5 produce files called e.g. '<AOI>__<Season+Year>_80polys10ha.shp'
 	These files contain only the polygons that achieved a zonally averaged threshold of >= 0.8 NDVI

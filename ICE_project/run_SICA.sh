@@ -13,7 +13,7 @@ module load dea
 
 module load parallel
 
-parallel --delay 5 -a nmdb_maxNDVItiffFiles.txt python3 workaround_IE_parallel_nmdb.py
+parallel --delay 5 -a nmdb_maxNDVItiffFiles.txt python3 SICA_parallel_nmdb.py
 wait;
 
 # python change_threshold.py > change_threshold.log

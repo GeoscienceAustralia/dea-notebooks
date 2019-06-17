@@ -120,7 +120,7 @@ class RSGISTiledShepherdSegmentationSingleThread (object):
             strchStatsOutFile = strchStatsBase + "_" + tileID + '.txt'
             kCentresOutFile = kCentresBase + "_" + tileID
             print(clumpsFile)
-            segutils.runShepherdSegmentation(imgTile, clumpsFile, outputMeanImg=None, tmpath=os.path.join(tmpDIR,tileID+'_segstemp'), gdalformat='KEA', noStats=False, noStretch=False, noDelete=False, numClusters=numClustersVal, minPxls=minPxlsVal, distThres=distThresVal, bands=bandsVal, sampling=samplingVal, kmMaxIter=kmMaxIterVal, processInMem=False, saveProcessStats=True, imgStretchStats=strchStatsOutFile, kMeansCentres=kCentresOutFile, imgStatsJSONFile=tmpStatsJSON)
+            segutils.runShepherdSegmentation(imgTile, clumpsFile, outputMeanImg=None, tmpath=os.path.join(tmpDIR,tileID+'_segstemp'), gdalformat='KEA', noStats=False, noStretch=False,       noDelete=False, numClusters=numClustersVal, minPxls=minPxlsVal, distThres=distThresVal, bands=bandsVal, sampling=samplingVal, kmMaxIter=kmMaxIterVal, processInMem=False, saveProcessStats=True, imgStretchStats=strchStatsOutFile, kMeansCentres=kCentresOutFile, imgStatsJSONFile=tmpStatsJSON)
 
             with open(tmpStatsJSON, 'r') as f:
                 jsonStrData = f.read()
