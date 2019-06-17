@@ -187,10 +187,11 @@ class RSGISTiledShepherdSegmentationSingleThread (object):
             
         imgTiles = glob.glob(os.path.join(tilesMaskedDIR, tilesBase+"*_masked.kea"))
         for imgTile in imgTiles:
+            print(imgTiles)
             baseName = os.path.splitext(os.path.basename(imgTile))[0]        
             clumpsFile = os.path.join(tilesSegsDIR, baseName + '_segs.kea')
             kMeansCentres, imgStretchStats = self.findSegStatsFiles(imgTile, segStatsInfo)
-            print("  !&!"+ imagTile + "___)"+ kMeansCentres + "___"+imgStretchStats)
+            print("  !&!"+ imgTile + "___"+ kMeansCentres + "___"+imgStretchStats)
             segutils.runShepherdSegmentationPreCalcdStats(imgTile, clumpsFile, kMeansCentres, imgStretchStats, outputMeanImg=None, tmpath=os.path.join(tmpDIR, baseName+'_segstemp'), gdalformat='KEA', noStats=False, noStretch=False, noDelete=False, minPxls=minPxlsVal, distThres=distThresVal, bands=bandsVal, processInMem=False)
             
         segTiles = glob.glob(os.path.join(tilesSegsDIR, tilesBase+"*_segs.kea"))
