@@ -232,14 +232,17 @@ class RSGISTiledShepherdSegmentationSingleThread (object):
                 rastergis.populateStats(maskedFile, True, False)
         ratDS = None
     
-    def performStage3SubsetsSegmentation(self, subsetImgsMaskedDIR, subsetSegsDIR, tmpDIR, subImgBaseName, segStatsInfo, minPxlsVal, distThresVal, bandsVal):
+    def performStage3SubsetsSegmentation(self, subsetImgsMaskedDIR, subsetSegsDIR, tmpDIR, subImgBaseName, segStatsInfo, minPxlsVal, distThresVal, bandsVal, ncpus):
         imgTiles = glob.glob(os.path.join(subsetImgsMaskedDIR, subImgBaseName+"*_masked.kea"))
-        for imgTile in imgTiles:
+        
+        def stage3threadedTiledImgSeg(imgTile):
             baseName = os.path.splitext(os.path.basename(imgTile))[0]  
             clumpsFile = os.path.join(subsetSegsDIR, baseName + '_segs.kea')
             kMeansCentres, imgStretchStats = self.findSegStatsFiles(imgTile, segStatsInfo)
-            segutils.runShepherdSegmentationPreCalcdStats(imgTile, clumpsFile, kMeansCentres, imgStretchStats, outputMeanImg=None, tmpath=os.path.join(tmpDIR, baseName+'_segstemp'), gdalformat='KEA', noStats=False, noStretch=False, noDelete=False, minPxls=minPxlsVal, distThres=distThresVal, bands=bandsVal, processInMem=False)        
-    
+            segutils.runShepherdSegmentationPreCalcdStats(imgTile, clumpsFile, kMeansCentres, imgStretchStats, outputMeanImg=None, tmpath=os.path.join(tmpDIR, baseName+'_segstemp'), gdalformat='KEA', noStats=False, noStretch=False, noDelete=False, minPxls=minPxlsVal, distThres=distThresVal, bands=bandsVal, processInMem=False)
+
+        p = Pool(ncpus)
+        p.map(stage3threadedTiledImgSeg, imgTiles)     
     
     def mergeStage3TilesToOutput(self, clumpsImage, subsetSegsDIR, subsetImgsMaskedDIR, subImgBaseName):
         burnTiles = glob.glob(os.path.join(subsetImgsMaskedDIR, subImgBaseName+"*_burn.kea"))
@@ -418,7 +421,7 @@ Example::
     
     # Perform Segmentation of the stage 3 regions
     print("Performing Segmentation of the stage 3 regions")
-    tiledSegObj.performStage3SubsetsSegmentation(stage3SubsetsMaskedDIR, stage3SubsetsSegsDIR, tmpDIR, stage3Base, segStatsInfo, minPxls, distThres, bands)
+    tiledSegObj.performStage3SubsetsSegmentation(stage3SubsetsMaskedDIR, stage3SubsetsSegsDIR, tmpDIR, stage3Base, segStatsInfo, minPxls, distThres, bands, ncpus)
     
     # Merge the stage 3 regions into the final clumps image
     print('merging stage 3 regions into the final clumps image')
