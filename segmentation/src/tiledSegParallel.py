@@ -1,7 +1,10 @@
 #! /usr/bin/env python
 
 ############################################################################
-#  tiledsegsingle.py
+# This is a customized version of the tiledsegsingle.py script implemented
+# through RSGISlib.  It runs the tiled segmentation in parallel across a
+# specified number of cpus.
+# -------------------------------------------------------------------------
 #
 #  Copyright 2016 RSGISLib.
 #

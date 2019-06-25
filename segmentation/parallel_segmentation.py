@@ -59,17 +59,14 @@ import numpy as np
 #import custom functions
 import sys
 sys.path.append('src')
-import tiledSegThreaded
+import tiledSegParallel
 from transform_tuple import transform_tuple
 from SpatialTools import array_to_geotiff
 
 #run segementation algorithm and time the code
-import time
-start = time.time()
-tiledSegThreaded.performTiledSegmentation(InputKEA, ClumpsFile, tmpDIR=temp, numClusters=20, validDataThreshold=validDataTileFraction,
+tiledSegParallel.performTiledSegmentation(InputKEA, ClumpsFile, tmpDIR=temp, numClusters=20, validDataThreshold=validDataTileFraction,
                                     tileWidth=width, tileHeight=height, minPxls=100, ncpus=ncpus)
-end = time.time()
-print(end - start)
+
 
 # Attribute segments with zonal mean of input image
 meanImage(inputTiff, ClumpsFile, meanImageTiff, "GTIFF",rsgislib.TYPE_32FLOAT)
