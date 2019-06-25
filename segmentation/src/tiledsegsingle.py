@@ -44,13 +44,10 @@ from rsgislib.segmentation import segutils
 from rsgislib import rastergis
 from rsgislib import imageutils
 from rsgislib import segmentation
-import dill
-from pathos.multiprocessing import ProcessingPool as Pool
 from osgeo import gdal
 from rios import rat
 import json
 import shutil
-
 
 class RSGISTiledShepherdSegmentationSingleThread (object):
     """
@@ -112,14 +109,10 @@ class RSGISTiledShepherdSegmentationSingleThread (object):
         dataType = rsgisUtils.getRSGISLibDataTypeFromImg(inputImage)
         tilingutils.createTilesFromMasks(inputImage, tilesBase, tilesMetaDIR, tilesImgDIR, dataType, 'KEA')
     
-    
-    def performStage1TilesSegmentation(self, tilesImgDIR, stage1TilesSegsDIR, tmpDIR, tilesBase, tileSegInfoJSON, strchStatsBase, kCentresBase, numClustersVal, minPxlsVal, distThresVal, bandsVal, samplingVal, kmMaxIterVal, ncpus):
+    def performStage1TilesSegmentation(self, tilesImgDIR, stage1TilesSegsDIR, tmpDIR, tilesBase, tileSegInfoJSON, strchStatsBase, kCentresBase, numClustersVal, minPxlsVal, distThresVal, bandsVal, samplingVal, kmMaxIterVal):
         imgTiles = glob.glob(os.path.join(tilesImgDIR, tilesBase+"*.kea"))
-        
-    def performStage1TilesSegmentation(self, tilesImgDIR, stage1TilesSegsDIR, tmpDIR, tilesBase, tileSegInfoJSON, strchStatsBase, kCentresBase, numClustersVal, minPxlsVal, distThresVal, bandsVal, samplingVal, kmMaxIterVal, ncpus):
-        imgTiles = glob.glob(os.path.join(tilesImgDIR, tilesBase+"*.kea"))
-        
-        def threadedTiledImgSeg(imgTile):
+        tileStatsFiles = dict()
+        for imgTile in imgTiles:
             baseName = os.path.splitext(os.path.basename(imgTile))[0]
             tileID = baseName.split('_')[-1]
             clumpsFile = os.path.join(stage1TilesSegsDIR, baseName + '_segs.kea')
@@ -127,19 +120,16 @@ class RSGISTiledShepherdSegmentationSingleThread (object):
             strchStatsOutFile = strchStatsBase + "_" + tileID + '.txt'
             kCentresOutFile = kCentresBase + "_" + tileID
             print(clumpsFile)
+            segutils.runShepherdSegmentation(imgTile, clumpsFile, outputMeanImg=None, tmpath=os.path.join(tmpDIR,tileID+'_segstemp'), gdalformat='KEA', noStats=False, noStretch=False, noDelete=False, numClusters=numClustersVal, minPxls=minPxlsVal, distThres=distThresVal, bands=bandsVal, sampling=samplingVal, kmMaxIter=kmMaxIterVal, processInMem=False, saveProcessStats=True, imgStretchStats=strchStatsOutFile, kMeansCentres=kCentresOutFile, imgStatsJSONFile=tmpStatsJSON)
             
-            try:
-                segutils.runShepherdSegmentation(imgTile, clumpsFile, outputMeanImg=None, tmpath=os.path.join(tmpDIR,tileID+'_segstemp'), gdalformat='KEA', noStats=False, noStretch=False,       noDelete=False, numClusters=numClustersVal, minPxls=minPxlsVal, distThres=distThresVal, bands=bandsVal, sampling=samplingVal, kmMaxIter=kmMaxIterVal, processInMem=False, saveProcessStats=True, imgStretchStats=strchStatsOutFile, kMeansCentres=kCentresOutFile, imgStatsJSONFile=tmpStatsJSON)
-                print(" !!! finished the seg on tile "+ imgTile)
-            
-            except:
-                print(" !&!" + imgTile + " Error: Its likely this tile doesn't have enough of the geotiff inside its extent to run the seg algorithm. I recommend overlaying the tiling shapefile (..._S1Tiles.shp) on the geotiff to check the extents. You can't proceed further until you deal with this as Part 2 will fail.")
-                pass
+            with open(tmpStatsJSON, 'r') as f:
+                jsonStrData = f.read()
+            segStatsInfo = json.loads(jsonStrData)
+            tileStatsFiles[baseName] = segStatsInfo
+            os.remove(tmpStatsJSON)
         
-        with Pool(ncpus) as p:
-            p.map(threadedTiledImgSeg, imgTiles)
-        
-        print("completed the stage 1 image seg")
+        with open(tileSegInfoJSON, 'w') as outfile:
+            json.dump(tileStatsFiles, outfile, sort_keys=True, indent=4, separators=(',', ': '), ensure_ascii=False)
             
             
     def defineStage1Boundaries(self, tilesImgDIR, stage1TilesSegBordersDIR, tilesBase):
@@ -169,7 +159,7 @@ class RSGISTiledShepherdSegmentationSingleThread (object):
         tilingutils.createTilesFromMasks(inputImage, tilesBase, tilesMetaDIR, tilesImgDIR, dataType, 'KEA')
     
     
-    def performStage2TilesSegmentation(self, tilesImgDIR, tilesMaskedDIR, tilesSegsDIR, tilesSegBordersDIR, tmpDIR, tilesBase, s1BordersImage, segStatsInfo, minPxlsVal, distThresVal, bandsVal, ncpus):
+    def performStage2TilesSegmentation(self, tilesImgDIR, tilesMaskedDIR, tilesSegsDIR, tilesSegBordersDIR, tmpDIR, tilesBase, s1BordersImage, segStatsInfo, minPxlsVal, distThresVal, bandsVal):
         rsgisUtils = rsgislib.RSGISPyUtils()
         imgTiles = glob.glob(os.path.join(tilesImgDIR, tilesBase+"*.kea"))
         for imgTile in imgTiles:
@@ -179,22 +169,20 @@ class RSGISTiledShepherdSegmentationSingleThread (object):
             imageutils.maskImage(imgTile, s1BordersImage, maskedFile, 'KEA', dataType, 0, 0)
             
         imgTiles = glob.glob(os.path.join(tilesMaskedDIR, tilesBase+"*_masked.kea"))
-        def stage2threadedTiledImgSeg(imgTile):
-                baseName = os.path.splitext(os.path.basename(imgTile))[0]        
-                clumpsFile = os.path.join(tilesSegsDIR, baseName + '_segs.kea')
-                kMeansCentres, imgStretchStats = self.findSegStatsFiles(imgTile, segStatsInfo)
-                segutils.runShepherdSegmentationPreCalcdStats(imgTile, clumpsFile, kMeansCentres, imgStretchStats, outputMeanImg=None, tmpath=os.path.join(tmpDIR, baseName+'_segstemp'), gdalformat='KEA', noStats=False, noStretch=False, noDelete=False, minPxls=minPxlsVal, distThres=distThresVal, bands=bandsVal, processInMem=False)	
-		
-        p = Pool(ncpus)
-        p.map(stage2threadedTiledImgSeg, imgTiles)
-        
+        for imgTile in imgTiles:
+            baseName = os.path.splitext(os.path.basename(imgTile))[0]        
+            clumpsFile = os.path.join(tilesSegsDIR, baseName + '_segs.kea')
+            kMeansCentres, imgStretchStats = self.findSegStatsFiles(imgTile, segStatsInfo)
+            segutils.runShepherdSegmentationPreCalcdStats(imgTile, clumpsFile, kMeansCentres, imgStretchStats, outputMeanImg=None, tmpath=os.path.join(tmpDIR, baseName+'_segstemp'), gdalformat='KEA', noStats=False, noStretch=False, noDelete=False, minPxls=minPxlsVal, distThres=distThresVal, bands=bandsVal, processInMem=False)
+            
         segTiles = glob.glob(os.path.join(tilesSegsDIR, tilesBase+"*_segs.kea"))
         for segTile in segTiles:
             baseName = os.path.splitext(os.path.basename(segTile))[0]        
             borderMaskFile = os.path.join(tilesSegBordersDIR, baseName + '_segsborder.kea')
             rastergis.defineBorderClumps(segTile, 'BoundaryClumps')
             rastergis.exportCol2GDALImage(segTile, borderMaskFile, 'KEA', rsgislib.TYPE_8UINT, 'BoundaryClumps')
-
+    
+    
     def mergeStage2TilesToOutput(self, clumpsImage, tilesSegsDIR, tilesSegBordersDIR, tilesBase, s2BordersImage):
         segTiles = glob.glob(os.path.join(tilesSegsDIR, tilesBase+"*_segs.kea"))
         segmentation.mergeClumpImages(segTiles, clumpsImage)
@@ -251,7 +239,7 @@ class RSGISTiledShepherdSegmentationSingleThread (object):
         rastergis.populateStats(clumpsImage, True, True)
 
 
-def performTiledSegmentation(inputImage, clumpsImage, tmpDIR='segtmp', tileWidth=2000, tileHeight=2000, validDataThreshold = 0.3, numClusters=60, minPxls=100, distThres=100, bands=None, sampling=100, kmMaxIter=200, ncpus=1):
+def performTiledSegmentation(inputImage, clumpsImage, tmpDIR='segtmp', tileWidth=2000, tileHeight=2000, validDataThreshold = 0.3, numClusters=60, minPxls=100, distThres=100, bands=None, sampling=100, kmMaxIter=200):
     """
 Utility function to call the segmentation algorithm of Shepherd et al. (2014) using the tiled process outlined in Clewley et al (2015).
 
@@ -320,27 +308,11 @@ Example::
     tiledSegObj.performStage1Tiling(inputImage, stage1TileShp, stage1TileRAT, stage1TilesBase, stage1TilesMetaDIR, stage1TilesImgDIR, os.path.join(tmpDIR, 's1tilingtemp'), tileWidth, tileHeight, validDataThreshold)
     
     # Perform Segmentation
-    print('Performing Stage 1 seg...multithreaded with ' + str(ncpus) + " cpus")
-    tiledSegObj.performStage1TilesSegmentation(stage1TilesImgDIR, stage1TilesSegsDIR, tmpDIR, stage1TilesBase, tileSegInfo, strchStatsBase, kCentresBase, numClusters, minPxls, distThres, bands, sampling, kmMaxIter, ncpus)
+    tiledSegObj.performStage1TilesSegmentation(stage1TilesImgDIR, stage1TilesSegsDIR, tmpDIR, stage1TilesBase, tileSegInfo, strchStatsBase, kCentresBase, numClusters, minPxls, distThres, bands, sampling, kmMaxIter)
     
-    #grab the stats for each tile and add to json
-    tileStatsFiles = dict()
-    for file in os.listdir(stage1TilesImgDIR):
-        if file.endswith(".json"):
-            baseName = os.path.splitext(os.path.basename(file))[0][:-9]
-            with open(stage1TilesImgDIR+"/"+file, 'r') as f:
-                    jsonStrData = f.read()
-            segStatsInfo = json.loads(jsonStrData) 
-            tileStatsFiles[baseName] = segStatsInfo
-            
-    with open(tileSegInfo, 'w') as outfile:
-        json.dump(tileStatsFiles, outfile, sort_keys=True, indent=4, separators=(',', ': '), ensure_ascii=False)
-
     # Define Boundaries
-    print('defining stage 1 boundaries')
     tiledSegObj.defineStage1Boundaries(stage1TilesSegsDIR, stage1TilesSegBordersDIR, stage1TilesBase)
     
-    print('Merging stage 1 segmented tiles')
     # Merge the Initial Tiles
     tiledSegObj.mergeStage1TilesToOutput(inputImage, stage1TilesSegsDIR, stage1TilesSegBordersDIR, stage1TilesBase, clumpsImage, stage1BordersImage)    
     
@@ -378,15 +350,12 @@ Example::
         os.makedirs(stage2TilesSegBordersDIR)
     
     # Perform offset tiling
-    print('Performing stage2 offset tilings')
     tiledSegObj.performStage2Tiling(inputImage, stage2TileShp, stage2TileRAT, stage2TilesBase, stage2TilesMetaDIR, stage2TilesImgDIR, os.path.join(tmpDIR, 's2tilingtemp'), tileWidth, tileHeight, validDataThreshold, stage1BordersImage)
     
-    print('Performing segmentation of stage2 offset tiles')
     # Perform Segmentation of the Offset Tiles
-    tiledSegObj.performStage2TilesSegmentation(stage2TilesImgDIR, stage2TilesImgMaskedDIR, stage2TilesSegsDIR, stage2TilesSegBordersDIR, tmpDIR, stage2TilesBase, stage1BordersImage, segStatsInfo, minPxls, distThres, bands, ncpus)
+    tiledSegObj.performStage2TilesSegmentation(stage2TilesImgDIR, stage2TilesImgMaskedDIR, stage2TilesSegsDIR, stage2TilesSegBordersDIR, tmpDIR, stage2TilesBase, stage1BordersImage, segStatsInfo, minPxls, distThres, bands)
     
     # Merge in the next set of boundaries
-    print('merging next set of boundaries')
     tiledSegObj.mergeStage2TilesToOutput(clumpsImage, stage2TilesSegsDIR, stage2TilesSegBordersDIR, stage2TilesBase, stage2BordersImage)
     
     shutil.rmtree(stage2TilesImgDIR)
@@ -397,7 +366,6 @@ Example::
     ########################################################
     
     ######################## STAGE 3 #######################
-    print('starting stage 3')
     # Stage 3 Parameters (Internal)
     stage3BordersClumps = os.path.join(tmpDIR, baseName+'_S3BordersClumps.kea')
     stage3SubsetsDIR = os.path.join(tmpDIR, 's3subsetimgs_'+uidStr)
@@ -413,15 +381,12 @@ Example::
         os.makedirs(stage3SubsetsSegsDIR)
     
     #Create the final boundary image subsets
-    print('creating final image subsets')
     tiledSegObj.createStage3ImageSubsets(inputImage, stage2BordersImage, stage3BordersClumps, stage3SubsetsDIR, stage3SubsetsMaskedDIR, stage3Base, minPxls)
     
     # Perform Segmentation of the stage 3 regions
-    print("Performing Segmentation of the stage 3 regions")
     tiledSegObj.performStage3SubsetsSegmentation(stage3SubsetsMaskedDIR, stage3SubsetsSegsDIR, tmpDIR, stage3Base, segStatsInfo, minPxls, distThres, bands)
     
     # Merge the stage 3 regions into the final clumps image
-    print('merging stage 3 regions into the final clumps image')
     tiledSegObj.mergeStage3TilesToOutput(clumpsImage, stage3SubsetsSegsDIR, stage3SubsetsMaskedDIR, stage3Base)
     
     shutil.rmtree(stage3SubsetsDIR)
@@ -441,6 +406,6 @@ Example::
     os.remove(tileSegInfo)
     if createdTmp:
         shutil.rmtree(tmpDIR)
-    print('Done!')
+
 
 
