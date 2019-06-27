@@ -55,8 +55,8 @@ from shapely import geometry
 import seaborn as sns
 import sys
 import time
-import traceback #new to catch errors properly
-import logging # new to catch errors properly
+#import traceback #new to catch errors properly
+#import logging # new to catch errors properly
 import xarray as xr
 
 #keep the plotting modules in here as we want to output the stackplots to *.jpg
@@ -81,7 +81,7 @@ dc = datacube.Datacube(app='wetlands insight tool')
 ### Set up polygon
 poly_path='/g/data/r78/rjd547/shapefiles/DCDB_NW_LGA_aoi.shp'
 print(f'Shape file is {poly_path}')
-#part=1
+#part=2
 part = sys.argv[1] #take an argument from the command line (our parallelish scripte)
 part = int(part)
 print(f'system argument received is {part}')
@@ -104,8 +104,8 @@ time.sleep(5*part)
 #DesiredChunks=64
 
 ### Create error log file
-logging.basicConfig(filename=f'{Output_dir}logfile.log',
-                    level=logging.INFO)
+#logging.basicConfig(filename=f'{Output_dir}logfile.log',
+ #                   level=logging.ERROR)
 
 #this code tells us which polygon ids will be running on this particular (node?). Shapessubset will be the subset of polygons that our function
 #will run over. 
@@ -411,9 +411,9 @@ def BigBadFunkyFunction(lilshape,crs):
             print(f'wrote output data to file {Output_dir}{polyName}.csv')
             return 1
         else:
-            #print(f'skipping this polygon {polyName} as it already has been run')
-            logging.error(f'skipping this polygon {polyName} as it already has been run')
-            return 1 
+            print(f'skipping this polygon {polyName} as it already has been run')
+            return 1
+            #logging.error(f'skipping this polygon {polyName} as it already has been run')
     except:
         print(f'did not run for {polyName}') 
  # Mainline
