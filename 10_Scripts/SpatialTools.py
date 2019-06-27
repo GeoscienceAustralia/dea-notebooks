@@ -309,7 +309,7 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
     # If array has only two dimensions, run in single array, multiple z-values mode:
     if len(ds_array.shape) == 2:
         
-        print(f'Operating in single array, multiple z-values mode')   
+        if verbose: print(f'Operating in single array, multiple z-values mode')   
         
         # If no custom attributes given, default to including a single z-value field based on `z_values`
         if not attribute_data:
@@ -339,6 +339,7 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
             ps_y = ds_affine[4]  # Compute pixel y size
             contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps_x, 0.5 * ps_y]) for i in
                             find_contours(ds_array, z_value)]
+#             contours_geo = [np.column_stack([i[:, 1], i[:, 0]]) for i in find_contours(ds_array, z_value)]
 
             # For each array of coordinates, drop any xy points that have NA
             contours_nona = [i[~np.isnan(i).any(axis=1)] for i in contours_geo]
@@ -418,7 +419,7 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
     # If a shapefile path is given, generate shapefile
     if output_shp:
 
-        print(f'Exporting contour shapefile to {output_shp}')
+        if verbose: print(f'Exporting contour shapefile to {output_shp}')
 
         # Set up output multiline shapefile properties
         schema = {'geometry': 'MultiLineString',

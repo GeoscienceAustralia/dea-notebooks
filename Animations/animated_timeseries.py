@@ -22,7 +22,7 @@ from datacube.utils.geometry import CRS
 from datacube import Datacube
 from skimage import exposure
 from skimage.color import rgb2hsv, hsv2rgb
-from unsharp_mask import unsharp_mask
+from skimage.filters import unsharp_mask
 
 # Import external functions from dea-notebooks using relative link to Scripts
 sys.path.append('../10_Scripts')
@@ -421,25 +421,69 @@ def hsv_image_processing(rgb_array,
 # power = 0.8
 # image_proc_func = None
 
-study_area = 'murraymouthwide'
-lat, lon, buffer_m = -35.55798788, 138.88525863, 6000
-time_range = ('1987-01-01', '2019-03-01')
-resolution = (-25, 25)
+# study_area = 'murraymouthwide'
+# lat, lon, buffer_m = -35.55798788, 138.88525863, 6000
+# time_range = ('1987-01-01', '2019-03-01')
+# resolution = (-25, 25)
+# ratio = 1
+# landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
+# landsat_clearprop = 0.70
+# sentinel_clearprop = 0.70
+# landsat_product = 'nbart'
+# landsat_sensors = ['ls5', 'ls7', 'ls8']   
+# sentinel_sensors = ['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels = 700
+# interval = 50
+# rolling_median = 25
+# interpolation_freq = 1
+# power = 0.8
+# image_proc_func = None
+
+# study_area = 'northfraser'
+# lat, lon, buffer_m = -24.637182, 153.250, 10000
+# time_range = ('1987-01-01', '2019-04-01')
+# resolution = (-25, 25)
+# ratio = 1
+# landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
+# landsat_clearprop = 0.92
+# sentinel_clearprop = 0.8
+# landsat_product = 'nbart'
+# landsat_sensors = ['ls5', 'ls7', 'ls8']   
+# sentinel_sensors = None  #['s2a', 's2b']
+# bands = ['red', 'green', 'blue']
+# percentile_stretch = [0.005, 0.995]
+# width_pixels = 900
+# interval = 20
+# rolling_median = 29
+# interpolation_freq = None
+# power = 0.5
+# image_proc_func = partial(hsv_image_processing, val_mult=1.00,
+#                           unsharp_radius1=20, unsharp_amount1=0.7,
+#                           unsharp_radius2=1, unsharp_amount2=0.2)
+
+study_area = 'moretonbay'
+lat, lon, buffer_m = -27.065, 153.32, 17000
+time_range = ('1987-01-01', '2019-05-01')
+resolution = (-50, 50)
 ratio = 1
 landsat_mask_dict = {'contiguous': True, 'cloud_fmask': 'no_cloud'}
-landsat_clearprop = 0.70
-sentinel_clearprop = 0.70
+landsat_clearprop = 0.75
+sentinel_clearprop = 0.8
 landsat_product = 'nbart'
 landsat_sensors = ['ls5', 'ls7', 'ls8']   
-sentinel_sensors = ['s2a', 's2b']
+sentinel_sensors = None  #['s2a', 's2b']
 bands = ['red', 'green', 'blue']
 percentile_stretch = [0.005, 0.995]
-width_pixels = 700
-interval = 50
-rolling_median = 25
-interpolation_freq = 1
-power = 0.8
-image_proc_func = None
+width_pixels = 900
+interval = 25
+rolling_median = 29
+interpolation_freq = None
+power = 0.5
+image_proc_func = partial(hsv_image_processing, val_mult=1.00,
+                          unsharp_radius1=20, unsharp_amount1=0.7,
+                          unsharp_radius2=1, unsharp_amount2=0.2)
 
 
 ##############################
@@ -534,14 +578,14 @@ if interpolation_freq:
 
 # Produce an RGB animation that includes both Sentinel and Landsat observations, using
 # the `title` parameter to print satellite names for each observation
-DEAPlotting.animated_timeseries(ds=combined_ds ** power,     # (combined_ds ** 0.02).isel(time=slice(5, -5)).fillna(0),
+DEAPlotting.animated_timeseries(ds=(combined_ds ** power).isel(time=slice(10, -1)),     # (combined_ds ** 0.02).isel(time=slice(5, -5)).fillna(0),
                                 output_path=f'animated_timeseries_{study_area}.mp4',
                                 bands=bands,
                                 interval=interval,
                                 width_pixels=width_pixels,
                                 percentile_stretch=percentile_stretch,
                                 show_date=False,
-                                onebandplot_kwargs={'interpolation': 'nearest'},
+                                # onebandplot_kwargs={'interpolation': 'nearest'},
                                 title=combined_ds.time.dt.year.values.tolist(),
                                 image_proc_func=image_proc_func)
 
