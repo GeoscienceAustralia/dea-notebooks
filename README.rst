@@ -28,7 +28,7 @@ The intended order of these notebook folders are:
 
 10. `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/10_Scripts>`_
 
-The *read-the-docs* version of this repository can be found at: `<http://geoscienceaustralia.github.io/digitalearthau/notebooks/index.html>`_
+The *read-the-docs* version of this repository can be found at: `<http://geoscienceaustralia.github.io/digitalearthau/notebooks/01_Getting_started/README.html>`_
 
 The examples provided here can be found as Jupyter Notebooks in the `dea-notebooks Github repository <https://github.com/GeoscienceAustralia/dea-notebooks>`_ . 
 
@@ -189,7 +189,7 @@ The process for completing a ``pull`` request may seem complicated, so if you ar
 
 9. ``git status``. You should see that you are on the temp branch, and the files you have moved across are listed in red as untracked. Double check that these files are in one of the ten ``dea-notebook`` directories, and not in a folder of your own naming.
 
-10. ``git add <file>``. Repeat this for every file that you want to publish. Make sure to add the ``README.rst`` files you have updated as well (see the `Updating the .rst file to point to your new files`_ section above)! If you do a ``git status`` here, you should now see the list of files in green ready to be committed.
+10. ``git add <file>``. Repeat this for every file that you want to publish. **Make sure to add the ``README.rst`` files you have updated as well!** (see the `Updating the .rst file to point to your new files`_ section above)! If you do a ``git status`` here, you should now see the list of files in green ready to be committed.
 
 11. ``git commit -m "Short explanation of the files being added"``
 
