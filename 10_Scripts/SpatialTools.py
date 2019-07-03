@@ -814,8 +814,6 @@ def geotransform(ds, coords, epsg=3577, alignment = 'centre', rotation=0.0):
         e.g (ds.long,ds.lat) or (ds.x,ds.y). Order MUST BE X then Y
     :param epsg:
         Integer. A projection number in epsg format, defaults to 3577 (albers equal area).
-    :param pixelSize:
-        float. The size of the pixels in metres. defaults to 25m, as per Landsat pixel size
     :param alignment:
         Str. How should the coords be aligned with respect to the pixels? 
         If "centre", then the transform will align coordinates with the centre of the pixel.
@@ -854,7 +852,7 @@ def geotransform(ds, coords, epsg=3577, alignment = 'centre', rotation=0.0):
         
         transform = (east, EW_pixelRes, rotation, north, rotation, NS_pixelRes)
     
-    elif alignment == 'upper_left':
+    if alignment == 'upper_left':
         EW_pixelRes = float(coords[1][0] - coords[1][1])
         NS_pixelRes = float(coords[0][0] - coords[0][1])        
         east = float(coords[0][0])
