@@ -2,9 +2,7 @@
 """
 This file contains a set of python functions for manipulating rasters and shapefiles that do not 
 specifically rely on DEA functionality (i.e. no dc.load or xarrays)
-
 Available functions:
-
     rasterize_vector
     contour_extract
     indices_to_coords
@@ -12,12 +10,11 @@ Available functions:
     raster_randomsample
     array_to_geotiff
     reproject_to_template
-
+    geotransform
 Last modified: September 2018
 Author: Robbi Bishop-Taylor
-
 """
-
+import osr
 import gdal
 import affine
 import fiona
@@ -49,7 +46,6 @@ def rasterize_vector(input_data, cols, rows, geo_transform, projection,
     
     Last modified: April 2018
     Author: Robbi Bishop-Taylor
-
     :param input_data: 
         Input shapefile path or preloaded GDAL/OGR layer. This must be in the same 
         projection system as the desired output raster (i.e. same as the 'projection'
@@ -84,7 +80,6 @@ def rasterize_vector(input_data, cols, rows, geo_transform, projection,
         Optionally set the dtype of the output array. This defaults to integers 
         (gdal.GDT_UInt16), and should only be changed if rasterising float values from a 
         shapefile field
-
     :return: 
         A 'row x col' array containing values from vector (if Field is supplied), or binary 
         values (1=shapefile data, 0=no shapefile)        
@@ -147,7 +142,6 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
     Contours are exported to file as a shapefile and returned as a geopandas geodataframe with one row per
     z-value or one row per array along a specified dimension. The `attribute_data` and `attribute_dtypes` parameters 
     can be used to pass custom attributes to the output contour features.
-
     Last modified: November 2018
     Author: Robbi Bishop-Taylor
     
@@ -196,7 +190,6 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
     verbose: bool, optional
         Whether to print the result of each contour extraction to the console. The default is True which prints all
         results; set to False for a cleaner output, particularly when extracting large numbers of contours.
-
     Returns
     -------
     output_gdf : geopandas geodataframe
@@ -204,20 +197,16 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
         row per array along the dimension specified by the `dim` parameter ('single z-value, multiple arrays' mode). 
         If `attribute_data` and `ttribute_dtypes` are provided, these values will be included in the shapefile's 
         attribute table.
-
     Example
     -------   
     >>> # Import modules
     >>> import sys
     >>> import datacube
-
     >>> # Import external dea-notebooks functions using relative link to Scripts directory
     >>> sys.path.append('../10_Scripts')
     >>> import SpatialTools
-
     >>> # Set up datacube instance
     >>> dc = datacube.Datacube(app='Contour extraction')
-
     ########################################
     # Single array, multiple z-values mode #
     ########################################
@@ -227,10 +216,8 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
     ...                    'lon': (149.05, 149.17),
     ...                    'output_crs': 'EPSG:3577',
     ...                    'resolution': (-25, 25)}
-
     >>> # Import sample elevation data
     >>> elevation_data = dc.load(product='srtm_dem1sv1_0', **elevation_query)
-
     >>> # Extract contours
     >>> contour_gdf = SpatialTools.contour_extract(z_values=[600, 700, 800],
     ...                                            ds_array=elevation_data.dem_h,
@@ -254,7 +241,6 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
     ...                  'time': ('2016-02-15', '2016-03-01'),
     ...                  'output_crs': 'EPSG:3577',
     ...                  'resolution': (-25, 25)}
-
     >>> # Import sample Landsat data
     >>> landsat_data = dc.load(product='ls8_nbart_albers', 
     ...                        group_by='solar_day',
@@ -263,11 +249,9 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
     >>> # Test that there are multiple arrays along the 'time' dimension
     >>> print(len(landsat_data.time))
     2
-
     >>> # Set up custom attributes to be added as shapefile fields
     >>> attribute_data = {'value': ['first_contour', 'second_contour']}
     >>> attribute_dtypes = {'value': 'str'}
-
     >>> # Extract contours
     >>> contour_gdf = SpatialTools.contour_extract(z_values=3000,
     ...                                            ds_array=landsat_data.red,
@@ -281,7 +265,6 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
         Extracting contour 0
         Extracting contour 1
     Exporting contour shapefile to extracted_contours.shp
-
     """
 
     # Obtain affine object from either rasterio/xarray affine or a gdal geotransform:
@@ -332,11 +315,12 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
         for z_value in z_values:
 
             # Extract contours and convert output array cell coords into arrays of coordinate reference system coords.
-            # We need to add (0.5 x the pixel size) to x values and subtract (-0.5 * pixel size) from y values to
-            # correct coordinates to give the centre point of pixels, rather than the top-left corner
+            # We need to add (0.5 x the pixel size) to the x and y values to correct coordinates to give the centre 
+            # point of pixels, rather than the top-left corner
             if verbose: print(f'    Extracting contour {z_value}')
-            ps = ds_affine[0]  # Compute pixel size
-            contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps, -0.5 * ps]) for i in
+            ps_x = ds_affine[0]  # Compute pixel x size
+            ps_y = ds_affine[4]  # Compute pixel y size
+            contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps_x, 0.5 * ps_y]) for i in
                             find_contours(ds_array, z_value)]
 
             # For each array of coordinates, drop any xy points that have NA
@@ -387,11 +371,12 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
         for z_value, _ in enumerate(ds_array[dim]): 
 
             # Extract contours and convert output array cell coords into arrays of coordinate reference system coords.
-            # We need to add (0.5 x the pixel size) to x values and subtract (-0.5 * pixel size) from y values to
-            # correct coordinates to give the centre point of pixels, rather than the top-left corner
+            # We need to add (0.5 x the pixel size) to the x and y values to correct coordinates to give the centre 
+            # point of pixels, rather than the top-left corner
             if verbose: print(f'    Extracting contour {z_value}')
-            ps = ds_affine[0]  # Compute pixel size
-            contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps, -0.5 * ps]) for i in
+            ps_x = ds_affine[0]  # Compute pixel x size
+            ps_y = ds_affine[4]  # Compute pixel y size
+            contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps_x, 0.5 * ps_y]) for i in
                             find_contours(ds_array.isel({dim: z_value}), z_values[0])]
 
             # For each array of coordinates, drop any xy points that have NA
@@ -579,7 +564,6 @@ def raster_randomsample(n_samples, input_raster, nodata=None, prob=False, replac
     
     Last modified: April 2018
     Author: Robbi Bishop-Taylor
-
     :param n_samples: 
         Number of points to generate
         
@@ -598,7 +582,6 @@ def raster_randomsample(n_samples, input_raster, nodata=None, prob=False, replac
         If replace=False, only generate one sample per input raster cell. 
         Alternatively, replace=True allows multiple samples to be randomly 
         generated within individual raster cells
-
     :return: 
         Lists of x coordinates and y coordinates in coordinate system of input_raster        
     """   
@@ -795,3 +778,70 @@ if __name__ == '__main__':
     print('Testing...')
     doctest.testmod(optionflags=doctest.ELLIPSIS)
     print('Testing complete')
+    
+
+def geotransform(ds, coords, epsg=3577, alignment = 'centre', rotation=0.0):
+    """
+    Creates a GDAL geotransform tuple from an xarray object, along with
+    a projection object in the form of WKT. Basically provides everything you need to use
+    the 'array_to_geotiff' function from '10_Scripts/SpatialTools', and that is the express
+    purpose for this function.
+    
+    :param ds:
+        xarray dataset or dataArray object
+    :param coords:
+        Tuple. The georeferencing coordinate data in the xarray object. 
+        e.g (ds.long,ds.lat) or (ds.x,ds.y). Order MUST BE X then Y
+    :param epsg:
+        Integer. A projection number in epsg format, defaults to 3577 (albers equal area).
+    :param alignment:
+        Str. How should the coords be aligned with respect to the pixels? 
+        If "centre", then the transform will align coordinates with the centre of the pixel.
+        If 'upper_left', then coords will be aligned with the upperleftmost corner of array
+    :param rotation:
+        Float. the degrees of rotation of the image. If North is up, rotation = 0.0.
+    
+        Example:
+        #Open an xarray object
+        ds = xr.open_rasterio(input_file.tif).squeeze()
+        #grab the trasnform and projection info from the dataset
+        transform, projection = geotransform(ds, (ds.x, ds.y), epsg=3577)
+        #use the transform object in a 'array_to_geotiff' function
+        width,height = a.shape
+        SpatialTools.array_to_geotiff("output_file.tif",
+          ds.values, geo_transform = transform, 
+          projection = projection, 
+          nodata_val=-999)
+    
+      :Returns:
+          A tuple containing the geotransform tuple and WKT projection information
+          i.e. (transform_tuple, projection)
+      -------------------------------------------------------------------------    
+    """
+    print("This function is written for use with the GDAL backed 'array_to_geotiff' function and should be used with extreme caution elsewhere.")
+    
+    
+    if alignment == 'centre':
+        EW_pixelRes = float(coords[1][0] - coords[1][1])
+        NS_pixelRes = float(coords[0][0] - coords[0][1])        
+        east = float(coords[0][0]) - (EW_pixelRes/2)
+        north = float(coords[1][0]) + (NS_pixelRes/2)
+        
+        transform = (east, EW_pixelRes, rotation, north, rotation, NS_pixelRes)
+    
+    if alignment == 'upper_left':
+        EW_pixelRes = float(coords[1][0] - coords[1][1])
+        NS_pixelRes = float(coords[0][0] - coords[0][1])        
+        east = float(coords[0][0])
+        north = float(coords[1][0])
+        
+        transform = (east, EW_pixelRes, rotation, north, rotation, NS_pixelRes)
+    
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(epsg)
+    prj_wkt = srs.ExportToWkt()
+    
+    return transform, prj_wkt
+    
+    
+    
