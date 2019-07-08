@@ -2,7 +2,7 @@
 
 Overview of DEA Notebooks
 =========================
-This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. 
+This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. If you need to join the NCI first, read about joining the NCI here:  http://geoscienceaustralia.github.io/digitalearthau/connect/account.html 
 
 Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an Issue in the Github repository, or fix it yourself and create a Pull request to contribute the updated function back into the repository (See the repository README for instructions on creating a Pull request).
 
