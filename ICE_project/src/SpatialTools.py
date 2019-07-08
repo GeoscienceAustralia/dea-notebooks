@@ -818,7 +818,7 @@ def geotransform(ds, coords, epsg=3577, alignment = 'centre', rotation=0.0):
           i.e. (transform_tuple, projection)
       -------------------------------------------------------------------------    
     """
-    print("This function is written for use with the GDAL backed 'array_to_geotiff' function and should be used with extreme caution elsewhere.")
+#     print("This function is written for use with the GDAL backed 'array_to_geotiff' function and should be used with extreme caution elsewhere.")
     
     
     if alignment == 'centre':

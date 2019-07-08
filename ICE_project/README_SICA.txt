@@ -1,6 +1,6 @@
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Readme for Summer Irrigated Cropping Area workflow (tailored for NMDB analysis, 05/06/2019)
+Readme for Summer Irrigated Cropping Area workflow (tailored for NMDB analysis, 08/07/2019)
 
     - An explanation of the output filenames are at the bottom of this readme
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -36,7 +36,7 @@ Readme for Summer Irrigated Cropping Area workflow (tailored for NMDB analysis, 
 	
 		/g/data/r78/cb3058/dea-notebooks/ICE_project/clip_ndvi_max.py
 
-5. Run 'run_workaround_IE.py'. This does the bulk of the analysis by pulling in the 
+5. Run 'SICA_parallel_nmdb.py'. This does the bulk of the analysis by pulling in the 
 	clipped NDVI maximum geotiff from step 4 and running the image segmentation, thresholding
 	the zonal stats over the segments, and filtering by area.  
 	This script is run on megamem and is parallelized using the GNU Parallel library.
@@ -44,7 +44,7 @@ Readme for Summer Irrigated Cropping Area workflow (tailored for NMDB analysis, 
 	in the qsub submission script.
 	
 		/g/data/r78/cb3058/dea-notebooks/ICE_project/SICA_parallel_nmdb.py
-		/g/data/r78/cb3058/dea-notebooks/ICE_project/runwSICA.sh
+		/g/data/r78/cb3058/dea-notebooks/ICE_project/run_SICA.sh
 
 6. The results of step 5 produce files called e.g. '<AOI>__<Season+Year>_80polys10ha.shp'
 	These files contain only the polygons that achieved a zonally averaged threshold of >= 0.8 NDVI
@@ -58,7 +58,7 @@ Readme for Summer Irrigated Cropping Area workflow (tailored for NMDB analysis, 
 7. Using a good basemap, manually curate egregious commission errors contained in the 
 	'<AOI>_80mask_allDryYears_merged.shp' file.  Typically these will be plantation forests
 	and highlands grasslands in regions closer to the coast. There are also 'tractor tread'
-    artefacts from geometric errors that need to be deleted.
+    artefacts from geometric errors in the LS5 satellite data that need to be deleted.
 
 8. Run 'mask_results.py' which applies the curated mask from step 7 over the 'multithreshold.tif' output
 	from step 5.  The results from this script have a suffix called '_Irrigated_<mask>.shp'. These are your
@@ -67,7 +67,7 @@ Readme for Summer Irrigated Cropping Area workflow (tailored for NMDB analysis, 
 	/g/data/r78/cb3058/dea-notebooks/ICE_project/mask_results.py
 	
 9.	Using the 'inspect_resuts.ipynb' notebook, generate plots showing the time-series of annual irrigated area
-    and cumulative irrigatable area.
+    and cumulative irrigable area.
 	Plots can be created for the whole catchment, and/or for subcatchments if shapefiles of the subcatchments
 	are available.
 	
@@ -80,7 +80,7 @@ Filename Index:
     It is the output of applying image segmentation over the seasonal composite of Maximum NDVI.
 
 <AOI>_<Season+Year>_ClumpMean.kea
-    These file is the same as the sheperdSEG file but the segments have the zonal mean NDVI as an
+    This file is the same as the sheperdSEG file but the segments have the zonal mean NDVI as an
     attribute. This file is the input to creating the multithreshold.tif
 
 <AOI>_<Season+Year>_multithreshold.tif
