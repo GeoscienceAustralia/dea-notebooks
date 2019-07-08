@@ -23,7 +23,7 @@ from SpatialTools import rasterize_vector
 threeRivers = 'data/spatial/ThreeRivers.shp'
 ds = xr.open_dataset("results/animations/threeRivers_irrigation.nc")
 print("filling NaNs")
-ds = ds.Irrigated_Area.fillna(0)
+ds = ds.fillna(0)
 
 #get our irrigated area data, and scale it so numbers are similar to rainfall anomalies
 irr_area = pd.read_csv('results/nmdb_plots/csvs/NMDB_annual_area.csv')['irrigated area']
@@ -45,11 +45,12 @@ df = pd.DataFrame({"Rainfall (mm)": list(rain.rain_anomaly_winter),
 print("starting animation")
 DEAPlotting.animated_timeseriesline(ds, df, "results/animations/threeRivers_lineplot.gif", 
                                     width_pixels=1000, interval=300, bands=['Irrigated_Area'],onebandplot_cbar=False,
-                                    show_date=True, shapefile_path=threeRivers,title= "Summer Irrigated Area",
+                                    show_date=True, title= "Summer Irrigated Area",
                                     onebandplot_kwargs={'cmap':'plasma'},
                                     pandasplot_kwargs={'ylim': (-200,200), 'style':'o--'}, 
                                     shapefile_kwargs={'linewidth':1, 'edgecolor':'black', 'facecolor':"#00000000"})
 
+# shapefile_path=threeRivers,
 #clipping to shapefile
 # da = xr.open_dataset("results/animations/NMDB_irrigation.nc")
 # transform, proj = geotransform(da.Irrigated_Area, (da.Irrigated_Area.x, da.Irrigated_Area.y), epsg=3577, alignment='centre')

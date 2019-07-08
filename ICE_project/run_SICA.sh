@@ -12,6 +12,7 @@ module use /g/data/v10/public/modules/modulefiles/
 module load dea
 
 python animate_large.py
+
 # module load parallel
 
 # parallel --delay 5 -a nmdb_maxNDVItiffFiles.txt python3 SICA_parallel_nmdb.py

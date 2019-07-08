@@ -331,7 +331,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
             # Remove Landsat 7 SLC-off from PQ layer if ls7_slc_off=False
             if not ls7_slc_off and sensor == 'ls7':
 
-                print('Ignoring SLC-off observations for ls7')
+#                 print('Ignoring SLC-off observations for ls7')
                 data = data.sel(time=data.time < np.datetime64('2003-05-30'))
 
             # Return only Landsat observations that have matching PQ data 
@@ -340,7 +340,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
             pq = pq.sel(time=time)
 
             # Load PQ data using dask
-            print('Loading {} pixel quality'.format(sensor))
+#             print('Loading {} pixel quality'.format(sensor))
             pq = pq.compute()
             
             # If a custom dict is provided for mask_dict, use these values to make mask from PQ
@@ -365,7 +365,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
 
             # Filter by data_perc to drop low quality observations and finally import data using dask
             filtered = data.sel(time=data.data_perc >= masked_prop)
-            print(f'    Loading {len(filtered.time)} filtered {sensor} timesteps')
+#             print(f'    Loading {len(filtered.time)} filtered {sensor} timesteps')
             filtered = filtered.compute()
             
             # Optionally apply pixel quality mask to all observations that were not dropped in previous step
@@ -387,19 +387,17 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
             pq = None            
                         
         except:
-            
+            pass
             # If there is no data for sensor or if another error occurs:
-            print(f'Loading {sensor} pixel quality\n    Skipping {sensor}; no valid data for query')
+#             print(f'Loading {sensor} pixel quality\n    Skipping {sensor}; no valid data for query')
 
     # Concatenate all sensors into one big xarray dataset, and then sort by time 
-    sensor_string = ", ".join(successfully_returned)
-    print(f'Combining and sorting {sensor_string} data')
     combined_ds = xr.concat(filtered_sensors, dim='time')
     combined_ds = combined_ds.sortby('time')                                                               
        
     # Optionally filter to replace no data values with nans
     if mask_invalid_data:
-        print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
+#         print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
         combined_ds = masking.mask_invalid_data(combined_ds)
 
     # Return combined dataset
