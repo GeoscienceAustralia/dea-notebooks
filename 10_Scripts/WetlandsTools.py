@@ -24,7 +24,7 @@ def get_RAMSAR_polyName(shapefile):
     RAMSAR_NAME = '_'.join(shapefile['properties']['RAMSAR_NAM'].split(' '))
     WETLAND_NAME = '_'.join(shapefile['properties']['WETLAND_NA'].split(' '))
     STATE = '_'.join(shapefile['properties']['STATE'].split(' ')) 
-    ID = shapefile['FeatureID']
+    ID = shapefile['id']
     polyName = f'{RAMSAR_NAME}-{WETLAND_NAME}-{STATE}-{ID}'
     print(f'processing polygon {polyName}')
     return(polyName)
