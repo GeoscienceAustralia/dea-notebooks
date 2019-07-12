@@ -15,6 +15,8 @@ import fiona
 import geopandas
 
 
+
+
 def get_RAMSAR_polyName(shapefile):
     ''' function designed specifically for the RAMSAR wetlands australia shapefile. Takes the shapefile and extracts
     the ramsar name, wetland name and objectID from the ESRI shapefile format and turns it into a useful string for our output.
@@ -40,5 +42,26 @@ def get_LRA_polyName(feature):
     OBJECTID = feature['properties']['OBJECTID']
     LOCALITY = feature['properties']['LOCALITY']
     polyName = f'{LOTPLANSEGPAR}-{LOCALITY}-{OBJECTID}'
+    print(f'processing polygon {polyName}')
+    return(polyName)
+
+def get_polyName(shapefile):
+    'function just for the peatlands'
+    ID = feature['properties']['OBJECTID']
+    polyName = f'peat-{ID}'
+    print(f'processing polygon {polyName}')
+    return(polyName)
+
+def get_WetMAP_polyName(shapefile):
+    'function just for the WetMAP polygons'
+    ID = feature['properties']['FID_1']
+    if feature['properties']['LU_NAME']is not None:
+        NAME = '_'.join(feature['properties']['LU_NAME'].split(' ')).replace("'","_").replace("/","_") 
+        print(NAME)
+    elif feature['properties']['NAME_MAIN'] is not None:
+        NAME = f'_'.join(feature['properties']['NAME_MAIN'].split(' ')).replace("'","_").replace("/","_") 
+    else:     
+        NAME = 'WetMAP_polygon'  
+    polyName = f'{ID}_{NAME}'
     print(f'processing polygon {polyName}')
     return(polyName)
