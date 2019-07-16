@@ -1,1 +1,2 @@
 Hello I am making another test so I can learn how to write things in nano. 
+This is a conflict
