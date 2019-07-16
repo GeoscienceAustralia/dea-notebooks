@@ -23,7 +23,7 @@ from SpatialTools import rasterize_vector
 threeRivers = 'data/spatial/ThreeRivers.shp'
 ds = xr.open_dataset("results/animations/threeRivers_irrigation.nc")
 print("filling NaNs")
-ds = ds.fillna(0)
+ds = ds.fillna(0.1)
 
 #get our irrigated area data, and scale it so numbers are similar to rainfall anomalies
 irr_area = pd.read_csv('results/nmdb_plots/csvs/NMDB_annual_area.csv')['irrigated area']
@@ -43,12 +43,12 @@ df = pd.DataFrame({"Rainfall (mm)": list(rain.rain_anomaly_winter),
                     index =dates)
 
 print("starting animation")
-DEAPlotting.animated_timeseriesline(ds, df, "results/animations/threeRivers_lineplot.gif", 
+DEAPlotting.animated_timeseriesline(ds, df, "results/animations/threeRivers_lineplot_fillNA_withShape.gif", 
                                     width_pixels=1000, interval=300, bands=['Irrigated_Area'],onebandplot_cbar=False,
-                                    show_date=True, title= "Summer Irrigated Area",
+                                    show_date=True, title= "Summer Irrigated Area", shapefile_path=threeRivers, 
+                                    shapefile_kwargs={'linewidth':1, 'edgecolor':'black',  'facecolor':"#00000000"},
                                     onebandplot_kwargs={'cmap':'plasma'},
-                                    pandasplot_kwargs={'ylim': (-200,200), 'style':'o--'}, 
-                                    shapefile_kwargs={'linewidth':1, 'edgecolor':'black', 'facecolor':"#00000000"})
+                                    pandasplot_kwargs={'ylim': (-200,200), 'style':'o--'})
 
 # shapefile_path=threeRivers,
 #clipping to shapefile
