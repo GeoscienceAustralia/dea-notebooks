@@ -1,20 +1,39 @@
 # WetlandsTools.py
 """
-This file contains a set of python functions used for processing existing shapefile types for the Wetlands Insight Tool.  In future these will be turned into a wetlands insight tool module, with options to select a polygon type or a default setting getting the name off the OBJECTID of the polygon.
+This file contains a set of python functions used in the Wetlands Insight Toolkit.  In future these will be turned into a wetlands insight tool module, with options to select a polygon type or a default setting getting the name off the OBJECTID of the polygon.
 Available functions:
 
     get_RAMSAR_polyName
     get_LRA_polyName
+    get_polyname
+    get_WetMAP_polyname
+    get_masked_tcw
+    get_masked_ls578_data
 
 Last modified: July 2019
 Author: Bex Dunn
 
 """
-from datacube.utils import geometry
+
 import fiona
-import geopandas
+from datetime import datetime, timedelta
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+import rasterio.mask
+import rasterio.features
+from shapely import geometry
+import seaborn as sns
+import sys
+import xarray as xr
 
+import datacube as dc
+from datacube.storage import masking
+from datacube.utils import geometry
+from digitalearthau.utils import wofs_fuser
 
+sys.path.append('/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/10_Scripts')
+import DEADataHandling, TasseledCapTools
 
 
 def get_RAMSAR_polyName(shapefile):
@@ -52,7 +71,7 @@ def get_polyName(shapefile):
     print(f'processing polygon {polyName}')
     return(polyName)
 
-def get_WetMAP_polyName(shapefile):
+def get_WetMAP_polyName(feature):
     'function just for the WetMAP polygons'
     ID = feature['properties']['FID_1']
     if feature['properties']['LU_NAME']is not None:
@@ -65,3 +84,39 @@ def get_WetMAP_polyName(shapefile):
     polyName = f'{ID}_{NAME}'
     print(f'processing polygon {polyName}')
     return(polyName)
+
+def get_masked_tcw(sr_data, mask, threshold=-350):
+    '''uses TasseledCapTools and an input threshold (defaults to -350) to create masked over-threshold tasseled cap '''
+
+    #transform the nbart into tci
+    tci = TasseledCapTools.thresholded_tasseled_cap(sr_data,wetness_threshold=-350, drop=True , drop_tc_bands=True)
+
+    #select only finite values (over threshold values)
+    tcw = xr.ufuncs.isfinite(tci.wetness_thresholded)
+
+    # #reapply the polygon mask
+    tcw = tcw.where(mask==False)
+
+    return tcw
+
+def get_masked_ls578_data(query, geom, dc=dc):
+    '''create a function that takes in the masked proportion, query and geometry and returns the fully masked surface reflectance data'''
+    ## Set up datasets
+    #set cloudmasking threshold and load landsat nbart data
+    landsat_masked_prop = 0.90
+    ls578_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, product='nbart',
+            masked_prop=landsat_masked_prop)
+
+    ### mask the data with our original polygon to remove extra data 
+
+    data = ls578_ds
+    mask = rasterio.features.geometry_mask([geom.to_crs(data.geobox.crs)for geoms in [geom]],
+                                               out_shape=data.geobox.shape,
+                                               transform=data.geobox.affine,
+                                               all_touched=False,
+                                               invert=False)
+
+    #for some reason xarray is not playing nicely with our old masking function
+    mask_xr = xr.DataArray(mask, dims = ('y','x'))
+    ls578_ds = data.where(mask_xr==False)
+    return ls578_ds, mask_xr
