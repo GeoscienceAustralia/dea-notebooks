@@ -22,12 +22,12 @@ sys.path.append('src')
 import DEADataHandling, DEAPlotting, TasseledCapTools
 dc = datacube.Datacube(app='wetlands insight tool')
 
-def WITdrill(feat, crs, time_period, Output_dir):
+def WITdrill(feat, crs, time_period, Output_dir, columnName):
     first_geom = feat['geometry']
-    polyName = feat['properties']['UniqueID']
-    ID = int(polyName[-1])
-    progress = round((ID/1813) * 100, 4)
-    print("\r", "working on polygon: " + polyName + ", " + str(progress) + "%" + " complete. ", end = '')
+    polyName = feat['properties'][columnName]
+#     ID = int(polyName[-1])
+#     progress = round((ID/1813) * 100, 4)
+#     print("\r", "working on polygon: " + polyName + ", " + str(progress) + "%" + " complete. ", end = '')
     geom = geometry.Geometry(first_geom, crs=crs)
     #make quaery from polygon
     query = {'geopolygon': geom, 'time': time_period}
@@ -91,7 +91,15 @@ def WITdrill(feat, crs, time_period, Output_dir):
 
     # #re-mask with nans to remove no-data
     BSPVNPV=BSPVNPV.where(FC_mask)
-
+    #restack the Fractional cover dataset all together
+    FC_dominant = xr.Dataset({
+        'BS': (BSPVNPV==0).where(FC_mask),
+        'PV': (BSPVNPV==1).where(FC_mask),
+        'NPV': (BSPVNPV==2).where(FC_mask),
+        })
+    # count number of Fractional Cover pixels for each cover type in area of interest
+    FC_count = FC_dominant.sum(dim=['x','y'])
+    
     #number of pixels in area of interest
     pixels = (mask_xr==0).sum(dim=['x','y'])
 
@@ -123,34 +131,7 @@ def WITdrill(feat, crs, time_period, Output_dir):
     #calculate wet not wofs
     tcw_less_wofs = tcw_area_percent-wofs_area_percent
 
-    #drop data percentage and Unmixing Error
-    fc_tester = fc_ds_noTCW.drop(['data_perc','UE'])
 
-    #following robbi's advice, cast the dataset to a dataarray
-    maxFC = fc_tester.to_array(dim='variable', name='maxFC')
-
-    #turn FC array into integer only as nanargmax doesn't seem to handle floats the way we want it to
-    FC_int = maxFC.astype('int8')
-
-    #use numpy.nanargmax to get the index of the maximum value along the variable dimension
-    #BSPVNPV=np.nanargmax(FC_int, axis=0)
-    BSPVNPV=FC_int.argmax(dim='variable')
-
-
-    #work out where we have actual values!
-    FC_mask=xr.ufuncs.isfinite(maxFC).all(dim='variable')
-
-    # #re-mask with nans to remove no-data
-    BSPVNPV=BSPVNPV.where(FC_mask)
-    
-    #restack the Fractional cover dataset all together
-    FC_dominant = xr.Dataset({
-        'BS': (BSPVNPV==0).where(FC_mask),
-        'PV': (BSPVNPV==1).where(FC_mask),
-        'NPV': (BSPVNPV==2).where(FC_mask),
-    })
-
-    FC_count = FC_dominant.sum(dim=['x','y'])
 
     #Fractional cover pixel count method
     #Get number of FC pixels, divide by total number of pixels per polygon
