@@ -2,7 +2,7 @@
 #PBS -P r78
 #PBS -l walltime=2:00:00
 #PBS -l mem=1TB
-#PBS -l ncpus=7
+#PBS -l ncpus=2
 #PBS -q hugemem
 #PBS -m abe
 #PBS -M chad.burton@ga.gov.au

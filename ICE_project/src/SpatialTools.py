@@ -780,7 +780,7 @@ if __name__ == '__main__':
     print('Testing complete')
     
 
-def geotransform(ds, coords, epsg=3577, alignment = 'centre', rotation=0.0):
+def geotransform(ds, coords, epsg=3577, alignment = 'upper_left', rotation=0.0):
     """
     Creates a GDAL geotransform tuple from an xarray object, along with
     a projection object in the form of WKT. Basically provides everything you need to use
@@ -821,7 +821,7 @@ def geotransform(ds, coords, epsg=3577, alignment = 'centre', rotation=0.0):
 #     print("This function is written for use with the GDAL backed 'array_to_geotiff' function and should be used with extreme caution elsewhere.")
     
     
-    if alignment == 'centre':
+    if alignment == 'upper_left':
         EW_pixelRes = float(coords[1][0] - coords[1][1])
         NS_pixelRes = float(coords[0][0] - coords[0][1])        
         east = float(coords[0][0]) - (EW_pixelRes/2)
@@ -829,7 +829,7 @@ def geotransform(ds, coords, epsg=3577, alignment = 'centre', rotation=0.0):
         
         transform = (east, EW_pixelRes, rotation, north, rotation, NS_pixelRes)
     
-    if alignment == 'upper_left':
+    if alignment == 'centre':
         EW_pixelRes = float(coords[1][0] - coords[1][1])
         NS_pixelRes = float(coords[0][0] - coords[0][1])        
         east = float(coords[0][0])
