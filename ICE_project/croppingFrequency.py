@@ -35,7 +35,7 @@ def IrrigationFirstOccurs(x, dim):
 count = count_irrigation(irr_alltime.Irrigated_Area, dim='time')
 frequency = count / len(irr_alltime.time)
 firstOccured = IrrigationFirstOccurs(irr_alltime.Irrigated_Area, dim='time')
-yearsIrrigated = firstOccured - len(irr_alltime.time)
+yearsIrrigated = len(irr_alltime.time)-firstOccured 
 normalisedFrequency = count / yearsIrrigated
 
 #covert first observed to an array with the date (year)
@@ -84,32 +84,32 @@ SpatialTools.array_to_geotiff(results+'normalisedFrequency_alltime.tif',
               nodata_val=0)
 
 #NOW DO THE 90'S
-# irr_90s = irr_alltime.isel(time=range(0,13))
-# count = count_irrigation(irr_90s.Irrigated_Area, dim='time')
-# frequency = count / len(irr_90s.time)
+irr_90s = irr_alltime.isel(time=range(0,13))
+count = count_irrigation(irr_90s.Irrigated_Area, dim='time')
+frequency = count / len(irr_90s.time)
 
-# SpatialTools.array_to_geotiff(results+'rawfrequency_90s.tif',
-#               frequency.values, geo_transform = transform, 
-#               projection = projection, 
-#               nodata_val=0)
+SpatialTools.array_to_geotiff(results+'rawfrequency_90s.tif',
+              frequency.values, geo_transform = transform, 
+              projection = projection, 
+              nodata_val=0)
 
-# #NOW DO THE 00'S
-# irr_00s = irr_alltime.isel(time=range(13,23))
-# count = count_irrigation(irr_00s.Irrigated_Area, dim='time')
-# frequency = count / len(irr_00s.time)
+#NOW DO THE 00'S
+irr_00s = irr_alltime.isel(time=range(13,23))
+count = count_irrigation(irr_00s.Irrigated_Area, dim='time')
+frequency = count / len(irr_00s.time)
 
-# SpatialTools.array_to_geotiff(results+'rawfrequency_00s.tif',
-#               frequency.values, geo_transform = transform, 
-#               projection = projection, 
-#               nodata_val=0)
+SpatialTools.array_to_geotiff(results+'rawfrequency_00s.tif',
+              frequency.values, geo_transform = transform, 
+              projection = projection, 
+              nodata_val=0)
 
-# #NOW DO THE 10'S
-# irr_10s = irr_alltime.isel(time=range(23,30))
-# count = count_irrigation(irr_10s.Irrigated_Area, dim='time')
-# frequency = count / len(irr_10s.time)
+#NOW DO THE 10'S
+irr_10s = irr_alltime.isel(time=range(23,30))
+count = count_irrigation(irr_10s.Irrigated_Area, dim='time')
+frequency = count / len(irr_10s.time)
 
-# SpatialTools.array_to_geotiff(results+'rawfrequency_10s.tif',
-#               frequency.values, geo_transform = transform, 
-#               projection = projection, 
-#               nodata_val=0)
+SpatialTools.array_to_geotiff(results+'rawfrequency_10s.tif',
+              frequency.values, geo_transform = transform, 
+              projection = projection, 
+              nodata_val=0)
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 #PBS -P r78
 #PBS -l walltime=2:00:00
-#PBS -l mem=1TB
-#PBS -l ncpus=7
-#PBS -q hugemem
+#PBS -l mem=3TB
+#PBS -l ncpus=32
+#PBS -q megamem
 #PBS -m abe
 #PBS -M chad.burton@ga.gov.au
 
