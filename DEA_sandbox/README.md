@@ -1,2 +1,2 @@
-# Open Data Cube Sandbox Notebooks
-Jupyter Notebooks to be used with FrontierSI's JupyterHub sandbox.
+# Digital Earth Australia Sandbox Notebooks
+Jupyter Notebooks to be used with Geoscience Australia's Jupyterhub Sandbox
