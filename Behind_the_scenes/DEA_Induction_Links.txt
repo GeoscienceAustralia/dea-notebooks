@@ -1,0 +1,35 @@
+*Get L drive access:*
+\\prod.lan\ops 
+
+*Get Strudel and turbo VNC* 
+L:\strudelaccess + follow the README (if this doesn’t work you may need to request Strudel and TurboVNC)  - which should be via IT but could get complicated, so if you get too stuck come and find someone.
+
+*National map -*
+https://nationalmap.gov.au/
+
+*Landsat satellite program*
+https://landsat.gsfc.nasa.gov/
+
+*Sentinel*
+https://en.wikipedia.org/wiki/Copernicus_Programme
+
+*DEA doco*
+http://geoscienceaustralia.github.io/digitalearthau/
+http://geoscienceaustralia.github.io/digitalearthau/connect/account.html  
+project is r78 –join this project so that you can run analyses
+
+*Collaboration tools:*
+Join Slack           https://slack.com/intl/en-au/downloads/windows
+Opendatacube.slack.com
+
+*Join github with GA email;*
+https://github.com/GeoscienceAustralia/dea-notebooks 
+
+*ssh key set up for git hub account:*
+https://help.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
+
+*How to clone the repo:*  (before you do this come talk to a wombat)
+https://github.com/GeoscienceAustralia/dea-notebooks#to-clone-the-repo-on-the-vdi 
+
+*Fundamentals of remote sensing:*
+https://register.gotowebinar.com/register/5274323579896872193

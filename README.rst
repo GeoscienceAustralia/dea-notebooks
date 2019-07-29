@@ -2,7 +2,7 @@
 
 Overview of DEA Notebooks
 =========================
-This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. 
+This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. If you need to join the NCI first, read about joining the NCI here:  http://geoscienceaustralia.github.io/digitalearthau/connect/account.html 
 
 Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an Issue in the Github repository, or fix it yourself and create a Pull request to contribute the updated function back into the repository (See the repository README for instructions on creating a Pull request).
 
@@ -189,7 +189,7 @@ The process for completing a ``pull`` request may seem complicated, so if you ar
 
 9. ``git status``. You should see that you are on the temp branch, and the files you have moved across are listed in red as untracked. Double check that these files are in one of the ten ``dea-notebook`` directories, and not in a folder of your own naming.
 
-10. ``git add <file>``. Repeat this for every file that you want to publish. Make sure to add the ``README.rst`` files you have updated as well (see the `Updating the .rst file to point to your new files`_ section above)! If you do a ``git status`` here, you should now see the list of files in green ready to be committed.
+10. ``git add <file>``. Repeat this for every file that you want to publish. **Make sure to add the ``README.rst`` files you have updated as well!** (see the `Updating the .rst file to point to your new files`_ section above)! If you do a ``git status`` here, you should now see the list of files in green ready to be committed.
 
 11. ``git commit -m "Short explanation of the files being added"``
 

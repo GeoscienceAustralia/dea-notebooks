@@ -15,3 +15,5 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
    Fractional_Cover_Percentiles.ipynb
    CumulativeMassResidualRainfall.ipynb
    Generate_Mangrove_Cover_Statistics_Through_Time.ipynb
+   LinearModels-NDVI_recession.ipynb
+   Parallel_Image_Segmentation.ipynb
