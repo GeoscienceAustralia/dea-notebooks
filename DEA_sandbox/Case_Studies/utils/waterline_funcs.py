@@ -8,6 +8,7 @@ Author: Robbi Bishop-Taylor
 
 """
 
+import xarray as xr
 import affine
 import fiona
 import collections
@@ -22,32 +23,38 @@ import matplotlib.colors
 from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps
 
 
-def load_cloudmaskedlandsat(dc, query, platform='ls8', bands=['red', 'green', 'blue']):
+def load_cloudmaskedlandsat(dc, query, platforms=['ls5t', 'ls7e', 'ls8c'], 
+                            bands=['nbart_red', 'nbart_green', 'nbart_blue', 
+                                   'nbart_nir', 'nbart_swir_1', 'nbart_swir_2'],
+                            rename_bands=True):
     
     '''
-    This function returns cloud-masked Landsat `*_nbar_scene` data by loading 
-    both Landsat and Landsat pixel quality data and masking out any pixels 
-    affected by cloud, cloud shadow, saturated pixels or any pixels missing data 
-    in any band. For convenience, the resulting data is returned with sensible
-    band names (e.g. 'red', 'green', 'blue') instead of the unnamed bands in the
+    This function returns cloud-masked Landsat Collection 3 `ga_{platform}_ard_3` 
+    data by loading both Landsat and masking out any pixels affected by cloud, cloud shadow, 
+    or any pixels missing data in any band. For convenience, the resulting data is returned 
+    with sensible band names (e.g. 'red', 'green', 'blue') instead of the unnamed bands in the
     original data.
     
-    Last modified: March 2019
+    Last modified: July 2019
     Author: Robbi Bishop-Taylor
     
     Parameters
     ----------  
     dc : datacube Datacube object
-        A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This allows you to 
-        also use development datacubes if they have been imported into the environment.    
+        A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. 
+        This allows you to also use development datacubes if required.    
     query : dict
-        A dict containing the query bounds. Can include lat/lon, time etc. If no `time` query is given, the 
-        function defaults to all timesteps available to all sensors (e.g. 1987-2018)
-    platform : list, optional
-        An optional Landsat platform name to load data from. Options are 'ls5', 'ls7', 'ls8'.
+        A dict containing the query bounds. Can include lat/lon, time etc. If no `time` query is 
+        given, the function defaults to all timesteps available to all sensors (e.g. 1987-2018)
+    platforms : list, optional
+        An optional Landsat platform name to load data from. Options are 'ls5t', 'ls7e', 'ls8c'.
     bands : list, optional
-        An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
-        'nir', 'swir1', 'swir2'; defaults to `['red', 'green', 'blue']`.
+        An optional list of strings containing the bands to be read in; options default to 
+        'nbart_red', 'nbart_green', 'nbart_blue', 'nbart_nir', 'nbart_swir_1', 'nbart_swir_2'.
+    rename_bands : bool, optional
+        An optiona boolean specifying whether to rename complex 'nbart_swir_2'-style names to
+        simpler 'swir2' aliases. This can be used to provide compatability with the previous
+        Collection 2 band name aliases. Defaults to True.
         
     Returns
     -------
@@ -55,55 +62,51 @@ def load_cloudmaskedlandsat(dc, query, platform='ls8', bands=['red', 'green', 'b
         An xarray dataset containing pixel-quality masked Landsat observations        
         
     '''
-    
-    # Define dictionary for converting band names between numbered 
-    # (e.g. '2', '3', '4') and named bands (e.g. 'red', 'green', 'blue')
-    band_nametonum = {'coastal': '1', 'blue': '2', 'green': '3', 
-                      'red': '4', 'nir': '5', 'swir1': '6', 'swir2': '7'}
-    
-    # Test if data is available for query
-    n_obs = len(dc.find_datasets(product=f'{platform}_nbar_scene', **query))
-    if n_obs > 0:
 
-        print(f'Loading data for {n_obs} {platform} observations')
-        landsat_ds = dc.load(product=f'{platform}_nbar_scene', 
-                             measurements=[band_nametonum[i] for i in bands],
+    # If bands do not include fmask, add it
+    new_bands = set(bands)
+    new_bands.add('fmask')
+    
+    # Dictionary mapping full data names to simpler 'red' alias names
+    bands_simplenames = {'nbart_red': 'red',
+                         'nbart_green': 'green',
+                         'nbart_blue': 'blue',
+                         'nbart_nir': 'nir',
+                         'nbart_swir_1': 'swir1',
+                         'nbart_swir_2': 'swir2',
+                         'nbar_red': 'red',
+                         'nbar_green': 'green',
+                         'nbar_blue': 'blue',
+                         'nbar_nir': 'nir',
+                         'nbar_swir_1': 'swir1',
+                         'nbar_swir_2': 'swir2'}
+    
+    platform_data = []
+
+    for platform in platforms:
+
+        # Load landsat data
+        landsat_ds = dc.load(product=f'ga_{platform}_ard_3', 
+                             dask_chunks={'time': 1}, 
+                             measurements=new_bands,
                              group_by='solar_day', 
                              **query)
 
-        print(f'Loading pixel quality data for {n_obs} {platform} observations')
-        landsat_pq = dc.load(product=f'{platform}_pq_scene', 
-                             group_by='solar_day', 
-                             **query)
+        # Mask out all pixels affected by cloud, cloud shadow, or other invalid data
+        valid_data = (landsat_ds.fmask == 1) | (landsat_ds.fmask == 4) | (landsat_ds.fmask == 5)
+        landsat_ds = landsat_ds.where(valid_data)
 
-        print('Masking out poor quality pixels (e.g. cloud)')
-        good_quality = masking.make_mask(landsat_pq.pqa,                        
-                                     cloud_acca='no_cloud',
-                                     cloud_shadow_acca='no_cloud_shadow',
-                                     cloud_shadow_fmask='no_cloud_shadow',
-                                     cloud_fmask='no_cloud',
-                                     blue_saturated=False,
-                                     green_saturated=False,
-                                     red_saturated=False,
-                                     nir_saturated=False,
-                                     swir1_saturated=False,
-                                     swir2_saturated=False,
-                                     contiguous=True)
+        if rename_bands:
 
-        # Apply pixel quality mask
-        landsat_ds = landsat_ds.where(good_quality)
+            # Rename bands in dataset to use simple names (e.g. 'red')
+            bands_to_rename = {a: b for a, b in bands_simplenames.items() if a in bands}
+            landsat_ds = landsat_ds[bands].rename(bands_to_rename)
 
-        # Rename bands to useful names and return data
-        band_numtoname = {b: a for a, b in band_nametonum.items() if a in bands}
-        landsat_ds = landsat_ds.rename(band_numtoname)
+        platform_data.append(landsat_ds)
 
-        return landsat_ds
+    return xr.concat(platform_data, dim='time').sortby('time')
     
-    else:
-        raise Exception(f'No data was returned for the query {query}. '
-                        'Please change lat, lon and time extents to an area with data.')
-        
-
+     
 def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_vertices=2,
                     attribute_data=None, attribute_dtypes=None, dim='time', verbose=True):
 
@@ -575,7 +578,7 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
             img.figure.savefig(savefig_path, **savefig_kwargs)
 
             
-def map_shapefile(gdf, colormap=mpl.cm.YlOrRd, default_zoom=13):
+def map_shapefile(gdf, colormap=mpl.cm.YlOrRd, weight=2, default_zoom=13):
     
     def n_colors(n, colormap=colormap):
         data = np.linspace(0.0,1.0,n)
@@ -602,7 +605,7 @@ def map_shapefile(gdf, colormap=mpl.cm.YlOrRd, default_zoom=13):
     colors = n_colors(n_features)
     
     for feature, color in zip(data['features'], colors):
-        feature['properties']['style'] = {'color': color, 'weight': 3, 
+        feature['properties']['style'] = {'color': color, 'weight': weight, 
                                           'fillColor': color, 'fillOpacity': 1.0}
 
     # Get centroid to focus map on
