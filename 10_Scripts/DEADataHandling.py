@@ -330,7 +330,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                 data = dc.load(product=f'{sensor}_{product}_albers',
                                group_by='solar_day', 
                                dask_chunks={'time': 1},
-                               **query)             
+                               **query)
 
             # Load PQ data
             pq = dc.load(product=f'{sensor}_pq_albers',
@@ -436,7 +436,11 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
 
             print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
             combined_ds = masking.mask_invalid_data(combined_ds)
-
+        
+        # reset pixel quality flags
+        if product == 'pq':
+            combined_ds.pixelquality.attrs['flags_definition'] = list(filtered_sensors.values())[0].pixelquality.flags_definition
+        
         # Return combined dataset
         return combined_ds
     
