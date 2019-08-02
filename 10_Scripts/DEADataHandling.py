@@ -437,9 +437,10 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
             print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
             combined_ds = masking.mask_invalid_data(combined_ds)
         
-        # reset pixel quality flags
+        # reset pixel quality attributes
         if product == 'pq':
-            combined_ds.pixelquality.attrs['flags_definition'] = list(filtered_sensors.values())[0].pixelquality.flags_definition
+            combined_ds['pixelquality'] = combined_ds.pixelquality.astype(int)
+            combined_ds.pixelquality.attrs.update(list(filtered_sensors.values())[0].pixelquality.attrs)
         
         # Return combined dataset
         return combined_ds
