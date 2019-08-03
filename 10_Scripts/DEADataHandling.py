@@ -302,6 +302,13 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     # Process each sensor #
     #######################    
     
+    #warn if loading a pq bitstring product and attempting to mask it (and therefore cast to float)
+    if product == 'pq' and mask_invalid_data:
+        warnings.warn("""You are attempting to load pixel quality product and
+                     mask_invalid_data. Pixel quality is a bitstring 
+                     (only makes sense as int) and mask_invalid_data
+                     casts to float64.""")
+    
     # Dictionary to save results from each sensor 
     filtered_sensors = {}
 
@@ -439,7 +446,6 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         
         # reset pixel quality attributes
         if product == 'pq':
-            combined_ds['pixelquality'] = combined_ds.pixelquality.astype(int)
             combined_ds.pixelquality.attrs.update(list(filtered_sensors.values())[0].pixelquality.attrs)
         
         # Return combined dataset
