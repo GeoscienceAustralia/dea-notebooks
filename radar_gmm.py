@@ -1,4 +1,4 @@
-#Gaussian Mixture Model tools for radar project, including some generic plotting code
+#Gaussian Mixture Model tools for radar wetlands project, including some generic plotting code
 
 #Richard Taylor 2019
 
@@ -99,9 +99,15 @@ def _sklearn_flatten(sar_ds):
     
     stacked_vv = stacked_sar.vv.to_masked_array()
     stacked_vh = stacked_sar.vh.to_masked_array()
-
-    stacked_both = np.stack((stacked_vv,stacked_vh),axis=-1)
-    return stacked_both[np.logical_and(~stacked_vv.mask,~stacked_vh.mask)]
+    
+    try:
+        stacked_vh_vv = stacked_sar.vh_over_vv.to_masked_array()
+        stacked_all = np.stack((stacked_vv,stacked_vh,stacked_vh_vv),axis=-1)
+        stacked_all = stacked_all[np.logical_and(~stacked_vv.mask,~stacked_vh.mask,~stacked_vh_vv.mask)]
+        return stacked_all
+    except AttributeError:
+        stacked_both = np.stack((stacked_vv,stacked_vh),axis=-1)
+        return stacked_both[np.logical_and(~stacked_vv.mask,~stacked_vh.mask)]
 
 #method to convert the flat output of a scikit-learn predict call to an xarray
 #with compatible shape to the original input
@@ -111,11 +117,16 @@ def _reshape(output,sar_ds):
     
     stacked_vv = stacked_sar.vv.to_masked_array()
     stacked_vh = stacked_sar.vh.to_masked_array()
+    try:
+        stacked_vh_vv = stacked_sar.vh_over_vv.to_masked_array()
+        thirdmask = stacked_vh_vv.mask
+    except AttributeError:
+        thirdmask = np.zeros(np.shape(stacked_vv.mask))
     
     maskclusters = ma.empty(np.shape(stacked_vv))
 
-    maskclusters[np.logical_and(~stacked_vv.mask,~stacked_vh.mask)] = output
-    maskclusters.mask = ~np.logical_and(~stacked_vv.mask,~stacked_vh.mask)
+    maskclusters[np.logical_and(~stacked_vv.mask,~stacked_vh.mask,~thirdmask)] = output
+    maskclusters.mask = ~np.logical_and(~stacked_vv.mask,~stacked_vh.mask,~thirdmask)
 
     #same coords as the original stacked DataArray
     coords = stacked_sar['z']
