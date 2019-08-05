@@ -42,8 +42,11 @@ def plot_results(means, covariances, index, title):
     plt.ylim(0, 0.1)
     plt.title(title)
 
-#gmm model fitter
 def fit_gmm(sar_ds, n_components=4):
+    """Wrapper around sklearn's GaussianMixture().fit() method to automatically feed
+    an xarray Dataset with specific properties instead of an np.array.
+    
+    """
     #prepare the sar data in a format that suits the model
     gm_input = _sklearn_flatten(sar_ds)
     
@@ -55,14 +58,23 @@ def fit_gmm(sar_ds, n_components=4):
 
 
 def fit_kmeans(sar_ds, n_components=4):
-    km_input = _sklearn_flatten(sar_ds)
+    """Wrapper around sklearn's KMeans().fit() method to automatically feed
+    an xarray Dataset with specific properties instead of an np.array.
     
-    #pad the list with zeros to force a cluster at or near (0,0) [i.e. open water]
+    """
+    km_input = _sklearn_flatten(sar_ds)
     
     return KMeans(n_clusters=n_components).fit(km_input)
 
-#plot gmm classes for one step of dataset
 def plot_gmm_classes(sar_ds,gmm,**kwargs):
+    """wrapper around calc_gmm_classes() to automatically plot the result as well
+    Arguments:
+    sar_ds -- as for calc_gmm_classes()
+    gmm -- as for calc_gmm_classes()
+    **kwargs -- keyword arguments to be fed to the xarray.DataArray.plot() method
+    
+    """
+    
     #predict
     plottable = calc_gmm_classes(sar_ds,gmm)
     
@@ -70,8 +82,23 @@ def plot_gmm_classes(sar_ds,gmm,**kwargs):
     plottable.plot(**kwargs)
     
 
-#return the class predictions on a single scene
 def calc_gmm_classes(sar_ds,gmm):
+    """return the class predictions on a single scene.
+    
+    Arguments:
+    sar_ds -- an xarray.Dataset containing the SAR backscatter data. Should contain only 
+    have only one time index (single scene) and spatial dimensions 'x' and 'y'.
+    
+    gmm -- a fitted sklearn.mixture.GaussianMixture or sklearn.cluster.KMeans object, which
+    should accept the same number of channels that sar_ds has (i.e. don't pass a dataset
+    with a 'vh_over_vv' variable to a clustering model that wasn't fit with this extra
+    variable, or vice versa)
+    
+    Returns:
+    An xarray.DataArray containing class predictions.
+    """
+    
+    
     #prepare for prediction
     gm_input = _sklearn_flatten(sar_ds)
     
@@ -92,9 +119,19 @@ def calc_gmm_classes(sar_ds,gmm):
     return plottable
 
 
-#'private' method to convert the sar data to a format suitable for fitting and
-#predicting with sklearn
 def _sklearn_flatten(sar_ds):
+    """private method to convert SAR datasets to a format suitable for fitting and
+    predicting with sklearn.
+    
+    Arguments:
+    sar_ds -- an xarray.Dataset with dimensions 'x' and 'y' and data variables 'vv' and 'vh'
+    (and optionally 'vh_over_vv')
+    
+    Returns:
+    A two-dimensional np.array. The number of columns depends on the number of masked elements
+    in sar_ds, and the number of rows is 2 or 3 depending on whether 'vh_over_vv' is
+    provided.
+    """
     stacked_sar = sar_ds.stack(z=['x','y'])
     
     stacked_vv = stacked_sar.vv.to_masked_array()
@@ -109,9 +146,19 @@ def _sklearn_flatten(sar_ds):
         stacked_both = np.stack((stacked_vv,stacked_vh),axis=-1)
         return stacked_both[np.logical_and(~stacked_vv.mask,~stacked_vh.mask)]
 
-#method to convert the flat output of a scikit-learn predict call to an xarray
-#with compatible shape to the original input
 def _reshape(output,sar_ds):
+    """
+    Method to convert the flat output array of predictions from a sklearn clustering
+    model to an xarray.DataArray with the same shape as the input dataset.
+
+    Arguments:
+    output -- flat predictions from an sklearn clustering model.
+    sar_ds -- the input (single-scene) SAR dataset which was used to produce the predictions.
+    
+    Returns:
+    An xarray.DataArray with the same shape and dimension names as sar_ds.
+
+    """
     
     stacked_sar = sar_ds.stack(z=['x','y'])
     
@@ -136,9 +183,14 @@ def _reshape(output,sar_ds):
     return cluster_xr.unstack().transpose('y','x')
 
 
-#method to plot timeseries for each gmm class
 
 def plot_gmm_timeseries(timeseries_ds,gmm):
+    """Wrapper around calc_gmm_timeseries() to plot class predictions over time.
+    Arguments:
+    timeseries_ds -- as for calc_gmm_timeseries()
+    gmm -- as for calc_gmm_classes()
+    """
+    
 
     times,timeseries = calc_gmm_timeseries(timeseries_ds,gmm)
     
@@ -147,15 +199,24 @@ def plot_gmm_timeseries(timeseries_ds,gmm):
     plt.show()
     return (times,timeseries)
 
-#method to calculate the timeseries (without plotting)
-def calc_gmm_timeseries(timeseries_ds,gmm,tmin=None,tmax=None):
-
+def calc_gmm_timeseries(timeseries_ds,gmm,tmin=0,tmax=None):
+    """Calculate timeseries of predictions for each class given a clustering model and multi-scene SAR dataset.
+    Arguments:
+    timeseries_ds -- SAR xarray.Dataset with ['x','y'] spatial dimensions and temporal dimension 'time'.
+    gmm -- as for calc_gmm_classes()
+    
+    Keyword arguments:
+    tmin, tmax -- minimum and maximum time indices of timeseries_ds to select and predict. By default,
+    tmin is set to zero and tmax to the length of the timeseries.
+    
+    Returns:
+    np.array of size [tmax-tmin,gmm.n_components] (or [tmax-tmin,gmm.n_clusters] if gmm is a KMeans model),
+    containing the ratio of pixels in each scene of timeseries_ds that were predicted in each class.
+    """
     
     if tmax is None:
         times = timeseries_ds['time']
         tmax = len(times)
-    if tmin is None:
-        tmin = 0
 
     times = timeseries_ds['time'][tmin:tmax]
     
@@ -176,9 +237,19 @@ def calc_gmm_timeseries(timeseries_ds,gmm,tmin=None,tmax=None):
         
     return (times,timeseries)
     
-#make a new dataset with the GMM/KMM classes instead of SAR reflectance
+
 
 def gmm_dataset(timeseries_ds,gmm):
+    """Calculate a timeseries dataset containing pixel maps of class predictions given a 
+    SAR timeseries and a pixel classifier.
+    Arguments:
+    timeseries_ds -- as for calc_gmm_timeseries().
+    gmm -- as for calc_gmm_timeseries()
+    
+    Returns:
+    xarray.DataArray containing timeseries of class predictions from gmm. Shape is same as timeseries_ds.
+    
+    """
     times = timeseries_ds['time']
 
     try:
