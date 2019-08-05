@@ -81,7 +81,6 @@ def plot_gmm_classes(sar_ds,gmm,**kwargs):
     #plot
     plottable.plot(**kwargs)
     
-
 def calc_gmm_classes(sar_ds,gmm):
     """return the class predictions on a single scene.
     
@@ -116,7 +115,8 @@ def calc_gmm_classes(sar_ds,gmm):
     except:
         pass
     
-    return plottable
+    
+    return plottable.isel(time=0)
 
 
 def _sklearn_flatten(sar_ds):
