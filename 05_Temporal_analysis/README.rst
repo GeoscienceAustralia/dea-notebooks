@@ -22,3 +22,4 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
    Hovmoller_TCI_Multi-site.ipynb
    Hovmoller_NDVI_Multi-site.ipynb
    SnowMonitoringUsingLandsat.ipynb
+   CustomisableTemporalWaterAnalysis.ipynb
