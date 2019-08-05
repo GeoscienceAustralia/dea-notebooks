@@ -316,7 +316,7 @@ def animated_timeseries(ds, output_path,
     ###############
     # Setup steps #
     ############### 
-
+    
     # Test if all dimensions exist in dataset
     if time_dim in ds and x_dim in ds and y_dim in ds:        
         
@@ -1698,6 +1698,7 @@ def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch, ima
 
     # Compute percents
     p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
+    print(p_low, p_high)
 
     array_list = []
     for i, timestep in enumerate(ds[time_dim]):
@@ -1714,7 +1715,7 @@ def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch, ima
             # Create new one band array
             img_toshow = exposure.rescale_intensity(ds_i[bands[0]].values, 
                                                     in_range=(p_low, p_high),
-                                                    out_range='image')
+                                                    out_range=(p_low, p_high))
 
         else:
 

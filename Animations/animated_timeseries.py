@@ -41,23 +41,30 @@ def interpolate_timeseries(ds, freq='7D', method='linear'):
     intervals from the start time of the xarray dataset to the end time. 
     `freq='24H'` will interpolate new values for each day, etc.
     
-    :param ds:
+    Parameters
+    ----------  
+    ds : xarray Dataset
         The xarray dataset to interpolate new time-step observations for.
         
-    :param freq:
-        An optional string giving the frequency at which to interpolate new time-step 
-        observations. Defaults to '7D' which interpolates new values at weekly intervals; 
-        for a full list of options refer to Panda's list of offset aliases: 
+    freq : string or int, optional
+        An optional string or integer giving the frequency at which to interpolate new 
+        time-step observations. To interpolate a time series at a constant/regualar time 
+        frequency (e.g. weekly or monthly), use a Pandas offset alias string (e.g. '7D'): 
         https://pandas.pydata.org/pandas-docs/stable/timeseries.html#timeseries-offset-aliases
+        Alternatively, specify an integer to insert X evenly spaced new time steps between
+        each existing timestep in the dataset (e.g. a value of 1 will create 1 new frame
+        between every existing timestep). Defaults to Pandas offset '7D' which interpolates 
+        new values at weekly intervals.
         
-    :param method:
+    method : string, optional
         An optional string giving the interpolation method to use to generate new time-steps.
         Default is 'linear'; options are {'linear', 'nearest'} for multidimensional arrays and
         {'linear', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic'} for 1-dimensional arrays.
         
-    :return:
-        A matching xarray dataset covering the same time period as `ds`, but with an 
-        interpolated for each time-step given by `freq`.
+    Returns
+    -------
+    A xarray dataset covering the same time period as `ds`, but with new timesteps interpolated 
+    for each time-step given by `freq`.
         
     """    
     
@@ -96,6 +103,7 @@ def interpolate_timeseries(ds, freq='7D', method='linear'):
         # Use these dates to linearly interpolate new data for each new date
         print('Interpolating {} time-steps by generating {} intermediate frames'.format(len(from_to), freq))
         return ds.interp(coords={'time': from_to}, method=method)
+
 
 
 def hsv_image_processing(rgb_array,
