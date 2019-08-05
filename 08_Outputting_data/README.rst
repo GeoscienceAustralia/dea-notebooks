@@ -18,5 +18,6 @@ The examples provided here can be found as Jupyter Notebooks in the `dea-noteboo
 
    ProduceFalseColourGeotiffs.ipynb
    Sentinel2ScenesToGeoTIFF.ipynb   
+   LandsatScenestoGeoTIFF.ipynb 
    PlottingAnimatedGifs.ipynb
    ExportingCompliantNetCDFs.ipynb
