@@ -302,6 +302,13 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     # Process each sensor #
     #######################    
     
+    #warn if loading a pq bitstring product and attempting to mask it (and therefore cast to float)
+    if product == 'pq' and (mask_invalid_data or mask_pixel_quality):
+        warnings.warn("""You are attempting to load pixel quality product with a mask flag
+                        (mask_invalid_data or mask_pixel_quality). Pixel quality is a bitstring 
+                        (only makes sense as int) and masking
+                        casts to float64.""")
+    
     # Dictionary to save results from each sensor 
     filtered_sensors = {}
 
@@ -436,7 +443,11 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
 
             print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
             combined_ds = masking.mask_invalid_data(combined_ds)
-
+        
+        # reset pixel quality attributes
+        if product == 'pq':
+            combined_ds.pixelquality.attrs.update(list(filtered_sensors.values())[0].pixelquality.attrs)
+        
         # Return combined dataset
         return combined_ds
     
