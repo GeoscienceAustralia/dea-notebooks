@@ -18,6 +18,18 @@ import numpy as np
 dc = datacube.Datacube(app='wetlands insight tool')
 
 def WIT_array(query):
+    """Predict the timeseries of land cover fraction classifications based on the
+    Wetlands Insight Tool.
+    
+    Arguments:
+    
+    query -- query compatible with DEADataHandling.load_clearlandsat
+    
+    Returns:
+    
+    xarray.Dataset containing pixel ratios for each WIT class at each time available in the query.
+    
+    """
     landsat_masked_prop = 0.90
     ls578_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, product='nbart',
         masked_prop=landsat_masked_prop)
@@ -105,9 +117,17 @@ def WIT_array(query):
     
     return cover_array
 
-#calculate the WIT classes for each pixel in a query
-
 def WIT_da(query):
+    """calculate the WIT classes for each pixel in a query
+    Arguments:
+    
+    query -- a query compatible with DEADataHandling.load_clearlandsat()
+    
+    Returns:
+    
+    An xarray.DataArray of Wetlands Insight Tool predictions for each pixel in an optical satellite dataset,
+    given a query.
+    """
     landsat_masked_prop = 0.90
     ls578_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, product='nbart',
         masked_prop=landsat_masked_prop)
