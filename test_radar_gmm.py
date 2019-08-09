@@ -80,6 +80,15 @@ def test_calc_gmm_classes_gmm(rgmm):
     assert class_xr.max() == 4
     assert class_xr.min() == 0
     
+#test that it works with no time dimension
+def test_calc_gmm_classes_notime(rkmm):
+    single_ds = sar_ds.mean(dim='time')
+    class_xr = calc_gmm_classes(single_ds,rkmm)
+    
+    assert class_xr.shape == sar_ds.mean(dim='time').vv.shape
+    assert class_xr.max() == 4
+    assert class_xr.min() == 0
+    
 def test_gmm_dataset_kmm(rkmm):
     class_xr = gmm_dataset(sar_ds,rkmm)
     
