@@ -14,6 +14,8 @@ import fiona
 import collections
 import numpy as np
 import geopandas as gpd
+import scipy.interpolate
+from scipy import ndimage as nd
 from datacube.storage import masking
 from skimage.measure import find_contours
 from shapely.geometry import MultiLineString, mapping
@@ -621,4 +623,127 @@ def map_shapefile(gdf, colormap=mpl.cm.YlOrRd, weight=2, default_zoom=13):
     m.add_layer(feature_layer)
     
     return m
+
+
+def interpolate_2d(ds, x_coords, y_coords, z_coords, 
+                 method='linear', fill_nearest=False, sigma=None):
+    
+    '''
+    This function takes points with X, Y and Z coordinates, and interpolates Z-values
+    across the extent of an existing xarray dataset. This can be useful for producing 
+    smooth surfaces from point data that can be compared directly against satellite
+    data derived from an OpenDataCube query.
+    
+    Last modified: August 2019
+    Author: Robbi Bishop-Taylor
+    
+    Parameters
+    ----------  
+    ds_array : xarray DataArray or Dataset
+        A two-dimensional or multi-dimensional array from which x and y dimensions will be 
+        copied and used for the area in which to interpolate point data. 
+    x_coords : numpy array
+        An array containing X coordinates for all points (e.g. longitudes). 
+    y_coords : numpy array
+        An array containing Y coordinates for all points (e.g. latitudes).
+    z_coords : numpy array
+        An array containing Z coordinates for all points (e.g. elevations). These are the 
+        values you wish to interpolate between.
+    method : string, optional
+        The method used to interpolate between point values. This string is passed to 
+        `scipy.interpolate.griddata`; the default is 'linear' and options include
+        'linear', 'nearest' and 'cubic'.
+    fill_nearest : boolean, optional
+        A boolean value indicating whether to fill NaN areas outside of the extent of 
+        the input X and Y coordinates with the value of the nearest pixel. By default,
+        `scipy.interpolate.griddata` only returns interpolated values for the convex hull
+        of the of the input points, so this variable can be used to provide results for
+        all pixels instead. Warning: this can produce significant artefacts for areas
+        located far from the nearest point.
+    sigma : None or int, optional
+        An optional integer value can be provided to smooth the interpolated surface
+        using a guassian filter. Higher values of sigma result in a smoother surface
+        that may loose some of the detail in the original interpolated layer.        
+      
+    Returns
+    -------
+    interp_2d_array : xarray DataArray
+        An xarray DataArray containing with x and y coordinates copied from `ds_array`,
+        and Z-values interpolated from the points data. 
+        
+    '''
+    
+    # Extract xy and elev points
+    points_xy = np.vstack([x_coords, y_coords]).T
+
+    # Create grid to interpolate into
+    grid_y, grid_x = np.meshgrid(ds.x, ds.y)  
+
+    # Interpolate x, y and z values using linear/TIN interpolation
+    out = scipy.interpolate.griddata(points=points_xy, 
+                                     values=z_coords, 
+                                     xi=(grid_y, grid_x), 
+                                     method=method)
+
+    # Calculate nearest
+    if fill_nearest:
+        
+        nearest_inds = nd.distance_transform_edt(input=np.isnan(out), 
+                                                 return_distances=False, 
+                                                 return_indices=True)
+        out = out[tuple(nearest_inds)]
+        
+    # Apply guassian filter        
+    if sigma:
+
+        out = nd.filters.gaussian_filter(out, sigma=sigma)
+        
+    # Create xarray dataarray from the data
+    interp_2d_array = xr.DataArray(out, coords=[ds.y, ds.x], dims=['y', 'x']) 
+        
+    return interp_2d_array
+
+
+def contours_to_arrays(gdf, col):
+    
+    '''
+    This function converts a polyline shapefile into an array with three
+    columns giving the X, Y and Z coordinates of each vertex. This data
+    can then be used as an input to interpolation procedures (e.g. using a
+    function like `interpolate_2d`.
+    
+    Last modified: August 2019
+    Author: Robbi Bishop-Taylor
+    
+    Parameters
+    ----------  
+    gdf : Geopandas GeoDataFrame
+        A GeoPandas GeoDataFrame of lines to convert into point coordinates.
+    col : str
+        A string giving the name of the GeoDataFrame field to use as Z-values.
+        
+    Returns
+    -------
+    A numpy array with three columns giving the X, Y and Z coordinates of each
+    vertex in the input GeoDataFrame.
+        
+    '''    
+    
+
+    coords_zvals = []
+
+    for i in range(0, len(gdf)):
+
+        val = gdf.iloc[i][col]
+
+        try:
+            coords = np.concatenate([np.vstack(x.coords.xy).T for x in gdf.iloc[i].geometry])
+
+        except:
+            coords = np.vstack(gdf.iloc[i].geometry.coords.xy).T
+
+        coords_zvals.append(np.column_stack((coords, np.full(np.shape(coords)[0], fill_value=val))))
+
+    return np.concatenate(coords_zvals)
+
             
