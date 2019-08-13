@@ -177,118 +177,11 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
+def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart', dask_chunks = {'time': 1},
                       bands_of_interest=None, masked_prop=0.99, mask_dict=None,
                       mask_pixel_quality=False, mask_invalid_data=True, ls7_slc_off=False, satellite_metadata=False):
     
-    """Load cloud-free data from multiple Landsat satellites as an xarray dataset
-    
-    Loads Landsat NBAR, NBART or FC25 and PQ data for multiple sensors (i.e. ls5, ls7, ls8) and returns a single 
-    xarray dataset containing only observations that contain greater than a given proportion of good quality pixels.
-    This function can be used to extract visually appealing time series of observations that are not affected by cloud,
-    for example as an input to the `animated_timeseries` function from `DEAPlotting`.
-    
-    The proportion of clear pixels is calculated by summing the pixels that are not flagged as being poor quality
-    in the Landsat PQ25 layer. By default only cloudy pixels or pixels that are missing data in any band are
-    used to calculate the number of poor quality pixels, but this can be customised using the `mask_dict` parameter.
-    
-    Last modified: October 2018
-    Author: Robbi Bishop-Taylor, Bex Dunn    
-    
-    Parameters
-    ----------    
-    dc : datacube Datacube object
-        A specific Datacube to import from, i.e. `dc = datacube.Datacube(app='Clear Landsat')`. This allows you to 
-        also use development datacubes if they have been imported into the environment.    
-    query : dict
-        A dict containing the query bounds. Can include lat/lon, time etc. If no `time` query is given, the 
-        function defaults to all timesteps available to all sensors (e.g. 1987-2018)
-    sensors : list, optional
-        An optional list of Landsat sensor names to load data for. Options are 'ls5', 'ls7', 'ls8'; defaults to all.
-    product : str, optional
-        An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to 'nbart'. For information on the difference, 
-        see the '02_DEA_datasets/Introduction_to_Landsat' or '02_DEA_datasets/Introduction_to_Fractional_Cover'
-        notebooks from DEA-notebooks.
-    bands_of_interest : list, optional
-        An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
-        'nir', 'swir1', 'swir2'; defaults to all available bands if no bands are specified.
-    masked_prop : float, optional
-        An optional float giving the minimum percentage of clear pixels required for a Landsat observation to be 
-        loaded. Defaults to 0.99 (i.e. only return observations with less than 1% of poor quality pixels).
-    mask_dict : dict, optional
-        An optional dict of arguments to the `masking.make_mask` function that can be used to identify good/poor
-        quality pixels from the PQ layer using alternative masking criteria. The default value of None masks
-        out pixels flagged as cloud by either the ACCA or Fmask algorithms, or pixels that are missing data in any
-        band (equivalent to: `mask_dict={'cloud_acca': 'no_cloud', 'cloud_fmask': 'no_cloud', 'contiguous': True}`.
-        See the `02_DEA_datasets/Introduction_to_LandsatPQ.ipynb` notebook on DEA Notebooks for a list of all
-        possible options.
-    mask_pixel_quality : bool, optional
-        An optional boolean indicating whether to apply the pixel quality mask to all observations that were not
-        filtered out for having less good quality pixels that `masked_prop`. For example, if `masked_prop=0.99`, the
-        filtered images may still contain up to 1% poor quality pixels. The default of False simply returns the
-        resulting observations without masking out these pixels; True masks them out and sets them to NaN using the
-        pixel quality mask, but has the side effect of changing the data type of the output arrays from int16 to
-        float64 which can cause memory issues. To reduce memory usage, set to False.
-    mask_invalid_data : bool, optional
-        An optional boolean indicating whether invalid -999 nodata values should be replaced with NaN. Defaults to
-        True; this has the side effect of changing the data type of the output arrays from int16 to float64 which
-        can cause memory issues. To reduce memory usage, set to False.
-    ls7_slc_off : bool, optional
-        An optional boolean indicating whether to include data from after the Landsat 7 SLC failure (i.e. SLC-off).
-        Defaults to False, which removes all Landsat 7 observations after May 31 2003. 
-    satellite_metadata : bool, optional
-        An optional boolean indicating whether to return the dataset with a `satellite` variable that gives the name 
-        of the satellite that made each observation in the timeseries (i.e. ls5, ls7, ls8). Defaults to False. 
-    
-    Returns
-    -------
-    combined_ds : xarray Dataset
-        An xarray dataset containing only Landsat observations that contain greater than `masked_prop`
-        proportion of clear pixels.   
-        
-    Notes
-    -----
-    Memory issues: For large data extractions, it is recommended that you set both `mask_pixel_quality=False` and 
-    `mask_invalid_data=False`. Otherwise, all output variables will be coerced to float64 when NaN values are 
-    inserted into the array, potentially causing your data to use 4x as much memory. Be aware that the resulting
-    arrays will contain invalid -999 values which should be considered in analyses.
-        
-    Example
-    -------    
-    >>> # Import modules
-    >>> import datacube
-    >>> import sys
-
-    >>> # Import dea-notebooks functions using relative link to 10_Scripts directory
-    >>> sys.path.append('../10_Scripts')
-    >>> import DEADataHandling
-
-    >>> # Connect to a datacube containing Landsat data
-    >>> dc = datacube.Datacube(app='load_clearlandsat')
-
-    >>> # Set up spatial and temporal query
-    >>> query = {'x': (954163, 972163),
-    ...          'y': (-3573891, -3555891),
-    ...          'time': ('2011-06-01', '2013-06-01'),
-    ...          'crs': 'EPSG:3577'}   
-
-    >>> # Load observations with less than 25% cloud from ls5, ls7 and ls8 as a single combined dataset
-    >>> landsat_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, sensors=['ls5', 'ls7', 'ls8'], 
-    ...                                    bands_of_interest=['red', 'green', 'blue'], 
-    ...                                    masked_prop=0.75, mask_pixel_quality=True, ls7_slc_off=True)
-    Loading ls5 pixel quality
-        Loading 4 filtered ls5 timesteps
-    Loading ls7 pixel quality
-        Loading 29 filtered ls7 timesteps
-    Loading ls8 pixel quality
-        Loading 3 filtered ls8 timesteps
-    Combining and sorting ls5, ls7, ls8 data
-        Replacing invalid -999 values with NaN (data will be coerced to float64)
-
-    >>> # Test that function returned data
-    >>> len(landsat_ds.time) > 0
-    True
-                
+    """Load cloud-free data from multiple Landsat satellites as an xarray dataset                
     """    
 
     # List to save results from each sensor and list to keep names of successfully processed sensors
@@ -296,8 +189,9 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     successfully_returned = []
 
     # Iterate through all sensors, returning only observations with > mask_prop clear pixels
+   
     for sensor in sensors:
-        
+        print("\r", 'loading sensor ' + sensor, end='')
         try:
             
             # If bands of interest are given, assign measurements in dc.load call. This is
@@ -308,7 +202,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                 data = dc.load(product=f'{sensor}_{product}_albers',
                                measurements=bands_of_interest,
                                group_by='solar_day', 
-                               dask_chunks={'time': 1},
+                               dask_chunks=dask_chunks,
                                **query)
 
             # If no bands of interest given, run without specifying measurements, and 
@@ -318,14 +212,14 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                 # Lazily load Landsat data using dask  
                 data = dc.load(product=f'{sensor}_{product}_albers',
                                group_by='solar_day', 
-                               dask_chunks={'time': 1},
+                               dask_chunks=dask_chunks,
                                **query)             
 
             # Load PQ data
             pq = dc.load(product=f'{sensor}_pq_albers',
                          group_by='solar_day',
                          fuse_func=ga_pq_fuser,
-                         dask_chunks={'time': 1},
+                         dask_chunks=dask_chunks,
                          **query)
 
             # Remove Landsat 7 SLC-off from PQ layer if ls7_slc_off=False
@@ -390,16 +284,17 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
             pass
             # If there is no data for sensor or if another error occurs:
 #             print(f'Loading {sensor} pixel quality\n    Skipping {sensor}; no valid data for query')
-
+    print(', concatenating sensors')
     # Concatenate all sensors into one big xarray dataset, and then sort by time 
     combined_ds = xr.concat(filtered_sensors, dim='time')
     combined_ds = combined_ds.sortby('time')                                                               
-       
+    combined_ds = combined_ds.chunk(dask_chunks)
+    
     # Optionally filter to replace no data values with nans
     if mask_invalid_data:
 #         print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
         combined_ds = masking.mask_invalid_data(combined_ds)
-
+        combined_ds = combined_ds.chunk(dask_chunks)
     # Return combined dataset
     return combined_ds
 
