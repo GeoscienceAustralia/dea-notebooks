@@ -57,3 +57,38 @@ def denoise(ds, verbose = False, bands = None, fill_negative = True, remove_high
             smoothed[band] = smoothed[band].where(smoothed[band] < eroded.max(), eroded)
 
     return smoothed.where(~nodata_mask)
+
+def load_cleaned_SAR(query,dc):
+    """put all the nasty loading and filtering code for the SAR scenes in a simple-to-use function.
+    
+    Arguments:
+    query -- a query for dc.load()
+    dc -- a datacube.Datacube instance for loading the SAR data from.
+    
+    Returns:
+    An xarray.Dataset with the SAR data matching the query. Includes VH, VV and VH/VV segments.
+    
+    """
+    
+    #load the raw SAR scenes
+    sardata = dc.load(product='s1_gamma0_scene_v2', group_by='solar_day', output_crs='EPSG:3577',resolution=(25,25), **query)
+
+    #Denoise and mask the radar data with the actual polygon - it will have been returned as a rectangle
+    sardata=sardata.where(sardata!=0)
+    clean=denoise(sardata)
+    #mask = rasterio.features.geometry_mask([geom.to_crs(sardata.geobox.crs)for geoms in [geom]],
+    #                                           out_shape=sardata.geobox.shape,
+    #                                           transform=sardata.geobox.affine,
+    #                                           all_touched=False,
+    #                                           invert=False)
+    #clean=clean.where(~mask)
+
+    #drop scenes with a lot of NaN pixels
+    nanmask = ((np.isnan(clean).mean(dim = ['x','y'])) > 0.2).vv
+    valtimes = nanmask.where(~nanmask).dropna(dim='time')['time']
+
+    clean = clean.sel(time = valtimes)
+    
+    clean['vh_over_vv'] = clean.vh/clean.vv
+    
+    return clean

@@ -19,6 +19,7 @@ def mode_class(arr, axis = 0, num_classes = 4):
     definitely worth using this method if your problem can be coerced to be compatible with it.
 
     """
+    
     clarr = np.array([(arr == cla).sum(axis=axis) for cla in range(num_classes)])
     
     return np.argmax(clarr,axis=0)

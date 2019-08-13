@@ -112,11 +112,10 @@ def calc_gmm_classes(sar_ds,gmm):
         timec = np.datetime64(sar_ds['time'].data)
         plottable = plottable.expand_dims('time')
         plottable['time'] = [timec]
+        return plottable.isel(time=0)
     except:
-        pass
-    
-    
-    return plottable.isel(time=0)
+        return plottable
+
 
 
 def _sklearn_flatten(sar_ds):
@@ -199,7 +198,7 @@ def plot_gmm_timeseries(timeseries_ds,gmm):
     plt.show()
     return (times,timeseries)
 
-def calc_gmm_timeseries(timeseries_ds,gmm,tmin=0,tmax=None):
+def calc_gmm_timeseries(timeseries_ds,gmm,tmin=0,tmax=None, subcluster_model = None, wetclass = 1, bareclass = 0):
     """Calculate timeseries of predictions for each class given a clustering model and multi-scene SAR dataset.
     Arguments:
     timeseries_ds -- SAR xarray.Dataset with ['x','y'] spatial dimensions and temporal dimension 'time'.
@@ -208,6 +207,11 @@ def calc_gmm_timeseries(timeseries_ds,gmm,tmin=0,tmax=None):
     Keyword arguments:
     tmin, tmax -- minimum and maximum time indices of timeseries_ds to select and predict. By default,
     tmin is set to zero and tmax to the length of the timeseries.
+    
+    subcluster_model -- default None. If a model is provided then the 'wet' class output from gmm will be fed through
+    this model to differentiate bare soil from flooded vegetation.
+    wetclass -- default 1. For use with subcluster_model only.
+    bareclass -- the class index of the subcluster_model corresponding to bare soil. For use with subcluster_model only    
     
     Returns:
     np.array of size [tmax-tmin,gmm.n_components] (or [tmax-tmin,gmm.n_clusters] if gmm is a KMeans model),
@@ -225,6 +229,9 @@ def calc_gmm_timeseries(timeseries_ds,gmm,tmin=0,tmax=None):
     except:
         nc=gmm.n_clusters
         
+    if subcluster_model:
+        nc += 1
+        
     timeseries = np.empty([tmax-tmin,nc])
     
     
@@ -232,7 +239,14 @@ def calc_gmm_timeseries(timeseries_ds,gmm,tmin=0,tmax=None):
         sar_ds = timeseries_ds.isel(time=i+tmin)
         gm_input = _sklearn_flatten(sar_ds)
         gm_output = gmm.predict(gm_input)
+        if subcluster_model:
+            subc_input = gm_input[gm_output==wetclass]
+            subc_output = subcluster_model.predict(subc_input)
+            bare = (subc_output==bareclass).sum()
+            
         timeseries[i] = [(gm_output == cat).sum() for cat in range(nc)]
+        timeseries[i,wetclass] -= bare
+        timeseries[i,nc-1] = bare
         timeseries[i] = timeseries[i]/len(gm_output)
         
     return (times,timeseries)
@@ -250,23 +264,30 @@ def gmm_dataset(timeseries_ds,gmm):
     xarray.DataArray containing timeseries of class predictions from gmm. Shape is same as timeseries_ds.
     
     """
-    times = timeseries_ds['time']
+    try:
+        times = timeseries_ds['time']
+    except:
+        return calc_gmm_classes(timeseries_ds,gmm)
 
     try:
         nc=gmm.n_components
     except:
         nc=gmm.n_clusters
     
-    for i in range(len(times)):
-        sar_ds = timeseries_ds.isel(time=i)
-        gm_input = _sklearn_flatten(sar_ds)
-        gm_output = gmm.predict(gm_input)
-        gm_xr = _reshape(gm_output,sar_ds).expand_dims('time')
-        
-        gm_xr['time'] = [np.datetime64(times[i]['time'].data)]
-        
-        cluster_xr = gm_xr if i == 0 else xr.concat([cluster_xr,gm_xr],dim='time')
-        
+    try:
+        for i in range(len(times)):
+            sar_ds = timeseries_ds.isel(time=i)
+            gm_input = _sklearn_flatten(sar_ds)
+            gm_output = gmm.predict(gm_input)
+            gm_xr = _reshape(gm_output,sar_ds).expand_dims('time')
+
+            gm_xr['time'] = [np.datetime64(times[i]['time'].data)]
+
+            cluster_xr = gm_xr if i == 0 else xr.concat([cluster_xr,gm_xr],dim='time')
+            
+    except:
+        return calc_gmm_classes(timeseries_ds,gmm)
+
                 
     return cluster_xr
     
