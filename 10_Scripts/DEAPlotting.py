@@ -1698,7 +1698,6 @@ def _ds_to_arrraylist(ds, bands, time_dim, x_dim, y_dim, percentile_stretch, ima
 
     # Compute percents
     p_low, p_high = ds[bands].to_array().quantile(percentile_stretch).values
-    print(p_low, p_high)
 
     array_list = []
     for i, timestep in enumerate(ds[time_dim]):
