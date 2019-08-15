@@ -185,8 +185,8 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
-                      bands_of_interest=None, masked_prop=0.0, mask_dict=None,
+def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart', dask_chunks = {'time': 1},
+                      lazy_load = False, bands_of_interest=None, masked_prop=0.0, mask_dict=None,
                       mask_pixel_quality=True, mask_invalid_data=True, 
                       ls7_slc_off=False, satellite_metadata=False):
 
@@ -218,6 +218,13 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to 'nbart'. For information on the difference, 
         see the '02_DEA_datasets/Introduction_to_Landsat' or '02_DEA_datasets/Introduction_to_Fractional_Cover'
         notebooks from DEA-notebooks.
+    dask_chunks : dict, optional
+        An optional dictionary containing the coords and sizes you wish to create dask chunks over. Usually
+        used in combination with lazy_load=True (see below). example: dask_chunks = {'x': 500, 'y': 500}
+    lazy_load : boolean, optional
+        Setting this variable to 'True' will delay the computation of the function until you explicitly
+        run ds.compute(). If used in conjuction with dask.distributed.Client() will allow 
+        for automatic parallel computation. 
     bands_of_interest : list, optional
         An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
         'nir', 'swir1', 'swir2'; defaults to all available bands if no bands are specified.
@@ -326,7 +333,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                 data = dc.load(product=f'{sensor}_{product}_albers',
                                measurements=bands_of_interest,
                                group_by='solar_day', 
-                               dask_chunks={'time': 1},
+                               dask_chunks=dask_chunks,
                                **query)
 
             # If no bands of interest given, run without specifying measurements, and 
@@ -336,14 +343,14 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                 # Lazily load Landsat data using dask  
                 data = dc.load(product=f'{sensor}_{product}_albers',
                                group_by='solar_day', 
-                               dask_chunks={'time': 1},
+                               dask_chunks=dask_chunks,
                                **query)             
 
             # Load PQ data
             pq = dc.load(product=f'{sensor}_pq_albers',
                          group_by='solar_day',
                          fuse_func=ga_pq_fuser,
-                         dask_chunks={'time': 1},
+                         dask_chunks=dask_chunks,
                          **query)            
             
             # If resulting dataset has data, continue:
@@ -406,7 +413,10 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                         filtered['satellite'] = xr.DataArray([sensor] * len(filtered.time), [('time', filtered.time)])
 
                     # Add result to dictionary
-                    filtered_sensors[sensor] = filtered.compute()
+                    if lazy_load==True:
+                        filtered_sensors[sensor] = filtered
+                    else:
+                        filtered_sensors[sensor] = filtered.compute()
 
                     # Close datasets
                     filtered = None
