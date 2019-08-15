@@ -3,7 +3,7 @@
 #Richard Taylor 2019
 
 from sklearn.mixture import GaussianMixture
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, Birch, AgglomerativeClustering
 import xarray as xr
 import itertools
 from scipy import linalg
@@ -170,9 +170,11 @@ def _reshape(output,sar_ds):
         thirdmask = np.zeros(np.shape(stacked_vv.mask))
     
     maskclusters = ma.empty(np.shape(stacked_vv))
-
-    maskclusters[np.logical_and(~stacked_vv.mask,~stacked_vh.mask,~thirdmask)] = output
-    maskclusters.mask = ~np.logical_and(~stacked_vv.mask,~stacked_vh.mask,~thirdmask)
+    
+    #if the output is not empty, otherwise the empty masked_array is fine anyway
+    if len(output) > 0:
+        maskclusters[np.logical_and(~stacked_vv.mask,~stacked_vh.mask,~thirdmask)] = output
+        maskclusters.mask = ~np.logical_and(~stacked_vv.mask,~stacked_vh.mask,~thirdmask)
 
     #same coords as the original stacked DataArray
     coords = stacked_sar['z']
@@ -251,8 +253,6 @@ def calc_gmm_timeseries(timeseries_ds,gmm,tmin=0,tmax=None, subcluster_model = N
         
     return (times,timeseries)
     
-
-
 def gmm_dataset(timeseries_ds,gmm):
     """Calculate a timeseries dataset containing pixel maps of class predictions given a 
     SAR timeseries and a pixel classifier.
@@ -278,8 +278,12 @@ def gmm_dataset(timeseries_ds,gmm):
         for i in range(len(times)):
             sar_ds = timeseries_ds.isel(time=i)
             gm_input = _sklearn_flatten(sar_ds)
-            gm_output = gmm.predict(gm_input)
+            if len(gm_input)>0:
+                gm_output = gmm.predict(gm_input)
+            else:
+                gm_output = np.array([])
             gm_xr = _reshape(gm_output,sar_ds).expand_dims('time')
+                
 
             gm_xr['time'] = [np.datetime64(times[i]['time'].data)]
 
@@ -291,3 +295,169 @@ def gmm_dataset(timeseries_ds,gmm):
                 
     return cluster_xr
     
+    
+
+def fit_birch(sar_ds, n_components = 5, **kwargs):
+    """Unsupervised clustering using a feature-tree based algorithm.
+
+    Uses the Birch algorithm as implemented by scikit-learn, inspired by the improved success of hierarchical K-Means clustering
+    compared to a single K-Means model on the SAR wetlands classifier.
+    
+    Wraps the Birch functionality in sklearn with the compatibility methods implemented in this module.
+    
+    Arguments:
+    sar_ds -- SAR data to fit in an xarray.Dataset. Assumes three-component.
+    
+    Keyword arguments:
+    n_components -- the number of clusters in the returned model.
+    
+    Other **kwargs -- passed to the constructor of the sklearn.cluster.Birch() class.
+    
+    Returns:
+    A fitted sklearn.cluster.Birch object.
+
+    """
+
+    tree_input = _sklearn_flatten(sar_ds)
+    
+    return Birch(n_clusters=n_components, **kwargs).fit(tree_input)
+
+
+def fit_ward(sar_ds, **kwargs):
+    """Ward hierarchical clustering. Uses a bottom-up method, as opposed to the top-down splitting implemented
+    in the SAR_Ktree class below."""
+    
+    ward_input = _sklearn_flatten(sar_ds)
+    
+    return AgglomerativeClustering(**kwargs).fit(ward_input)
+
+def calc_ward_classes(sar_ds,**kwargs):
+    """The ward tree object has no predict method, only fit_predict.
+    this works on a single SAR scene only - don't try it with timeseries.
+    """
+    ward_input = _sklearn_flatten(sar_ds)
+    
+    ward_output = AgglomerativeClustering(**kwargs).fit_predict(ward_input)
+    
+    ward_da = _reshape(ward_output,sar_ds)
+    
+    #if the sar dataset has a time coordinate
+    try:
+        timec = np.datetime64(sar_ds['time'].data)
+        ward_da = ward_da.expand_dims('time')
+        ward_da['time'] = [timec]
+        return ward_da.isel(time=0)
+    except:
+        return ward_da
+
+def ward_dataset(timeseries_ds,**kwargs):
+    """Calculate a timeseries dataset containing pixel maps of class predictions given a 
+    SAR timeseries, using the ward classification per-scene.
+    Arguments:
+    timeseries_ds -- as for calc_gmm_timeseries().
+    
+    Keyword arguments:
+    **kwargs -- passed to the constructor for the ward tree. E.g. n_clusters for number of clusters to find.
+    
+    Returns:
+    xarray.DataArray containing timeseries of class predictions from gmm. Shape is same as timeseries_ds.
+    
+    """
+    try:
+        times = timeseries_ds['time']
+    except:
+        return calc_ward_classes(timeseries_ds,**kwargs)
+
+
+    
+    try:
+        for i in range(len(times)):
+            sar_ds = timeseries_ds.isel(time=i)
+            
+            ward_xr = calc_ward_classes(sar_ds,**kwargs).expand_dims('time')
+
+            cluster_xr = ward_xr if i == 0 else xr.concat([cluster_xr,ward_xr],dim='time')
+            
+    except:
+        return calc_ward_classes(timeseries_ds,**kwargs)
+
+    return cluster_xr
+    
+
+class SAR_Ktree():
+    """
+    Class to implement a hierarchical K-means model for land cover classification of
+    SAR images of wetlands.
+    
+    Should be compatible with the prediction methods for KMMs and GMMs.
+    
+    """
+    
+    def __init__(self,levels = 2, branches = 3):
+        self.model = KMeans(n_clusters = branches)
+        self.levels = levels
+        if levels > 1:
+            self.branches = [SAR_Ktree(levels = levels-1,branches = branches) for _ in range(branches)]
+            
+    def fit(self,sar_ds):
+        fit_input = _sklearn_flatten(sar_ds)
+        self.model = self.model.fit(fit_input)
+        
+        self_predictions = gmm_dataset(sar_ds,self.model)
+        if self.levels > 1:
+            for branch in range(len(self.branches)):
+                sub_ds = sar_ds.where(self_predictions == branch)
+                self.branches[branch].fit(sub_ds)
+        
+    def predict(self,sar_ds):
+        """predict a single scene."""
+        pred_input = _sklearn_flatten(sar_ds)
+        if len(pred_input) > 0:
+            pred_out = _reshape(self.model.predict(pred_input),sar_ds)
+        else:
+            pred_out = _reshape([],sar_ds)
+        
+        if self.levels > 1:
+            #define number of possible classes in each branch's output
+            num_values = len(self.branches) ** (self.levels - 1)
+            pred_out *= num_values
+            
+            for branch in range(len(self.branches)):
+                branch_ds = sar_ds.where(pred_out == num_values*branch)
+                branch_out = self.branches[branch].predict(branch_ds)
+                
+                for value in range(num_values):
+                    np.place(pred_out.data, branch_out.data == value, branch*num_values + value)
+                    
+        #if the sar dataset has a time coordinate
+        try:
+            timec = np.datetime64(sar_ds['time'].data)
+            pred_out = pred_out.expand_dims('time')
+            pred_out['time'] = [timec]
+            return pred_out.isel(time=0)
+        except:
+            return pred_out
+
+    def predict_dataset(self,timeseries_ds):
+        """predict a whole time series of observations and return a dataarray with matching
+        shape"""
+        
+        try:
+            times = timeseries_ds['time']
+        except:
+            return self.predict(timeseries_ds)
+
+
+
+        try:
+            for i in range(len(times)):
+                sar_ds = timeseries_ds.isel(time=i)
+
+                tree_xr = self.predict(sar_ds).expand_dims('time')
+
+                cluster_xr = tree_xr if i == 0 else xr.concat([cluster_xr,tree_xr],dim='time')
+
+        except:
+            return self.predict(timeseries_ds)
+
+        return cluster_xr
