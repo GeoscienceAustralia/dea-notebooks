@@ -203,9 +203,6 @@ def run_agriculture_app(ds):
         plt.ioff()
         fig, ax = plt.subplots(num=0, figsize=(8, 5))
         ax.set_ylim([-1, 1])
-        ax.set_title("Average NDVI from Sentinel-2")
-        ax.set_xlabel("Date")
-        ax.set_ylabel("NDVI")
 
     # Function to execute each time something is drawn on the map
     def handle_draw(self, action, geo_json):
@@ -255,6 +252,11 @@ def run_agriculture_app(ds):
                          marker='*',
                          color=colour,
                          ax=ax)
+
+            # reset titles back to custom
+            ax.set_title("Average NDVI from Sentinel-2")
+            ax.set_xlabel("Date")
+            ax.set_ylabel("NDVI")
 
             # refresh display
             fig_display.clear_output()
