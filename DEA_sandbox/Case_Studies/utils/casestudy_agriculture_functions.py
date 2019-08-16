@@ -184,7 +184,6 @@ def run_agriculture_app(ds):
     studyarea_map.add_layer(GeoJSON(data=geom_obj))
 
     # Index to count drawn polygons
-    global polygon_number
     polygon_number = 0
 
     # Define widgets to interact with
@@ -197,13 +196,20 @@ def run_agriculture_app(ds):
     with info:
         print("Plot status:")
 
+    fig_display = widgets.Output()
+    colour_list = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+    with fig_display:
+        plt.ioff()
+        fig, ax = plt.subplots(num=0, figsize=(8, 5))
+        ax.set_ylim([-1, 1])
+        ax.set_title("Average NDVI from Sentinel-2")
+        ax.set_xlabel("Date")
+        ax.set_ylabel("NDVI")
+
     # Function to execute each time something is drawn on the map
     def handle_draw(self, action, geo_json):
-        global polygon_number
-
-        # Construct figure attributes
-        plt.figure(0, figsize=(8, 5))
-        plt.ylim([-1, 1])
+        nonlocal polygon_number
 
         # Execute behaviour based on what the user draws
         if geo_json['geometry']['type'] == 'Polygon':
@@ -228,35 +234,32 @@ def run_agriculture_app(ds):
             )
 
             masked_ds = ds.ndvi.where(mask)
-
             masked_ds_mean = masked_ds.mean(dim=['x', 'y'], skipna=True)
-
-            # Get list of matplotlib colours for plotting
-            colour_list = plt.rcParams['axes.prop_cycle'].by_key()['color']
-            colour_index = polygon_number % len(colour_list)
-
-            # Plot the data with data points marked
-            xr.plot.plot(
-                masked_ds_mean,
-                marker='*',
-                color=colour_list[colour_index]
-            )
-            plt.title("Average NDVI from Sentinel-2")
-            plt.xlabel("Date")
-            plt.ylabel("NDVI")
+            colour = colour_list[polygon_number % len(colour_list)]
 
             # Add a layer to the map to make the most recently drawn polygon
             # the same colour as the line on the plot
             studyarea_map.add_layer(
                 GeoJSON(data=geo_json,
                         style={
-                            'color': colour_list[colour_index],
+                            'color': colour,
                             'opacity': 1,
                             'weight': 4.5,
                             'fillOpacity': 0.0
                         }
                         )
             )
+
+            # add new data to the plot
+            xr.plot.plot(masked_ds_mean,
+                         marker='*',
+                         color=colour,
+                         ax=ax)
+
+            # refresh display
+            fig_display.clear_output()
+            with fig_display:
+                display(fig)
 
             # Iterate the polygon number before drawing another polygon
             polygon_number = polygon_number + 1
@@ -274,3 +277,4 @@ def run_agriculture_app(ds):
     display(instruction)
     display(studyarea_map)
     display(info)
+    display(fig_display)
