@@ -176,7 +176,11 @@ def run_agriculture_app(ds):
 
     # define the drawing controls
     studyarea_drawctrl = DrawControl(
-        polygon={"shapeOptions": {"fillOpacity": 0}}
+        polygon={"shapeOptions": {"fillOpacity": 0}},
+        marker={},
+        circle={},
+        circlemarker={},
+        polyline={},
     )
 
     # add drawing controls and data bound geometry to the map
@@ -211,7 +215,7 @@ def run_agriculture_app(ds):
         # Execute behaviour based on what the user draws
         if geo_json['geometry']['type'] == 'Polygon':
 
-            info.clear_output()
+            info.clear_output(wait=True)  # wait=True reduces flicker effect
             with info:
                 print("Plot status: polygon sucessfully added to plot.")
 
@@ -259,7 +263,7 @@ def run_agriculture_app(ds):
             ax.set_ylabel("NDVI")
 
             # refresh display
-            fig_display.clear_output()
+            fig_display.clear_output(wait=True)  # wait=True reduces flicker effect
             with fig_display:
                 display(fig)
 
@@ -267,7 +271,7 @@ def run_agriculture_app(ds):
             polygon_number = polygon_number + 1
 
         else:
-            info.clear_output()
+            info.clear_output(wait=True)
             with info:
                 print("Plot status: this drawing tool is not currently "
                       "supported. Please use the polygon tool.")
