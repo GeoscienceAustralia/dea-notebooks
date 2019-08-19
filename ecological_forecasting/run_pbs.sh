@@ -1,10 +1,10 @@
 #!/bin/bash
 #PBS -P r78 
 #PBS -q hugemem
-#PBS -l walltime=12:00:00
-#PBS -l mem=1024GB
-#PBS -l jobfs=1GB
-#PBS -l ncpus=28
+#PBS -l walltime=5:00:00
+#PBS -l mem=1TB
+#PBS -l jobfs=2GB
+#PBS -l ncpus=14
 #PBS -l wd
 #PBS -m abe
 #PBS -M chad.burton@ga.gov.au

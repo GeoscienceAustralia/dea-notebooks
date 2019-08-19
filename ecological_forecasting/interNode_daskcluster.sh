@@ -25,7 +25,7 @@ then
 fi
 mkdir $DASKWORKERDIR
 
-#build a dask cluster
+#build a dask cluster (#.bashrc is where the module load dea enviro is done, each node must have same python enviro. )
 for i in $(seq 0 $(( NNODES-1 ))); do
     mkdir $DASKWORKERDIR/$i
     if [[ $i -eq 0 ]]

@@ -13,9 +13,11 @@ import numpy as np
 import xarray as xr
 import datacube 
 import dask
-from dask.distributed import Client
+from dask.distributed import Client, LocalCluster
+import logging
 import sys
 sys.path.append('src')
+# import lazily_load_clearlandsat as llcLS
 import DEADataHandling
 import query_from_shp
 
@@ -32,23 +34,17 @@ import query_from_shp
 start = '1987-12-01'
 end = '2019-05-31'
 shp_fpath = "/g/data/r78/cb3058/dea-notebooks/dcStats/data/spatial/griffith_MSAVI_test.shp"
-chunk_size = 800
-cpus = 27
-memory_per_cpu = '25GB'
+chunk_size = 250
+cpus = 14
+memory_per_cpu = '40GB'
 results = 'results/'
 
+lat, lon = -34.294, 146.037
+latLon_adjust = 1.0
+
 #-------------------------------------------------------------------------
+#Functions for script
 
-#set up dask cluster
-client = Client(n_workers=cpus, threads_per_worker=1, memory_limit=memory_per_cpu)
-
-#create query and load data
-query = query_from_shp.query_from_shp(shp_fpath, start, end)
-dc = datacube.Datacube(app='load_clearlandsat')
-ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, sensors=['ls5','ls7','ls8'], bands_of_interest=['nir', 'red'],
-                                       dask_chunks = {'x': chunk_size, 'y': chunk_size}, masked_prop=0.15, mask_pixel_quality=True)
-
-#functions for calculating seasonal anomalies of MSAVI
 def msavi_func(nir, red):
     return (2*nir+1-np.sqrt((2*nir+1)**2 - 8*(nir-red)))/2
 
@@ -70,7 +66,31 @@ def compute_seasonal(data):
     masvi_anomalies = msavi_seasonalMeans.groupby('time.season') - msavi_seasonalClimatology
     return masvi_anomalies
 
-#lazily compute anomalies
-a = compute_seasonal(ds)
-#write out data (will compute now)
-a.to_netcdf(results + 'griffith_MSAVI_anomalies.nc')  
+#-------------------------------------------------------------------------------------
+print('starting')
+
+#trying to suppress 'garbage collector' warnings from distributed
+# and 'divide' warnings from numpy
+logger = logging.getLogger("distributed.utils_perf")
+logger.setLevel(logging.ERROR)
+np.seterr(divide='ignore', invalid='ignore')
+
+if __name__ == '__main__':
+    with LocalCluster(n_workers=cpus, threads_per_worker=1) as cluster:
+        with Client(cluster, memory_limit=memory_per_cpu) as client:
+            print('querying datacube')
+            # create query and load data
+#             query = query_from_shp.query_from_shp(shp_fpath, start, end)
+            query = {'lon': (lon - latLon_adjust, lon + latLon_adjust),
+                     'lat': (lat - latLon_adjust, lat + latLon_adjust),
+                     'time': (start, end)}
+            dc = datacube.Datacube(app='load_clearlandsat')
+            ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, sensors=['ls5','ls7','ls8'], bands_of_interest=['nir', 'red'],
+                                                   lazy_load=True, dask_chunks = {'x': chunk_size, 'y': chunk_size},
+                                                    masked_prop=0.25, mask_pixel_quality=True)
+            #lazily compute anomalies
+            a = compute_seasonal(ds)
+            #write out data (will compute now)
+            print('exporting netcdf')
+            a.to_netcdf(results + 'griffith_MSAVI_anomalies_1deg.nc')  
+            
