@@ -200,13 +200,16 @@ def run_agriculture_app(ds):
     with info:
         print("Plot status:")
 
-    fig_display = widgets.Output()
-    colour_list = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    fig_display = widgets.Output(layout=widgets.Layout(
+        width="30%",  # proportion of horizontal space taken by plot
+    ))
 
     with fig_display:
         plt.ioff()
-        fig, ax = plt.subplots(num=0, figsize=(8, 5))
+        fig, ax = plt.subplots(figsize=(8, 6))
         ax.set_ylim([-1, 1])
+
+    colour_list = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
     # Function to execute each time something is drawn on the map
     def handle_draw(self, action, geo_json):
@@ -279,8 +282,22 @@ def run_agriculture_app(ds):
     # call to say activate handle_draw function on draw
     studyarea_drawctrl.on_draw(handle_draw)
 
-    # plot the map
-    display(instruction)
-    display(studyarea_map)
-    display(info)
-    display(fig_display)
+    with fig_display:
+        # TODO: update with user friendly something
+        display(widgets.HTML("""
+        <h2> figure placeholder </h2>
+        """))
+
+    # Construct UI:
+    #  +-----------------------+
+    #  | instruction           |
+    #  +----------------+------+
+    #  |  map           | plot |
+    #  |                |      |
+    #  +----------------+------+
+    #  | info                  |
+    #  +-----------------------+
+    ui = widgets.VBox([instruction,
+                       widgets.HBox([studyarea_map, fig_display]),
+                       info])
+    display(ui)
