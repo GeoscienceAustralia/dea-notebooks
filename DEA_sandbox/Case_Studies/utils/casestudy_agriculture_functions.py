@@ -201,7 +201,7 @@ def run_agriculture_app(ds):
         print("Plot status:")
 
     fig_display = widgets.Output(layout=widgets.Layout(
-        width="30%",  # proportion of horizontal space taken by plot
+        width="50%",  # proportion of horizontal space taken by plot
     ))
 
     with fig_display:
@@ -244,21 +244,24 @@ def run_agriculture_app(ds):
             # Add a layer to the map to make the most recently drawn polygon
             # the same colour as the line on the plot
             studyarea_map.add_layer(
-                GeoJSON(data=geo_json,
-                        style={
-                            'color': colour,
-                            'opacity': 1,
-                            'weight': 4.5,
-                            'fillOpacity': 0.0
-                        }
-                        )
+                GeoJSON(
+                    data=geo_json,
+                    style={
+                        'color': colour,
+                        'opacity': 1,
+                        'weight': 4.5,
+                        'fillOpacity': 0.0
+                    }
+                )
             )
 
             # add new data to the plot
-            xr.plot.plot(masked_ds_mean,
-                         marker='*',
-                         color=colour,
-                         ax=ax)
+            xr.plot.plot(
+                masked_ds_mean,
+                marker='*',
+                color=colour,
+                ax=ax
+            )
 
             # reset titles back to custom
             ax.set_title("Average NDVI from Sentinel-2")
@@ -284,17 +287,15 @@ def run_agriculture_app(ds):
 
     with fig_display:
         # TODO: update with user friendly something
-        display(widgets.HTML("""
-        <h2> figure placeholder </h2>
-        """))
+        display(widgets.HTML(""))
 
     # Construct UI:
     #  +-----------------------+
     #  | instruction           |
-    #  +----------------+------+
-    #  |  map           | plot |
-    #  |                |      |
-    #  +----------------+------+
+    #  +-----------+-----------+
+    #  |  map      |  plot     |
+    #  |           |           |
+    #  +-----------+-----------+
     #  | info                  |
     #  +-----------------------+
     ui = widgets.VBox([instruction,
