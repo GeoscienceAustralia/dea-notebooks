@@ -176,7 +176,11 @@ def run_agriculture_app(ds):
 
     # define the drawing controls
     studyarea_drawctrl = DrawControl(
-        polygon={"shapeOptions": {"fillOpacity": 0}}
+        polygon={"shapeOptions": {"fillOpacity": 0}},
+        marker={},
+        circle={},
+        circlemarker={},
+        polyline={},
     )
 
     # add drawing controls and data bound geometry to the map
@@ -196,13 +200,16 @@ def run_agriculture_app(ds):
     with info:
         print("Plot status:")
 
-    fig_display = widgets.Output()
-    colour_list = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    fig_display = widgets.Output(layout=widgets.Layout(
+        width="50%",  # proportion of horizontal space taken by plot
+    ))
 
     with fig_display:
         plt.ioff()
-        fig, ax = plt.subplots(num=0, figsize=(8, 5))
+        fig, ax = plt.subplots(figsize=(8, 6))
         ax.set_ylim([-1, 1])
+
+    colour_list = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
     # Function to execute each time something is drawn on the map
     def handle_draw(self, action, geo_json):
@@ -211,7 +218,7 @@ def run_agriculture_app(ds):
         # Execute behaviour based on what the user draws
         if geo_json['geometry']['type'] == 'Polygon':
 
-            info.clear_output()
+            info.clear_output(wait=True)  # wait=True reduces flicker effect
             with info:
                 print("Plot status: polygon sucessfully added to plot.")
 
@@ -237,21 +244,24 @@ def run_agriculture_app(ds):
             # Add a layer to the map to make the most recently drawn polygon
             # the same colour as the line on the plot
             studyarea_map.add_layer(
-                GeoJSON(data=geo_json,
-                        style={
-                            'color': colour,
-                            'opacity': 1,
-                            'weight': 4.5,
-                            'fillOpacity': 0.0
-                        }
-                        )
+                GeoJSON(
+                    data=geo_json,
+                    style={
+                        'color': colour,
+                        'opacity': 1,
+                        'weight': 4.5,
+                        'fillOpacity': 0.0
+                    }
+                )
             )
 
             # add new data to the plot
-            xr.plot.plot(masked_ds_mean,
-                         marker='*',
-                         color=colour,
-                         ax=ax)
+            xr.plot.plot(
+                masked_ds_mean,
+                marker='*',
+                color=colour,
+                ax=ax
+            )
 
             # reset titles back to custom
             ax.set_title("Average NDVI from Sentinel-2")
@@ -259,7 +269,7 @@ def run_agriculture_app(ds):
             ax.set_ylabel("NDVI")
 
             # refresh display
-            fig_display.clear_output()
+            fig_display.clear_output(wait=True)  # wait=True reduces flicker effect
             with fig_display:
                 display(fig)
 
@@ -267,7 +277,7 @@ def run_agriculture_app(ds):
             polygon_number = polygon_number + 1
 
         else:
-            info.clear_output()
+            info.clear_output(wait=True)
             with info:
                 print("Plot status: this drawing tool is not currently "
                       "supported. Please use the polygon tool.")
@@ -275,8 +285,20 @@ def run_agriculture_app(ds):
     # call to say activate handle_draw function on draw
     studyarea_drawctrl.on_draw(handle_draw)
 
-    # plot the map
-    display(instruction)
-    display(studyarea_map)
-    display(info)
-    display(fig_display)
+    with fig_display:
+        # TODO: update with user friendly something
+        display(widgets.HTML(""))
+
+    # Construct UI:
+    #  +-----------------------+
+    #  | instruction           |
+    #  +-----------+-----------+
+    #  |  map      |  plot     |
+    #  |           |           |
+    #  +-----------+-----------+
+    #  | info                  |
+    #  +-----------------------+
+    ui = widgets.VBox([instruction,
+                       widgets.HBox([studyarea_map, fig_display]),
+                       info])
+    display(ui)
