@@ -3,7 +3,7 @@
 #Richard Taylor 2019
 
 from sklearn.mixture import GaussianMixture
-from sklearn.cluster import KMeans, Birch, AgglomerativeClustering
+from sklearn.cluster import KMeans, Birch, AgglomerativeClustering, MiniBatchKMeans
 import xarray as xr
 import itertools
 from scipy import linalg
@@ -393,8 +393,11 @@ class SAR_Ktree():
     
     """
     
-    def __init__(self,levels = 2, branches = 3):
-        self.model = KMeans(n_clusters = branches)
+    def __init__(self,levels = 2, branches = 3, minibatch=False, **kwargs):
+        if minibatch:
+            self.model = MiniBatchKMeans(n_clusters = branches, **kwargs)
+        else:
+            self.model = KMeans(n_clusters = branches, **kwargs)
         self.levels = levels
         if levels > 1:
             self.branches = [SAR_Ktree(levels = levels-1,branches = branches) for _ in range(branches)]

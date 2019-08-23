@@ -58,12 +58,16 @@ def denoise(ds, verbose = False, bands = None, fill_negative = True, remove_high
 
     return smoothed.where(~nodata_mask)
 
-def load_cleaned_SAR(query,dc):
+def load_cleaned_SAR(query,dc,drop_bad_scenes=True):
     """put all the nasty loading and filtering code for the SAR scenes in a simple-to-use function.
     
     Arguments:
     query -- a query for dc.load()
     dc -- a datacube.Datacube instance for loading the SAR data from.
+
+    Keyword arguments:
+    drop_bad_scenes -- Boolean, drop scenes in the dataset with a lot of NaNs if this is true. Useful
+    if loading a small area on a boundary between passes
     
     Returns:
     An xarray.Dataset with the SAR data matching the query. Includes VH, VV and VH/VV segments.
@@ -84,11 +88,31 @@ def load_cleaned_SAR(query,dc):
     #clean=clean.where(~mask)
 
     #drop scenes with a lot of NaN pixels
-    nanmask = ((np.isnan(clean).mean(dim = ['x','y'])) > 0.2).vv
-    valtimes = nanmask.where(~nanmask).dropna(dim='time')['time']
+    if drop_bad_scenes:
+        nanmask = ((np.isnan(clean).mean(dim = ['x','y'])) > 0.2).vv
+        valtimes = nanmask.where(~nanmask).dropna(dim='time')['time']
 
-    clean = clean.sel(time = valtimes)
+        clean = clean.sel(time = valtimes)
     
     clean['vh_over_vv'] = clean.vh/clean.vv
     
     return clean
+
+def bulknorm_SAR_ds(sar_ds):
+    """Takes a SAR dataset and normalises each channel based on mu and sigma over
+       all observations in the dataset (i.e. this does not operate per-scene).
+    """
+    nscene = sar_ds.copy(deep=True)
+
+    nscene['vv'] = (nscene['vv']-nscene['vv'].median())/(2*nscene['vv'].std())
+    nscene['vh'] = (nscene['vh']-nscene['vh'].median())/(2*nscene['vh'].std())
+    nscene['vh_over_vv'] = (nscene['vh_over_vv']-nscene['vh_over_vv'].median())/(2*nscene['vh_over_vv'].std())
+        
+    return nscene
+
+def downsample_ds(normlogSAR, downsample_factor=5):
+    """Spatially downsample an xarray DataArray or Dataset.
+    """
+    downsampled = normlogSAR.groupby_bins('x',len(normlogSAR.x)/downsample_factor).mean(dim='x').groupby_bins('y',len(normlogSAR.y)/downsample_factor).mean(dim='y')
+    downsampled = downsampled.rename({'x_bins':'x','y_bins':'y'})
+    return downsampled
