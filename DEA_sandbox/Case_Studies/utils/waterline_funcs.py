@@ -3,7 +3,7 @@
 
 Additional functions for waterline extraction notebook
 
-Last modified: March 2019
+Last modified: August 2019
 Author: Robbi Bishop-Taylor
 
 """
@@ -22,7 +22,52 @@ from shapely.geometry import MultiLineString, mapping
 import matplotlib as mpl
 import matplotlib.cm
 import matplotlib.colors
+from otps import TimePoint
+from otps import predict_tide
+from datacube.utils.geometry import CRS
 from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps
+
+
+def tidal_tag(ds, tidepost_lat=None, tidepost_lon=None, swap_dims=False):
+    
+    if not tidepost_lat or not tidepost_lon:
+
+        tidepost_lon, tidepost_lat = ds.extent.centroid.to_crs(crs=CRS('EPSG:4326')).coords[0]
+        print(f'Setting tide modelling location from dataset centroid: {tidepost_lon}, {tidepost_lat}')
+
+    else:
+        print(f'Using user-supplied tide modelling location: {tidepost_lon}, {tidepost_lat}')
+
+    # Use the tidal mode to compute tide heights for each observation:
+    obs_datetimes = ds.time.data.astype('M8[s]').astype('O').tolist()
+    obs_timepoints = [TimePoint(tidepost_lon, tidepost_lat, dt) for dt in obs_datetimes]
+    obs_predictedtides = predict_tide(obs_timepoints)
+
+    # If tides cannot be successfully modeled (e.g. if the centre of the xarray dataset 
+    # is located is over land), raise an exception 
+    if len(obs_predictedtides) == 0:
+
+        raise ValueError(f'Tides could not be modelled for dataset centroid located at '
+                         f'{tidepost_lon}, {tidepost_lat}. This can happen if this coordinate '
+                         f'occurs over land. Please manually specify a tide modelling location '
+                         f'located over water using the `tidepost_lat` and `tidepost_lon` parameters.')
+
+    else:
+
+        # Extract tide heights
+        obs_tideheights = [predictedtide.tide_m for predictedtide in obs_predictedtides]
+
+        # Assign tide heights to the dataset as a new variable
+        ds['tide_height'] = xr.DataArray(obs_tideheights, [('time', ds.time)])
+
+        # If swap_dims = True, make tide height the primary dimension instead of time
+        if swap_dims:
+
+            # Swap dimensions and sort by tide height
+            ds = ds.swap_dims({'time': 'tide_height'})
+            ds = ds.sortby('tide_height')     
+
+        return ds
 
 
 def load_cloudmaskedlandsat(dc, query, platforms=['ls5t', 'ls7e', 'ls8c'], 
