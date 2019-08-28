@@ -3,7 +3,7 @@
 
 Additional functions for waterline extraction notebook
 
-Last modified: March 2019
+Last modified: August 2019
 Author: Robbi Bishop-Taylor
 
 """
@@ -22,7 +22,52 @@ from shapely.geometry import MultiLineString, mapping
 import matplotlib as mpl
 import matplotlib.cm
 import matplotlib.colors
+from otps import TimePoint
+from otps import predict_tide
+from datacube.utils.geometry import CRS
 from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps
+
+
+def tidal_tag(ds, tidepost_lat=None, tidepost_lon=None, swap_dims=False):
+    
+    if not tidepost_lat or not tidepost_lon:
+
+        tidepost_lon, tidepost_lat = ds.extent.centroid.to_crs(crs=CRS('EPSG:4326')).coords[0]
+        print(f'Setting tide modelling location from dataset centroid: {tidepost_lon}, {tidepost_lat}')
+
+    else:
+        print(f'Using user-supplied tide modelling location: {tidepost_lon}, {tidepost_lat}')
+
+    # Use the tidal mode to compute tide heights for each observation:
+    obs_datetimes = ds.time.data.astype('M8[s]').astype('O').tolist()
+    obs_timepoints = [TimePoint(tidepost_lon, tidepost_lat, dt) for dt in obs_datetimes]
+    obs_predictedtides = predict_tide(obs_timepoints)
+
+    # If tides cannot be successfully modeled (e.g. if the centre of the xarray dataset 
+    # is located is over land), raise an exception 
+    if len(obs_predictedtides) == 0:
+
+        raise ValueError(f'Tides could not be modelled for dataset centroid located at '
+                         f'{tidepost_lon}, {tidepost_lat}. This can happen if this coordinate '
+                         f'occurs over land. Please manually specify a tide modelling location '
+                         f'located over water using the `tidepost_lat` and `tidepost_lon` parameters.')
+
+    else:
+
+        # Extract tide heights
+        obs_tideheights = [predictedtide.tide_m for predictedtide in obs_predictedtides]
+
+        # Assign tide heights to the dataset as a new variable
+        ds['tide_height'] = xr.DataArray(obs_tideheights, [('time', ds.time)])
+
+        # If swap_dims = True, make tide height the primary dimension instead of time
+        if swap_dims:
+
+            # Swap dimensions and sort by tide height
+            ds = ds.swap_dims({'time': 'tide_height'})
+            ds = ds.sortby('tide_height')     
+
+        return ds
 
 
 def load_cloudmaskedlandsat(dc, query, platforms=['ls5t', 'ls7e', 'ls8c'], 
@@ -424,34 +469,41 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
 
 
 def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time', 
-        robust=True, percentile_stretch = None, col_wrap=4, size=6, aspect=1,
+        robust=True, percentile_stretch=None, col_wrap=4, size=6, aspect=None,
         savefig_path=None, savefig_kwargs={}, **kwargs):
     
     """
-    Takes an xarray dataset and plots RGB images using three imagery bands (e.g true colour ['red', 'green', 'blue']
-    or false colour ['swir1', 'nir', 'green']). The `index` parameter allows easily selecting individual or multiple
-    images for RGB plotting. Images can be saved to file by specifying an output path using `savefig_path`.
+    Takes an xarray dataset and plots RGB images using three imagery bands (e.g true 
+    colour ['red', 'green', 'blue'] or false colour ['swir1', 'nir', 'green']). The 
+    `index` parameter allows easily selecting individual or multiple images for RGB 
+    plotting. Images can be saved to file by specifying an output path using `savefig_path`.
     
-    This function was designed to work as an easy-to-use wrapper around xarray's `.plot.imshow()` functionality.
-    Last modified: November 2018
+    This function was designed to work as an easy-to-use wrapper around xarray's 
+    `.plot.imshow()` functionality.
+    
+    Last modified: August 2019
     Author: Robbi Bishop-Taylor
     
     Parameters
     ----------  
     ds : xarray Dataset
-        A two-dimensional or multi-dimensional array to plot as an RGB image. If the array has more than two 
-        dimensions (e.g. multiple observations along a 'time' dimension), either use `index` to select one (`index=0`) 
-        or multiple observations (`index=[0, 1]`), or create a custom faceted plot using e.g. `col="time", col_wrap=4`.       
+        A two-dimensional or multi-dimensional array to plot as an RGB image. If the array 
+        has more than two dimensions (e.g. multiple observations along a 'time' dimension), 
+        either use `index` to select one (`index=0`) or multiple observations (`index=[0, 1]`), 
+        or create a custom faceted plot using e.g. `col="time", col_wrap=4`.       
     bands : list of strings, optional
-        A list of three strings giving the band names to plot. Defaults to '['red', 'green', 'blue']'.
+        A list of three strings giving the band names to plot. Defaults to 
+        '['red', 'green', 'blue']'.
     index : integer or list of integers, optional
-        For convenience `index` can be used to select one (`index=0`) or multiple observations (`index=[0, 1]`) from
-        the input dataset for plotting. If multiple images are requested these will be plotted as a faceted plot.
+        For convenience `index` can be used to select one (`index=0`) or multiple 
+        observations (`index=[0, 1]`) from the input dataset for plotting. If multiple images 
+        are requested these will be plotted as a faceted plot.
     index_dim : string, optional
-        The dimension along which observations should be plotted if multiple observations are requested using `index`.
-        Defaults to `time`.
+        The dimension along which observations should be plotted if multiple observations are 
+        requested using `index`. Defaults to `time`.
     robust : bool, optional
-        Produces an enhanced image where the colormap range is computed with 2nd and 98th percentiles instead of the 
+        Produces an enhanced image where the colormap range is computed with 2nd and 98th 
+        percentiles instead of the 
         extreme values. Defaults to True.
     percentile_stretch : tuple of floats
         An tuple of two floats (between 0.00 and 1.00) that can be used to clip the colormap range to manually 
@@ -462,7 +514,8 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
     size : integer, optional
         The height (in inches) of each plot. Defaults to 6.
     aspect : integer, optional
-        Aspect ratio of each facet in the plot, so that aspect * size gives width of each facet in inches. Defaults to 1.
+        Aspect ratio of each facet in the plot, so that aspect * size gives width of each facet in inches. Defaults 
+        to None, which will calculate the aspect based on the x and y dimensions of the input data.
     savefig_path : string, optional
         Path to export image file for the RGB plot. Defaults to None, which does not export an image file.
     savefig_kwargs : dict, optional
@@ -480,36 +533,47 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
     >>> # Import modules
     >>> import sys
     >>> import datacube
+
     >>> # Import external dea-notebooks functions using relative link to Scripts directory
     >>> sys.path.append('../10_Scripts')
     >>> import DEAPlotting
+
     >>> # Set up datacube instance
     >>> dc = datacube.Datacube(app='RGB plotting')
+
     >>> # Define a Landsat query
     >>> landsat_query = {'lat': (-35.25, -35.35),
     ...                  'lon': (149.05, 149.17),
     ...                  'time': ('2016-02-15', '2016-03-01'),
     ...                  'output_crs': 'EPSG:3577',
     ...                  'resolution': (-25, 25)}
+
     >>> # Import sample Landsat data
     >>> landsat_data = dc.load(product='ls8_nbart_albers', 
     ...                        group_by='solar_day',
     ...                        **landsat_query)
+
     >>> # Plot a single observation (option 1)
     >>> DEAPlotting.rgb(ds=landsat_data.isel(time=0))
+
     >>> # Plot a single observation using `index` (option 2)
     >>> DEAPlotting.rgb(ds=landsat_data, index=0)
+
     >>> # Plot multiple observations as a facet plot (option 1)
     >>> DEAPlotting.rgb(ds=landsat_data, col='time')
+
     >>> # Plot multiple observations as a facet plot using `index` (option 2)
     >>> DEAPlotting.rgb(ds=landsat_data, index=[0, 1])
+
     >>> # Increase contrast by specifying percentile thresholds using `percentile_stretch`
     >>> DEAPlotting.rgb(ds=landsat_data, index=[0, 1], 
     ...                 percentile_stretch=(0.02, 0.9))
+
     >>> # Pass in any keyword argument to `xarray.plot.imshow()` (e.g. `aspect`). For more 
     >>> # options, see: http://xarray.pydata.org/en/stable/generated/xarray.plot.imshow.html  
     >>> DEAPlotting.rgb(ds=landsat_data, index=[0, 1], 
     ...                 percentile_stretch=(0.02, 0.9), aspect=1.2)
+
     >>> # Export the RGB image to file using `savefig_path`
     >>> DEAPlotting.rgb(ds=landsat_data, index=[0, 1], 
     ...                 percentile_stretch=(0.02, 0.9), aspect=1.2, 
@@ -517,6 +581,11 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
     Exporting image to output_image_test.png
     
     """   
+    
+    # Compute image aspect based on first index
+    if not aspect:
+        data_shape = ds.isel(**{index_dim: index}).to_array().shape
+        aspect = data_shape[2] / data_shape[1]    
 
     # If no value is supplied for `index` (the default), plot using default values and arguments passed via `**kwargs`
     if index is None:
@@ -531,10 +600,11 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
         
         # If percentile_stretch is provided, clip plotting to percentile vmin, vmax
         if percentile_stretch:
-            vmin, vmax = da.quantile(percentile_stretch).values
+            vmin, vmax = da.compute().quantile(percentile_stretch).values
             kwargs.update({'vmin': vmin, 'vmax': vmax})
             
-        img = da.plot.imshow(robust=robust, col_wrap=col_wrap, size=size, **kwargs)        
+        img = da.plot.imshow(robust=robust, col_wrap=col_wrap, 
+                             size=size, aspect=aspect, **kwargs)        
  
     # If values provided for `index`, extract corresponding observations and plot as either single image or facet plot
     else:
@@ -555,18 +625,19 @@ def rgb(ds, bands=['red', 'green', 'blue'], index=None, index_dim='time',
         
         # If percentile_stretch is provided, clip plotting to percentile vmin, vmax
         if percentile_stretch:
-            vmin, vmax = da.quantile(percentile_stretch).values
+            vmin, vmax = da.compute().quantile(percentile_stretch).values
             kwargs.update({'vmin': vmin, 'vmax': vmax})
             
         # If multiple index values are supplied, plot as a faceted plot 
         if len(index) > 1:
             
-            img = da.plot.imshow(robust=robust, col=index_dim, col_wrap=col_wrap, size=size, **kwargs)
+            img = da.plot.imshow(robust=robust, col=index_dim, col_wrap=col_wrap, 
+                                 size=size, aspect=aspect, **kwargs)
         
         # If only one index is supplied, squeeze out index_dim and plot as a single panel
         else:
 
-            img = da.squeeze(dim=index_dim).plot.imshow(robust=robust, size=size, **kwargs)
+            img = da.squeeze(dim=index_dim).plot.imshow(robust=robust, size=size, aspect=aspect, **kwargs)
     
     # If an export path is provided, save image to file. Individual and faceted plots have a different API (figure
     # vs fig) so we get around this using a try statement:
