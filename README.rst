@@ -8,31 +8,25 @@ Note that these functions have been developed by DEA users, not the DEA developm
 
 The intended order of these notebook folders are:
 
-1. `Getting_started <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/01_Getting_started>`_
+1. `Beginners_Guide <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Beginners_Guide>`_
 
-2. `DEA_datasets <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/02_DEA_datasets>`_
+2. `DEA_Datasets <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/DEA_Datasets>`_
 
-3. `Integrating_external_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/03_Integrating_external_data>`_
+3. `Frequently_Used_Code <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Frequently_Used_Code>`_
 
-4. `Index_calculation <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/04_Index_calculation>`_
+4. `Real_World_Examples <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Real_World_Examples>`_
 
-5. `Temporal_analysis <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/05_Temporal_analysis>`_
+The supporting scripts and data for the notebooks are kept in the following folders:
 
-6. `Composite_generation <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/06_Composite_generation>`_
+- `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Scripts>`_
 
-7. `Image_classification <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/07_Image_classification>`_
+- `Supplementary_Data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Supplementary_Data>`_
 
-8. `Outputting_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/08_Outputting_data>`_
-
-9. `Workflows <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/09_Workflows>`_
-
-10. `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/10_Scripts>`_
-
-The *read-the-docs* version of this repository can be found at: `<http://geoscienceaustralia.github.io/digitalearthau/notebooks/01_Getting_started/README.html>`_
+The *read-the-docs* version of this repository can be found at: `<https://docs.dea.ga.gov.au/notebooks/01_Getting_started/README.html>`_
 
 The examples provided here can be found as Jupyter Notebooks in the `dea-notebooks Github repository <https://github.com/GeoscienceAustralia/dea-notebooks>`_ . 
 
-If you are searching for a specific functionality, use the `Tags Index <http://geoscienceaustralia.github.io/digitalearthau/genindex.html>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an `Issue` in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
+If you are searching for a specific functionality, use the `Tags Index <https://docs.dea.ga.gov.au/genindex.html>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an `Issue` in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
 
 The basic structure of this repository is designed to keep 'all' of the DEA Jupyter notebooks in one place. The repository uses branches to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared. There are two main types of branches:
 
