@@ -12,7 +12,6 @@ from rsgislib.segmentation import segutils
 import sys
 sys.path.append('src')
 import DEAPlotting, SpatialTools
-from transform_tuple import transform_tuple
 
 ############
 #User Inputs
@@ -20,16 +19,16 @@ from transform_tuple import transform_tuple
 
 
 # where are the dcStats MaxNDVI tifs?
-MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/nmdb/"
+MaxNDVItiffs = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/SA_MDB/ndvi_max/"
 
 # where should I put the results?
-results ='/g/data/r78/cb3058/dea-notebooks/ICE_project/results/nmdb/'
+results ='/g/data/r78/cb3058/dea-notebooks/ICE_project/results/SA_MDB/'
 
 #what season are we processing (Must be 'Summmer' or 'Winter')?
 season = 'Summer'
 
 #Input your area of interest's name
-AOI = 'nmdb'
+AOI = 'SA_MDB'
 
 output_suffix = '_multithreshold_65Thres'
 
@@ -42,7 +41,7 @@ def irrigated_extent(tif):
     results_ = results
     
     if season == 'Summer':
-        year = tif[11:15]
+        year = tif[13:17]
         nextyear = str(int(year) + 1)[2:] 
         year = year + "_" + nextyear
         year = season + year
@@ -76,17 +75,20 @@ def irrigated_extent(tif):
     segment_means = xr.open_rasterio(meanImage).squeeze()
     
     #reclassify and threshold by different values
+#     a = np.where(segment_means.values>=0.8, 80, segment_means.values)
+#     b = np.where((a>=0.75) & (a<0.8), 75, a)
+#     c = np.where((b>=0.70) & (b<0.75), 70, b)
+#     d = np.where((c>=0.65) & (c<0.70), 65, c)
+#     e = np.where(d>=65, d, np.nan)
+    
     a = np.where(segment_means.values>=0.8, 80, segment_means.values)
-    b = np.where((a>=0.75) & (a<0.8), 75, a)
-    c = np.where((b>=0.70) & (b<0.75), 70, b)
-    d = np.where((c>=0.65) & (c<0.70), 65, c)
-    e = np.where(d>=65, d, np.nan)
+    b = np.where((a>=0.70) & (a<0.8), 70, a)
+    c = np.where((b>=0.60) & (b<0.70), 60, b)
+    d = np.where((c>=0.55) & (c<0.60), 55, c)
+    e = np.where(d>=55, d, np.nan)
     
     print('exporting the multithreshold as Gtiff')
-    transform, projection = transform_tuple(segment_means, (segment_means.x, segment_means.y), epsg=3577)
-    #find the width and height of the xarray dataset we want to mask
-    width,height = segment_means.shape
-    
+    transform, projection = SpatialTools.geotransform(segment_means, (segment_means.x, segment_means.y), epsg=3577)
     SpatialTools.array_to_geotiff(results_ + AOI + "_" + year + output_suffix +".tif",
                   e, geo_transform = transform, 
                   projection = projection, 
@@ -106,11 +108,11 @@ def irrigated_extent(tif):
     smallArea = gdf['area'] <= 50000000
     gdf = gdf[smallArea]
     
-    gdf = gdf[gdf.DN==80]
+    gdf = gdf[gdf.DN==60]
     gdf = gdf[gdf.area>100000]
     
     print('exporting _80polys_10ha shapefile')
-    gdf.to_file(results_ + AOI + "_" + year + "_80polys_10ha.shp")
+    gdf.to_file(results_ + AOI + "_" + year + "_60polys_10ha.shp")
         
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print('finished processing ' + tif)
