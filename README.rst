@@ -2,7 +2,7 @@
 
 Overview of DEA Notebooks
 =========================
-This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. If you need to join the NCI first, read about joining the NCI here:  http://geoscienceaustralia.github.io/digitalearthau/connect/account.html 
+This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. If you need to join the NCI first, read about joining the NCI here:  https://docs.dea.ga.gov.au/connect/account.html.
 
 Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an Issue in the Github repository, or fix it yourself and create a Pull request to contribute the updated function back into the repository (See the repository README for instructions on creating a Pull request).
 
@@ -37,7 +37,7 @@ The basic structure of this repository is designed to keep 'all' of the DEA Jupy
 Getting started with DEA notebooks
 ----------------------------------
 
-To start contributing to the DEA notebooks page, first read through the `Publishing finished notebooks`_ section to ensure that your notebook meets all the metadata and formatting requirements. This should only take a few minutes, and ensures that all notebooks are thoroughly documented so that they can be understood by all users, and rendered correctly on the `DEA User Guide page <http://geoscienceaustralia.github.io/digitalearthau/index.html>`_.
+To start contributing to the DEA notebooks page, first read through the `Publishing finished notebooks`_ section to ensure that your notebook meets all the metadata and formatting requirements. This should only take a few minutes, and ensures that all notebooks are thoroughly documented so that they can be understood by all users, and rendered correctly on the `DEA User Guide page <https://docs.dea.ga.gov.au/index.html>`_.
 
 Once you have checked that your notebook meets all the publishing requirements, there are two main options for interacting with ``dea-notebooks``:
 
