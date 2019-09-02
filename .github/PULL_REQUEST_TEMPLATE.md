@@ -15,3 +15,5 @@ Include a brief description of the changes being proposed, and why they are nece
 - [ ] Include details of environments known to be compatible with the notebook
 - [ ] Ensure that all code cells follow PEP8
 - [ ] Include relevant tags in the final notebook cell (refer to the [DEA Tags Index](https://docs.dea.ga.gov.au/genindex.html))
+- [ ] Remove any unused/empty code cells
+- [ ] Remove any guidance cells (e.g. `Style tips`)
