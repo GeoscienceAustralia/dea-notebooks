@@ -4,8 +4,8 @@ _Note: checklist below only relevant if committing to the [`develop`](https://gi
 Include a brief description of the changes being proposed, and why they are necessary.
 
 ### Closes issues (optional)
-Closes Issue #000
-Closes Issue #000
+- Closes Issue #000
+- Closes Issue #000
 
 ### Checklist (replace `[ ]` with `[x]` to check off)
 - [ ] Notebook created using the [DEA-notebooks template](https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop)
