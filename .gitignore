@@ -15,6 +15,7 @@
 *.wmv
 *.png
 *.nc
+*.csv
 *.nfs*
 *.DS_Store
 Advanced_coastal/output_data/*
