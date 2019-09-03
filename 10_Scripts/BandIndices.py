@@ -2,20 +2,212 @@
 """
 This code allows for the quick calculation of remote sensing band indices.
 
-Date: Novemeber 2018
-Authors: Claire Krause, Bex Dunn, Robbi Bishop-Taylor
+Date: June 2018
+Authors: Claire Krause, Bex Dunn
 
 Available functions:
-    calculate_indices  : NDVI, GNDVI, NDWI, NDMI
+    calculate indices  : NDVI, GNDVI, NDWI, NDMI
     geological_indices : CMR, FMR, IOR
     tasseled_cap       : Brightness, Greenness, Wetness
 
 """
-
 #Load modules
 import dask
 import numpy as np
 import xarray as xr
+
+
+# Define custom functions
+def band_indices(ds, index='NDVI', 
+                 custom_varname=None, 
+                 source='LandsatCollection2'): 
+    
+    """
+    Takes an xarray dataset containing spectral bands, calculates one of a 
+    set of remote sensing indices, and adds the resulting array as a new variable 
+    in the original dataset.    
+
+    Last modified: September 2019
+    Author: Robbi Bishop-Taylor
+    
+    Parameters
+    ----------  
+    ds : xarray Dataset
+        A two-dimensional or multi-dimensional array with spectral bands named 
+        'red', 'green', 'blue', 'nir', 'swir1' or 'swir2'. These bands are used
+        as inputs to calculate the selected water index.
+    index : str, optional
+        A string giving the name of the index to calculate. Valid options:
+        'NDVI' (Normalised Difference Vegation Index, Rouse 1973)
+        'EVI' (Enhanced Vegetation Index, Huete 2002),
+        'LAI' (Leaf Area Index, Boegh 2002),
+        'SAVI' (Soil Adjusted Vegetation Index, Huete 1988),
+        'NDMI' (Normalised Difference Moisture Index, Gao 1996),
+        'NBR' (Normalised Burn Ratio, Lopez Garcia 1991),
+        'BAI' (Burn Area Index, Martin 1998),
+        'NDBI' (Normalised Difference Built-Up Index, Zha 2003),
+        'NDSI' (Normalised Difference Snow Index, Hall 1995),
+        'NDWI' (Normalised Difference Water Index, McFeeters 1996), 
+        'MNDWI' (Modified Normalised Difference Water Index, Xu 1996), 
+        'AWEI_ns (Automated Water Extraction Index - no shadows, Feyisa 2014)',
+        'AWEI_sh' (Automated Water Extraction Index - shadows, Feyisa 2014), 
+        'WI' (Water Index, Fisher 2016),
+        'TCW' (Tasseled Cap Wetness, Crist 1985),
+        'TCG' (Tasseled Cap Greeness, Crist 1985),
+        'TCB' (Tasseled Cap Brightness, Crist 1985),
+        'CMR' (Clay Minerals Ratio, Drury 1987),
+        'FMR' (Ferrous Minerals Ratio, Segal 1982),
+        'IOR' (Iron Oxide Ratio, Segal 1982)
+        Defaults to 'NDVI'.        
+    custom_varname : str, optional
+        By default, the function will return the original dataset with a new
+        index variable named after `index` (e.g. 'NDVI'). To specify
+        a custom name instead, you can supply e.g. `custom_varname='custom_name'`. 
+    collection : str, optional
+        An optional string that tells the function what dataset or data 
+        collection is being used to calculate the index. This is necessary 
+        because Landsat Collection 2, Landsat Collection 3 and Sentinel 2 use
+        different names for bands covering a similar spectra. Valid options
+        are 'LandsatCollection2', 'LandsatCollection3' and 'Sentinel2';
+        defaults to 'LandsatCollection2'.
+        
+    Returns
+    -------
+    ds : xarray Dataset
+        The original xarray Dataset inputted into the function, with a new band
+        containing the remote sensing index as a DataArray.
+    """           
+   
+    # Dictionary containing remote sensing index band recipes
+    index_dict = {
+                  # Normalised Difference Vegation Index, Rouse 1973
+                  'NDVI': lambda ds: (ds.nir - ds.red) / (ds.nir + ds.red),
+        
+                  # Enhanced Vegetation Index, Huete 2002
+                  'EVI': lambda ds: ((2.5 * (ds.nir - ds.red)) / 
+                                     (ds.nir + 6 * ds.red - 7.5 * ds.blue + 1)),
+        
+                  # Leaf Area Index, Boegh 2002
+                  'LAI': lambda ds: (3.618 * ((2.5 * (ds.nir - ds.red)) / 
+                                     (ds.nir + 6 * ds.red - 7.5 * ds.blue + 1))
+                                     - 0.118),
+        
+                  # Soil Adjusted Vegetation Index, Huete 1988
+                  'SAVI': lambda ds: ((1.5 * (ds.nir - ds.red)) / 
+                                      (ds.nir + ds.red + 0.5)),
+        
+                  # Normalised Difference Moisture Index, Gao 1996 
+                  'NDMI': lambda ds: (ds.nir - ds.swir1) / (ds.nir + ds.swir1),
+        
+                  # Normalised Burn Ratio, Lopez Garcia 1991
+                  'NBR': lambda ds: (ds.nir - ds.swir1) / (ds.nir + ds.swir1),
+        
+                  # Burn Area Index, Martin 1998
+                  'BAI': lambda ds: (1.0 / ((0.10 - ds.red) ** 2 + 
+                                            (0.06 - ds.nir) ** 2)),
+        
+                  # Normalised Difference Built-Up Index, Zha 2003
+                  'NDBI': lambda ds: (ds.swir1 - ds.nir) / (ds.swir1 + ds.nir),
+        
+                  # Normalised Difference Snow Index, Hall 1995
+                  'NDSI': lambda ds: (ds.green - ds.swir1) / (ds.green + ds.swir1),
+        
+                  # Normalised Difference Water Index, McFeeters 1996
+                  'NDWI': lambda ds: (ds.green - ds.nir) / (ds.green + ds.nir),
+        
+                  # Modified Normalised Difference Water Index, Xu 2006
+                  'MNDWI': lambda ds: (ds.green - ds.swir1) / (ds.green + ds.swir1),
+        
+                  # Automated Water Extraction Index (no shadows), Feyisa 2014
+                  'AWEI_ns': lambda ds: (4 * (ds.green - ds.swir1) -
+                                        (2.5 * ds.nir * + 2.75 * ds.swir2)),
+        
+                  # Automated Water Extraction Index (shadows), Feyisa 2014
+                  'AWEI_sh': lambda ds: (ds.blue + 2.5 * ds.green - 
+                                         1.5 * (ds.nir + ds.swir1) - 2.5 * ds.swir2),
+    
+                  # Water Index, Fisher 2016
+                  'WI': lambda ds: (1.7204 + 171 * ds.green + 3 * ds.red - 
+                                    70 * ds.nir - 45 * ds.swir1 - 71 * ds.swir2),
+        
+                  # Tasseled Cap Wetness, Crist 1985
+                  'TCW': lambda ds: (0.0315 * ds.blue + 0.2021 * ds.green + 
+                                     0.3102 * ds.red + 0.1594 * ds.nir + 
+                                    -0.6806 * ds.swir1 + -0.6109 * ds.swir2),
+        
+                  # Tasseled Cap Greeness, Crist 1985
+                  'TCG': lambda ds: (-0.1603 * ds.blue + -0.2819 * ds.green + 
+                                     -0.4934 * ds.red + 0.7940 * ds.nir + 
+                                     -0.0002 * ds.swir1 + -0.1446 * ds.swir2),
+        
+                  # Tasseled Cap Brightness, Crist 1985
+                  'TCB': lambda ds: (0.2043 * ds.blue + 0.4158 * ds.green + 
+                                     0.5524 * ds.red + 0.5741 * ds.nir + 
+                                     0.3124 * ds.swir1 + -0.2303 * ds.swir2),
+    
+                  # Clay Minerals Ratio, Drury 1987
+                  'CMR': lambda ds: (ds.swir1 / ds.swir2),
+        
+                  # Ferrous Minerals Ratio, Segal 1982
+                  'FMR': lambda ds: (ds.swir1 / ds.nir),
+        
+                  # Iron Oxide Ratio, Segal 1982
+                  'IOR': lambda ds: (ds.red / ds.blue)
+    } 
+    
+    # Select a water index function based on 'water_index'    
+    index_func = index_dict[index]
+    
+    # Rename bands to a consistent format if either 'Collection3'
+    # or 'Sentinel2' is specified by `source`
+    if source == 'Collection3':
+        
+        # Dictionary mapping full data names to simpler 'red' alias names
+        bandnames_dict = {'nbart_red': 'red', 'nbart_green': 'green',
+                          'nbart_blue': 'blue', 'nbart_nir': 'nir',
+                          'nbart_swir_1': 'swir1', 'nbart_swir_2': 'swir2',
+                          'nbar_red': 'red', 'nbar_green': 'green',
+                          'nbar_blue': 'blue', 'nbar_nir': 'nir', 
+                          'nbar_swir_1': 'swir1', 'nbar_swir_2': 'swir2'}
+
+        # Rename bands in dataset to use simple names (e.g. 'red')
+        bands_to_rename = {a: b for a, b in bandnames_dict.items() if a in ds.variables}
+        
+    elif source == 'Sentinel2':
+        
+        # Dictionary mapping full data names to simpler 'red' alias names
+        bandnames_dict = {'nbart_red': 'red', 'nbart_green': 'green',
+                          'nbart_blue': 'blue', 'nbart_nir_1': 'nir',
+                          'nbart_swir_2': 'swir1', 'nbart_swir_3': 'swir2',
+                          'nbar_red': 'red', 'nbar_green': 'green',
+                          'nbar_blue': 'blue', 'nbar_nir': 'nir',
+                          'nbar_swir_2': 'swir1', 'nbar_swir_3': 'swir2'}
+
+        # Rename bands in dataset to use simple names (e.g. 'red')
+        bands_to_rename = {a: b for a, b in bandnames_dict.items() if a in ds.variables}
+
+    elif source == 'Collection2':
+        
+        # For the DEA Collection 2, pass an empty dict as no bands need renaming
+        bands_to_rename = {}
+
+    
+    # Apply water index function to data and add to input dataset. If a custom name
+    # is supplied for the output water index variable, use it.
+    if custom_varname:        
+        
+        # Apply function after normalising to a 0.0-1.0 range by dividing by 10,000
+        ds[custom_varname] = index_func(ds.rename(bands_to_rename) / 10000.0)
+        
+    else:
+        
+        # Apply function after normalising to a 0.0-1.0 range by dividing by 10,000
+        ds[index] = index_func(ds.rename(bands_to_rename) / 10000.0)
+    
+    # Return input dataset with added water index variable
+    return ds
+
+
 
 def calculate_indices(ds, index):
 
@@ -30,13 +222,8 @@ def calculate_indices(ds, index):
     Available indices:
     - NDVI: Normalised Difference Vegetation Index
     - GNDVI: Green Normalised Difference Vegetation Index
-    - NDWI or NDWI-nir: Normalised Difference Water Index
-    - MNDWI or NDWI-swir: Modified Normalised Difference Water Index
+    - NDWI: Normalised Difference Water Index
     - NDMI: Normalised Difference Moisture Index
-    - AWEI_noshadow: Automated Water Extraction Index
-    - AWEI_shadow: Automated Water Extraction Index
-    - NDSI: Normalized Difference Snow Index
-    - NBR: Normalised Burn Ratio
 
     inputs:
     ds - dataset containing the bands needed for index calculation
@@ -47,39 +234,8 @@ def calculate_indices(ds, index):
     
     """
 
-    if index == 'NDVI':
-        print(f'Computing {index} using formula `(nir - red)/(nir + red)` for Landsat or '
-              '`(nir_1 - red)/(nir_1 + red)` for Sentinel 2')
-        try:
-            indexout = ((ds.nir - ds.red)/(ds.nir + ds.red))
-        except AttributeError:
-            try:
-                # Assume the user wants to use nbart unless they explicity state otherwise
-                indexout = ((ds.nbart_nir_1 - ds.nbart_red)/(ds.nbart_nir_1 + ds.nbart_red))
-            except AttributeError:
-                try:
-                    indexout = ((ds.nbar_nir_1 - ds.nbar_red)/(ds.nbar_nir_1 + ds.nbar_red))
-                except:
-                    print('Error! NDVI requires red and nir bands (nir_1 for Sentinel 2)') 
-    
-    elif index == 'GNDVI':
-        print(f'Computing {index} using formula `(nir - green)/(nir + green)` for Landsat or '
-              '`(nir_1 - green)/(nir_1 + green)` for Sentinel 2')
-        try:
-            indexout = ((ds.nir - ds.green)/(ds.nir + ds.green))
-        except AttributeError:
-            try:
-                # Assume the user wants to use nbart unless they explicity state otherwise
-                indexout = ((ds.nbart_nir_1 - ds.nbart_green)/(ds.nbart_nir_1 + ds.nbart_green))
-            except AttributeError:
-                try:
-                    indexout = ((ds.nbar_nir_1 - ds.nbar_green)/(ds.nbar_nir_1 + ds.nbar_green))
-                except:
-                    print('Error! GNDVI requires green and nir bands (nir_1 for Sentinel 2)')
-                    
-    elif (index == 'NDWI') or (index == 'NDWI-nir'):
-        print(f'Computing {index} using formula `(green - nir)/(green + nir)` for Landsat or '
-              '`(green - nir_1)/(green + nir_1)` for Sentinel 2')
+    if index == 'NDWI-nir':
+        print('The formula we are using is (green - nir)/(green + nir)')
         try:
             indexout = ((ds.green - ds.nir)/(ds.green + ds.nir))
         except AttributeError:
@@ -90,111 +246,77 @@ def calculate_indices(ds, index):
                 try:
                     indexout = ((ds.nbar_green - ds.nbar_nir_1)/(ds.nbar_green + ds.nbar_nir_1))
                 except:
-                    print('Error! NDWI requires green and nir bands (nir_1 for Sentinel 2)')
-                    
-    elif (index == 'MNDWI') or (index == 'NDWI-swir') or (index == 'NDSI'):
-        print(f'Computing {index} using formula `(green - swir1)/(green + swir1)` for Landsat or '
-              '`(green - swir_2)/(green + swir_2)` for Sentinel 2')
+                    print('Error! NDWI requires green and nir bands')
+    elif index == 'ModifiedNDWI':
+        print('The formula we are using is (green - swir1)/(green + swir1)')
         try:
             indexout = ((ds.green - ds.swir1)/(ds.green + ds.swir1))
         except AttributeError:
             try:
                 # Assume the user wants to use nbart unless they explicity state otherwise
-                indexout = ((nbart_green - ds.nbart_swir_2)/(nbart_green + ds.nbart_swir_2))
+                indexout = ((nbart_green - ds.nbart_swir_1)/(nbart_green + ds.nbart_swir_1))
             except AttributeError:
                 try:
-                    indexout = ((nbar_green - ds.nbar_swir_2)/(nbar_green + ds.nbar_swir_2))
+                    indexout = ((nbar_green - ds.nbar_swir_1)/(nbar_green + ds.nbar_swir_1))
                 except:
-                    print('Error! NDWI requires green and swir1 bands (swir_2 for Sentinel 2)')
-                    
-    elif index == 'NDMI':
-        print(f'Computing {index} using formula `(nir - swir1)/(nir + swir1)` for Landsat or '
-              '`(nir_1 - swir_2)/(nir_1 + swir_2)` for Sentinel 2')
+                    print('Error! NDWI requires green and swir1 bands')
+    elif index == 'NDVI':
+        print('The formula we are using is (nir - red)/(nir + red)')
+        try:
+            indexout = ((ds.nir - ds.red)/(ds.nir + ds.red))
+        except AttributeError:
+            try:
+                # Assume the user wants to use nbart unless they explicity state otherwise
+                indexout = ((ds.nbart_nir_1 - ds.nbart_red)/(ds.nbart_nir_1 + ds.nbart_red))
+            except AttributeError:
+                try:
+                    indexout = ((ds.nbar_nir_1 - ds.nbar_red)/(ds.nbar_nir_1 + ds.nbar_red))
+                except:
+                    print('Error! NDVI requires red and nir bands')  
+    elif index == 'GNDVI':
+        print('The formula we are using is (nir - green)/(nir + green)')
+        try:
+            indexout = ((ds.nir - ds.green)/(ds.nir + ds.green))
+        except AttributeError:
+            try:
+                # Assume the user wants to use nbart unless they explicity state otherwise
+                indexout = ((ds.nbart_nir_1 - ds.nbart_green)/(ds.nbart_nir_1 + ds.nbart_green))
+            except AttributeError:
+                try:
+                    indexout = ((ds.nbar_nir_1 - ds.nbar_green)/(ds.nbar_nir_1 + ds.nbar_green))
+                except:
+                    print('Error! GNDVI requires green and nir bands')
+    elif index == 'NDMI-green':
+        print('The formula we are using is (swir1 - green)/(swir1 + green)')
+        try:
+            indexout = ((ds.swir1 - ds.green)/(ds.swir1 + ds.green))
+        except AttributeError:
+            try:
+                # Assume the user wants to use nbart unless they explicity state otherwise
+                indexout = ((ds.nbart_swir_1 - ds.nbart_green)/(ds.nbart_swir_1 + ds.nbart_green))
+            except AttributeError:
+                try:
+                    indexout = ((ds.nbar_swir_1 - ds.nbar_green)/(ds.nbar_swir_1 + ds.nbar_green))
+                except:
+                    print('Error! NDMI-green requires green and swir1 bands')
+    elif index == 'NDMI-nir':
+        print('The formula we are using is (nir - swir1)/(nir + swir1)')
         try:
             indexout = ((ds.nir - ds.swir1)/(ds.nir + ds.swir1))
         except AttributeError:
             try:
                 # Assume the user wants to use nbart unless they explicity state otherwise
-                indexout = ((ds.nbart_nir_1 - ds.nbart_swir_2)/(ds.nbart_nir_1 + ds.nbart_swir_2))
+                indexout = ((ds.nbart_nir_1 - ds.nbart_swir_1)/(ds.nbart_nir_1 + ds.nbart_swir_1))
             except AttributeError:
-                try: 
-                    indexout = ((ds.nbar_nir_1 - ds.nbar_swir_2)/(ds.nbar_nir_1 + ds.nbar_swir_2))
-                except:
-                    print('Error! NDMI requires nir and swir1 bands (swir_2 for Sentinel 2)')  
-                    
-    elif (index == 'AWEI_noshadow'):
-        print(f'Computing {index} using formula `4 * (green - swir1) - (0.25 * nir + 2.75 * swir1)` for Landsat or '
-              '`4 * (green - swir_2) - (0.25 * nir + 2.75 * swir_2)` for Sentinel 2')
-        try:
-            ds2 = ds[['green', 'nir', 'swir1']] / 10000
-            indexout = (4 * (ds2.green - ds2.swir1) - (0.25 * ds2.nir + 2.75 * ds2.swir1))
-        except AttributeError:
-            try:
-                # Assume the user wants to use nbart unless they explicity state otherwise
-                ds2 = ds[['nbart_green', 'nbart_swir_2', 'nbart_nir']] / 10000
-                indexout = (4 * (ds2.nbart_green - ds2.nbart_swir_2) - (0.25 * ds2.nbart_nir + 2.75 * ds2.nbart_swir_2))
-            except AttributeError:
-                try: 
-                    ds2 = ds[['nbar_green', 'nbar_swir_2', 'nbar_nir']] / 10000
-                    indexout = (4 * (ds2.nbar_green - ds2.nbar_swir_2) - (0.25 * ds2.nbar_nir + 2.75 * ds2.nbar_swir_2))
-                except:
-                    print('Error! AWEI_noshadow requires green, nir and swir1 bands (swir_2 for Sentinel 2)')  
-                    
-    elif (index == 'AWEI_shadow'):
-        print(f'Computing {index} using formula `blue + 2.5 * green - 1.5 * (nir + swir1) - 0.25 * swir2` for Landsat or '
-              '`blue + 2.5 * green - 1.5 * (nir + swir_2) - 0.25 * swir_3` for Sentinel 2')
-        try:
-            ds2 = ds[['blue', 'green', 'nir', 'swir1', 'swir2']] / 10000
-            indexout = ds2.blue + 2.5 * ds2.green - 1.5 * (ds2.nir + ds2.swir1) - 0.25 * ds2.swir2
-        except AttributeError:
-            try:
-                # Assume the user wants to use nbart unless they explicity state otherwise
-                ds2 = ds[['nbart_blue', 'nbart_green', 'nbart_nir', 'nbart_swir_2', 'nbart_swir_3']] / 10000
-                indexout = ds2.nbart_blue + 2.5 * ds2.nbart_green - 1.5 * (ds2.nbart_nir + ds2.nbart_swir_2) - 0.25 * ds2.nbart_swir_3
-            except AttributeError:
-                try: 
-                    ds2 = ds[['nbar_blue', 'nbar_green', 'nbar_nir', 'nbar_swir_2', 'nbar_swir_3']] / 10000
-                    indexout = ds2.nbar_blue + 2.5 * ds2.nbar_green - 1.5 * (ds2.nbar_nir + ds2.nbar_swir_2) - 0.25 * ds2.nbar_swir_3
-                except:
-                    print('Error! AWEI_shadow requires blue, green, nir, swir1 and swir2 bands (swir_2 and swir_3 for Sentinel 2)')  
-                    
-    elif (index == 'WI'):
-        print(f'Computing {index} using formula `1.7204 + (171 * green) + (3 * red) - (70 * nir) - (45 * swir1) - (71 * swir2)` for Landsat or '
-              '`1.7204 + (171 * green) + (3 * red) - (70 * nir) - (45 * swir_2) - (71 * swir_3)` for Sentinel 2')
-        try:
-            ds2 = ds[['red', 'green', 'nir', 'swir1', 'swir2']] / 10000
-            indexout = 1.7204 + (171 * ds2.green) + (3 * ds2.red) - (70 * ds2.nir) - (45 * ds2.swir1) - (71 * ds2.swir2)
-        except AttributeError:
-            try:
-                # Assume the user wants to use nbart unless they explicity state otherwise
-                ds2 = ds[['nbart_red', 'nbart_green', 'nbart_nir', 'nbart_swir_2', 'nbart_swir_3']] / 10000
-                indexout = 1.7204 + (171 * ds2.nbart_green) + (3 * ds2.nbart_red) - (70 * ds2.nbart_nir) - (45 * ds2.nbart_swir_2) - (71 * ds2.nbart_swir_3)
-            except AttributeError:
-                try: 
-                    ds2 = ds[['nbar_red', 'nbar_green', 'nbar_nir', 'nbar_swir_2', 'nbar_swir_3']] / 10000
-                    indexout = 1.7204 + (171 * ds2.nbar_green) + (3 * ds2.nbar_red) - (70 * ds2.nbar_nir) - (45 * ds2.nbar_swir_2) - (71 * ds2.nbar_swir_3)
-                except:
-                    print('Error! WI requires red, green, nir, swir1 and swir2 bands (swir_2 and swir_3 for Sentinel 2)')  
-                    
-    elif index == 'NBR':
-        print(f'Computing {index} using formula (nir - swir2)/(nir + swir2) for Landsat or '
-              '(nir_1 - swir_3)/(nir_1 + swir_3) for Sentinel 2')
-        try:
-            indexout = ((ds.nir - ds.swir2)/(ds.nir + ds.swir2))
-        except AttributeError:
-            try:
-                # Assume the user wants to use nbart unless they explicity state otherwise
-                indexout = ((ds.nbart_nir_1 - ds.nbart_swir_3)/(ds.nbart_nir_1 + ds.nbart_swir_3))
-            except AttributeError:
-                try: 
-                    indexout = ((ds.nbar_nir_1 - ds.nbar_swir_3)/(ds.nbar_nir_1 + ds.nbar_swir_3))
-                except:
-                    print('Error! NBR requires nir and swir2 bands (swir_3 for Sentinel 2)') 
+               try: 
+                   indexout = ((ds.nbar_nir_1 - ds.nbar_swir_1)/(ds.nbar_nir_1 + ds.nbar_swir_1))
+               except:
+                   print('Error! NDMI-nir requires nir and swir1 bands')
     try:
         return indexout
     except:
-        print('Hmmmmm. I don\'t recognise that index. Valid options currently include NDVI, GNDVI, '
-              'NDWI/NDWI-nir, MNDWI/NDWI-swir, NDSI, AWEI-noshadow, AWEI-shadow, WI, NBR')
+        print('Hmmmmm. I don\'t recognise that index. '
+              'Options I currently have are NDVI, GNDVI, NDMI-green, NDMI-nir, NDWI and ModifiedNDWI.')
 
 
 def geological_indices(ds, index):

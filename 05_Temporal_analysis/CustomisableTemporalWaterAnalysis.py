@@ -4,20 +4,19 @@
 # # Extract customisable time-series of inundation within a polygon using Landsat data
 
 # **What does this notebook do?** 
-# 
+ 
 # This notebook uses a polygon to query all of Landsat 5, 7 and 8 data available from 1987 onward, optionally filter to drop cloudy scenes, mask out remaining cloud and invalid data, then compute one of several water indices on the data to indentify open water. The resulting dataset can then be used to generate a timeseries of total inundated pixels which is exported as both a CSV of metrics and water index/RGB images for each timestep. 
-# 
+
 # This methodology is a simplified version of the Digital Earth Australia _Water Area Mapping and Monitoring_ product (WAMM). WAMM maps the location of persistent waterbodies in the Australian landscape, then monitors changes to the surface area of water within each waterbody through time. For more information, see the [following Jupyter notebook](https://github.com/GeoscienceAustralia/dea-notebooks/blob/ClaireK/WaterbodyAreaMappingandMonitoring/GenerateWaterBodyPolygons.ipynb).
-# 
+
 # **Requirements:**
-# 
+ 
 # You need to run the following commands from the command line prior to launching jupyter notebooks from the same terminal so that the required libraries and paths are set:
-# 
-# `module use /g/data/v10/public/modules/modulefiles` 
-# 
+ 
+# `module use /g/data/v10/public/modules/modulefiles`
 # `module load dea`    
-# 
-# This notebook uses three external functions called `load_clearlandsat` and `rgb`. These functions are available in the `10_Scripts` folder of the [dea-notebooks Github repository](https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/10_Scripts). Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an 'Issue' in the Github repository, or fix it yourself and create a 'Pull' request to contribute the updated function back into the repository (See the repository [README](https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/README.rst) for instructions on creating a Pull request).
+
+# This notebook uses an external function called `load_clearlandsat`. This function is available in the `10_Scripts` folder of the [dea-notebooks Github repository](https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/10_Scripts). Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an 'Issue' in the Github repository, or fix it yourself and create a 'Pull' request to contribute the updated function back into the repository (See the repository [README](https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/README.rst) for instructions on creating a Pull request).
 # 
 # **Date:** August 2019
 
@@ -158,18 +157,23 @@ def water_indices(ds, water_index='NDWI', custom_varname=None, source='Collectio
     # Return input dataset with added water index variable
     return ds
 
+
 ##############################
 # Set up required parameters #
 ##############################
 
-# All parameters that need to be modified are listed below. The default values will load 25m resolution Landsat data for an example polygon, keeping only images with more than 90% cloud free pixels. These images will then be classified into water vs non-water using the `MNDWI` index using a threshold of 0.
+# All parameters that need to be modified are listed below. The default values will load 
+# 25m resolution Landsat data for an example polygon, keeping only images with more than 
+# 90% cloud free pixels. These images will then be classified into water vs non-water 
+# using the `MNDWI` index using a threshold of 0.
 
 # Time range including a from and to date to load data. Can be in the format 
 # ('1995', '2003'), ('1995-01', '2003-12') or ('1995-01-01', '2003-12-30')
-time_range = ('2018', '2018')
+time_range = ('2015', '2018')
 
 # A path to the polygon used to extract data from the datacube
 polygon_path = '/g/data/r78/rt1527/dea-notebooks/05_Temporal_analysis/large_waterbody_test.shp'
+# polygon_path = '../Supplementary_data/Files/WA_example_waterbody.shp'
 
 # The projection system you wish to load the data in; default is 'EPSG:3577'
 output_crs = 'EPSG:3577'
@@ -196,7 +200,8 @@ water_index_thresh = 0.0
 # Read in polygon #
 ###################
 
-# Read in an example polygon from file, re-project it to match the desired output CRS, and prepare it to extract data from the datacube.
+# Read in an example polygon from file, re-project it to match the desired output CRS, 
+# and prepare it to extract data from the datacube.
 
 # Read in polygon from file into a geopandas dataframe
 waterbody_polygon = gpd.read_file(polygon_path)
@@ -210,192 +215,236 @@ geom = geometry.Geometry(waterbody_polygon_albers.iloc[0].geometry.__geo_interfa
                          crs=geometry.CRS(output_crs))
 
 
+#######################
+# Test waterbody size #
+#######################
+
+# Large waterbodies can use an extremely large amount of memory. Here we test if the
+# waterbody is larger than a threshold (e.g. 2000000 m^2), and if so, break the time
+# series into smaller 1 year chunks which are analysed one-by-one.
+
+if waterbody_polygon_albers.area.item() > 2000000:  #2000000:
+    
+    # If the waterbody is large, turn the `time_range` into a list of 1 year chunks
+    # that we will iterate through in a loop below
+    print('Large waterbody, running time series in annual chunks to reduce memory')    
+    time_periods_start = pd.date_range(start=time_range[0], end=time_range[1], freq='1YS')
+    time_periods_end = time_periods_start + pd.offsets.DateOffset(years=1)
+    time_periods_iter = list(zip(time_periods_start.astype(str), 
+                                 time_periods_end.astype(str)))
+
+else: 
+    
+    # If the waterbody is small, use the time range as-is
+    print('Small waterbody, running entire time series')
+    time_periods_iter = [time_range]
+
+
 ###################################################
 # Load data from Digital Earth Australia datacube #
 ###################################################
 
-# Here we use the `load_clearlandsat` function to extract a timeseries of Landsat data from the Landsat 5, 7 and 8 satellites. By default, we include the entire Landsat timeseries including images taken after the 2003 Landsat 7 SLC-off failure (to remove this, set `ls7_slc_off=True` to `ls7_slc_off=False`). The function keeps only images containing a minimum percentage of cloud-free pixels, and combines data from the three satellites into a single dataset with cloudy/invalid pixels marked as `NaN`.
+# Here we use the `load_clearlandsat` function to extract a timeseries of Landsat 
+# data from the Landsat 5, 7 and 8 satellites. By default, we include the entire 
+# Landsat timeseries including images taken after the 2003 Landsat 7 SLC-off failure 
+# (to remove this, set `ls7_slc_off=True` to `ls7_slc_off=False`). The function keeps
+# only images containing a minimum percentage of cloud-free pixels, and combines data 
+# from the three satellites into a single dataset with cloudy/invalid pixels marked 
+# as `NaN`.
 
 # Connect to datacube database
 dc = datacube.Datacube(app='Customisable water analysis')
 
-# Loading data from the datacube requires a spatiotemporal query that informs
-# the datacube of the area, time period and other parameters used to load the data
-query = {'geopolygon': geom,   
-         'time': time_range,
-         'output_crs': output_crs,
-         'resolution': output_res} 
+for time_range in time_periods_iter: 
 
-# Set up a custom dictionary which tells the `load_clearlandsat` function what
-# pixels to mark as being 'unclear' based on the Landsat's pixel quality data.
-# We do not include the `'contiguous': True` argument here, because this causes
-# Landsat 7 SLC-off observations to be dropped before they are loaded (see below)
-mask_dict = {'cloud_acca': 'no_cloud', 
-             'cloud_shadow_acca': 'no_cloud_shadow', 
-             'cloud_shadow_fmask': 'no_cloud_shadow', 
-             'cloud_fmask': 'no_cloud', 
-             'blue_saturated': False, 
-             'green_saturated': False, 
-             'red_saturated': False, 
-             'nir_saturated': False, 
-             'swir1_saturated': False, 
-             'swir2_saturated': False}
+    # Loading data from the datacube requires a spatiotemporal query that informs
+    # the datacube of the area, time period and other parameters used to load the data
+    query = {'geopolygon': geom,   
+             'time': time_range,
+             'output_crs': output_crs,
+             'resolution': output_res} 
 
-# The 'load_clearlandsat' function loads a subset of images from all of Landsat 5, 7
-# and 8 based on their cloudiness, and returns a single combined dataset where all 
-# remaining cloudy pixels are masked out as NAN values
-landsat_ds = DEADataHandling.load_clearlandsat(dc=dc, 
-                                               query=query,
-                                               sensors=['ls5', 'ls7', 'ls8'],
-                                               masked_prop=min_clearprop, 
-                                               mask_pixel_quality=True,
-                                               mask_invalid_data=True,
-                                               mask_dict=mask_dict,
-                                               ls7_slc_off=True)
+    # Set up a custom dictionary which tells the `load_clearlandsat` function what
+    # pixels to mark as being 'unclear' based on the Landsat's pixel quality data.
+    # We do not include the `'contiguous': True` argument here, because this causes
+    # Landsat 7 SLC-off observations to be dropped before they are loaded (see below)
+    mask_dict = {'cloud_acca': 'no_cloud', 
+                 'cloud_shadow_acca': 'no_cloud_shadow', 
+                 'cloud_shadow_fmask': 'no_cloud_shadow', 
+                 'cloud_fmask': 'no_cloud', 
+                 'blue_saturated': False, 
+                 'green_saturated': False, 
+                 'red_saturated': False, 
+                 'nir_saturated': False, 
+                 'swir1_saturated': False, 
+                 'swir2_saturated': False}
 
-# Typically, we use a pixel quality flag `'contiguous': True` to mask out pixels which 
-# have NA values in any of their spectral bands. However, this has the unintended side 
-# effect of causing SLC-off LS7 scenes to be dropped, as the function considers them to 
-# contain many missing/unclear values. As a workaround, we identify pixels with missing 
-# values *after* we load the data by testing if each pixel contains valid values in all 
-# six spectral bands. We can then use this mask to remove these pixels from our data:
-is_valid = landsat_ds.drop('data_perc').to_array().count(dim='variable') == 6
-landsat_ds = landsat_ds.where(is_valid)
+    # The 'load_clearlandsat' function loads a subset of images from all of Landsat 5, 7
+    # and 8 based on their cloudiness, and returns a single combined dataset where all 
+    # remaining cloudy pixels are masked out as NAN values
+    landsat_ds = DEADataHandling.load_clearlandsat(dc=dc, 
+                                                   query=query,
+                                                   sensors=['ls5', 'ls7', 'ls8'],
+                                                   masked_prop=min_clearprop, 
+                                                   mask_pixel_quality=True,
+                                                   mask_invalid_data=True,
+                                                   mask_dict=mask_dict,
+                                                   ls7_slc_off=True)
 
-
-#########################
-# Calculate water index #
-#########################
-
-# We use the `water_indices` function to calculate a water index based on the loaded Landsat bands. By default, we use the Modified Normalised Difference Water Index ('MNDWI') to identify open water, however valid options are listed below (see `Set up required parameters`):
-# - NDWI (Normalised Difference Water Index, McFeeters 1996)
-# - MNDWI (Modified Normalised Difference Water, Index, Xu 1996)
-# - AWEI_ns (Automated Water Extraction Index - no shadows, Feyisa 2014)
-# - AWEI_sh (Automated Water Extraction Index - shadows, Feyisa 2014)
-# - WI (Water Index, Fisher 2016)
-# - TCW (Tasseled Cap Wetness, Crist 1985)
-
-# We use the `water_indices` function to apply a water index of choice to the
-# Landsat dataset. The new index will appear as a new generically named 
-# 'water_index' variable in the dataset
-landsat_ds = water_indices(landsat_ds, 
-                           water_index=water_index, 
-                           custom_varname='water_index')
+    # Typically, we use a pixel quality flag `'contiguous': True` to mask out pixels which 
+    # have NA values in any of their spectral bands. However, this has the unintended side 
+    # effect of causing SLC-off LS7 scenes to be dropped, as the function considers them to 
+    # contain many missing/unclear values. As a workaround, we identify pixels with missing 
+    # values *after* we load the data by testing if each pixel contains valid values in all 
+    # six spectral bands. We can then use this mask to remove these pixels from our data:
+    is_valid = landsat_ds.drop('data_perc').to_array().count(dim='variable') == 6
+    landsat_ds = landsat_ds.where(is_valid)
 
 
-#################################
-# Mask out area outside polygon #
-#################################
+    #########################
+    # Calculate water index #
+    #########################
 
-# To focus on the area of the actual waterbody to calculate inundation statistics, we mask out pixels located outside the polygon boundary.
+    # We use the `water_indices` function to calculate a water index based on the loaded 
+    # Landsat bands. By default, we use the Modified Normalised Difference Water Index 
+    # ('MNDWI') to identify open water, however valid options are listed below (see 
+    # `Set up required parameters`):
+    # - NDWI (Normalised Difference Water Index, McFeeters 1996)
+    # - MNDWI (Modified Normalised Difference Water, Index, Xu 1996)
+    # - AWEI_ns (Automated Water Extraction Index - no shadows, Feyisa 2014)
+    # - AWEI_sh (Automated Water Extraction Index - shadows, Feyisa 2014)
+    # - WI (Water Index, Fisher 2016)
+    # - TCW (Tasseled Cap Wetness, Crist 1985)
 
-mask = rasterio.features.rasterize(shapes=[(waterbody_polygon_albers.iloc[0].geometry, 1)],
-                                   out_shape=(landsat_ds.dims['y'], landsat_ds.dims['x']),
-                                   transform=landsat_ds.geobox.transform)
-
-# Apply raster mask to dataset. This will automatically apply the mask to 
-# all timesteps and bands in the dataset.
-landsat_masked = landsat_ds.where(mask)
-
-
-#############################
-# Export inundation metrics #
-#############################
-
-# Using the masked dataset created above, we can now calculate overall inundation statistics for every timestep in the dataset. We calculate four overall metric types: the total number of pixels/area within the polygon, the total number of inundated pixels/area, the total number of dry pixels/area, and the total number of nodata/NaN pixels/area. Finally, our output statistics are saved to file as a CSV.
-
-# Calculate total, inundated, dry and NA stats across the timeseries
-pxct = mask.sum()  # get total pixels from polygon mask area
-pxin = (landsat_masked.water_index >= water_index_thresh).sum(dim=['x', 'y'])
-pxha = (landsat_masked.water_index < water_index_thresh).sum(dim=['x', 'y'])
-pxna = pxct - pxin - pxha  # nodata pixels = total - wet - dry
-
-# Compute areas in hectares by multiplying by square metres and dividing by 10000 for ha
-toha = pxct * np.abs(output_res[0] * output_res[1]) / 10000.0
-inha = pxin * np.abs(output_res[0] * output_res[1]) / 10000.0
-drha = pxha * np.abs(output_res[0] * output_res[1]) / 10000.0
-naha = pxna * np.abs(output_res[0] * output_res[1]) / 10000.0
-
-# Add to a single dataframe ready to be written out as a CSV with time as an index
-wateranalysis_df = pd.DataFrame(data={'pxct': pxct, 'pxin': pxin, 'pxha': pxha, 'pxna': pxna, 
-                                      'toha': toha, 'inha': inha, 'drha': drha, 'naha': naha },
-                                index=landsat_masked.time.values)
-
-# Write to file
-wateranalysis_df.to_csv(f'rel_indundation_{time_range[0]}-{time_range[1]}.csv', index_label='time')
-
-# Preview data
-wateranalysis_df.head()
+    # We use the `water_indices` function to apply a water index of choice to the
+    # Landsat dataset. The new index will appear as a new generically named 
+    # 'water_index' variable in the dataset
+    landsat_ds = water_indices(landsat_ds, 
+                               water_index=water_index, 
+                               custom_varname='water_index')
 
 
-##################################################
-# Export RGB and water index images and geotiffs #
-##################################################
+    #################################
+    # Mask out area outside polygon #
+    #################################
 
-# Finally, we export some accompanying images to help interpret the metrics in the CSV. This includes an RGB image and a water index image for each timestep in the dataset. Optionally, we can also export a geotiff file for each timestep for both the RGB bands and the water index variable.
+    # To focus on the area of the actual waterbody to calculate inundation statistics, 
+    # we mask out pixels located outside the polygon boundary.
 
-for time, i in landsat_ds.groupby('time'):
-    
-    ####################
-    # Plot water index #
-    ####################
-    
-    # Plot water index
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(i.water_index.values, 
-              cmap='RdBu',
-              extent=[i.extent.boundingbox[x] for x in [0, 2, 1, 3]],
-              vmin=-1.0, vmax=1.0)
-    
-    # Add polygon as an overlay over the top of the image
-    waterbody_polygon_albers.plot(ax=ax, facecolor='None', 
-                                  edgecolor='black', linestyle='--')
-    
-    # Export water index image to file
-    water_index_png = f'd{str(time)[0:10]}_{water_index}.png'
-    fig.savefig(water_index_png, bbox_inches='tight')
-    
-    # Close figure to save memory
-    plt.close(fig)
-    
- 
-    ############
-    # Plot RGB #
-    ############
-    
-    # To plot the RGB array, first we need to load it
-    # as a 3D numpy array with bands as the final axis
-    rgb_array = np.transpose(i[['red', 'green', 'blue']]
-                             .to_array()
-                             .values, 
-                             axes=[1, 2, 0])
-    
-    # Divide by 3000 to keep values between 0 and 1,
-    # and create a reasonably good colour stretch
-    rgb_array = (rgb_array / 3000).clip(0, 1)
-    
-    # Plot RGB array
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(rgb_array, 
-              extent=[i.extent.boundingbox[x] for x in [0, 2, 1, 3]])
-    
-    # Add polygon as an overlay over the top of the image
-    waterbody_polygon_albers.plot(ax=ax, facecolor='None', 
-                                  edgecolor='black', linestyle='--')
-    
-    # Export RGB image to file
-    rgb_png = f'd{str(time)[0:10]}_rgb.png'
-    fig.savefig(rgb_png, bbox_inches='tight')
-    
-    # Close figure to save memory
-    plt.close(fig)
-    
-    
-    ######################################
-    # OPTIONAL - export geotiffs to file #
-    ######################################
-    
-#     water_index_tif = f'd{str(time)[0:10]}_{water_index}.tif'
-#     rgb_tif = f'd{str(time)[0:10]}_rgb.tif'
-#     write_geotiff(filename=water_index_tif, dataset=i[['water_index']]) 
-#     write_geotiff(filename=rgb_tif, dataset=i[['red', 'green', 'blue']]) 
+    mask = rasterio.features.rasterize(shapes=[(waterbody_polygon_albers.iloc[0].geometry, 1)],
+                                       out_shape=(landsat_ds.dims['y'], landsat_ds.dims['x']),
+                                       transform=landsat_ds.geobox.transform)
+
+    # Apply raster mask to dataset. This will automatically apply the mask to 
+    # all timesteps and bands in the dataset.
+    landsat_masked = landsat_ds.where(mask)
+
+
+    #############################
+    # Export inundation metrics #
+    #############################
+
+    # Using the masked dataset created above, we can now calculate overall inundation 
+    # statistics for every timestep in the dataset. We calculate four overall metric 
+    # types: the total number of pixels/area within the polygon, the total number of 
+    # inundated pixels/area, the total number of dry pixels/area, and the total number 
+    # of nodata/NaN pixels/area. Finally, our output statistics are saved to file as a CSV.
+
+    # Calculate total, inundated, dry and NA stats across the timeseries
+    pxct = mask.sum()  # get total pixels from polygon mask area
+    pxin = (landsat_masked.water_index >= water_index_thresh).sum(dim=['x', 'y'])
+    pxha = (landsat_masked.water_index < water_index_thresh).sum(dim=['x', 'y'])
+    pxna = pxct - pxin - pxha  # nodata pixels = total - wet - dry
+
+    # Compute areas in hectares by multiplying by square metres and dividing by 10000 for ha
+    toha = pxct * np.abs(output_res[0] * output_res[1]) / 10000.0
+    inha = pxin * np.abs(output_res[0] * output_res[1]) / 10000.0
+    drha = pxha * np.abs(output_res[0] * output_res[1]) / 10000.0
+    naha = pxna * np.abs(output_res[0] * output_res[1]) / 10000.0
+
+    # Add to a single dataframe ready to be written out as a CSV with time as an index
+    wateranalysis_df = pd.DataFrame(data={'pxct': pxct, 'pxin': pxin, 'pxha': pxha, 'pxna': pxna, 
+                                          'toha': toha, 'inha': inha, 'drha': drha, 'naha': naha },
+                                    index=landsat_masked.time.values)
+
+    # Write to file
+    wateranalysis_df.to_csv(f'rel_indundation_{time_range[0]}-{time_range[1]}.csv', index_label='time')
+
+    # Preview data
+    wateranalysis_df.head()
+
+
+    ##################################################
+    # Export RGB and water index images and geotiffs #
+    ##################################################
+
+    # Finally, we export some accompanying images to help interpret the metrics in the CSV. 
+    # This includes an RGB image and a water index image for each timestep in the dataset. 
+    # Optionally, we can also export a geotiff file for each timestep for both the RGB bands 
+    # and the water index variable.
+
+    for time, i in landsat_ds.groupby('time'):
+
+        ####################
+        # Plot water index #
+        ####################
+
+        # Plot water index
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.imshow(i.water_index.values, 
+                  cmap='RdBu',
+                  extent=[i.extent.boundingbox[x] for x in [0, 2, 1, 3]],
+                  vmin=-1.0, vmax=1.0)
+
+        # Add polygon as an overlay over the top of the image
+        waterbody_polygon_albers.plot(ax=ax, facecolor='None', 
+                                      edgecolor='black', linestyle='--')
+
+        # Export water index image to file
+        water_index_png = f'd{str(time)[0:10]}_{water_index}.png'
+        fig.savefig(water_index_png, bbox_inches='tight')
+
+        # Close figure to save memory
+        plt.close(fig)
+
+
+        ############
+        # Plot RGB #
+        ############
+
+        # To plot the RGB array, first we need to load it
+        # as a 3D numpy array with bands as the final axis
+        rgb_array = np.transpose(i[['red', 'green', 'blue']]
+                                 .to_array()
+                                 .values, 
+                                 axes=[1, 2, 0])
+
+        # Divide by 3000 to keep values between 0 and 1,
+        # and create a reasonably good colour stretch
+        rgb_array = (rgb_array / 3000).clip(0, 1)
+
+        # Plot RGB array
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.imshow(rgb_array, 
+                  extent=[i.extent.boundingbox[x] for x in [0, 2, 1, 3]])
+
+        # Add polygon as an overlay over the top of the image
+        waterbody_polygon_albers.plot(ax=ax, facecolor='None', 
+                                      edgecolor='black', linestyle='--')
+
+        # Export RGB image to file
+        rgb_png = f'd{str(time)[0:10]}_rgb.png'
+        fig.savefig(rgb_png, bbox_inches='tight')
+
+        # Close figure to save memory
+        plt.close(fig)
+
+
+        ######################################
+        # OPTIONAL - export geotiffs to file #
+        ######################################
+
+    #     water_index_tif = f'd{str(time)[0:10]}_{water_index}.tif'
+    #     rgb_tif = f'd{str(time)[0:10]}_rgb.tif'
+    #     write_geotiff(filename=water_index_tif, dataset=i[['water_index']]) 
+    #     write_geotiff(filename=rgb_tif, dataset=i[['red', 'green', 'blue']]) 
