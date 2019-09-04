@@ -128,7 +128,7 @@ def WIT_da(query):
     An xarray.DataArray of Wetlands Insight Tool predictions for each pixel in an optical satellite dataset,
     given a query.
     """
-    landsat_masked_prop = 0.90
+    landsat_masked_prop = 0.50
     ls578_ds = DEADataHandling.load_clearlandsat(dc=dc, query=query, product='nbart',
         masked_prop=landsat_masked_prop)
     

@@ -237,6 +237,7 @@ def calc_gmm_timeseries(timeseries_ds,gmm,tmin=0,tmax=None, subcluster_model = N
     timeseries = np.empty([tmax-tmin,nc])
     
     
+    
     for i in range(tmax-tmin):
         sar_ds = timeseries_ds.isel(time=i+tmin)
         gm_input = _sklearn_flatten(sar_ds)
@@ -400,7 +401,9 @@ class SAR_Ktree():
             self.model = KMeans(n_clusters = branches, **kwargs)
         self.levels = levels
         if levels > 1:
-            self.branches = [SAR_Ktree(levels = levels-1,branches = branches) for _ in range(branches)]
+            self.branches = [SAR_Ktree(levels = levels-1,branches = branches, minibatch = minibatch, **kwargs) for _ in range(branches)]
+            
+        self.landcover_dict = None
             
     def fit(self,sar_ds):
         fit_input = _sklearn_flatten(sar_ds)
@@ -437,9 +440,18 @@ class SAR_Ktree():
             timec = np.datetime64(sar_ds['time'].data)
             pred_out = pred_out.expand_dims('time')
             pred_out['time'] = [timec]
-            return pred_out.isel(time=0)
+            ret = pred_out.isel(time=0)
         except:
-            return pred_out
+            ret = pred_out
+        
+        #copy the defined landcover classes if available
+        if self.landcover_dict:
+            pred = ret.copy(deep=True)
+            for i in range(len(self.landcover_dict)):
+                np.place(pred.data,ret.data==i,self.landcover_dict[i])
+            ret = pred
+        return ret
+            
 
     def predict_dataset(self,timeseries_ds):
         """predict a whole time series of observations and return a dataarray with matching
@@ -464,3 +476,29 @@ class SAR_Ktree():
             return self.predict(timeseries_ds)
 
         return cluster_xr
+    
+
+def tree_timeseries(timeseries_ds,treemodel,tmin=0,tmax=None):
+    """predicc the pixel fractions in each landcover class for a labelled KMeans tree (treemodel) and SAR timeseries dataset (timeseries_ds).
+    """
+    nc = len(np.unique(treemodel.landcover_dict))
+    
+    if tmax is None:
+        tmax = len(timeseries_ds.time)
+    
+    times = timeseries_ds['time'][tmin:tmax]
+    
+    timeseries = np.empty([tmax-tmin,nc])
+    
+    
+    output_ds = treemodel.predict_dataset(timeseries_ds)
+    
+    for i in range(tmax-tmin):
+        gm_output = output_ds.isel(time=i+tmin)
+            
+        timeseries[i] = [(gm_output == cat).sum() for cat in range(nc)]
+        timeseries[i] = timeseries[i]/((~np.isnan(gm_output)).sum().data)
+        
+    return (times,timeseries)
+    
+    
