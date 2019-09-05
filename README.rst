@@ -8,19 +8,19 @@ Note that these functions have been developed by DEA users, not the DEA developm
 
 The intended order of these notebook folders are:
 
-1. `Beginners_Guide <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Beginners_Guide>`_
+1. `Beginners_guide <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Beginners_Guide>`_
 
-2. `DEA_Datasets <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/DEA_Datasets>`_
+2. `DEA_datasets <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/DEA_Datasets>`_
 
-3. `Frequently_Used_Code <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Frequently_Used_Code>`_
+3. `Frequently_used_code <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Frequently_Used_Code>`_
 
-4. `Real_World_Examples <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Real_World_Examples>`_
+4. `Real_world_examples <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Real_World_Examples>`_
 
 The supporting scripts and data for the notebooks are kept in the following folders:
 
 - `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Scripts>`_
 
-- `Supplementary_Data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Supplementary_Data>`_
+- `Supplementary_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Supplementary_Data>`_
 
 The *read-the-docs* version of this repository can be found at: `<https://docs.dea.ga.gov.au/notebooks/01_Getting_started/README.html>`_
 
