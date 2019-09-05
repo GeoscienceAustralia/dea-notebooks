@@ -172,7 +172,7 @@ def water_indices(ds, water_index='NDWI', custom_varname=None, source='Collectio
 time_range = ('1987', '2018')
 
 # A path to the polygon used to extract data from the datacube
-polygon_path = '/g/data/r78/rt1527/dea-notebooks/05_Temporal_analysis/large_waterbody_test.shp'
+polygon_path = '/g/data/r78/rt1527/dea-notebooks/05_Temporal_analysis/medium_waterbody_test.shp'
 # polygon_path = '../Supplementary_data/Files/WA_example_waterbody.shp'
 
 # The projection system you wish to load the data in; default is 'EPSG:3577'
