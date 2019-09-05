@@ -381,9 +381,10 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                     # Compute good data for each observation as a percentage of total array pixels. Need to
                     # sum over x and y axes individually so that the function works with lat-lon dimensions,
                     # and because it isn't currently possible to pass a list of axes (bug with xarray?) 
-                    first_da = data[list(data.data_vars.keys())[0]]
-                    valid_pixels = (first_da != first_da.nodata)
-                    data_perc = good_quality.sum(axis=1).sum(axis=1) / valid_pixels.sum(axis=1).sum(axis=1)
+#                     first_da = data[list(data.data_vars.keys())[0]]
+#                     valid_pixels = (first_da != first_da.nodata)
+#                     data_perc = good_quality.sum(axis=1).sum(axis=1) / valid_pixels.sum(axis=1).sum(axis=1)
+                    data_perc = good_quality.sum(axis=1).sum(axis=1) / (good_quality.shape[1] * good_quality.shape[2])
 
                     # Add data_perc data to Landsat dataset as a new xarray variable
                     data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])

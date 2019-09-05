@@ -3,22 +3,22 @@
 
 # # Extract customisable time-series of inundation within a polygon using Landsat data
 
-# **What does this notebook do?** 
+# **What does this code do?** 
  
-# This notebook uses a polygon to query all of Landsat 5, 7 and 8 data available from 1987 onward, optionally filter to drop cloudy scenes, mask out remaining cloud and invalid data, then compute one of several water indices on the data to indentify open water. The resulting dataset can then be used to generate a timeseries of total inundated pixels which is exported as both a CSV of metrics and water index/RGB images for each timestep. 
-
-# This methodology is a simplified version of the Digital Earth Australia _Water Area Mapping and Monitoring_ product (WAMM). WAMM maps the location of persistent waterbodies in the Australian landscape, then monitors changes to the surface area of water within each waterbody through time. For more information, see the [following Jupyter notebook](https://github.com/GeoscienceAustralia/dea-notebooks/blob/ClaireK/WaterbodyAreaMappingandMonitoring/GenerateWaterBodyPolygons.ipynb).
+# This script uses a polygon to query all of Landsat 5, 7 and 8 data available from 1987 onward, optionally filter to drop cloudy scenes, mask out remaining cloud and invalid data, then compute one of several water indices on the data to indentify open water. The resulting dataset can then be used to generate a timeseries of total inundated pixels which is exported as both a CSV of metrics and water index/RGB images for each timestep. 
 
 # **Requirements:**
- 
-# You need to run the following commands from the command line prior to launching jupyter notebooks from the same terminal so that the required libraries and paths are set:
- 
-# `module use /g/data/v10/public/modules/modulefiles`
-# `module load dea`    
 
-# This notebook uses an external function called `load_clearlandsat`. This function is available in the `10_Scripts` folder of the [dea-notebooks Github repository](https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/10_Scripts). Note that these functions have been developed by DEA users, not the DEA development team, and so are provided without warranty. If you find an error or bug in the functions, please either create an 'Issue' in the Github repository, or fix it yourself and create a 'Pull' request to contribute the updated function back into the repository (See the repository [README](https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/README.rst) for instructions on creating a Pull request).
+# First open a terminal on the VDI, and change the directory:
+# cd /g/data/r78/rt1527/dea-notebooks/05_Temporal_analysis
+
+# Then login to Raijin using ssh (follow guide here: https://opus.nci.org.au/display/Help/Raijin+User+Guide)
+# ssh abc123@raijin.nci.org.au (where abc123 is your NCI username)
+
+# Then run the raijin_submit.sh shell script to call the job:
+# sh raijin_submit.sh
 # 
-# **Date:** August 2019
+# **Date:** September 2019
 
 
 ################################
@@ -169,7 +169,7 @@ def water_indices(ds, water_index='NDWI', custom_varname=None, source='Collectio
 
 # Time range including a from and to date to load data. Can be in the format 
 # ('1995', '2003'), ('1995-01', '2003-12') or ('1995-01-01', '2003-12-30')
-time_range = ('2015', '2018')
+time_range = ('1987', '2018')
 
 # A path to the polygon used to extract data from the datacube
 polygon_path = '/g/data/r78/rt1527/dea-notebooks/05_Temporal_analysis/large_waterbody_test.shp'
@@ -223,13 +223,13 @@ geom = geometry.Geometry(waterbody_polygon_albers.iloc[0].geometry.__geo_interfa
 # waterbody is larger than a threshold (e.g. 2000000 m^2), and if so, break the time
 # series into smaller 1 year chunks which are analysed one-by-one.
 
-if waterbody_polygon_albers.area.item() > 2000000:  #2000000:
+if waterbody_polygon_albers.area.item() > 2000000:  
     
     # If the waterbody is large, turn the `time_range` into a list of 1 year chunks
     # that we will iterate through in a loop below
     print('Large waterbody, running time series in annual chunks to reduce memory')    
     time_periods_start = pd.date_range(start=time_range[0], end=time_range[1], freq='1YS')
-    time_periods_end = time_periods_start + pd.offsets.DateOffset(years=1)
+    time_periods_end = time_periods_start + pd.offsets.YearEnd()
     time_periods_iter = list(zip(time_periods_start.astype(str), 
                                  time_periods_end.astype(str)))
 
@@ -252,15 +252,18 @@ else:
 # from the three satellites into a single dataset with cloudy/invalid pixels marked 
 # as `NaN`.
 
+# Create an empty list to hold the dataframes for each time chunk
+dataframe_list = []
+
 # Connect to datacube database
 dc = datacube.Datacube(app='Customisable water analysis')
 
-for time_range in time_periods_iter: 
+for time_range_i in time_periods_iter: 
 
     # Loading data from the datacube requires a spatiotemporal query that informs
     # the datacube of the area, time period and other parameters used to load the data
     query = {'geopolygon': geom,   
-             'time': time_range,
+             'time': time_range_i,
              'output_crs': output_crs,
              'resolution': output_res} 
 
@@ -362,17 +365,14 @@ for time_range in time_periods_iter:
     drha = pxha * np.abs(output_res[0] * output_res[1]) / 10000.0
     naha = pxna * np.abs(output_res[0] * output_res[1]) / 10000.0
 
-    # Add to a single dataframe ready to be written out as a CSV with time as an index
+    # Add to a single dataframe with time as an index
     wateranalysis_df = pd.DataFrame(data={'pxct': pxct, 'pxin': pxin, 'pxha': pxha, 'pxna': pxna, 
                                           'toha': toha, 'inha': inha, 'drha': drha, 'naha': naha },
                                     index=landsat_masked.time.values)
-
-    # Write to file
-    wateranalysis_df.to_csv(f'rel_indundation_{time_range[0]}-{time_range[1]}.csv', index_label='time')
-
-    # Preview data
-    wateranalysis_df.head()
-
+    
+    # Add the resulting dataframe to the output list. This will be combined as a final step.
+    dataframe_list.append(wateranalysis_df)
+    
 
     ##################################################
     # Export RGB and water index images and geotiffs #
@@ -382,7 +382,12 @@ for time_range in time_periods_iter:
     # This includes an RGB image and a water index image for each timestep in the dataset. 
     # Optionally, we can also export a geotiff file for each timestep for both the RGB bands 
     # and the water index variable.
+    
+    # If no output directory exists, create it
+    if not os.path.exists('outputs'):
+        os.makedirs('outputs')
 
+    # Loop through all timesteps and export plots
     for time, i in landsat_ds.groupby('time'):
 
         ####################
@@ -401,7 +406,7 @@ for time_range in time_periods_iter:
                                       edgecolor='black', linestyle='--')
 
         # Export water index image to file
-        water_index_png = f'd{str(time)[0:10]}_{water_index}.png'
+        water_index_png = f'outputs/d{str(time)[0:10]}_{water_index}.png'
         fig.savefig(water_index_png, bbox_inches='tight')
 
         # Close figure to save memory
@@ -433,7 +438,7 @@ for time_range in time_periods_iter:
                                       edgecolor='black', linestyle='--')
 
         # Export RGB image to file
-        rgb_png = f'd{str(time)[0:10]}_rgb.png'
+        rgb_png = f'outputs/d{str(time)[0:10]}_rgb.png'
         fig.savefig(rgb_png, bbox_inches='tight')
 
         # Close figure to save memory
@@ -448,3 +453,17 @@ for time_range in time_periods_iter:
     #     rgb_tif = f'd{str(time)[0:10]}_rgb.tif'
     #     write_geotiff(filename=water_index_tif, dataset=i[['water_index']]) 
     #     write_geotiff(filename=rgb_tif, dataset=i[['red', 'green', 'blue']]) 
+
+    
+#############################################
+# Combine all output files and write to CSV #
+#############################################
+
+# Concatenate dataframes in list into a single dataframe
+print('Combining dataframes in list into a single dataframe')
+wateranalysis_all_df = pd.concat(dataframe_list)
+
+# Write to CSV
+print('Exporting data to CSV')
+wateranalysis_all_df.to_csv(f'outputs/rel_indundation_{time_range[0]}-{time_range[1]}.csv', 
+                            index_label='time')
