@@ -17,7 +17,7 @@ Last modified: September 2019
 def calculate_indices(ds,
                       index='NDVI',
                       custom_varname=None,
-                      source='LandsatCollection3'):
+                      collection='LandsatCollection3'):
     """
     Takes an xarray dataset containing spectral bands, calculates one of
     a set of remote sensing indices, and adds the resulting array as a 
@@ -164,92 +164,91 @@ def calculate_indices(ds,
                   'IOR': lambda ds: (ds.red / ds.blue)
     }
 
-    try:
+    # Select a water index function based on 'water_index'      
+    index_func = index_dict.get(index)
+    
+    # If no function is returned due to an invalid option being provided,
+    # raise an error informing user to choose from the list of valid options
+    if index_func is None:
+        raise ValueError(f'The selected index {index} is not one of the '
+                          'valid remote sensing index options. \nPlease '
+                          'see the function documentation for a full list '
+                          'of valid options for `index`')
 
-        # Select a water index function based on 'water_index'
-        index_func = index_dict[index]
+    # Rename bands to a consistent format if either 'Collection3'
+    # or 'Sentinel2' is specified by `source`
+    if collection == 'LandsatCollection3':
 
-        # Rename bands to a consistent format if either 'Collection3'
-        # or 'Sentinel2' is specified by `source`
-        if source == 'LandsatCollection3':
+        # Dictionary mapping full data names to simpler 'red' alias names
+        bandnames_dict = {
+            'nbart_nir': 'nir',
+            'nbart_red': 'red',
+            'nbart_green': 'green',
+            'nbart_blue': 'blue',
+            'bart_swir_1': 'swir1',
+            'nbart_swir_2': 'swir2',
+            'nbar_red': 'red',
+            'nbar_green': 'green',
+            'nbar_blue': 'blue',
+            'nbar_nir': 'nir',
+            'nbar_swir_1': 'swir1',
+            'nbar_swir_2': 'swir2'
+        }
 
-            # Dictionary mapping full data names to simpler 'red' alias names
-            bandnames_dict = {
-                'nbart_nir': 'nir',
-                'nbart_red': 'red',
-                'nbart_green': 'green',
-                'nbart_blue': 'blue',
-                'bart_swir_1': 'swir1',
-                'nbart_swir_2': 'swir2',
-                'nbar_red': 'red',
-                'nbar_green': 'green',
-                'nbar_blue': 'blue',
-                'nbar_nir': 'nir',
-                'nbar_swir_1': 'swir1',
-                'nbar_swir_2': 'swir2'
-            }
+        # Rename bands in dataset to use simple names (e.g. 'red')
+        bands_to_rename = {
+            a: b for a, b in bandnames_dict.items() if a in ds.variables
+        }
 
-            # Rename bands in dataset to use simple names (e.g. 'red')
-            bands_to_rename = {
-                a: b for a, b in bandnames_dict.items() if a in ds.variables
-            }
+    elif collection == 'Sentinel2':
 
-        elif source == 'Sentinel2':
+        # Dictionary mapping full data names to simpler 'red' alias names
+        bandnames_dict = {
+            'nbart_red': 'red',
+            'nbart_green': 'green',
+            'nbart_blue': 'blue',
+            'nbart_nir_1': 'nir',
+            'nbart_swir_2': 'swir1',
+            'nbart_swir_3': 'swir2',
+            'nbar_red': 'red',
+            'nbar_green': 'green',
+            'nbar_blue': 'blue',
+            'nbar_nir': 'nir',
+            'nbar_swir_2': 'swir1',
+            'nbar_swir_3': 'swir2'
+        }
 
-            # Dictionary mapping full data names to simpler 'red' alias names
-            bandnames_dict = {
-                'nbart_red': 'red',
-                'nbart_green': 'green',
-                'nbart_blue': 'blue',
-                'nbart_nir_1': 'nir',
-                'nbart_swir_2': 'swir1',
-                'nbart_swir_3': 'swir2',
-                'nbar_red': 'red',
-                'nbar_green': 'green',
-                'nbar_blue': 'blue',
-                'nbar_nir': 'nir',
-                'nbar_swir_2': 'swir1',
-                'nbar_swir_3': 'swir2'
-            }
+        # Rename bands in dataset to use simple names (e.g. 'red')
+        bands_to_rename = {
+            a: b for a, b in bandnames_dict.items() if a in ds.variables
+        }
 
-            # Rename bands in dataset to use simple names (e.g. 'red')
-            bands_to_rename = {
-                a: b for a, b in bandnames_dict.items() if a in ds.variables
-            }
+    elif collection == 'LandsatCollection2':
 
-        elif source == 'LandsatCollection2':
-
-            # Pass an empty dict as no bands need renaming
-            bands_to_rename = {}
-
-        # Apply water index function to data and add to input dataset. If a
-        # custom name is supplied for the output water index variable, use it.
-        if custom_varname:
-
-            # Apply function after normalising to 0.0-1.0 by dividing by 10K
-            ds[custom_varname] = index_func(
-                ds.rename(bands_to_rename) / 10000.0)
-
-        else:
-
-            # Apply function after normalising to 0.0-1.0 by dividing by 10K
-            ds[index] = index_func(ds.rename(bands_to_rename) / 10000.0)
-
-        # Return input dataset with added water index variable
-        return ds
-
-    except AttributeError as e:
-        raise Exception(
-            f'The band equivelent to {str(e).split(" ")[-1]} is missing from '
-            f'the input dataset. \nPlease verify that all bands required to '
-            f'compute {index} are present in `ds`.'
-        )
-
-    except KeyError as e:
-        raise Exception(
-            f'The selected index {e} is not one of the valid remote sensing '
-            f'index options. \n Please see the function documentation for a '
-            'full list of valid options for `index`'
-        )
+        # Pass an empty dict as no bands need renaming
+        bands_to_rename = {}
+    
+    # Raise error if no valid collection name is provided:
+    else:
+        raise ValueError(f"'{collection}' is not a valid option for "
+                          "`collection`. Please specify either \n"
+                          "'LandsatCollection2', 'LandsatCollection3' or "
+                          "'Sentinel2'")
         
+    # Apply index function after normalising to 0.0-1.0 by dividing by 10K
+    try:
+        index_array = index_func(ds.rename(bands_to_rename)/1000.0)
+    except AttributeError:
+        raise ValueError(f'Please verify that all bands required to '
+                         f'compute {index} are present in `ds`. \n'
+                         f'These bands may vary depending on the `collection` '
+                         f'(e.g. the Landsat `nbart_nir` band \n'
+                         f'is equivelent to `nbart_nir_1` for Sentinel 2)')
+
+    # Add as a new variable in dataset
+    ds[custom_varname or index] = index_array
+
+    # Return input dataset with added water index variable
+    return ds
+
 
