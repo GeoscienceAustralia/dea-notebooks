@@ -19,17 +19,16 @@ from datacube.storage import masking
 
 
 def load_ard(dc,
-             query,
              products=['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
-             bands=['nbart_red', 'nbart_green', 'nbart_blue'],
              min_gooddata=0.0,
              fmask_gooddata=[1, 4, 5],
              mask_pixel_quality=True,
              mask_invalid_data=True,
-             ls7_slc_off=False,
+             ls7_slc_off=True,
              product_metadata=False,
              dask_chunks={'time': 1},
-             lazy_load=False):
+             lazy_load=False,
+             **dcload_kwargs):
     '''
     Loads Landsat Collection 3 or Sentinel 2 ARD data for multiple 
     sensors (i.e. ls5t, ls7e and ls8c for Landsat; s2a and s2b for 
@@ -58,17 +57,10 @@ def load_ard(dc,
     dc : datacube Datacube object
         The Datacube to connect to, i.e. `dc = datacube.Datacube()`.
         This allows you to also use development datacubes if required.    
-    query : dict
-        A dict containing the query bounds. Can include lat/lon, time 
-        etc. If no `time` query is given, the function defaults to all 
-        timesteps available to all sensors (e.g. 1987-2018)
     products : list, optional
         An optional product name to load data from. Options are 
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] for Landsat,
         and ['s2a_ard_granule', 's2b_ard_granule'] for Sentinel 2
-    bands : list, optional
-        An optional list of strings containing the bands to be loaded; 
-        options default to ['nbart_red', 'nbart_green', 'nbart_blue'].
     min_gooddata : float, optional
         An optional float giving the minimum percentage of good quality 
         pixels required for a satellite observation to be loaded. 
@@ -79,7 +71,7 @@ def load_ard(dc,
         An optional list of fmask values to treat as good quality 
         observations in the above `min_gooddata` calculation. The 
         default is `[1, 4, 5]` which will return non-cloudy or shadowed 
-        land, snow and water pixels Choose from: 
+        land, snow and water pixels. Choose from: 
         `{'0': 'nodata', '1': 'valid', '2': 'cloud', 
           '3': 'shadow', '4': 'snow', '5': 'water'}`.
     mask_pixel_quality : bool, optional
@@ -100,7 +92,7 @@ def load_ard(dc,
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from 
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to 
-        False, which removes all Landsat 7 observations > May 31 2003. 
+        True, which keeps all Landsat 7 observations > May 31 2003. 
     product_metadata : bool, optional
         An optional boolean indicating whether to return the dataset 
         with a `product` variable that gives the name of the product 
@@ -116,6 +108,15 @@ def load_ard(dc,
         function until you explicitly run `ds.compute()`. If used in 
         conjuction with `dask.distributed.Client()` this will allow for 
         automatic parallel computation.
+    **dcload_kwargs: dict
+        A set of keyword arguments to `dc.load` that define the 
+        spatiotemporal query used to extract data. This can include `x`,
+        `y`, `time`, `resolution`, `resampling`, `group_by`, `crs`
+        etc, and can either be listed directly in the `load_ard` call 
+        (e.g. `x=(150, 151)`), or by passing in a query kwarg 
+        (e.g. `**query`). For a full list of possible options, see: 
+        https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html        
+        
         
     Returns
     -------
@@ -126,9 +127,10 @@ def load_ard(dc,
         
     '''
 
-    # If `bands` does not include fmask, add it
-    new_bands = set(bands)
-    new_bands.add('fmask')
+    # If `measurements` are specified but do not include fmask, add it
+    if (('measurements' in dcload_kwargs) and 
+        ('fmask' not in dcload_kwargs['measurements'])):
+        dcload_kwargs['measurements'].append('fmask')
 
     # Create a list to hold data for each product
     product_data = []
@@ -140,11 +142,14 @@ def load_ard(dc,
 
             # Load data including fmask band
             print(f'Loading {product} data')
-            ds = dc.load(product=f'{product}',
-                         dask_chunks=dask_chunks,
-                         measurements=new_bands,
-                         group_by='solar_day',
-                         **query)
+            try:
+                ds = dc.load(product=f'{product}',
+                             dask_chunks=dask_chunks,
+                             **dcload_kwargs)
+            except KeyError as e:
+                raise ValueError(f'Band {e} does not exist in this product. '
+                                 f'Verify all requested `measurements` exist '
+                                 f'in {products}')
             
             # Keep a record of the original number of observations
             total_obs = len(ds.time)
@@ -153,6 +158,11 @@ def load_ard(dc,
             if not ls7_slc_off and product == 'ga_ls7e_ard_3':
                 print('    Ignoring SLC-off observations for ls7')
                 ds = ds.sel(time=ds.time < np.datetime64('2003-05-30'))
+                
+            # If no measurements are specified, `fmask` is given a 
+            # different name. If necessary, rename it:
+            if 'oa_fmask' in ds:
+                ds = ds.rename({'oa_fmask': 'fmask'})
 
             # Identify all pixels not affected by cloud/shadow/invalid
             good_quality = np.isin(ds.fmask,
@@ -187,13 +197,6 @@ def load_ard(dc,
         # the dataset, skip this product and move on to the next
         except AttributeError:
             print(f'    No data for {product}')
-
-        # If a KeyError occurs, raise an error to check that all
-        # requested bands are found in the product
-        except KeyError as e:
-            raise Exception(f'Band {e} does not exist in this product. '
-                            f'Verify that values passed to `bands` exist '
-                            f'in {products}')
 
     # If any data was returned above, combine into one xarray
     if (len(product_data) > 0):
