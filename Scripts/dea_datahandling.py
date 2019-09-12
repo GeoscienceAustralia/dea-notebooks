@@ -30,13 +30,14 @@ def load_ard(dc,
              lazy_load=False,
              **dcload_kwargs):
     '''
-    Loads Landsat Collection 3 or Sentinel 2 ARD data for multiple 
-    sensors (i.e. ls5t, ls7e and ls8c for Landsat; s2a and s2b for 
-    Sentinel 2), and returns a single masked xarray dataset containing 
-    only observations that contain greater than a given proportion of 
-    good quality pixels. This can be used to extract clean time series 
-    of observations that are not affected by cloud, for example as an 
-    input to the `animated_timeseries` function from `dea_plotting`.
+    Loads Landsat Collection 3 or Sentinel 2 Definitive and Near Real 
+    Time data for multiple sensors (i.e. ls5t, ls7e and ls8c for 
+    Landsat; s2a and s2b for Sentinel 2), and returns a single masked 
+    xarray dataset containing only observations that contain greater 
+    than a given proportion of good quality pixels. This can be used 
+    to extract clean time series of observations that are not affected 
+    by cloud, for example as an input to the `animated_timeseries` 
+    function from `dea_plotting`.
     
     The proportion of good quality pixels is calculated by summing the 
     pixels flagged as good quality in `fmask`. By default non-cloudy or 
@@ -60,7 +61,9 @@ def load_ard(dc,
     products : list
         A list of product names to load data from. Valid options are 
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] for Landsat,
-        and ['s2a_ard_granule', 's2b_ard_granule'] for Sentinel 2
+        ['s2a_ard_granule', 's2b_ard_granule'] for Sentinel 2 Definitive, 
+        and ['s2a_nrt_granule', 's2b_nrt_granule'] for Sentinel 2 Near 
+        Real Time.
     min_gooddata : float, optional
         An optional float giving the minimum percentage of good quality 
         pixels required for a satellite observation to be loaded. 
@@ -131,8 +134,10 @@ def load_ard(dc,
         raise ValueError("Please provide a list of product names "
                          "to load data from. Valid options are: \n"
                          "['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] " 
-                         "for Landsat, and ['s2a_ard_granule', "
-                         "'s2b_ard_granule'] for Sentinel 2'")
+                         "for Landsat, ['s2a_ard_granule', "
+                         "'s2b_ard_granule'] \nfor Sentinel 2 Definitive, or "
+                         "['s2a_nrt_granule', 's2b_nrt_granule'] for Sentinel 2 "
+                         "Near Real Time")
 
     # If `measurements` are specified but do not include fmask, add it
     if (('measurements' in dcload_kwargs) and 
