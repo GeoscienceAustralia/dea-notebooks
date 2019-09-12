@@ -17,7 +17,8 @@ Last modified: September 2019
 def calculate_indices(ds,
                       index=None,
                       collection=None,
-                      custom_varname=None):
+                      custom_varname=None,
+                      normalise=False):
     """
     Takes an xarray dataset containing spectral bands, calculates one of
     a set of remote sensing indices, and adds the resulting array as a 
@@ -59,15 +60,21 @@ def calculate_indices(ds,
         An string that tells the function what data collection is 
         being used to calculate the index. This is necessary because 
         different collections use different names for bands covering 
-        a similar spectra. Valid options are 'ga_landsat_2' (for GA 
-        Landsat Collection 2), 'ga_landsat_3' (for GA Landsat 
-        Collection 3) and 'ga_sentinel2_1' (for GA Sentinel 2 
-        Collection 1).
+        a similar spectra. Valid options are 'ga_ls_2' (for GA 
+        Landsat Collection 2), 'ga_ls_3' (for GA Landsat Collection 3) 
+        and 'ga_s2_1' (for GA Sentinel 2 Collection 1).
     custom_varname : str, optional
         By default, the original dataset will be returned with 
         a new index variable named after `index` (e.g. 'NDVI'). To 
         specify a custom name instead, you can supply e.g. 
-        `custom_varname='custom_name'`. 
+        `custom_varname='custom_name'`. Defaults to None, which uses
+        `index` to name the variable. 
+    normalise : bool, optional
+        Some coefficient-based indices (e.g. WI, AWEI_sh, AWEI_sh, TCW, 
+        TCG, TCB) produce different results if surface reflectance 
+        values are not scaled between 0.0 and 1.0 prior to calculating 
+        the index. Set `normalise=True` to scale values first by 
+        dividing by 10000.0. Defaults to False.        
         
     Returns
     -------
@@ -189,11 +196,11 @@ def calculate_indices(ds,
     if collection is None:
 
         raise ValueError("'No `collection` was provided. Please specify "
-                         "either 'ga_landsat_2', 'ga_landsat_3' \nor "
-                         "'ga_sentinel2_1' to ensure the function calculates "
-                         "indices using the correct spectral bands")
+                         "either 'ga_ls_2', 'ga_ls_3' or 'ga_s2_1' \nto "
+                         "ensure the function calculates indices using the "
+                         "correct spectral bands")
     
-    elif collection == 'ga_landsat_3':
+    elif collection == 'ga_ls_3':
 
         # Dictionary mapping full data names to simpler 'red' alias names
         bandnames_dict = {
@@ -216,7 +223,7 @@ def calculate_indices(ds,
             a: b for a, b in bandnames_dict.items() if a in ds.variables
         }
 
-    elif collection == 'ga_sentinel2_1':
+    elif collection == 'ga_s2_1':
 
         # Dictionary mapping full data names to simpler 'red' alias names
         bandnames_dict = {
@@ -239,7 +246,7 @@ def calculate_indices(ds,
             a: b for a, b in bandnames_dict.items() if a in ds.variables
         }
 
-    elif collection == 'ga_landsat_2':
+    elif collection == 'ga_ls_2':
 
         # Pass an empty dict as no bands need renaming
         bands_to_rename = {}
@@ -248,12 +255,13 @@ def calculate_indices(ds,
     else:
         raise ValueError(f"'{collection}' is not a valid option for "
                           "`collection`. Please specify either \n"
-                          "'ga_landsat_2', 'ga_landsat_3' or "
-                          "'ga_sentinel2_1'")
+                          "'ga_ls_2', 'ga_ls_3' or 'ga_s2_1'")
         
-    # Apply index function after normalising to 0.0-1.0 by dividing by 10K
+    # Apply index function 
     try:
-        index_array = index_func(ds.rename(bands_to_rename)/1000.0)
+        # If normalised=True, divide data by 10,000 before applying func
+        mult = 10000.0 if normalise else 1.0
+        index_array = index_func(ds.rename(bands_to_rename) / mult)
     except AttributeError:
         raise ValueError(f'Please verify that all bands required to '
                          f'compute {index} are present in `ds`. \n'
@@ -267,3 +275,4 @@ def calculate_indices(ds,
 
     # Return input dataset with added water index variable
     return ds
+
