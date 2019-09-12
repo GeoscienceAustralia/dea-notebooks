@@ -58,10 +58,11 @@ def calculate_indices(ds,
     collection : str
         An string that tells the function what data collection is 
         being used to calculate the index. This is necessary because 
-        the GA Landsat Collection 2, Landsat Collection 3 and Sentinel 2 
-        use different names for bands covering a similar spectra. Valid 
-        options are 'ga_landsat_collection_2', 'ga_landsat_collection_3'
-        and 'ga_sentinel2_collection_1'.
+        different collections use different names for bands covering 
+        a similar spectra. Valid options are 'ga_landsat_2' (for GA 
+        Landsat Collection 2), 'ga_landsat_3' (for GA Landsat 
+        Collection 3) and 'ga_sentinel2_1' (for GA Sentinel 2 
+        Collection 1).
     custom_varname : str, optional
         By default, the original dataset will be returned with 
         a new index variable named after `index` (e.g. 'NDVI'). To 
@@ -188,13 +189,11 @@ def calculate_indices(ds,
     if collection is None:
 
         raise ValueError("'No `collection` was provided. Please specify "
-                         "either 'ga_landsat_collection_2', "
-                         "'ga_landsat_collection_3' \nor "
-                         "'ga_sentinel2_collection_1' to ensure the "
-                         "function calculates indices using the correct "
-                         "spectral bands")
+                         "either 'ga_landsat_2', 'ga_landsat_3' \nor "
+                         "'ga_sentinel2_1' to ensure the function calculates "
+                         "indices using the correct spectral bands")
     
-    elif collection == 'ga_landsat_collection_3':
+    elif collection == 'ga_landsat_3':
 
         # Dictionary mapping full data names to simpler 'red' alias names
         bandnames_dict = {
@@ -217,7 +216,7 @@ def calculate_indices(ds,
             a: b for a, b in bandnames_dict.items() if a in ds.variables
         }
 
-    elif collection == 'ga_sentinel2_collection_1':
+    elif collection == 'ga_sentinel2_1':
 
         # Dictionary mapping full data names to simpler 'red' alias names
         bandnames_dict = {
@@ -240,7 +239,7 @@ def calculate_indices(ds,
             a: b for a, b in bandnames_dict.items() if a in ds.variables
         }
 
-    elif collection == 'ga_landsat_collection_2':
+    elif collection == 'ga_landsat_2':
 
         # Pass an empty dict as no bands need renaming
         bands_to_rename = {}
@@ -249,9 +248,8 @@ def calculate_indices(ds,
     else:
         raise ValueError(f"'{collection}' is not a valid option for "
                           "`collection`. Please specify either \n"
-                          "'ga_landsat_collection_2', "
-                          "'ga_landsat_collection_3' or "
-                          "'ga_sentinel2_collection_1'")
+                          "'ga_landsat_2', 'ga_landsat_3' or "
+                          "'ga_sentinel2_1'")
         
     # Apply index function after normalising to 0.0-1.0 by dividing by 10K
     try:
