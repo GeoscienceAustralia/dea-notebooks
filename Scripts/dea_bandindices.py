@@ -253,7 +253,7 @@ def calculate_indices(ds,
         
     # Apply index function after normalising to 0.0-1.0 by dividing by 10K
     try:
-        index_array = index_func(ds.rename(bands_to_rename)/1000.0)
+        index_array = index_func(ds.rename(bands_to_rename)/10000.0)
     except AttributeError:
         raise ValueError(f'Please verify that all bands required to '
                          f'compute {index} are present in `ds`. \n'
