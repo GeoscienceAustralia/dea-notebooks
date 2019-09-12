@@ -100,8 +100,8 @@ def calculate_indices(ds,
                                      (ds.nir + ds.swir1),
 
                   # Normalised Burn Ratio, Lopez Garcia 1991
-                  'NBR': lambda ds: (ds.nir - ds.swir1) /
-                                    (ds.nir + ds.swir1),
+                  'NBR': lambda ds: (ds.nir - ds.swir2) /
+                                    (ds.nir + ds.swir2),
 
                   # Burn Area Index, Martin 1998
                   'BAI': lambda ds: (1.0 / ((0.10 - ds.red) ** 2 +
