@@ -33,7 +33,7 @@ def calculate_indices(ds,
         used as inputs to calculate the selected water index.
     index : str
         A string giving the name of the index to calculate:
-        'NDVI' (Normalised Difference Vegation Index, Rouse 1973)
+        'NDVI' (Normalised Difference Vegetation Index, Rouse 1973)
         'EVI' (Enhanced Vegetation Index, Huete 2002),
         'LAI' (Leaf Area Index, Boegh 2002),
         'SAVI' (Soil Adjusted Vegetation Index, Huete 1988),
@@ -56,14 +56,14 @@ def calculate_indices(ds,
         'FMR' (Ferrous Minerals Ratio, Segal 1982),
         'IOR' (Iron Oxide Ratio, Segal 1982)   
     collection : str
-        An string that tells the function what dataset or data 
-        collection is being used to calculate the index. This is 
-        necessary because Landsat Collection 2, Landsat Collection 3 and
-        Sentinel 2 use different names for bands covering a similar 
-        spectra. Valid options are 'ga_landsat_collection_2', 
-        'ga_landsat_collection_3' and 'sentinel2'.
+        An string that tells the function what data collection is 
+        being used to calculate the index. This is necessary because 
+        the GA Landsat Collection 2, Landsat Collection 3 and Sentinel 2 
+        use different names for bands covering a similar spectra. Valid 
+        options are 'ga_landsat_collection_2', 'ga_landsat_collection_3'
+        and 'ga_sentinel2_collection_1'.
     custom_varname : str, optional
-        By default, the function will return the original dataset with 
+        By default, the original dataset will be returned with 
         a new index variable named after `index` (e.g. 'NDVI'). To 
         specify a custom name instead, you can supply e.g. 
         `custom_varname='custom_name'`. 
@@ -166,7 +166,7 @@ def calculate_indices(ds,
     index_func = index_dict.get(index)
     
     # If no index is provided or if no function is returned due to an 
-    # invalid option being provided, raise an error informing user to 
+    # invalid option being provided, raise an exception informing user to 
     # choose from the list of valid options
     if index is None:
         
@@ -181,15 +181,18 @@ def calculate_indices(ds,
                           "refer to the function documentation for a full "
                           "list of valid options for `index`")
 
-    # Rename bands to a consistent format if either 'Collection3'
-    # or 'Sentinel2' is specified by `source`
+    # Rename bands to a consistent format if depending on what collection
+    # is specified in `collection`. This allows the same index calculations
+    # to be applied to all collections. If no collection was provided, 
+    # raise an exception.
     if collection is None:
 
         raise ValueError("'No `collection` was provided. Please specify "
                          "either 'ga_landsat_collection_2', "
-                         "'ga_landsat_collection_3' \nor 'sentinel2' to "
-                         "ensure the function calculates indices using the "
-                         "correct spectral bands")
+                         "'ga_landsat_collection_3' \nor "
+                         "'ga_sentinel2_collection_1' to ensure the "
+                         "function calculates indices using the correct "
+                         "spectral bands")
     
     elif collection == 'ga_landsat_collection_3':
 
@@ -214,7 +217,7 @@ def calculate_indices(ds,
             a: b for a, b in bandnames_dict.items() if a in ds.variables
         }
 
-    elif collection == 'sentinel2':
+    elif collection == 'ga_sentinel2_collection_1':
 
         # Dictionary mapping full data names to simpler 'red' alias names
         bandnames_dict = {
@@ -247,7 +250,8 @@ def calculate_indices(ds,
         raise ValueError(f"'{collection}' is not a valid option for "
                           "`collection`. Please specify either \n"
                           "'ga_landsat_collection_2', "
-                          "'ga_landsat_collection_3' or 'sentinel2'")
+                          "'ga_landsat_collection_3' or "
+                          "'ga_sentinel2_collection_1'")
         
     # Apply index function after normalising to 0.0-1.0 by dividing by 10K
     try:
