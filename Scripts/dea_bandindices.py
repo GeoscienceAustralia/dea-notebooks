@@ -56,13 +56,12 @@ def calculate_indices(ds,
         'FMR' (Ferrous Minerals Ratio, Segal 1982),
         'IOR' (Iron Oxide Ratio, Segal 1982)   
     collection : str
-        An optional string that tells the function what dataset or data 
+        An string that tells the function what dataset or data 
         collection is being used to calculate the index. This is 
         necessary because Landsat Collection 2, Landsat Collection 3 and
         Sentinel 2 use different names for bands covering a similar 
-        spectra. Valid options are 'LandsatCollection2', 
-        'LandsatCollection3' and 'Sentinel2'; defaults to 
-        'LandsatCollection2'.
+        spectra. Valid options are 'ga_landsat_collection_2', 
+        'ga_landsat_collection_3' and 'sentinel2'.
     custom_varname : str, optional
         By default, the function will return the original dataset with 
         a new index variable named after `index` (e.g. 'NDVI'). To 
