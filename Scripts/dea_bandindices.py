@@ -41,9 +41,13 @@ def calculate_indices(ds,
         'NDMI' (Normalised Difference Moisture Index, Gao 1996),
         'NBR' (Normalised Burn Ratio, Lopez Garcia 1991),
         'BAI' (Burn Area Index, Martin 1998),
-        'NDBI' (Normalised Difference Built-Up Index, Zha 2003),
         'NDSI' (Normalised Difference Snow Index, Hall 1995),
-        'NDWI' (Normalised Difference Water Index, McFeeters 1996), 
+        'NDWI' (Normalised Difference Water Index, McFeeters 1996),
+        'NDBI' (Normalised Difference Built-Up Index, Zha 2003),
+        'BUI' (Built-Up Index, He et al. 2010)
+        'BAEI' (Built-Up Area Extraction Index, Bouzekri et al. 2015) 
+        'NBI' (New Built-Up Index, Jieli et al. 2010)
+        'BSI' (Bare Soil Index, Rikimaru et al. 2002)
         'MNDWI' (Modified Normalised Difference Water Index, Xu 1996), 
         'AWEI_ns (Automated Water Extraction Index,
                   no shadows, Feyisa 2014)',
@@ -115,10 +119,6 @@ def calculate_indices(ds,
                   'BAI': lambda ds: (1.0 / ((0.10 - ds.red) ** 2 +
                                             (0.06 - ds.nir) ** 2)),
 
-                  # Normalised Difference Built-Up Index, Zha 2003
-                  'NDBI': lambda ds: (ds.swir1 - ds.nir) /
-                                     (ds.swir1 + ds.nir),
-
                   # Normalised Difference Snow Index, Hall 1995
                   'NDSI': lambda ds: (ds.green - ds.swir1) /
                                      (ds.green + ds.swir1),
@@ -130,6 +130,29 @@ def calculate_indices(ds,
                   # Modified Normalised Difference Water Index, Xu 2006
                   'MNDWI': lambda ds: (ds.green - ds.swir1) /
                                       (ds.green + ds.swir1),
+      
+                  # Normalised Difference Built-Up Index, Zha 2003
+                  'NDBI': lambda ds: (ds.swir1 - ds.nir) /
+                                     (ds.swir1 + ds.nir),
+      
+                  # Built-Up Index, He et al. 2010
+                  'BUI': lambda ds:  ((ds.swir1 - ds.nir) /
+                                      (ds.swir1 + ds.nir)) -
+                                     ((ds.nir - ds.red) /
+                                      (ds.nir + ds.red)),
+      
+                  # Built-up Area Extraction Index, Bouzekri et al. 2015
+                  'BAEI': lambda ds: (ds.red + 0.3) /
+                                     (ds.green + ds.swir1),
+      
+                  # New Built-up Index, Jieli et al. 2010
+                  'NBI': lambda ds: (ds.swir1 + ds.red) / ds.nir,
+      
+                  # Bare Soil Index, Rikimaru et al. 2002
+                  'BSI': lambda ds: ((ds.swir1 + ds.red) - 
+                                     (ds.nir + ds.blue)) / 
+                                    ((ds.swir1 + ds.red) + 
+                                     (ds.nir + ds.blue)),
 
                   # Automated Water Extraction Index (no shadows), Feyisa 2014
                   'AWEI_ns': lambda ds: (4 * (ds.green - ds.swir1) -
