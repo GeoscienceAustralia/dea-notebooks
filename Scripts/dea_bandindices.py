@@ -36,36 +36,36 @@ def calculate_indices(ds,
         used as inputs to calculate the selected water index.
     index : str
         A string giving the name of the index to calculate:
-        'NDVI' (Normalised Difference Vegetation Index, Rouse 1973)
-        'EVI' (Enhanced Vegetation Index, Huete 2002)
-        'LAI' (Leaf Area Index, Boegh 2002)
-        'SAVI' (Soil Adjusted Vegetation Index, Huete 1988)
-        'MSAVI' (Modified Soil Adjusted Vegetation Index, 
-                 Qi et al. 1994)
-        'NDMI' (Normalised Difference Moisture Index, Gao 1996)
-        'NBR' (Normalised Burn Ratio, Lopez Garcia 1991)
-        'BAI' (Burn Area Index, Martin 1998)
-        'NDCI' (Normalised Difference Chlorophyll Index, 
-                Mishra & Mishra, 2012)
-        'NDSI' (Normalised Difference Snow Index, Hall 1995)
-        'NDWI' (Normalised Difference Water Index, McFeeters 1996)
-        'NDBI' (Normalised Difference Built-Up Index, Zha 2003)
-        'BUI' (Built-Up Index, He et al. 2010)
-        'BAEI' (Built-Up Area Extraction Index, Bouzekri et al. 2015) 
-        'NBI' (New Built-Up Index, Jieli et al. 2010)
-        'BSI' (Bare Soil Index, Rikimaru et al. 2002)
-        'MNDWI' (Modified Normalised Difference Water Index, Xu 1996) 
         'AWEI_ns (Automated Water Extraction Index,
                   no shadows, Feyisa 2014)
         'AWEI_sh' (Automated Water Extraction Index,
-                   shadows, Feyisa 2014) 
-        'WI' (Water Index, Fisher 2016)
-        'TCW' (Tasseled Cap Wetness, Crist 1985)
-        'TCG' (Tasseled Cap Greeness, Crist 1985)
-        'TCB' (Tasseled Cap Brightness, Crist 1985)
+                   shadows, Feyisa 2014)
+        'BAEI' (Built-Up Area Extraction Index, Bouzekri et al. 2015) 
+        'BAI' (Burn Area Index, Martin 1998)
+        'BSI' (Bare Soil Index, Rikimaru et al. 2002)
+        'BUI' (Built-Up Index, He et al. 2010)
         'CMR' (Clay Minerals Ratio, Drury 1987)
+        'EVI' (Enhanced Vegetation Index, Huete 2002)
         'FMR' (Ferrous Minerals Ratio, Segal 1982)
-        'IOR' (Iron Oxide Ratio, Segal 1982)   
+        'IOR' (Iron Oxide Ratio, Segal 1982)  
+        'LAI' (Leaf Area Index, Boegh 2002)
+        'MNDWI' (Modified Normalised Difference Water Index, Xu 1996) 
+        'MSAVI' (Modified Soil Adjusted Vegetation Index, 
+                 Qi et al. 1994)              
+        'NBI' (New Built-Up Index, Jieli et al. 2010)
+        'NBR' (Normalised Burn Ratio, Lopez Garcia 1991)
+        'NDBI' (Normalised Difference Built-Up Index, Zha 2003)
+        'NDCI' (Normalised Difference Chlorophyll Index, 
+                Mishra & Mishra, 2012)
+        'NDMI' (Normalised Difference Moisture Index, Gao 1996)        
+        'NDSI' (Normalised Difference Snow Index, Hall 1995)
+        'NDVI' (Normalised Difference Vegetation Index, Rouse 1973)
+        'NDWI' (Normalised Difference Water Index, McFeeters 1996)
+        'SAVI' (Soil Adjusted Vegetation Index, Huete 1988)
+        'TCB' (Tasseled Cap Brightness, Crist 1985)
+        'TCG' (Tasseled Cap Greeness, Crist 1985)
+        'TCW' (Tasseled Cap Wetness, Crist 1985)
+        'WI' (Water Index, Fisher 2016) 
     collection : str
         An string that tells the function what data collection is 
         being used to calculate the index. This is necessary because 
