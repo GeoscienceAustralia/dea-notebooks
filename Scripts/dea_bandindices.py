@@ -37,30 +37,32 @@ def calculate_indices(ds,
     index : str
         A string giving the name of the index to calculate:
         'NDVI' (Normalised Difference Vegetation Index, Rouse 1973)
-        'EVI' (Enhanced Vegetation Index, Huete 2002),
-        'LAI' (Leaf Area Index, Boegh 2002),
-        'SAVI' (Soil Adjusted Vegetation Index, Huete 1988),
-        'NDMI' (Normalised Difference Moisture Index, Gao 1996),
-        'NBR' (Normalised Burn Ratio, Lopez Garcia 1991),
-        'BAI' (Burn Area Index, Martin 1998),
-        'NDSI' (Normalised Difference Snow Index, Hall 1995),
-        'NDWI' (Normalised Difference Water Index, McFeeters 1996),
-        'NDBI' (Normalised Difference Built-Up Index, Zha 2003),
+        'EVI' (Enhanced Vegetation Index, Huete 2002)
+        'LAI' (Leaf Area Index, Boegh 2002)
+        'SAVI' (Soil Adjusted Vegetation Index, Huete 1988)
+        'MSAVI' (Modified Soil Adjusted Vegetation Index, 
+                 Qi et al. 1994)
+        'NDMI' (Normalised Difference Moisture Index, Gao 1996)
+        'NBR' (Normalised Burn Ratio, Lopez Garcia 1991)
+        'BAI' (Burn Area Index, Martin 1998)
+        'NDSI' (Normalised Difference Snow Index, Hall 1995)
+        'NDWI' (Normalised Difference Water Index, McFeeters 1996)
+        'NDBI' (Normalised Difference Built-Up Index, Zha 2003)
         'BUI' (Built-Up Index, He et al. 2010)
         'BAEI' (Built-Up Area Extraction Index, Bouzekri et al. 2015) 
         'NBI' (New Built-Up Index, Jieli et al. 2010)
         'BSI' (Bare Soil Index, Rikimaru et al. 2002)
-        'MNDWI' (Modified Normalised Difference Water Index, Xu 1996), 
+        'MNDWI' (Modified Normalised Difference Water Index, Xu 1996) 
         'AWEI_ns (Automated Water Extraction Index,
-                  no shadows, Feyisa 2014)',
+                  no shadows, Feyisa 2014)
         'AWEI_sh' (Automated Water Extraction Index,
-                   shadows, Feyisa 2014), 
-        'WI' (Water Index, Fisher 2016),
-        'TCW' (Tasseled Cap Wetness, Crist 1985),
-        'TCG' (Tasseled Cap Greeness, Crist 1985),
-        'TCB' (Tasseled Cap Brightness, Crist 1985),
-        'CMR' (Clay Minerals Ratio, Drury 1987),
-        'FMR' (Ferrous Minerals Ratio, Segal 1982),
+                   shadows, Feyisa 2014) 
+        'WI' (Water Index, Fisher 2016)
+        'TCW' (Tasseled Cap Wetness, Crist 1985)
+        'TCG' (Tasseled Cap Greeness, Crist 1985)
+        'TCB' (Tasseled Cap Brightness, Crist 1985)
+        'CMR' (Clay Minerals Ratio, Drury 1987)
+        'FMR' (Ferrous Minerals Ratio, Segal 1982)
         'IOR' (Iron Oxide Ratio, Segal 1982)   
     collection : str
         An string that tells the function what data collection is 
@@ -76,11 +78,12 @@ def calculate_indices(ds,
         `custom_varname='custom_name'`. Defaults to None, which uses
         `index` to name the variable. 
     normalise : bool, optional
-        Some coefficient-based indices (e.g. WI, BAEI, AWEI_nh, AWEI_sh, 
-        TCW, TCG, TCB) produce different results if surface reflectance 
-        values are not scaled between 0.0 and 1.0 prior to calculating 
-        the index. Set `normalise=True` to scale values first by 
-        dividing by 10000.0. Defaults to False.        
+        Some coefficient-based indices (e.g. 'WI', 'BAEI', 'AWEI_ns', 
+        'AWEI_sh', 'TCW', 'TCG', 'TCB', 'EVI', 'LAI', 'SAVI', 'MSAVI') 
+        produce different results if surface reflectance values are not 
+        scaled between 0.0 and 1.0 prior to calculating the index. 
+        Set `normalise=True` to scale values first by dividing by 
+        10000.0. Defaults to False.        
         
     Returns
     -------
@@ -108,6 +111,11 @@ def calculate_indices(ds,
                   # Soil Adjusted Vegetation Index, Huete 1988
                   'SAVI': lambda ds: ((1.5 * (ds.nir - ds.red)) /
                                       (ds.nir + ds.red + 0.5)),
+      
+                  # Mod. Soil Adjusted Vegetation Index, Qi et al. 1994
+                  'MSAVI': lambda ds: ((2 * ds.nir + 1 - 
+                                      ((2 * ds.nir + 1)**2 - 
+                                       8 * (ds.nir - ds.red))**0.5) / 2),    
 
                   # Normalised Difference Moisture Index, Gao 1996
                   'NDMI': lambda ds: (ds.nir - ds.swir1) /
@@ -207,7 +215,8 @@ def calculate_indices(ds,
                           "refer to the function \ndocumentation for a full "
                           "list of valid options for `index` (e.g. 'NDVI')")
     
-    elif (index in ['WI', 'BAEI', 'AWEI_ns', 'AWEI_sh', 'TCW', 'TCG', 'TCB'] 
+    elif (index in ['WI', 'BAEI', 'AWEI_ns', 'AWEI_sh', 'TCW', 
+                    'TCG', 'TCB', 'EVI', 'LAI', 'SAVI', 'MSAVI'] 
           and not normalise):
 
         warnings.warn(f"\nA coefficient-based index ('{index}') normally "
