@@ -12,6 +12,8 @@ Last modified: September 2019
 
 '''
 
+# Import required packages
+import warnings
 
 # Define custom functions
 def calculate_indices(ds,
@@ -74,8 +76,8 @@ def calculate_indices(ds,
         `custom_varname='custom_name'`. Defaults to None, which uses
         `index` to name the variable. 
     normalise : bool, optional
-        Some coefficient-based indices (e.g. WI, AWEI_sh, AWEI_sh, TCW, 
-        TCG, TCB) produce different results if surface reflectance 
+        Some coefficient-based indices (e.g. WI, BAEI, AWEI_sh, AWEI_sh, 
+        TCW, TCG, TCB) produce different results if surface reflectance 
         values are not scaled between 0.0 and 1.0 prior to calculating 
         the index. Set `normalise=True` to scale values first by 
         dividing by 10000.0. Defaults to False.        
@@ -192,7 +194,7 @@ def calculate_indices(ds,
                   # Iron Oxide Ratio, Segal 1982
                   'IOR': lambda ds: (ds.red / ds.blue)
     }
-
+    
     # Select a water index function based on 'water_index'      
     index_func = index_dict.get(index)
     
@@ -204,6 +206,15 @@ def calculate_indices(ds,
         raise ValueError(f"No remote sensing `index` was provided. Please "
                           "refer to the function \ndocumentation for a full "
                           "list of valid options for `index` (e.g. 'NDVI')")
+    
+    elif (index in ['WI', 'BAEI', 'AWEI_ns', 'AWEI_sh', 'TCW', 'TCG', 'TCB'] 
+          and not normalise):
+
+        warnings.warn(f"\nA coefficient-based index ('{index}') normally "
+                       "applied to surface reflectance values in the \n"
+                       "0.0-1.0 range was applied to values in the 0-10000 "
+                       "range. This can produce unexpected results; \nif "
+                       "required, resolve this by setting `normalise=True`")
         
     elif index_func is None:
         
@@ -298,4 +309,3 @@ def calculate_indices(ds,
 
     # Return input dataset with added water index variable
     return ds
-
