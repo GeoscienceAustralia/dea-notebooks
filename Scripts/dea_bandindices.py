@@ -76,7 +76,7 @@ def calculate_indices(ds,
         `custom_varname='custom_name'`. Defaults to None, which uses
         `index` to name the variable. 
     normalise : bool, optional
-        Some coefficient-based indices (e.g. WI, BAEI, AWEI_sh, AWEI_sh, 
+        Some coefficient-based indices (e.g. WI, BAEI, AWEI_nh, AWEI_sh, 
         TCW, TCG, TCB) produce different results if surface reflectance 
         values are not scaled between 0.0 and 1.0 prior to calculating 
         the index. Set `normalise=True` to scale values first by 
