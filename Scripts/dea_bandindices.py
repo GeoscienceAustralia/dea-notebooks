@@ -45,6 +45,8 @@ def calculate_indices(ds,
         'NDMI' (Normalised Difference Moisture Index, Gao 1996)
         'NBR' (Normalised Burn Ratio, Lopez Garcia 1991)
         'BAI' (Burn Area Index, Martin 1998)
+        'NDCI' (Normalised Difference Chlorophyll Index, 
+                Mishra & Mishra, 2012)
         'NDSI' (Normalised Difference Snow Index, Hall 1995)
         'NDWI' (Normalised Difference Water Index, McFeeters 1996)
         'NDBI' (Normalised Difference Built-Up Index, Zha 2003)
@@ -128,6 +130,11 @@ def calculate_indices(ds,
                   # Burn Area Index, Martin 1998
                   'BAI': lambda ds: (1.0 / ((0.10 - ds.red) ** 2 +
                                             (0.06 - ds.nir) ** 2)),
+        
+                 # Normalised Difference Chlorophyll Index, 
+                 # (Mishra & Mishra, 2012)
+                  'NDCI': lambda ds: (ds.red_edge_1 - ds.red) /
+                                     (ds.red_edge_1 + ds.red),
 
                   # Normalised Difference Snow Index, Hall 1995
                   'NDSI': lambda ds: (ds.green - ds.swir1) /
@@ -274,12 +281,16 @@ def calculate_indices(ds,
             'nbart_green': 'green',
             'nbart_blue': 'blue',
             'nbart_nir_1': 'nir',
+            'nbart_red_edge_1': 'red_edge_1', 
+            'nbart_red_edge_2': 'red_edge_2',    
             'nbart_swir_2': 'swir1',
             'nbart_swir_3': 'swir2',
             'nbar_red': 'red',
             'nbar_green': 'green',
             'nbar_blue': 'blue',
-            'nbar_nir': 'nir',
+            'nbar_nir_1': 'nir',
+            'nbar_red_edge_1': 'red_edge_1',   
+            'nbar_red_edge_2': 'red_edge_2',   
             'nbar_swir_2': 'swir1',
             'nbar_swir_3': 'swir2'
         }
@@ -318,3 +329,4 @@ def calculate_indices(ds,
 
     # Return input dataset with added water index variable
     return ds
+  
