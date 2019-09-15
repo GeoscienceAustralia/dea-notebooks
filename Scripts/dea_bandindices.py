@@ -20,7 +20,7 @@ def calculate_indices(ds,
                       index=None,
                       collection=None,
                       custom_varname=None,
-                      normalise=False):
+                      normalise=True):
     """
     Takes an xarray dataset containing spectral bands, calculates one of
     a set of remote sensing indices, and adds the resulting array as a 
@@ -84,8 +84,8 @@ def calculate_indices(ds,
         'AWEI_sh', 'TCW', 'TCG', 'TCB', 'EVI', 'LAI', 'SAVI', 'MSAVI') 
         produce different results if surface reflectance values are not 
         scaled between 0.0 and 1.0 prior to calculating the index. 
-        Set `normalise=True` to scale values first by dividing by 
-        10000.0. Defaults to False.        
+        Setting `normalise=True` first scales values to a 0.0-1.0 range
+        by dividing by 10000.0. Defaults to True.        
         
     Returns
     -------
