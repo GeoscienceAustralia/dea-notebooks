@@ -85,6 +85,24 @@ def get_WetMAP_polyName(feature):
     print(f'processing polygon {polyName}')
     return(polyName)
 
+def get_WetMAP_newest(feature):
+    'function just for the WetMAP_newest polygons'
+    if feature['properties']['NAME_MAIN']is not None:
+        NAME = '_'.join(feature['properties']['NAME_MAIN'].split(' ')).replace("'","_").replace("/","_") 
+        print(NAME)
+    else:     
+        print('your shapefile names don t work")
+    #catch if names are non-unique in this bit. hopefully you read the outputs.
+    try:
+        assert feature['properties']['NAME_MAIN'].is_unique
+    except AssertionError:
+        print('names are non-unique')
+    print(f'processing polygon {polyName}')
+    return(polyName)
+
+
+
+
 def get_masked_tcw(sr_data, mask, threshold=-350):
     '''uses TasseledCapTools and an input threshold (defaults to -350) to create masked over-threshold tasseled cap '''
 

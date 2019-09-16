@@ -1,0 +1,16 @@
+ERROR: No valid executable to run! ret=0 errno=17
+pbsdsh: task 0x00000000 exit status 1
+0: cd /g/data1a/r78/rjd547/jupyter_notebooks/dea-notebooks/00_Development_Notebooks/DEWLP_VIC_Project/DELWP_WIT_v3
+
+======================================================================================
+                  Resource Usage on 2019-09-16 17:00:48:
+   Job Id:             2047843.r-man2
+   Project:            r78
+   Exit Status:        271 (Linux Signal 15 SIGTERM Termination)
+   Service Units:      2.20
+   NCPUs Requested:    32                     NCPUs Used: 32              
+                                           CPU Time Used: 00:00:10                                   
+   Memory Requested:   3.0TB                 Memory Used: 15.69MB         
+   Walltime requested: 06:00:00            Walltime Used: 00:04:08        
+   JobFS requested:    1.76TB                 JobFS used: 0B              
+======================================================================================

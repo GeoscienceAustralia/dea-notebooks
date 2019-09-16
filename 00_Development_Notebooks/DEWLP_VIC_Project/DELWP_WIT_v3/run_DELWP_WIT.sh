@@ -28,6 +28,6 @@ for i in $(seq 0 $(($NNODES-1))); do
     module load parallel;\
     echo $i:\
     cd $JOBDIR;\
-    parallel --delay 5 --retries 3 --load 100%  --colsep ',' python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/00_Development_Notebooks/DEWLP_VIC_Project/DELWP_WIT_raijin.py ::: $PARAMF"&
+    parallel --delay 5 --retries 3 --load 100%  --colsep ',' python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/00_Development_Notebooks/DEWLP_VIC_Project/DELWP_WIT_v3/DELWP_WIT_raijin.py ::: $PARAMF"&
 done;
 wait;

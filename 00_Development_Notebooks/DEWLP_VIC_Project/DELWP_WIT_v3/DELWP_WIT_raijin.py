@@ -1,7 +1,7 @@
 # | Authors:  | Bex Dunn|
 # |----------|----------------|
 # | Created: | Jan 7, 2019 |
-# | Last edited: | Jun 12, 2019 |
+# | Last edited: | Sept 16,2019 |
 
 
 #  Before running this script load these modules:
@@ -78,13 +78,16 @@ import DEADataHandling, DEAPlotting, TasseledCapTools
 # setup the datacube 
 dc = datacube.Datacube(app='wetlands insight tool')
 
+#******************************************************************************************************
 global Output_dir
-Output_dir = '/g/data/r78/rjd547/DEWLP-Vic_Project/WIT/'
+Output_dir = '/g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/'
+#*****************************************************************************************************
 
-
+#*****************************************************************************************************
 ### Set up polygon
-poly_path = '/g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_sites_updated/WetMAP_sites_Join_2.shp'
+poly_path = '/g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp'
 print(f'Shape file is {poly_path}')
+#******************************************************************************************************
 
 #part=7
 part = sys.argv[1] #take an argument from the command line (our parallelish scripte)
@@ -99,6 +102,11 @@ DesiredChunks = int(sys.argv[2])
 
 # add in a delay between dc.load calls to avoid overloading the database - 5 seconds in this case
 time.sleep(5*part)
+#open the polygon
+
+#defaults 
+#part =2
+#DesiredChunks=64
 
 #this code tells us which polygon ids will be running on this particular (node?). Shapessubset will be the subset of polygons that our function
 #will run over. 
@@ -116,16 +124,11 @@ with fiona.open(poly_path) as allshapes:
         print(f'Running for polygon IDs in the range {(part - 1) * ChunkSize} to {part * ChunkSize}') 
 
 def get_WetMAP_polyName(feature):
-    'function just for the WetMAP polygons'
-    ID = feature['properties']['FID_1']
-    if feature['properties']['LU_NAME']is not None:
-        NAME = '_'.join(feature['properties']['LU_NAME'].split(' ')).replace("'","_").replace("/","_") 
-        print(NAME)
-    elif feature['properties']['NAME_MAIN'] is not None:
-        NAME = f'_'.join(feature['properties']['NAME_MAIN'].split(' ')).replace("'","_").replace("/","_") 
+    'function just for the WetMAP_newest polygons'
+    if feature['properties']['NAME_MAIN']is not None:
+        polyName = '_'.join(feature['properties']['NAME_MAIN'].split(' ')).replace("'","_").replace("/","_") 
     else:     
-        NAME = 'WetMAP_polygon'  
-    polyName = f'{ID}_{NAME}'
+        print("your shapefile names don t work")
     print(f'processing polygon {polyName}')
     return(polyName)
                    
@@ -382,7 +385,7 @@ def BigBadFunkyFunction(lilshape,crs):
 
             #save the figure
             plt.savefig(f'{Output_dir}{polyName}.png')#, transparent=True)
-            #plt.show()
+            plt.show()
             print(f'plot created for {polyName}')
 
             #make a new dataframe using the data from the xarray of wofs area for the polygon
