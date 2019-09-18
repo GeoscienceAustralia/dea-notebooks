@@ -173,12 +173,12 @@ def calculate_indices(ds,
 
                   # Automated Water Extraction Index (no shadows), Feyisa 2014
                   'AWEI_ns': lambda ds: (4 * (ds.green - ds.swir1) -
-                                        (2.5 * ds.nir * + 2.75 * ds.swir2)),
+                                        (0.25 * ds.nir * + 2.75 * ds.swir2)),
 
                   # Automated Water Extraction Index (shadows), Feyisa 2014
                   'AWEI_sh': lambda ds: (ds.blue + 2.5 * ds.green -
                                          1.5 * (ds.nir + ds.swir1) -
-                                         2.5 * ds.swir2),
+                                         0.25 * ds.swir2),
 
                   # Water Index, Fisher 2016
                   'WI': lambda ds: (1.7204 + 171 * ds.green + 3 * ds.red -
