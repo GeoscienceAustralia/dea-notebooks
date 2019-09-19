@@ -1,5 +1,15 @@
 .. Notebook Gallery Instructions:
 
+DEA-notebooks refresh (19 September and 9 October 2019)
+=======================================================
+* `Github project page <https://github.com/GeoscienceAustralia/dea-notebooks/projects/1>`_
+* `Notebook template <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/DEA_notebooks_template.ipynb>`_
+* Wiki page
+    * `Notebook allocations <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/DEA-notebooks-refresh:-notebook-allocations>`_
+    * `Guide to contributing DEA notebook refresh notebooks through git <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/DEA-notebooks-refresh:-contributing-new-notebooks-through-git>`_
+    * `Working group minutes and agendas <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/DEA-notebooks-refresh:-Working-group-meeting-minutes>`_
+    
+
 Overview of DEA Notebooks
 =========================
 This documentation is designed to step the user through getting started with Digital Earth Australia (DEA), through to more complicated algorithms and workflows. If you need to join the NCI first, read about joining the NCI here:  https://docs.dea.ga.gov.au/connect/account.html.
