@@ -1,6 +1,6 @@
-## dea_coastaltools.py
+## dea_classificationtools.py
 '''
-Description: This file contains a set of python functions for conducting coastal analyses on Digital Earth Australia data.
+Description: This file contains a set of python functions for applying machine learning classifiying remote sensing data from Digital Earth Australia.
 
 License: The code in this notebook is licensed under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth Australia data is licensed under the Creative Commons by Attribution 4.0 license (https://creativecommons.org/licenses/by/4.0/).
 
