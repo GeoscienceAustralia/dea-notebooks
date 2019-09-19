@@ -452,7 +452,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         if mask_invalid_data:
 
             print('    Replacing invalid -999 values with NaN (data will be coerced to float32)')
-	    combined_ds = combined_ds.astype(np.float32)
+            combined_ds = combined_ds.astype(np.float32)
             combined_ds = masking.mask_invalid_data(combined_ds)
         
         # reset pixel quality attributes
