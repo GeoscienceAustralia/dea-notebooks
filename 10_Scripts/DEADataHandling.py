@@ -247,10 +247,10 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         filtered images may still contain up to 1% poor quality pixels. The default of False simply returns the
         resulting observations without masking out these pixels; True masks them out and sets them to NaN using the
         pixel quality mask, but has the side effect of changing the data type of the output arrays from int16 to
-        float64 which can cause memory issues. To reduce memory usage, set to False.
+        float32 which can cause memory issues. To reduce memory usage, set to False.
     mask_invalid_data : bool, optional
         An optional boolean indicating whether invalid -999 nodata values should be replaced with NaN. Defaults to
-        True; this has the side effect of changing the data type of the output arrays from int16 to float64 which
+        True; this has the side effect of changing the data type of the output arrays from int16 to float32 which
         can cause memory issues. To reduce memory usage, set to False.
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from after the Landsat 7 SLC failure (i.e. SLC-off).
@@ -314,7 +314,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         warnings.warn("""You are attempting to load pixel quality product with a mask flag
                         (mask_invalid_data or mask_pixel_quality). Pixel quality is a bitstring 
                         (only makes sense as int) and masking
-                        casts to float64.""")
+                        casts to float32.""")
     
     # Dictionary to save results from each sensor 
     filtered_sensors = {}
@@ -406,7 +406,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
 
                     # Optionally apply pixel quality mask to all observations that were not dropped in previous step
                     if mask_pixel_quality:
-                        filtered = filtered.where(good_quality)
+                        filtered = filtered.astype(np.float32).where(good_quality)
 
                     # Optionally add satellite name variable
                     if satellite_metadata:
@@ -451,7 +451,8 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         # Optionally filter to replace no data values with nans
         if mask_invalid_data:
 
-            print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
+            print('    Replacing invalid -999 values with NaN (data will be coerced to float32)')
+            combined_ds = combined_ds.astype(np.float32)
             combined_ds = masking.mask_invalid_data(combined_ds)
         
         # reset pixel quality attributes
