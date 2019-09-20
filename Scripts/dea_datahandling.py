@@ -45,11 +45,11 @@ def load_ard(dc,
     but this can be customised using the `fmask_gooddata` parameter.
     
     MEMORY ISSUES: For large data extractions, it can be advisable to 
-    set both `mask_pixel_quality=False` and `mask_invalid_data=False`. 
-    These operations coerce all numeric values to float64 when NaN 
-    values are inserted into the array, potentially causing your data 
-    to use 4x as much memory. Be aware that the resulting arrays will 
-    contain invalid -999 values which may affect future analyses.
+    set `mask_pixel_quality=False`. The masking step coerces all 
+    numeric values to float32 when NaN values are inserted into the 
+    array, potentially causing your data to use twice the memory. 
+    Be aware that the resulting arrays will contain invalid values 
+    which may affect future analyses.
     
     Last modified: September 2019
     
@@ -85,13 +85,16 @@ def load_ard(dc,
         up to 1% poor quality pixels. The default of False simply 
         returns the resulting observations without masking out these 
         pixels; True masks them out and sets them to NaN using the good 
-        data mask. This will convert numeric values to float64 which can 
+        data mask. This will convert numeric values to float32 which can 
         cause memory issues, set to False to prevent this.
     mask_invalid_data : bool, optional
         An optional boolean indicating whether invalid -999 nodata 
-        values should be replaced with NaN. Defaults to True. This will 
-        convert all numeric values to float64 which can cause memory 
-        issues, set to False to prevent this.
+        values should be replaced with NaN. These invalid values can be
+        caused by missing data along the edges of scenes, or terrain 
+        effects (for NBAR-T). Setting `mask_invalid_data=True` will 
+        convert all numeric values to float32 when -999 values are 
+        replaced with NaN which can cause memory issues; set to False 
+        to prevent this. Defaults to True. 
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from 
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to 
@@ -116,7 +119,7 @@ def load_ard(dc,
         spatiotemporal query used to extract data. This can include `x`,
         `y`, `time`, `resolution`, `resampling`, `group_by`, `crs`
         etc, and can either be listed directly in the `load_ard` call 
-        (e.g. `x=(150, 151)`), or by passing in a query kwarg 
+        (e.g. `x=(150.0, 151.0)`), or by passing in a query kwarg 
         (e.g. `**query`). For a full list of possible options, see: 
         https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html          
         
@@ -136,8 +139,8 @@ def load_ard(dc,
                          "['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] " 
                          "for Landsat, ['s2a_ard_granule', "
                          "'s2b_ard_granule'] \nfor Sentinel 2 Definitive, or "
-                         "['s2a_nrt_granule', 's2b_nrt_granule'] for Sentinel 2 "
-                         "Near Real Time")
+                         "['s2a_nrt_granule', 's2b_nrt_granule'] for "
+                         "Sentinel 2 Near Real Time")
 
     # If `measurements` are specified but do not include fmask, add it
     if (('measurements' in dcload_kwargs) and 
@@ -177,33 +180,42 @@ def load_ard(dc,
                 ds = ds.rename({'oa_fmask': 'fmask'})
 
             # Identify all pixels not affected by cloud/shadow/invalid
-            good_quality = np.isin(ds.fmask,
-                                   test_elements=fmask_gooddata)
-            good_quality = ds.fmask.where(good_quality).notnull()
+            good_quality = ds.fmask.isin(fmask_gooddata)
+            
+            # The good data percentage calculation has to load in all `fmask`
+            # data, which can be slow. If the user has chosen no filtering 
+            # by using the default `min_gooddata = 0`, we can skip this step 
+            # completely to save processing time
+            if min_gooddata > 0.0:
 
-            # Compute good data for each observation as % of total pixels
-            data_perc = good_quality.sum(axis=1).sum(
-                axis=1) / (good_quality.shape[1] * good_quality.shape[2])
+                # Compute good data for each observation as % of total pixels
+                data_perc = (good_quality.sum(axis=1).sum(axis=1) / 
+                    (good_quality.shape[1] * good_quality.shape[2]))
 
-            # Filter by data_perc to drop low quality observations
-            filtered = ds.sel(time=data_perc >= min_gooddata)
-            print(f'    Filtering to {len(filtered.time)} '
-                  f'out of {total_obs} observations')
+                # Filter by `min_gooddata` to drop low quality observations
+                ds = ds.sel(time=data_perc >= min_gooddata)
+                print(f'    Filtering to {len(ds.time)} '
+                      f'out of {total_obs} observations')
 
-            # Optionally apply pixel quality mask to all observations that
-            # were not dropped in previous step
-            if mask_pixel_quality & (len(filtered.time) > 0):
+            # Optionally apply pixel quality mask to observations remaining 
+            # after the filtering step above to mask out all remaining
+            # bad quality pixels
+            if mask_pixel_quality & (len(ds.time) > 0):
                 print('    Applying pixel quality mask')
-                filtered = filtered.where(good_quality)
+                
+                # First change dtype to float32, then mask out values using
+                # `.where()`. By casting to float32, we prevent `.where()` 
+                # from automatically casting to float64, using 2x the memory
+                ds = ds.astype(np.float32).where(good_quality)
 
-            # Optionally add satellite name
+            # Optionally add satellite/product name as a new variable
             if product_metadata:
-                filtered['product'] = xr.DataArray(
-                    [product] * len(filtered.time), [('time', filtered.time)])
+                ds['product'] = xr.DataArray(
+                    [product] * len(ds.time), [('time', ds.time)])
 
             # If any data was returned, add result to list
-            if len(filtered.time) > 0:
-                product_data.append(filtered.drop('fmask'))
+            if len(ds.time) > 0:
+                product_data.append(ds.drop('fmask'))
 
         # If  AttributeError due to there being no `fmask` variable in
         # the dataset, skip this product and move on to the next
@@ -216,10 +228,15 @@ def load_ard(dc,
         # Concatenate results and sort by time
         print(f'Combining and sorting data')
         combined_ds = xr.concat(product_data, dim='time').sortby('time')
-
+        
         # Optionally filter to replace no data values with nans
         if mask_invalid_data:
             print('    Masking out invalid values')
+            
+            # First change dtype to float32, then mask out values using
+            # `.where()`. By casting to float32, we prevent `.where()` 
+            # from automatically casting to float64, using 2x the memory
+            combined_ds = combined_ds.astype(np.float32)
             combined_ds = masking.mask_invalid_data(combined_ds)
 
         # If `lazy_load` is True, return data as a dask array without
