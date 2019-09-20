@@ -1,0 +1,1697 @@
+ERROR: No valid executable to run! ret=0 errno=17
+pbsdsh: task 0x00000000 exit status 1
+0: cd /g/data1a/r78/rjd547/jupyter_notebooks/dea-notebooks/00_Development_Notebooks/DEWLP_VIC_Project/DELWP_WIT_v3
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 2
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 3 to 6
+processing polygon Litle_Heywood_Lake
+skipping this polygon Litle_Heywood_Lake as it already has been run
+processing polygon Carapugna_Wetland
+skipping this polygon Carapugna_Wetland as it already has been run
+processing polygon Crow_Swamp
+skipping this polygon Crow_Swamp as it already has been run
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 7
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 18 to 21
+processing polygon Black_Swamp_(Gunbower_Forest)
+skipping this polygon Black_Swamp_(Gunbower_Forest) as it already has been run
+processing polygon Camerons_Creek_(Gunbower_Forest)
+skipping this polygon Camerons_Creek_(Gunbower_Forest) as it already has been run
+processing polygon Hird_Swamp
+skipping this polygon Hird_Swamp as it already has been run
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 20
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 57 to 60
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 21
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 60 to 63
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 22
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 63 to 66
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 23
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 66 to 69
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 24
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 69 to 72
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 25
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 72 to 75
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 26
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 75 to 78
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 27
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 78 to 81
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 28
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 81 to 84
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 29
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 84 to 87
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 30
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 87 to 90
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 31
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 90 to 93
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 32
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 93 to 96
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 33
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 96 to 99
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 34
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 99 to 102
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 35
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 102 to 105
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 36
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 105 to 108
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 37
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 108 to 111
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 38
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 111 to 114
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 39
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 114 to 117
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 40
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 117 to 120
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 41
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 120 to 123
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 42
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 123 to 126
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 43
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 126 to 129
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 44
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 129 to 132
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 45
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 132 to 135
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 46
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 135 to 138
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 19
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 54 to 57
+processing polygon Wirra_Lo_Lignum_Swamp_South
+processing polygon Wirra_Lo_Lignum_Swamp_South still
+Loading ls5
+    Loading 405 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 81 filtered ls7 timesteps
+Loading ls8
+    Loading 123 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 405 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 81 filtered ls7 timesteps
+Loading ls8
+    Loading 123 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Wirra_Lo_Lignum_Swamp_South
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Wirra_Lo_Lignum_Swamp_South.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 47
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 138 to 141
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 48
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 141 to 144
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 49
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 144 to 147
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 1
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 0 to 3
+processing polygon Reedy_Lagoon_(Gunbower_Forest)
+skipping this polygon Reedy_Lagoon_(Gunbower_Forest) as it already has been run
+processing polygon Richardsons_Lagoon_part_B
+processing polygon Richardsons_Lagoon_part_B still
+Loading ls5
+    Loading 224 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 49 filtered ls7 timesteps
+Loading ls8
+    Loading 87 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 224 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 49 filtered ls7 timesteps
+Loading ls8
+    Loading 87 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Richardsons_Lagoon_part_B
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Richardsons_Lagoon_part_B.csv
+processing polygon Little_Lake_Meering
+processing polygon Little_Lake_Meering still
+Loading ls5
+    Loading 417 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 95 filtered ls7 timesteps
+Loading ls8
+    Loading 178 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 417 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 95 filtered ls7 timesteps
+Loading ls8
+    Loading 178 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Little_Lake_Meering
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Little_Lake_Meering.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 50
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 147 to 150
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 51
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 150 to 153
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 52
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 153 to 156
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 17
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 48 to 51
+processing polygon Cucumber_Gully_(Barmah_Forest)
+processing polygon Cucumber_Gully_(Barmah_Forest) still
+Loading ls5
+    Loading 231 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 44 filtered ls7 timesteps
+Loading ls8
+    Loading 88 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 231 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 44 filtered ls7 timesteps
+Loading ls8
+    Loading 88 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Cucumber_Gully_(Barmah_Forest)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Cucumber_Gully_(Barmah_Forest).csv
+processing polygon RR11_(Ovens_Floodplain)
+processing polygon RR11_(Ovens_Floodplain) still
+Loading ls5
+    Loading 214 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 47 filtered ls7 timesteps
+Loading ls8
+    Loading 74 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 214 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 47 filtered ls7 timesteps
+Loading ls8
+    Loading 74 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for RR11_(Ovens_Floodplain)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/RR11_(Ovens_Floodplain).csv
+processing polygon Peechalba_(Ovens_Floodplain)
+processing polygon Peechalba_(Ovens_Floodplain) still
+Loading ls5
+    Loading 210 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 47 filtered ls7 timesteps
+Loading ls8
+    Loading 78 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 210 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 47 filtered ls7 timesteps
+Loading ls8
+    Loading 78 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Peechalba_(Ovens_Floodplain)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Peechalba_(Ovens_Floodplain).csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 53
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 156 to 159
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 54
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 159 to 162
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 55
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 162 to 165
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 16
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 45 to 48
+processing polygon RRX_(Ovens_Floodplain)
+processing polygon RRX_(Ovens_Floodplain) still
+Loading ls5
+    Loading 209 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 45 filtered ls7 timesteps
+Loading ls8
+    Loading 74 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 209 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 45 filtered ls7 timesteps
+Loading ls8
+    Loading 74 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for RRX_(Ovens_Floodplain)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/RRX_(Ovens_Floodplain).csv
+processing polygon Tarma_Lagoon_(Barmah_Forest)
+processing polygon Tarma_Lagoon_(Barmah_Forest) still
+Loading ls5
+    Loading 222 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 44 filtered ls7 timesteps
+Loading ls8
+    Loading 87 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 222 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 44 filtered ls7 timesteps
+Loading ls8
+    Loading 87 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Tarma_Lagoon_(Barmah_Forest)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Tarma_Lagoon_(Barmah_Forest).csv
+processing polygon Bunyip_Swamp_(Barmah_Forest)
+processing polygon Bunyip_Swamp_(Barmah_Forest) still
+Loading ls5
+    Loading 232 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 48 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 232 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 48 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Bunyip_Swamp_(Barmah_Forest)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Bunyip_Swamp_(Barmah_Forest).csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 6
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 15 to 18
+processing polygon Vinifera
+processing polygon Vinifera still
+Loading ls5
+    Loading 223 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 45 filtered ls7 timesteps
+Loading ls8
+    Loading 82 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 223 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 45 filtered ls7 timesteps
+Loading ls8
+    Loading 82 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Vinifera
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Vinifera.csv
+processing polygon Catish_Lagoon_(Horseshoe_Bend_Billabong)
+processing polygon Catish_Lagoon_(Horseshoe_Bend_Billabong) still
+Loading ls5
+    Loading 238 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 82 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 238 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 82 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Catish_Lagoon_(Horseshoe_Bend_Billabong)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Catish_Lagoon_(Horseshoe_Bend_Billabong).csv
+processing polygon Ducksfoot_Lagoon
+processing polygon Ducksfoot_Lagoon still
+Loading ls5
+    Loading 236 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 54 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 236 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 54 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Ducksfoot_Lagoon
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Ducksfoot_Lagoon.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 4
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 9 to 12
+processing polygon Heywood_Lake
+processing polygon Heywood_Lake still
+Loading ls5
+    Loading 231 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 52 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 231 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 52 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Heywood_Lake
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Heywood_Lake.csv
+processing polygon Nyah_Floodplain
+processing polygon Nyah_Floodplain still
+Loading ls5
+    Loading 212 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 42 filtered ls7 timesteps
+Loading ls8
+    Loading 79 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 212 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 42 filtered ls7 timesteps
+Loading ls8
+    Loading 79 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Nyah_Floodplain
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Nyah_Floodplain.csv
+processing polygon Kings_Billabong
+processing polygon Kings_Billabong still
+Loading ls5
+    Loading 224 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 224 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Kings_Billabong
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Kings_Billabong.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 9
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 24 to 27
+processing polygon Richardsons_lagoon
+processing polygon Richardsons_lagoon still
+Loading ls5
+    Loading 222 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 47 filtered ls7 timesteps
+Loading ls8
+    Loading 84 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 222 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 47 filtered ls7 timesteps
+Loading ls8
+    Loading 84 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Richardsons_lagoon
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Richardsons_lagoon.csv
+processing polygon Lake_Murphy_(North)
+processing polygon Lake_Murphy_(North) still
+Loading ls5
+    Loading 429 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 87 filtered ls7 timesteps
+Loading ls8
+    Loading 164 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 429 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 87 filtered ls7 timesteps
+Loading ls8
+    Loading 164 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Lake_Murphy_(North)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Lake_Murphy_(North).csv
+processing polygon Mcdonalds_Swamp
+processing polygon Mcdonalds_Swamp still
+Loading ls5
+    Loading 422 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 93 filtered ls7 timesteps
+Loading ls8
+    Loading 160 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 422 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 93 filtered ls7 timesteps
+Loading ls8
+    Loading 160 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Mcdonalds_Swamp
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Mcdonalds_Swamp.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 8
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 21 to 24
+processing polygon Johnson_Swamp
+processing polygon Johnson_Swamp still
+Loading ls5
+    Loading 412 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 90 filtered ls7 timesteps
+Loading ls8
+    Loading 163 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 412 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 90 filtered ls7 timesteps
+Loading ls8
+    Loading 163 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Johnson_Swamp
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Johnson_Swamp.csv
+processing polygon Wirra_Lo_Duck_Creek_North
+processing polygon Wirra_Lo_Duck_Creek_North still
+Loading ls5
+    Loading 397 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 80 filtered ls7 timesteps
+Loading ls8
+    Loading 124 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 397 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 80 filtered ls7 timesteps
+Loading ls8
+    Loading 123 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Wirra_Lo_Duck_Creek_North
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Wirra_Lo_Duck_Creek_North.csv
+processing polygon Wirra_Lo_Lignum_Swamp_North
+processing polygon Wirra_Lo_Lignum_Swamp_North still
+Loading ls5
+    Loading 401 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 78 filtered ls7 timesteps
+Loading ls8
+    Loading 120 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 401 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 78 filtered ls7 timesteps
+Loading ls8
+    Loading 119 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Wirra_Lo_Lignum_Swamp_North
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Wirra_Lo_Lignum_Swamp_North.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 15
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 42 to 45
+processing polygon Sharps_Lagoon
+processing polygon Sharps_Lagoon still
+Loading ls5
+    Loading 245 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 52 filtered ls7 timesteps
+Loading ls8
+    Loading 83 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 245 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 52 filtered ls7 timesteps
+Loading ls8
+    Loading 82 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Sharps_Lagoon
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Sharps_Lagoon.csv
+processing polygon Hut_Lake_(Barmah_Forest)
+processing polygon Hut_Lake_(Barmah_Forest) still
+Loading ls5
+    Loading 227 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 42 filtered ls7 timesteps
+Loading ls8
+    Loading 84 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 227 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 42 filtered ls7 timesteps
+Loading ls8
+    Loading 84 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Hut_Lake_(Barmah_Forest)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Hut_Lake_(Barmah_Forest).csv
+processing polygon Reedy_Lake
+processing polygon Reedy_Lake still
+Loading ls5
+    Loading 102 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 23 filtered ls7 timesteps
+Loading ls8
+    Loading 44 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 102 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 23 filtered ls7 timesteps
+Loading ls8
+    Loading 44 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Reedy_Lake
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Reedy_Lake.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 10
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 27 to 30
+processing polygon Cullens_Lake
+processing polygon Cullens_Lake still
+Loading ls5
+    Loading 226 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 33 filtered ls7 timesteps
+Loading ls8
+    Loading 77 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 226 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 33 filtered ls7 timesteps
+Loading ls8
+    Loading 77 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Cullens_Lake
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Cullens_Lake.csv
+processing polygon Gannawarra_Red_Gum_Swamp
+processing polygon Gannawarra_Red_Gum_Swamp still
+Loading ls5
+    Loading 432 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 99 filtered ls7 timesteps
+Loading ls8
+    Loading 164 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 432 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 99 filtered ls7 timesteps
+Loading ls8
+    Loading 164 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Gannawarra_Red_Gum_Swamp
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Gannawarra_Red_Gum_Swamp.csv
+processing polygon Lake_Yando
+processing polygon Lake_Yando still
+Loading ls5
+    Loading 417 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 89 filtered ls7 timesteps
+Loading ls8
+    Loading 161 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 417 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 89 filtered ls7 timesteps
+Loading ls8
+    Loading 161 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Lake_Yando
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Lake_Yando.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 18
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 51 to 54
+processing polygon Punt_Paddock_(Barmah_Forest)
+processing polygon Punt_Paddock_(Barmah_Forest) still
+Loading ls5
+    Loading 229 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 49 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 229 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 49 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Punt_Paddock_(Barmah_Forest)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Punt_Paddock_(Barmah_Forest).csv
+processing polygon Gaynor_Swamp
+processing polygon Gaynor_Swamp still
+Loading ls5
+    Loading 204 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 47 filtered ls7 timesteps
+Loading ls8
+    Loading 89 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 204 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 47 filtered ls7 timesteps
+Loading ls8
+    Loading 89 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Gaynor_Swamp
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Gaynor_Swamp.csv
+processing polygon Lake_Murphy_(South)
+processing polygon Lake_Murphy_(South) still
+Loading ls5
+    Loading 425 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 80 filtered ls7 timesteps
+Loading ls8
+    Loading 168 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 425 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 80 filtered ls7 timesteps
+Loading ls8
+    Loading 168 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Lake_Murphy_(South)
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Lake_Murphy_(South).csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 11
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 30 to 33
+processing polygon Lake_Elizabeth
+processing polygon Lake_Elizabeth still
+Loading ls5
+    Loading 377 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 74 filtered ls7 timesteps
+Loading ls8
+    Loading 119 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 377 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 74 filtered ls7 timesteps
+Loading ls8
+    Loading 118 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Lake_Elizabeth
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Lake_Elizabeth.csv
+processing polygon Tang_Tang_Swamp
+processing polygon Tang_Tang_Swamp still
+Loading ls5
+    Loading 218 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 43 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 218 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 43 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Tang_Tang_Swamp
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Tang_Tang_Swamp.csv
+processing polygon Black_Swamp
+processing polygon Black_Swamp still
+Loading ls5
+    Loading 454 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 101 filtered ls7 timesteps
+Loading ls8
+    Loading 166 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 454 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 101 filtered ls7 timesteps
+Loading ls8
+    Loading 166 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Black_Swamp
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Black_Swamp.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 5
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 12 to 15
+processing polygon Wallpolla-Horseshoe_Lagoon
+processing polygon Wallpolla-Horseshoe_Lagoon still
+Loading ls5
+    Loading 228 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 54 filtered ls7 timesteps
+Loading ls8
+    Loading 86 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 228 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 54 filtered ls7 timesteps
+Loading ls8
+    Loading 86 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Wallpolla-Horseshoe_Lagoon
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Wallpolla-Horseshoe_Lagoon.csv
+processing polygon Cowanna_Billabong
+processing polygon Cowanna_Billabong still
+Loading ls5
+    Loading 247 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 55 filtered ls7 timesteps
+Loading ls8
+    Loading 86 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 247 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 55 filtered ls7 timesteps
+Loading ls8
+    Loading 86 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Cowanna_Billabong
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Cowanna_Billabong.csv
+processing polygon Margooya_Lagoon
+processing polygon Margooya_Lagoon still
+Loading ls5
+    Loading 485 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 101 filtered ls7 timesteps
+Loading ls8
+    Loading 169 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 485 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 101 filtered ls7 timesteps
+Loading ls8
+    Loading 169 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Margooya_Lagoon
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Margooya_Lagoon.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 12
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 33 to 36
+processing polygon Moodie_Swamp
+processing polygon Moodie_Swamp still
+Loading ls5
+    Loading 293 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 144 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 293 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 144 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Moodie_Swamp
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Moodie_Swamp.csv
+processing polygon Loch_Garry
+processing polygon Loch_Garry still
+Loading ls5
+    Loading 432 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 94 filtered ls7 timesteps
+Loading ls8
+    Loading 159 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 432 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 94 filtered ls7 timesteps
+Loading ls8
+    Loading 159 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Loch_Garry
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Loch_Garry.csv
+processing polygon Kanyapella_Basin
+processing polygon Kanyapella_Basin still
+Loading ls5
+    Loading 223 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 47 filtered ls7 timesteps
+Loading ls8
+    Loading 84 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 223 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 47 filtered ls7 timesteps
+Loading ls8
+    Loading 84 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Kanyapella_Basin
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Kanyapella_Basin.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 13
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 36 to 39
+processing polygon Lake_Lalbert
+processing polygon Lake_Lalbert still
+Loading ls5
+    Loading 197 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 43 filtered ls7 timesteps
+Loading ls8
+    Loading 81 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 197 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 43 filtered ls7 timesteps
+Loading ls8
+    Loading 81 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Lake_Lalbert
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Lake_Lalbert.csv
+processing polygon Woolshed_Swamp
+processing polygon Woolshed_Swamp still
+Loading ls5
+    Loading 411 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 88 filtered ls7 timesteps
+Loading ls8
+    Loading 158 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 411 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 88 filtered ls7 timesteps
+Loading ls8
+    Loading 158 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Woolshed_Swamp
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Woolshed_Swamp.csv
+processing polygon One_Tree_Swamp
+processing polygon One_Tree_Swamp still
+Loading ls5
+    Loading 198 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 41 filtered ls7 timesteps
+Loading ls8
+    Loading 82 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 198 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 41 filtered ls7 timesteps
+Loading ls8
+    Loading 82 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for One_Tree_Swamp
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/One_Tree_Swamp.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 14
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 39 to 42
+processing polygon Doctors_Swamp
+processing polygon Doctors_Swamp still
+Loading ls5
+    Loading 399 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 89 filtered ls7 timesteps
+Loading ls8
+    Loading 141 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 399 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 89 filtered ls7 timesteps
+Loading ls8
+    Loading 141 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Doctors_Swamp
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Doctors_Swamp.csv
+processing polygon Kinnairds_Wetland
+processing polygon Kinnairds_Wetland still
+Loading ls5
+    Loading 450 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 91 filtered ls7 timesteps
+Loading ls8
+    Loading 157 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 450 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 91 filtered ls7 timesteps
+Loading ls8
+    Loading 157 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Kinnairds_Wetland
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Kinnairds_Wetland.csv
+processing polygon Reedy_Swamp_Wildlife_Reserve
+processing polygon Reedy_Swamp_Wildlife_Reserve still
+Loading ls5
+    Loading 431 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 91 filtered ls7 timesteps
+Loading ls8
+    Loading 157 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 431 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 91 filtered ls7 timesteps
+Loading ls8
+    Loading 157 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Reedy_Swamp_Wildlife_Reserve
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Reedy_Swamp_Wildlife_Reserve.csv
+Shape file is /g/data/r78/rjd547/DEWLP-Vic_Project/WetMAP_newest/WetMAP_polygons_18Jul19.shp
+system argument received is 3
+chunk size is 3
+There are 18 generated chunks
+Running for polygon IDs in the range 6 to 9
+processing polygon Neds_Corner_East_Wetland
+processing polygon Neds_Corner_East_Wetland still
+Loading ls5
+    Loading 470 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 106 filtered ls7 timesteps
+Loading ls8
+    Loading 168 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 470 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 106 filtered ls7 timesteps
+Loading ls8
+    Loading 168 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Neds_Corner_East_Wetland
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Neds_Corner_East_Wetland.csv
+processing polygon Neds_Corner_Central_Wetland
+processing polygon Neds_Corner_Central_Wetland still
+Loading ls5
+    Loading 462 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 104 filtered ls7 timesteps
+Loading ls8
+    Loading 165 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 462 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 104 filtered ls7 timesteps
+Loading ls8
+    Loading 165 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Neds_Corner_Central_Wetland
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Neds_Corner_Central_Wetland.csv
+processing polygon Neds_Corner_Woolshed_Wetland
+processing polygon Neds_Corner_Woolshed_Wetland still
+Loading ls5
+    Loading 446 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 102 filtered ls7 timesteps
+Loading ls8
+    Loading 156 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 446 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 102 filtered ls7 timesteps
+Loading ls8
+    Loading 156 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for Neds_Corner_Woolshed_Wetland
+wrote output data to file /g/data/r78/rjd547/DEWLP-Vic_Project/WIT/WITv3/Neds_Corner_Woolshed_Wetland.csv
+
+======================================================================================
+                  Resource Usage on 2019-09-16 17:36:06:
+   Job Id:             2048136.r-man2
+   Project:            r78
+   Exit Status:        0
+   Service Units:      16.92
+   NCPUs Requested:    32                     NCPUs Used: 32              
+                                           CPU Time Used: 03:05:01                                   
+   Memory Requested:   3.0TB                 Memory Used: 12.7GB          
+   Walltime requested: 06:00:00            Walltime Used: 00:31:44        
+   JobFS requested:    1.76TB                 JobFS used: 0B              
+======================================================================================
