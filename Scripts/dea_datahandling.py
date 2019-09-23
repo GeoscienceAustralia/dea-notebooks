@@ -205,8 +205,11 @@ def load_ard(dc,
                 
                 # First change dtype to float32, then mask out values using
                 # `.where()`. By casting to float32, we prevent `.where()` 
-                # from automatically casting to float64, using 2x the memory
-                ds = ds.astype(np.float32).where(good_quality)
+                # from automatically casting to float64, using 2x the memory.
+                # We also need to manually reset attributes due to a possible
+                # bug in recent xarray version
+                ds = ds.astype(np.float32).assign_attrs(crs=ds.crs)
+                ds = ds.where(good_quality)
 
             # Optionally add satellite/product name as a new variable
             if product_metadata:
@@ -235,8 +238,11 @@ def load_ard(dc,
             
             # First change dtype to float32, then mask out values using
             # `.where()`. By casting to float32, we prevent `.where()` 
-            # from automatically casting to float64, using 2x the memory
-            combined_ds = combined_ds.astype(np.float32)
+            # from automatically casting to float64, using 2x the memory.
+            # We also need to manually reset attributes due to a possible
+            # bug in recent xarray version
+            combined_ds = (combined_ds.astype(np.float32)
+                           .assign_attrs(crs=combined_ds.crs))
             combined_ds = masking.mask_invalid_data(combined_ds)
 
         # If `lazy_load` is True, return data as a dask array without
