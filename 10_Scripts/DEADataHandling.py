@@ -268,8 +268,8 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     Notes
     -----
     Memory issues: For large data extractions, it is recommended that you set both `mask_pixel_quality=False` and 
-    `mask_invalid_data=False`. Otherwise, all output variables will be coerced to float64 when NaN values are 
-    inserted into the array, potentially causing your data to use 4x as much memory. Be aware that the resulting
+    `mask_invalid_data=False`. Otherwise, all output variables will be coerced to float32 when NaN values are 
+    inserted into the array, potentially causing your data to use 2x as much memory. Be aware that the resulting
     arrays will contain invalid -999 values which should be considered in analyses.
         
     Example
@@ -298,7 +298,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     Loading ls8
         Loading 3 filtered ls8 timesteps
     Combining and sorting ls5, ls7, ls8 data
-        Replacing invalid -999 values with NaN (data will be coerced to float64)
+        Replacing invalid -999 values with NaN (data will be coerced to float32)
     >>> # Test that function returned data
     >>> len(landsat_ds.time) > 0
     True
@@ -406,7 +406,14 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
 
                     # Optionally apply pixel quality mask to all observations that were not dropped in previous step
                     if mask_pixel_quality:
-                        filtered = filtered.astype(np.float32).where(good_quality)
+                        
+                        # First change dtype to float32, then mask out values using
+                        # `.where()`. By casting to float32, we prevent `.where()` 
+                        # from automatically casting to float64, using 2x the memory
+                        # We also need to manually reset attributes due to a possible
+                        # bug in recent xarray version
+                        filtered = filtered.astype(np.float32).assign_attrs(crs=filtered.crs)
+                        filtered = filtered.where(good_quality)
 
                     # Optionally add satellite name variable
                     if satellite_metadata:
@@ -452,7 +459,14 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         if mask_invalid_data:
 
             print('    Replacing invalid -999 values with NaN (data will be coerced to float32)')
-            combined_ds = combined_ds.astype(np.float32)
+	
+            # First change dtype to float32, then mask out values using
+            # `.where()`. By casting to float32, we prevent `.where()` 
+            # from automatically casting to float64, using 2x the memory
+            # We also need to manually reset attributes due to a possible
+            # bug in recent xarray version
+            combined_ds = (combined_ds.astype(np.float32)
+                           .assign_attrs(crs=combined_ds.crs))
             combined_ds = masking.mask_invalid_data(combined_ds)
         
         # reset pixel quality attributes
@@ -472,8 +486,16 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         # Optionally filter to replace no data values with nans
         if mask_invalid_data:
 
-            print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
-            sensor_ds = masking.mask_invalid_data(sensor_ds)       
+            print('    Replacing invalid -999 values with NaN (data will be coerced to float32)')
+
+            # First change dtype to float32, then mask out values using
+            # `.where()`. By casting to float32, we prevent `.where()` 
+            # from automatically casting to float64, using 2x the memory
+            # We also need to manually reset attributes due to a possible
+            # bug in recent xarray version
+            combined_ds = (combined_ds.astype(np.float32)
+                           .assign_attrs(crs=combined_ds.crs))
+            combined_ds = masking.mask_invalid_data(combined_ds)    
         
         return sensor_ds
     
