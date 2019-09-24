@@ -11,7 +11,7 @@
 
 #user inputs
 cpus=4
-directory = "/g/data/r78/cb3058/dea-notebooks/dcStats/results/mdb_NSW/ndvi_max/"
+directory = "/g/data1a/r78/cb3058/dea-notebooks/tas_irrigation/data/ndvi_max/tiffs/"
 filenames= "ndvi_max"
 
 import fnmatch

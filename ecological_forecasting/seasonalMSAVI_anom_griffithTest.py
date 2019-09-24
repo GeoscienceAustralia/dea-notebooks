@@ -33,30 +33,48 @@ memory_per_cpu = '30GB'
 results = 'results/test_standardised_anomaly_big.nc'
 
 lat, lon = -34.294, 146.037
-latLon_adjust = 0.5
+latLon_adjust = 1.0
 
 #-------------------------------------------------------------------------
 #Functions for script
 
-def compute_seasonal(data, output_dir):
+def compute_climatology(data):
     #Scale reflectance values to 0-1
     nir = data.nir / 10000
     red = data.red / 10000
     #calculate msavi
     msavi = (2*nir+1-((2*nir+1)**2 - 8*(nir-red))**0.5)/2
     msavi = msavi.astype('float32') #convert to reduce memory
+    
+    #calculate climatologies and compute
+    climatology_mean = msavi.groupby('time.season').mean('time').to_netcdf('results/masvi_climatology_mean.nc', format='netCDF4')
+    climatology_std = msavi.groupby('time.season').std('time').to_netcdf('results/masvi_climatology_std.nc', format='netCDF4')
+    
+def compute_anomalies(data, output_dir):
+    #Scale reflectance values to 0-1
+    nir = data.nir / 10000
+    red = data.red / 10000
+    #calculate msavi
+    msavi = (2*nir+1-((2*nir+1)**2 - 8*(nir-red))**0.5)/2
+    msavi = msavi.astype('float32') #convert to reduce memory
+    
     #resample to quarterly and groupby seasons
     msavi_seasonalMeans = msavi.resample(time='QS-DEC').mean('time')
     msavi_seasonalMeans = msavi_seasonalMeans.groupby('time.season')
-    #calculate climatologies
-    climatology_mean = msavi.groupby('time.season').mean('time')
-    climatology_std = msavi.groupby('time.season').std('time')
+    
+    #import climatology
+    climatology_mean = open_dataarray('masvi_climatology_mean.nc', chunks={'x': chunk_size, 'y': chunk_size})
+    climatology_std = open_dataarray('masvi_climatology_std.nc', chunks={'x': chunk_size, 'y': chunk_size})
+    
     #calculate standardised anomalies
     msavi_stand_anomalies = xr.apply_ufunc(lambda x, m, s: (x - m) / s,
                                  msavi_seasonalMeans, climatology_mean, climatology_std,
                                  dask='allowed')
+    
     #write out results (will compute now)
     msavi_stand_anomalies.to_netcdf(output_dir, format='netCDF4')
+    
+    return msavi_stand_anomalies
 
 #-------------------------------------------------------------------------------------
 print('starting')
@@ -82,7 +100,8 @@ if __name__ == '__main__':
                                                    dask_chunks = {'x': chunk_size, 'y': chunk_size}, 
                                                    masked_prop=0.25, mask_pixel_quality=True,
                                                    mask_invalid_data=False)
-            #lazily compute anomalies
+           
+            compute_climatology(ds)
             compute_seasonal(ds, results)
             
 
