@@ -286,18 +286,20 @@ def array_to_geotiff(fname, data, geo_transform, projection,
         geotrans = xarraydataset.geobox.transform.to_gdal()
         prj = xarraydataset.geobox.crs.wkt
     
-    fname: str
+    Parameters
+    ----------     
+    fname : str
         Output geotiff file path including extension
-    data: numpy array
+    data : numpy array
         Input array to export as a geotiff    
-    geo_transform: tuple 
+    geo_transform : tuple 
         Geotransform for output raster; e.g. "(upleft_x, x_size, x_rotation, 
         upleft_y, y_rotation, y_size)"
-    projection: str
+    projection : str
         Projection for output raster (in "WKT" format)
-    nodata_val: int
+    nodata_val : int, optional
         Value to convert to nodata in the output raster; default 0
-    dtype: gdal dtype object, optional
+    dtype : gdal dtype object, optional
         Optionally set the dtype of the output raster; can be useful when exporting 
         an array of float or integer values. Defaults to gdal.GDT_Float32
         
