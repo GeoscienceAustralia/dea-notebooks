@@ -22,6 +22,7 @@ import numpy as np
 import xarray as xr
 
 from sklearn.cluster import KMeans
+from sklearn.base import ClusterMixin
 
 #'Wrappers' to translate xarrays to np arrays and back for interfacing with sklearn models
 
@@ -208,9 +209,76 @@ def make_supervised_data(input_xr,labelled_polys):
     """
     pass
 
-class KMeans_tree():
+class KMeans_tree(ClusterMixin):
     """
-    A hierarchical KMeans unsupervised clustering model. This class is designed to be compatible with methods and kwargs from
-    the sklearn.cluster.KMeans() class
+    A hierarchical KMeans unsupervised clustering model. This class is a clustering model, so it inherits
+    scikit-learn's ClusterMixin base class.
+    
     """
-    pass
+    def __init__(self, n_levels = 2, n_clusters = 3, **kwargs):
+        
+        assert(n_levels >= 1)
+        
+        self.base_model = KMeans(n_clusters = 3,**kwargs)
+        self.n_levels = n_levels
+        #make child models
+        if n_levels > 1:
+            self.branches = [KMeans_tree(n_levels = n_levels-1, n_clusters = n_clusters, **kwargs) for _ in range(n_clusters)]
+            
+    def fit(self, X, y = None, sample_weight = None):
+        """fit the tree of KMeans models. All parameters mimic those of KMeans.fit()
+        
+        Parameters
+        ----------
+        X : array-like or sparse matrix, shape=(n_samples, n_features)
+            Training instances to cluster. It must be noted that the data
+            will be converted to C ordering, which will cause a memory
+            copy if the given data is not C-contiguous.
+        y : Ignored
+            not used, present here for API consistency by convention.
+        sample_weight : array-like, shape (n_samples,), optional
+            The weights for each observation in X. If None, all observations
+            are assigned equal weight (default: None)
+        """
+        
+        self.labels_ = self.base_model.fit(X,sample_weight=sample_weight).labels_
+        
+        if self.n_levels > 1:
+            labels_old = np.copy(self.labels_)
+            #make room to add the sub-cluster labels
+            self.labels_*= (self.base_model.n_clusters)**(self.n_levels-1)
+            
+            for clu in range(self.base_model.n_clusters):
+                #fit child models on their corresponding partition of the training set
+                self.branches[clu].fit(X[labels_old==clu],sample_weight=sample_weight[labels_old==clu])
+                self.labels_[labels_old==clu] += self.branches[clu].labels_
+        
+        return self
+    
+    def predict(self, X, sample_weight = None):
+        """Send X through the KMeans tree and predict the resultant cluster.
+        Compatible with KMeans.predict()
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape = [n_samples, n_features]
+            New data to predict.
+        sample_weight : array-like, shape (n_samples,), optional
+            The weights for each observation in X. If None, all observations
+            are assigned equal weight (default: None)
+        Returns
+        -------
+        labels : array, shape [n_samples,]
+            Index of the cluster each sample belongs to.
+        """
+        
+        result = self.base_model.predict(X, sample_weight=sample_weight)
+        
+        if n_levels > 1:
+            rescpy = np.copy(result)
+            #make room to add the sub-cluster labels
+            result *= (self.base_model.n_clusters)**(self.n_levels-1)
+            
+            for clu in range(self.base_model.n_clusters):
+                result[rescpy==clu] += self.branches[clu].predict(X[rescpy==clu], sample_weight = sample_weight[rescpy==clu])
+        
+        return result
