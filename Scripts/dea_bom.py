@@ -75,7 +75,9 @@ def mk_station_selector(on_select,
     Returns
     =======
 
-    Passes through dst_map if not None, or returns newly constructed Map object.
+    (map, marker_cluster)
+
+    Passes through map=dst_map if not None, or returns newly constructed Map object.
     """
     import ipyleaflet as L
 
@@ -90,6 +92,7 @@ def mk_station_selector(on_select,
         st = pos2st.get(pos)
         if st is None:
             # should probably log warning here
+            print("Can't map click to station")
             return
 
         on_select(st)
@@ -100,13 +103,14 @@ def mk_station_selector(on_select,
                for st in stations]
 
     cluster = L.MarkerCluster(markers=markers)
-    cluster.on_click(on_click)
 
     if dst_map is None:
         dst_map = L.Map(**kw)
 
     dst_map.add_layer(cluster)
-    return dst_map
+    cluster.on_click(on_click)
+
+    return dst_map, cluster
 
 
 
