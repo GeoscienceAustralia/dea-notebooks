@@ -214,6 +214,15 @@ class KMeans_tree(ClusterMixin):
     A hierarchical KMeans unsupervised clustering model. This class is a clustering model, so it inherits
     scikit-learn's ClusterMixin base class.
     
+    Parameters
+    ----------
+    n_levels : integer, default 2
+        number of levels in the tree of clustering models.
+    n_clusters : integer, default 3
+        number of clusters in each of the constituent KMeans models in the tree.
+    **kwargs : optional
+        other keyword arguments to be passed directly to the KMeans initialiser.
+    
     """
     def __init__(self, n_levels = 2, n_clusters = 3, **kwargs):
         
