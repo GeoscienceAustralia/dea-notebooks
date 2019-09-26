@@ -221,6 +221,7 @@ class KMeans_tree(ClusterMixin):
         
         self.base_model = KMeans(n_clusters = 3,**kwargs)
         self.n_levels = n_levels
+        self.n_clusters = n_clusters
         #make child models
         if n_levels > 1:
             self.branches = [KMeans_tree(n_levels = n_levels-1, n_clusters = n_clusters, **kwargs) for _ in range(n_clusters)]
@@ -246,11 +247,11 @@ class KMeans_tree(ClusterMixin):
         if self.n_levels > 1:
             labels_old = np.copy(self.labels_)
             #make room to add the sub-cluster labels
-            self.labels_*= (self.base_model.n_clusters)**(self.n_levels-1)
+            self.labels_*= (self.n_clusters)**(self.n_levels-1)
             
-            for clu in range(self.base_model.n_clusters):
+            for clu in range(self.n_clusters):
                 #fit child models on their corresponding partition of the training set
-                self.branches[clu].fit(X[labels_old==clu],sample_weight=sample_weight[labels_old==clu])
+                self.branches[clu].fit(X[labels_old==clu],sample_weight=(sample_weight[labels_old==clu] if sample_weight is not None else None))
                 self.labels_[labels_old==clu] += self.branches[clu].labels_
         
         return self
@@ -273,12 +274,12 @@ class KMeans_tree(ClusterMixin):
         
         result = self.base_model.predict(X, sample_weight=sample_weight)
         
-        if n_levels > 1:
+        if self.n_levels > 1:
             rescpy = np.copy(result)
             #make room to add the sub-cluster labels
-            result *= (self.base_model.n_clusters)**(self.n_levels-1)
+            result *= (self.n_clusters)**(self.n_levels-1)
             
-            for clu in range(self.base_model.n_clusters):
-                result[rescpy==clu] += self.branches[clu].predict(X[rescpy==clu], sample_weight = sample_weight[rescpy==clu])
+            for clu in range(self.n_clusters):
+                result[rescpy==clu] += self.branches[clu].predict(X[rescpy==clu], sample_weight = (sample_weight[rescpy==clu] if sample_weight is not None else None))
         
         return result
