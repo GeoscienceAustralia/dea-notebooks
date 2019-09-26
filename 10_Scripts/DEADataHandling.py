@@ -493,9 +493,9 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
             # from automatically casting to float64, using 2x the memory
             # We also need to manually reset attributes due to a possible
             # bug in recent xarray version
-            combined_ds = (combined_ds.astype(np.float32)
-                           .assign_attrs(crs=combined_ds.crs))
-            combined_ds = masking.mask_invalid_data(combined_ds)    
+            sensor_ds = (sensor_ds.astype(np.float32)
+                           .assign_attrs(crs=sensor_ds.crs))
+            sensor_ds = masking.mask_invalid_data(sensor_ds)    
         
         return sensor_ds
     
