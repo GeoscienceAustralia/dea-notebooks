@@ -12,6 +12,7 @@ import lxml.etree
 __all__ = (
     'get_stations',
     'get_station_data',
+    'mk_station_selector',
 )
 
 def get_stations(time=None,
@@ -56,6 +57,57 @@ def get_station_data(station,
                               **_fmt_time(time))
     rr = requests.post(url, data=data)
     return _parse_get_data(rr.text)
+
+
+def mk_station_selector(on_select,
+                        stations=None,
+                        dst_map=None,
+                        **kw):
+    """
+    Add stations to the map and register on_click event.
+
+    :param on_select: Will be called when user selects station on the map `on_select(station)`
+    :param stations: List of stations as returned from get_stations
+    :param dst_map: Map to add stations markers to
+
+    Any other arguments are passed on  to Map(..) constructor.
+
+    Returns
+    =======
+
+    Passes through dst_map if not None, or returns newly constructed Map object.
+    """
+    import ipyleaflet as L
+
+    if stations is None:
+        stations = get_stations()
+
+    stations = [st for st in stations if st.pos is not None]
+    pos2st = {st.pos: st for st in stations}
+
+    def on_click(event='', type='', coordinates=None):
+        pos = tuple(coordinates)
+        st = pos2st.get(pos)
+        if st is None:
+            # should probably log warning here
+            return
+
+        on_select(st)
+
+    markers = [L.Marker(location=st.pos,
+                        draggable=False,
+                        title=st.name)
+               for st in stations]
+
+    cluster = L.MarkerCluster(markers=markers)
+    cluster.on_click(on_click)
+
+    if dst_map is None:
+        dst_map = L.Map(**kw)
+
+    dst_map.add_layer(cluster)
+    return dst_map
+
 
 
 def _fmt_time(time=None):
