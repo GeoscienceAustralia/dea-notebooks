@@ -140,10 +140,22 @@ def load_ard(dc,
     # Due to possible bug in xarray 0.13.0, define temporary function 
     # which converts dtypes in a way that preserves attributes
     def astype_attrs(da, dtype=np.float32):
-        da_attr = da.attrs
-        da = da.astype(dtype)
-        da = da.assign_attrs(**da_attr)
-        return da
+        '''
+        Loop through all data variables in the dataset, record 
+        attributes, convert to float32, then reassign attributes. If 
+        the data variable cannot be converted to float32 (e.g. for a
+        non-numeric dtype like strings), skip and return the variable 
+        unchanged.
+        '''
+        
+        try:            
+            da_attr = da.attrs
+            da = da.astype(dtype)
+            da = da.assign_attrs(**da_attr)
+            return da
+        
+        except ValueError:        
+            return da
     
     # Verify that products were provided
     if not products:
