@@ -137,6 +137,14 @@ def load_ard(dc,
         
     '''
     
+    # Due to possible bug in xarray 0.13.0, define temporary function 
+    # which converts dtypes in a way that preserves attributes
+    def astype_attrs(da, dtype=np.float32):
+        da_attr = da.attrs
+        da = da.astype(dtype)
+        da = da.assign_attrs(**da_attr)
+        return da
+    
     # Verify that products were provided
     if not products:
         raise ValueError("Please provide a list of product names "
@@ -211,9 +219,10 @@ def load_ard(dc,
                 # First change dtype to float32, then mask out values using
                 # `.where()`. By casting to float32, we prevent `.where()` 
                 # from automatically casting to float64, using 2x the memory.
-                # We also need to manually reset attributes due to a possible
-                # bug in recent xarray version
-                ds = ds.astype(np.float32).assign_attrs(crs=ds.crs)
+                # We need to do this by applying a custom function to every
+                # variable in the dataset instead of using `.astype()`, due 
+                # to a possible bug in xarray 0.13.0 that drops attributes 
+                ds = ds.apply(astype_attrs, dtype=np.float32, keep_attrs=True)
                 ds = ds.where(good_quality)
 
             # Optionally add satellite/product name as a new variable
@@ -244,10 +253,12 @@ def load_ard(dc,
             # First change dtype to float32, then mask out values using
             # `.where()`. By casting to float32, we prevent `.where()` 
             # from automatically casting to float64, using 2x the memory.
-            # We also need to manually reset attributes due to a possible
-            # bug in recent xarray version
-            combined_ds = (combined_ds.astype(np.float32)
-                           .assign_attrs(crs=combined_ds.crs))
+            # We need to do this by applying a custom function to every
+            # variable in the dataset instead of using `.astype()`, due 
+            # to a possible bug in xarray 0.13.0 that drops attributes           
+            combined_ds = combined_ds.apply(astype_attrs, 
+                                            dtype=np.float32, 
+                                            keep_attrs=True)
             combined_ds = masking.mask_invalid_data(combined_ds)
 
         # If `lazy_load` is True, return data as a dask array without
