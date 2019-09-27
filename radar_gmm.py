@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 ma = np.ma
 
+import fastmode
+
 color_iter = itertools.cycle(['navy', 'c', 'cornflowerblue', 'gold',
                               'darkorange'])
 
@@ -385,26 +387,51 @@ def ward_dataset(timeseries_ds,**kwargs):
     return cluster_xr
     
 
+#initial cluster centres to hopefully produce results that are consistent between areas
+init_clusters = [
+            [[ 0.12511279,  0.18816287,  0.08722887],
+            [-0.20368323, -0.418645  , -0.45288726],
+            [-1.3724948 , -1.1656201 ,  0.31573383]],
+            [
+            [[[ 0.2269218 ,  0.34693618,  0.19894943],
+            [ 0.37637348,  0.24985192, -0.26655155],
+            [-0.06508598, -0.00584951,  0.0741508 ]]],
+            [[[-0.50456102, -0.87914398, -0.76641863],
+            [-0.2563115 , -0.32433283, -0.17432645],
+            [ 0.25679989, -0.27658595, -1.04595977]]],
+            [[[-1.06004654, -1.16643965, -0.27202684],
+            [-1.72452352, -1.23191235,  0.8497928 ],
+            [-1.30253372, -1.1064539 ,  0.29728742]]]
+            ]
+            ]
+
+
 class SAR_Ktree():
     """
     Class to implement a hierarchical K-means model for land cover classification of
     SAR images of wetlands.
     
-    Should be compatible with the prediction methods for KMMs and GMMs.
     
     """
     
-    def __init__(self,levels = 2, branches = 3, minibatch=False, **kwargs):
+    def __init__(self,levels = 2, branches = 3, minibatch=False, init_clusters = None, **kwargs):
         if minibatch:
             self.model = MiniBatchKMeans(n_clusters = branches, **kwargs)
         else:
             self.model = KMeans(n_clusters = branches, **kwargs)
+            
+        if init_clusters:
+            self.model.init = np.array(init_clusters[0])
+
         self.levels = levels
         if levels > 1:
-            self.branches = [SAR_Ktree(levels = levels-1,branches = branches, minibatch = minibatch, **kwargs) for _ in range(branches)]
-            
+            if init_clusters:
+                self.branches = [SAR_Ktree(levels = levels-1,branches = branches, minibatch = minibatch, init_clusters = init_clusters[1][i], **kwargs) for i in range(branches)]
+            else:
+                self.branches = [SAR_Ktree(levels = levels-1,branches = branches, minibatch = minibatch, **kwargs) for i in range(branches)]
+        
         self.landcover_dict = None
-            
+        
     def fit(self,sar_ds):
         fit_input = _sklearn_flatten(sar_ds)
         self.model = self.model.fit(fit_input)
@@ -414,7 +441,81 @@ class SAR_Ktree():
             for branch in range(len(self.branches)):
                 sub_ds = sar_ds.where(self_predictions == branch)
                 self.branches[branch].fit(sub_ds)
+    
+    def balanced_fit(self,sar_ds,optical_cover,num_classes=5,class_weights=np.array([0.7,1.,0.7,1.3,1.3])):
+        """A method to perform a 'semi-supervised' fit based on land-cover classes determined by the optical_cover DataArray.
+           The algorithm is as follows:
+           1. reindex sar_ds so it only contains scenes that approximately match (within two days) the optical_cover scenes.
+           2. Split sar_ds into separate pixel arrays corresponding to each optical_cover class
+           3. Repeat pixels according to the relative prevalence of their associated cover class in optical_cover, in order to ensure
+              balance in the classes
+           4. Feed this final pixel array with repetition into the fit_nparray() method to initialise the model clusters
+           5. 'Predict' the data that was used to fit the model, then for each cluster take the modal optical_cover class and use this to
+              initialise the landcover dictionary.
+        """
+        print(class_weights)
+        #cluster the raw input data
+        self.fit(sar_ds)
         
+        #reindex SAR to match the optical WIT and discard optical scenes with no matching SAR
+        sar_ds = sar_ds.reindex(time=optical_cover.time,method='nearest',tolerance=np.timedelta64(2,'D'))
+        optical_cover = optical_cover.where(~(np.isnan(sar_ds.to_array()).any(dim='variable')))
+        sar_ds = sar_ds.where(~np.isnan(optical_cover))
+        print(optical_cover)
+        
+        #define amplification factors for each cover class
+        weights = 1./np.array([(optical_cover == cla).sum() for cla in range(num_classes)])
+        weights = weights/weights.min()
+        
+        #by default the class-based fudge factors will weight bare soil & vegetation more heavily - this avoids predicting large areas of flooding
+        #you may adjust the weighting to suit your problem. Bare soil tends to be underrepresented so adding weight to this may help too
+        weights = weights*class_weights
+        
+        
+        #predict the labelled pixels with the fitted clustering model
+        pred_input = _sklearn_flatten(sar_ds)
+        covervals = optical_cover.to_masked_array()
+        covervals = covervals[~covervals.mask]
+        test_out = np.stack([self.predict_nparr(pred_input),covervals])
+        
+        self.landcover_dict = np.zeros(len(self.branches)**self.levels)
+        for clu in range(len(self.branches)**self.levels):
+            reduced = test_out[1,test_out[0,:]==clu]
+            self.landcover_dict[clu] = fastmode.mode_class(reduced,num_classes=num_classes,weights=weights)
+            
+    def fit_nparr(self,fit_input):
+        self.model = self.model.fit(fit_input)
+        
+        self_predictions = self.model.predict(fit_input)
+        if self.levels > 1:
+            for branch in range(len(self.branches)):
+                sub_arr = fit_input[self_predictions == branch]
+                self.branches[branch].fit_nparr(sub_arr)
+                
+    def predict_nparr(self,arr):
+        pred_out = self.model.predict(arr)
+
+        #if not a leaf
+        if self.levels > 1:        
+            num_values = len(self.branches) ** (self.levels - 1)
+            pred_out *= num_values
+
+            for branch in range(len(self.branches)):
+                branch_arr = arr[pred_out == num_values*branch]
+                branch_out = self.branches[branch].predict_nparr(branch_arr)
+
+                pred_out[pred_out == num_values*branch] = pred_out[pred_out == num_values*branch] + branch_out
+
+        
+        #copy the defined landcover classes if available
+        if (np.array(self.landcover_dict).any()):
+            cover = pred_out.copy(deep=True)
+            for i in range(len(self.landcover_dict)):
+                cover[pred_out==i] = self.landcover_dict[i]
+            pred_out = cover
+        
+        return pred_out
+    
     def predict(self,sar_ds):
         """predict a single scene."""
         pred_input = _sklearn_flatten(sar_ds)
@@ -445,7 +546,7 @@ class SAR_Ktree():
             ret = pred_out
         
         #copy the defined landcover classes if available
-        if self.landcover_dict:
+        if (np.array(self.landcover_dict).any()):
             pred = ret.copy(deep=True)
             for i in range(len(self.landcover_dict)):
                 np.place(pred.data,ret.data==i,self.landcover_dict[i])

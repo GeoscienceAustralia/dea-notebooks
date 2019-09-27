@@ -1,6 +1,6 @@
 import numpy as np
 
-def mode_class(arr, axis = 0, num_classes = 4):
+def mode_class(arr, axis = None, num_classes = 4, weights = []):
     """Fast mode finder using numpy. Designed to be compatible with xarray's reduce()
     functionality.
 
@@ -19,7 +19,12 @@ def mode_class(arr, axis = 0, num_classes = 4):
     definitely worth using this method if your problem can be coerced to be compatible with it.
 
     """
+    if ~(np.array(weights).any()):
+        weights = np.ones(num_classes)
     
-    clarr = np.array([(arr == cla).sum(axis=axis) for cla in range(num_classes)])
+    if axis:
+        clarr = weights*np.array([(arr == cla).sum(axis=axis) for cla in range(num_classes)])
+    else:
+        clarr = weights*np.array([(arr == cla).sum() for cla in range(num_classes)])
     
     return np.argmax(clarr,axis=0)
