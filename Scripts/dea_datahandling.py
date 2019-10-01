@@ -11,8 +11,9 @@ If you would like to report an issue with this script, you can file one on Githu
 Functions included:
     load_ard
     array_to_geotiff
+    mostcommon_utm
 
-Last modified: September 2019
+Last modified: October 2019
 
 '''
 
@@ -20,6 +21,8 @@ Last modified: September 2019
 import numpy as np
 import xarray as xr
 from datacube.storage import masking
+from collections import Counter
+import warnings
 import gdal
 
 
@@ -347,3 +350,44 @@ def array_to_geotiff(fname, data, geo_transform, projection,
 
     # Close file
     dataset = None
+
+def mostcommon_crs(dc, product, query):
+    
+    """
+    Takes a given query and returns the most common CRS for observations
+    returned for that spatial extent. This can be useful when your study
+    area lies on the boundary of two UTM zones, forcing you to decide
+    which CRS to use for your `output_crs` in `dc.load`.
+    
+    Parameters
+    ----------     
+    dc : datacube Datacube object
+        The Datacube to connect to, i.e. `dc = datacube.Datacube()`.
+        This allows you to also use development datacubes if required.   
+    product : str
+        A product name to load CRSs from
+    query : dict
+        A datacube query including x, y and time range to assess for the
+        most common CRS
+    
+    """
+    
+    # List of matching products
+    matching_datasets = dc.find_datasets(product=product, **query)
+    
+    # Extract all CRSs
+    crs_list = [str(i.crs) for i in matching_datasets]    
+   
+    # Identify most common CRS
+    crs_counts = Counter(crs_list)    
+    crs_mostcommon = crs_counts.most_common(1)[0][0]
+
+    # Warn user if multiple CRSs are encountered
+    if len(crs_counts.keys()) > 1:
+
+        warnings.warn(f'Multiple UTM zones {list(crs_counts.keys())} '
+                      f'were returned for this query. Defaulting to '
+                      f'the most common zone: {crs_mostcommon}', 
+                      UserWarning)
+    
+    return crs_mostcommon
