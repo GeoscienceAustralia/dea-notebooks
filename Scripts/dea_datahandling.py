@@ -351,8 +351,8 @@ def array_to_geotiff(fname, data, geo_transform, projection,
     # Close file
     dataset = None
 
-def mostcommon_crs(dc, product, query):
-    
+
+def mostcommon_crs(dc, product, query):    
     """
     Takes a given query and returns the most common CRS for observations
     returned for that spatial extent. This can be useful when your study
@@ -369,6 +369,11 @@ def mostcommon_crs(dc, product, query):
     query : dict
         A datacube query including x, y and time range to assess for the
         most common CRS
+        
+    Returns
+    -------
+    A EPSG string giving the most common CRS from all datasets returned
+    by the query above
     
     """
     
