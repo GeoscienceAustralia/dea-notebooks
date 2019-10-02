@@ -128,6 +128,9 @@ def sklearn_unflatten(output_np,input_xr):
     if len(pxdims)!=0:
         mask = mask.any(dim=pxdims)
         
+    #turn the mask into a numpy array (boolean indexing with xarrays acts weird)
+    mask=mask.data
+    
     #handle multivariable output
     output_px_shape = ()
     if len(output_np.shape[1:]):
