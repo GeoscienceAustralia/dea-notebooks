@@ -8,7 +8,12 @@ Contact: If you need assistance, please post a question on the Open Data Cube Sl
 
 If you would like to report an issue with this script, you can file one on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: September 2019
+Functions included:
+    rgb
+    display_map
+    map_shapefile
+
+Last modified: October 2019
 
 '''
 
@@ -16,7 +21,11 @@ Last modified: September 2019
 import folium  
 import math
 import numpy as np
+import ipywidgets
+import matplotlib as mpl
 from pyproj import Proj, transform
+from IPython.display import display
+from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps
 
 
 def rgb(ds,
@@ -281,6 +290,103 @@ def display_map(x, y, crs='EPSG:4326', margin=-0.5, zoom_bias=0):
     interactive_map.add_child(folium.features.LatLngPopup())
 
     return interactive_map
+
+
+def map_shapefile(gdf, 
+                  weight=2, 
+                  colormap=mpl.cm.YlOrRd, 
+                  basemap=basemaps.Esri.WorldImagery, 
+                  default_zoom=13,
+                  hover_col=None,
+                  hover_prefix=''):
+    
+    """
+    Plots a geopandas GeoDataFrame over an interactive ipyleaflet 
+    basemap. Optionally, can be set up to print selected data from 
+    features in the GeoDataFrame. 
+    
+    Last modified: October 2019
+    
+    Parameters
+    ----------  
+    gdf : geopandas.GeoDataFrame
+        A GeoDataFrame containing the spatial features to be plotted 
+        over the basemap
+    weight : float or int, optional
+        An optional numeric value giving the weight that line features
+        will be plotted as. Defaults to 2; larger numbers = thicker
+    colormap : matplotlib.cm, optional
+        An optional matplotlib.cm colormap used to style the features
+        in the GeoDataFrame. Features will be coloured by the order
+        they appear in the GeoDataFrame. Defaults to the `YlOrRd` 
+        colormap.
+    basemap : ipyleaflet.basemaps object, optional
+        An optional ipyleaflet.basemaps object used as the basemap for 
+        the interactive plot. Defaults to `basemaps.Esri.WorldImagery`
+    default_zoom : int, optional
+        An optional integer giving a default zoom level for the 
+        interactive ipyleaflet plot. Defaults to 13
+    hover_col : str, optional
+        An optional string giving the name of any column in the
+        GeoDataFrame you wish to have data from printed above the 
+        interactive map when a user hovers over the features in the map.
+        Defaults to None which will not print any data. 
+
+    """
+    
+    def n_colors(n, colormap=colormap):
+        data = np.linspace(0.0,1.0,n)
+        c = [mpl.colors.rgb2hex(d[0:3]) for d in colormap(data)]
+        return c
+
+    def data_to_colors(data, colormap=colormap):
+        c = [mpl.colors.rgb2hex(d[0:3]) for 
+             d in colormap(mpl.colors.Normalize()(data))]
+        return c 
+    
+    def on_hover(event, id, properties):
+        with dbg:
+            text = properties.get(hover_col, '???')
+            lbl.value = f'{hover_col}: {text}'
+            # print(properties)
+  
+    # Convert to WGS 84 and GeoJSON format
+    gdf_wgs84 = gdf.to_crs(epsg=4326)
+    data = gdf_wgs84.__geo_interface__    
+    
+    # For each feature in dataset, append colour values
+    n_features = len(data['features'])
+    colors = n_colors(n_features)
+    
+    for feature, color in zip(data['features'], colors):
+        feature['properties']['style'] = {'color': color, 
+                                          'weight': weight, 
+                                          'fillColor': color, 
+                                          'fillOpacity': 1.0}
+
+    # Get centroid to focus map on
+    lon, lat = gdf_wgs84.unary_union.centroid.coords.xy 
+    
+    # Plot map 
+    m = Map(center=(lat[0], lon[0]), 
+            zoom=default_zoom, 
+            basemap=basemap, 
+            layout=dict(width='800px', height='600px'))
+    
+    # Add GeoJSON layer to map
+    feature_layer = GeoJSON(data=data)
+    m.add_layer(feature_layer)
+    
+    # If a column is specified by `hover_col`, print data from the
+    # hovered feature above the map
+    if hover_col:        
+        lbl = ipywidgets.Label()
+        dbg = ipywidgets.Output()        
+        feature_layer.on_hover(on_hover)
+        display(lbl)
+      
+    # Display the map
+    display(m)
 
 
 def _degree_to_zoom_level(l1, l2, margin=0.0):
