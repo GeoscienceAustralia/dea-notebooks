@@ -25,7 +25,6 @@ from sklearn.cluster import KMeans
 from sklearn.base import ClusterMixin
 
 #'Wrappers' to translate xarrays to np arrays and back for interfacing with sklearn models
-
 def sklearn_flatten(input_xr):
     """
     Reshape a DataArray or Dataset with spatial (and optionally temporal) structure into 
@@ -69,7 +68,9 @@ def sklearn_flatten(input_xr):
     mask = np.isnan(stacked)
     if len(pxdims)!=0:
         mask = mask.any(dim=pxdims)
-    
+        
+    #turn the mask into a numpy array (boolean indexing with xarrays acts weird)
+    mask=mask.data
     #the dimension we are masking along ('z') needs to be the first dimension in the underlying np array for
     #the boolean indexing to work
     stacked = stacked.transpose('z',*pxdims)
