@@ -51,7 +51,7 @@ def rgb(ds,
     This function was designed to work as an easier-to-use wrapper 
     around xarray's `.plot.imshow()` functionality.
     
-    Last modified: August 2019
+    Last modified: October 2019
     
     Parameters
     ----------  
@@ -114,16 +114,38 @@ def rgb(ds,
     
     """
 
-    # Compute image aspect based on first index
+    # Compute image aspect based on the last two dimensions (this will 
+    # exclude the index dim if it is present in the dataset)
     if not aspect:
-        data_shape = ds.isel(**{index_dim: 0}).to_array().shape
-        aspect = data_shape[2] / data_shape[1]
+        x_dim, y_dim = list(ds.dims)[-2:]
+        aspect = len(ds[y_dim]) / len(ds[x_dim])
 
     # If no value is supplied for `index` (the default), plot using default 
     # values and arguments passed via `**kwargs`
     if index is None:
+        
+        # Select bands and convert to DataArray
+        da = ds[bands].to_array()
 
-        if len(ds.dims) > 2 and 'col' not in kwargs:
+        # If percentile_stretch == True, clip plotting to percentile vmin, vmax
+        if percentile_stretch:
+            vmin, vmax = da.compute().quantile(percentile_stretch).values
+            kwargs.update({'vmin': vmin, 'vmax': vmax})        
+        
+        # If there are more than three dimensions and the index dimension == 1, 
+        # squeeze this dimension out to remove it
+        if ((len(ds.dims) > 2) and 
+            ('col' not in kwargs) and 
+            (len(da[index_dim]) == 1)):
+        
+            da = da.squeeze(dim=index_dim)
+            
+        # If there are more than three dimensions and the index dimension
+        # is longer than 1, raise exception to tell user to use 'col'/`index`
+        elif ((len(ds.dims) > 2) and 
+              ('col' not in kwargs) and 
+              (len(da[index_dim]) > 1)):
+                
             raise Exception(
                 f'The input dataset `ds` has more than two dimensions: '
                 '{list(ds.dims.keys())}. Please select a single observation '
@@ -131,14 +153,6 @@ def rgb(ds,
                 'the arguments e.g. `col="time", col_wrap=4` to the function ' 
                 'call'
             )
-
-        # Select bands and convert to DataArray
-        da = ds[bands].to_array()
-
-        # If percentile_stretch == True, clip plotting to percentile vmin, vmax
-        if percentile_stretch:
-            vmin, vmax = da.compute().quantile(percentile_stretch).values
-            kwargs.update({'vmin': vmin, 'vmax': vmax})
 
         img = da.plot.imshow(robust=robust,
                              col_wrap=col_wrap,
