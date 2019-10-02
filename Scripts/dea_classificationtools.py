@@ -260,7 +260,8 @@ class KMeans_tree(ClusterMixin):
             
             for clu in range(self.n_clusters):
                 #fit child models on their corresponding partition of the training set
-                self.branches[clu].fit(X[labels_old==clu],sample_weight=(sample_weight[labels_old==clu] if sample_weight is not None else None))
+                self.branches[clu].fit(X[labels_old==clu],
+                    sample_weight=(sample_weight[labels_old==clu] if sample_weight is not None else None))
                 self.labels_[labels_old==clu] += self.branches[clu].labels_
         
         return self
@@ -289,6 +290,7 @@ class KMeans_tree(ClusterMixin):
             result *= (self.n_clusters)**(self.n_levels-1)
             
             for clu in range(self.n_clusters):
-                result[rescpy==clu] += self.branches[clu].predict(X[rescpy==clu], sample_weight = (sample_weight[rescpy==clu] if sample_weight is not None else None))
+                result[rescpy==clu] += self.branches[clu].predict(X[rescpy==clu], 
+                    sample_weight = (sample_weight[rescpy==clu] if sample_weight is not None else None))
         
         return result
