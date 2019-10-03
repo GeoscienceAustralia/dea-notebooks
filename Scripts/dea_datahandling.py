@@ -21,14 +21,13 @@ Last modified: October 2019
 # Import required packages
 import os
 import gdal
-import wget
+import requests
 import zipfile
 import warnings
 import numpy as np
 import xarray as xr
 from datacube.storage import masking
 from collections import Counter
-from urllib.error import HTTPError
 
 
 def load_ard(dc,
@@ -437,11 +436,9 @@ def download_unzip(url,
                          
     # Download zip file
     print(f'Downloading {zip_name}')
-    try:
-        wget.download(url, zip_name)        
-    except HTTPError:        
-        raise ValueError('The URL provided does not exist. Please '
-                         'specify a valid URL path to a .zip file')
+    r = requests.get(url)
+    with open(zip_name, 'wb') as f:
+        f.write(r.content)
         
     # Extract into output_dir
     with zipfile.ZipFile(zip_name, 'r') as zip_ref:        
