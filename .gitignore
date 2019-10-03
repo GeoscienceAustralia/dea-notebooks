@@ -14,4 +14,7 @@
 *.cpg
 *.dbf
 *.shx
+*.sh
+*.csv
+*.py
 __pycache__
