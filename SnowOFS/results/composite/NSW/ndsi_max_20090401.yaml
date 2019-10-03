@@ -1,0 +1,3533 @@
+creation_dt: '2019-08-20T00:16:17.207928'
+extent:
+  center_dt: '2009-04-01T00:00:00'
+  coord:
+    ll:
+      lat: -36.63432831408709
+      lon: 148.10328759698183
+    lr:
+      lat: -36.575816303391015
+      lon: 148.66397121409213
+    ul:
+      lat: -36.05972102098505
+      lon: 148.0137229341066
+    ur:
+      lat: -36.00163114678246
+      lon: 148.57135734603926
+  from_dt: '2009-04-01T00:00:00'
+  to_dt: '2009-04-01T00:00:00'
+format:
+  name: GeoTIFF
+grid_spatial:
+  projection:
+    geo_ref_points:
+      ll:
+        x: 1439250.0
+        y: -4094375.0
+      lr:
+        x: 1489925.0
+        y: -4094375.0
+      ul:
+        x: 1439250.0
+        y: -4030175.0
+      ur:
+        x: 1489925.0
+        y: -4030175.0
+    spatial_reference: EPSG:3577
+    valid_data:
+      coordinates:
+      - - - 1439250.0
+          - -4030175.0
+        - - 1489925.0
+          - -4030175.0
+        - - 1489925.0
+          - -4094375.0
+        - - 1439250.0
+          - -4094375.0
+        - - 1439250.0
+          - -4030175.0
+      type: Polygon
+id: ba8e6572-fee4-4fb1-86ae-6b23db1bd487
+image:
+  bands:
+    ndsi_max:
+      layer: 1
+      path: file:///g/data/r78/jt7365/dea-notebooks/SnowOFS/results/composite/NSW/ndsi_max_20090401.tif
+lineage:
+  algorithm:
+    name: datacube-stats
+    parameters:
+      configuration_file:
+        computation:
+          chunking:
+            x: 1000
+            y: 1000
+        date_ranges:
+          end_date: '2018-10-31'
+          start_date: '1987-04-01'
+          stats_duration: 7m
+          step_size: 1y
+        filter_product: {}
+        global_attributes: {}
+        input_region:
+          from_file: /g/data/r78/jt7365/dea-notebooks/SnowOFS/NSW_alpine_region.shp
+          gridded: false
+        location: /g/data/r78/jt7365/dea-notebooks/SnowOFS/results/composite/NSW/
+        output_products:
+        - file_path_template: '{name}_max_{epoch_start:%Y%m%d}.tif'
+          name: ndsi
+          output_params:
+            fletcher32: true
+            zlib: true
+          statistic: simple_normalised_difference
+          statistic_args:
+            band1: green
+            band2: swir1
+            name: ndsi
+            stats:
+            - max
+        sources:
+        - group_by: solar_day
+          masks:
+          - flags:
+              blue_saturated: false
+              cloud_acca: no_cloud
+              cloud_shadow_acca: no_cloud_shadow
+              contiguous: true
+              green_saturated: false
+              nir_saturated: false
+              red_saturated: false
+              swir1_saturated: false
+              swir2_saturated: false
+            fuse_func: datacube.helpers.ga_pq_fuser
+            group_by: solar_day
+            measurement: pixelquality
+            product: ls5_pq_albers
+          measurements:
+          - green
+          - swir1
+          product: ls5_nbar_albers
+          source_filter:
+            gqa_iterative_mean_xy:
+            - 0
+            - 1
+            product: ls5_level1_scene
+        - group_by: solar_day
+          masks:
+          - flags:
+              blue_saturated: false
+              cloud_acca: no_cloud
+              cloud_shadow_acca: no_cloud_shadow
+              contiguous: true
+              green_saturated: false
+              nir_saturated: false
+              red_saturated: false
+              swir1_saturated: false
+              swir2_saturated: false
+            fuse_func: datacube.helpers.ga_pq_fuser
+            group_by: solar_day
+            measurement: pixelquality
+            product: ls7_pq_albers
+          measurements:
+          - green
+          - swir1
+          product: ls7_nbar_albers
+          source_filter:
+            gqa_iterative_mean_xy:
+            - 0
+            - 1
+            product: ls7_level1_scene
+          time:
+          - '1986-01-01'
+          - '2003-05-01'
+        - group_by: solar_day
+          masks:
+          - flags:
+              blue_saturated: false
+              cloud_acca: no_cloud
+              cloud_shadow_acca: no_cloud_shadow
+              contiguous: true
+              green_saturated: false
+              nir_saturated: false
+              red_saturated: false
+              swir1_saturated: false
+              swir2_saturated: false
+            fuse_func: datacube.helpers.ga_pq_fuser
+            group_by: solar_day
+            measurement: pixelquality
+            product: ls8_pq_albers
+          measurements:
+          - green
+          - swir1
+          product: ls8_nbar_albers
+          source_filter:
+            gqa_iterative_mean_xy:
+            - 0
+            - 1
+            product: ls8_level1_scene
+        storage:
+          chunking:
+            time: 1
+            x: 256
+            y: 256
+          crs: EPSG:3577
+          dimension_order:
+          - time
+          - y
+          - x
+          driver: GeoTIFF
+          resolution:
+            x: 25
+            y: -25
+          tile_size:
+            x: 100000
+            y: 100000
+        var_attributes: {}
+    repo_url: https://github.com/GeoscienceAustralia/datacube-stats.git
+    version: 0.9b5
+  machine:
+    hostname: r3367
+    software_versions:
+      datacube:
+        repo_url: https://github.com/opendatacube/datacube-core.git
+        version: '1.7'
+      python:
+        version: "3.6.7 | packaged by conda-forge | (default, Feb 20 2019, 02:51:38)
+          \n[GCC 7.3.0]"
+    uname: 'Linux r3367 3.10.0-957.21.3.el6.x86_64 #1 SMP Wed Jun 19 09:41:06 AEST
+      2019 x86_64'
+  source_datasets:
+    '0':
+      creation_dt: '2016-07-15T08:44:54.903127'
+      extent:
+        center_dt: '2009-04-30T23:44:21'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-04-30T23:44:21'
+        to_dt: '2009-04-30T23:44:21'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: 0242b178-4e86-45f1-85ad-15969922ee78
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r921
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r921 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '1':
+      creation_dt: '2016-07-13T08:03:13.810625'
+      extent:
+        center_dt: '2009-05-16T23:44:39.500000'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-05-16T23:44:39.500000'
+        to_dt: '2009-05-16T23:44:39.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: abebfa9e-ad98-4f2b-a789-a768dec58504
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r417
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r417 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '10':
+      creation_dt: '2016-07-13T07:29:14.022358'
+      extent:
+        center_dt: '2009-08-29T23:40:37.500000'
+        coord:
+          ll:
+            lat: -36.69403639749841
+            lon: 148.02005764161422
+          lr:
+            lat: -36.615775411321664
+            lon: 148.7697081216954
+          ul:
+            lat: -36.51928357908315
+            lon: 147.9928608820452
+          ur:
+            lat: -36.44119631037498
+            lon: 148.7412673268491
+        from_dt: '2009-08-29T23:40:37.500000'
+        to_dt: '2009-08-29T23:40:37.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1498745.4318846758
+                - -4100000.0
+              - - 1431023.3936664355
+                - -4100000.0
+              - - 1438309.577390023
+                - -4081420.092915341
+              - - 1438664.115515678
+                - -4080530.882563075
+              - - 1438700.1304526506
+                - -4080491.3231942486
+              - - 1438838.4963595462
+                - -4080507.2621091884
+              - - 1498745.4318846758
+                - -4100000.0
+            type: Polygon
+      id: ab6eb68a-d05c-41f5-bab5-00bdea2f6a57
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r607
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r607 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '11':
+      creation_dt: '2016-07-15T08:48:52.319497'
+      extent:
+        center_dt: '2009-05-09T23:38:20.500000'
+        coord:
+          ll:
+            lat: -36.686522638301604
+            lon: 148.0935800991644
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.79174236369244
+            lon: 147.95451417862088
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-05-09T23:38:20.500000'
+        to_dt: '2009-05-09T23:38:20.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1475789.5614523862
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1441511.3039821684
+                - -4100000.0
+              - - 1439178.7875509146
+                - -4099239.477478709
+              - - 1438833.1677379606
+                - -4099122.322076643
+              - - 1437775.4016665474
+                - -4098447.8394951904
+              - - 1437660.769646813
+                - -4098277.539063758
+              - - 1441182.146517392
+                - -4088887.664901225
+              - - 1449628.7181821193
+                - -4067162.873769456
+              - - 1475789.5614523862
+                - -4000000.0
+            type: Polygon
+      id: cab6f3bb-fa89-4731-beba-d41e11fb84ef
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r919
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r919 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '12':
+      creation_dt: '2016-07-15T08:20:00.251866'
+      extent:
+        center_dt: '2009-10-16T23:40:48.500000'
+        coord:
+          ll:
+            lat: -36.69300257709357
+            lon: 148.03019405350148
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.79814982124309
+            lon: 147.89166443587362
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-10-16T23:40:48.500000'
+        to_dt: '2009-10-16T23:40:48.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1467412.1624912557
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1442024.299801621
+                - -4100000.0
+              - - 1435210.0417676098
+                - -4097777.7347362484
+              - - 1432003.727915739
+                - -4096704.7960469024
+              - - 1431938.419684792
+                - -4096660.689340981
+              - - 1432793.603481992
+                - -4089238.7657055464
+              - - 1432794.252735366
+                - -4089233.293287745
+              - - 1433566.762277422
+                - -4087131.3080816343
+              - - 1447592.4622594798
+                - -4050909.3743773494
+              - - 1467412.1624912557
+                - -4000000.0
+            type: Polygon
+      id: 8a870466-98a5-4f0c-b6bf-3420ae37fba9
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r910
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r910 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '13':
+      creation_dt: '2016-07-15T08:44:51.023744'
+      extent:
+        center_dt: '2009-10-23T23:47:03.500000'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-10-23T23:47:03.500000'
+        to_dt: '2009-10-23T23:47:03.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: 153ab321-7776-4290-ab31-67ddc470c928
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r913
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r913 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '14':
+      creation_dt: '2016-07-15T08:45:26.956227'
+      extent:
+        center_dt: '2009-10-16T23:40:48.500000'
+        coord:
+          ll:
+            lat: -36.68803991001485
+            lon: 148.07876119937947
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.7932426660562
+            lon: 147.93982064795688
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-10-16T23:40:48.500000'
+        to_dt: '2009-10-16T23:40:48.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1473809.3068641317
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1444970.5113037063
+                - -4100000.0
+              - - 1437383.152497756
+                - -4097525.615289764
+              - - 1436355.93306135
+                - -4096863.142443579
+              - - 1436322.8883255234
+                - -4096700.6684439904
+              - - 1436383.402945305
+                - -4096400.242520067
+              - - 1437732.525429444
+                - -4092786.9247949673
+              - - 1448985.4634226863
+                - -4063770.0356244943
+              - - 1473809.3068641317
+                - -4000000.0
+            type: Polygon
+      id: 8dd8d8d7-afe6-4eac-81be-4d00944d2a2f
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r965
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r965 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '15':
+      creation_dt: '2016-07-15T08:45:47.972703'
+      extent:
+        center_dt: '2009-04-07T23:37:44.500000'
+        coord:
+          ll:
+            lat: -36.68712856840269
+            lon: 148.08766376919695
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.79234151714984
+            lon: 147.9486479004097
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-04-07T23:37:44.500000'
+        to_dt: '2009-04-07T23:37:44.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1474810.2757222874
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1444223.8751153245
+                - -4100000.0
+              - - 1438499.0171075654
+                - -4098131.353919818
+              - - 1438275.229018843
+                - -4098053.430813744
+              - - 1437239.7501752723
+                - -4097406.697500351
+              - - 1437126.6262696872
+                - -4097209.7598711676
+              - - 1437181.3271482007
+                - -4096919.1148339836
+              - - 1439577.3130206456
+                - -4090562.302397047
+              - - 1449068.399974496
+                - -4066117.901677719
+              - - 1474810.2757222874
+                - -4000000.0
+            type: Polygon
+      id: 8890c6a8-a0fe-46ff-852d-18cd500ff49b
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r965
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r965 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '16':
+      creation_dt: '2016-07-15T09:55:27.154252'
+      extent:
+        center_dt: '2009-09-14T23:40:50.500000'
+        coord:
+          ll:
+            lat: -36.6954842694232
+            lon: 148.0058505129468
+          lr:
+            lat: -36.61653316839707
+            lon: 148.76261400279094
+          ul:
+            lat: -36.519062963447816
+            lon: 147.97841880620896
+          ur:
+            lat: -36.44028878409218
+            lon: 148.73391445127203
+        from_dt: '2009-09-14T23:40:50.500000'
+        to_dt: '2009-09-14T23:40:50.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1498104.0778819276
+                - -4100000.0
+              - - 1429740.9299804913
+                - -4100000.0
+              - - 1435702.7864565852
+                - -4084788.8347878843
+              - - 1437522.4681030274
+                - -4080305.375479337
+              - - 1437649.8063047475
+                - -4080320.048427318
+              - - 1498104.0778819276
+                - -4100000.0
+            type: Polygon
+      id: 91f0f6fe-bb4f-451e-9123-b81b98620321
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r835
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r835 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '17':
+      creation_dt: '2016-07-15T08:47:27.403449'
+      extent:
+        center_dt: '2009-09-30T23:41:02'
+        coord:
+          ll:
+            lat: -36.689708708847675
+            lon: 148.0624462365532
+          lr:
+            lat: -36.615218699370416
+            lon: 148.77491810044125
+          ul:
+            lat: -36.52282177758232
+            lon: 148.03640325536486
+          ur:
+            lat: -36.44848969285297
+            lon: 148.7477459777036
+        from_dt: '2009-09-30T23:41:02'
+        to_dt: '2009-09-30T23:41:02'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1499216.4534806202
+                - -4100000.0
+              - - 1434849.984712671
+                - -4100000.0
+              - - 1441827.87279809
+                - -4082177.0958980448
+              - - 1442172.1605719998
+                - -4081368.6244285023
+              - - 1442423.1151303123
+                - -4081423.1599511863
+              - - 1461081.6421821443
+                - -4087560.8260292737
+              - - 1499216.4534806202
+                - -4100000.0
+            type: Polygon
+      id: 3158e9fd-a1f5-479f-88f8-4dbf0471dfb4
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r968
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r968 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '18':
+      creation_dt: '2016-07-13T08:06:07.074101'
+      extent:
+        center_dt: '2009-04-14T23:44:04'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-04-14T23:44:04'
+        to_dt: '2009-04-14T23:44:04'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: 8acb39dd-7eda-4c96-b8cd-d3b7a4647be6
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r550
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r550 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '19':
+      creation_dt: '2016-07-15T08:32:49.355440'
+      extent:
+        center_dt: '2009-09-30T23:41:02'
+        coord:
+          ll:
+            lat: -36.69685500786555
+            lon: 147.9923883725062
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -36.511720069169606
+            lon: 147.96362804955083
+          ur:
+            lat: -36.429351392826355
+            lon: 148.7534336163916
+        from_dt: '2009-09-30T23:41:02'
+        to_dt: '2009-09-30T23:41:02'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1500000.0
+                - -4099965.556766432
+              - - 1500000.0
+                - -4100000.0
+              - - 1428525.7488045825
+                - -4100000.0
+              - - 1433779.1075420638
+                - -4086602.536197686
+              - - 1436679.7720055524
+                - -4079372.192263981
+              - - 1436715.7292060717
+                - -4079332.7365448927
+              - - 1436853.539945446
+                - -4079348.6200341824
+              - - 1500000.0
+                - -4099965.556766432
+            type: Polygon
+      id: 348bd6d2-e7b1-4e32-82be-89727c8a399f
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r492
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r492 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '2':
+      creation_dt: '2016-07-15T08:22:16.935150'
+      extent:
+        center_dt: '2009-04-07T23:37:44.500000'
+        coord:
+          ll:
+            lat: -36.692015557122794
+            lon: 148.03986549137304
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.79717384305492
+            lon: 147.90125403596855
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-04-07T23:37:44.500000'
+        to_dt: '2009-04-07T23:37:44.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1468426.3236967435
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1441282.6211733401
+                - -4100000.0
+              - - 1436447.5197647423
+                - -4098422.664712981
+              - - 1432997.9632559281
+                - -4097271.6033903807
+              - - 1432811.4890172093
+                - -4097183.7979005724
+              - - 1433681.5664200196
+                - -4089630.73574347
+              - - 1435057.1816530374
+                - -4085795.438316525
+              - - 1445598.700790573
+                - -4058602.483571227
+              - - 1468426.3236967435
+                - -4000000.0
+            type: Polygon
+      id: 71cc2c0d-d3ce-494b-ae5d-9a3bb4243597
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r838
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r838 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '20':
+      creation_dt: '2016-07-15T08:16:06.096384'
+      extent:
+        center_dt: '2009-10-23T23:47:03.500000'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-10-23T23:47:03.500000'
+        to_dt: '2009-10-23T23:47:03.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: eccf6495-13db-4e4a-bf69-eaf0bbc433b1
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r877
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r877 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '21':
+      creation_dt: '2016-07-15T09:00:19.839847'
+      extent:
+        center_dt: '2009-10-07T23:46:53.500000'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-10-07T23:46:53.500000'
+        to_dt: '2009-10-07T23:46:53.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: c7ee5636-c6bb-4e6a-b8e2-29147591d8bd
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r831
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r831 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '22':
+      creation_dt: '2016-07-15T08:16:31.560979'
+      extent:
+        center_dt: '2009-04-30T23:44:21'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-04-30T23:44:21'
+        to_dt: '2009-04-30T23:44:21'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: 90358251-fcb5-4b80-9319-bbe8e7ed9a1e
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r838
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r838 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '23':
+      creation_dt: '2016-07-13T08:10:19.560769'
+      extent:
+        center_dt: '2009-05-09T23:38:44.500000'
+        coord:
+          ll:
+            lat: -36.69238297230873
+            lon: 148.03626602404984
+          lr:
+            lat: -36.61792056334714
+            lon: 148.749617247473
+          ul:
+            lat: -36.526796323934484
+            lon: 148.01046778517593
+          ur:
+            lat: -36.452490571804454
+            lon: 148.72269719009415
+        from_dt: '2009-05-09T23:38:44.500000'
+        to_dt: '2009-05-09T23:38:44.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1496929.11194278
+                - -4100000.0
+              - - 1432486.5524957767
+                - -4100000.0
+              - - 1438972.0513614374
+                - -4083331.0616115755
+              - - 1439727.791109265
+                - -4081514.4532147413
+              - - 1439856.3978165619
+                - -4081529.2635320313
+              - - 1496929.11194278
+                - -4100000.0
+            type: Polygon
+      id: 5059f248-c577-423b-a2aa-f13d3477ffd6
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r389
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r389 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '24':
+      creation_dt: '2016-07-15T08:33:45.304657'
+      extent:
+        center_dt: '2009-08-29T23:40:37.500000'
+        coord:
+          ll:
+            lat: -36.68689293555314
+            lon: 148.0899647634631
+          lr:
+            lat: -36.61678456836465
+            lon: 148.76025971835517
+          ul:
+            lat: -36.53046070115923
+            lon: 148.06550934262356
+          ur:
+            lat: -36.46049169470369
+            lon: 148.7348084550106
+        from_dt: '2009-08-29T23:40:37.500000'
+        to_dt: '2009-08-29T23:40:37.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1497891.237495567
+                - -4100000.0
+              - - 1437334.3659412367
+                - -4100000.0
+              - - 1443862.326154741
+                - -4083341.0323288785
+              - - 1444177.6767256658
+                - -4082572.7062275675
+              - - 1444231.4441759635
+                - -4082535.433267728
+              - - 1444725.5150617626
+                - -4082668.171429244
+              - - 1460640.8783347432
+                - -4087887.232348825
+              - - 1497891.237495567
+                - -4100000.0
+            type: Polygon
+      id: afc3b2aa-dcda-4167-880b-09b305dc21e3
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r831
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r831 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '25':
+      creation_dt: '2016-07-15T08:38:56.974665'
+      extent:
+        center_dt: '2009-05-16T23:44:39.500000'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-05-16T23:44:39.500000'
+        to_dt: '2009-05-16T23:44:39.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: 28a96b01-ce91-4c60-8a81-665ea9f3474e
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r821
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r821 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '26':
+      creation_dt: '2016-07-15T09:54:53.230094'
+      extent:
+        center_dt: '2009-10-07T23:46:53.500000'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-10-07T23:46:53.500000'
+        to_dt: '2009-10-07T23:46:53.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: 2b06794c-781e-4cc6-8c6c-cefa91303c22
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r910
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r910 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '27':
+      creation_dt: '2016-07-15T08:48:37.513022'
+      extent:
+        center_dt: '2009-09-21T23:46:42.500000'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-09-21T23:46:42.500000'
+        to_dt: '2009-09-21T23:46:42.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: 24938d72-5f39-4f03-b1ec-707d433becbc
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r968
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r968 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '28':
+      creation_dt: '2016-07-15T08:45:07.137315'
+      extent:
+        center_dt: '2009-04-07T23:38:08.500000'
+        coord:
+          ll:
+            lat: -36.69574628176401
+            lon: 148.0032781611878
+          lr:
+            lat: -36.617447987791884
+            lon: 148.75404537111973
+          ul:
+            lat: -36.5202038623188
+            lon: 147.97598730090115
+          ur:
+            lat: -36.442080161356735
+            lon: 148.72550294480277
+        from_dt: '2009-04-07T23:38:08.500000'
+        to_dt: '2009-04-07T23:38:08.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1497329.4309686418
+                - -4100000.0
+              - - 1429508.73013119
+                - -4100000.0
+              - - 1435085.0888601518
+                - -4085773.0753078265
+              - - 1437284.1628124777
+                - -4080403.5795169836
+              - - 1437410.8857387095
+                - -4080418.1823514034
+              - - 1497329.4309686418
+                - -4100000.0
+            type: Polygon
+      id: e2973835-8caa-42d7-ad33-c8dea9e4d4f0
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r833
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r833 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '29':
+      creation_dt: '2016-07-15T08:49:34.913141'
+      extent:
+        center_dt: '2009-09-14T23:40:26.500000'
+        coord:
+          ll:
+            lat: -36.68725889215509
+            lon: 148.08639099151736
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.792470383351954
+            lon: 147.9473858904981
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-09-14T23:40:26.500000'
+        to_dt: '2009-09-14T23:40:26.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1475012.6864570896
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1441634.84904102
+                - -4100000.0
+              - - 1438283.327973116
+                - -4098910.349189356
+              - - 1438059.3169965656
+                - -4098832.297160375
+              - - 1437037.6747601964
+                - -4098172.539089859
+              - - 1437011.7170390778
+                - -4097954.6842067456
+              - - 1439131.625245645
+                - -4092244.528190268
+              - - 1449342.7608054727
+                - -4065923.205622413
+              - - 1475012.6864570896
+                - -4000000.0
+            type: Polygon
+      id: a4222ddd-0a07-4054-a414-8dc6acf58119
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r814
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r814 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '3':
+      creation_dt: '2016-07-15T08:49:20.950606'
+      extent:
+        center_dt: '2009-04-07T23:38:08.500000'
+        coord:
+          ll:
+            lat: -36.688555222123334
+            lon: 148.07372507081286
+          lr:
+            lat: -36.61875853422386
+            lon: 148.7417623525914
+          ul:
+            lat: -36.53129906553341
+            lon: 148.04916581749217
+          ur:
+            lat: -36.46164185633692
+            lon: 148.71620533994562
+        from_dt: '2009-04-07T23:38:08.500000'
+        to_dt: '2009-04-07T23:38:08.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1496219.0089158705
+                - -4100000.0
+              - - 1435868.2250290432
+                - -4100000.0
+              - - 1441723.7881691868
+                - -4085055.0841688663
+              - - 1442722.89772003
+                - -4082506.229109758
+              - - 1442779.662504266
+                - -4082443.798672553
+              - - 1496219.0089158705
+                - -4100000.0
+            type: Polygon
+      id: fd996142-ecb8-4d0d-a3bb-83d184f36eea
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r919
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r919 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '30':
+      creation_dt: '2016-07-13T08:01:37.381647'
+      extent:
+        center_dt: '2009-08-29T23:40:13.500000'
+        coord:
+          ll:
+            lat: -36.69083155456128
+            lon: 148.05145923579587
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.79600308521267
+            lon: 147.9127496805752
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-08-29T23:40:13.500000'
+        to_dt: '2009-08-29T23:40:13.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1469952.4309317635
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1439368.2605011025
+                - -4100000.0
+              - - 1433858.1126425501
+                - -4098171.492273862
+              - - 1434701.8866021726
+                - -4090844.3836647267
+              - - 1434704.1071406542
+                - -4090830.7110467213
+              - - 1435179.2029921496
+                - -4089553.298452391
+              - - 1436916.4315351031
+                - -4084979.0354758753
+              - - 1445343.9414860425
+                - -4063225.3212760957
+              - - 1469952.4309317635
+                - -4000000.0
+            type: Polygon
+      id: b638b12c-d91c-494c-ab2e-a5fdcbfe66d6
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r389
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r389 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '31':
+      creation_dt: '2016-07-15T08:46:43.579714'
+      extent:
+        center_dt: '2009-09-14T23:40:26.500000'
+        coord:
+          ll:
+            lat: -36.69220616483202
+            lon: 148.03799826212696
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.79736231847923
+            lon: 147.8994026065993
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-09-14T23:40:26.500000'
+        to_dt: '2009-09-14T23:40:26.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1468645.979231057
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1438689.0842180683
+                - -4100000.0
+              - - 1436353.413026679
+                - -4099240.7648945395
+              - - 1432642.9274052645
+                - -4097990.213571841
+              - - 1433444.393999639
+                - -4091032.6679787156
+              - - 1433660.2425258427
+                - -4090258.5110126906
+              - - 1435311.866004109
+                - -4085774.234827758
+              - - 1440564.1113772688
+                - -4072128.4546562373
+              - - 1445858.7838096304
+                - -4058531.834379978
+              - - 1468645.979231057
+                - -4000000.0
+            type: Polygon
+      id: e0ce0cc3-b25a-4f1c-a106-85f2c9a3c34b
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r877
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r877 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '32':
+      creation_dt: '2016-07-15T08:18:23.325786'
+      extent:
+        center_dt: '2009-09-30T23:40:38.500000'
+        coord:
+          ll:
+            lat: -36.69313326704235
+            lon: 148.02891302496863
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.79827904912472
+            lon: 147.8903942473837
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-09-30T23:40:38.500000'
+        to_dt: '2009-09-30T23:40:38.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1467422.5971933275
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1440845.2041871278
+                - -4100000.0
+              - - 1435288.8629078602
+                - -4098188.73312945
+              - - 1431822.778696932
+                - -4097007.574136442
+              - - 1432652.3092163447
+                - -4089808.332719018
+              - - 1432724.998316583
+                - -4089398.604692704
+              - - 1433094.681913736
+                - -4088383.368914846
+              - - 1445371.0713352005
+                - -4056639.7945549814
+              - - 1467422.5971933275
+                - -4000000.0
+            type: Polygon
+      id: 8c4bf0a4-5f73-4be5-be7f-9d0ed264e89a
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r856
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r856 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '33':
+      creation_dt: '2016-07-15T08:39:59.832045'
+      extent:
+        center_dt: '2009-05-09T23:38:44.500000'
+        coord:
+          ll:
+            lat: -36.68528759458085
+            lon: 148.10563224995835
+          lr:
+            lat: -36.61886119532254
+            lon: 148.74079977802498
+          ul:
+            lat: -36.5377600243708
+            lon: 148.08254477522541
+          ur:
+            lat: -36.471458182047776
+            lon: 148.7168222769438
+        from_dt: '2009-05-09T23:38:44.500000'
+        to_dt: '2009-05-09T23:38:44.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1496131.9904509613
+                - -4100000.0
+              - - 1438748.8920543029
+                - -4100000.0
+              - - 1443788.7852759743
+                - -4087051.7227956313
+              - - 1444824.0254547193
+                - -4084406.5628105397
+              - - 1445226.5453916916
+                - -4083529.453231786
+              - - 1496131.9904509613
+                - -4100000.0
+            type: Polygon
+      id: 39e06ef6-63d0-4573-92ff-3c47f2662441
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r832
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r832 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '34':
+      creation_dt: '2016-07-15T09:00:25.409418'
+      extent:
+        center_dt: '2009-09-14T23:40:50.500000'
+        coord:
+          ll:
+            lat: -36.688314535807294
+            lon: 148.07607749095786
+          lr:
+            lat: -36.6176075424847
+            lon: 148.75255044696232
+          ul:
+            lat: -36.530153410535505
+            lon: 148.0513734750022
+          ur:
+            lat: -36.459588520513705
+            lon: 148.7268302897234
+        from_dt: '2009-09-14T23:40:50.500000'
+        to_dt: '2009-09-14T23:40:50.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1497194.2837952028
+                - -4100000.0
+              - - 1436080.6017071656
+                - -4100000.0
+              - - 1442992.9886834307
+                - -4082342.6899333335
+              - - 1443608.6110940063
+                - -4082514.5598982675
+              - - 1465647.6763339292
+                - -4089741.709441267
+              - - 1497194.2837952028
+                - -4100000.0
+            type: Polygon
+      id: acdda34e-12b5-46fc-9734-610b49d0395d
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r794
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r794 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '35':
+      creation_dt: '2016-07-15T08:42:08.154789'
+      extent:
+        center_dt: '2009-05-09T23:38:20.500000'
+        coord:
+          ll:
+            lat: -36.69138407509665
+            lon: 148.0460500234736
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.79654942513141
+            lon: 147.9073862374375
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-05-09T23:38:20.500000'
+        to_dt: '2009-05-09T23:38:20.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1469436.3819883799
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1438581.1154123214
+                - -4100000.0
+              - - 1437030.5132377865
+                - -4099494.56054959
+              - - 1433369.7937864254
+                - -4098249.9046183657
+              - - 1434244.5861995288
+                - -4090654.3740520906
+              - - 1436354.5903773997
+                - -4085040.161445454
+              - - 1440526.1123989439
+                - -4074210.434110858
+              - - 1445139.7418237168
+                - -4062372.012715518
+              - - 1469436.3819883799
+                - -4000000.0
+            type: Polygon
+      id: e73630be-13ed-4e0b-a58d-190cf2c1b1e2
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r492
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r492 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '4':
+      creation_dt: '2016-07-15T08:45:12.245189'
+      extent:
+        center_dt: '2009-09-30T23:40:38.500000'
+        coord:
+          ll:
+            lat: -36.68818717523151
+            lon: 148.0773221456293
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.79338828417369
+            lon: 147.9383937691141
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-09-30T23:40:38.500000'
+        to_dt: '2009-09-30T23:40:38.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1473796.5324339578
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1443790.5983724662
+                - -4100000.0
+              - - 1437340.3738556423
+                - -4097897.4897174384
+              - - 1436216.412253816
+                - -4097198.760154704
+              - - 1436192.9696302928
+                - -4096957.1054345486
+              - - 1436542.5934760182
+                - -4095891.9302675272
+              - - 1437626.430064072
+                - -4093051.166898405
+              - - 1449203.1399419378
+                - -4063191.5963074896
+              - - 1473796.5324339578
+                - -4000000.0
+            type: Polygon
+      id: 0e758f32-d79e-4cdf-a703-a928ce67809a
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r913
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r913 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '5':
+      creation_dt: '2016-07-15T09:54:29.442809'
+      extent:
+        center_dt: '2009-09-05T23:46:30'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-09-05T23:46:30'
+        to_dt: '2009-09-05T23:46:30'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: 5dc0d3b6-a156-465d-9527-93a3db2b189b
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r901
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r901 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '6':
+      creation_dt: '2016-07-15T09:00:16.237291'
+      extent:
+        center_dt: '2009-09-05T23:46:30'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-09-05T23:46:30'
+        to_dt: '2009-09-05T23:46:30'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: efc09d7f-8eba-4b08-bf1c-c127fdc3a09f
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r968
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r968 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '7':
+      creation_dt: '2016-07-15T08:38:41.633706'
+      extent:
+        center_dt: '2009-08-29T23:40:13.500000'
+        coord:
+          ll:
+            lat: -36.685881301780086
+            lon: 148.09983971979472
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.79110819957591
+            lon: 147.96072084456125
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-08-29T23:40:13.500000'
+        to_dt: '2009-08-29T23:40:13.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1476313.441251742
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1442279.3789465402
+                - -4100000.0
+              - - 1439400.7758053027
+                - -4099064.0777498144
+              - - 1438251.8329780956
+                - -4098362.5650707553
+              - - 1438225.9131188258
+                - -4098144.5895233876
+              - - 1441746.7722988406
+                - -4088801.9301787126
+              - - 1443865.1749388312
+                - -4083316.236117732
+              - - 1476313.441251742
+                - -4000000.0
+            type: Polygon
+      id: 2c5997b1-d44f-4b70-b53a-2c2383646f17
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r920
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r920 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+    '8':
+      creation_dt: '2016-07-15T08:40:30.871020'
+      extent:
+        center_dt: '2009-09-21T23:46:42.500000'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-09-21T23:46:42.500000'
+        to_dt: '2009-09-21T23:46:42.500000'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: 47218ead-4113-4186-baae-30f9a48d27e4
+      image:
+        bands:
+          blue:
+            layer: blue
+            path: ''
+          green:
+            layer: green
+            path: ''
+          nir:
+            layer: nir
+            path: ''
+          red:
+            layer: red
+            path: ''
+          swir1:
+            layer: swir1
+            path: ''
+          swir2:
+            layer: swir2
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_nbar_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r887
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r887 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: nbar
+    '9':
+      creation_dt: '2016-07-15T08:39:21.459664'
+      extent:
+        center_dt: '2009-04-14T23:44:04'
+        coord:
+          ll:
+            lat: -36.72870433407541
+            lon: 147.67626965057613
+          lr:
+            lat: -36.614292227775124
+            lon: 148.78358479892202
+          ul:
+            lat: -35.833451823260276
+            lon: 147.54073701225525
+          ur:
+            lat: -35.720318326735864
+            lon: 148.6386896760633
+        from_dt: '2009-04-14T23:44:04'
+        to_dt: '2009-04-14T23:44:04'
+      format:
+        name: NetCDF
+      grid_spatial:
+        projection:
+          geo_ref_points:
+            ll:
+              x: 1400000.0
+              y: -4100000.0
+            lr:
+              x: 1500000.0
+              y: -4100000.0
+            ul:
+              x: 1400000.0
+              y: -4000000.0
+            ur:
+              x: 1500000.0
+              y: -4000000.0
+          spatial_reference: EPSG:3577
+          valid_data:
+            coordinates:
+            - - - 1400000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4000000.0
+              - - 1500000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4100000.0
+              - - 1400000.0
+                - -4000000.0
+            type: Polygon
+      id: c54c06c9-f2ec-4060-9f08-7adacc56e878
+      image:
+        bands:
+          pixelquality:
+            layer: pixelquality
+            path: ''
+      instrument:
+        name: TM
+      lineage:
+        algorithm:
+          name: datacube-ingest
+          parameters:
+            configuration_file: ls5_pq_albers.yaml
+          repo_url: https://github.com/GeoscienceAustralia/datacube-ingester.git
+          version: 1.0.5
+        machine:
+          hostname: r822
+          software_versions:
+            datacube:
+              repo_url: https://github.com/data-cube/agdc-v2.git
+              version: 1.1.4
+            python:
+              version: "2.7.12 |Continuum Analytics, Inc.| (default, Jul  2 2016,
+                17:42:40) \n[GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]"
+          uname: 'Linux r822 2.6.32-642.1.1.el6.x86_64 #1 SMP Tue May 31 21:57:07
+            UTC 2016 x86_64'
+        source_datasets: {}
+      platform:
+        code: LANDSAT_5
+      product_type: pqa
+product_type: '!!NOTSET!!'
+statistics:
+  period: 7m
+  step: 1y

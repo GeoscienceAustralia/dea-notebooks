@@ -1,0 +1,14 @@
+#for a minor qsub
+#PBS -P r78
+#PBS -l walltime=8:00:00
+#PBS -l mem=1TB
+#PBS -l ncpus=8
+#PBS -q hugemem
+#PBS -m abe
+#PBS -M joanna.tobin@ga.gov.au
+
+cd /g/data/r78/jt7365/dea-notebooks/SnowOFS/
+module use /g/data/v10/public/modules/modulefiles/
+module load dea
+
+python3 snow_f_80_99.py

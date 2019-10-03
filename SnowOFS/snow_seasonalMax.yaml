@@ -1,0 +1,132 @@
+## Define inputs to perform statistics on
+sources:
+  - product: ls5_nbar_albers
+    measurements: [green, swir1]
+    group_by: solar_day
+    source_filter:
+      product: ls5_level1_scene
+      gqa_iterative_mean_xy: [0, 1]
+    masks:
+      - product: ls5_pq_albers
+        measurement: pixelquality
+        group_by: solar_day
+        fuse_func: datacube.helpers.ga_pq_fuser
+        flags:
+          contiguous: True
+          cloud_acca: no_cloud
+#           cloud_fmask: no_cloud
+          cloud_shadow_acca: no_cloud_shadow
+#           cloud_shadow_fmask: no_cloud_shadow
+          blue_saturated: False
+          green_saturated: False
+          red_saturated: False
+          nir_saturated: False
+          swir1_saturated: False
+          swir2_saturated: False
+          
+  - product: ls7_nbar_albers
+    measurements: [green, swir1]
+    group_by: solar_day
+    time: [1986-01-01, 2003-05-01]
+    source_filter:
+      product: ls7_level1_scene
+      gqa_iterative_mean_xy: [0, 1]
+    masks:
+      - product: ls7_pq_albers
+        measurement: pixelquality
+        group_by: solar_day
+        fuse_func: datacube.helpers.ga_pq_fuser
+        flags:
+          contiguous: True
+          cloud_acca: no_cloud
+#           cloud_fmask: no_cloud
+          cloud_shadow_acca: no_cloud_shadow
+#           cloud_shadow_fmask: no_cloud_shadow
+          blue_saturated: False
+          green_saturated: False
+          red_saturated: False
+          nir_saturated: False
+          swir1_saturated: False
+          swir2_saturated: False
+          
+  - product: ls8_nbar_albers
+    measurements: [green, swir1]
+    group_by: solar_day
+    source_filter:
+      product: ls8_level1_scene
+      gqa_iterative_mean_xy: [0, 1]
+    masks:
+      - product: ls8_pq_albers
+        measurement: pixelquality
+        group_by: solar_day
+        fuse_func: datacube.helpers.ga_pq_fuser
+        flags:
+          contiguous: True
+          cloud_acca: no_cloud
+#           cloud_fmask: no_cloud
+          cloud_shadow_acca: no_cloud_shadow
+#           cloud_shadow_fmask: no_cloud_shadow
+          blue_saturated: False
+          green_saturated: False
+          red_saturated: False
+          nir_saturated: False
+          swir1_saturated: False
+          swir2_saturated: False
+          
+## Define whether and how to chunk over time
+date_ranges:
+  start_date: 1987-04-01
+  end_date: 2018-10-31
+  stats_duration: 7m
+  step_size: 1y
+
+## Define output directory and file structure
+location: '/g/data/r78/jt7365/dea-notebooks/SnowOFS/results/composite/NSW/'
+
+input_region:
+   from_file: '/g/data/r78/jt7365/dea-notebooks/SnowOFS/NSW_alpine_region.shp'
+   gridded: False
+
+# Output Storage Format
+storage:
+  driver: GeoTIFF
+
+  crs: EPSG:3577
+  tile_size: 
+          x: 100000
+          y: 100000
+  resolution:
+          x: 25
+          y: -25
+  chunking:
+      x: 256
+      y: 256
+      time: 1
+  dimension_order: [time, y, x]
+
+## Computational/memory optimisation
+computation:
+  chunking:
+    x: 1000
+    y: 1000
+
+## Define statistics to perform and how to store the data
+output_products:
+
+ - name: ndsi
+   statistic: simple_normalised_difference
+   statistic_args:
+      name: ndsi
+      band1: green
+      band2: swir1
+      stats: [max]
+   output_params:
+      zlib: True
+      fletcher32: True
+   file_path_template: '{name}_max_{epoch_start:%Y%m%d}.tif'
+
+
+
+
+
+
