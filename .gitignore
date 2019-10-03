@@ -17,4 +17,11 @@
 *.sh
 *.csv
 *.py
+*.TIFF
+*.TIF
+*.PNG
+*.txt
+data/
+old/
+
 __pycache__
