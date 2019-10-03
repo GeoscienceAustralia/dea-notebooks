@@ -12,18 +12,23 @@ Functions included:
     load_ard
     array_to_geotiff
     mostcommon_utm
+    download_unzip
 
 Last modified: October 2019
 
 '''
 
 # Import required packages
+import os
+import gdal
+import wget
+import zipfile
+import warnings
 import numpy as np
 import xarray as xr
 from datacube.storage import masking
 from collections import Counter
-import warnings
-import gdal
+from urllib.error import HTTPError
 
 
 def load_ard(dc,
@@ -396,3 +401,54 @@ def mostcommon_crs(dc, product, query):
                       UserWarning)
     
     return crs_mostcommon
+
+
+def download_unzip(url,
+                   output_dir=None,
+                   remove_zip=True):
+    """
+    Downloads and unzips a .zip file from an external URL to a local
+    directory.
+    
+    Parameters
+    ----------     
+    url : str
+        A string giving a URL path to the zip file you wish to download
+        and unzip
+    output_dir : str, optional
+        An optional string giving the directory to unzip files into. 
+        Defaults to None, which will unzip files in the current working 
+        directory
+    remove_zip : bool, optional
+        An optional boolean indicating whether to remove the downloaded
+        .zip file after files are unzipped. Defaults to True, which will
+        delete the .zip file.  
+    
+    """
+    
+    # Get basename for zip file
+    zip_name = os.path.basename(url)
+    
+    # Raise exception if the file is not of type .zip
+    if not zip_name.endswith('.zip'):
+        raise ValueError(f'The URL provided does not point to a .zip '
+                         f'file (e.g. {zip_name}). Please specify a '
+                         f'URL path to a valid .zip file')
+                         
+    # Download zip file
+    print(f'Downloading {zip_name}')
+    try:
+        wget.download(url, zip_name)        
+    except HTTPError:        
+        raise ValueError('The URL provided does not exist. Please '
+                         'specify a valid URL path to a .zip file')
+        
+    # Extract into output_dir
+    with zipfile.ZipFile(zip_name, 'r') as zip_ref:        
+        zip_ref.extractall(output_dir)        
+        print(f'Unzipping output files to: '
+              f'{output_dir if output_dir else os.getcwd()}')
+    
+    # Optionally cleanup
+    if remove_zip:        
+        os.remove(zip_name)
