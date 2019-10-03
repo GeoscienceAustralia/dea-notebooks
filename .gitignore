@@ -5,4 +5,13 @@
 *.tif
 *.xml
 *.nc
+*.pdf
+*.png
+*.shp
+*.e*
+*.o*
+*.prj
+*.cpg
+*.dbf
+*.shx
 __pycache__
