@@ -8,7 +8,7 @@ Contact: If you need assistance, please post a question on the Open Data Cube Sl
 
 If you would like to report an issue with this script, you can file one on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: September 2019
+Last modified: October 2019
 
 '''
 
@@ -20,7 +20,8 @@ def calculate_indices(ds,
                       index=None,
                       collection=None,
                       custom_varname=None,
-                      normalise=True):
+                      normalise=True,
+                      drop=False):
     """
     Takes an xarray dataset containing spectral bands, calculates one of
     a set of remote sensing indices, and adds the resulting array as a 
@@ -85,13 +86,18 @@ def calculate_indices(ds,
         produce different results if surface reflectance values are not 
         scaled between 0.0 and 1.0 prior to calculating the index. 
         Setting `normalise=True` first scales values to a 0.0-1.0 range
-        by dividing by 10000.0. Defaults to True.        
+        by dividing by 10000.0. Defaults to True.  
+    drop : bool, optional
+        Provides the option to drop the original input data, thus saving 
+        space. if drop = True, returns only the index and its values.
         
     Returns
     -------
     ds : xarray Dataset
         The original xarray Dataset inputted into the function, with a 
         new varible containing the remote sensing index as a DataArray.
+        If drop = True, the new variable/s as DataArrays in the 
+        original Dataset. 
     """
 
     # Dictionary containing remote sensing index band recipes
@@ -311,6 +317,11 @@ def calculate_indices(ds,
                           "`collection`. Please specify either \n"
                           "'ga_ls_2', 'ga_ls_3' or 'ga_s2_1'")
         
+    #capture input band names in order to drop these if drop = True
+    if drop:
+        bands_to_drop=list(ds.data_vars)
+        print(f'dropping bands {bands_to_drop}')
+        
     # Apply index function 
     try:
         # If normalised=True, divide data by 10,000 before applying func
@@ -326,6 +337,8 @@ def calculate_indices(ds,
     # Add as a new variable in dataset
     output_band_name = custom_varname if custom_varname else index
     ds[output_band_name] = index_array
+    if drop: 
+        ds = ds.drop(bands_to_drop)
 
     # Return input dataset with added water index variable
     return ds
