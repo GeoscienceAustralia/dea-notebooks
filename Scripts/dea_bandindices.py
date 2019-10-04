@@ -38,7 +38,7 @@ def calculate_indices(ds,
         used as inputs to calculate the selected water index.
     index : str or list of strs
         A string giving the name of the index to calculate or a list of 
-        strings giving the names of the indexes to calculate:
+        strings giving the names of the indices to calculate:
         'AWEI_ns (Automated Water Extraction Index,
                   no shadows, Feyisa 2014)
         'AWEI_sh' (Automated Water Extraction Index,
@@ -110,16 +110,16 @@ def calculate_indices(ds,
         original Dataset. 
     """
     
-    #set ds equal to a copy of itself in order to prevent the function from editing the input dataset.
-    #This is to prevent unexpected behaviour though it uses twice as much memory.
-    
+    # Set ds equal to a copy of itself in order to prevent the function 
+    # from editing the input dataset. This is to prevent unexpected 
+    # behaviour though it uses twice as much memory.    
     if deep_copy:
         ds = ds.copy(deep=True)
     
-    #capture input band names in order to drop these if drop = True
+    # Capture input band names in order to drop these if drop=True
     if drop:
         bands_to_drop=list(ds.data_vars)
-        print(f'dropping bands {bands_to_drop}')
+        print(f'Dropping bands {bands_to_drop}')
 
     # Dictionary containing remote sensing index band recipes
     index_dict = {
@@ -237,11 +237,12 @@ def calculate_indices(ds,
                   'IOR': lambda ds: (ds.red / ds.blue)
     }
     
-    # If index function supplied is not a list, convert to list:
-    indexes = index if isinstance(index, list) else [index]
+    # If index supplied is not a list, convert to list. This allows us to
+    # iterate through either multiple or single indices in the loop below
+    indices = index if isinstance(index, list) else [index]
     
     #calculate for each index in the list of indices supplied (indexes)
-    for index in indexes:
+    for index in indices:
 
         # Select an index function from the dictionary
         index_func = index_dict.get(str(index))
@@ -360,7 +361,7 @@ def calculate_indices(ds,
         output_band_name = custom_varname if custom_varname else index
         ds[output_band_name] = index_array
     
-    #once all indexes are calculated, drop input bands if drop=True
+    # Once all indexes are calculated, drop input bands if drop=True
     if drop: 
         ds = ds.drop(bands_to_drop)
 
