@@ -21,7 +21,8 @@ def calculate_indices(ds,
                       collection=None,
                       custom_varname=None,
                       normalise=True,
-                      drop=False):
+                      drop=False,
+                      deep_copy=True):
     """
     Takes an xarray dataset containing spectral bands, calculates one of
     a set of remote sensing indices, and adds the resulting array as a 
@@ -35,8 +36,9 @@ def calculate_indices(ds,
         A two-dimensional or multi-dimensional array with containing the 
         spectral bands required to calculate the index. These bands are 
         used as inputs to calculate the selected water index.
-    index : str
-        A string giving the name of the index to calculate:
+    index : str or list of strs
+        A string giving the name of the index to calculate or a list of 
+        strings giving the names of the indices to calculate:
         'AWEI_ns (Automated Water Extraction Index,
                   no shadows, Feyisa 2014)
         'AWEI_sh' (Automated Water Extraction Index,
@@ -88,18 +90,36 @@ def calculate_indices(ds,
         Setting `normalise=True` first scales values to a 0.0-1.0 range
         by dividing by 10000.0. Defaults to True.  
     drop : bool, optional
-        Provides the option to drop the original input variables, thus 
-        saving memory. If drop=True, returns only the index and its 
-        values.
+        Provides the option to drop the original input data, thus saving 
+        space. if drop = True, returns only the index and its values.
+    deep_copy: bool, optional
+        If deep_copy=False, calculate_indices will modify the original
+        array, adding bands to the input dataset and not removing them.
+        If the calculate_indices function is run more than once, variables
+        may be dropped incorrectly producing unexpected behaviour. This is
+        a bug and may be fixed in future releases. This is only a problem 
+        when drop=True.
+    
         
     Returns
     -------
     ds : xarray Dataset
         The original xarray Dataset inputted into the function, with a 
-        new variable containing the remote sensing index as a DataArray.
-        If drop=True, the new variable/s will be the only DataArrays 
-        returned in the Dataset. 
+        new varible containing the remote sensing index as a DataArray.
+        If drop = True, the new variable/s as DataArrays in the 
+        original Dataset. 
     """
+    
+    # Set ds equal to a copy of itself in order to prevent the function 
+    # from editing the input dataset. This is to prevent unexpected 
+    # behaviour though it uses twice as much memory.    
+    if deep_copy:
+        ds = ds.copy(deep=True)
+    
+    # Capture input band names in order to drop these if drop=True
+    if drop:
+        bands_to_drop=list(ds.data_vars)
+        print(f'Dropping bands {bands_to_drop}')
 
     # Dictionary containing remote sensing index band recipes
     index_dict = {
@@ -217,127 +237,131 @@ def calculate_indices(ds,
                   'IOR': lambda ds: (ds.red / ds.blue)
     }
     
-    # Select a water index function based on 'water_index'      
-    index_func = index_dict.get(index)
+    # If index supplied is not a list, convert to list. This allows us to
+    # iterate through either multiple or single indices in the loop below
+    indices = index if isinstance(index, list) else [index]
     
-    # If no index is provided or if no function is returned due to an 
-    # invalid option being provided, raise an exception informing user to 
-    # choose from the list of valid options
-    if index is None:
-        
-        raise ValueError(f"No remote sensing `index` was provided. Please "
-                          "refer to the function \ndocumentation for a full "
-                          "list of valid options for `index` (e.g. 'NDVI')")
+    #calculate for each index in the list of indices supplied (indexes)
+    for index in indices:
+
+        # Select an index function from the dictionary
+        index_func = index_dict.get(str(index))
+
+        # If no index is provided or if no function is returned due to an 
+        # invalid option being provided, raise an exception informing user to 
+        # choose from the list of valid options
+        if index is None:
+
+            raise ValueError(f"No remote sensing `index` was provided. Please "
+                              "refer to the function \ndocumentation for a full "
+                              "list of valid options for `index` (e.g. 'NDVI')")
+
+        elif (index in ['WI', 'BAEI', 'AWEI_ns', 'AWEI_sh', 'TCW', 
+                        'TCG', 'TCB', 'EVI', 'LAI', 'SAVI', 'MSAVI'] 
+              and not normalise):
+
+            warnings.warn(f"\nA coefficient-based index ('{index}') normally "
+                           "applied to surface reflectance values in the \n"
+                           "0.0-1.0 range was applied to values in the 0-10000 "
+                           "range. This can produce unexpected results; \nif "
+                           "required, resolve this by setting `normalise=True`")
+
+        elif index_func is None:
+
+            raise ValueError(f"The selected index '{index}' is not one of the "
+                              "valid remote sensing index options. \nPlease "
+                              "refer to the function documentation for a full "
+                              "list of valid options for `index`")
+
+        # Rename bands to a consistent format if depending on what collection
+        # is specified in `collection`. This allows the same index calculations
+        # to be applied to all collections. If no collection was provided, 
+        # raise an exception.
+        if collection is None:
+
+            raise ValueError("'No `collection` was provided. Please specify "
+                             "either 'ga_ls_2', 'ga_ls_3' or 'ga_s2_1' \nto "
+                             "ensure the function calculates indices using the "
+                             "correct spectral bands")
+
+        elif collection == 'ga_ls_3':
+
+            # Dictionary mapping full data names to simpler 'red' alias names
+            bandnames_dict = {
+                'nbart_nir': 'nir',
+                'nbart_red': 'red',
+                'nbart_green': 'green',
+                'nbart_blue': 'blue',
+                'nbart_swir_1': 'swir1',
+                'nbart_swir_2': 'swir2',
+                'nbar_red': 'red',
+                'nbar_green': 'green',
+                'nbar_blue': 'blue',
+                'nbar_nir': 'nir',
+                'nbar_swir_1': 'swir1',
+                'nbar_swir_2': 'swir2'
+            }
+
+            # Rename bands in dataset to use simple names (e.g. 'red')
+            bands_to_rename = {
+                a: b for a, b in bandnames_dict.items() if a in ds.variables
+            }
+
+        elif collection == 'ga_s2_1':
+
+            # Dictionary mapping full data names to simpler 'red' alias names
+            bandnames_dict = {
+                'nbart_red': 'red',
+                'nbart_green': 'green',
+                'nbart_blue': 'blue',
+                'nbart_nir_1': 'nir',
+                'nbart_red_edge_1': 'red_edge_1', 
+                'nbart_red_edge_2': 'red_edge_2',    
+                'nbart_swir_2': 'swir1',
+                'nbart_swir_3': 'swir2',
+                'nbar_red': 'red',
+                'nbar_green': 'green',
+                'nbar_blue': 'blue',
+                'nbar_nir_1': 'nir',
+                'nbar_red_edge_1': 'red_edge_1',   
+                'nbar_red_edge_2': 'red_edge_2',   
+                'nbar_swir_2': 'swir1',
+                'nbar_swir_3': 'swir2'
+            }
+
+            # Rename bands in dataset to use simple names (e.g. 'red')
+            bands_to_rename = {
+                a: b for a, b in bandnames_dict.items() if a in ds.variables
+            }
+
+        elif collection == 'ga_ls_2':
+
+            # Pass an empty dict as no bands need renaming
+            bands_to_rename = {}
+
+        # Raise error if no valid collection name is provided:
+        else:
+            raise ValueError(f"'{collection}' is not a valid option for "
+                              "`collection`. Please specify either \n"
+                              "'ga_ls_2', 'ga_ls_3' or 'ga_s2_1'")
+
+        # Apply index function 
+        try:
+            # If normalised=True, divide data by 10,000 before applying func
+            mult = 10000.0 if normalise else 1.0
+            index_array = index_func(ds.rename(bands_to_rename) / mult)
+        except AttributeError:
+            raise ValueError(f'Please verify that all bands required to '
+                             f'compute {index} are present in `ds`. \n'
+                             f'These bands may vary depending on the `collection` '
+                             f'(e.g. the Landsat `nbart_nir` band \n'
+                             f'is equivelent to `nbart_nir_1` for Sentinel 2)')
+
+        # Add as a new variable in dataset
+        output_band_name = custom_varname if custom_varname else index
+        ds[output_band_name] = index_array
     
-    elif (index in ['WI', 'BAEI', 'AWEI_ns', 'AWEI_sh', 'TCW', 
-                    'TCG', 'TCB', 'EVI', 'LAI', 'SAVI', 'MSAVI'] 
-          and not normalise):
-
-        warnings.warn(f"\nA coefficient-based index ('{index}') normally "
-                       "applied to surface reflectance values in the \n"
-                       "0.0-1.0 range was applied to values in the 0-10000 "
-                       "range. This can produce unexpected results; \nif "
-                       "required, resolve this by setting `normalise=True`")
-        
-    elif index_func is None:
-        
-        raise ValueError(f"The selected index '{index}' is not one of the "
-                          "valid remote sensing index options. \nPlease "
-                          "refer to the function documentation for a full "
-                          "list of valid options for `index`")
-
-    # Rename bands to a consistent format if depending on what collection
-    # is specified in `collection`. This allows the same index calculations
-    # to be applied to all collections. If no collection was provided, 
-    # raise an exception.
-    if collection is None:
-
-        raise ValueError("'No `collection` was provided. Please specify "
-                         "either 'ga_ls_2', 'ga_ls_3' or 'ga_s2_1' \nto "
-                         "ensure the function calculates indices using the "
-                         "correct spectral bands")
-    
-    elif collection == 'ga_ls_3':
-
-        # Dictionary mapping full data names to simpler 'red' alias names
-        bandnames_dict = {
-            'nbart_nir': 'nir',
-            'nbart_red': 'red',
-            'nbart_green': 'green',
-            'nbart_blue': 'blue',
-            'nbart_swir_1': 'swir1',
-            'nbart_swir_2': 'swir2',
-            'nbar_red': 'red',
-            'nbar_green': 'green',
-            'nbar_blue': 'blue',
-            'nbar_nir': 'nir',
-            'nbar_swir_1': 'swir1',
-            'nbar_swir_2': 'swir2'
-        }
-
-        # Rename bands in dataset to use simple names (e.g. 'red')
-        bands_to_rename = {
-            a: b for a, b in bandnames_dict.items() if a in ds.variables
-        }
-
-    elif collection == 'ga_s2_1':
-
-        # Dictionary mapping full data names to simpler 'red' alias names
-        bandnames_dict = {
-            'nbart_red': 'red',
-            'nbart_green': 'green',
-            'nbart_blue': 'blue',
-            'nbart_nir_1': 'nir',
-            'nbart_red_edge_1': 'red_edge_1', 
-            'nbart_red_edge_2': 'red_edge_2',    
-            'nbart_swir_2': 'swir1',
-            'nbart_swir_3': 'swir2',
-            'nbar_red': 'red',
-            'nbar_green': 'green',
-            'nbar_blue': 'blue',
-            'nbar_nir_1': 'nir',
-            'nbar_red_edge_1': 'red_edge_1',   
-            'nbar_red_edge_2': 'red_edge_2',   
-            'nbar_swir_2': 'swir1',
-            'nbar_swir_3': 'swir2'
-        }
-
-        # Rename bands in dataset to use simple names (e.g. 'red')
-        bands_to_rename = {
-            a: b for a, b in bandnames_dict.items() if a in ds.variables
-        }
-
-    elif collection == 'ga_ls_2':
-
-        # Pass an empty dict as no bands need renaming
-        bands_to_rename = {}
-    
-    # Raise error if no valid collection name is provided:
-    else:
-        raise ValueError(f"'{collection}' is not a valid option for "
-                          "`collection`. Please specify either \n"
-                          "'ga_ls_2', 'ga_ls_3' or 'ga_s2_1'")
-        
-    # Capture input band names in order to drop these if drop=True
-    if drop:
-        bands_to_drop=list(ds.data_vars)
-        print(f'Dropping bands {bands_to_drop}')
-        
-    # Apply index function 
-    try:
-        # If normalised=True, divide data by 10,000 before applying func
-        mult = 10000.0 if normalise else 1.0
-        index_array = index_func(ds.rename(bands_to_rename) / mult)
-    except AttributeError:
-        raise ValueError(f'Please verify that all bands required to '
-                         f'compute {index} are present in `ds`. \n'
-                         f'These bands may vary depending on the `collection` '
-                         f'(e.g. the Landsat `nbart_nir` band \n'
-                         f'is equivelent to `nbart_nir_1` for Sentinel 2)')
-
-    # Add as a new variable in dataset
-    output_band_name = custom_varname if custom_varname else index
-    ds[output_band_name] = index_array
+    # Once all indexes are calculated, drop input bands if drop=True
     if drop: 
         ds = ds.drop(bands_to_drop)
 
