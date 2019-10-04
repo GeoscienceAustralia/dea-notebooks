@@ -8,14 +8,26 @@ Contact: If you need assistance, please post a question on the Open Data Cube Sl
 
 If you would like to report an issue with this script, you can file one on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: September 2019
+Functions included:
+    load_ard
+    array_to_geotiff
+    mostcommon_utm
+    download_unzip
+
+Last modified: October 2019
 
 '''
 
 # Import required packages
+import os
+import gdal
+import requests
+import zipfile
+import warnings
 import numpy as np
 import xarray as xr
 from datacube.storage import masking
+from collections import Counter
 
 
 def load_ard(dc,
@@ -132,6 +144,26 @@ def load_ard(dc,
         
     '''
     
+    # Due to possible bug in xarray 0.13.0, define temporary function 
+    # which converts dtypes in a way that preserves attributes
+    def astype_attrs(da, dtype=np.float32):
+        '''
+        Loop through all data variables in the dataset, record 
+        attributes, convert to float32, then reassign attributes. If 
+        the data variable cannot be converted to float32 (e.g. for a
+        non-numeric dtype like strings), skip and return the variable 
+        unchanged.
+        '''
+        
+        try:            
+            da_attr = da.attrs
+            da = da.astype(dtype)
+            da = da.assign_attrs(**da_attr)
+            return da
+        
+        except ValueError:        
+            return da
+    
     # Verify that products were provided
     if not products:
         raise ValueError("Please provide a list of product names "
@@ -206,9 +238,10 @@ def load_ard(dc,
                 # First change dtype to float32, then mask out values using
                 # `.where()`. By casting to float32, we prevent `.where()` 
                 # from automatically casting to float64, using 2x the memory.
-                # We also need to manually reset attributes due to a possible
-                # bug in recent xarray version
-                ds = ds.astype(np.float32).assign_attrs(crs=ds.crs)
+                # We need to do this by applying a custom function to every
+                # variable in the dataset instead of using `.astype()`, due 
+                # to a possible bug in xarray 0.13.0 that drops attributes 
+                ds = ds.apply(astype_attrs, dtype=np.float32, keep_attrs=True)
                 ds = ds.where(good_quality)
 
             # Optionally add satellite/product name as a new variable
@@ -239,10 +272,12 @@ def load_ard(dc,
             # First change dtype to float32, then mask out values using
             # `.where()`. By casting to float32, we prevent `.where()` 
             # from automatically casting to float64, using 2x the memory.
-            # We also need to manually reset attributes due to a possible
-            # bug in recent xarray version
-            combined_ds = (combined_ds.astype(np.float32)
-                           .assign_attrs(crs=combined_ds.crs))
+            # We need to do this by applying a custom function to every
+            # variable in the dataset instead of using `.astype()`, due 
+            # to a possible bug in xarray 0.13.0 that drops attributes           
+            combined_ds = combined_ds.apply(astype_attrs, 
+                                            dtype=np.float32, 
+                                            keep_attrs=True)
             combined_ds = masking.mask_invalid_data(combined_ds)
 
         # If `lazy_load` is True, return data as a dask array without
@@ -260,3 +295,157 @@ def load_ard(dc,
     else:
         print('No data returned for query')
         return None
+
+
+def array_to_geotiff(fname, data, geo_transform, projection,
+                     nodata_val=0, dtype=gdal.GDT_Float32):
+    """
+    Create a single band GeoTIFF file with data from an array. 
+    
+    Because this works with simple arrays rather than xarray datasets 
+    from DEA, it requires geotransform info ("(upleft_x, x_size, 
+    x_rotation, upleft_y, y_rotation, y_size)") and projection data 
+    (in "WKT" format) for the output raster. These are typically 
+    obtained from an existing raster using the following GDAL calls:
+    
+        import gdal
+        gdal_dataset = gdal.Open(raster_path)
+        geotrans = gdal_dataset.GetGeoTransform()
+        prj = gdal_dataset.GetProjection()
+    
+    ...or alternatively, directly from an xarray dataset:
+    
+        geotrans = xarraydataset.geobox.transform.to_gdal()
+        prj = xarraydataset.geobox.crs.wkt
+    
+    Parameters
+    ----------     
+    fname : str
+        Output geotiff file path including extension
+    data : numpy array
+        Input array to export as a geotiff    
+    geo_transform : tuple 
+        Geotransform for output raster; e.g. "(upleft_x, x_size, 
+        x_rotation, upleft_y, y_rotation, y_size)"
+    projection : str
+        Projection for output raster (in "WKT" format)
+    nodata_val : int, optional
+        Value to convert to nodata in the output raster; default 0
+    dtype : gdal dtype object, optional
+        Optionally set the dtype of the output raster; can be 
+        useful when exporting an array of float or integer values. 
+        Defaults to gdal.GDT_Float32
+        
+    """
+
+    # Set up driver
+    driver = gdal.GetDriverByName('GTiff')
+
+    # Create raster of given size and projection
+    rows, cols = data.shape
+    dataset = driver.Create(fname, cols, rows, 1, dtype)
+    dataset.SetGeoTransform(geo_transform)
+    dataset.SetProjection(projection)
+
+    # Write data to array and set nodata values
+    band = dataset.GetRasterBand(1)
+    band.WriteArray(data)
+    band.SetNoDataValue(nodata_val)
+
+    # Close file
+    dataset = None
+
+
+def mostcommon_crs(dc, product, query):    
+    """
+    Takes a given query and returns the most common CRS for observations
+    returned for that spatial extent. This can be useful when your study
+    area lies on the boundary of two UTM zones, forcing you to decide
+    which CRS to use for your `output_crs` in `dc.load`.
+    
+    Parameters
+    ----------     
+    dc : datacube Datacube object
+        The Datacube to connect to, i.e. `dc = datacube.Datacube()`.
+        This allows you to also use development datacubes if required.   
+    product : str
+        A product name to load CRSs from
+    query : dict
+        A datacube query including x, y and time range to assess for the
+        most common CRS
+        
+    Returns
+    -------
+    A EPSG string giving the most common CRS from all datasets returned
+    by the query above
+    
+    """
+    
+    # List of matching products
+    matching_datasets = dc.find_datasets(product=product, **query)
+    
+    # Extract all CRSs
+    crs_list = [str(i.crs) for i in matching_datasets]    
+   
+    # Identify most common CRS
+    crs_counts = Counter(crs_list)    
+    crs_mostcommon = crs_counts.most_common(1)[0][0]
+
+    # Warn user if multiple CRSs are encountered
+    if len(crs_counts.keys()) > 1:
+
+        warnings.warn(f'Multiple UTM zones {list(crs_counts.keys())} '
+                      f'were returned for this query. Defaulting to '
+                      f'the most common zone: {crs_mostcommon}', 
+                      UserWarning)
+    
+    return crs_mostcommon
+
+
+def download_unzip(url,
+                   output_dir=None,
+                   remove_zip=True):
+    """
+    Downloads and unzips a .zip file from an external URL to a local
+    directory.
+    
+    Parameters
+    ----------     
+    url : str
+        A string giving a URL path to the zip file you wish to download
+        and unzip
+    output_dir : str, optional
+        An optional string giving the directory to unzip files into. 
+        Defaults to None, which will unzip files in the current working 
+        directory
+    remove_zip : bool, optional
+        An optional boolean indicating whether to remove the downloaded
+        .zip file after files are unzipped. Defaults to True, which will
+        delete the .zip file.  
+    
+    """
+    
+    # Get basename for zip file
+    zip_name = os.path.basename(url)
+    
+    # Raise exception if the file is not of type .zip
+    if not zip_name.endswith('.zip'):
+        raise ValueError(f'The URL provided does not point to a .zip '
+                         f'file (e.g. {zip_name}). Please specify a '
+                         f'URL path to a valid .zip file')
+                         
+    # Download zip file
+    print(f'Downloading {zip_name}')
+    r = requests.get(url)
+    with open(zip_name, 'wb') as f:
+        f.write(r.content)
+        
+    # Extract into output_dir
+    with zipfile.ZipFile(zip_name, 'r') as zip_ref:        
+        zip_ref.extractall(output_dir)        
+        print(f'Unzipping output files to: '
+              f'{output_dir if output_dir else os.getcwd()}')
+    
+    # Optionally cleanup
+    if remove_zip:        
+        os.remove(zip_name)
