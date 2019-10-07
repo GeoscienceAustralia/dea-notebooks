@@ -118,7 +118,7 @@ def rgb(ds,
     # exclude the index dim if it is present in the dataset)
     if not aspect:
         x_dim, y_dim = list(ds.dims)[-2:]
-        aspect = len(ds[y_dim]) / len(ds[x_dim])
+        aspect = len(ds[x_dim]) / len(ds[y_dim])
 
     # If no value is supplied for `index` (the default), plot using default 
     # values and arguments passed via `**kwargs`
