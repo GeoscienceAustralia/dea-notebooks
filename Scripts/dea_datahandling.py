@@ -460,8 +460,8 @@ def download_unzip(url,
     if remove_zip:        
         os.remove(zip_name)
 
-  
-  def wofs_fuser(dest, src):
+        
+def wofs_fuser(dest, src):
     """
     Fuse two WOfS water measurements represented as `ndarray`s.
     
