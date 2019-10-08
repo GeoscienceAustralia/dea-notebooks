@@ -113,8 +113,8 @@ with fiona.open(poly_path) as allshapes:
         crs = geometry.CRS(allshapes.crs_wkt)
         #get the list of all the shapes in the shapefile
         ShapesList = list(allshapes)
-        ChunkSize =3
-        #ChunkSize = ceil(len(ShapesList)/DesiredChunks) 
+        #ChunkSize =3
+        ChunkSize = ceil(len(ShapesList)/DesiredChunks) 
         print(f'chunk size is {ChunkSize}')
         print(f'There are {int(len(ShapesList)/ChunkSize)} generated chunks')
         shapessubset = allshapes[(part - 1) * ChunkSize: part * ChunkSize]

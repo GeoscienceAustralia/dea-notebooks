@@ -4,8 +4,8 @@
 #PBS -N WIT_L
 #PBS -l walltime=24:00:00
 #PBS -l mem=6TB
-#PBS -l jobfs=1800GB
-#PBS -l ncpus=64
+#PBS -l jobfs=900GB
+#PBS -l ncpus=32
 #PBS -l wd
 #PBS -M bex.dunn@ga.gov.au
 #PBS -m abe
