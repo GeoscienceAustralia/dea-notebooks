@@ -21,6 +21,7 @@ Functions included:
     rgb
     display_map
     map_shapefile
+    animated_timeseries
 
 Last modified: October 2019
 
@@ -42,6 +43,10 @@ import matplotlib.animation as animation
 
 from datetime import datetime
 import calendar
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import geopandas as gpd
+from matplotlib.colors import ListedColormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def rgb(ds,
@@ -421,7 +426,7 @@ def map_shapefile(gdf,
     
 def animated_timeseries(ds,
                         output_path,
-                        width_pixels=600,
+                        width_pixels=500,
                         interval=200,
                         bands=['nbart_red', 'nbart_green', 'nbart_blue'],
                         percentile_stretch=(0.02, 0.98),
@@ -437,98 +442,121 @@ def animated_timeseries(ds,
                         x_dim='x',
                         y_dim='y'):
     """
-    Takes an xarray time series and animates the data as either a three-band (e.g. true or false colour) 
-    or single-band animation, allowing changes in the landscape to be compared across time.
+    Takes an xarray time series and animates the data as either a 
+    three-band (e.g. true or false colour) or single-band animation, 
+    allowing changes in the landscape to be compared across time.
     
-    Animations can be exported as .mp4 (ideal for Twitter/social media), .wmv (ideal for Powerpoint) and .gif 
-    (ideal for all purposes, but can have large file sizes) format files, and customised to include titles and 
-    date annotations or use specific combinations of input bands.
+    Animations can be exported as .mp4 (ideal for Twitter/social media)
+    and .gif (ideal for all purposes, but can have large file sizes) 
+    format files, and customised to include titles and date annotations 
+    or use specific combinations of input bands.
     
-    A shapefile boundary can be added to the output animation by providing a path to the shapefile.
+    A shapefile boundary can be added to the output animation by 
+    providing a path to the shapefile.
     
-    This function can be used to produce visually appealing cloud-free animations when used in combination with 
-    the `load_clearlandsat` function from `dea-notebooks/10_Scripts/DEADataHandling`.
+    This function can be used to produce visually appealing 
+    cloud-free animations when used in combination with the `load_ard` 
+    function from `dea-notebooks/Scripts/dea_datahandling`.
     
-    Last modified: October 2018
-    Author: Robbi Bishop-Taylor, Sean Chua, Bex Dunn    
+    Last modified: October 2019
     
-    :param ds: 
-        An xarray dataset with multiple time steps (i.e. multiple observations along the `time` dimension).
-        
-    :param output_path: 
-        A string giving the output location and filename of the resulting animation. File extensions of '.mp4', 
-        '.wmv' and '.gif' are accepted.
-    
-    :param width_pixels:
-        An integer defining the output width in pixels for the resulting animation. The height of the animation is
-        set automatically based on the dimensions/ratio of the input xarray dataset. Defaults to 600 pixels wide.
-        
-    :param interval:
-        An integer defining the milliseconds between each animation frame used to control the speed of the output
-        animation. Higher values result in a slower animation. Defaults to 200 milliseconds between each frame. 
-        
-    :param bands:
-        An optional list of either one or three bands to be plotted, all of which must exist in `ds`.
-        Defaults to `['red', 'green', 'blue']`. 
-        
-    :param percentile_stretch:
-        An optional tuple of two floats that can be used to clip one or three-band arrays by percentiles to produce 
-        a more vibrant, visually attractive image that is not affected by outliers/extreme values. The default is 
-        `(0.02, 0.98)` which is equivalent to xarray's `robust=True`.
-        
-    :param image_proc_func:
-        An optional function can be passed to modify three-band arrays for each timestep prior to animating. 
-        This could include image processing functions such as increasing contrast, unsharp masking, saturation etc. 
-        The function should take AND return a three-band numpy array with shape [:, :, 3]. If your function has 
-        parameters, you can pass in custom values using `partial` from `functools`: 
+    Parameters
+    ----------  
+    ds : xarray.Dataset
+        An xarray dataset with multiple time steps (i.e. multiple 
+        observations along the `time` dimension).        
+    output_path : str
+        A string giving the output location and filename of the 
+        resulting animation. File extensions of '.mp4' and '.gif' are 
+        accepted.    
+    width_pixels : int, optional
+        An integer defining the output width in pixels for the resulting 
+        animation. The height of the animation is set automatically 
+        based on the dimensions/ratio of the input xarray dataset. 
+        Defaults to 500 pixels wide.        
+    interval : int, optional
+        An integer defining the milliseconds between each animation 
+        frame used to control the speed of the output animation. Higher 
+        values result in a slower animation. Defaults to 200 
+        milliseconds between each frame.         
+    bands : list of strings, optional
+        An optional list of either one or three bands to be plotted, 
+        all of which must exist in `ds`. Defaults to 
+        `['nbart_red', 'nbart_green', 'nbart_blue']`.         
+    percentile_stretch : tuple of floats, optional
+        An optional tuple of two floats that can be used to clip one or 
+        three-band arrays by percentiles to produce a more vibrant, 
+        visually attractive image that is not affected by outliers/
+        extreme values. The default is `(0.02, 0.98)` which is 
+        equivalent to xarray's `robust=True`.        
+    image_proc_func : func, optional
+        An optional function can be passed to modify three-band arrays 
+        for each timestep prior to animating. This could include image 
+        processing functions such as increasing contrast, unsharp 
+        masking, saturation etc. The function should take AND return a 
+        three-band numpy array with shape [:, :, 3]. If your function 
+        has parameters, you can pass in custom values using `partial` 
+        from `functools`: 
         `image_proc_func=partial(custom_func, param1=10)`.
-    :param title: 
-        An optional string or list of strings with a length equal to the number of timesteps in ds. This can be
-        used to display a static title (using a string), or a dynamic title (using a list) that displays different
-        text for each timestep. Defaults to False, which plots no title.
+    title : str or list of strings, optional
+        An optional string or list of strings with a length equal to the
+        number of timesteps in ds. This can be used to display a static 
+        title (using a string), or a dynamic title (using a list) that 
+        displays different text for each timestep. Defaults to False, 
+        which plots no title.        
+    show_date : bool, optional
+        An optional boolean that defines whether or not to plot date 
+        annotations for each animation frame. Defaults to True, which 
+        plots date annotations based on ds.        
+    annotation_kwargs : dict, optional
+        An optional dict of kwargs for controlling the appearance of 
+        text annotations to pass to the matplotlib `plt.annotate` 
+        function (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.annotate.html 
+        for options). For example, `annotation_kwargs={'fontsize':20, 
+        'color':'red', 'family':'serif'}. By default, text annotations 
+        are plotted as white, size 20 mono-spaced font with a 2.5pt 
+        black outline in the top-right of the animation.         
+    onebandplot_cbar : bool, iptional
+        An optional boolean indicating whether to include a colourbar 
+        for one-band arrays. Defaults to True.        
+    onebandplot_kwargs : dict, optional
+        An optional dict of kwargs for controlling the appearance of 
+        one-band image arrays to pass to matplotlib `plt.imshow` 
+        (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.imshow.html 
+        for options). This only applies if an xarray with a single band 
+        is passed to `ds`. For example, a green colour scheme and custom 
+        stretch could be specified using: 
+        `onebandplot_kwargs={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}`. 
+        By default, one-band arrays are plotted using the 'Greys' cmap 
+        with bilinear interpolation.
         
-    :param show_date:
-        An optional boolean that defines whether or not to plot date annotations for each animation frame. Defaults 
-        to True, which plots date annotations based on ds.
-        
-    :param annotation_kwargs:
-        An optional dict of kwargs for controlling the appearance of text annotations to pass to the matplotlib 
-        `plt.annotate` function (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.annotate.html for options). 
-        For example, `annotation_kwargs={'fontsize':20, 'color':'red', 'family':'serif'}. By default, text annotations 
-        are plotted as white, size 25 mono-spaced font with a 4pt black outline in the top-right of the animation.   
-        
-    :param onebandplot_cbar:
-        An optional boolean indicating whether to include a colourbar for `ds1` one-band arrays. Defaults to True.
-        
-    :param onebandplot_kwargs:
-        An optional dict of kwargs for controlling the appearance of one-band image arrays to pass to matplotlib 
-        `plt.imshow` (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.imshow.html for options).
-        This only applies if an xarray with a single band is passed to `ds`. For example, a green colour scheme and
-        custom stretch could be specified using: `onebandplot_kwargs={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}`. 
-        By default, one-band arrays are plotted using the 'Greys' cmap with bilinear interpolation.
-        
-        Two special kwargs (`tick_fontsize`, `tick_colour`) can also be passed to control the tick labels on the 
-        colourbar. This can be useful for example when the tick labels are difficult to see against a dark background.
-        
-    :param shapefile_path:
-        An optional string or list of strings giving the file paths of one or multiple shapefiles to overlay on the 
-        output animation. The shapefiles must be in the same projection as the input xarray dataset.
-        
-    :param shapefile_kwargs:
-        An optional dictionary of kwargs or list of dictionaries to specify the appearance of the shapefile overlay 
-        by passing to `GeoSeries.plot` (see http://geopandas.org/reference.html#geopandas.GeoSeries.plot). For example: 
-        `shapefile_kwargs = {'linewidth':2, 'edgecolor':'black', 'facecolor':"#00000000"}`. If multiple shapefiles
-        were provided to `shapefile_path`, each shapefile can be plotted with a different colour style by passing in
-        a list of kwarg dicts of the same length as `shapefile_path`.
-        
-    :param time_dim:
-        An optional string allowing you to override the xarray dimension used for time. Defaults to 'time'.
-    
-    :param x_dim:
-        An optional string allowing you to override the xarray dimension used for x coordinates. Defaults to 'x'.
-    
-    :param y_dim:
-        An optional string allowing you to override the xarray dimension used for y coordinates. Defaults to 'y'.
+        Two special kwargs (`tick_fontsize`, `tick_colour`) can also be 
+        passed to control the tick labels on the colourbar. This can be 
+        useful for example when the tick labels are difficult to see 
+        against a dark background.       
+    shapefile_path : str or list of strings, optional
+        An optional string or list of strings giving the file paths of 
+        one or multiple shapefiles to overlay on the output animation. 
+        The shapefiles must be in the same projection as the input 
+        xarray dataset.        
+    shapefile_kwargs : dict or list of dicts, optional
+        An optional dictionary of kwargs or list of dictionaries to 
+        specify the appearance of the shapefile overlay by passing to 
+        `GeoSeries.plot` (see http://geopandas.org/reference.html#geopandas.GeoSeries.plot). 
+        For example: `shapefile_kwargs = {'linewidth':2, 
+        'edgecolor':'black', 'facecolor':"#00000000"}`. If multiple 
+        shapefiles were provided to `shapefile_path`, each shapefile can 
+        be plotted with a different colour style by passing in a list of
+        kwarg dicts of the same length as `shapefile_path`.        
+    time_dim : str, optional
+        An optional string allowing you to override the xarray dimension 
+        used for time. Defaults to 'time'.
+    x_dim : str, optional
+        An optional string allowing you to override the xarray dimension 
+        used for x coordinates. Defaults to 'x'.    
+    y_dim : str, optional
+        An optional string allowing you to override the xarray dimension 
+        used for y coordinates. Defaults to 'y'.
         
     """
 
@@ -577,7 +605,7 @@ def animated_timeseries(ds,
                                        'vmin': vmin,
                                        'vmax': vmax,
                                        'tick_colour': 'black',
-                                       'tick_fontsize': 15}, 
+                                       'tick_fontsize': 12}, 
                                       **onebandplot_kwargs)
 
             # Use pop to remove the two special tick kwargs from the 
@@ -597,9 +625,9 @@ def animated_timeseries(ds,
                     'textcoords': 'offset points',
                     'horizontalalignment': 'right',
                     'verticalalignment': 'top',
-                    'fontsize': 28,
+                    'fontsize': 20,
                     'color': 'white',
-                    'path_effects': [PathEffects.withStroke(linewidth=3, 
+                    'path_effects': [PathEffects.withStroke(linewidth=2.5, 
                                                             foreground='black')]
                 }, **annotation_kwargs)
 
