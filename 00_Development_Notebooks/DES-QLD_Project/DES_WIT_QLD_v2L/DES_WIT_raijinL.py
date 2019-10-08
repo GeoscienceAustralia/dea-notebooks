@@ -1,7 +1,7 @@
 # | Authors:  | Bex Dunn|
 # |----------|----------------|
 # | Created: | Jan 7, 2019 |
-# | Last edited: | Sept 26, 2019 |
+# | Last edited: | OCt 8, 2019 |
 
 
 #  Before running this script load these modules:
@@ -125,7 +125,7 @@ def get_polyName(feature):
     ID = feature['properties']['OBJECTID']
     CATCHMENT = feature['properties']['CATCHMENT']
     HAB = feature['properties']['HAB']
-    polyName = f'{ID}_{CATCHMENT}_{HAB}.png'
+    polyName = f'{ID}_{CATCHMENT}_{HAB}'
     print(f'processing polygon {polyName}')
     return(polyName)
                    

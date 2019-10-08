@@ -3,7 +3,7 @@
 #PBS -q megamem 
 #PBS -N WIT_L
 #PBS -l walltime=24:00:00
-#PBS -l mem=6TB
+#PBS -l mem=3TB
 #PBS -l jobfs=900GB
 #PBS -l ncpus=32
 #PBS -l wd
