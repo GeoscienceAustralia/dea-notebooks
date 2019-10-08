@@ -4,6 +4,8 @@
 */.ipynb_checkpoints/*
 *.tif
 *.nc
+*.e*
+*.o*
 *.xml
 __pycache__
 *Untitled*
