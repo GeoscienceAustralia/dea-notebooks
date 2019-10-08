@@ -1,18 +1,28 @@
 ## dea_datahandling.py
 '''
-Description: This file contains a set of python functions for handling Digital Earth Australia data.
+Description: This file contains a set of python functions for handling 
+Digital Earth Australia data.
 
-License: The code in this notebook is licensed under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth Australia data is licensed under the Creative Commons by Attribution 4.0 license (https://creativecommons.org/licenses/by/4.0/).
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
+Australia data is licensed under the Creative Commons by Attribution 4.0 
+license (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open Data Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using the `open-data-cube` tag (you can view previously asked questions here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+Contact: If you need assistance, please post a question on the Open Data 
+Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack 
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) 
+using the `open-data-cube` tag (you can view previously asked questions 
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
 
-If you would like to report an issue with this script, you can file one on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+If you would like to report an issue with this script, you can file one on 
+Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Functions included:
     load_ard
     array_to_geotiff
     mostcommon_utm
     download_unzip
+    wofs_fuser
 
 Last modified: October 2019
 
@@ -449,3 +459,17 @@ def download_unzip(url,
     # Optionally cleanup
     if remove_zip:        
         os.remove(zip_name)
+
+  
+  def wofs_fuser(dest, src):
+    """
+    Fuse two WOfS water measurements represented as `ndarray`s.
+    
+    Note: this is a copy of the function located here:
+    https://github.com/GeoscienceAustralia/digitalearthau/blob/develop/digitalearthau/utils.py
+    """
+    empty = (dest & 1).astype(np.bool)
+    both = ~empty & ~((src & 1).astype(np.bool))
+    dest[empty] = src[empty]
+    dest[both] |= src[both]
+    
