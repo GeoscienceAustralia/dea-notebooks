@@ -152,6 +152,10 @@ def ui_select_station(stations,
         display(fig)
 
     def _on_select(station):
+        if state.finished:
+            print('Please re-run the cell')
+            return
+
         state.station = station
         state.pos = station.pos
         state.gauge_data = None
@@ -181,6 +185,11 @@ def ui_select_station(stations,
             _on_select(station)
 
     def on_done(btn):
+        if state.finished:
+            with dbg_display:
+                print('Please re-run the cell')
+                return
+
         state.finished = True
         n_obs = 0 if state.gauge_data is None else state.gauge_data.shape[0]
 
