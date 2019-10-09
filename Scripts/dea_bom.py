@@ -113,6 +113,124 @@ def mk_station_selector(on_select,
     return dst_map, cluster
 
 
+def ui_select_station(stations,
+                      zoom=3,
+                      center=(-24, 138),
+                      **kw):
+    """
+    Returns
+    =======
+
+    (gauge_data, station)
+    """
+    import ipywidgets as W
+    from IPython.display import display
+    import matplotlib.pyplot as plt
+    import ipyleaflet as L
+    from odc.ui import ui_poll
+
+    dbg_display = W.Output()
+    fig_display = W.Output()
+    btn_done = W.Button(description='Done')
+    scroll_wheel_zoom = kw.pop('scroll_wheel_zoom', True)
+    map_widget = L.Map(zoom=zoom,
+                       center=center,
+                       scroll_wheel_zoom=scroll_wheel_zoom,
+                       **kw)
+
+    state = SimpleNamespace(pos=None,
+                            gauge_data=None,
+                            finished=False,
+                            station=None)
+
+    plt_interactive_state = plt.isinteractive()
+    plt.interactive(False)
+
+    with fig_display:
+        fig, ax = plt.subplots(1, figsize=(14,4))
+        ax.set_visible(False)
+        display(fig)
+
+    def _on_select(station):
+        state.station = station
+        state.pos = station.pos
+        state.gauge_data = None
+
+        print('Fetching data for: {}'.format(station.name))
+        try:
+            xx = get_station_data(station).dropna()
+        except Exception:
+            print('Failed to read data')
+            return
+        print('Got {} observations'.format(xx.shape[0]))
+
+        state.gauge_data = xx
+
+        with fig_display:
+            ax.clear()
+            ax.set_visible(True)
+            xx.plot(ax=ax)
+            ax.legend([station.name])
+
+        fig_display.clear_output(wait=True)
+        with fig_display:
+            display(fig)
+
+    def on_select(station):
+        with dbg_display:
+            _on_select(station)
+
+    def on_done(btn):
+        state.finished = True
+        n_obs = 0 if state.gauge_data is None else state.gauge_data.shape[0]
+
+        with dbg_display:
+            print('''Finished
+Station: {}
+Number of Observations: {}'''.format(state.station.name, n_obs))
+
+    def on_poll():
+        with dbg_display:
+            if state.finished:
+                return state.gauge_data, state.station
+            return None
+
+    mk_station_selector(on_select,
+                        stations=stations,
+                        dst_map=map_widget)
+
+    ## UI:
+    ##
+    ##  MMMMMMMMMMMMM BBBBB
+    ##  MMMMMMMMMMMMM .....
+    ##  MMMMMMMMMMMMM .....
+    ##  MMMMMMMMMMMMM .....
+    ##  MMMMMMMMMMMMM .....
+    ##  FFFFFFFFFFFFFFFFFFF
+    ##  FFFFFFFFFFFFFFFFFFF
+
+    #  M - Map     F - Figure
+    #  B - Button  . - Debug output
+
+    btn_done.on_click(on_done)
+    r_panel = W.VBox([btn_done, dbg_display],
+                     layout=W.Layout(width='30%'))
+
+    ui = W.VBox([W.HBox([map_widget, r_panel]),
+                 fig_display])
+
+    display(ui)
+
+    result = ui_poll(on_poll, 1/20)  # this will block until done is pressed
+
+    #restore interactive state
+    fig_display.clear_output(wait=True)
+    with fig_display:
+        plt.interactive(plt_interactive_state)
+        plt.show()
+
+    return result
+
 
 def _fmt_time(time=None):
     if time is None:
