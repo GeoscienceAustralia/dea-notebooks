@@ -405,7 +405,7 @@ init_clusters = [
             ]
             ]
 
-
+# import pdb
 class SAR_Ktree():
     """
     Class to implement a hierarchical K-means model for land cover classification of
@@ -442,7 +442,24 @@ class SAR_Ktree():
                 sub_ds = sar_ds.where(self_predictions == branch)
                 self.branches[branch].fit(sub_ds)
     
-    def balanced_fit(self,sar_ds,optical_cover,num_classes=5,class_weights=np.array([0.7,1.,0.7,1.3,1.3])):
+    #define a bespoke cost function to use for assigning clusters to landcover classes.
+    #this lets us weight mistakes differently - e.g. messing up between 'wet' and 'water'
+    #isn't as bad as doing the same between bare soil and water. This matrix can also be
+    #asymmetric, so we can say, for example, that classifying bare soil from the WIT as
+    #NPV is worse than classifying NPV from WIT as bare soil. This matrix is read such
+    #that the first dimension corresponds to the prospective association class - i.e.
+    #error_matrix[X][Y] is the cost of the SARWIT classifying a pixel of Y class from the
+    #WIT as X.
+    error_matrix_default = np.array([
+        [0.0,0.1,1.0,0.7,0.6],
+        [0.1,0.0,1.0,0.2,0.8],
+        [1.0,1.0,0.0,0.8,0.2],
+        [0.7,0.2,0.8,0.0,1.0],
+        [0.6,0.8,0.2,1.0,0.0]
+    ])
+    
+    
+    def assoc(self,sar_ds,optical_cover,error_matrix=error_matrix_default):
         """A method to perform a 'semi-supervised' fit based on land-cover classes determined by the optical_cover DataArray.
            The algorithm is as follows:
            1. reindex sar_ds so it only contains scenes that approximately match (within two days) the optical_cover scenes.
@@ -453,35 +470,42 @@ class SAR_Ktree():
            5. 'Predict' the data that was used to fit the model, then for each cluster take the modal optical_cover class and use this to
               initialise the landcover dictionary.
         """
-        print(class_weights)
-        #cluster the raw input data
-        self.fit(sar_ds)
+        #check the error matrix is valid and set the number of landcover classes
+        assert(len(error_matrix.shape)==2 and error_matrix.shape[0]==error_matrix.shape[1])
+        num_classes = error_matrix.shape[0]
         
+        #unset any existing landcover mapping
+        self.landcover_dict=None
+
         #reindex SAR to match the optical WIT and discard optical scenes with no matching SAR
         sar_ds = sar_ds.reindex(time=optical_cover.time,method='nearest',tolerance=np.timedelta64(2,'D'))
         optical_cover = optical_cover.where(~(np.isnan(sar_ds.to_array()).any(dim='variable')))
         sar_ds = sar_ds.where(~np.isnan(optical_cover))
-        print(optical_cover)
         
-        #define amplification factors for each cover class
-        weights = 1./np.array([(optical_cover == cla).sum() for cla in range(num_classes)])
-        weights = weights/weights.min()
-        
-        #by default the class-based fudge factors will weight bare soil & vegetation more heavily - this avoids predicting large areas of flooding
-        #you may adjust the weighting to suit your problem. Bare soil tends to be underrepresented so adding weight to this may help too
-        weights = weights*class_weights
-        
-        
-        #predict the labelled pixels with the fitted clustering model
+        #predict the matched pixels with the fitted clustering model
         pred_input = _sklearn_flatten(sar_ds)
         covervals = optical_cover.to_masked_array()
         covervals = covervals[~covervals.mask]
         test_out = np.stack([self.predict_nparr(pred_input),covervals])
         
-        self.landcover_dict = np.zeros(len(self.branches)**self.levels)
-        for clu in range(len(self.branches)**self.levels):
-            reduced = test_out[1,test_out[0,:]==clu]
-            self.landcover_dict[clu] = fastmode.mode_class(reduced,num_classes=num_classes,weights=weights)
+        #initialise the landcover dictionary with invalid values
+        #will be useful later for checking if all values are assigned
+        num_clusters = len(self.branches)**self.levels
+        
+        self.landcover_dict=np.full(num_clusters,-1)
+        
+        #amplify error signal from underrepresented classes
+        prevalence = np.array([(test_out[1,:]==cla).sum() for cla in range(num_classes)])
+        amp_factors = 1./prevalence
+        #assign classes to clusters to minimise error defined in error_matrix
+        for clu in range(num_clusters):
+            test_slice = test_out[1,test_out[0,:]==clu]
+            cost = np.zeros(num_classes)
+            for cla in range(num_classes):
+                earr = error_matrix[cla]*amp_factors
+                efunc = np.vectorize(earr.__getitem__)
+                cost[cla] = efunc(test_slice.astype(int)).sum()
+            self.landcover_dict[clu] = np.argmin(cost)
             
     def fit_nparr(self,fit_input):
         self.model = self.model.fit(fit_input)
