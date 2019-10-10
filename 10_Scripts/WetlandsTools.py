@@ -91,7 +91,7 @@ def get_WetMAP_newest(feature):
         NAME = '_'.join(feature['properties']['NAME_MAIN'].split(' ')).replace("'","_").replace("/","_") 
         print(NAME)
     else:     
-        print('your shapefile names don t work")
+        print("your shapefile names don' t work")
     #catch if names are non-unique in this bit. hopefully you read the outputs.
     try:
         assert feature['properties']['NAME_MAIN'].is_unique

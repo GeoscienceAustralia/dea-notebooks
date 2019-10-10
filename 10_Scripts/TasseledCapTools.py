@@ -53,8 +53,7 @@ def thresholded_tasseled_cap(sensor_data, tc_bands=['greenness', 'brightness', '
     :attr wetness_threshold: optional threshold as float
     :attr drop: if 'drop = False', return all original Landsat bands
     :attr drop_tc_bands: if 'drop_tc_bands = False', return all unthresholded tasseled 
-    cap bands as well as the thresholded bands
-    :returns: xarray dataset with newly computed thresholded tasseled cap bands
+    cap bands as well as the thresholded band    :returns: xarray dataset with newly computed thresholded tasseled cap bands
     """
 
     # Copy input dataset
