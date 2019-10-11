@@ -22,9 +22,14 @@ def mode_class(arr, axis = None, num_classes = 4, weights = []):
     if ~(np.array(weights).any()):
         weights = np.ones(num_classes)
     
-    if axis:
-        clarr = weights*np.array([(arr == cla).sum(axis=axis) for cla in range(num_classes)])
-    else:
-        clarr = weights*np.array([(arr == cla).sum() for cla in range(num_classes)])
     
-    return np.argmax(clarr,axis=0)
+    
+    if axis is not None:
+        clarr = np.array([(arr == cla).sum(axis=axis) for cla in range(num_classes)])
+    else:
+        clarr = np.array([(arr == cla).sum() for cla in range(num_classes)])
+        
+    clarr = np.transpose(clarr,(*range(1,len(clarr.shape)),0))
+    clarr = weights*clarr
+    
+    return np.argmax(clarr,axis=-1)
