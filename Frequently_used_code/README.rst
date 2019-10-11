@@ -10,3 +10,18 @@ These notebooks should:
 * Include simple, reproducible examples of commonly used tasks
 
 * The end goal is to create a `recipe book` of useful code that users can copy-paste into their analyses
+
+.. toctree::
+   :maxdepth: 1
+
+   Animated_timeseries.ipynb
+   Calculating_band_indices.ipynb
+   Contour_extraction.ipynb
+   Exporting_geotiffs.ipynb
+   Geomedian_composites.ipynb
+   Image_segmentation.ipynb
+   Integrating_external_data.ipynb
+   Rasterize_vectorize.ipynb
+   Using_load_ard.ipynb
+   Virtual_products.ipynb
+   Working_with_time.ipynb
