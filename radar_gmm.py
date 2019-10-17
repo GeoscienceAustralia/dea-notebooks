@@ -451,24 +451,16 @@ class SAR_Ktree():
     #error_matrix[X][Y] is the cost of the SARWIT classifying a pixel of Y class from the
     #WIT as X.
     error_matrix_default = np.array([
-        [0.0,0.1,1.0,0.7,0.6],
-        [0.1,0.0,1.0,0.2,0.8],
-        [1.0,1.0,0.0,0.8,0.2],
-        [0.7,0.2,0.8,0.0,1.0],
-        [0.6,0.8,0.2,1.0,0.0]
+        [0.0,1.0,1.0,1.0,1.0],
+        [1.0,0.0,1.0,1.0,1.0],
+        [1.0,1.0,0.0,1.0,1.0],
+        [1.0,1.0,1.0,0.0,1.0],
+        [1.0,1.0,1.0,1.0,0.0]
     ])
     
     
     def assoc(self,sar_ds,optical_cover,error_matrix=error_matrix_default):
         """A method to perform a 'semi-supervised' fit based on land-cover classes determined by the optical_cover DataArray.
-           The algorithm is as follows:
-           1. reindex sar_ds so it only contains scenes that approximately match (within two days) the optical_cover scenes.
-           2. Split sar_ds into separate pixel arrays corresponding to each optical_cover class
-           3. Repeat pixels according to the relative prevalence of their associated cover class in optical_cover, in order to ensure
-              balance in the classes
-           4. Feed this final pixel array with repetition into the fit_nparray() method to initialise the model clusters
-           5. 'Predict' the data that was used to fit the model, then for each cluster take the modal optical_cover class and use this to
-              initialise the landcover dictionary.
         """
         #check the error matrix is valid and set the number of landcover classes
         assert(len(error_matrix.shape)==2 and error_matrix.shape[0]==error_matrix.shape[1])
@@ -507,6 +499,72 @@ class SAR_Ktree():
                 cost[cla] = efunc(test_slice.astype(int)).sum()
             self.landcover_dict[clu] = np.argmin(cost)
             
+    
+    def adaptive_assoc(self,sar_ds,optical_cover,error_matrix=error_matrix_default, minrep = np.array([0,0,1,2,2]), maxrep = np.array([2,2,2,3,3]),lr=0.01):
+        """A method to perform a 'semi-supervised' fit based on land-cover classes determined by the optical_cover DataArray.
+           Uses a cost function that is initialised by error_matrix and adjusted repeatedly until per-class representation
+           in the landcover mapping satisfies the constraints given by minrep and maxrep.
+        """
+        #check the error matrix is valid and set the number of landcover classes
+        assert(len(error_matrix.shape)==2 and error_matrix.shape[0]==error_matrix.shape[1])
+        num_classes = error_matrix.shape[0]
+        
+        #unset any existing landcover mapping
+        self.landcover_dict=None
+
+        #reindex SAR to match the optical WIT and discard optical scenes with no matching SAR
+        sar_ds = sar_ds.reindex(time=optical_cover.time,method='nearest',tolerance=np.timedelta64(2,'D'))
+        optical_cover = optical_cover.where(~(np.isnan(sar_ds.to_array()).any(dim='variable')))
+        sar_ds = sar_ds.where(~np.isnan(optical_cover))
+        
+        #predict the matched pixels with the fitted clustering model
+        pred_input = _sklearn_flatten(sar_ds)
+        covervals = optical_cover.to_masked_array()
+        covervals = covervals[~covervals.mask]
+        test_out = np.stack([self.predict_nparr(pred_input),covervals])
+        
+        #initialise the landcover dictionary with invalid values
+        #will be useful later for checking if all values are assigned
+        num_clusters = len(self.branches)**self.levels
+        
+        self.landcover_dict=np.full(num_clusters,-1)
+        
+        #amplify error signal from underrepresented classes
+#         prevalence = np.array([(test_out[1,:]==cla).sum() for cla in range(num_classes)])
+#         amp_factors = 1./prevalence
+        
+        done = False
+        
+        while not done:
+            #assign classes to clusters to minimise error defined in error_matrix
+            for clu in range(num_clusters):
+                test_slice = test_out[1,test_out[0,:]==clu]
+                cost = np.zeros(num_classes)
+                for cla in range(num_classes):
+                    earr = error_matrix[cla]
+                    efunc = np.vectorize(earr.__getitem__)
+                    cost[cla] = efunc(test_slice.astype(int)).sum()
+                self.landcover_dict[clu] = np.argmin(cost)
+            
+            representation = np.array([(self.landcover_dict==cla).sum() for cla in range(num_classes)])
+            lessthanmin = representation < minrep
+            morethanmax = representation > maxrep
+            
+            if not lessthanmin.any() and not morethanmax.any():
+                done = True
+            else:
+                if lessthanmin.any():
+                    #make it cheaper for all other classes to be misclassified as these and
+                    #more expensive for this class to be misclassified as anything else
+                    error_matrix[lessthanmin,:] *= 1-lr
+                    error_matrix[:,lessthanmin] *= 1+lr
+                if morethanmax.any():
+                    #make it more expensive for all other classes to be misclassified as these and
+                    #cheaper for this class to be misclassified as anything else
+                    error_matrix[morethanmax,:] *= 1+lr
+                    error_matrix[:,morethanmax] *= 1-lr
+        
+        
     def fit_nparr(self,fit_input):
         self.model = self.model.fit(fit_input)
         
@@ -517,6 +575,9 @@ class SAR_Ktree():
                 self.branches[branch].fit_nparr(sub_arr)
                 
     def predict_nparr(self,arr):
+        #don't send an empty array to the model's predict() method
+        if not (arr.any()):
+            return np.array([])
         pred_out = self.model.predict(arr)
 
         #if not a leaf
