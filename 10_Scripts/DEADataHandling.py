@@ -185,8 +185,8 @@ def load_sentinel(dc, product, query, filter_cloud=True, **bands_of_interest):
         return None
 
 
-def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
-                      bands_of_interest=None, masked_prop=0.0, mask_dict=None,
+def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart', dask_chunks = {'time': 1},
+                      lazy_load = False, bands_of_interest=None, masked_prop=0.0, mask_dict=None,
                       mask_pixel_quality=True, mask_invalid_data=True, 
                       ls7_slc_off=False, satellite_metadata=False):
 
@@ -218,6 +218,13 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         An optional string specifying 'nbar', 'nbart' or 'fc'. Defaults to 'nbart'. For information on the difference, 
         see the '02_DEA_datasets/Introduction_to_Landsat' or '02_DEA_datasets/Introduction_to_Fractional_Cover'
         notebooks from DEA-notebooks.
+    dask_chunks : dict, optional
+        An optional dictionary containing the coords and sizes you wish to create dask chunks over. Usually
+        used in combination with lazy_load=True (see below). example: dask_chunks = {'x': 500, 'y': 500}
+    lazy_load : boolean, optional
+        Setting this variable to 'True' will delay the computation of the function until you explicitly
+        run ds.compute(). If used in conjuction with dask.distributed.Client() will allow 
+        for automatic parallel computation. 
     bands_of_interest : list, optional
         An optional list of strings containing the bands to be read in; options include 'red', 'green', 'blue', 
         'nir', 'swir1', 'swir2'; defaults to all available bands if no bands are specified.
@@ -240,10 +247,10 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         filtered images may still contain up to 1% poor quality pixels. The default of False simply returns the
         resulting observations without masking out these pixels; True masks them out and sets them to NaN using the
         pixel quality mask, but has the side effect of changing the data type of the output arrays from int16 to
-        float64 which can cause memory issues. To reduce memory usage, set to False.
+        float32 which can cause memory issues. To reduce memory usage, set to False.
     mask_invalid_data : bool, optional
         An optional boolean indicating whether invalid -999 nodata values should be replaced with NaN. Defaults to
-        True; this has the side effect of changing the data type of the output arrays from int16 to float64 which
+        True; this has the side effect of changing the data type of the output arrays from int16 to float32 which
         can cause memory issues. To reduce memory usage, set to False.
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from after the Landsat 7 SLC failure (i.e. SLC-off).
@@ -261,8 +268,8 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     Notes
     -----
     Memory issues: For large data extractions, it is recommended that you set both `mask_pixel_quality=False` and 
-    `mask_invalid_data=False`. Otherwise, all output variables will be coerced to float64 when NaN values are 
-    inserted into the array, potentially causing your data to use 4x as much memory. Be aware that the resulting
+    `mask_invalid_data=False`. Otherwise, all output variables will be coerced to float32 when NaN values are 
+    inserted into the array, potentially causing your data to use 2x as much memory. Be aware that the resulting
     arrays will contain invalid -999 values which should be considered in analyses.
         
     Example
@@ -291,7 +298,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     Loading ls8
         Loading 3 filtered ls8 timesteps
     Combining and sorting ls5, ls7, ls8 data
-        Replacing invalid -999 values with NaN (data will be coerced to float64)
+        Replacing invalid -999 values with NaN (data will be coerced to float32)
     >>> # Test that function returned data
     >>> len(landsat_ds.time) > 0
     True
@@ -307,7 +314,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         warnings.warn("""You are attempting to load pixel quality product with a mask flag
                         (mask_invalid_data or mask_pixel_quality). Pixel quality is a bitstring 
                         (only makes sense as int) and masking
-                        casts to float64.""")
+                        casts to float32.""")
     
     # Dictionary to save results from each sensor 
     filtered_sensors = {}
@@ -326,7 +333,7 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                 data = dc.load(product=f'{sensor}_{product}_albers',
                                measurements=bands_of_interest,
                                group_by='solar_day', 
-                               dask_chunks={'time': 1},
+                               dask_chunks=dask_chunks,
                                **query)
 
             # If no bands of interest given, run without specifying measurements, and 
@@ -336,14 +343,14 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                 # Lazily load Landsat data using dask  
                 data = dc.load(product=f'{sensor}_{product}_albers',
                                group_by='solar_day', 
-                               dask_chunks={'time': 1},
+                               dask_chunks=dask_chunks,
                                **query)
 
             # Load PQ data
             pq = dc.load(product=f'{sensor}_pq_albers',
                          group_by='solar_day',
                          fuse_func=ga_pq_fuser,
-                         dask_chunks={'time': 1},
+                         dask_chunks=dask_chunks,
                          **query)            
             
             # If resulting dataset has data, continue:
@@ -399,6 +406,13 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
 
                     # Optionally apply pixel quality mask to all observations that were not dropped in previous step
                     if mask_pixel_quality:
+                        
+                        # First change dtype to float32, then mask out values using
+                        # `.where()`. By casting to float32, we prevent `.where()` 
+                        # from automatically casting to float64, using 2x the memory
+                        # We also need to manually reset attributes due to a possible
+                        # bug in recent xarray version
+                        filtered = filtered.astype(np.float32).assign_attrs(crs=filtered.crs)
                         filtered = filtered.where(good_quality)
 
                     # Optionally add satellite name variable
@@ -406,7 +420,10 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                         filtered['satellite'] = xr.DataArray([sensor] * len(filtered.time), [('time', filtered.time)])
 
                     # Add result to dictionary
-                    filtered_sensors[sensor] = filtered.compute()
+                    if lazy_load==True:
+                        filtered_sensors[sensor] = filtered
+                    else:
+                        filtered_sensors[sensor] = filtered.compute()
 
                     # Close datasets
                     filtered = None
@@ -441,7 +458,15 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         # Optionally filter to replace no data values with nans
         if mask_invalid_data:
 
-            print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
+            print('    Replacing invalid -999 values with NaN (data will be coerced to float32)')
+	
+            # First change dtype to float32, then mask out values using
+            # `.where()`. By casting to float32, we prevent `.where()` 
+            # from automatically casting to float64, using 2x the memory
+            # We also need to manually reset attributes due to a possible
+            # bug in recent xarray version
+            combined_ds = (combined_ds.astype(np.float32)
+                           .assign_attrs(crs=combined_ds.crs))
             combined_ds = masking.mask_invalid_data(combined_ds)
         
         # reset pixel quality attributes
@@ -461,8 +486,16 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
         # Optionally filter to replace no data values with nans
         if mask_invalid_data:
 
-            print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
-            sensor_ds = masking.mask_invalid_data(sensor_ds)       
+            print('    Replacing invalid -999 values with NaN (data will be coerced to float32)')
+
+            # First change dtype to float32, then mask out values using
+            # `.where()`. By casting to float32, we prevent `.where()` 
+            # from automatically casting to float64, using 2x the memory
+            # We also need to manually reset attributes due to a possible
+            # bug in recent xarray version
+            sensor_ds = (sensor_ds.astype(np.float32)
+                           .assign_attrs(crs=sensor_ds.crs))
+            sensor_ds = masking.mask_invalid_data(sensor_ds)    
         
         return sensor_ds
     
