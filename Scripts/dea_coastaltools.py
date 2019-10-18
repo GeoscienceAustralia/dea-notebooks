@@ -55,7 +55,7 @@ def tidal_tag(ds,
         which uses the centroid of the dataset as the tide modelling 
         location.
     ebb_flow : bool, optional
-        An optional boolean indicating whether to compute whether the 
+        An optional boolean indicating whether to compute if the 
         tide phase was ebbing (falling) or flowing (rising) for each 
         observation. The default is False; if set to True, a new 
         `ebb_flow` variable will be added to the dataset with each 
