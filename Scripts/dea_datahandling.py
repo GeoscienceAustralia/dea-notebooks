@@ -137,7 +137,9 @@ def load_ard(dc,
         Setting this variable to True will delay the computation of the 
         function until you explicitly run `ds.compute()`. If used in 
         conjuction with `dask.distributed.Client()` this will allow for 
-        automatic parallel computation.
+        automatic parallel computation. Be aware that computation will
+        still occur if min_gooddata > 0, as the pixel quality will be
+        loaded to compute the 'good data' percentage.
     **dcload_kwargs : 
         A set of keyword arguments to `dc.load` that define the 
         spatiotemporal query used to extract data. This can include `x`,
@@ -176,11 +178,15 @@ def load_ard(dc,
         except ValueError:        
             return da
     
-    # Verify that products were provided
-    if (min_gooddata > 0.0) & (lazy_load==True):
-                warnings.warn("Setting 'min_gooddata' percentage to > 0.0 will cause dask arrays \n"
-                "to compute when loading pixel-quality data to calculate 'good pixel' percentage. This will significantly slow the return of your dataset.")
+    # Warn user if they combine lazy load with min_gooddata
+    if (min_gooddata > 0.0) & lazy_load:
+                warnings.warn("Setting 'min_gooddata' percentage to > 0.0 "
+                              "will cause dask arrays \n to compute when "
+                              "loading pixel-quality data to calculate "
+                              "'good pixel' percentage. This will "
+                              "significantly slow the return of your dataset.")
     
+    # Verify that products were provided    
     if not products:
         raise ValueError("Please provide a list of product names "
                          "to load data from. Valid options are: \n"
