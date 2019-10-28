@@ -83,6 +83,8 @@ products:
                     formula: (4 * (green - swir1) - (0.25 * nir * + 2.75 * swir2))
                  awei_sh:
                     formula: (blue + 2.5 * green - 1.5 * (nir + swir1) - 0.25 * swir2)
+                 ndbi:
+                    formula: (swir1 - nir) / (swir1 + nir)
              input: *ls_nbart_masked
                 
                 
