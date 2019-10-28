@@ -177,6 +177,10 @@ def load_ard(dc,
             return da
     
     # Verify that products were provided
+    if (min_gooddata > 0.0) & (lazy_load==True):
+                warnings.warn("Setting 'min_gooddata' percentage to > 0.0 will cause dask arrays \n"
+                "to compute when loading pixel-quality data to calculate 'good pixel' percentage. This will significantly slow the return of your dataset.")
+    
     if not products:
         raise ValueError("Please provide a list of product names "
                          "to load data from. Valid options are: \n"
@@ -279,7 +283,7 @@ def load_ard(dc,
         
         # Optionally filter to replace no data values with nans
         if mask_invalid_data:
-            print('    Masking out invalid values')
+            print('Masking out invalid values')
             
             # First change dtype to float32, then mask out values using
             # `.where()`. By casting to float32, we prevent `.where()` 
