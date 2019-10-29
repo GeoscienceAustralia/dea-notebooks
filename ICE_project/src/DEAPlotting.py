@@ -706,7 +706,7 @@ def animated_timeseriesline(ds, df, output_path,
             line_test = df.plot(ax=ax2, **pandasplot_kwargs)
 
             # Legend to right panel
-            ax2.legend(loc='upper left', bbox_to_anchor=(0, 1), ncol=1, frameon=False) 
+#             ax2.legend(loc='upper left', bbox_to_anchor=(0, 1), ncol=1, frameon=False) 
 
             # Initialise annotation objects to be updated during animation
             t = ax1.annotate('', **annotation_kwargs)

@@ -312,7 +312,26 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     #######################
     # Process each sensor #
     #######################    
-    
+    # Due to possible bug in xarray 0.13.0, define temporary function 
+    # which converts dtypes in a way that preserves attributes
+    def astype_attrs(da, dtype=np.float32):
+        '''
+        Loop through all data variables in the dataset, record 
+        attributes, convert to float32, then reassign attributes. If 
+        the data variable cannot be converted to float32 (e.g. for a
+        non-numeric dtype like strings), skip and return the variable 
+        unchanged.
+        '''
+        
+        try:            
+            da_attr = da.attrs
+            da = da.astype(dtype)
+            da = da.assign_attrs(**da_attr)
+            return da
+        
+        except ValueError:        
+            return da
+        
     #warn if loading a pq bitstring product and attempting to mask it (and therefore cast to float)
     if product == 'pq' and (mask_invalid_data or mask_pixel_quality):
         warnings.warn("""You are attempting to load pixel quality product with a mask flag
@@ -396,21 +415,12 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                                                          swir2_saturated=False,
                                                          contiguous=True)
                    
-                    # Compute good data for each observation as a percentage of total array pixels. Need to
-                    # sum over x and y axes individually so that the function works with lat-lon dimensions,
-                    # and because it isn't currently possible to pass a list of axes (bug with xarray?) 
-                    data_perc = good_quality.sum(axis=1).sum(axis=1) / (good_quality.shape[1] * good_quality.shape[2])
-
-                    # Add data_perc data to Landsat dataset as a new xarray variable
-                    data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
-
-                    # Filter by data_perc to drop low quality observations and finally import data using dask
-                    filtered = data.sel(time=data.data_perc >= masked_prop)
-                    print(f'    Loading {len(filtered.time)} filtered {sensor} timesteps')
-
+  
                     # Optionally apply pixel quality mask to all observations that were not dropped in previous step
                     if mask_pixel_quality:
-                        filtered = filtered.where(good_quality)
+                        print(' Applying pixel quality mask')
+                        ds = data.apply(astype_attrs, dtype=np.float32, keep_attrs=True)
+                        filtered = ds.where(good_quality)
 
                     # Optionally add satellite name variable
                     if satellite_metadata:
@@ -454,8 +464,10 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
 
         # Optionally filter to replace no data values with nans
         if mask_invalid_data:
-
-            print('    Replacing invalid -999 values with NaN (data will be coerced to float64)')
+            print('    Masking out invalid values')         
+            combined_ds = combined_ds.apply(astype_attrs, 
+                                            dtype=np.float32, 
+                                            keep_attrs=True)
             combined_ds = masking.mask_invalid_data(combined_ds)
         
         # reset pixel quality attributes

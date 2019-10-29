@@ -28,8 +28,8 @@ start = '1987-12-01'
 end = '2019-05-31'
 shp_fpath = "/g/data/r78/cb3058/dea-notebooks/dcStats/data/spatial/griffith_MSAVI_test.shp"
 chunk_size = 500
-cpus = 12
-memory_per_cpu = '30GB'
+cpus = 10
+memory_per_cpu = '20GB'
 results = 'results/test_standardised_anomaly_big.nc'
 
 lat, lon = -34.294, 146.037
@@ -46,50 +46,51 @@ def compute_climatology(data):
     msavi = (2*nir+1-((2*nir+1)**2 - 8*(nir-red))**0.5)/2
     msavi = msavi.astype('float32') #convert to reduce memory
     
-    #calculate climatologies and compute
-    climatology_mean = msavi.groupby('time.season').mean('time').to_netcdf('results/masvi_climatology_mean.nc', format='netCDF4')
-    climatology_std = msavi.groupby('time.season').std('time').to_netcdf('results/masvi_climatology_std.nc', format='netCDF4')
+    climatology_mean = msavi.groupby('time.season').mean('time').rename('masvi_mean_climatology')
+    climatology_mean = climatology_mean.to_dataset().to_zarr('results/masvi_climatology_mean.nc')
     
-def compute_anomalies(data, output_dir):
-    #Scale reflectance values to 0-1
-    nir = data.nir / 10000
-    red = data.red / 10000
-    #calculate msavi
-    msavi = (2*nir+1-((2*nir+1)**2 - 8*(nir-red))**0.5)/2
-    msavi = msavi.astype('float32') #convert to reduce memory
+    climatology_std = msavi.groupby('time.season').std('time').rename('masvi_std_climatology')
+    climatology_std = climatology_std.to_dataset().to_zarr('results/masvi_climatology_std.nc')
+# def compute_anomalies(data, output_dir):
+#     #Scale reflectance values to 0-1
+#     nir = data.nir / 10000
+#     red = data.red / 10000
+#     #calculate msavi
+#     msavi = (2*nir+1-((2*nir+1)**2 - 8*(nir-red))**0.5)/2
+#     msavi = msavi.astype('float32') #convert to reduce memory
     
-    #resample to quarterly and groupby seasons
-    msavi_seasonalMeans = msavi.resample(time='QS-DEC').mean('time')
-    msavi_seasonalMeans = msavi_seasonalMeans.groupby('time.season')
+#     #resample to quarterly and groupby seasons
+#     msavi_seasonalMeans = msavi.resample(time='QS-DEC').mean('time')
+#     msavi_seasonalMeans = msavi_seasonalMeans.groupby('time.season')
     
-    #import climatology
-    climatology_mean = open_dataarray('masvi_climatology_mean.nc', chunks={'x': chunk_size, 'y': chunk_size})
-    climatology_std = open_dataarray('masvi_climatology_std.nc', chunks={'x': chunk_size, 'y': chunk_size})
+#     #import climatology
+#     climatology_mean = open_dataarray('masvi_climatology_mean.nc', chunks={'x': chunk_size, 'y': chunk_size})
+#     climatology_std = open_dataarray('masvi_climatology_std.nc', chunks={'x': chunk_size, 'y': chunk_size})
     
-    #calculate standardised anomalies
-    msavi_stand_anomalies = xr.apply_ufunc(lambda x, m, s: (x - m) / s,
-                                 msavi_seasonalMeans, climatology_mean, climatology_std,
-                                 dask='allowed')
+#     #calculate standardised anomalies
+#     msavi_stand_anomalies = xr.apply_ufunc(lambda x, m, s: (x - m) / s,
+#                                  msavi_seasonalMeans, climatology_mean, climatology_std,
+#                                  dask='allowed')
     
-    #write out results (will compute now)
-    msavi_stand_anomalies.to_netcdf(output_dir, format='netCDF4')
+#     #write out results (will compute now)
+#     msavi_stand_anomalies.to_netcdf(output_dir, format='netCDF4')
     
-    return msavi_stand_anomalies
+#     return msavi_stand_anomalies
 
 #-------------------------------------------------------------------------------------
 print('starting')
+# trying to suppress 'garbage collector' warnings from distributed
+# and 'divide' warnings from numpy
+logger = logging.getLogger("distributed.utils_perf")
+logger.setLevel(logging.ERROR)
+np.seterr(divide='ignore', invalid='ignore')
+
 
 if __name__ == '__main__':
     
     with LocalCluster(n_workers=cpus, threads_per_worker=1) as cluster:
         with Client(cluster, memory_limit=memory_per_cpu) as client:
-            
-            # trying to suppress 'garbage collector' warnings from distributed
-            # and 'divide' warnings from numpy
-            logger = logging.getLogger("distributed.utils_perf")
-            logger.setLevel(logging.ERROR)
-            np.seterr(divide='ignore', invalid='ignore')
-            
+
             # create query and load data
             query = {'lon': (lon - latLon_adjust, lon + latLon_adjust),
                      'lat': (lat - latLon_adjust, lat + latLon_adjust),
@@ -102,7 +103,7 @@ if __name__ == '__main__':
                                                    mask_invalid_data=False)
            
             compute_climatology(ds)
-            compute_seasonal(ds, results)
+#             compute_seasonal(ds, results)
             
 
             
