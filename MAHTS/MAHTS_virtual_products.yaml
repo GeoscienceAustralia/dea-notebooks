@@ -6,6 +6,7 @@ products:
             product: ga_ls8c_ard_3
             measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir, nbart_swir_1, nbart_swir_2, oa_nbart_contiguity, oa_fmask]
             gqa_iterative_mean_xy: [0, 1]
+            resampling: {'*': 'average', 'oa_fmask': 'nearest'}
             group_by: solar_day
             
     ls7_nbart:
@@ -83,8 +84,8 @@ products:
                     formula: (4 * (green - swir1) - (0.25 * nir * + 2.75 * swir2))
                  awei_sh:
                     formula: (blue + 2.5 * green - 1.5 * (nir + swir1) - 0.25 * swir2)
-                 ndbi:
-                    formula: (swir1 - nir) / (swir1 + nir)
+#                  ndbi:
+#                     formula: (swir1 - nir) / (swir1 + nir)
              input: *ls_nbart_masked
                 
                 
