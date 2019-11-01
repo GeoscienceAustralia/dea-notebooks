@@ -6,4 +6,4 @@ module load dea
 
 export PYTHONPATH="/g/data/r78/datacube_stats/":"$PYTHONPATH"
 
-datacube-stats --qsub="project=r78,ncpus=28,walltime=24h,mem=large,queue=normalbw" DJF_MSAVI.yaml --workers-per-node=10
+datacube-stats --qsub="project=r78,ncpus=28,walltime=24h,mem=large,queue=normalbw" JJA_MSAVI.yaml --workers-per-node=10
