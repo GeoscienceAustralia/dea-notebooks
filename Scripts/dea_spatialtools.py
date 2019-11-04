@@ -12,8 +12,9 @@ Functions included:
     contour_extract
     interpolate_2d
     contours_to_array
+    largest_region
 
-Last modified: October 2019
+Last modified: November 2019
 
 '''
 
@@ -26,6 +27,7 @@ import xarray as xr
 import geopandas as gpd
 import scipy.interpolate
 from scipy import ndimage as nd
+from skimage.measure import label
 from skimage.measure import find_contours
 from shapely.geometry import MultiLineString, mapping
 
@@ -465,4 +467,42 @@ def contours_to_arrays(gdf, col):
     return np.concatenate(coords_zvals)
 
 
+def largest_region(bool_array, **kwargs):
+    
+    '''
+    Takes a boolean array and identifies the largest contiguous region of 
+    connected True values. This is returned as a new array with cells in 
+    the largest region marked as True, and all other cells marked as False.
+    
+    Parameters
+    ----------  
+    bool_array : boolean array
+        A boolean array (numpy or xarray DataArray) with True values for
+        the areas that will be inspected to find the largest group of 
+        connected cells
+    **kwargs : 
+        Optional keyword arguments to pass to `measure.label`
+        
+    Returns
+    -------
+    largest_region : boolean array
+        A boolean array with cells in the largest region marked as True, 
+        and all other cells marked as False.       
+        
+    '''
+    
+    # First, break boolean array into unique, descrete regions/blobs
+    blobs_labels = label(bool_array, background=0, **kwargs)
+    
+    # Count the size of each blob, excluding the background class (0)
+    ids, counts = np.unique(blobs_labels[blobs_labels > 0], 
+                            return_counts=True) 
+    
+    # Identify the region ID of the largest blob
+    largest_region_id = ids[np.argmax(counts)]
+    
+    # Produce a boolean array where 1 == the largest region
+    largest_region = blobs_labels == largest_region_id
+    
+    return largest_region
 
