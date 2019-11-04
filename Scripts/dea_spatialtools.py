@@ -491,7 +491,7 @@ def largest_region(bool_array, **kwargs):
         
     '''
     
-    # First, break boolean array into unique, descrete regions/blobs
+    # First, break boolean array into unique, discrete regions/blobs
     blobs_labels = label(bool_array, background=0, **kwargs)
     
     # Count the size of each blob, excluding the background class (0)
