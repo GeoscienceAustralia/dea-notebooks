@@ -250,6 +250,9 @@ def load_ard(dc,
                 ds = ds.sel(time=data_perc >= min_gooddata)
                 print(f'    Filtering to {len(ds.time)} '
                       f'out of {total_obs} observations')
+                
+            else:
+                print(f'    {total_obs} observations')                
 
             # Optionally apply pixel quality mask to observations remaining 
             # after the filtering step above to mask out all remaining
