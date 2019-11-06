@@ -231,7 +231,8 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
     masked_prop : float, optional
         An optional float giving the minimum percentage of good quality pixels required for a Landsat observation to 
         be loaded. Defaults to 0.0 which will return all observations regardless of pixel quality (set to e.g. 0.99 
-        to return only observations with more than 99% good quality pixels).
+        to return only observations with more than 99% good quality pixels). Not recommended for use when chunking in
+        spatial dimensions, as computation of good pixel percentage occurs across chunks.
     mask_dict : dict, optional
         An optional dict of arguments to the `masking.make_mask` function that can be used to identify poor
         quality pixels from the PQ layer using alternative masking criteria. The default value of None masks
@@ -394,14 +395,18 @@ def load_clearlandsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart',
                    
                     # Compute good data for each observation as a percentage of total array pixels. Need to
                     # sum over x and y axes individually so that the function works with lat-lon dimensions,
-                    # and because it isn't currently possible to pass a list of axes (bug with xarray?) 
-                    data_perc = good_quality.sum(axis=1).sum(axis=1) / (good_quality.shape[1] * good_quality.shape[2])
+                    # and because it isn't currently possible to pass a list of axes (bug with xarray?)
+                    if masked_prop > 0:
+                        data_perc = good_quality.sum(axis=1).sum(axis=1) / (good_quality.shape[1] * good_quality.shape[2])
 
-                    # Add data_perc data to Landsat dataset as a new xarray variable
-                    data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
+                        # Add data_perc data to Landsat dataset as a new xarray variable
+                        data['data_perc'] = xr.DataArray(data_perc, [('time', data.time)])
 
-                    # Filter by data_perc to drop low quality observations and finally import data using dask
-                    filtered = data.sel(time=data.data_perc >= masked_prop)
+                        # Filter by data_perc to drop low quality observations and finally import data using dask
+                        filtered = data.sel(time=data.data_perc >= masked_prop)
+                    else:
+                        filtered = data
+                        
                     print(f'    Loading {len(filtered.time)} filtered {sensor} timesteps')
 
                     # Optionally apply pixel quality mask to all observations that were not dropped in previous step
