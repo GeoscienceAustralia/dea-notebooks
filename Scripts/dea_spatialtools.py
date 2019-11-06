@@ -173,7 +173,8 @@ def subpixel_contours(da,
         dim = 'z_value'
         da = da.expand_dims({'z_value': z_values})
 
-        contour_arrays = {i: contours_to_multiline(da_i, i, min_vertices) 
+        contour_arrays = {str(i)[0:10]: 
+                          contours_to_multiline(da_i, i, min_vertices) 
                           for i, da_i in da.groupby(dim)}        
 
     else:
@@ -185,9 +186,8 @@ def subpixel_contours(da,
             raise Exception('Please provide a single z-value when operating '
                             'in single z-value, multiple arrays mode')
 
-        contour_arrays = {i: contours_to_multiline(da_i, 
-                                                   z_values[0], 
-                                                   min_vertices) 
+        contour_arrays = {str(i)[0:10]: 
+                          contours_to_multiline(da_i, z_values[0], min_vertices) 
                           for i, da_i in da.groupby(dim)}
 
     # If attributes are provided, add the contour keys to that dataframe
