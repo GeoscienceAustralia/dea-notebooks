@@ -331,7 +331,7 @@ def map_shapefile(gdf,
                   weight=2, 
                   colormap=mpl.cm.YlOrRd, 
                   basemap=basemaps.Esri.WorldImagery, 
-                  default_zoom=13,
+                  default_zoom=None,
                   hover_col=None,
                   hover_prefix=''):
     
@@ -400,10 +400,17 @@ def map_shapefile(gdf,
                                           'fillOpacity': 1.0}
 
     # Get centroid to focus map on
-    lon, lat = gdf_wgs84.unary_union.centroid.coords.xy 
+    lon1, lat1, lon2, lat2  = gdf_wgs84.total_bounds
+    lon = (lon1 + lon2) / 2
+    lat = (lat1 + lat2) / 2
+    
+    if default_zoom is None:
+        
+        # Calculate default zoom from latitude of features
+        default_zoom = _degree_to_zoom_level(lat1, lat2, margin=-0.5)
     
     # Plot map 
-    m = Map(center=(lat[0], lon[0]), 
+    m = Map(center=(lat, lon), 
             zoom=default_zoom, 
             basemap=basemap, 
             layout=dict(width='800px', height='600px'))

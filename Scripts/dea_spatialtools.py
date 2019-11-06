@@ -43,8 +43,9 @@ def subpixel_contours(da,
                       z_values=[0.0],
                       crs=None,
                       affine=None,
-                      attribute_data=None,
+                      attribute_df=None,
                       output_path=None,
+                      min_vertices=2,
                       dim='time'):
     
     """
@@ -57,7 +58,7 @@ def subpixel_contours(da,
     
     Contours are returned as a geopandas.GeoDataFrame with one row per 
     z-value or one row per array along a specified dimension. The 
-    `attribute_data` parameter can be used to pass custom attributes 
+    `attribute_df` parameter can be used to pass custom attributes 
     to the output contour features.
     
     Last modified: November 2019
@@ -88,22 +89,23 @@ def subpixel_contours(da,
         affine transformation used to convert raster coordinates 
         (e.g. [0, 0]) to geographic coordinates. If none is provided, 
         the function will attempt to obtain an affine transformation 
-        from the xarray object (e.g. `da.geobox.affine`).
+        from the xarray object (e.g. either at `da.transform` or
+        `da.geobox.transform`).
     output_path : string, optional
         The path and filename for the output shapefile.
-    min_vertices : int, optional
-        The minimum number of vertices required for a contour to be 
-        extracted. The default (and minimum) value is 2, which is the 
-        smallest number required to produce a contour line (i.e. a start
-        and end point). Higher values remove smaller contours, 
-        potentially removing noise from the output dataset.
-    attribute_data : pandas.Dataframe, optional
+    attribute_df : pandas.Dataframe, optional
         A pandas.Dataframe containing attributes to pass to the output
         contour features. The dataframe must contain either the same 
         number of rows as supplied `z_values` (in 'multiple z-value, 
         single array' mode), or the same number of rows as the number 
         of arrays along the `dim` dimension ('single z-value, multiple 
         arrays mode').
+    min_vertices : int, optional
+        The minimum number of vertices required for a contour to be 
+        extracted. The default (and minimum) value is 2, which is the 
+        smallest number required to produce a contour line (i.e. a start
+        and end point). Higher values remove smaller contours, 
+        potentially removing noise from the output dataset.
     dim : string, optional
         The name of the dimension along which to extract contours when 
         operating in 'single z-value, multiple arrays' mode. The default
@@ -116,21 +118,24 @@ def subpixel_contours(da,
         A geopandas geodataframe object with one feature per z-value 
         ('single array, multiple z-values' mode), or one row per array 
         along the dimension specified by the `dim` parameter ('single 
-        z-value, multiple arrays' mode). If `attribute_data` was 
+        z-value, multiple arrays' mode). If `attribute_df` was 
         provided, these values will be included in the shapefile's 
         attribute table.
     """
 
-    def contours_to_multiline(da_i, z_value):
+    def contours_to_multiline(da_i, z_value, min_vertices=2):
         '''
         Helper function to apply marching squares contour extraction
-        to an array and return a data as a shapely MultiLineString
+        to an array and return a data as a shapely MultiLineString.
+        The `min_vertices` parameter allows you to drop small contours 
+        with less than X vertices.
         '''
         
         # Extracts contours from array, and converts each discrete
         # contour into a Shapely LineString feature
         line_features = [LineString(i[:,[1, 0]]) 
-                         for i in find_contours(da_i, z_value)]
+                         for i in find_contours(da_i, z_value) 
+                         if i.shape[0] > min_vertices]
 
         # Output resulting lines into a single combined MultiLineString
         return MultiLineString(line_features)
@@ -149,6 +154,8 @@ def subpixel_contours(da,
     # If not, require supplied Affine
     try:
         affine = da.geobox.transform
+    except KeyError:
+        affine = da.transform
     except:
         if affine is None:
             raise Exception("Please provide an Affine object using the "
@@ -166,7 +173,8 @@ def subpixel_contours(da,
         dim = 'z_value'
         da = da.expand_dims({'z_value': z_values})
 
-        contour_arrays = {i: contours_to_multiline(da_i, i) 
+        contour_arrays = {str(i)[0:10]: 
+                          contours_to_multiline(da_i, i, min_vertices) 
                           for i, da_i in da.groupby(dim)}        
 
     else:
@@ -178,30 +186,31 @@ def subpixel_contours(da,
             raise Exception('Please provide a single z-value when operating '
                             'in single z-value, multiple arrays mode')
 
-        contour_arrays = {i: contours_to_multiline(da_i, z_values[0]) 
+        contour_arrays = {str(i)[0:10]: 
+                          contours_to_multiline(da_i, z_values[0], min_vertices) 
                           for i, da_i in da.groupby(dim)}
 
     # If attributes are provided, add the contour keys to that dataframe
-    if attribute_data is not None:
+    if attribute_df is not None:
 
         try:
-            attribute_data.insert(0, dim, contour_arrays.keys())
+            attribute_df.insert(0, dim, contour_arrays.keys())
         except ValueError:
 
             raise Exception("One of the following issues occured:\n\n"
-                            "1) `attribute_data` contains a different number of "
+                            "1) `attribute_df` contains a different number of "
                             "rows than the number of supplied `z_values` ("
                             "'multiple z-value, single array mode')\n"
-                            "2) `attribute_data` contains a different number of "
+                            "2) `attribute_df` contains a different number of "
                             "rows than the number of arrays along the `dim` "
                             "dimension ('single z-value, multiple arrays mode')")
 
     # Otherwise, use the contour keys as the only main attributes
     else:
-        attribute_data = list(contour_arrays.keys())
+        attribute_df = list(contour_arrays.keys())
 
     # Convert output contours to a geopandas.GeoDataFrame
-    contours_gdf = gpd.GeoDataFrame(data=attribute_data, 
+    contours_gdf = gpd.GeoDataFrame(data=attribute_df, 
                                     geometry=list(contour_arrays.values()),
                                     crs={'init': str(crs)})   
 
@@ -217,7 +226,11 @@ def subpixel_contours(da,
     contours_gdf = contours_gdf.rename({0: dim}, axis=1)
 
     # Drop empty timesteps
-    contours_gdf = contours_gdf[~contours_gdf.geometry.is_empty]
+    empty_contours = contours_gdf.geometry.is_empty
+    failed = ', '.join(map(str, contours_gdf[empty_contours][dim].to_list()))
+    contours_gdf = contours_gdf[~empty_contours]
+    if empty_contours.any():  
+        print(f'Failed to generate contours: {failed}')
 
     # If asked to write out file, test if geojson or shapefile
     if output_path and output_path.endswith('.geojson'):
