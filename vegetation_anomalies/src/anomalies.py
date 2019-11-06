@@ -3,6 +3,7 @@ import xarray as xr
 import fiona
 import rasterio.features
 import datacube 
+import warnings
 from datacube.storage import masking
 from datacube.utils import geometry
 from datacube.helpers import ga_pq_fuser
@@ -182,7 +183,12 @@ def calculate_anomalies(veg_index, from_shape, shp_fpath,
     if season not in ('DJF','MAM','JJA','SON'):
         raise ValueError("Not a valid season, "
                          "must be one of 'DJF', 'MAM, 'JJA' or 'SON'")
-    
+    if from_shape:
+        if len(fiona.open(shp_fpath)) > 1:
+            warnings.warn("This script can only accept shapefiles with a single polygon feature; "
+                          "seasonal anomalies will be calculated for the extent of the "
+                          "first geometry in the shapefile only.")
+        
     #Depending on the season, grab the time for the dc.load
     if season == 'DJF':
         time= (year + '-12', str(int(year)+1) + '-02')
@@ -198,10 +204,11 @@ def calculate_anomalies(veg_index, from_shape, shp_fpath,
     
     #get data from shapefile extent and mask
     if from_shape:
-        print("extracting data bsaed on shapefile extent")
+        print("extracting data based on shapefile extent")
         
         with fiona.open(shp_fpath) as input:
             crs = geometry.CRS(input.crs_wkt)
+        
         feat = fiona.open(shp_fpath)[0]
         first_geom = feat['geometry']
         geom = geometry.Geometry(first_geom, crs=crs)
