@@ -135,7 +135,7 @@ def rasterize_vector(input_data, cols, rows, geo_transform, projection,
     return out_array
 
 
-def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_vertices=2,
+def contour_extract2(ds_array, z_values, ds_crs, ds_affine, output_shp, min_vertices=2,
                     attribute_data=None, attribute_dtypes=None, dim='time', verbose=True):
 
     """
@@ -338,7 +338,7 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
             ps_x = ds_affine[0]  # Compute pixel x size
             ps_y = ds_affine[4]  # Compute pixel y size
             contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps_x, 0.5 * ps_y]) for i in
-                            find_contours(ds_array, z_value)]
+                            find_contours(ds_array, z_value, positive_orientation='high')]
 
             # For each array of coordinates, drop any xy points that have NA
             contours_nona = [i[~np.isnan(i).any(axis=1)] for i in contours_geo]
@@ -394,7 +394,7 @@ def contour_extract(ds_array, z_values, ds_crs, ds_affine, output_shp, min_verti
             ps_x = ds_affine[0]  # Compute pixel x size
             ps_y = ds_affine[4]  # Compute pixel y size
             contours_geo = [np.column_stack(ds_affine * (i[:, 1], i[:, 0])) + np.array([0.5 * ps_x, 0.5 * ps_y]) for i in
-                            find_contours(ds_array.isel({dim: z_value}), z_values[0])]
+                            find_contours(ds_array.isel({dim: z_value}), z_values[0], positive_orientation='high')]
 
             # For each array of coordinates, drop any xy points that have NA
             contours_nona = [i[~np.isnan(i).any(axis=1)] for i in contours_geo]
