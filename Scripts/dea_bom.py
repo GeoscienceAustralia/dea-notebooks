@@ -174,6 +174,8 @@ def ui_select_station(stations,
             ax.clear()
             ax.set_visible(True)
             xx.plot(ax=ax)
+            ax.set_xlabel("Date")
+            ax.set_ylabel("Cubic meters per second")
             ax.legend([station.name])
 
         fig_display.clear_output(wait=True)
