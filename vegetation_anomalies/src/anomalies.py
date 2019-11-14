@@ -1,13 +1,19 @@
 import numpy as np
 import xarray as xr
 import fiona
+import math
 import rasterio.features
 import datacube 
 import warnings
 from datacube.storage import masking
 from datacube.utils import geometry
 from datacube.helpers import ga_pq_fuser
-
+import folium
+from pyproj import Proj, transform
+import geopandas as gpd
+import ipywidgets
+import matplotlib as mpl
+from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps
 
 def load_landsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart', dask_chunks = {'time': 1},
                       lazy_load = False, bands_of_interest=None, ls7_slc_off=False,):
@@ -174,7 +180,7 @@ def load_landsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart', dask
 
 
 def calculate_anomalies(veg_index, from_shape, shp_fpath,
-                        year, season, lat, lon, buffer, chunk_size):
+                        year, season, region, lat, lon, buffer, chunk_size):
     
     #error messaging for important inputs
     if veg_index not in ('msavi', 'ndvi'):
@@ -261,9 +267,9 @@ def calculate_anomalies(veg_index, from_shape, shp_fpath,
     x_slice = [i+0.5 for i in range(int(xmin),int(xmax+25),25)]
     y_slice = [i-0.5 for i in range(int(ymin),int(ymax-25),-25)]
     
-    print('Indexing climatology')
     #index the climatology dataset to the location of our AOI
-    climatology = xr.open_rasterio('results/dcstats_test/' + veg_index + '_climatology_'+ season +'_mosaic.tif',
+    print('Opening climatology for: ' + veg_index + "_"+ region + '_climatology_'+ season)
+    climatology = xr.open_rasterio('results/' + veg_index + "_"+region+ '_climatology_'+ season +'_mosaic.tif',
                                   chunks=chunk_size).sel(x=x_slice, y=y_slice, method='nearest').squeeze()
     
     #test if the arrays match before we calculate the anomalies
@@ -289,3 +295,207 @@ def calculate_anomalies(veg_index, from_shape, shp_fpath,
     anomalies.attrs['units'] = 1
 
     return anomalies
+
+
+# Define function to assist `display_map` in selecting a zoom level for plotting
+def _degree_to_zoom_level(l1, l2, margin = 0.0):
+    
+    """
+    Helper function to set zoom level for `display_map`
+    """
+    
+    degree = abs(l1 - l2) * (1 + margin)
+    zoom_level_int = 0
+    if degree != 0:
+        zoom_level_float = math.log(360 / degree) / math.log(2)
+        zoom_level_int = int(zoom_level_float)
+    else:
+        zoom_level_int = 18
+    return zoom_level_int
+
+def map_shapefile(gdf, 
+                  weight=2, 
+                  colormap=mpl.cm.YlOrRd, 
+                  basemap=basemaps.Esri.WorldImagery, 
+                  default_zoom=None,
+                  hover_col=None,
+                  hover_prefix=''):
+    
+    """
+    Plots a geopandas GeoDataFrame over an interactive ipyleaflet 
+    basemap. Optionally, can be set up to print selected data from 
+    features in the GeoDataFrame. 
+    
+    Last modified: October 2019
+    
+    Parameters
+    ----------  
+    gdf : geopandas.GeoDataFrame
+        A GeoDataFrame containing the spatial features to be plotted 
+        over the basemap
+    weight : float or int, optional
+        An optional numeric value giving the weight that line features
+        will be plotted as. Defaults to 2; larger numbers = thicker
+    colormap : matplotlib.cm, optional
+        An optional matplotlib.cm colormap used to style the features
+        in the GeoDataFrame. Features will be coloured by the order
+        they appear in the GeoDataFrame. Defaults to the `YlOrRd` 
+        colormap.
+    basemap : ipyleaflet.basemaps object, optional
+        An optional ipyleaflet.basemaps object used as the basemap for 
+        the interactive plot. Defaults to `basemaps.Esri.WorldImagery`
+    default_zoom : int, optional
+        An optional integer giving a default zoom level for the 
+        interactive ipyleaflet plot. Defaults to 13
+    hover_col : str, optional
+        An optional string giving the name of any column in the
+        GeoDataFrame you wish to have data from printed above the 
+        interactive map when a user hovers over the features in the map.
+        Defaults to None which will not print any data. 
+    """
+    
+    def n_colors(n, colormap=colormap):
+        data = np.linspace(0.0,1.0,n)
+        c = [mpl.colors.rgb2hex(d[0:3]) for d in colormap(data)]
+        return c
+
+    def data_to_colors(data, colormap=colormap):
+        c = [mpl.colors.rgb2hex(d[0:3]) for 
+             d in colormap(mpl.colors.Normalize()(data))]
+        return c 
+    
+    def on_hover(event, id, properties):
+        with dbg:
+            text = properties.get(hover_col, '???')
+            lbl.value = f'{hover_col}: {text}'
+            # print(properties)
+  
+    # Convert to WGS 84 and GeoJSON format
+    gdf_wgs84 = gdf.to_crs(epsg=4326)
+    data = gdf_wgs84.__geo_interface__    
+    
+    # For each feature in dataset, append colour values
+    n_features = len(data['features'])
+    colors = n_colors(n_features)
+    
+    for feature, color in zip(data['features'], colors):
+        feature['properties']['style'] = {'color': color, 
+                                          'weight': weight, 
+                                          'fillColor': color, 
+                                          'fillOpacity': 1.0}
+
+    # Get centroid to focus map on
+    lon1, lat1, lon2, lat2  = gdf_wgs84.total_bounds
+    lon = (lon1 + lon2) / 2
+    lat = (lat1 + lat2) / 2
+    
+    if default_zoom is None:
+        
+        # Calculate default zoom from latitude of features
+        default_zoom = _degree_to_zoom_level(lat1, lat2, margin=-0.5)
+    
+    # Plot map 
+    m = Map(center=(lat, lon), 
+            zoom=default_zoom, 
+            basemap=basemap, 
+            layout=dict(width='800px', height='600px'))
+    
+    # Add GeoJSON layer to map
+    feature_layer = GeoJSON(data=data)
+    m.add_layer(feature_layer)
+    
+    # If a column is specified by `hover_col`, print data from the
+    # hovered feature above the map
+    if hover_col:        
+        lbl = ipywidgets.Label()
+        dbg = ipywidgets.Output()        
+        feature_layer.on_hover(on_hover)
+        display(lbl)
+      
+    # Display the map
+    display(m)
+
+
+
+def display_map(x, y, crs='EPSG:4326', margin=-0.5, zoom_bias=0):
+    """ 
+    Given a set of x and y coordinates, this function generates an 
+    interactive map with a bounded rectangle overlayed on Google Maps 
+    imagery.        
+    
+    Last modified: September 2019
+    
+    Modified from function written by Otto Wagner available here: 
+    https://github.com/ceos-seo/data_cube_utilities/tree/master/data_cube_utilities
+    
+    Parameters
+    ----------  
+    x : (float, float)
+        A tuple of x coordinates in (min, max) format. 
+    y : (float, float)
+        A tuple of y coordinates in (min, max) format.
+    crs : string, optional
+        A string giving the EPSG CRS code of the supplied coordinates. 
+        The default is 'EPSG:4326'.
+    margin : float
+        A numeric value giving the number of degrees lat-long to pad 
+        the edges of the rectangular overlay polygon. A larger value 
+        results more space between the edge of the plot and the sides 
+        of the polygon. Defaults to -0.5.
+    zoom_bias : float or int
+        A numeric value allowing you to increase or decrease the zoom 
+        level by one step. Defaults to 0; set to greater than 0 to zoom 
+        in, and less than 0 to zoom out.
+        
+    Returns
+    -------
+    folium.Map : A map centered on the supplied coordinate bounds. A 
+    rectangle is drawn on this map detailing the perimeter of the x, y 
+    bounds.  A zoom level is calculated such that the resulting 
+    viewport is the closest it can possibly get to the centered 
+    bounding rectangle without clipping it. 
+    """
+
+    # Convert each corner coordinates to lat-lon
+    all_x = (x[0], x[1], x[0], x[1])
+    all_y = (y[0], y[0], y[1], y[1])
+    all_longitude, all_latitude = transform(Proj(init=crs),
+                                            Proj(init='EPSG:4326'), 
+                                            all_x, all_y)
+
+    # Calculate zoom level based on coordinates
+    lat_zoom_level = _degree_to_zoom_level(min(all_latitude),
+                                           max(all_latitude),
+                                           margin=margin) + zoom_bias
+    lon_zoom_level = _degree_to_zoom_level(min(all_longitude), 
+                                           max(all_longitude), 
+                                           margin=margin) + zoom_bias
+    zoom_level = min(lat_zoom_level, lon_zoom_level)
+
+    # Identify centre point for plotting
+    center = [np.mean(all_latitude), np.mean(all_longitude)]
+
+    # Create map
+    interactive_map = folium.Map(
+        location=center,
+        zoom_start=zoom_level,
+        tiles="http://mt1.google.com/vt/lyrs=y&z={z}&x={x}&y={y}",
+        attr="Google")
+
+    # Create bounding box coordinates to overlay on map
+    line_segments = [(all_latitude[0], all_longitude[0]),
+                     (all_latitude[1], all_longitude[1]),
+                     (all_latitude[3], all_longitude[3]),
+                     (all_latitude[2], all_longitude[2]),
+                     (all_latitude[0], all_longitude[0])]
+
+    # Add bounding box as an overlay
+    interactive_map.add_child(
+        folium.features.PolyLine(locations=line_segments,
+                                 color='red',
+                                 opacity=0.8))
+
+    # Add clickable lat-lon popup box
+    interactive_map.add_child(folium.features.LatLngPopup())
+
+    return interactive_map
