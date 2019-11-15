@@ -414,7 +414,7 @@ def largest_region(bool_array, **kwargs):
     '''
     
     # First, break boolean array into unique, discrete regions/blobs
-    blobs_labels = label(bool_array, background=0, **kwargs)
+    blobs_labels = label(bool_array, **kwargs)
     
     # Count the size of each blob, excluding the background class (0)
     ids, counts = np.unique(blobs_labels[blobs_labels > 0], 
