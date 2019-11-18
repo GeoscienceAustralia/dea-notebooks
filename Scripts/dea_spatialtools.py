@@ -154,7 +154,7 @@ def subpixel_contours(da,
     # If not, require supplied Affine
     try:
         affine = da.geobox.transform
-    except KeyError:
+    except AttributeError:
         affine = da.transform
     except:
         if affine is None:
