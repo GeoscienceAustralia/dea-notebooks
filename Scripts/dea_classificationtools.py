@@ -14,7 +14,7 @@ If you would like to report an issue with this script, you can file one on Githu
 
 Last modified: September 2019
 
-Authors: Richard Taylor, Sean Chua, ...
+Authors: Richard Taylor, Sean Chua, Dan Clewley
 
 '''
 
