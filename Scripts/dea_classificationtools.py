@@ -1,16 +1,26 @@
 ## dea_classificationtools.py
 '''
-Description: This file contains a set of python functions for applying machine learning classifiying remote sensing data from Digital Earth Australia.
+Description: This file contains a set of python functions for applying machine learning classifiying remote sensing
+data from Digital Earth Australia.
 
-License: The code in this notebook is licensed under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth Australia data is licensed under the Creative Commons by Attribution 4.0 license (https://creativecommons.org/licenses/by/4.0/).
+License: The code in this notebook is licensed under the Apache License, Version 2.0 (
+https://www.apache.org/licenses/LICENSE-2.0). Digital Earth Australia data is licensed under the Creative Commons by
+Attribution 4.0 license (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open Data Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using the `open-data-cube` tag (you can view previously asked questions here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
+Contact: If you need assistance, please post a question on the Open Data Cube Slack channel (
+http://slack.opendatacube.org/) or on the GIS Stack Exchange (
+https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using the `open-data-cube` tag (you can view
+previously asked questions here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-Compatibility: This script is compatible with the DEA VDI environment, but incompatible with the DEA Sandbox in its current (2019-09-26) default state. This is because it requires scikit-learn to be installed, which is not the case
-               by default on the sandbox. The workaround is to run `pip install --user scikit-learn' in a terminal on the sandbox, but this may break functionality if a conflicting version of scikit-learn is installed on the sandbox
+Compatibility: This script is compatible with the DEA VDI environment, but incompatible with the DEA Sandbox in its
+current (2019-09-26) default state. This is because it requires scikit-learn to be installed, which is not the case
+               by default on the sandbox. The workaround is to run `pip install --user scikit-learn' in a terminal on
+               the sandbox, but this may break functionality if a conflicting version of scikit-learn is installed on
+               the sandbox
                in the future.
 
-If you would like to report an issue with this script, you can file one on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+If you would like to report an issue with this script, you can file one on Github (
+https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Last modified: November 2019
 
@@ -22,12 +32,13 @@ import numpy as np
 import xarray as xr
 import geopandas as gp
 import datacube
-# from dea_bandindices import calculate_indices
+from dea_bandindices import calculate_indices
 from rasterio.features import rasterize
 from sklearn.cluster import KMeans
 from sklearn.base import ClusterMixin
 
-#'Wrappers' to translate xarrays to np arrays and back for interfacing with sklearn models
+
+# 'Wrappers' to translate xarrays to np arrays and back for interfacing with sklearn models
 def sklearn_flatten(input_xr):
     """
     Reshape a DataArray or Dataset with spatial (and optionally temporal) structure into
@@ -81,8 +92,8 @@ def sklearn_flatten(input_xr):
 
     return input_np
 
-def sklearn_unflatten(output_np,input_xr):
 
+def sklearn_unflatten(output_np, input_xr):
     """
     Reshape a numpy array with no 'missing' elements (NaNs) and 'flattened' spatiotemporal structure
     into a DataArray matching the spatiotemporal structure of the DataArray
@@ -106,21 +117,18 @@ def sklearn_unflatten(output_np,input_xr):
 
     """
 
+    # the output of a sklearn model prediction should just be a numpy array with size matching x*y*time
+    # for the input DataArray/Dataset.
 
-    #the output of a sklearn model prediction should just be a numpy array with size matching x*y*time
-    #for the input DataArray/Dataset.
-
-    #cast input Datasets to DataArray
-    if isinstance(input_xr,xr.Dataset):
+    # cast input Datasets to DataArray
+    if isinstance(input_xr, xr.Dataset):
         input_xr = input_xr.to_array()
 
-    #generate the same mask we used to create the input to the sklearn model
+    # generate the same mask we used to create the input to the sklearn model
     if 'time' in input_xr.dims:
-        stacked = input_xr.stack(z=['x','y','time'])
+        stacked = input_xr.stack(z=['x', 'y', 'time'])
     else:
-        stacked = input_xr.stack(z=['x','y'])
-
-
+        stacked = input_xr.stack(z=['x', 'y'])
 
     pxdims = []
     for dim in stacked.dims:
@@ -128,27 +136,29 @@ def sklearn_unflatten(output_np,input_xr):
             pxdims.append(dim)
 
     mask = np.isnan(stacked)
-    if len(pxdims)!=0:
+    if len(pxdims) != 0:
         mask = mask.any(dim=pxdims)
 
-    #handle multivariable output
+    # handle multivariable output
     output_px_shape = ()
     if len(output_np.shape[1:]):
         output_px_shape = output_np.shape[1:]
 
-    #use the mask to put the data in all the right places
-    output_ma = np.ma.empty((len(stacked.z),*output_px_shape))
+    # use the mask to put the data in all the right places
+    output_ma = np.ma.empty((len(stacked.z), *output_px_shape))
     output_ma[~mask] = output_np
     output_ma.mask = mask
 
-    #set the stacked coordinate to match the input
-    output_xr = xr.DataArray(output_ma, coords={'z': stacked['z']},dims=['z',*['output_dim_'+str(idx) for idx in range(len(output_px_shape))]])
+    # set the stacked coordinate to match the input
+    output_xr = xr.DataArray(output_ma, coords={'z': stacked['z']},
+                             dims=['z', *['output_dim_' + str(idx) for idx in range(len(output_px_shape))]])
 
     output_xr = output_xr.unstack()
 
     return output_xr
 
-def fit_xr(model,input_xr):
+
+def fit_xr(model, input_xr):
     """
     Utilise our wrappers to fit a vanilla sklearn model.
 
@@ -169,7 +179,8 @@ def fit_xr(model,input_xr):
     model = model.fit(sklearn_flatten(input_xr))
     return model
 
-def predict_xr(model,input_xr, progress=True):
+
+def predict_xr(model, input_xr, progress=True):
     """
     Utilise our wrappers to predict with a vanilla sklearn model.
 
@@ -187,7 +198,8 @@ def predict_xr(model,input_xr, progress=True):
         the same spatiotemporal structure as input_xr.
 
     """
-    from dask.diagnostics import ProgressBar # Dask is used to process large netCDF without loading all to RAM this shows progress
+    from dask.diagnostics import \
+        ProgressBar  # Dask is used to process large netCDF without loading all to RAM this shows progress
 
     def _get_class_ufunc(*args):
         """
@@ -202,7 +214,7 @@ def predict_xr(model,input_xr, progress=True):
 
         # Mask out no-data in input (not all classifiers can cope with Inf or NaN values)
         input_data_flattened = np.where(np.isfinite(input_data_flattened),
-                                                    input_data_flattened, 0)
+                                        input_data_flattened, 0)
 
         # Actually apply the classification
         out_class = model.predict(input_data_flattened)
@@ -239,15 +251,16 @@ def predict_xr(model,input_xr, progress=True):
     else:
         out_class = _get_class(*input_data).compute()
 
-    #output_np = model.predict(sklearn_flatten(input_xr))
-    #output_xr = sklearn_unflatten(output_np,input_xr)
+    # output_np = model.predict(sklearn_flatten(input_xr))
+    # output_xr = sklearn_unflatten(output_np,input_xr)
 
-    #set the stacked coordinate to match the input
+    # set the stacked coordinate to match the input
     output_xr = xr.DataArray(out_class, coords=input_xr.coords)
 
     return output_xr
 
-def get_training_data_for_shp(path, out, product, time, crs = 'EPSG:3577', field='classnum'
+
+def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='classnum'
                               ):
     """
     Function to extract data for training classifier using a shapefile of labelled polygons.
@@ -276,17 +289,17 @@ def get_training_data_for_shp(path, out, product, time, crs = 'EPSG:3577', field
     print("loading data...")
 
     data = dc.load(product=product, group_by='solar_day', **query)
-    # Check if geomedian is in the product and calculate indices if it is
-    # if "geomedian" in product:
-    #     print("calculating indices...")
-    #     # Calculate indices - will use for all features
-    #     data = calculate_indices(data, 'BUI', collection='ga_ls_2')
-    #     data = calculate_indices(data, 'BSI', collection='ga_ls_2')
-    #     data = calculate_indices(data, 'BSI', collection='ga_ls_2')
-    #     data = calculate_indices(data, 'NBI', collection='ga_ls_2')
-    #     data = calculate_indices(data, 'EVI', collection='ga_ls_2')
-    #     data = calculate_indices(data, 'NDWI', collection='ga_ls_2')
-    #     data = calculate_indices(data, 'MSAVI', collection='ga_ls_2')
+    Check if geomedian is in the product and calculate indices if it is
+    if "geomedian" in product:
+        print("calculating indices...")
+        # Calculate indices - will use for all features
+        data = calculate_indices(data, 'BUI', collection='ga_ls_2')
+        data = calculate_indices(data, 'BSI', collection='ga_ls_2')
+        data = calculate_indices(data, 'BSI', collection='ga_ls_2')
+        data = calculate_indices(data, 'NBI', collection='ga_ls_2')
+        data = calculate_indices(data, 'EVI', collection='ga_ls_2')
+        data = calculate_indices(data, 'NDWI', collection='ga_ls_2')
+        data = calculate_indices(data, 'MSAVI', collection='ga_ls_2')
 
     try:
         # Remove time step if present
@@ -321,6 +334,7 @@ def get_training_data_for_shp(path, out, product, time, crs = 'EPSG:3577', field
     # Return a list of labels for columns in output array
     return [field] + list(data.data_vars)
 
+
 class KMeans_tree(ClusterMixin):
     """
     A hierarchical KMeans unsupervised clustering model. This class is a clustering model, so it inherits
@@ -336,18 +350,20 @@ class KMeans_tree(ClusterMixin):
         other keyword arguments to be passed directly to the KMeans initialiser.
 
     """
-    def __init__(self, n_levels = 2, n_clusters = 3, **kwargs):
 
-        assert(n_levels >= 1)
+    def __init__(self, n_levels=2, n_clusters=3, **kwargs):
 
-        self.base_model = KMeans(n_clusters = 3,**kwargs)
+        assert (n_levels >= 1)
+
+        self.base_model = KMeans(n_clusters=3, **kwargs)
         self.n_levels = n_levels
         self.n_clusters = n_clusters
-        #make child models
+        # make child models
         if n_levels > 1:
-            self.branches = [KMeans_tree(n_levels = n_levels-1, n_clusters = n_clusters, **kwargs) for _ in range(n_clusters)]
+            self.branches = [KMeans_tree(n_levels=n_levels - 1, n_clusters=n_clusters, **kwargs) for _ in
+                             range(n_clusters)]
 
-    def fit(self, X, y = None, sample_weight = None):
+    def fit(self, X, y=None, sample_weight=None):
         """fit the tree of KMeans models. All parameters mimic those of KMeans.fit()
 
         Parameters
@@ -363,21 +379,22 @@ class KMeans_tree(ClusterMixin):
             are assigned equal weight (default: None)
         """
 
-        self.labels_ = self.base_model.fit(X,sample_weight=sample_weight).labels_
+        self.labels_ = self.base_model.fit(X, sample_weight=sample_weight).labels_
 
         if self.n_levels > 1:
             labels_old = np.copy(self.labels_)
-            #make room to add the sub-cluster labels
-            self.labels_*= (self.n_clusters)**(self.n_levels-1)
+            # make room to add the sub-cluster labels
+            self.labels_ *= (self.n_clusters) ** (self.n_levels - 1)
 
             for clu in range(self.n_clusters):
-                #fit child models on their corresponding partition of the training set
-                self.branches[clu].fit(X[labels_old==clu],sample_weight=(sample_weight[labels_old==clu] if sample_weight is not None else None))
-                self.labels_[labels_old==clu] += self.branches[clu].labels_
+                # fit child models on their corresponding partition of the training set
+                self.branches[clu].fit(X[labels_old == clu], sample_weight=(
+                    sample_weight[labels_old == clu] if sample_weight is not None else None))
+                self.labels_[labels_old == clu] += self.branches[clu].labels_
 
         return self
 
-    def predict(self, X, sample_weight = None):
+    def predict(self, X, sample_weight=None):
         """Send X through the KMeans tree and predict the resultant cluster.
         Compatible with KMeans.predict()
         Parameters
@@ -397,10 +414,11 @@ class KMeans_tree(ClusterMixin):
 
         if self.n_levels > 1:
             rescpy = np.copy(result)
-            #make room to add the sub-cluster labels
-            result *= (self.n_clusters)**(self.n_levels-1)
+            # make room to add the sub-cluster labels
+            result *= (self.n_clusters) ** (self.n_levels - 1)
 
             for clu in range(self.n_clusters):
-                result[rescpy==clu] += self.branches[clu].predict(X[rescpy==clu], sample_weight = (sample_weight[rescpy==clu] if sample_weight is not None else None))
+                result[rescpy == clu] += self.branches[clu].predict(X[rescpy == clu], sample_weight=(
+                    sample_weight[rescpy == clu] if sample_weight is not None else None))
 
         return result
