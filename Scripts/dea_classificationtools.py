@@ -12,7 +12,7 @@ Compatibility: This script is compatible with the DEA VDI environment, but incom
 
 If you would like to report an issue with this script, you can file one on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: September 2019
+Last modified: November 2019
 
 Authors: Richard Taylor, Sean Chua, Dan Clewley
 
