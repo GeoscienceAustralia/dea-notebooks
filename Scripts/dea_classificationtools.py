@@ -38,6 +38,7 @@ from sklearn.base import ClusterMixin
 
 import dea_bandindices
 
+
 # 'Wrappers' to translate xarrays to np arrays and back for interfacing with sklearn models
 def sklearn_flatten(input_xr):
     """
@@ -258,7 +259,7 @@ def predict_xr(model, input_xr, progress=True):
 
 
 def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='classnum',
-                              calc_indices=True, feature_mean=False):
+                              calc_indices=True, feature_stats=None):
     """
     Function to extract data for training classifier using a shapefile of labelled polygons.
     Currently works for single time steps.
@@ -273,7 +274,7 @@ def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='
          crs: string containing desired crs e.g. 'EPSG:3577'
          field: string containing name of column with labels in shapefile attribute table. Must be numeric
          calc_indices: bool indicating if indices could be calculated for geomedian products
-         feature_mean: bool indicating if rather than extracting values for each pixel should just use the mean of each polygon.
+         feature_stats: string with statistics to calculate for the polygon. Default is None (all pixel values). Can use mean or geomedian (from hdstats module)
 
     Returns
     --------
@@ -281,6 +282,13 @@ def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='
         list of numpy arrays containing classes and extracted data for each pixel or polygon
 
     """
+    # Import hdstats as only needed for this function
+    if feature_stats == 'geomedian':
+        try:
+            import hdstats
+        except ImportError as err:
+            raise ImportError('Can not import hdstats module needed to calculate'
+                              ' geomedian.\n{}'.format(err))
     dc = datacube.Datacube(app='training_data')
     query = {'time': time}
     query['crs'] = crs
@@ -331,25 +339,35 @@ def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='
         mask = xr.DataArray(mask, coords=(data.y, data.x))
         # Mask out areas that were not within the labelled feature
         data_masked = data.where(mask == poly_class_id, np.nan)
-        # Flatten the data
-        if feature_mean:
+
+        if feature_stats is None:
+            # If no summary stats were requested then
+            # extract all pixel values
+            flat_train = sklearn_flatten(data_masked)
+            # Make a labelled array of identical size
+            flat_val = np.repeat(poly_class_id, flat_train.shape[0])
+            stacked = np.hstack((np.expand_dims(flat_val, axis=1), flat_train))
+        elif feature_stats == 'mean':
             # For the mean of each polygon take the mean over all
             # axis, ignoring masked out values (nan).
             # This gives a single pixel value for each band
             flat_train = data_masked.mean(axis=None, skipna=True)
             flat_train = flat_train.to_array()
             stacked = np.hstack((poly_class_id, flat_train))
-        else:
-            # Otherwise get all non-masked out pixels which are within
-            # the polygon.
+        elif feature_stats == 'geomedian':
+            # For the geomedian flatten so have a 2D array with
+            # bands and pixel values. Then use hdstats
+            # to calculate the geomedian
             flat_train = sklearn_flatten(data_masked)
-            # Make a labelled array of identical size
-            flat_val = np.repeat(poly_class_id, flat_train.shape[0])
-            stacked = np.hstack((np.expand_dims(flat_val, axis=1), flat_train))
+            flat_train_median = hdstats.geomedian(flat_train, axis=0)
+            # Geomedian will return a single value for each band so join
+            # this with class id to create a single row in output
+            stacked = np.hstack((poly_class_id, flat_train_median))
 
         # Append training data and label to list
         out.append(stacked)
 
+        # Update status counter (feature number)
         i = i + 1
 
     # Return a list of labels for columns in output array
