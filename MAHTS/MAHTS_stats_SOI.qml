@@ -1,19 +1,19 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
 <qgis simplifyDrawingTol="1" maxScale="0" minScale="1e+8" simplifyLocal="1" version="3.0.3-Girona" simplifyDrawingHints="0" simplifyAlgorithm="0" labelsEnabled="1" simplifyMaxScale="1" readOnly="0" hasScaleBasedVisibilityFlag="0">
-  <renderer-v2 attr="rate_time" forceraster="0" enableorderby="0" type="graduatedSymbol" symbollevels="0" graduatedMethod="GraduatedColor">
+  <renderer-v2 attr="rate_SOI" forceraster="0" enableorderby="0" type="graduatedSymbol" symbollevels="0" graduatedMethod="GraduatedColor">
     <ranges>
-      <range label=" -20.00 - -2.50 " upper="-2.500000000000000" render="true" symbol="0" lower="-20.000000000000000"/>
-      <range label=" -2.50 - -1.00 " upper="-1.000000000000000" render="true" symbol="1" lower="-2.500000000000000"/>
-      <range label=" -1.00 - -0.60 " upper="-0.600000000000000" render="true" symbol="2" lower="-1.000000000000000"/>
-      <range label=" -0.60 - -0.30 " upper="-0.300000000000000" render="true" symbol="3" lower="-0.600000000000000"/>
-      <range label=" -0.30 - -0.10 " upper="-0.100000000000000" render="true" symbol="4" lower="-0.300000000000000"/>
-      <range label=" -0.10 - 0.00 " upper="0.000000000000000" render="true" symbol="5" lower="-0.100000000000000"/>
-      <range label=" 0.00 - 0.10 " upper="0.100000000000000" render="true" symbol="6" lower="0.000000000000000"/>
-      <range label=" 0.10 - 0.30 " upper="0.300000000000000" render="true" symbol="7" lower="0.100000000000000"/>
-      <range label=" 0.30 - 0.60 " upper="0.600000000000000" render="true" symbol="8" lower="0.300000000000000"/>
-      <range label=" 0.60 - 1.00 " upper="1.000000000000000" render="true" symbol="9" lower="0.600000000000000"/>
-      <range label=" 1.00 - 2.50 " upper="2.500000000000000" render="true" symbol="10" lower="1.000000000000000"/>
-      <range label=" 2.50 - 20.00 " upper="20.000000000000000" render="true" symbol="11" lower="2.500000000000000"/>
+      <range label=" -20.00 - -8.00 " upper="-8.000000000000000" render="true" symbol="0" lower="-20.000000000000000"/>
+      <range label=" -8.00 - -5.00 " upper="-5.000000000000000" render="true" symbol="1" lower="-8.000000000000000"/>
+      <range label=" -5.00 - -3.00 " upper="-3.000000000000000" render="true" symbol="2" lower="-5.000000000000000"/>
+      <range label=" -3.00 - -2.00 " upper="-2.000000000000000" render="true" symbol="3" lower="-3.000000000000000"/>
+      <range label=" -2.00 - -1.50 " upper="-1.500000000000000" render="true" symbol="4" lower="-2.000000000000000"/>
+      <range label=" -1.50 - 0.00 " upper="0.000000000000000" render="true" symbol="5" lower="-1.500000000000000"/>
+      <range label=" 0.00 - 1.50 " upper="1.500000000000000" render="true" symbol="6" lower="0.000000000000000"/>
+      <range label=" 1.50 - 2.00 " upper="2.000000000000000" render="true" symbol="7" lower="1.500000000000000"/>
+      <range label=" 2.00 - 3.00 " upper="3.000000000000000" render="true" symbol="8" lower="2.000000000000000"/>
+      <range label=" 3.00 - 5.00 " upper="5.000000000000000" render="true" symbol="9" lower="3.000000000000000"/>
+      <range label=" 5.00 - 8.00 " upper="8.000000000000000" render="true" symbol="10" lower="5.000000000000000"/>
+      <range label=" 8.00 - 20.00 " upper="20.000000000000000" render="true" symbol="11" lower="8.000000000000000"/>
     </ranges>
     <symbols>
       <symbol alpha="1" clip_to_extent="1" type="marker" name="0">
@@ -410,7 +410,7 @@
   </renderer-v2>
   <labeling type="simple">
     <settings>
-      <text-style fontWeight="50" fieldName="concat(format_number( rate_time, 1), ' m') " fontSizeMapUnitScale="3x:0,0,0,0,0,0" fontItalic="0" fontWordSpacing="0" multilineHeight="2" namedStyle="Regular" useSubstitutions="0" fontCapitals="0" fontStrikeout="0" fontSizeUnit="Point" fontLetterSpacing="0" fontFamily="MS Shell Dlg 2" previewBkgrdColor="#ffffff" textOpacity="1" isExpression="1" fontUnderline="0" blendMode="0" textColor="255,255,255,255" fontSize="7">
+      <text-style fontWeight="50" fieldName="concat(format_number( rate_soi, 1), ' m') " fontSizeMapUnitScale="3x:0,0,0,0,0,0" fontItalic="0" fontWordSpacing="0" multilineHeight="2" namedStyle="Regular" useSubstitutions="0" fontCapitals="0" fontStrikeout="0" fontSizeUnit="Point" fontLetterSpacing="0" fontFamily="MS Shell Dlg 2" previewBkgrdColor="#ffffff" textOpacity="1" isExpression="1" fontUnderline="0" blendMode="0" textColor="255,255,255,255" fontSize="7">
         <text-buffer bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferSizeUnits="MM" bufferJoinStyle="128" bufferColor="255,255,255,255" bufferOpacity="1" bufferDraw="0" bufferNoFill="1" bufferSize="0" bufferBlendMode="0"/>
         <background shapeSizeMapUnitScale="3x:0,0,0,0,0,0" shapeRadiiUnit="MM" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeRotation="0" shapeDraw="0" shapeOpacity="1" shapeBorderColor="128,128,128,0" shapeSVGFile="" shapeOffsetY="0" shapeSizeType="0" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeRadiiY="5" shapeJoinStyle="64" shapeBlendMode="0" shapeSizeY="5" shapeRadiiX="5" shapeOffsetX="0" shapeFillColor="255,255,255,0" shapeSizeX="5" shapeRotationType="0" shapeType="0" shapeBorderWidth="0" shapeSizeUnit="MM" shapeBorderWidthUnit="MM" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetUnit="MM"/>
         <shadow shadowRadius="1.5" shadowRadiusMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowRadiusUnit="MM" shadowBlendMode="8" shadowDraw="1" shadowOffsetAngle="135" shadowOpacity="1" shadowOffsetDist="1" shadowRadiusAlphaOnly="0" shadowColor="255,255,255,255" shadowUnder="0" shadowScale="100" shadowOffsetUnit="MM" shadowOffsetGlobal="1"/>
@@ -439,7 +439,6 @@
   <SingleCategoryDiagramRenderer attributeLegend="1" diagramType="Histogram">
     <DiagramCategory backgroundAlpha="255" sizeScale="3x:0,0,0,0,0,0" penColor="#000000" backgroundColor="#ffffff" penAlpha="255" labelPlacementMethod="XHeight" lineSizeScale="3x:0,0,0,0,0,0" width="15" enabled="0" lineSizeType="MM" diagramOrientation="Up" maxScaleDenominator="1e+8" rotationOffset="270" height="15" scaleDependency="Area" opacity="1" barWidth="5" minScaleDenominator="0" penWidth="0" sizeType="MM" minimumSize="0" scaleBasedVisibility="0">
       <fontProperties style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0"/>
-      <attribute label="" color="#000000" field=""/>
     </DiagramCategory>
   </SingleCategoryDiagramRenderer>
   <DiagramLayerSettings priority="0" dist="0" linePlacementFlags="18" obstacle="0" placement="0" zIndex="0" showAll="1">

@@ -267,7 +267,7 @@ def interpolate_2d(ds,
     
     Parameters
     ----------  
-    ds_array : xarray DataArray or Dataset
+    ds : xarray DataArray or Dataset
         A two-dimensional or multi-dimensional array from which x and y 
         dimensions will be copied and used for the area in which to 
         interpolate point data. 
@@ -308,10 +308,23 @@ def interpolate_2d(ds,
     # Extract xy and elev points
     points_xy = np.vstack([x_coords, y_coords]).T
     
-    # Create grid to interpolate into. If `factor` is greater than 1,
-    # the resulting grid will be subsampled for faster run-times
-    x_grid_coords = ds.x[::factor].values.tolist() + [ds.x[-1].item()]
-    y_grid_coords = ds.y[::factor].values.tolist() + [ds.y[-1].item()]
+    # Extract x and y coordinates to interpolate into. 
+    # If `factor` is greater than 1, the coordinates will be subsampled 
+    # for faster run-times. If the last x or y value in the subsampled 
+    # grid aren't the same as the last x or y values in the original 
+    # full resolution grid, add the final full resolution grid value to 
+    # ensure data is interpolated up to the very edge of the array
+    if ds.x[::factor][-1].item() == ds.x[-1].item():
+        x_grid_coords = ds.x[::factor].values
+    else:
+        x_grid_coords = ds.x[::factor].values.tolist() + [ds.x[-1].item()]
+        
+    if ds.y[::factor][-1].item() == ds.y[-1].item():
+        y_grid_coords = ds.y[::factor].values
+    else:
+        y_grid_coords = ds.y[::factor].values.tolist() + [ds.y[-1].item()]
+
+    # Create grid to interpolate into
     grid_y, grid_x = np.meshgrid(x_grid_coords, y_grid_coords)
     
     # Apply scipy.interpolate.griddata interpolation methods
