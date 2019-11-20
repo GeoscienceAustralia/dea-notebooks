@@ -289,7 +289,8 @@ def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='
     print("loading data...")
 
     data = dc.load(product=product, group_by='solar_day', **query)
-    Check if geomedian is in the product and calculate indices if it is
+
+    # Check if geomedian is in the product and calculate indices if it is
     if "geomedian" in product:
         print("calculating indices...")
         # Calculate indices - will use for all features
