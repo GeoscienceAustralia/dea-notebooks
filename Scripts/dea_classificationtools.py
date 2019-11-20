@@ -32,11 +32,11 @@ import numpy as np
 import xarray as xr
 import geopandas as gp
 import datacube
-from dea_bandindices import calculate_indices
 from rasterio.features import rasterize
 from sklearn.cluster import KMeans
 from sklearn.base import ClusterMixin
 
+import dea_bandindices
 
 # 'Wrappers' to translate xarrays to np arrays and back for interfacing with sklearn models
 def sklearn_flatten(input_xr):
@@ -251,28 +251,35 @@ def predict_xr(model, input_xr, progress=True):
     else:
         out_class = _get_class(*input_data).compute()
 
-    # output_np = model.predict(sklearn_flatten(input_xr))
-    # output_xr = sklearn_unflatten(output_np,input_xr)
-
-    # set the stacked coordinate to match the input
+    # Set the stacked coordinate to match the input
     output_xr = xr.DataArray(out_class, coords=input_xr.coords)
 
     return output_xr
 
 
-def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='classnum'
-                              ):
+def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='classnum',
+                              calc_indices=True, feature_mean=False):
     """
     Function to extract data for training classifier using a shapefile of labelled polygons.
     Currently works for single time steps.
-         Parameters
-         ----------
+
+    Parameters
+    ----------
+
          path: path to shapefile containing labelled polygons
-         field: string containing name of column with labels in shapefile attribute table
          out: empty list to contain output data
          product: string of product name from which to load and extract datacube data e.g. 'ls8_nbart_tmad_annual'
          time: tuple containing the time period from which to extract training data e.g. ('2015-01-01', '2015-12-31')
          crs: string containing desired crs e.g. 'EPSG:3577'
+         field: string containing name of column with labels in shapefile attribute table. Must be numeric
+         calc_indices: bool indicating if indices could be calculated for geomedian products
+         feature_mean: bool indicating if rather than extracting values for each pixel should just use the mean of each polygon.
+
+    Returns
+    --------
+
+        list of numpy arrays containing classes and extracted data for each pixel or polygon
+
     """
     dc = datacube.Datacube(app='training_data')
     query = {'time': time}
@@ -290,29 +297,31 @@ def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='
 
     data = dc.load(product=product, group_by='solar_day', **query)
 
-    # Check if geomedian is in the product and calculate indices if it is
-    if "geomedian" in product:
+    # Check if geomedian is in the product and if indices are wanted
+    if "geomedian" in product and calc_indices:
         print("calculating indices...")
         # Calculate indices - will use for all features
-        data = calculate_indices(data, 'BUI', collection='ga_ls_2')
-        data = calculate_indices(data, 'BSI', collection='ga_ls_2')
-        data = calculate_indices(data, 'BSI', collection='ga_ls_2')
-        data = calculate_indices(data, 'NBI', collection='ga_ls_2')
-        data = calculate_indices(data, 'EVI', collection='ga_ls_2')
-        data = calculate_indices(data, 'NDWI', collection='ga_ls_2')
-        data = calculate_indices(data, 'MSAVI', collection='ga_ls_2')
+        data = dea_bandindices.calculate_indices(data, 'BUI', collection='ga_ls_2')
+        data = dea_bandindices.calculate_indices(data, 'BSI', collection='ga_ls_2')
+        data = dea_bandindices.calculate_indices(data, 'BSI', collection='ga_ls_2')
+        data = dea_bandindices.calculate_indices(data, 'NBI', collection='ga_ls_2')
+        data = dea_bandindices.calculate_indices(data, 'EVI', collection='ga_ls_2')
+        data = dea_bandindices.calculate_indices(data, 'NDWI', collection='ga_ls_2')
+        data = dea_bandindices.calculate_indices(data, 'MSAVI', collection='ga_ls_2')
 
+    # Remove time step if present
     try:
-        # Remove time step if present
         data = data.isel(time=0)
+    # Don't worry if it isn't
     except ValueError:
         pass
 
-    print("rastering features...")
-    # Go through each feature
+    print("rasterizing features and extracting data...")
+    # Initialize counter for status messages.
     i = 0
+    # Go through each feature
     for poly_geom, poly_class_id in zip(shp.geometry, shp[field]):
-        print("Feature {:04}/{:04}\r".format(i + 1, len(shp.geometry)), end='')
+        print(" feature {:04}/{:04}\r".format(i + 1, len(shp.geometry)), end='')
 
         # Rasterise the feature
         mask = rasterize([(poly_geom, poly_class_id)],
@@ -323,10 +332,21 @@ def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='
         # Mask out areas that were not within the labelled feature
         data_masked = data.where(mask == poly_class_id, np.nan)
         # Flatten the data
-        flat_train = sklearn_flatten(data_masked)
-        # Make a labelled array of identical size
-        flat_val = np.repeat(poly_class_id, flat_train.shape[0])
-        stacked = np.hstack((np.expand_dims(flat_val, axis=1), flat_train))
+        if feature_mean:
+            # For the mean of each polygon take the mean over all
+            # axis, ignoring masked out values (nan).
+            # This gives a single pixel value for each band
+            flat_train = data_masked.mean(axis=None, skipna=True)
+            flat_train = flat_train.to_array()
+            stacked = np.hstack((poly_class_id, flat_train))
+        else:
+            # Otherwise get all non-masked out pixels which are within
+            # the polygon.
+            flat_train = sklearn_flatten(data_masked)
+            # Make a labelled array of identical size
+            flat_val = np.repeat(poly_class_id, flat_train.shape[0])
+            stacked = np.hstack((np.expand_dims(flat_val, axis=1), flat_train))
+
         # Append training data and label to list
         out.append(stacked)
 
