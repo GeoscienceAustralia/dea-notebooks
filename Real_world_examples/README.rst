@@ -12,7 +12,8 @@ These notebooks should:
 .. toctree::
    :maxdepth: 1
 
+   Change_detection.ipynb
    Chlorophyll_monitoring.ipynb
    Coastal_erosion.ipynb
    Intertidal_elevation.ipynb
-   Change_detection.ipynb
+   Inundation_mapping.ipynb

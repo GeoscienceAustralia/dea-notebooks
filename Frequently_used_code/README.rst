@@ -15,12 +15,15 @@ These notebooks should:
    :maxdepth: 1
 
    Animated_timeseries.ipynb
+   Applying_WOfS_bitmasking.ipynb
    Calculating_band_indices.ipynb
    Contour_extraction.ipynb
    Exporting_geotiffs.ipynb
    Geomedian_composites.ipynb
    Image_segmentation.ipynb
    Integrating_external_data.ipynb
+   Masking_data.ipynb
+   Open_Geotiff_and_NetCDF_as_xarray.ipynb
    Rasterize_vectorize.ipynb
    Using_load_ard.ipynb
    Virtual_products.ipynb

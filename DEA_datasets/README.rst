@@ -12,3 +12,9 @@ These notebooks should include:
 * Information on any special features of the data (e.g. important attributes or bands) and any important steps that must be considered to conduct valid analyses (e.g. PQ fusers, group_by etc)
 
 * Where possible, aim at beginner to intermediate users who may not be familar with technical remote sensing terminology
+
+.. toctree::
+   :maxdepth: 1
+   :caption: DEA Datasets
+
+   Sentinel_2.ipynb
