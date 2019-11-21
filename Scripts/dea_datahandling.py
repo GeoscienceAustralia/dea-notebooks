@@ -23,6 +23,7 @@ Functions included:
     mostcommon_utm
     download_unzip
     wofs_fuser
+    dilate
 
 Last modified: October 2019
 
@@ -36,8 +37,9 @@ import zipfile
 import warnings
 import numpy as np
 import xarray as xr
-from datacube.storage import masking
 from collections import Counter
+from datacube.storage import masking
+from scipy.ndimage import binary_dilation
 
 
 def load_ard(dc,
@@ -135,7 +137,9 @@ def load_ard(dc,
         Setting this variable to True will delay the computation of the 
         function until you explicitly run `ds.compute()`. If used in 
         conjuction with `dask.distributed.Client()` this will allow for 
-        automatic parallel computation.
+        automatic parallel computation. Be aware that computation will
+        still occur if min_gooddata > 0, as the pixel quality will be
+        loaded to compute the 'good data' percentage.
     **dcload_kwargs : 
         A set of keyword arguments to `dc.load` that define the 
         spatiotemporal query used to extract data. This can include `x`,
@@ -174,7 +178,15 @@ def load_ard(dc,
         except ValueError:        
             return da
     
-    # Verify that products were provided
+    # Warn user if they combine lazy load with min_gooddata
+    if (min_gooddata > 0.0) & lazy_load:
+                warnings.warn("Setting 'min_gooddata' percentage to > 0.0 "
+                              "will cause dask arrays \n to compute when "
+                              "loading pixel-quality data to calculate "
+                              "'good pixel' percentage. This will "
+                              "significantly slow the return of your dataset.")
+    
+    # Verify that products were provided    
     if not products:
         raise ValueError("Please provide a list of product names "
                          "to load data from. Valid options are: \n"
@@ -277,7 +289,7 @@ def load_ard(dc,
         
         # Optionally filter to replace no data values with nans
         if mask_invalid_data:
-            print('    Masking out invalid values')
+            print('Masking out invalid values')
             
             # First change dtype to float32, then mask out values using
             # `.where()`. By casting to float32, we prevent `.where()` 
@@ -460,7 +472,7 @@ def download_unzip(url,
     if remove_zip:        
         os.remove(zip_name)
 
-
+        
 def wofs_fuser(dest, src):
     """
     Fuse two WOfS water measurements represented as `ndarray`s.
@@ -473,3 +485,46 @@ def wofs_fuser(dest, src):
     dest[empty] = src[empty]
     dest[both] |= src[both]
     
+
+def dilate(array, dilation=10, invert=True):
+    """
+    Dilate a binary array by a specified nummber of pixels using a 
+    disk-like radial dilation.
+    
+    By default, invalid (e.g. False or 0) values are dilated. This is
+    suitable for applications such as cloud masking (e.g. creating a 
+    buffer around cloudy or shadowed pixels). This functionality can 
+    be reversed by specifying `invert=False`.
+    
+    Parameters
+    ----------     
+    array : array
+        The binary array to dilate.
+    dilation : int, optional
+        An optional integer specifying the number of pixels to dilate 
+        by. Defaults to 10, which will dilate `array` by 10 pixels.
+    invert : bool, optional
+        An optional boolean specifying whether to invert the binary 
+        array prior to dilation. The default is True, which dilates the
+        invalid values in the array (e.g. False or 0 values).
+        
+    Returns
+    -------
+    An array of the same shape as `array`, with valid data pixels 
+    dilated by the number of pixels specified by `dilation`.    
+    """
+    
+    y, x = np.ogrid[
+        -dilation : (dilation + 1),
+        -dilation : (dilation + 1),
+    ]
+    
+    # disk-like radial dilation
+    kernel = (x * x) + (y * y) <= (dilation + 0.5) ** 2
+    
+    # If invert=True, invert True values to False etc
+    if invert:        
+        array = ~array
+    
+    return ~binary_dilation(array.astype(np.bool), 
+                            structure=kernel.reshape((1,) + kernel.shape))
