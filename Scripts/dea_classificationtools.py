@@ -32,10 +32,12 @@ import numpy as np
 import xarray as xr
 import geopandas as gp
 import datacube
+from rasterio.features import geometry_mask
 from rasterio.features import rasterize
 from sklearn.cluster import KMeans
 from sklearn.base import ClusterMixin
-
+import sys
+sys.path.append('/home/547/sc0554/.digitalearthau/dea-env/20190709/local/lib/python3.6/site-packages')
 import dea_bandindices
 
 
@@ -199,8 +201,7 @@ def predict_xr(model, input_xr, progress=True):
         the same spatiotemporal structure as input_xr.
 
     """
-    from dask.diagnostics import \
-        ProgressBar  # Dask is used to process large netCDF without loading all to RAM this shows progress
+    from dask.diagnostics import ProgressBar
 
     def _get_class_ufunc(*args):
         """
@@ -259,7 +260,7 @@ def predict_xr(model, input_xr, progress=True):
 
 
 def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='classnum',
-                              calc_indices=True, feature_stats=None):
+                              calc_indices=None, feature_stats=None, collection='ga_ls_2'):
     """
     Function to extract data for training classifier using a shapefile of labelled polygons.
     Currently works for single time steps.
@@ -287,6 +288,7 @@ def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='
         try:
             import hdstats
         except ImportError as err:
+            raise
             raise ImportError('Can not import hdstats module needed to calculate'
                               ' geomedian.\n{}'.format(err))
     dc = datacube.Datacube(app='training_data')
@@ -306,16 +308,15 @@ def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='
     data = dc.load(product=product, group_by='solar_day', **query)
 
     # Check if geomedian is in the product and if indices are wanted
-    if "geomedian" in product and calc_indices:
-        print("calculating indices...")
-        # Calculate indices - will use for all features
-        data = dea_bandindices.calculate_indices(data, 'BUI', collection='ga_ls_2')
-        data = dea_bandindices.calculate_indices(data, 'BSI', collection='ga_ls_2')
-        data = dea_bandindices.calculate_indices(data, 'BSI', collection='ga_ls_2')
-        data = dea_bandindices.calculate_indices(data, 'NBI', collection='ga_ls_2')
-        data = dea_bandindices.calculate_indices(data, 'EVI', collection='ga_ls_2')
-        data = dea_bandindices.calculate_indices(data, 'NDWI', collection='ga_ls_2')
-        data = dea_bandindices.calculate_indices(data, 'MSAVI', collection='ga_ls_2')
+    if calc_indices is not None:
+        try:
+            print("calculating indices...")
+            # Calculate indices - will use for all features
+            for index in calc_indices:
+                data = dea_bandindices.calculate_indices(data, index, collection=collection)
+        except ValueError:
+            print("input dataset not suitable for selected indices, just extracting product data")
+            pass 
 
     # Remove time step if present
     try:
@@ -335,6 +336,7 @@ def get_training_data_for_shp(path, out, product, time, crs='EPSG:3577', field='
         mask = rasterize([(poly_geom, poly_class_id)],
                          out_shape=(data.y.size, data.x.size),
                          transform=data.affine)
+
         # Convert mask from numpy to DataArray
         mask = xr.DataArray(mask, coords=(data.y, data.x))
         # Mask out areas that were not within the labelled feature
