@@ -2,10 +2,9 @@
 * Bishop-Taylor et al. 2019, in review
 ---
 
-
 ## `subpixel_contours` function
 
-The [`subpixel_contours` function from the `dea_spatialtools.py` script](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Scripts/dea_spatialtools.py#L42-L244) uses `skimage.measure.find_contours` to extract multiple z-value contour lines from a two-dimensional array (e.g. multiple elevations from a single DEM), or one z-value for each array along a specified dimension of a multi-dimensional array (e.g. to map waterlines across time by extracting a 0 NDWI contour from each individual timestep in an xarray timeseries).    
+The [`subpixel_contours` function from the `dea_spatialtools.py` script](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Scripts/dea_spatialtools.py#L42-L244) uses `skimage.measure.find_contours` to extract multiple z-value contour lines from a two-dimensional array (e.g. multiple elevations from a single digital elevation model), or one z-value for each array along a specified dimension of a multi-dimensional array (e.g. to map waterlines across time by extracting a 0 NDWI contour from each individual timestep in an xarray timeseries).    
     
 Contours are returned as a geopandas.GeoDataFrame with one row per z-value or one row per array along a specified dimension. The     `attribute_df` parameter can be used to pass custom attributes to the output contour features.
 
@@ -15,7 +14,7 @@ Contours are returned as a geopandas.GeoDataFrame with one row per z-value or on
 
 This introductory notebook demonstrates how to use the `subpixel_contours` function to:
 
-* Extract one or multiple contour lines from a single two-dimensional digital elevation model (DEM) and export these as a shapefile
+* Extract one or multiple contour lines from a single two-dimensional digital elevation model and export these as a shapefile
 * Optionally include custom attributes in the extracted contour features
 * Load in a multi-dimensional satellite dataset from Digital Earth Australia, and extract a single contour value consistently through time along a specified dimension
 * Filter the resulting contours to remove small noisy features
@@ -33,7 +32,7 @@ This introductory notebook demonstrates how to use the `subpixel_contours` funct
 
 [Modelling intertidal elevation using tidal data](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Real_world_examples/Intertidal_elevation.ipynb)
 
-* Geoscience Australia recently combined 30 years of Landsat data from the Digital Earth Australia archive with tidal modelling to produce the first 3D model of Australia's entire coastline: the National Intertidal Digital Elevation Model or NIDEM (for more information, see Bishop-Taylor et al. 2019 or access the dataset here).
+* Geoscience Australia recently combined 30 years of Landsat data from the Digital Earth Australia archive with tidal modelling to produce the first 3D model of Australia's entire coastline: the National Intertidal Digital Elevation Model or NIDEM (for more information, see [Bishop-Taylor et al. 2019](https://doi.org/10.1016/j.ecss.2019.03.006) or [access the dataset here](http://dx.doi.org/10.26186/5c4fc06a79f76)).
 * In this example, we demonstrate a simplified version of the NIDEM method that combines data from the Landsat 5, 7 and 8 satellites with tidal modelling, image compositing and spatial interpolation techniques. 
 * Subpixel resolution waterline mapping using the `subpixel_contours` function is used to map the boundary between land and water from low to high tide, with this information then used to generate smooth, continuous 3D elevation maps of the intertidal zone.
 
@@ -43,7 +42,7 @@ This introductory notebook demonstrates how to use the `subpixel_contours` funct
 
 ## Additional information
 
-**License:** The code in this notebook is licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0). 
+**License:** All Digital Earth Australia code referenced on this page is licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0). 
 Digital Earth Australia data is licensed under the [Creative Commons by Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) license.
 
 **Contact:** If you need assistance, please post a question on the [Open Data Cube Slack channel](http://slack.opendatacube.org/) or on the [GIS Stack Exchange](https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using the `open-data-cube` tag (you can view previously asked questions [here](https://gis.stackexchange.com/questions/tagged/open-data-cube)).
