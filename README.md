@@ -1,4 +1,4 @@
-# Subpixel waterline extraction 
+# Subpixel waterline extraction  <img align="right" src="/images/dea_logo.jpg">
 * Bishop-Taylor et al. 2019, in review
 ---
 
@@ -38,3 +38,15 @@ This introductory notebook demonstrates how to use the `subpixel_contours` funct
 * Subpixel resolution waterline mapping using the `subpixel_contours` function is used to map the boundary between land and water from low to high tide, with this information then used to generate smooth, continuous 3D elevation maps of the intertidal zone.
 
 ![Intertidal elevation](/images/intertidal_elevation.jpg)
+
+***
+
+## Additional information
+
+**License:** The code in this notebook is licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0). 
+Digital Earth Australia data is licensed under the [Creative Commons by Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) license.
+
+**Contact:** If you need assistance, please post a question on the [Open Data Cube Slack channel](http://slack.opendatacube.org/) or on the [GIS Stack Exchange](https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using the `open-data-cube` tag (you can view previously asked questions [here](https://gis.stackexchange.com/questions/tagged/open-data-cube)).
+If you would like to report an issue with this notebook, you can file one on [Github](https://github.com/GeoscienceAustralia/dea-notebooks).
+
+**Last modified:** November 2019
