@@ -7,7 +7,7 @@ The recent development of high performance earth observation ‘data cubes’ ha
 Previous studies have however largely relied on mapping waterlines at the pixel scale, or employed computationally intensive sub-pixel waterline extraction methods that are impractical to implement at scale. 
 Accordingly, there is a pressing need for operational methods for extracting information from freely available medium resolution satellite imagery at spatial scales relevant to coastal and environmental management. 
 
-In this study, we evaluate the accuracy and sensitivity of a [high performance sub-pixel waterline extraction method based on contour extraction](#Code-examples). 
+In this study, we evaluate the accuracy and sensitivity of a [high performance sub-pixel waterline extraction method based on contour extraction](#subpixel_contours-function). 
 We combine a synthetic landscape approach with high resolution satellite imagery to assess performance across multiple unique environments with contrasting spectral characteristics, and under a range of water indices and thresholding approaches. 
 The sub-pixel extraction method shows a strong ability to reproduce both absolute waterline positions and relative shape at a resolution that far exceeds that of traditional whole-pixel methods, particularly in environments without extreme contrast between water and land (e.g. **accuracies of up to 1.50-3.28 m at 30 m Landsat resolution** using optimal water index thresholds). 
 
