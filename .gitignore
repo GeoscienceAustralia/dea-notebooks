@@ -6,3 +6,7 @@
 *.xml
 __pycache__
 Transitory_notebooks/
+*.tif
+SOC_geotiff/
+*.e*
+*.o*
