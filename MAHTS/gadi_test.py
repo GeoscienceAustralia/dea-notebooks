@@ -167,170 +167,170 @@ points_gdf = gpd.read_file('input_data/tide_points_coastal.geojson')
 comp_gdf = gpd.read_file('input_data/Euc_SCC_coast10kmbuffer.geojson').set_index('ID_Seconda')
 
 
-study_area = 'SA10.01'  # 
-query = {'geopolygon': get_geopoly(study_area, comp_gdf),
-         'time': ('1987', '2019'),
-         'cloud_cover': [0, 80]}
+def main(argv=None):
 
+    if argv is None:
 
-# ## Load virtual product
+        argv = sys.argv
+        print(sys.argv)
 
-from dea_datahandling import load_ard
-from dea_bandindices import calculate_indices
-from dea_datahandling import mostcommon_crs
+    # If no user arguments provided
+    if len(argv) < 2:
 
-crs = mostcommon_crs(dc=dc, product='ga_ls5t_ard_3', query=query)
-
-ds = load_ard(dc=dc, 
-              measurements=['nbart_blue', 'nbart_green', 'nbart_red', 'nbart_nir', 'nbart_swir_1', 'nbart_swir_2'], 
-              min_gooddata=0.0,
-              products=['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'], 
-              output_crs=crs,
-              resampling={'*': 'average', 'fmask': 'nearest', 'oa_fmask': 'nearest'},
-              resolution=(-30, 30),  
-              gqa_iterative_mean_xy=[0, 1],
-              align=(15, 15),
-              lazy_load=True,
-              group_by='solar_day',
-              dask_chunks={'time': 1, 'x': 1000, 'y': 1000},
-              **query)
-
-ds = (calculate_indices(ds, index=['NDWI', 'MNDWI', 'AWEI_ns', 'AWEI_sh'], 
-                        collection='ga_ls_3', 
-                        drop=True)
-      .rename({'NDWI': 'ndwi', 'MNDWI': 'mndwi', 'AWEI_ns': 'awei_ns', 'AWEI_sh': 'awei_sh'}))
-
-
-# ## Model tides
-
-# Pull out subset of modelling points for region around satellite data
-try:
-    bounds = comp_gdf.loc[study_area].geometry.buffer(0.05)
-except:
-    bounds = shapely.wkt.loads(ds.geobox.geographic_extent.buffer(0.05).wkt)
-    
-subset_gdf = points_gdf[points_gdf.geometry.intersects(bounds)]
-
-# Extract lon, lat from tides, and time from satellite data
-x_vals = subset_gdf.geometry.centroid.x
-y_vals = subset_gdf.geometry.centroid.y
-observed_datetimes = ds.time.data.astype('M8[s]').astype('O').tolist()
-
-# Create list of lat/lon/time scenarios to model
-observed_timepoints = [otps.TimePoint(lon, lat, date) 
-                       for date in observed_datetimes
-                       for lon, lat in zip(x_vals, y_vals)]
-
-# Model tides for each scenario
-observed_predictedtides = otps.predict_tide(observed_timepoints)
-
-# Output results into pandas.DataFrame
-tidepoints_df = pd.DataFrame([(i.timepoint.timestamp, 
-                               i.timepoint.lon, 
-                               i.timepoint.lat, 
-                               i.tide_m) for i in observed_predictedtides], 
-                             columns=['time', 'lon', 'lat', 'tide_m']) 
-
-# Convert data to spatial geopandas.GeoDataFrame
-tidepoints_gdf = gpd.GeoDataFrame(data={'time': tidepoints_df.time, 
-                                        'tide_m': tidepoints_df.tide_m}, 
-                                  geometry=gpd.points_from_xy(tidepoints_df.lon, 
-                                                              tidepoints_df.lat), 
-                                  crs={'init': 'EPSG:4326'})
-
-# Reproject to satellite data CRS
-tidepoints_gdf = tidepoints_gdf.to_crs(epsg=ds.crs.epsg)
-
-# Fix time and set to index
-tidepoints_gdf['time'] = pd.to_datetime(tidepoints_gdf['time'], utc=True)
-tidepoints_gdf = tidepoints_gdf.set_index('time')
-
-
-# ### Interpolate tides into each satellite timestep
-
-# Interpolate tides for each timestep into the spatial extent of the data
-tide_da = ds.groupby('time').apply(interpolate_tide, 
-                                   tidepoints_gdf=tidepoints_gdf,
-                                   factor=50)
-
-# Determine tide cutoff
-tide_cutoff = tide_da.median(dim='time')
-
-# Add interpolated tides as measurement in satellite dataset
-ds['tide_m'] = tide_da
-
-
-# ## Generate yearly composites
-
-# If output folder doesn't exist, create it
-output_dir = f'output_data/{study_area}'
-os.makedirs(output_dir, exist_ok=True)
-
-# Create empty vars containing un-composited data from the previous,
-# current and future year. This is progressively updated to ensure that
-# no more than 3 years of data are loaded into memory at any one time
-previous_ds = None
-current_ds = None
-future_ds = None
-
-# Iterate through each year in the dataset, starting at one year before
-for year in np.unique(ds.time.dt.year) - 1:
-    
-    # Load data for the subsequent year
-    future_ds = load_tidal_subset(ds.sel(time=str(year + 1)), 
-                                  tide_cutoff=tide_cutoff)
-    
-    # If the current year var contains data, combine these observations
-    # into median annual high tide composites and export GeoTIFFs
-    if current_ds:
+        str_usage = "You must specify a study area ID"
+        print(str_usage)
+        sys.exit()
         
-        # Generate composite
-        tidal_composite(current_ds, 
-                        label=year,
-                        label_dim='year',
-                        output_dir=output_dir, 
-                        export_geotiff=True)        
+    # Set study area for analysis
+    study_area = argv[1]  
+
+    # study_area = 'WA01.01'  # 
+    query = {'geopolygon': get_geopoly(study_area, comp_gdf),
+             'time': ('1987', '2019'),
+             'cloud_cover': [0, 80]}
+
+
+    # ## Load virtual product
+
+    from dea_datahandling import load_ard
+    from dea_bandindices import calculate_indices
+    from dea_datahandling import mostcommon_crs
+
+    crs = mostcommon_crs(dc=dc, product='ga_ls5t_ard_3', query=query)
+
+    ds = load_ard(dc=dc, 
+                  measurements=['nbart_blue', 'nbart_green', 'nbart_red', 'nbart_nir', 'nbart_swir_1', 'nbart_swir_2'], 
+                  min_gooddata=0.0,
+                  products=['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'], 
+                  output_crs=crs,
+                  resampling={'*': 'average', 'fmask': 'nearest', 'oa_fmask': 'nearest'},
+                  resolution=(-30, 30),  
+                  gqa_iterative_mean_xy=[0, 1],
+                  align=(15, 15),
+                  lazy_load=True,
+                  group_by='solar_day',
+                  dask_chunks={'time': 1, 'x': 1000, 'y': 1000},
+                  **query)
+
+    ds = (calculate_indices(ds, index=['NDWI', 'MNDWI', 'AWEI_ns', 'AWEI_sh'], 
+                            collection='ga_ls_3', 
+                            drop=True)
+          .rename({'NDWI': 'ndwi', 'MNDWI': 'mndwi', 'AWEI_ns': 'awei_ns', 'AWEI_sh': 'awei_sh'}))
+
+
+    # ## Model tides
+
+    # Pull out subset of modelling points for region around satellite data
+    try:
+        bounds = comp_gdf.loc[study_area].geometry.buffer(0.05)
+    except:
+        bounds = shapely.wkt.loads(ds.geobox.geographic_extent.buffer(0.05).wkt)
+
+    subset_gdf = points_gdf[points_gdf.geometry.intersects(bounds)]
+
+    # Extract lon, lat from tides, and time from satellite data
+    x_vals = subset_gdf.geometry.centroid.x
+    y_vals = subset_gdf.geometry.centroid.y
+    observed_datetimes = ds.time.data.astype('M8[s]').astype('O').tolist()
+
+    # Create list of lat/lon/time scenarios to model
+    observed_timepoints = [otps.TimePoint(lon, lat, date) 
+                           for date in observed_datetimes
+                           for lon, lat in zip(x_vals, y_vals)]
+
+    # Model tides for each scenario
+    observed_predictedtides = otps.predict_tide(observed_timepoints)
+
+    # Output results into pandas.DataFrame
+    tidepoints_df = pd.DataFrame([(i.timepoint.timestamp, 
+                                   i.timepoint.lon, 
+                                   i.timepoint.lat, 
+                                   i.tide_m) for i in observed_predictedtides], 
+                                 columns=['time', 'lon', 'lat', 'tide_m']) 
+
+    # Convert data to spatial geopandas.GeoDataFrame
+    tidepoints_gdf = gpd.GeoDataFrame(data={'time': tidepoints_df.time, 
+                                            'tide_m': tidepoints_df.tide_m}, 
+                                      geometry=gpd.points_from_xy(tidepoints_df.lon, 
+                                                                  tidepoints_df.lat), 
+                                      crs={'init': 'EPSG:4326'})
+
+    # Reproject to satellite data CRS
+    tidepoints_gdf = tidepoints_gdf.to_crs(epsg=ds.crs.epsg)
+
+    # Fix time and set to index
+    tidepoints_gdf['time'] = pd.to_datetime(tidepoints_gdf['time'], utc=True)
+    tidepoints_gdf = tidepoints_gdf.set_index('time')
+
+
+    # ### Interpolate tides into each satellite timestep
+
+    # Interpolate tides for each timestep into the spatial extent of the data
+    tide_da = ds.groupby('time').apply(interpolate_tide, 
+                                       tidepoints_gdf=tidepoints_gdf,
+                                       factor=50)
+
+    # Determine tide cutoff
+    tide_cutoff = tide_da.median(dim='time')
+
+    # Add interpolated tides as measurement in satellite dataset
+    ds['tide_m'] = tide_da
+
+
+    # ## Generate yearly composites
+
+    # If output folder doesn't exist, create it
+    output_dir = f'output_data/{study_area}'
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Create empty vars containing un-composited data from the previous,
+    # current and future year. This is progressively updated to ensure that
+    # no more than 3 years of data are loaded into memory at any one time
+    previous_ds = None
+    current_ds = None
+    future_ds = None
+
+    # Iterate through each year in the dataset, starting at one year before
+    for year in np.unique(ds.time.dt.year) - 1:
+
+        # Load data for the subsequent year
+        future_ds = load_tidal_subset(ds.sel(time=str(year + 1)), 
+                                      tide_cutoff=tide_cutoff)
+
+        # If the current year var contains data, combine these observations
+        # into median annual high tide composites and export GeoTIFFs
+        if current_ds:
+
+            # Generate composite
+            tidal_composite(current_ds, 
+                            label=year,
+                            label_dim='year',
+                            output_dir=output_dir, 
+                            export_geotiff=True)        
+
+        # If ALL of the previous, current and future year vars contain data,
+        # combine these three years of observations into a single median 
+        # 3-year gapfill composite
+        if previous_ds and current_ds and future_ds:
+
+            # Concatenate the three years into one xarray.Dataset
+            gapfill_ds = xr.concat([previous_ds, current_ds, future_ds], 
+                                   dim='time')
+
+            # Generate composite
+            tidal_composite(gapfill_ds,
+                            label=year,
+                            label_dim='year',
+                            output_dir=output_dir, 
+                            output_prefix='gapfill_',
+                            export_geotiff=True)        
+
+        # Shift all loaded data back so that we can re-use it in the next
+        # iteration and not have to load the same data multiple times
+        previous_ds = current_ds
+        current_ds = future_ds
+        future_ds = []
+
         
-    # If ALL of the previous, current and future year vars contain data,
-    # combine these three years of observations into a single median 
-    # 3-year gapfill composite
-    if previous_ds and current_ds and future_ds:
-        
-        # Concatenate the three years into one xarray.Dataset
-        gapfill_ds = xr.concat([previous_ds, current_ds, future_ds], 
-                               dim='time')
-        
-        # Generate composite
-        tidal_composite(gapfill_ds,
-                        label=year,
-                        label_dim='year',
-                        output_dir=output_dir, 
-                        output_prefix='gapfill_',
-                        export_geotiff=True)        
-    
-    # Shift all loaded data back so that we can re-use it in the next
-    # iteration and not have to load the same data multiple times
-    previous_ds = current_ds
-    current_ds = future_ds
-    future_ds = []
-
-
-# ***
-# 
-# ## Additional information
-
-# **License:** The code in this notebook is licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0). 
-# Digital Earth Australia data is licensed under the [Creative Commons by Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) license.
-# 
-# **Contact:** If you need assistance, please post a question on the [Open Data Cube Slack channel](http://slack.opendatacube.org/) or on the [GIS Stack Exchange](https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using the `open-data-cube` tag (you can view previously asked questions [here](https://gis.stackexchange.com/questions/tagged/open-data-cube)).
-# If you would like to report an issue with this notebook, you can file one on [Github](https://github.com/GeoscienceAustralia/dea-notebooks).
-# 
-# **Last modified:** October 2019
-# 
-# **Compatible datacube version:** 
-
-# In[12]:
-
-
-print(datacube.__version__)
-
+if __name__ == "__main__":
+    main()
