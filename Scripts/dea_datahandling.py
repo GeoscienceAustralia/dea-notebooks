@@ -24,17 +24,17 @@ Functions included:
     download_unzip
     wofs_fuser
     dilate
+    pan_sharpen_brovey
     paths_to_datetimeindex
-
-Last modified: December 2019
 
 '''
 
 # Import required packages
 import os
 import gdal
-import requests
 import zipfile
+import numexpr
+import requests
 import warnings
 import numpy as np
 import pandas as pd
@@ -531,6 +531,46 @@ def dilate(array, dilation=10, invert=True):
     return ~binary_dilation(array.astype(np.bool), 
                             structure=kernel.reshape((1,) + kernel.shape))
 
+
+def pan_sharpen_brovey(band_1, band_2, band_3, pan_band):
+    '''    
+    Brovey pan sharpening on surface reflectance input using numexpr 
+    and return three xarrays.
+    
+    Parameters
+    ---------- 
+    band_1, band_2, band_3 : xarray.DataArray or numpy.array
+        Three input multispectral bands, either as xarray.DataArrays or 
+        numpy.arrays. These bands should have already been resampled to 
+        the spatial resolution of the panchromatic band.
+    pan_band : xarray.DataArray or numpy.array
+        A panchromatic band corresponding to the above multispectral
+        bands that will be used to pan-sharpen the data.
+    
+    Returns
+    -------
+    band_1_sharpen, band_2_sharpen, band_3_sharpen : numpy.arrays
+        Three numpy arrays equivelent to `band_1`, `band_2` and `band_3` 
+        pan-sharpened to the spatial resolution of `pan_band`.    
+    
+    '''   
+    # Calculate total
+    exp = 'band_1 + band_2 + band_3'
+    total = numexpr.evaluate(exp)
+    
+    # Perform Brovey Transform in form of: band/total*panchromatic
+    exp = 'a/b*c'
+    band_1_sharpen = numexpr.evaluate(exp, local_dict={'a': band_1, 
+                                                       'b': total, 
+                                                       'c': pan_band})
+    band_2_sharpen = numexpr.evaluate(exp, local_dict={'a': band_2, 
+                                                       'b': total, 
+                                                       'c': pan_band})
+    band_3_sharpen = numexpr.evaluate(exp, local_dict={'a': band_3, 
+                                                       'b': total, 
+                                                       'c': pan_band})
+    
+    return band_1_sharpen, band_2_sharpen, band_3_sharpen
 
 
 def paths_to_datetimeindex(paths, string_slice=(0, 10)):
