@@ -49,19 +49,22 @@ Getting started with DEA notebooks
 
 There are two main options for interacting with ``dea-notebooks``:
 
-* DEA notebooks using git: Git is a version-control software designed to help track changes to files and collaborate with multiple users on a project. Using ``git`` is the recommended workflow for working with ``dea-notebooks`` as it makes it easy to stay up to date with the latest versions of functions and code, and makes it impossible to lose your work. 
+* **DEA notebooks using git**: Git is a version-control software designed to help track changes to files and collaborate with multiple users on a project. Using ``git`` is the recommended workflow for working with ``dea-notebooks`` as it makes it easy to stay up to date with the latest versions of functions and code, and makes it impossible to lose your work. 
 
   * Refer to the repository's `Guide to DEA Notebooks using Git <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-Git-on-the-DEA-Sandbox>`_ wiki article.
 
-* DEA notebooks using Github: Alternatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with ``dea-notebooks``. 
+* **DEA notebooks using Github**: Alternatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with ``dea-notebooks``. 
 
   * Refer to the repository's `Guide to DEA Notebooks using the Github website <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-Git-on-the-DEA-Sandbox>`_ wiki article.
   
-DEA Notebooks template notebook
--------------------------------
-An empty template notebook has been developed to ensure that Jupyter notebooks in the ``dea-notebooks`` repository are consistent and well-documented so they can be understood by future users, and rendered correctly in the `DEA User Guide <https://docs.dea.ga.gov.au/>`_.
+Publishing notebooks to the master branch
+-----------------------------------------
 
-The template notebook contains useful general advice on writing and formatting Jupyter notebooks. The template can be found here: `DEA_notebooks_template.ipynb <https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/DEA_notebooks_template.ipynb>`_
+Once you have a notebook ready to be published on the `master` branch, you can submit a 'pull request' in the `Pull requests tab at the top of the repository <https://github.com/GeoscienceAustralia/dea-notebooks/pulls>`_. The default pull request template contains a check-list to ensure that all ``master`` branch Jupyter notebooks are consistent and well-documented so they can be understood by future users, and rendered correctly in the `DEA User Guide <https://docs.dea.ga.gov.au/>`_. Please ensure that as many of these checklist items are complete as possible, or leave a comment in the pull request asking for help.
+
+DEA Notebooks template notebook
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+A template notebook has been developed to make it easier to create new notebooks that meet all the pull request checklists. The template notebook contains a simple structure and useful general advice on writing and formatting Jupyter notebooks. The template can be found here: `DEA_notebooks_template.ipynb <https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/DEA_notebooks_template.ipynb>`_
 
 Approving pull requests
 -----------------------
