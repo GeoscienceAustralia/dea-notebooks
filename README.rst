@@ -35,18 +35,12 @@ All notebooks in the dea-notebooks repository contain tags describing their func
 Contributing to DEA Notebooks
 =============================
 
-DEA Notebooks template notebook
--------------------------------
-An empty template notebook has been developed to ensure that Jupyter notebooks in the ``dea-notebooks`` repository are consistent and well-documented so they can be understood by future users, and rendered correctly in the `DEA User Guide <https://docs.dea.ga.gov.au/>`_.
-
-The template notebook contains useful general advice on writing and formatting Jupyter notebooks. The template can be found here: `DEA_notebooks_template.ipynb <https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/DEA_notebooks_template.ipynb>`_
-
 Master and working branches
 ---------------------------
 
 The ``dea-notebooks`` repository uses 'branches' to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared. There are two main types of branches:
 
-* `Master branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master>`_: The ``master`` branch is where notebooks are put that are ready to be shared publicly. Notebooks added to this branch will become part of the offical DEA documentation and are published on the `DEA User Guide <https://docs.dea.ga.gov.au/>`_. The ``master`` branch is protected, and requires changes to be approved via a ``pull request`` before they appear on the branch. 
+* `Master branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master>`_: The ``master`` branch is where notebooks are put that are ready to be shared publicly. Notebooks added to this branch will become part of the offical DEA documentation and are published on the `DEA User Guide <https://docs.dea.ga.gov.au/>`_. The ``master`` branch is protected, and requires changes to be approved via a 'pull request' before they appear on the branch. 
 
 * `Working branches <https://github.com/GeoscienceAustralia/dea-notebooks/branches>`_: All other branches in the repository are working spaces for users of ``dea-notebooks``. They have a unique name (typically named after the user, e.g. ``ClaireK``, ``BexDunn``). The notebooks on these branches can be works-in-progress and do not need to be pretty or complete. By using a working branch, it is easy to use scripts and algorithms from ``dea-notebooks`` in your own work, or share and collaborate on a working version of a notebook or code.
 
@@ -62,3 +56,19 @@ There are two main options for interacting with ``dea-notebooks``:
 * DEA notebooks using Github: Alternatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with ``dea-notebooks``. 
 
   * Refer to the repository's `Guide to DEA Notebooks using the Github website <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-Git-on-the-DEA-Sandbox>`_ wiki article.
+  
+DEA Notebooks template notebook
+-------------------------------
+An empty template notebook has been developed to ensure that Jupyter notebooks in the ``dea-notebooks`` repository are consistent and well-documented so they can be understood by future users, and rendered correctly in the `DEA User Guide <https://docs.dea.ga.gov.au/>`_.
+
+The template notebook contains useful general advice on writing and formatting Jupyter notebooks. The template can be found here: `DEA_notebooks_template.ipynb <https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/DEA_notebooks_template.ipynb>`_
+
+Approving pull requests
+-----------------------
+
+Anyone with admin access to the ``dea-notebooks`` repository can approve 'pull requests'. You can see a list of the 'pull requests' ready for review in the `Pull requests tab at the top of the repository <https://github.com/GeoscienceAustralia/dea-notebooks/pulls>`_. Click this tab, then click on the open pull request. You will need to review the code before you can approve the request. Ensure that all items in the pull request checklist have been ticked off and incorperated into the notebook.
+
+If the notebook meets all the checklist requirements, click the green 'Review' button and click 'Approve' (with an optional comment). You can also 'Request changes' here if any of the checklist items are not complete.
+
+Once the pull request has been approved, you can merge it into the ``master`` branch. Select the 'Squash and merge' option from the drop down menu to the right of the green 'merge' button. Once you have merged the new branch in, you need to delete the branch. There is a button on the page that asks you if you would like to delete the now merged branch. Select 'Yes' to delete it.
+
