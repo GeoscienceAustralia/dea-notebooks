@@ -32,18 +32,30 @@ The Jupyter notebooks on the ``master`` branch of this repository are used to ge
 All notebooks in the dea-notebooks repository contain tags describing their functionality. If you are searching for a specific functionality, use the `Tags Index <https://docs.dea.ga.gov.au/genindex.html>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an 'Issue' in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
 
 
-
 Contributing to DEA Notebooks
 =============================
+
+DEA Notebooks template notebook
+-------------------------------
+An empty template notebook has been developed to ensure that Jupyter notebooks in the ``dea-notebooks`` repository are consistent and well-documented so they can be understood by future users, and rendered correctly in the `DEA User Guide <https://docs.dea.ga.gov.au/>`_.
+
+The template notebook contains useful general advice on writing and formatting Jupyter notebooks. The template can be found here: `DEA_notebooks_template.ipynb <https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/DEA_notebooks_template.ipynb>`_
 
 Master and working branches
 ---------------------------
 
 The ``dea-notebooks`` repository uses 'branches' to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared. There are two main types of branches:
 
-* `Master branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master>`_: The ``master`` branch is where notebooks are put that are ready to be shared publicly. Notebooks added to this branch will become part of the offical DEA documentation and published on the `DEA User Guide <https://docs.dea.ga.gov.au/>`_. The ``master`` branch is protected, and requires changes to be approved via a ``pull request`` before they appear on the branch. This is to ensure that code published in the repository is consistent and easy to understand and use for future users.
+* `Master branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master>`_: The ``master`` branch is where notebooks are put that are ready to be shared publicly. Notebooks added to this branch will become part of the offical DEA documentation and are published on the `DEA User Guide <https://docs.dea.ga.gov.au/>`_. The ``master`` branch is protected, and requires changes to be approved via a ``pull request`` before they appear on the branch. 
 
 * `Working branches <https://github.com/GeoscienceAustralia/dea-notebooks/branches>`_: All other branches in the repository are working spaces for users of ``dea-notebooks``. They have a unique name (typically named after the user, e.g. ``ClaireK``, ``BexDunn``). The notebooks on these branches can be works-in-progress and do not need to be pretty or complete. By using a working branch, it is easy to use scripts and algorithms from ``dea-notebooks`` in your own work, or share and collaborate on a working version of a notebook or code.
 
+Getting started with DEA notebooks
+----------------------------------
 
- 
+There are two main options for interacting with ``dea-notebooks``:
+
+* **DEA notebooks using git:** Git is a version-control software designed to help track changes to files and collaborate with multiple users on a project. Using ``git`` is the *recommended* workflow for working with ``dea-notebooks`` as it makes it easy to stay up to date with the latest versions of functions and code, and makes it impossible to lose your work. 
+    * Refer to the repository's `Guide to DEA Notebooks using Git <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-Git-on-the-DEA-Sandbox>`_ wiki article.
+* **DEA notebooks using Github:** Alternatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with dea-notebooks quickly. 
+    * Refer to the repository's `Guide to DEA Notebooks using the Github website <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-Git-on-the-DEA-Sandbox>`_ wiki article.
