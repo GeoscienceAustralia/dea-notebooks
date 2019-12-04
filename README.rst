@@ -55,7 +55,8 @@ Getting started with DEA notebooks
 
 There are two main options for interacting with ``dea-notebooks``:
 
-* **DEA notebooks using git:** Git is a version-control software designed to help track changes to files and collaborate with multiple users on a project. Using ``git`` is the *recommended* workflow for working with ``dea-notebooks`` as it makes it easy to stay up to date with the latest versions of functions and code, and makes it impossible to lose your work. 
-    * Refer to the repository's `Guide to DEA Notebooks using Git <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-Git-on-the-DEA-Sandbox>`_ wiki article.
-* **DEA notebooks using Github:** Alternatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with dea-notebooks quickly. 
-    * Refer to the repository's `Guide to DEA Notebooks using the Github website <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-Git-on-the-DEA-Sandbox>`_ wiki article.
+- DEA notebooks using git: Git is a version-control software designed to help track changes to files and collaborate with multiple users on a project. Using ``git`` is the recommended workflow for working with ``dea-notebooks`` as it makes it easy to stay up to date with the latest versions of functions and code, and makes it impossible to lose your work. 
+ - Refer to the repository's `Guide to DEA Notebooks using Git <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-Git-on-the-DEA-Sandbox>`_ wiki article.
+
+- DEA notebooks using Github: Alternatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with ``dea-notebooks``. 
+ - Refer to the repository's `Guide to DEA Notebooks using the Github website <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-Git-on-the-DEA-Sandbox>`_ wiki article.
