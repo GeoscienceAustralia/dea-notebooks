@@ -25,8 +25,7 @@ Functions included:
     wofs_fuser
     dilate
     pan_sharpen_brovey
-
-Last modified: November 2019
+    paths_to_datetimeindex
 
 '''
 
@@ -38,6 +37,7 @@ import numexpr
 import requests
 import warnings
 import numpy as np
+import pandas as pd
 import xarray as xr
 from collections import Counter
 from datacube.storage import masking
@@ -571,3 +571,29 @@ def pan_sharpen_brovey(band_1, band_2, band_3, pan_band):
                                                        'c': pan_band})
     
     return band_1_sharpen, band_2_sharpen, band_3_sharpen
+
+
+def paths_to_datetimeindex(paths, string_slice=(0, 10)):
+    '''
+    Helper function to generate a Pandas datetimeindex object
+    from dates contained in a file path string.
+    
+    Parameters
+    ----------     
+    paths : list of strings
+        A list of file path strings that will be used to extract times 
+    string_slice : tuple
+        An optional tuple giving the start and stop position that 
+        contains the time information in the provided paths. These are
+        applied to the basename (i.e. file name) in each path, not the
+        path itself. Defaults to (0, 10).
+        
+    Returns
+    -------
+    A pandas.DatetimeIndex object containing a 'datetime64[ns]' derived 
+    from the file paths provided by `paths`.
+    '''
+    
+    date_strings = [os.path.basename(i)[slice(*string_slice)] 
+                    for i in paths]
+    return pd.to_datetime(date_strings)
