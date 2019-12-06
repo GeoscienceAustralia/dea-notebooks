@@ -18,12 +18,14 @@ These notebooks should:
    Applying_WOfS_bitmasking.ipynb
    Calculating_band_indices.ipynb
    Contour_extraction.ipynb
-   Exporting_geotiffs.ipynb
+   Exporting_GeoTIFFs.ipynb
+   Exporting_NetCDFs.ipynb
    Geomedian_composites.ipynb
    Image_segmentation.ipynb
    Integrating_external_data.ipynb
    Masking_data.ipynb
-   Open_Geotiff_and_NetCDF_as_xarray.ipynb
+   Opening_GeoTIFFs_NetCDFs.ipynb
+   Pan_sharpening_Brovey.ipynb
    Rasterize_vectorize.ipynb
    Using_load_ard.ipynb
    Virtual_products.ipynb
