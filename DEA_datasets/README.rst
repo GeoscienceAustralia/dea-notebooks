@@ -5,6 +5,6 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
 
 .. toctree::
    :maxdepth: 1
-   :caption: DEA datasets
+   :caption: DEA Datasets
 
    Sentinel_2.ipynb
