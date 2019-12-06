@@ -65,12 +65,12 @@ Once you have a notebook that is ready to be published on the ``master`` branch,
 Draft pull requests
 ^^^^^^^^^^^^^^^^^^^
 
-For pull requests you would like help with or that are a work in progress, consider using Github's `draft pull request <https://github.blog/2019-02-14-introducing-draft-pull-requests/>`_ feature. This indicates your work is a draft, allowing you to get feedback from other DEA users before it is published on the ``master`` branch.
+For pull requests you would like help with or that are a work in progress, consider using Github's `draft pull request <https://github.blog/2019-02-14-introducing-draft-pull-requests/>`_ feature. This indicates that your work is still a draft, allowing you to get feedback from other DEA users before it is published on the ``master`` branch.
 
 DEA Notebooks template notebook
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A template notebook has been developed to make it easier to create new notebooks that meet all the pull request checklists. The template notebook contains a simple structure and useful general advice on writing and formatting Jupyter notebooks. The template can be found here: `DEA_notebooks_template.ipynb <https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/DEA_notebooks_template.ipynb>`_
+A template notebook has been developed to make it easier to create new notebooks that meet all the pull request checklist requirements. The template notebook contains a simple structure and useful general advice on writing and formatting Jupyter notebooks. The template can be found here: `DEA_notebooks_template.ipynb <https://github.com/GeoscienceAustralia/dea-notebooks/blob/master/DEA_notebooks_template.ipynb>`_
 
 Using the template is not required for working branch notebooks, but is *highly recommended* as it will make it much easier to publish any notebooks on ``master`` in the future.
 
