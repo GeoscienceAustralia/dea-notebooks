@@ -1,7 +1,7 @@
 Beginner's guide
 ================
 
-These notebooks are designed to introduce you to key concepts.
+Introductory notebooks aimed at introducing Jupyter Notebooks and how to load, plot and interact with DEA data.
 
 .. toctree::
    :maxdepth: 1

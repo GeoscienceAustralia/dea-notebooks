@@ -1,18 +1,11 @@
 Frequently used code
 ====================
 
-These notebooks feature code-snippets that are applicable to many analyses.
-
-These notebooks should:
-
-* Be as short as possible
-
-* Include simple, reproducible examples of commonly used tasks
-
-* The end goal is to create a `recipe book` of useful code that users can copy-paste into their analyses
+A recipe book of simple code examples demonstrating how to perform common geospatial analysis tasks using DEA and open-source software.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Frequently Used Code
 
    Animated_timeseries.ipynb
    Applying_WOfS_bitmasking.ipynb
