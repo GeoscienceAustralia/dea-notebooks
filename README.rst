@@ -1,5 +1,9 @@
 .. Notebook Gallery Instructions:
 
+.. image:: Supplementary_data/dea_logo_wide.jpg
+  :width: 900
+  :alt: Digital Earth Australia logo
+
 Digital Earth Australia Notebooks
 #################################
 
