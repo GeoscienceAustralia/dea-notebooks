@@ -1,6 +1,6 @@
 # Sub-pixel waterline extraction: characterising accuracy and sensitivity to indices and spectra  <img align="right" src="/images/dea_logo.jpg">
 
-### Bishop-Taylor et al. (in review), Remote Sensing
+### Bishop-Taylor et al. (accepted 6 December), _Remote Sensing_
 
 Accurately mapping the boundary between land and water (the ‘waterline’) is critical for tracking change in vulnerable coastal zones, and managing increasingly threatened water resources. 
 The recent development of high performance earth observation ‘data cubes’ has revolutionised the spatial and temporal scale of remote sensing analyses, supporting the operational mapping and monitoring of surface water using freely available medium resolution satellite data such as Landsat. 
@@ -15,7 +15,7 @@ The sub-pixel waterline extraction method (`subpixel_contours`) has a low comput
 
 Citing this work and/or code:
 
-> Bishop-Taylor et al. (in review) Sub-pixel waterline extraction: characterising accuracy and sensitivity to indices and spectra, Remote Sensing
+> Bishop-Taylor et al. (in press) Sub-pixel waterline extraction: characterising accuracy and sensitivity to indices and spectra, Remote Sensing
 
 ---
 
@@ -65,4 +65,4 @@ Digital Earth Australia data is licensed under the [Creative Commons by Attribut
 **Contact:** If you need assistance, please post a question on the [Open Data Cube Slack channel](http://slack.opendatacube.org/) or on the [GIS Stack Exchange](https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using the `open-data-cube` tag (you can view previously asked questions [here](https://gis.stackexchange.com/questions/tagged/open-data-cube)).
 If you would like to report an issue with this notebook, you can file one on [Github](https://github.com/GeoscienceAustralia/dea-notebooks).
 
-**Last modified:** November 2019
+**Last modified:** December 2019
