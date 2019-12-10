@@ -21,7 +21,9 @@
 
 # # High memory
 # for study_area in QLD16.02 
-for study_area in WA26.04 
+# for study_area in WA26.04 
+
+for study_area in WA25.01
 
 do
 
@@ -32,40 +34,17 @@ do
     #PBS -P r78\n\
     #PBS -q express\n\
     #PBS -l walltime=6:00:00\n\
-    #PBS -l mem=128GB\n\
+    #PBS -l mem=32GB\n\
     #PBS -l jobfs=2GB\n\
     #PBS -l ncpus=1\n\
     #PBS -l wd\n\
     module use /g/data/v10/public/modules/modulefiles\n\
     module load dea/20191105\n\
     module load otps\n\
-    python /g/data/r78/rt1527/dea-notebooks/MAHTS/gadi_test.py $study_area"
+    python /g/data/r78/rt1527/dea-notebooks/MAHTS/MAHTS_stats.py $study_area"
 
     echo -e ${PBS} | qsub
     sleep 0.2
     echo "Submitting study area $study_area"
 
 done
-
-
-
-# #!/bin/bash
-
-# PBS="#!/bin/bash\n\
-# #PBS -N MAHTS\n\
-# #PBS -o PBS_output.out\n\
-# #PBS -e PBS_output.err\n\
-# #PBS -P r78\n\
-# #PBS -q express\n\
-# #PBS -l walltime=6:00:00\n\
-# #PBS -l mem=64GB\n\
-# #PBS -l jobfs=2GB\n\ 
-# #PBS -l ncpus=1\n\
-# #PBS -l wd\n\
-# module use /g/data/v10/public/modules/modulefiles\n\
-# module load dea/20191105\n\
-# module load otps\n\
-# python /g/data/r78/rt1527/dea-notebooks/MAHTS/gadi_test.py"
-
-# echo -e ${PBS} | qsub
-# echo "Submitting job"
