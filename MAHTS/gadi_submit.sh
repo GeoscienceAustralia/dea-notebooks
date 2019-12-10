@@ -23,7 +23,7 @@
 # for study_area in QLD16.02 
 # for study_area in WA26.04 
 
-for study_area in WA25.01
+for study_area in WA29.02
 
 do
 
@@ -38,9 +38,11 @@ do
     #PBS -l jobfs=2GB\n\
     #PBS -l ncpus=1\n\
     #PBS -l wd\n\
+    source /etc/bashrc\n\
     module use /g/data/v10/public/modules/modulefiles\n\
     module load dea/20191105\n\
     module load otps\n\
+    export PYTHONPATH=/home/561/rt1527/.local/lib/python3.6/site-packages/:$PYTHONPATH\n\
     python /g/data/r78/rt1527/dea-notebooks/MAHTS/MAHTS_stats.py $study_area"
 
     echo -e ${PBS} | qsub
