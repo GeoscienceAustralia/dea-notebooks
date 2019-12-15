@@ -25,6 +25,8 @@ The repository is based around the following directory structure (from simple to
 
 4. `Real_world_examples <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Real_world_examples>`_: *More complex workflows demonstrating how DEA can be used to address real-world problems*
 
+5. `Scientific_workflows <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Scientific_workflows>`_: *Production code and notebooks for generating published DEA products or analysis tools*
+
 The supporting scripts and data for the notebooks are kept in the following directories:
 
 - `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master/Scripts>`_: *Python functions and algorithms for developed to assist in analysing DEA data (e.g. loading data, plotting, spatial analysis, machine learning)* 
