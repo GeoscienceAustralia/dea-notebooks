@@ -1,6 +1,7 @@
 # Sub-pixel waterline extraction: characterising accuracy and sensitivity to indices and spectra  <img align="right" src="/images/dea_logo.jpg">
 
-### Bishop-Taylor et al. (accepted 6 December 2019), _Remote Sensing_
+### Bishop-Taylor et al. (2019), _Remote Sensing_ 
+### https://doi.org/10.3390/rs11242984
 
 Accurately mapping the boundary between land and water (the ‘waterline’) is critical for tracking change in vulnerable coastal zones, and managing increasingly threatened water resources. 
 The recent development of high performance earth observation ‘data cubes’ has revolutionised the spatial and temporal scale of remote sensing analyses, supporting the operational mapping and monitoring of surface water using freely available medium resolution satellite data such as Landsat. 
@@ -15,7 +16,7 @@ The sub-pixel waterline extraction method (`subpixel_contours`) has a low comput
 
 Citing this work and/or code:
 
-> Bishop-Taylor et al. (in press) Sub-pixel waterline extraction: characterising accuracy and sensitivity to indices and spectra, Remote Sensing
+> Bishop-Taylor, R., Sagar, S., Lymburner, L., Alam, I. and Sixsmith, J., 2019. Sub-Pixel Waterline Extraction: Characterising Accuracy and Sensitivity to Indices and Spectra. Remote Sensing, 11(24), p.2984. Available: https://doi.org/10.3390/rs11242984
 
 ---
 
