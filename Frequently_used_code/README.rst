@@ -15,6 +15,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Exporting_NetCDFs.ipynb
    Geomedian_composites.ipynb
    Image_segmentation.ipynb
+   Imagery_on_web_map.ipynb
    Integrating_external_data.ipynb
    Masking_data.ipynb
    Opening_GeoTIFFs_NetCDFs.ipynb
