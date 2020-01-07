@@ -36,11 +36,7 @@ mask_raster = rasterio.features.rasterize(shapes=shapes,
                                          transform=transform)
 
 # Convert result to a xarray.DataArray
-mask_raster = xr.DataArray(mask_raster,
-                                  coords=[ycoords, xcoords],
-                                  dims=['y', 'x'],
-                                  name='clean_mask',
-                                  attrs=attrs)
+mask_raster = xr.DataArray(mask_raster,coords=[ycoords, xcoords],dims=['y', 'x'],name='clean_mask',attrs=attrs)
 
 # and mask with DEM
 print('cleaning mask')

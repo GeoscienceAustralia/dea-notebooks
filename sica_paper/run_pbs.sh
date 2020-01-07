@@ -11,4 +11,4 @@ cd /g/data/r78/cb3058/dea-notebooks/sica_paper/
 module use /g/data/v10/public/modules/modulefiles/
 module load dea
 
-python3 commission_mask.py
+python3 9_summary_tiffs.py
