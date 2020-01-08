@@ -4,8 +4,8 @@ This file contains functions for loading and interacting with data in the
 crop health notebook, inside the Real_world_examples folder.
 
 Available functions:
-    load_agriculture_data
-    run_agriculture_app
+    load_crophealth_data
+    run_crophelath_app
 
 Last modified: January 2020
 '''
@@ -37,7 +37,7 @@ from dea_bandindices import calculate_indices
 
 def load_crophealth_data():
     """
-    Loads Sentinel-2 Near Real Time (NRT) product for the agriculture
+    Loads Sentinel-2 Near Real Time (NRT) product for the crop health
     case-study area. The NRT product is provided for the last 90 days.
     Last modified: January 2020
 
@@ -96,7 +96,7 @@ def load_crophealth_data():
 
 def run_crophealth_app(ds):
     """
-    Plots an interactive map of the agriculture case-study area and allows
+    Plots an interactive map of the crop health case-study area and allows
     the user to draw polygons. This returns a plot of the average NDVI value
     in the polygon area.
     Last modified: January 2020
