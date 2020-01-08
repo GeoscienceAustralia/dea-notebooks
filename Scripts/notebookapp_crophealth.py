@@ -45,6 +45,7 @@ def load_crophealth_data():
     ds - data set containing combined, masked data from Sentinel-2a and -2b.
     Masked values are set to 'nan'
     """
+    
     # Suppress warnings
     warnings.filterwarnings('ignore')
 
@@ -105,6 +106,7 @@ def run_crophealth_app(ds):
     ds - data set containing combined, masked data from Sentinel-2a and -2b.
     Must also have an attribute containing the NDVI value for each pixel
     """
+    
     # Suppress warnings
     warnings.filterwarnings('ignore')
 

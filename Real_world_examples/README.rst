@@ -9,6 +9,7 @@ More complex workflows demonstrating how DEA can be used to address real-world p
    
    Change_detection.ipynb
    Chlorophyll_monitoring.ipynb
+   Crop_health.ipynb
    Coastal_erosion.ipynb
    Intertidal_elevation.ipynb
    Inundation_mapping.ipynb
