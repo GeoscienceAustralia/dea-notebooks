@@ -37,8 +37,8 @@ from dea_bandindices import calculate_indices
 
 def load_crophealth_data():
     """
-    Loads Sentinel-2 Near Real Time (NRT) product for the crop health
-    case-study area. The NRT product is provided for the last 90 days.
+    Loads Sentinel-2 analysis-ready data (ARD) product for the crop health
+    case-study area. The ARD product is provided for the last year.
     Last modified: January 2020
 
     outputs
@@ -59,7 +59,7 @@ def load_crophealth_data():
     # Calculated as today's date, subtract 90 days to match NRT availability
     # Dates are converted to strings as required by loading function below
     end_date = dt.date.today()
-    start_date = end_date - dt.timedelta(days=90)
+    start_date = end_date - dt.timedelta(days=365)
 
     time = (start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
 
