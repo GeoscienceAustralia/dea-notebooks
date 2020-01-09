@@ -39,6 +39,7 @@ def load_miningrehab_data():
     ds - data set containing masked Fractional Cover data from Landsat 8
     Masked values are set to 'nan'
     """
+    
     # Suppress warnings
     warnings.filterwarnings("ignore")
 
@@ -97,6 +98,7 @@ def run_miningrehab_app(ds):
     inputs
     ds - data set containing masked Fractional Cover data from Landsat 8
     """
+    
     # Suppress warnings
     warnings.filterwarnings("ignore")
 
