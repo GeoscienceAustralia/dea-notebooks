@@ -1,0 +1,192 @@
+about: Catalog of virtual products for DEA Notebooks
+products:
+
+    s2a_ard_granule_simple:
+        recipe:
+            product: s2a_ard_granule
+
+    s2a_nbart_rgb:
+        recipe:
+            product: s2a_ard_granule
+            measurements: [nbart_blue, nbart_green, nbart_red]
+
+    s2a_nbart_rgb_renamed:
+        recipe:
+            transform: expressions
+            output:
+                blue: nbart_blue
+                green: nbart_green
+                red: nbart_red
+            input:
+                product: s2a_ard_granule
+                measurements: [nbart_blue, nbart_green, nbart_red]
+
+    s2a_nbart_rgb_nodata_masked:
+        recipe:
+            transform: expressions
+            output:
+                blue:
+                    formula: nbart_blue
+                    dtype: float32
+                green:
+                    formula: nbart_green
+                    dtype: float32
+                red:
+                    formula: nbart_red
+                    dtype: float32
+            input:
+                product: s2a_ard_granule
+                measurements: [nbart_blue, nbart_green, nbart_red]
+
+    s2a_nbart_rgb_and_fmask:
+        recipe:
+            product: s2a_ard_granule
+            measurements: [nbart_blue, nbart_green, nbart_red, fmask]
+
+    s2a_nbart_rgb_and_fmask_native:
+        recipe:
+            product: s2a_ard_granule
+            like: fmask
+            measurements: [nbart_blue, nbart_green, nbart_red, fmask]
+            resampling:
+                fmask: nearest
+                '*': average
+
+    s2a_nbart_rgb_and_fmask_albers:
+        recipe:
+            &s2a_albers_recipe
+            product: s2a_ard_granule
+            measurements: [nbart_blue, nbart_green, nbart_red, fmask]
+            output_crs: EPSG:3577
+            resolution: [-20, 20]
+            resampling:
+                fmask: nearest
+                '*': average
+
+    s2a_fmask:
+        recipe:
+            transform: make_mask
+            mask_measurement_name: fmask
+            flags:
+                fmask: valid
+            input:
+                product: s2a_ard_granule
+                measurements: [fmask]
+
+    s2a_cloud_free_nbart_rgb_albers:
+        recipe:
+            &s2a_cloud_free_recipe
+            transform: apply_mask
+            mask_measurement_name: fmask
+            preserve_dtype: False
+            input:
+                transform: make_mask
+                mask_measurement_name: fmask
+                flags:
+                    fmask: valid
+                input: *s2a_albers_recipe
+                
+    s2a_cloud_free_nbart_rgb_albers_reprojected:
+        recipe:
+            reproject:
+                output_crs: EPSG:3577
+                resolution: [-20, 20]
+            resampling: average
+            input:
+                transform: apply_mask
+                mask_measurement_name: fmask
+                preserve_dtype: False
+                input:
+                    transform: make_mask
+                    mask_measurement_name: fmask
+                    flags:
+                        fmask: valid
+                    input:
+                        product: s2a_ard_granule
+                        measurements: [nbart_blue, nbart_green, nbart_red, fmask]
+                        like: fmask
+                        resampling: average
+
+
+    s2a_cloud_free_nbart_rgb_albers_dilated:
+        recipe:
+            <<: *s2a_cloud_free_recipe
+            dilation: 10
+
+    s2a_NDVI:
+        recipe:
+            transform: expressions
+            output:
+                NDVI:
+                    formula: (nbart_nir_1 - nbart_red) / (nbart_nir_1 + nbart_red)
+                    dtype: float32
+            input:
+                product: s2a_ard_granule
+                measurements: [nbart_red, nbart_nir_1]
+
+    s2a_tasseled_cap:
+        recipe:
+            transform: expressions
+            output:
+                brightness:
+                    formula: 0.2043 * nbart_blue + 0.4158 * nbart_green + 0.5524 * nbart_red + 0.5741 * nbart_nir_1 + 0.3124 * nbart_swir_2 + -0.2303 * nbart_swir_3
+                    dtype: float32
+                greenness:
+                    formula: -0.1603 * nbart_blue + -0.2819 * nbart_green + -0.4934 * nbart_red + 0.7940 * nbart_nir_1 + -0.0002 * nbart_swir_2 + -0.1446 * nbart_swir_3
+                    dtype: float32
+                wetness:
+                    formula: 0.0315 * nbart_blue + 0.2021 * nbart_green + 0.3102 * nbart_red + 0.1594 * nbart_nir_1 + -0.6806 * nbart_swir_2 + -0.6109 * nbart_swir_3
+                    dtype: float32
+            input:
+                product: s2a_ard_granule
+                measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir_1, nbart_swir_2, nbart_swir_3]
+                output_crs: EPSG:3577
+                resolution: [-20, 20]
+                resampling: average
+
+    s2a_cloud_free_tasseled_cap:
+        recipe:
+            transform: expressions
+            output:
+                brightness:
+                    formula: 0.2043 * nbart_blue + 0.4158 * nbart_green + 0.5524 * nbart_red + 0.5741 * nbart_nir_1 + 0.3124 * nbart_swir_2 + -0.2303 * nbart_swir_3
+                    dtype: float32
+                greenness:
+                    formula: -0.1603 * nbart_blue + -0.2819 * nbart_green + -0.4934 * nbart_red + 0.7940 * nbart_nir_1 + -0.0002 * nbart_swir_2 + -0.1446 * nbart_swir_3
+                    dtype: float32
+                wetness:
+                    formula: 0.0315 * nbart_blue + 0.2021 * nbart_green + 0.3102 * nbart_red + 0.1594 * nbart_nir_1 + -0.6806 * nbart_swir_2 + -0.6109 * nbart_swir_3
+                    dtype: float32
+            input:
+                transform: apply_mask
+                mask_measurement_name: fmask
+                input:
+                    transform: make_mask
+                    flags:
+                        fmask: valid
+                    mask_measurement_name: fmask
+                    input:
+                        product: s2a_ard_granule
+                        measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir_1, nbart_swir_2, nbart_swir_3, fmask]
+                        output_crs: EPSG:3577
+                        resolution: [-20, 20]
+                        resampling:
+                            fmask: nearest
+                            '*': average
+                            
+
+    s2a_mean:
+        recipe:
+            aggregate: xarray_reduction
+            group_by: year
+            method: mean
+            input: *s2a_cloud_free_recipe
+
+
+    s2_nbart_rgb:
+        recipe:
+            collate:
+              - product: s2a_ard_granule
+                measurements: [nbart_blue, nbart_green, nbart_red]
+              - product: s2b_ard_granule
+                measurements: [nbart_blue, nbart_green, nbart_red]
