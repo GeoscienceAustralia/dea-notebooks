@@ -1,5 +1,3 @@
-_Note: checklist below only relevant if committing to the [`develop`](https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop) branch:_
-
 ### Proposed changes
 Include a brief description of the changes being proposed, and why they are necessary.
 
