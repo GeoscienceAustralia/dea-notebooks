@@ -1,21 +1,47 @@
 ## dea_datahandling.py
 '''
-Description: This file contains a set of python functions for handling Digital Earth Australia data.
+Description: This file contains a set of python functions for handling 
+Digital Earth Australia data.
 
-License: The code in this notebook is licensed under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth Australia data is licensed under the Creative Commons by Attribution 4.0 license (https://creativecommons.org/licenses/by/4.0/).
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
+Australia data is licensed under the Creative Commons by Attribution 4.0 
+license (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open Data Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using the `open-data-cube` tag (you can view previously asked questions here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+Contact: If you need assistance, please post a question on the Open Data 
+Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack 
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) 
+using the `open-data-cube` tag (you can view previously asked questions 
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
 
-If you would like to report an issue with this script, you can file one on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+If you would like to report an issue with this script, you can file one on 
+Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: September 2019
+Functions included:
+    load_ard
+    array_to_geotiff
+    mostcommon_utm
+    download_unzip
+    wofs_fuser
+    dilate
+    pan_sharpen_brovey
+    paths_to_datetimeindex
 
 '''
 
 # Import required packages
+import os
+import gdal
+import zipfile
+import numexpr
+import requests
+import warnings
 import numpy as np
+import pandas as pd
 import xarray as xr
+from collections import Counter
 from datacube.storage import masking
+from scipy.ndimage import binary_dilation
 
 
 def load_ard(dc,
@@ -63,7 +89,7 @@ def load_ard(dc,
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] for Landsat,
         ['s2a_ard_granule', 's2b_ard_granule'] for Sentinel 2 Definitive, 
         and ['s2a_nrt_granule', 's2b_nrt_granule'] for Sentinel 2 Near 
-        Real Time.
+        Real Time (on the DEA Sandbox only).
     min_gooddata : float, optional
         An optional float giving the minimum percentage of good quality 
         pixels required for a satellite observation to be loaded. 
@@ -113,7 +139,9 @@ def load_ard(dc,
         Setting this variable to True will delay the computation of the 
         function until you explicitly run `ds.compute()`. If used in 
         conjuction with `dask.distributed.Client()` this will allow for 
-        automatic parallel computation.
+        automatic parallel computation. Be aware that computation will
+        still occur if min_gooddata > 0, as the pixel quality will be
+        loaded to compute the 'good data' percentage.
     **dcload_kwargs : 
         A set of keyword arguments to `dc.load` that define the 
         spatiotemporal query used to extract data. This can include `x`,
@@ -132,7 +160,35 @@ def load_ard(dc,
         
     '''
     
-    # Verify that products were provided
+    # Due to possible bug in xarray 0.13.0, define temporary function 
+    # which converts dtypes in a way that preserves attributes
+    def astype_attrs(da, dtype=np.float32):
+        '''
+        Loop through all data variables in the dataset, record 
+        attributes, convert to float32, then reassign attributes. If 
+        the data variable cannot be converted to float32 (e.g. for a
+        non-numeric dtype like strings), skip and return the variable 
+        unchanged.
+        '''
+        
+        try:            
+            da_attr = da.attrs
+            da = da.astype(dtype)
+            da = da.assign_attrs(**da_attr)
+            return da
+        
+        except ValueError:        
+            return da
+    
+    # Warn user if they combine lazy load with min_gooddata
+    if (min_gooddata > 0.0) & lazy_load:
+                warnings.warn("Setting 'min_gooddata' percentage to > 0.0 "
+                              "will cause dask arrays \n to compute when "
+                              "loading pixel-quality data to calculate "
+                              "'good pixel' percentage. This will "
+                              "significantly slow the return of your dataset.")
+    
+    # Verify that products were provided    
     if not products:
         raise ValueError("Please provide a list of product names "
                          "to load data from. Valid options are: \n"
@@ -206,9 +262,10 @@ def load_ard(dc,
                 # First change dtype to float32, then mask out values using
                 # `.where()`. By casting to float32, we prevent `.where()` 
                 # from automatically casting to float64, using 2x the memory.
-                # We also need to manually reset attributes due to a possible
-                # bug in recent xarray version
-                ds = ds.astype(np.float32).assign_attrs(crs=ds.crs)
+                # We need to do this by applying a custom function to every
+                # variable in the dataset instead of using `.astype()`, due 
+                # to a possible bug in xarray 0.13.0 that drops attributes 
+                ds = ds.apply(astype_attrs, dtype=np.float32, keep_attrs=True)
                 ds = ds.where(good_quality)
 
             # Optionally add satellite/product name as a new variable
@@ -234,15 +291,17 @@ def load_ard(dc,
         
         # Optionally filter to replace no data values with nans
         if mask_invalid_data:
-            print('    Masking out invalid values')
+            print('Masking out invalid values')
             
             # First change dtype to float32, then mask out values using
             # `.where()`. By casting to float32, we prevent `.where()` 
             # from automatically casting to float64, using 2x the memory.
-            # We also need to manually reset attributes due to a possible
-            # bug in recent xarray version
-            combined_ds = (combined_ds.astype(np.float32)
-                           .assign_attrs(crs=combined_ds.crs))
+            # We need to do this by applying a custom function to every
+            # variable in the dataset instead of using `.astype()`, due 
+            # to a possible bug in xarray 0.13.0 that drops attributes           
+            combined_ds = combined_ds.apply(astype_attrs, 
+                                            dtype=np.float32, 
+                                            keep_attrs=True)
             combined_ds = masking.mask_invalid_data(combined_ds)
 
         # If `lazy_load` is True, return data as a dask array without
@@ -260,3 +319,281 @@ def load_ard(dc,
     else:
         print('No data returned for query')
         return None
+
+
+def array_to_geotiff(fname, data, geo_transform, projection,
+                     nodata_val=0, dtype=gdal.GDT_Float32):
+    """
+    Create a single band GeoTIFF file with data from an array. 
+    
+    Because this works with simple arrays rather than xarray datasets 
+    from DEA, it requires geotransform info ("(upleft_x, x_size, 
+    x_rotation, upleft_y, y_rotation, y_size)") and projection data 
+    (in "WKT" format) for the output raster. These are typically 
+    obtained from an existing raster using the following GDAL calls:
+    
+        import gdal
+        gdal_dataset = gdal.Open(raster_path)
+        geotrans = gdal_dataset.GetGeoTransform()
+        prj = gdal_dataset.GetProjection()
+    
+    ...or alternatively, directly from an xarray dataset:
+    
+        geotrans = xarraydataset.geobox.transform.to_gdal()
+        prj = xarraydataset.geobox.crs.wkt
+    
+    Parameters
+    ----------     
+    fname : str
+        Output geotiff file path including extension
+    data : numpy array
+        Input array to export as a geotiff    
+    geo_transform : tuple 
+        Geotransform for output raster; e.g. "(upleft_x, x_size, 
+        x_rotation, upleft_y, y_rotation, y_size)"
+    projection : str
+        Projection for output raster (in "WKT" format)
+    nodata_val : int, optional
+        Value to convert to nodata in the output raster; default 0
+    dtype : gdal dtype object, optional
+        Optionally set the dtype of the output raster; can be 
+        useful when exporting an array of float or integer values. 
+        Defaults to gdal.GDT_Float32
+        
+    """
+
+    # Set up driver
+    driver = gdal.GetDriverByName('GTiff')
+
+    # Create raster of given size and projection
+    rows, cols = data.shape
+    dataset = driver.Create(fname, cols, rows, 1, dtype)
+    dataset.SetGeoTransform(geo_transform)
+    dataset.SetProjection(projection)
+
+    # Write data to array and set nodata values
+    band = dataset.GetRasterBand(1)
+    band.WriteArray(data)
+    band.SetNoDataValue(nodata_val)
+
+    # Close file
+    dataset = None
+
+
+def mostcommon_crs(dc, product, query):    
+    """
+    Takes a given query and returns the most common CRS for observations
+    returned for that spatial extent. This can be useful when your study
+    area lies on the boundary of two UTM zones, forcing you to decide
+    which CRS to use for your `output_crs` in `dc.load`.
+    
+    Parameters
+    ----------     
+    dc : datacube Datacube object
+        The Datacube to connect to, i.e. `dc = datacube.Datacube()`.
+        This allows you to also use development datacubes if required.   
+    product : str
+        A product name to load CRSs from
+    query : dict
+        A datacube query including x, y and time range to assess for the
+        most common CRS
+        
+    Returns
+    -------
+    A EPSG string giving the most common CRS from all datasets returned
+    by the query above
+    
+    """
+    
+    # List of matching products
+    matching_datasets = dc.find_datasets(product=product, **query)
+    
+    # Extract all CRSs
+    crs_list = [str(i.crs) for i in matching_datasets]    
+   
+    # Identify most common CRS
+    crs_counts = Counter(crs_list)    
+    crs_mostcommon = crs_counts.most_common(1)[0][0]
+
+    # Warn user if multiple CRSs are encountered
+    if len(crs_counts.keys()) > 1:
+
+        warnings.warn(f'Multiple UTM zones {list(crs_counts.keys())} '
+                      f'were returned for this query. Defaulting to '
+                      f'the most common zone: {crs_mostcommon}', 
+                      UserWarning)
+    
+    return crs_mostcommon
+
+
+def download_unzip(url,
+                   output_dir=None,
+                   remove_zip=True):
+    """
+    Downloads and unzips a .zip file from an external URL to a local
+    directory.
+    
+    Parameters
+    ----------     
+    url : str
+        A string giving a URL path to the zip file you wish to download
+        and unzip
+    output_dir : str, optional
+        An optional string giving the directory to unzip files into. 
+        Defaults to None, which will unzip files in the current working 
+        directory
+    remove_zip : bool, optional
+        An optional boolean indicating whether to remove the downloaded
+        .zip file after files are unzipped. Defaults to True, which will
+        delete the .zip file.  
+    
+    """
+    
+    # Get basename for zip file
+    zip_name = os.path.basename(url)
+    
+    # Raise exception if the file is not of type .zip
+    if not zip_name.endswith('.zip'):
+        raise ValueError(f'The URL provided does not point to a .zip '
+                         f'file (e.g. {zip_name}). Please specify a '
+                         f'URL path to a valid .zip file')
+                         
+    # Download zip file
+    print(f'Downloading {zip_name}')
+    r = requests.get(url)
+    with open(zip_name, 'wb') as f:
+        f.write(r.content)
+        
+    # Extract into output_dir
+    with zipfile.ZipFile(zip_name, 'r') as zip_ref:        
+        zip_ref.extractall(output_dir)        
+        print(f'Unzipping output files to: '
+              f'{output_dir if output_dir else os.getcwd()}')
+    
+    # Optionally cleanup
+    if remove_zip:        
+        os.remove(zip_name)
+
+        
+def wofs_fuser(dest, src):
+    """
+    Fuse two WOfS water measurements represented as `ndarray`s.
+    
+    Note: this is a copy of the function located here:
+    https://github.com/GeoscienceAustralia/digitalearthau/blob/develop/digitalearthau/utils.py
+    """
+    empty = (dest & 1).astype(np.bool)
+    both = ~empty & ~((src & 1).astype(np.bool))
+    dest[empty] = src[empty]
+    dest[both] |= src[both]
+    
+
+def dilate(array, dilation=10, invert=True):
+    """
+    Dilate a binary array by a specified nummber of pixels using a 
+    disk-like radial dilation.
+    
+    By default, invalid (e.g. False or 0) values are dilated. This is
+    suitable for applications such as cloud masking (e.g. creating a 
+    buffer around cloudy or shadowed pixels). This functionality can 
+    be reversed by specifying `invert=False`.
+    
+    Parameters
+    ----------     
+    array : array
+        The binary array to dilate.
+    dilation : int, optional
+        An optional integer specifying the number of pixels to dilate 
+        by. Defaults to 10, which will dilate `array` by 10 pixels.
+    invert : bool, optional
+        An optional boolean specifying whether to invert the binary 
+        array prior to dilation. The default is True, which dilates the
+        invalid values in the array (e.g. False or 0 values).
+        
+    Returns
+    -------
+    An array of the same shape as `array`, with valid data pixels 
+    dilated by the number of pixels specified by `dilation`.    
+    """
+    
+    y, x = np.ogrid[
+        -dilation : (dilation + 1),
+        -dilation : (dilation + 1),
+    ]
+    
+    # disk-like radial dilation
+    kernel = (x * x) + (y * y) <= (dilation + 0.5) ** 2
+    
+    # If invert=True, invert True values to False etc
+    if invert:        
+        array = ~array
+    
+    return ~binary_dilation(array.astype(np.bool), 
+                            structure=kernel.reshape((1,) + kernel.shape))
+
+
+def pan_sharpen_brovey(band_1, band_2, band_3, pan_band):
+    '''    
+    Brovey pan sharpening on surface reflectance input using numexpr 
+    and return three xarrays.
+    
+    Parameters
+    ---------- 
+    band_1, band_2, band_3 : xarray.DataArray or numpy.array
+        Three input multispectral bands, either as xarray.DataArrays or 
+        numpy.arrays. These bands should have already been resampled to 
+        the spatial resolution of the panchromatic band.
+    pan_band : xarray.DataArray or numpy.array
+        A panchromatic band corresponding to the above multispectral
+        bands that will be used to pan-sharpen the data.
+    
+    Returns
+    -------
+    band_1_sharpen, band_2_sharpen, band_3_sharpen : numpy.arrays
+        Three numpy arrays equivelent to `band_1`, `band_2` and `band_3` 
+        pan-sharpened to the spatial resolution of `pan_band`.    
+    
+    '''   
+    # Calculate total
+    exp = 'band_1 + band_2 + band_3'
+    total = numexpr.evaluate(exp)
+    
+    # Perform Brovey Transform in form of: band/total*panchromatic
+    exp = 'a/b*c'
+    band_1_sharpen = numexpr.evaluate(exp, local_dict={'a': band_1, 
+                                                       'b': total, 
+                                                       'c': pan_band})
+    band_2_sharpen = numexpr.evaluate(exp, local_dict={'a': band_2, 
+                                                       'b': total, 
+                                                       'c': pan_band})
+    band_3_sharpen = numexpr.evaluate(exp, local_dict={'a': band_3, 
+                                                       'b': total, 
+                                                       'c': pan_band})
+    
+    return band_1_sharpen, band_2_sharpen, band_3_sharpen
+
+
+def paths_to_datetimeindex(paths, string_slice=(0, 10)):
+    '''
+    Helper function to generate a Pandas datetimeindex object
+    from dates contained in a file path string.
+    
+    Parameters
+    ----------     
+    paths : list of strings
+        A list of file path strings that will be used to extract times 
+    string_slice : tuple
+        An optional tuple giving the start and stop position that 
+        contains the time information in the provided paths. These are
+        applied to the basename (i.e. file name) in each path, not the
+        path itself. Defaults to (0, 10).
+        
+    Returns
+    -------
+    A pandas.DatetimeIndex object containing a 'datetime64[ns]' derived 
+    from the file paths provided by `paths`.
+    '''
+    
+    date_strings = [os.path.basename(i)[slice(*string_slice)] 
+                    for i in paths]
+    return pd.to_datetime(date_strings)
