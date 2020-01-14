@@ -24,6 +24,7 @@ Functions included:
     largest_region
     array_to_geotiff
     geotransform
+    transform_geojson_wgs_to_epsg
 
 Last modified: November 2019
 
@@ -34,6 +35,8 @@ import collections
 import numpy as np
 import xarray as xr
 import geopandas as gpd
+import osr
+import ogr
 import scipy.interpolate
 from scipy import ndimage as nd
 from skimage.measure import label
@@ -539,3 +542,38 @@ def geotransform(ds, coords, epsg=3577, alignment = 'centre', rotation=0.0):
     prj_wkt = srs.ExportToWkt()
     
     return transform, prj_wkt
+
+def transform_geojson_wgs_to_epsg(geojson, EPSG):
+    
+    """
+    Takes a geojson dictionary and converts it from WGS84 (EPSG:4326) to desired EPSG
+    
+    Parameters
+    ----------
+    geojson: dict
+        a geojson dictionary containing a 'geometry' key, in WGS84 coordinates
+    EPSG: int
+        numeric code for the EPSG coordinate referecnce system to transform into
+        
+    Returns
+    -------
+    transformed_geojson: dict
+        a geojson dictionary containing a 'coordinates' key, in the desired CRS
+        
+    """
+
+    geojson_geom = geojson['geometry']
+    polygon = ogr.CreateGeometryFromJson(str(geojson_geom))
+
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(4326)
+
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(EPSG)
+
+    transform = osr.CoordinateTransformation(source, target)
+    polygon.Transform(transform)
+    
+    transformed_geojson = eval(polygon.ExportToJson())
+
+    return transformed_geojson

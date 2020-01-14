@@ -8,3 +8,4 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
    :caption: DEA Datasets
 
    Sentinel_2.ipynb
+   TSmask.ipynb

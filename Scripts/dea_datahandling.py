@@ -89,7 +89,7 @@ def load_ard(dc,
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] for Landsat,
         ['s2a_ard_granule', 's2b_ard_granule'] for Sentinel 2 Definitive, 
         and ['s2a_nrt_granule', 's2b_nrt_granule'] for Sentinel 2 Near 
-        Real Time.
+        Real Time (on the DEA Sandbox only).
     min_gooddata : float, optional
         An optional float giving the minimum percentage of good quality 
         pixels required for a satellite observation to be loaded. 
