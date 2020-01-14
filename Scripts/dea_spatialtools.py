@@ -402,27 +402,32 @@ def contours_to_arrays(gdf, col):
     return np.concatenate(coords_zvals)
 
 
-def largest_region(bool_array, **kwargs):
+def largest_region(bool_array, n=0, **kwargs):
     
     '''
-    Takes a boolean array and identifies the largest contiguous region of 
-    connected True values. This is returned as a new array with cells in 
-    the largest region marked as True, and all other cells marked as False.
+    Takes a boolean array and identifies the largest (or nth) contiguous 
+    region of connected True values. This is returned as a new array 
+    with cells in the largest (or nth) region marked as True, and all 
+    other cells marked as False.
     
     Parameters
     ----------  
     bool_array : boolean array
         A boolean array (numpy or xarray.DataArray) with True values for
-        the areas that will be inspected to find the largest group of 
-        connected cells
+        the areas that will be inspected to find the largest (or nth) 
+        group of connected cells
+    n : integer
+        An integer giving the nth largest feature to select. The default
+        is 0, which will select the largest feature in the array. n=1 
+        will select the second largest, n=-1 will select the smallest.
     **kwargs : 
         Optional keyword arguments to pass to `measure.label`
         
     Returns
     -------
     largest_region : boolean array
-        A boolean array with cells in the largest region marked as True, 
-        and all other cells marked as False.       
+        A boolean array with cells in the largest (or nth) region marked
+        as True, and all other cells marked as False.       
         
     '''
     
@@ -433,11 +438,11 @@ def largest_region(bool_array, **kwargs):
     ids, counts = np.unique(blobs_labels[blobs_labels > 0], 
                             return_counts=True) 
     
-    # Identify the region ID of the largest blob
-    largest_region_id = ids[np.argmax(counts)]
+    # Identify the region ID of the largest (or nth) blob
+    region_id = ids[counts.argsort()[::-1][n]]
     
     # Produce a boolean array where 1 == the largest region
-    largest_region = blobs_labels == largest_region_id
+    region = blobs_labels == region_id
     
-    return largest_region
+    return region
 
