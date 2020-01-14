@@ -22,8 +22,9 @@ Functions included:
     interpolate_2d
     contours_to_array
     largest_region
+    transform_geojson_wgs_to_epsg
 
-Last modified: November 2019
+Last modified: January 2020
 
 '''
 
@@ -32,6 +33,8 @@ import collections
 import numpy as np
 import xarray as xr
 import geopandas as gpd
+import osr
+import ogr
 import scipy.interpolate
 from scipy import ndimage as nd
 from skimage.measure import label
@@ -134,7 +137,9 @@ def subpixel_contours(da,
         # Extracts contours from array, and converts each discrete
         # contour into a Shapely LineString feature
         line_features = [LineString(i[:,[1, 0]]) 
-                         for i in find_contours(da_i, z_value, positive_orientation='high', fully_connected='high') 
+                         for i in find_contours(da_i, z_value, 
+                                                positive_orientation='high', 
+                                                fully_connected='high') 
                          if i.shape[0] > min_vertices]
 
         # Output resulting lines into a single combined MultiLineString
@@ -425,7 +430,7 @@ def largest_region(bool_array, n=0, **kwargs):
         
     Returns
     -------
-    largest_region : boolean array
+    region : boolean array
         A boolean array with cells in the largest (or nth) region marked
         as True, and all other cells marked as False.       
         
@@ -446,3 +451,38 @@ def largest_region(bool_array, n=0, **kwargs):
     
     return region
 
+
+def transform_geojson_wgs_to_epsg(geojson, EPSG):
+    
+    """
+    Takes a geojson dictionary and converts it from WGS84 (EPSG:4326) to desired EPSG
+    
+    Parameters
+    ----------
+    geojson: dict
+        a geojson dictionary containing a 'geometry' key, in WGS84 coordinates
+    EPSG: int
+        numeric code for the EPSG coordinate referecnce system to transform into
+        
+    Returns
+    -------
+    transformed_geojson: dict
+        a geojson dictionary containing a 'coordinates' key, in the desired CRS
+        
+    """
+
+    geojson_geom = geojson['geometry']
+    polygon = ogr.CreateGeometryFromJson(str(geojson_geom))
+
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(4326)
+
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(EPSG)
+
+    transform = osr.CoordinateTransformation(source, target)
+    polygon.Transform(transform)
+    
+    transformed_geojson = eval(polygon.ExportToJson())
+
+    return transformed_geojson

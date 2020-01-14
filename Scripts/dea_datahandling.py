@@ -24,18 +24,24 @@ Functions included:
     download_unzip
     wofs_fuser
     dilate
+    pan_sharpen_brovey
+    paths_to_datetimeindex
 
-Last modified: October 2019
+Last modified: January 2020
+=======
+
 
 '''
 
 # Import required packages
 import os
 import gdal
-import requests
 import zipfile
+import numexpr
+import requests
 import warnings
 import numpy as np
+import pandas as pd
 import xarray as xr
 from collections import Counter
 from datacube.storage import masking
@@ -87,7 +93,7 @@ def load_ard(dc,
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] for Landsat,
         ['s2a_ard_granule', 's2b_ard_granule'] for Sentinel 2 Definitive, 
         and ['s2a_nrt_granule', 's2b_nrt_granule'] for Sentinel 2 Near 
-        Real Time.
+        Real Time (on the DEA Sandbox only).
     min_gooddata : float, optional
         An optional float giving the minimum percentage of good quality 
         pixels required for a satellite observation to be loaded. 
@@ -250,9 +256,6 @@ def load_ard(dc,
                 ds = ds.sel(time=data_perc >= min_gooddata)
                 print(f'    Filtering to {len(ds.time)} '
                       f'out of {total_obs} observations')
-                
-            else:
-                print(f'    {total_obs} observations')                
 
             # Optionally apply pixel quality mask to observations remaining 
             # after the filtering step above to mask out all remaining
@@ -531,3 +534,70 @@ def dilate(array, dilation=10, invert=True):
     
     return ~binary_dilation(array.astype(np.bool), 
                             structure=kernel.reshape((1,) + kernel.shape))
+
+
+def pan_sharpen_brovey(band_1, band_2, band_3, pan_band):
+    '''    
+    Brovey pan sharpening on surface reflectance input using numexpr 
+    and return three xarrays.
+    
+    Parameters
+    ---------- 
+    band_1, band_2, band_3 : xarray.DataArray or numpy.array
+        Three input multispectral bands, either as xarray.DataArrays or 
+        numpy.arrays. These bands should have already been resampled to 
+        the spatial resolution of the panchromatic band.
+    pan_band : xarray.DataArray or numpy.array
+        A panchromatic band corresponding to the above multispectral
+        bands that will be used to pan-sharpen the data.
+    
+    Returns
+    -------
+    band_1_sharpen, band_2_sharpen, band_3_sharpen : numpy.arrays
+        Three numpy arrays equivelent to `band_1`, `band_2` and `band_3` 
+        pan-sharpened to the spatial resolution of `pan_band`.    
+    
+    '''   
+    # Calculate total
+    exp = 'band_1 + band_2 + band_3'
+    total = numexpr.evaluate(exp)
+    
+    # Perform Brovey Transform in form of: band/total*panchromatic
+    exp = 'a/b*c'
+    band_1_sharpen = numexpr.evaluate(exp, local_dict={'a': band_1, 
+                                                       'b': total, 
+                                                       'c': pan_band})
+    band_2_sharpen = numexpr.evaluate(exp, local_dict={'a': band_2, 
+                                                       'b': total, 
+                                                       'c': pan_band})
+    band_3_sharpen = numexpr.evaluate(exp, local_dict={'a': band_3, 
+                                                       'b': total, 
+                                                       'c': pan_band})
+    
+    return band_1_sharpen, band_2_sharpen, band_3_sharpen
+
+
+def paths_to_datetimeindex(paths, string_slice=(0, 10)):
+    '''
+    Helper function to generate a Pandas datetimeindex object
+    from dates contained in a file path string.
+    
+    Parameters
+    ----------     
+    paths : list of strings
+        A list of file path strings that will be used to extract times 
+    string_slice : tuple
+        An optional tuple giving the start and stop position that 
+        contains the time information in the provided paths. These are
+        applied to the basename (i.e. file name) in each path, not the
+        path itself. Defaults to (0, 10).
+        
+    Returns
+    -------
+    A pandas.DatetimeIndex object containing a 'datetime64[ns]' derived 
+    from the file paths provided by `paths`.
+    '''
+    
+    date_strings = [os.path.basename(i)[slice(*string_slice)] 
+                    for i in paths]
+    return pd.to_datetime(date_strings)
