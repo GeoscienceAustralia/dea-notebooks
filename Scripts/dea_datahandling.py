@@ -28,8 +28,6 @@ Functions included:
     paths_to_datetimeindex
 
 Last modified: January 2020
-=======
-
 
 '''
 
