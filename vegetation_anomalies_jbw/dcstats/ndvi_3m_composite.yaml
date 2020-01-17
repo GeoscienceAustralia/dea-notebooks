@@ -1,0 +1,82 @@
+date_ranges:
+    start_date: 2019-10-01
+    end_date: 2019-12-31
+input_region:
+    tiles:
+    -   - 12
+        - -58
+    sensor_source: landsat
+location: /g/data/r78/jbw156/dea-notebooks/vegetation_anomalies/results/NSW_NDVI_3M_composites
+storage:
+    driver: GeoTIFF
+    crs: EPSG:3577
+    tile_size:
+        x: 120000.0
+        y: 120000.0
+    resolution:
+        x: 30
+        y: -30
+    chunking:
+        x: 512
+        y: 512
+        time: 1
+    dimension_order:
+    - time
+    - y
+    - x
+computation:
+    chunking:
+        x: 500
+        y: 500
+output_products:
+-   name: ndvi_3m_comp
+    product_type: ndvi_3m_comp
+    metadata:
+        format:
+            name: GeoTIFF
+        platform:
+            code: LANDSAT_5,LANDSAT_7,LANDSAT_8
+        instrument:
+            name: TM,ETM+,OLI
+    recipe:
+        aggregate: datacube_stats.external.ndvi_3m_comp
+        num_threads: 1
+        group_by: year
+        input:
+            reproject:
+                output_crs: EPSG:3577
+                resolution:
+                - -30
+                - 30
+                resampling: average
+            input:
+                collate:
+                -   transform: apply_mask
+                    mask_measurement_name: fmask
+                    dilation: 3
+                    input:
+                        transform: expressions
+                        output:
+                            fmask:
+                                formula: (fmask != 2) & (fmask != 3) & (fmask != 0)
+                                    & (oa_nbart_contiguity == 1)
+                                nodata: false
+                            nbart_red: nbart_red
+                            nbart_nir: nbart_nir
+                        input:
+                            product: ga_ls8c_ard_3
+                            measurements:
+                            - nbart_red
+                            - nbart_nir
+                            - fmask
+                            - oa_nbart_contiguity
+                            gqa_iterative_mean_xy:
+                            - 0
+                            - 1
+                            dataset_predicate: datacube_stats.main.ls8_on
+    crs: EPSG:3577
+    output_params:
+        predictor: 2
+        resampling: average
+        overview_level: 5
+    file_path_template: 'NSW_{x}_{y}_{var_name}_{name}.tif'
