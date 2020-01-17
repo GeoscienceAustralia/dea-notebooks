@@ -5,7 +5,7 @@ from datacube.virtual.impl import Transformation
 import numpy as np
 import pandas as pd
 
-class NDVI_climatology_mean(Transformation):
+class ndvi_clim_mean(Transformation):
     """
     Calculate rolling quarterly NDVI mean climatolgies
     
@@ -26,27 +26,26 @@ class NDVI_climatology_mean(Transformation):
                        'DJF': [12,1,2],
                       }
 
-    def compute(self, data, self.quarter):
+    def compute(self, data):
         
         def attrs_reassign(da, dtype=np.float32):
-        """little function to reassigna atributes
-        to the dataArrays inside a dataset"""
             da_attr = data.attrs
             da = da.assign_attrs(**da_attr)
             return da
 
-        ndvi = xarray.Dataset(data_vars={'ndvi': (data.nbart_nir - data.nbart_red) / (data.nbart_nir + data.nbart_red)},
+        ndvi = xr.Dataset(data_vars={'ndvi': (data.nbart_nir - data.nbart_red) / (data.nbart_nir + data.nbart_red)},
                               coords=data.coords,
                               attrs=dict(crs=data.crs))
         
         ndvi_var = []
         for q in self.quarter:
             ix=ndvi['time.month'].isin(self.quarter[q])
-            ndvi_clim_mean=ndvi[ix].mean(dim='time')   
-            ndvi_clim_mean=ndvi_clim_mean.rename('ndvi_clim_mean'+q)
+            ndvi_clim_mean=ndvi.where(ix,drop = True).mean(dim='time')   
+            ndvi_clim_mean=ndvi_clim_mean.to_array(name='ndvi_clim_mean'+q).drop('variable').squeeze()
             ndvi_var.append(ndvi_clim_mean)
             
         q_clim_mean = xr.merge(ndvi_var)   
+        
         #assign back attributes
         q_clim_mean.attrs = data.attrs 
         q_clim_mean = q_clim_mean.apply(attrs_reassign, keep_attrs=True)  
