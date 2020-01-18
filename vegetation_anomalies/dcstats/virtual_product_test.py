@@ -19,9 +19,7 @@ dc = Datacube(env='c3-samples')
 
 query = {'lon': (lon - buffer, lon + buffer),
          'lat': (lat - buffer, lat + buffer),
-         'time': time,
-#          'measurements':['nbart_red', 'nbart_nir', 'fmask', 'oa_nbart_contiguity'],
-    }
+         'time': time}
 
 #create VP from yaml
 print('constructing from yaml')
@@ -35,22 +33,6 @@ ndvi_clim_mean = construct_from_yaml("""
             resampling: average
           input:
             collate:
-              - transform: apply_mask
-                mask_measurement_name: fmask
-                dilation: 3
-                input:
-                  transform: expressions
-                  output: 
-                    fmask:
-                        formula: (fmask != 2) & (fmask != 3) & (fmask != 0) & (oa_nbart_contiguity == 1)
-                        nodata: False
-                    nbart_red: nbart_red
-                    nbart_nir: nbart_nir
-                  input:
-                    product: ga_ls8c_ard_3
-                    measurements: [nbart_red, nbart_nir, fmask, oa_nbart_contiguity]
-                    gqa_iterative_mean_xy: [0, 1]
-                    dataset_predicate: datacube_stats.main.ls8_on
               - transform: apply_mask
                 mask_measurement_name: fmask
                 dilation: 3
