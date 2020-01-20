@@ -29,3 +29,5 @@
 *.nfs2ac003add000433800000d36
 __pycache__
 *.dirlock
+Transitory_notebooks/
+
