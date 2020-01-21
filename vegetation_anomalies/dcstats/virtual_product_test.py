@@ -40,13 +40,13 @@ ndvi_clim_mean = construct_from_yaml("""
                   transform: expressions
                   output: 
                     fmask:
-                        formula: (fmask != 2) & (fmask != 3) & (fmask != 0) & (oa_nbart_contiguity == 1)
+                        formula: (fmask != 2) & (fmask != 3) & (fmask != 0)
                         nodata: False
                     nbart_red: nbart_red
                     nbart_nir: nbart_nir
                   input:
                     product: ga_ls7e_ard_3
-                    measurements: [nbart_red, nbart_nir, fmask, oa_nbart_contiguity]
+                    measurements: [nbart_red, nbart_nir, fmask]
                     gqa_iterative_mean_xy: [0, 1]
                     dataset_predicate: datacube_stats.main.ls7_on
               - transform: apply_mask
@@ -56,13 +56,13 @@ ndvi_clim_mean = construct_from_yaml("""
                   transform: expressions
                   output: 
                     fmask:
-                        formula: (fmask != 2) & (fmask != 3) & (fmask != 0) & (oa_nbart_contiguity == 1)
+                        formula: (fmask != 2) & (fmask != 3) & (fmask != 0)
                         nodata: False
                     nbart_red: nbart_red
                     nbart_nir: nbart_nir
                   input:
                     product: ga_ls5t_ard_3
-                    measurements: [nbart_red, nbart_nir,fmask, oa_nbart_contiguity]
+                    measurements: [nbart_red, nbart_nir,fmask]
                     gqa_iterative_mean_xy: [0, 1]
                     dataset_predicate: datacube_stats.main.ls5_on
     """)
@@ -73,7 +73,7 @@ datasets = ndvi_clim_mean.query(dc, **query)
 print(datasets)
 grouped = ndvi_clim_mean.group(datasets, **query)
 print(grouped)
-results = ndvi_clim_mean.fetch(grouped, **query, dask_chunks={'time':-1, 'x':250, 'y':250})
+results = ndvi_clim_mean.fetch(grouped, **query, dask_chunks={'time':-1, 'x':100, 'y':100})
 results.load()
 
 print('writing to file')
