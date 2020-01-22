@@ -37,8 +37,9 @@ def run_filmstrip_app(output_name,
                       time_range,
                       time_step,
                       tide_range=(0.0, 1.0),
-                      max_cloud=50,
                       resolution=(-30, 30),
+                      max_cloud=50,
+                      ls7_slc_off=False,
                       size_limit=100):
     
     
@@ -83,9 +84,21 @@ def run_filmstrip_app(output_name,
     # Select and load data #
     ########################
     
+    # Define centre_coords as a global variable
+    global centre_coords
+        
+    # Test if centre_coords is in the global namespace;
+    # use default value if it isn't
+    if 'centre_coords' not in globals():
+        centre_coords = (-33.9719, 151.1934)
+    
     # Plot interactive map to select area
     geopolygon = select_on_a_map(height='600px', 
-                                 center=(-33.9719, 151.1934), zoom=12)
+                                 center=centre_coords , zoom=12)
+        
+    # Set centre coords based on most recent selection to re-focus
+    # subsequent data selections
+    centre_coords = geopolygon.centroid.points[0][::-1]
 
     # Test size of selected area
     area = (geopolygon.to_crs(crs = CRS('epsg:3577')).area / 
@@ -123,6 +136,7 @@ def run_filmstrip_app(output_name,
                                 'ga_ls8c_ard_3'], 
                       min_gooddata=0.0,
                       lazy_load=True,
+                      ls7_slc_off=ls7_slc_off,
                       **query)
         
         # Optionally calculate tides for each timestep in the satellite 
