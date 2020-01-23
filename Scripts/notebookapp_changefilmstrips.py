@@ -173,6 +173,8 @@ def run_filmstrip_app(output_name,
         
     else:
         
+        print('Starting analysis...')
+        
         # Obtain native CRS 
         crs = mostcommon_crs(dc=dc, 
                              product='ga_ls5t_ard_3', 
@@ -235,7 +237,7 @@ def run_filmstrip_app(output_name,
                                   nocheck=True)))  # disable some checks inside geomedian library that use too much ram
 
         print('\nGenerating geomedian composites and plotting '
-              'filmstrips... (this may take several minutes)')
+              'filmstrips... (click the Dashboard link above for status)')
         ds_geomedian = ds_geomedian.compute()
 
         # Reset CRS that is lost during geomedian compositing
