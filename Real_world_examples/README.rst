@@ -8,6 +8,7 @@ More complex workflows demonstrating how DEA can be used to address real-world p
    :caption: Real World Examples
    
    Change_detection.ipynb
+   Change_filmstrips.ipynb
    Chlorophyll_monitoring.ipynb
    Coastal_erosion.ipynb
    Intertidal_elevation.ipynb
