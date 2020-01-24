@@ -52,7 +52,7 @@ def load_ard(dc,
              fmask_gooddata=[1, 4, 5],
              mask_pixel_quality=True,
              mask_contiguity='nbart_contiguity',
-             mask_dtype=np.float16,
+             mask_dtype=np.float32,
              ls7_slc_off=True,
              product_metadata=False,
              **dcload_kwargs):
@@ -123,8 +123,8 @@ def load_ard(dc,
     mask_dtype : numpy dtype, optional
         An optional parameter that controls the data type/dtype that
         layers are coerced to when when `mask_pixel_quality=True` or 
-        `mask_contiguity=True`. Defaults to `np.float16`, which uses
-        approximately 1/4 the memory of `np.float64`.
+        `mask_contiguity=True`. Defaults to `np.float32`, which uses
+        approximately 1/2 the memory of `np.float64`.
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from 
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to 
@@ -163,8 +163,10 @@ def load_ard(dc,
         floats), skip and return the variable unchanged.
         
         This can be combined with `.where()` to save memory. By casting 
-        to e.g. np.float16, we prevent `.where()` from automatically 
-        casting to np.float64, using 4x the memory.
+        to e.g. np.float32, we prevent `.where()` from automatically 
+        casting to np.float64, using 2x the memory. np.float16 could be 
+        used to save even more memory (although this may not be 
+        compatible with all downstream applications).
         
         This custom function is required instead of using xarray's 
         built-in `.astype()`, due to a bug in xarray 0.13.0 that drops
