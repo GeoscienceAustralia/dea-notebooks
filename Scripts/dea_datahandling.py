@@ -154,7 +154,7 @@ def load_ard(dc,
     
     # Due to possible bug in xarray 0.13.0, define temporary function 
     # which converts dtypes in a way that preserves attributes
-    def astype_attrs(da, dtype=np.float16):
+    def astype_attrs(da, dtype=np.float32):
         '''
         Loop through all data variables in the dataset, record 
         attributes, convert to a custom dtype, then reassign attributes. 
