@@ -26,6 +26,8 @@ Functions included:
     dilate
     pan_sharpen_brovey
     paths_to_datetimeindex
+    
+Last modified: January 2020
 
 '''
 
@@ -49,11 +51,10 @@ def load_ard(dc,
              min_gooddata=0.0,
              fmask_gooddata=[1, 4, 5],
              mask_pixel_quality=True,
-             mask_invalid_data=True,
+             mask_contiguity='nbart_contiguity',
+             mask_dtype=np.float16,
              ls7_slc_off=True,
              product_metadata=False,
-             dask_chunks={'time': 1},
-             lazy_load=False,
              **dcload_kwargs):
     '''
     Loads Landsat Collection 3 or Sentinel 2 Definitive and Near Real 
@@ -70,14 +71,7 @@ def load_ard(dc,
     shadowed land, snow and water pixels are treated as good quality, 
     but this can be customised using the `fmask_gooddata` parameter.
     
-    MEMORY ISSUES: For large data extractions, it can be advisable to 
-    set `mask_pixel_quality=False`. The masking step coerces all 
-    numeric values to float32 when NaN values are inserted into the 
-    array, potentially causing your data to use twice the memory. 
-    Be aware that the resulting arrays will contain invalid values 
-    which may affect future analyses.
-    
-    Last modified: September 2019
+    Last modified: January 2020
     
     Parameters
     ----------  
@@ -110,17 +104,27 @@ def load_ard(dc,
         `min_gooddata=0.99`, the filtered observations may still contain 
         up to 1% poor quality pixels. The default of False simply 
         returns the resulting observations without masking out these 
-        pixels; True masks them out and sets them to NaN using the good 
-        data mask. This will convert numeric values to float32 which can 
-        cause memory issues, set to False to prevent this.
-    mask_invalid_data : bool, optional
-        An optional boolean indicating whether invalid -999 nodata 
-        values should be replaced with NaN. These invalid values can be
-        caused by missing data along the edges of scenes, or terrain 
-        effects (for NBAR-T). Setting `mask_invalid_data=True` will 
-        convert all numeric values to float32 when -999 values are 
-        replaced with NaN which can cause memory issues; set to False 
-        to prevent this. Defaults to True. 
+        pixels; True masks them and sets them to NaN using the good data 
+        mask. This will convert numeric values to floating point values 
+        which can cause memory issues, set to False to prevent this.
+    mask_contiguity : str or bool, optional
+        An optional string or boolean indicating whether to mask out 
+        pixels missing data in any band (i.e. "non-contiguous" values). 
+        These invalid values can be caused by missing data along the 
+        edges of scenes, or terrain effects (for NBART). The default
+        is `mask_contiguity='nbart_contiguity'` which will set any 
+        pixels with non-contiguous values to NaN based on NBART data. 
+        If you are loading NBAR data instead, you should specify
+        `mask_contiguity='nbar_contiguity'` instead. To ignore non-
+        contiguous values, set `mask_contiguity=False`.
+        Be aware that masking out non-contiguous values will convert 
+        all numeric values to floating point values when -999 values 
+        are replaced with NaN, which can cause memory issues.
+    mask_dtype : numpy dtype, optional
+        An optional parameter that controls the data type/dtype that
+        layers are coerced to when when `mask_pixel_quality=True` or 
+        `mask_contiguity=True`. Defaults to `np.float16`, which uses
+        approximately 1/4 the memory of `np.float64`.
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from 
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to 
@@ -130,18 +134,6 @@ def load_ard(dc,
         with a `product` variable that gives the name of the product 
         that each observation in the time series came from (e.g. 
         'ga_ls5t_ard_3'). Defaults to False.
-    dask_chunks : dict, optional
-        An optional dictionary containing the coords and sizes you wish 
-        to create dask chunks over. Usually used in combination with 
-        `lazy_load=True` (see below). For example: 
-        `dask_chunks = {'x': 500, 'y': 500}`
-    lazy_load : boolean, optional
-        Setting this variable to True will delay the computation of the 
-        function until you explicitly run `ds.compute()`. If used in 
-        conjuction with `dask.distributed.Client()` this will allow for 
-        automatic parallel computation. Be aware that computation will
-        still occur if min_gooddata > 0, as the pixel quality will be
-        loaded to compute the 'good data' percentage.
     **dcload_kwargs : 
         A set of keyword arguments to `dc.load` that define the 
         spatiotemporal query used to extract data. This can include `x`,
@@ -162,13 +154,21 @@ def load_ard(dc,
     
     # Due to possible bug in xarray 0.13.0, define temporary function 
     # which converts dtypes in a way that preserves attributes
-    def astype_attrs(da, dtype=np.float32):
+    def astype_attrs(da, dtype=np.float16):
         '''
         Loop through all data variables in the dataset, record 
-        attributes, convert to float32, then reassign attributes. If 
-        the data variable cannot be converted to float32 (e.g. for a
-        non-numeric dtype like strings), skip and return the variable 
-        unchanged.
+        attributes, convert to a custom dtype, then reassign attributes. 
+        If the data variable cannot be converted to the custom dtype 
+        (e.g. trying to convert non-numeric dtype like strings to 
+        floats), skip and return the variable unchanged.
+        
+        This can be combined with `.where()` to save memory. By casting 
+        to e.g. np.float16, we prevent `.where()` from automatically 
+        casting to np.float64, using 4x the memory.
+        
+        This custom function is required instead of using xarray's 
+        built-in `.astype()`, due to a bug in xarray 0.13.0 that drops
+        attributes: https://github.com/pydata/xarray/issues/3348
         '''
         
         try:            
@@ -179,13 +179,16 @@ def load_ard(dc,
         
         except ValueError:        
             return da
+        
+    # Determine if lazy loading is required
+    lazy_load = 'dask_chunks' in dcload_kwargs
     
     # Warn user if they combine lazy load with min_gooddata
     if (min_gooddata > 0.0) & lazy_load:
                 warnings.warn("Setting 'min_gooddata' percentage to > 0.0 "
-                              "will cause dask arrays \n to compute when "
+                              "will cause dask arrays to compute when "
                               "loading pixel-quality data to calculate "
-                              "'good pixel' percentage. This will "
+                              "'good pixel' percentage. This can "
                               "significantly slow the return of your dataset.")
     
     # Verify that products were provided    
@@ -198,10 +201,19 @@ def load_ard(dc,
                          "['s2a_nrt_granule', 's2b_nrt_granule'] for "
                          "Sentinel 2 Near Real Time")
 
-    # If `measurements` are specified but do not include fmask, add it
-    if (('measurements' in dcload_kwargs) and 
-        ('fmask' not in dcload_kwargs['measurements'])):
-        dcload_kwargs['measurements'].append('fmask')
+    # If `measurements` are specified but do not include fmask or 
+    # contiguity variables, add these to `measurements`
+    to_drop = []  # store loaded var names here to later drop
+    if 'measurements' in dcload_kwargs:
+
+        if 'fmask' not in dcload_kwargs['measurements']:
+            dcload_kwargs['measurements'].append('fmask')
+            to_drop.append('fmask')
+
+        if (mask_contiguity and 
+            (mask_contiguity not in dcload_kwargs['measurements'])):
+            dcload_kwargs['measurements'].append(mask_contiguity)
+            to_drop.append(mask_contiguity)
 
     # Create a list to hold data for each product
     product_data = []
@@ -215,7 +227,6 @@ def load_ard(dc,
             print(f'Loading {product} data')
             try:
                 ds = dc.load(product=f'{product}',
-                             dask_chunks=dask_chunks,
                              **dcload_kwargs)
             except KeyError as e:
                 raise ValueError(f'Band {e} does not exist in this product. '
@@ -252,30 +263,48 @@ def load_ard(dc,
                 ds = ds.sel(time=data_perc >= min_gooddata)
                 print(f'    Filtering to {len(ds.time)} '
                       f'out of {total_obs} observations')
-
-            # Optionally apply pixel quality mask to observations remaining 
-            # after the filtering step above to mask out all remaining
-            # bad quality pixels
-            if mask_pixel_quality & (len(ds.time) > 0):
-                print('    Applying pixel quality mask')
                 
-                # First change dtype to float32, then mask out values using
-                # `.where()`. By casting to float32, we prevent `.where()` 
-                # from automatically casting to float64, using 2x the memory.
-                # We need to do this by applying a custom function to every
-                # variable in the dataset instead of using `.astype()`, due 
-                # to a possible bug in xarray 0.13.0 that drops attributes 
-                ds = ds.apply(astype_attrs, dtype=np.float32, keep_attrs=True)
-                ds = ds.where(good_quality)
-
-            # Optionally add satellite/product name as a new variable
-            if product_metadata:
-                ds['product'] = xr.DataArray(
-                    [product] * len(ds.time), [('time', ds.time)])
-
-            # If any data was returned, add result to list
+            # If any data was returned
             if len(ds.time) > 0:
-                product_data.append(ds.drop('fmask'))
+
+                # Optionally apply pixel quality mask to observations 
+                # remaining after the filtering step above to mask out 
+                # all remaining bad quality pixels
+                if mask_pixel_quality:
+                    print('    Applying pixel quality/cloud mask')
+
+                    # Change dtype to custom float before masking to 
+                    # save memory. See `astype_attrs` func docstring 
+                    # above for details  
+                    ds = ds.apply(astype_attrs, 
+                                  dtype=mask_dtype, 
+                                  keep_attrs=True)
+                    ds = ds.where(good_quality)
+
+                # Optionally apply contiguity mask to observations to
+                # remove any nodata values
+                if mask_contiguity:
+                    print('    Applying contiguity/missing data mask')
+
+                    # Change dtype to custom float before masking to 
+                    # save memory. See `astype_attrs` func docstring 
+                    # above for details   
+                    ds = ds.apply(astype_attrs, 
+                                  dtype=mask_dtype, 
+                                  keep_attrs=True)
+                    ds = ds.where(ds[mask_contiguity] == 1)
+                    
+                    # Clean up any stray -999 values that weren't 
+                    # captured above
+                    ds = masking.mask_invalid_data(ds)
+
+                # Optionally add satellite/product name as a new variable
+                if product_metadata:
+                    ds['product'] = xr.DataArray(
+                        [product] * len(ds.time), [('time', ds.time)])
+
+                # If any data was returned, add result to list
+                product_data.append(ds.drop(to_drop))
 
         # If  AttributeError due to there being no `fmask` variable in
         # the dataset, skip this product and move on to the next
@@ -289,21 +318,6 @@ def load_ard(dc,
         print(f'Combining and sorting data')
         combined_ds = xr.concat(product_data, dim='time').sortby('time')
         
-        # Optionally filter to replace no data values with nans
-        if mask_invalid_data:
-            print('Masking out invalid values')
-            
-            # First change dtype to float32, then mask out values using
-            # `.where()`. By casting to float32, we prevent `.where()` 
-            # from automatically casting to float64, using 2x the memory.
-            # We need to do this by applying a custom function to every
-            # variable in the dataset instead of using `.astype()`, due 
-            # to a possible bug in xarray 0.13.0 that drops attributes           
-            combined_ds = combined_ds.apply(astype_attrs, 
-                                            dtype=np.float32, 
-                                            keep_attrs=True)
-            combined_ds = masking.mask_invalid_data(combined_ds)
-
         # If `lazy_load` is True, return data as a dask array without
         # actually loading it in
         if lazy_load:
