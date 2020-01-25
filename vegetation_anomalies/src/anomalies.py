@@ -15,6 +15,207 @@ import ipywidgets
 import matplotlib as mpl
 from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps
 
+
+def load_ard(dc,
+             products=None,
+             min_gooddata=0.0,
+             fmask_gooddata=[1, 4, 5],
+             mask_pixel_quality=True,
+             mask_contiguity='nbart_contiguity',
+             mask_dtype=np.float32,
+             ls7_slc_off=True,
+             product_metadata=False,
+             **dcload_kwargs):
+    '''
+        
+    '''
+    
+    # Due to possible bug in xarray 0.13.0, define temporary function 
+    # which converts dtypes in a way that preserves attributes
+    def astype_attrs(da, dtype=np.float32):
+        '''
+        Loop through all data variables in the dataset, record 
+        attributes, convert to a custom dtype, then reassign attributes. 
+        If the data variable cannot be converted to the custom dtype 
+        (e.g. trying to convert non-numeric dtype like strings to 
+        floats), skip and return the variable unchanged.
+        
+        This can be combined with `.where()` to save memory. By casting 
+        to e.g. np.float32, we prevent `.where()` from automatically 
+        casting to np.float64, using 2x the memory. np.float16 could be 
+        used to save even more memory (although this may not be 
+        compatible with all downstream applications).
+        
+        This custom function is required instead of using xarray's 
+        built-in `.astype()`, due to a bug in xarray 0.13.0 that drops
+        attributes: https://github.com/pydata/xarray/issues/3348
+        '''
+        
+        try:            
+            da_attr = da.attrs
+            da = da.astype(dtype)
+            da = da.assign_attrs(**da_attr)
+            return da
+        
+        except ValueError:        
+            return da
+        
+    # Determine if lazy loading is required
+    lazy_load = 'dask_chunks' in dcload_kwargs
+    
+    # Warn user if they combine lazy load with min_gooddata
+    if (min_gooddata > 0.0) & lazy_load:
+                warnings.warn("Setting 'min_gooddata' percentage to > 0.0 "
+                              "will cause dask arrays to compute when "
+                              "loading pixel-quality data to calculate "
+                              "'good pixel' percentage. This can "
+                              "significantly slow the return of your dataset.")
+    
+    # Verify that products were provided    
+    if not products:
+        raise ValueError("Please provide a list of product names "
+                         "to load data from. Valid options are: \n"
+                         "['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] " 
+                         "for Landsat, ['s2a_ard_granule', "
+                         "'s2b_ard_granule'] \nfor Sentinel 2 Definitive, or "
+                         "['s2a_nrt_granule', 's2b_nrt_granule'] for "
+                         "Sentinel 2 Near Real Time")
+
+    # If `measurements` are specified but do not include fmask or 
+    # contiguity variables, add these to `measurements`
+    to_drop = []  # store loaded var names here to later drop
+    if 'measurements' in dcload_kwargs:
+
+        if 'fmask' not in dcload_kwargs['measurements']:
+            dcload_kwargs['measurements'].append('fmask')
+            to_drop.append('fmask')
+
+        if (mask_contiguity and 
+            (mask_contiguity not in dcload_kwargs['measurements'])):
+            dcload_kwargs['measurements'].append(mask_contiguity)
+            to_drop.append(mask_contiguity)
+
+    # Create a list to hold data for each product
+    product_data = []
+
+    # Iterate through each requested product
+    for product in products:
+
+        try:
+
+            # Load data including fmask band
+            print(f'Loading {product} data')
+            try:
+                ds = dc.load(product=f'{product}',
+                             **dcload_kwargs)
+            except KeyError as e:
+                raise ValueError(f'Band {e} does not exist in this product. '
+                                 f'Verify all requested `measurements` exist '
+                                 f'in {products}')
+            
+            # Keep a record of the original number of observations
+            total_obs = len(ds.time)
+
+            # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
+            if not ls7_slc_off and product == 'ga_ls7e_ard_3':
+                print('    Ignoring SLC-off observations for ls7')
+                ds = ds.sel(time=ds.time < np.datetime64('2003-05-30'))
+                
+            # If no measurements are specified, `fmask` is given a 
+            # different name. If necessary, rename it:
+            if 'oa_fmask' in ds:
+                ds = ds.rename({'oa_fmask': 'fmask'})
+
+            # Identify all pixels not affected by cloud/shadow/invalid
+            good_quality = ds.fmask.isin(fmask_gooddata)
+            
+            # The good data percentage calculation has to load in all `fmask`
+            # data, which can be slow. If the user has chosen no filtering 
+            # by using the default `min_gooddata = 0`, we can skip this step 
+            # completely to save processing time
+            if min_gooddata > 0.0:
+
+                # Compute good data for each observation as % of total pixels
+                data_perc = (good_quality.sum(axis=1).sum(axis=1) / 
+                    (good_quality.shape[1] * good_quality.shape[2]))
+
+                # Filter by `min_gooddata` to drop low quality observations
+                ds = ds.sel(time=data_perc >= min_gooddata)
+                print(f'    Filtering to {len(ds.time)} '
+                      f'out of {total_obs} observations')
+                
+            # If any data was returned
+            if len(ds.time) > 0:
+
+                # Optionally apply pixel quality mask to observations 
+                # remaining after the filtering step above to mask out 
+                # all remaining bad quality pixels
+                if mask_pixel_quality:
+                    print('    Applying pixel quality/cloud mask')
+
+                    # Change dtype to custom float before masking to 
+                    # save memory. See `astype_attrs` func docstring 
+                    # above for details  
+                    ds = ds.apply(astype_attrs, 
+                                  dtype=mask_dtype, 
+                                  keep_attrs=True)
+                    ds = ds.where(good_quality)
+
+                # Optionally apply contiguity mask to observations to
+                # remove any nodata values
+                if mask_contiguity:
+                    print('    Applying contiguity/missing data mask')
+
+                    # Change dtype to custom float before masking to 
+                    # save memory. See `astype_attrs` func docstring 
+                    # above for details   
+                    ds = ds.apply(astype_attrs, 
+                                  dtype=mask_dtype, 
+                                  keep_attrs=True)
+                    ds = ds.where(ds[mask_contiguity] == 1)
+                    
+                    # Clean up any stray -999 values that weren't 
+                    # captured above
+                    ds = masking.mask_invalid_data(ds)
+
+                # Optionally add satellite/product name as a new variable
+                if product_metadata:
+                    ds['product'] = xr.DataArray(
+                        [product] * len(ds.time), [('time', ds.time)])
+
+                # If any data was returned, add result to list
+                product_data.append(ds.drop(to_drop))
+
+        # If  AttributeError due to there being no `fmask` variable in
+        # the dataset, skip this product and move on to the next
+        except AttributeError:
+            print(f'    No data for {product}')
+
+    # If any data was returned above, combine into one xarray
+    if (len(product_data) > 0):
+
+        # Concatenate results and sort by time
+        print(f'Combining and sorting data')
+        combined_ds = xr.concat(product_data, dim='time').sortby('time')
+        
+        # If `lazy_load` is True, return data as a dask array without
+        # actually loading it in
+        if lazy_load:
+            print(f'    Returning {len(combined_ds.time)} observations'
+                  ' as a dask array')
+            return combined_ds
+
+        else:
+            print(f'    Returning {len(combined_ds.time)} observations ')
+            return combined_ds.compute()
+
+    # If no data was returned:
+    else:
+        print('No data returned for query')
+        return None
+
+
+
 def load_landsat(dc, query, sensors=('ls5', 'ls7', 'ls8'), product='nbart', dask_chunks = {'time': 1},
                       lazy_load = False, bands_of_interest=None, ls7_slc_off=False,):
 
