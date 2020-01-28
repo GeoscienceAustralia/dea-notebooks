@@ -27,8 +27,6 @@ Functions included:
     pan_sharpen_brovey
     paths_to_datetimeindex
 
-Last modified: January 2020
-
 '''
 
 # Import required packages

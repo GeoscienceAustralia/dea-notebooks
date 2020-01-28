@@ -23,7 +23,13 @@
 # for study_area in QLD16.02 
 # for study_area in WA26.04 
 
-for study_area in WA29.02
+# for study_area in WA29.02 WA29.01 WA28.02 WA28.01 WA27.04 WA27.03 WA27.02 \
+#                   WA27.01 WA26.04 WA26.03 WA26.02 WA26.01 WA25.01 WA24.02 \
+#                   WA24.01 WA23.04
+
+for study_area in WA29.01 WA28.02 WA28.01 WA27.04 \
+                  WA26.04 WA26.03 WA26.02 WA26.01 WA25.01 \
+                  WA24.01 WA23.04
 
 do
 
@@ -31,19 +37,21 @@ do
     #PBS -N ${study_area}\n\
     #PBS -o MAHTS_${study_area}.out\n\
     #PBS -e MAHTS_${study_area}.err\n\
+    #PBS -l storage=gdata/v10+gdata/r78+gdata/xu18+gdata/fk4\n\
     #PBS -P r78\n\
     #PBS -q express\n\
-    #PBS -l walltime=6:00:00\n\
-    #PBS -l mem=32GB\n\
+    #PBS -l walltime=12:00:00\n\
+    #PBS -l mem=128GB\n\
     #PBS -l jobfs=2GB\n\
     #PBS -l ncpus=1\n\
     #PBS -l wd\n\
     module use /g/data/v10/public/modules/modulefiles\n\
-    module load dea/20191105\n\
+    module load dea/20191127\n\
     module load otps\n\
-    python /g/data/r78/rt1527/dea-notebooks/MAHTS/MAHTS_stats.py $study_area"
+    python3 /g/data/r78/rt1527/dea-notebooks/MAHTS/MAHTS_generation.py $study_area\n\ 
+    python3 /g/data/r78/rt1527/dea-notebooks/MAHTS/MAHTS_stats.py $study_area"
 
-    echo -e ${PBS} | qsub
+    echo -e ${PBS} | qsub || echo "${study_area} failed" >> log.txt
     sleep 0.2
     echo "Submitting study area $study_area"
 
