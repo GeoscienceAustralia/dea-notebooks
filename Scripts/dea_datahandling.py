@@ -51,6 +51,7 @@ def load_ard(dc,
              min_gooddata=0.0,
              fmask_gooddata=[1, 4, 5],
              mask_pixel_quality=True,
+             mask_invalid_data=True,
              mask_contiguity='nbart_contiguity',
              mask_dtype=np.float32,
              ls7_slc_off=True,
@@ -107,16 +108,24 @@ def load_ard(dc,
         pixels; True masks them and sets them to NaN using the good data 
         mask. This will convert numeric values to floating point values 
         which can cause memory issues, set to False to prevent this.
+    mask_invalid_data : bool, optional
+        An optional boolean indicating whether invalid -999 nodata 
+        values should be replaced with NaN. These invalid values can be
+        caused by missing data along the edges of scenes, or terrain 
+        effects (for NBAR-T). Be aware that masking out invalid values 
+        will convert all numeric values to floating point values when 
+        -999 values are replaced with NaN, which can cause memory issues.
     mask_contiguity : str or bool, optional
         An optional string or boolean indicating whether to mask out 
         pixels missing data in any band (i.e. "non-contiguous" values). 
-        These invalid values can be caused by missing data along the 
-        edges of scenes, or terrain effects (for NBART). The default
+        Although most missing data issues are resolved by 
+        `mask_invalid_data`, this step is important for generating 
+        clean and concistent composite datasets. The default
         is `mask_contiguity='nbart_contiguity'` which will set any 
         pixels with non-contiguous values to NaN based on NBART data. 
         If you are loading NBAR data instead, you should specify
         `mask_contiguity='nbar_contiguity'` instead. To ignore non-
-        contiguous values, set `mask_contiguity=False`.
+        contiguous values completely, set `mask_contiguity=False`.
         Be aware that masking out non-contiguous values will convert 
         all numeric values to floating point values when -999 values 
         are replaced with NaN, which can cause memory issues.
@@ -241,7 +250,7 @@ def load_ard(dc,
             # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
             if not ls7_slc_off and product == 'ga_ls7e_ard_3':
                 print('    Ignoring SLC-off observations for ls7')
-                ds = ds.sel(time=ds.time < np.datetime64('2003-05-30'))
+                ds = ds.sel(time=ds.time < np.datetime64('2003-05-31'))
                 
             # If no measurements are specified, `fmask` is given a 
             # different name. If necessary, rename it:
@@ -282,11 +291,23 @@ def load_ard(dc,
                                   dtype=mask_dtype, 
                                   keep_attrs=True)
                     ds = ds.where(good_quality)
+                    
+                # Optionally filter to replace no data values with nans
+                if mask_invalid_data:
+                    print('    Applying invalid data mask')
+
+                    # Change dtype to custom float before masking to 
+                    # save memory. See `astype_attrs` func docstring 
+                    # above for details           
+                    ds = ds.apply(astype_attrs, 
+                                  dtype=mask_dtype, 
+                                  keep_attrs=True)
+                    ds = masking.mask_invalid_data(ds)
 
                 # Optionally apply contiguity mask to observations to
-                # remove any nodata values
+                # remove pixels missing data in any band
                 if mask_contiguity:
-                    print('    Applying contiguity/missing data mask')
+                    print('    Applying contiguity mask')
 
                     # Change dtype to custom float before masking to 
                     # save memory. See `astype_attrs` func docstring 
@@ -295,10 +316,6 @@ def load_ard(dc,
                                   dtype=mask_dtype, 
                                   keep_attrs=True)
                     ds = ds.where(ds[mask_contiguity] == 1)
-                    
-                    # Clean up any stray -999 values that weren't 
-                    # captured above
-                    ds = masking.mask_invalid_data(ds)
 
                 # Optionally add satellite/product name as a new variable
                 if product_metadata:
@@ -307,8 +324,13 @@ def load_ard(dc,
 
                 # If any data was returned, add result to list
                 product_data.append(ds.drop(to_drop))
+                
+            # If no data is returned, print status
+            else:
+                print(f'    No data for {product}')
+                
 
-        # If  AttributeError due to there being no `fmask` variable in
+        # If  AttributeError due to there being no variables in
         # the dataset, skip this product and move on to the next
         except AttributeError:
             print(f'    No data for {product}')
