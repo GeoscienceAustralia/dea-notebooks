@@ -1,3 +1,7 @@
+.. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
+  :target: https://opensource.org/licenses/Apache-2.0
+  :alt: Digital Earth Australia logo
+
 .. Notebook Gallery Instructions:
 
 **9 January 2020 update:** *This repository was recently upgraded to a new directory structure and set of improved and easier to use Jupyter notebooks and scripts. To access an archive of the previous version of the repository,* `visit the master_archive branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master_archive>`_. *Please note that notebooks and code in the* ``master_archive`` *branch are no longer maintained or supported.*
