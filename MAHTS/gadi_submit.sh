@@ -27,9 +27,11 @@
 #                   WA27.01 WA26.04 WA26.03 WA26.02 WA26.01 WA25.01 WA24.02 \
 #                   WA24.01 WA23.04
 
-for study_area in WA29.01 WA28.02 WA28.01 WA27.04 \
-                  WA26.04 WA26.03 WA26.02 WA26.01 WA25.01 \
-                  WA24.01 WA23.04
+# for study_area in WA29.01 WA28.02 WA28.01 WA27.04 \
+#                   WA26.04 WA26.03 WA26.02 WA26.01 WA25.01 \
+#                   WA24.01 WA23.04
+
+for study_area in WA28.01
 
 do
 

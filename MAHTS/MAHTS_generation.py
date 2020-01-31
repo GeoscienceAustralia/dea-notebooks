@@ -90,19 +90,20 @@ def interpolate_tide(timestep_ds, tidepoints_gdf, method='rbf', factor=20):
     return out_tide.astype(np.float32)
 
 
-def load_tidal_subset(year_ds, tide_cutoff):
+def load_tidal_subset(year_ds, tide_cutoff_min, tide_cutoff_max):
     
     # Print status
     year = year_ds.time[0].dt.year.item()
     print(f'Processing {year}')
     
-    # Determine what pixels were acquired above median tide, and drop
-    # time-steps without any pixels above median tide to reduce data to load
-    high_tide_bool = year_ds.tide_m >= tide_cutoff
-    year_ds = year_ds.sel(time=high_tide_bool.sum(dim=['x', 'y']) > 0)
+    # Determine what pixels were acquired in selected tide range, and 
+    # drop time-steps without any relevant pixels to reduce data to load
+    tide_bool = ((year_ds.tide_m >= tide_cutoff_min) & 
+                      (year_ds.tide_m <= tide_cutoff_max))
+    year_ds = year_ds.sel(time=tide_bool.sum(dim=['x', 'y']) > 0)
     
     # Apply mask, and load in corresponding high tide data
-    year_ds = year_ds.where(high_tide_bool)
+    year_ds = year_ds.where(tide_bool)
     return year_ds.compute()
 
     
@@ -207,7 +208,6 @@ def main(argv=None):
                   resolution=(-30, 30),  
                   gqa_iterative_mean_xy=[0, 1],
                   align=(15, 15),
-                  lazy_load=True,
                   group_by='solar_day',
                   dask_chunks={'time': 1, 'x': 1000, 'y': 1000},
                   **query)
@@ -271,7 +271,11 @@ def main(argv=None):
                                        factor=50)
 
     # Determine tide cutoff
-    tide_cutoff = tide_da.median(dim='time')
+#     tide_cutoff_min = tide_da.median(dim='time')
+#     tide_cutoff_max = np.Inf
+#     tide_cutoff_min = tide_da.median(dim='time')
+    tide_cutoff_min = tide_da.quantile(dim='time', q=0.6)
+    tide_cutoff_max = tide_da.quantile(dim='time', q=0.9)
 
     # Add interpolated tides as measurement in satellite dataset
     ds['tide_m'] = tide_da
@@ -295,7 +299,8 @@ def main(argv=None):
 
         # Load data for the subsequent year
         future_ds = load_tidal_subset(ds.sel(time=str(year + 1)), 
-                                      tide_cutoff=tide_cutoff)
+                                      tide_cutoff_min=tide_cutoff_min,
+                                      tide_cutoff_max=tide_cutoff_max)
 
         # If the current year var contains data, combine these observations
         # into median annual high tide composites and export GeoTIFFs
