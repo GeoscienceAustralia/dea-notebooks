@@ -19,6 +19,8 @@ Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Functions included:
     load_ard
+    xr_vectorize
+    xr_rasterize
     array_to_geotiff
     mostcommon_utm
     download_unzip
@@ -38,6 +40,9 @@ import zipfile
 import numexpr
 import requests
 import warnings
+import shapely
+import rasterio.features
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -359,6 +364,234 @@ def load_ard(dc,
         return None
 
 
+def xr_vectorize(da, 
+                 attribute_col, 
+                 transform=None, 
+                 crs=None, 
+                 dtype='float32',
+                 export_shp=False,
+                 **rasterio_kwargs):
+    
+    """
+    Converts a xarray.dataarray into a geopandas geodataframe
+    
+    Parameters
+    ----------
+    da : xarray dataarray or a numpy ndarray  
+    attribute_col : str,
+        Name of the attribute column in the resulting geodataframe: 
+        values of the raster oject converted to polygons will be assigned to this
+        column
+    transform : affine.Affine object, optional
+        An affine.Affine object (e.g. `from affine import Affine; 
+        Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "6886890.0) giving the 
+        affine transformation used to convert raster coordinates 
+        (e.g. [0, 0]) to geographic coordinates. If none is provided, 
+        the function will attempt to obtain an affine transformation 
+        from the xarray object (e.g. either at `da.transform` or
+        `da.geobox.transform`).
+    crs : str or CRS object, optional
+        An EPSG string giving the coordinate system of the array 
+        (e.g. 'EPSG:3577'). If none is provided, the function will 
+        attempt to extract a CRS from the xarray object's `crs` 
+        attribute.
+    dtype : str
+         Data type must be one of int16, int32, uint8, uint16, or float32
+    export_shp : Boolean or string path, optional
+        To export the output vectorised features to a shapefile, supply
+        an output path using this parameter (e.g. 'output_dir/output.shp'. 
+        The default is False, which will not write out a shapefile. 
+    **rasterio_kwargs : 
+        A set of keyword arguments to rasterio.features.shapes
+        Can include, 'mask' and 'connectivity'.
+    
+    Returns
+    -------
+    gdf : Geopandas geodataframe
+    
+    """
+
+    
+    # Check for a crs object
+    try:
+        crs = da.crs
+    except:
+        if crs is None:
+            raise Exception("Please add a `crs` attribute to the "
+                            "xarray.DataArray, or provide a CRS using the "
+                            "function's `crs` parameter (e.g. 'EPSG:3577')")
+    # Check if transform is provided as a xarray.DataArray method.
+    # If not, require supplied Affine
+    if transform is None:
+        try:
+            # First, try to take transform info from geobox
+            transform = da.geobox.transform
+        # If no geobox
+        except:
+            try:
+                # Try getting transform from 'transform' attribute
+                transform = da.transform
+            except:
+                # If neither of those options work, raise an exception telling the 
+                # user to provide a transform
+                raise Exception("Please provide an Affine transform object using the "
+                        "`affine` parameter (e.g. `from affine import "
+                        "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
+                        "6886890.0)`")
+    
+    #check to see if the input is a numpy array
+    if type(da) is np.ndarray:
+        vectors = rasterio.features.shapes(source=da.astype(dtype),
+                                           transform=transform,
+                                           **rasterio_kwargs)
+    
+    else:
+        # Run the vectorizing function
+        vectors = rasterio.features.shapes(source=da.data.astype(dtype),
+                                           transform=transform,
+                                           **rasterio_kwargs)
+    
+    # Convert the generator into a list
+    vectors = list(vectors)
+    # Extract the polygon coordinates and values from the list
+    polygons = [polygon for polygon, value in vectors]
+    values = [value for polygon, value in vectors]
+    # Convert polygon coordinates into polygon shapes
+    polygons = [shapely.geometry.shape(polygon) for polygon in polygons]
+    # Create a geopandas dataframe populated with the polygon shapes
+    gdf = gpd.GeoDataFrame(data={attribute_col: values},
+                           geometry=polygons,
+                           crs={'init': str(crs)})
+    
+    # If a file path is supplied, export a shapefile
+    if export_shp:
+        gdf.to_file(export_shp)    
+    return gdf
+
+
+def xr_rasterize(gdf,
+                 da,
+                 x_dim='x',
+                 y_dim='y',
+                 attribute_col=False,
+                 crs=None,
+                 transform=None,
+                 name=None,
+                 **rasterio_kwargs):
+    
+    """
+    Converts a geopandas geodataframe into an xarray.dataarray
+    
+    Parameters
+    ----------
+    gdf : geopandas dataframe
+    da : xarray dataarray
+        The shape, coordinates, dimensions, and transform of this object are used to build
+        the rasterized shapefile. It effectively provides a template. The attributes
+        of this object are also appended to the output xarray.
+    x_dim : str, optional
+        An optional string allowing you to override the xarray dimension 
+        used for x coordinates. Defaults to 'x'.    
+    y_dim : str, optional
+        An optional string allowing you to override the xarray dimension 
+        used for y coordinates. Defaults to 'y'.
+    attribute_col : string, optional
+        Name of the attribute column in the geodataframe that the pixels in the
+        raster will contain.  If set to False, output will be a boolean array of 
+        1's and 0's
+    crs : str, optional
+        CRS metadata to add to the output xarray. e.g. 'epsg:3577'.
+        Code will attempt get this info from the input geodataframe first.
+    transform : affine.Affine object, optional
+        An affine.Affine object (e.g. `from affine import Affine; 
+        Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "6886890.0) giving the 
+        affine transformation used to convert raster coordinates 
+        (e.g. [0, 0]) to geographic coordinates. If none is provided, 
+        the function will attempt to obtain an affine transformation 
+        from the xarray object (e.g. either at `da.transform` or
+        `da.geobox.transform`).
+    **rasterio_kwargs : 
+        A set of keyword arguments to rasterio.features.rasterize
+        Can include: 'all_touched', 'merge_alg', 'dtype'
+    
+    Returns
+    -------
+    gdf : Geopandas geodataframe
+    
+    """    
+    
+
+    # Check if transform is provided as a xarray.DataArray method.
+    # If not, require supplied Affine
+    if transform is None:
+        try:
+            # First, try to take transform info from geobox
+            transform = da.geobox.transform
+        # If no geobox
+        except:
+            try:
+                # Try getting transform from 'transform' attribute
+                transform = da.transform
+            except:
+                # If neither of those options work, raise an exception telling the 
+                # user to provide a transform
+                raise Exception("Please provide an Affine transform object using the "
+                        "`affine` parameter (e.g. `from affine import "
+                        "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
+                        "6886890.0)`")
+    
+    # get the dims, coords, and out shape from da
+    da=da.squeeze()
+    y,x = da.shape
+    dims = list(da.dims)
+    xy_coords = [da[y_dim], da[x_dim]]
+    
+    
+    if attribute_col:
+        # Use the geometry and attributes from `gdf` to create an iterable
+        shapes = zip(gdf.geometry, gdf[attribute_col])
+
+        # Now convert the polgons into a numpy array
+        arr = rasterio.features.rasterize(shapes=shapes,
+                                          out_shape=(y, x),
+                                          transform=transform,
+                                          **rasterio_kwargs)
+    else:
+        arr = rasterio.features.rasterize(shapes=gdf.geometry,
+                                          out_shape=(y, x),
+                                          transform=transform,
+                                          **rasterio_kwargs)
+        
+    # Convert result to a xarray.DataArray
+    if name is not None:
+        xarr = xr.DataArray(arr,
+                           coords=xy_coords,
+                           dims=dims,
+                           attrs=da.attrs,
+                           name=name)
+    else:
+        xarr = xr.DataArray(arr,
+                   coords=xy_coords,
+                   dims=dims,
+                   attrs=da.attrs)
+    
+    #add in the CRS metadata
+    if 'crs' not in xarr.attrs:
+        if crs is None:
+            try:
+                # if gdf.crs is in the form {'init': 'epsg:3577'}
+                xarr.attrs['crs'] = [*gdf.crs.values()][0]
+            except:
+                # if gdf.crs is in form 'EPSG:3577'
+                xarr.attrs['crs'] = gdf.crs
+
+        else:
+            #otherwise, just assign the provided one
+            xarr.attrs['crs'] = crs
+    
+    return xarr
+
+    
 def array_to_geotiff(fname, data, geo_transform, projection,
                      nodata_val=0, dtype=gdal.GDT_Float32):
     """
