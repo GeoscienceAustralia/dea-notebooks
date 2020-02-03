@@ -143,52 +143,59 @@ def main(argv=None):
     os.makedirs(output_dir, exist_ok=True)
 
     # Get file paths
-    gapfill_files = sorted(glob.glob(f'output_data/{study_area}/gapfill_{water_index}_*.tif'))
-    index_files = sorted(glob.glob(f'output_data/{study_area}/{water_index}_*.tif'))[1:len(gapfill_files)+1]
-    stdev_files = sorted(glob.glob(f'output_data/{study_area}/stdev_*.tif'))[1:len(gapfill_files)+1]
-    tidem_files = sorted(glob.glob(f'output_data/{study_area}/tide_m_*.tif'))[1:len(gapfill_files)+1]
-    count_files = sorted(glob.glob(f'output_data/{study_area}/count_*.tif'))[1:len(gapfill_files)+1]
+    gapfill_index_files = sorted(glob.glob(f'output_data/{study_area}/gapfill_{water_index}_*.tif'))
+    gapfill_tide_files = sorted(glob.glob(f'output_data/{study_area}/gapfill_tide_m_*.tif'))
+    index_files = sorted(glob.glob(f'output_data/{study_area}/{water_index}_*.tif'))[1:len(gapfill_index_files)+1]
+    stdev_files = sorted(glob.glob(f'output_data/{study_area}/stdev_*.tif'))[1:len(gapfill_index_files)+1]
+    tidem_files = sorted(glob.glob(f'output_data/{study_area}/tide_m_*.tif'))[1:len(gapfill_index_files)+1]
+    count_files = sorted(glob.glob(f'output_data/{study_area}/count_*.tif'))[1:len(gapfill_index_files)+1]
 
     # Create variable used for time axis
     time_var = xr.Variable('year', [int(i[-8:-4]) for i in index_files])
 
     # Import data
-    print('Loading rasters')
     index_da = xr.concat([xr.open_rasterio(i) for i in index_files], dim=time_var)
-    gapfill_da = xr.concat([xr.open_rasterio(i) for i in gapfill_files], dim=time_var)
+    gapfill_index_da = xr.concat([xr.open_rasterio(i) for i in gapfill_index_files], dim=time_var)
+    gapfill_tide_da = xr.concat([xr.open_rasterio(i) for i in gapfill_tide_files], dim=time_var)
     stdev_da = xr.concat([xr.open_rasterio(i) for i in stdev_files], dim=time_var)
     tidem_da = xr.concat([xr.open_rasterio(i) for i in tidem_files], dim=time_var)
     count_da = xr.concat([xr.open_rasterio(i) for i in count_files], dim=time_var)
 
     # Assign names to allow merge
     index_da.name = water_index
-    gapfill_da.name = 'gapfill'
+    gapfill_index_da.name = 'gapfill_index'
+    gapfill_tide_da.name = 'gapfill_tide_m'
     stdev_da.name = 'stdev'
     tidem_da.name = 'tide_m'
     count_da.name = 'count'
 
     # Combine into a single dataset and set CRS
-    yearly_ds = xr.merge([index_da, gapfill_da, stdev_da, tidem_da, count_da]).squeeze('band', drop=True)
+    yearly_ds = xr.merge([index_da, gapfill_index_da, gapfill_tide_da, stdev_da, tidem_da, count_da]).squeeze('band', drop=True)
     yearly_ds.attrs['crs'] = index_da.crs
     yearly_ds.attrs['transform'] = Affine(*index_da.transform)
 
-    
-    # ## Extract shoreline contours
+    # Print
+    yearly_ds
 
+
+    # ## Extract shoreline contours
+    # 
     # ### Extract ocean-masked contours
-    
-    print('Generating contours')
+
+    # In[5]:
+
 
     # Mask to study area
     comp_gdf = gpd.read_file('input_data/Euc_SCC_coast10kmbuffer.geojson').set_index('ID_Seconda')
     study_area_mask = rasterize(shapes=comp_gdf.to_crs(str(yearly_ds.crs)).loc[study_area]['geometry'],
-                             out_shape=yearly_ds.mndwi.shape[1:],
+                             out_shape=yearly_ds[water_index].shape[1:],
                              transform=yearly_ds.transform,
                              all_touched=True).astype(bool)
 
     # Remove low obs and high variance pixels and replace with 3-year gapfill
     gapfill_mask = (yearly_ds['count'] > 5) & (yearly_ds['stdev'] < 0.5)
-    yearly_ds = yearly_ds.where(gapfill_mask, other=yearly_ds.gapfill)
+    yearly_ds[water_index] = yearly_ds[water_index].where(gapfill_mask, other=yearly_ds.gapfill_index)
+    yearly_ds['tide_m'] = yearly_ds['tide_m'].where(gapfill_mask, other=yearly_ds.gapfill_tide_m)
 
     # Apply water index threshold
     thresholded_ds = (yearly_ds[water_index] > index_threshold)
@@ -212,9 +219,7 @@ def main(argv=None):
                                  transform=yearly_ds.transform,
                                  all_touched=True).astype(bool)
     except:
-        estuary_mask = np.full(yearly_ds[water_index].shape[1:], 
-                               False, 
-                               dtype=bool)
+        estuary_mask = np.full(yearly_ds[water_index].shape[1:], False, dtype=bool)
 
     # Drop empty timesteps and apply estuary mask
     thresholded_ds = (thresholded_ds
@@ -253,11 +258,15 @@ def main(argv=None):
                                      min_vertices=10,
                                      dim='year')
 
+    # Plot
+    # contours_gdf.plot(column='year', cmap='YlOrRd')
+
 
     # ## Compute statistics
     # ### Measure distances from baseline
-    
-    print('Computing statistics')
+
+    # In[6]:
+
 
     # Get array of water index values for baseline time period 
     baseline_year = '2018'
@@ -277,7 +286,11 @@ def main(argv=None):
 
     # Make a copy of the GeoDataFrame to hold tidal data
     tide_points_gdf = points_gdf.copy()
-    gapfill_points_gdf = points_gdf.copy()
+    # gapfill_points_gdf = points_gdf.copy()
+
+
+    # In[7]:
+
 
     # Copy geometry to baseline point
     points_gdf['p_baseline'] = points_gdf.geometry
@@ -324,11 +337,11 @@ def main(argv=None):
         tide_array = yearly_ds['tide_m'].sel(year=int(comp_year))
         tide_points_gdf[f'{comp_year}'] = tide_array.interp(x=baseline_x_vals, y=baseline_y_vals)
 
-        # Add gapfill data
-        gapfill_array = gapfill_mask.sel(year=int(comp_year))
-        gapfill_points_gdf[f'{comp_year}'] = gapfill_array.astype(int).interp(x=comp_x_vals, 
-                                                                              y=comp_y_vals, 
-                                                                              method='nearest')
+    #     # Add gapfill data
+    #     gapfill_array = gapfill_mask.sel(year=int(comp_year))
+    #     gapfill_points_gdf[f'{comp_year}'] = gapfill_array.astype(int).interp(x=comp_x_vals, 
+    #                                                                           y=comp_y_vals, 
+    #                                                                           method='nearest')
 
     # Keep required columns
     points_gdf = points_gdf[['geometry'] + 
@@ -343,15 +356,16 @@ def main(argv=None):
 
 
     # ### Calculate regressions
-    
-    print('Calculating regressions')
+
+    # In[11]:
+
 
     # Identify SOI values for regression
     climate_df = pd.read_csv('input_data/climate_indices.csv', index_col='year')
     climate_df = climate_df.loc[x_years,:]
 
     # Compute change rates
-    rate_out = points_gdf.apply(lambda x: change_regress(row=x[x_years.astype(str)], 
+    rate_out = points_gdf[x_years.astype(str)].apply(lambda x: change_regress(row=x, 
                                                          x_vals = x_years, 
                                                          x_labels = x_years, 
                                                          std_dev=3), axis=1)
@@ -359,9 +373,13 @@ def main(argv=None):
 
 
     # Compute tide flag
-    tide_out = tide_points_gdf.apply(lambda x: change_regress(row=x[x_years.astype(str)], 
-                                                   x_vals = x_years, 
-                                                   x_labels = x_years, 
+    # tide_out = tide_points_gdf[x_years.astype(str)].apply(lambda x: change_regress(row=x, 
+    #                                                x_vals = x_years, 
+    #                                                x_labels = x_years, 
+    #                                                std_dev=3), axis=1)
+    tide_out = tide_points_gdf[x_years.astype(str)].apply(lambda x: change_regress(row=points_gdf[x_years.astype(str)].iloc[x.name], 
+                                                   x_vals=x, 
+                                                   x_labels=x_years, 
                                                    std_dev=3), axis=1)
     points_gdf[['rate_tide', 'incpt_tide', 'sig_tide', 'outl_tide']] = tide_out 
 
@@ -372,7 +390,7 @@ def main(argv=None):
         print(ci)
 
         # Compute stats for each row
-        ci_out = points_gdf.apply(lambda x: change_regress(row=x[x_years.astype(str)],
+        ci_out = points_gdf[x_years.astype(str)].apply(lambda x: change_regress(row=x,
                                                            x_vals = climate_df[ci].values, 
                                                            x_labels = x_years, 
     #                                                        detrend_params=[x.rate_time, x.incpt_time],
@@ -382,11 +400,11 @@ def main(argv=None):
         points_gdf[[f'rate_{ci}', f'incpt_{ci}', f'sig_{ci}', f'outl_{ci}']] = ci_out
 
 
-    # Add breakpoints
-    print('Identifying breakpoints')
-    points_gdf['breakpoint'] = points_gdf.apply(lambda x: breakpoints(x=x[x_years.astype(str)], 
-                                                                      labels=x_years, 
-                                                                      pen=10), axis=1)
+    # # Add breakpoints
+    # print('Identifying breakpoints')
+    # points_gdf['breakpoint'] = points_gdf.apply(lambda x: breakpoints(x=x[x_years.astype(str)], 
+    #                                                                   labels=x_years, 
+    #                                                                   pen=10), axis=1)
 
     # Set CRS
     points_gdf.crs = baseline_array.crs
@@ -396,19 +414,19 @@ def main(argv=None):
         'rate_time', 'rate_SOI', 'rate_IOD', 'rate_SAM', 'rate_IPO', 'rate_PDO', 'rate_tide',
         'sig_time', 'sig_SOI', 'sig_IOD', 'sig_SAM', 'sig_IPO', 'sig_PDO', 'sig_tide',
         'outl_time', 'outl_SOI', 'outl_IOD', 'outl_SAM', 'outl_IPO', 'outl_PDO', 'outl_tide',
-        'breakpoint', 
+    #     'breakpoint', 
         *x_years.astype(str).tolist(), 'geometry'
     ]]
 
     # Export
-    print('Exporting contours')
     stats_path = f'output_data/{study_area}/vectors/{study_area}_stats_{water_index}_{index_threshold}'
     points_towrite.to_file(f'{stats_path}.geojson', driver='GeoJSON')
 
 
     # ## Shapefile package
-          
-    print('Zipping data')
+
+    # In[ ]:
+
 
     contours_gdf.to_file(f'{contour_path}.shp')
     points_towrite.to_file(f'{stats_path}.shp')

@@ -51,6 +51,9 @@ sys.path.append('../Scripts')
 from dea_plotting import rgb
 from dea_plotting import display_map
 from dea_spatialtools import interpolate_2d
+from dea_datahandling import load_ard
+from dea_bandindices import calculate_indices
+from dea_datahandling import mostcommon_crs
 
 
 def get_geopoly(index, gdf):
@@ -99,7 +102,7 @@ def load_tidal_subset(year_ds, tide_cutoff_min, tide_cutoff_max):
     # Determine what pixels were acquired in selected tide range, and 
     # drop time-steps without any relevant pixels to reduce data to load
     tide_bool = ((year_ds.tide_m >= tide_cutoff_min) & 
-                      (year_ds.tide_m <= tide_cutoff_max))
+                 (year_ds.tide_m <= tide_cutoff_max))
     year_ds = year_ds.sel(time=tide_bool.sum(dim=['x', 'y']) > 0)
     
     # Apply mask, and load in corresponding high tide data
@@ -183,7 +186,7 @@ def main(argv=None):
         sys.exit()
         
     # Set study area for analysis
-    study_area = argv[1]  
+    study_area = argv[1]     
 
     # study_area = 'WA01.01'  # 
     query = {'geopolygon': get_geopoly(study_area, comp_gdf),
@@ -192,11 +195,6 @@ def main(argv=None):
 
 
     # ## Load virtual product
-
-    from dea_datahandling import load_ard
-    from dea_bandindices import calculate_indices
-    from dea_datahandling import mostcommon_crs
-
     crs = mostcommon_crs(dc=dc, product='ga_ls5t_ard_3', query=query)
 
     ds = load_ard(dc=dc, 
@@ -274,8 +272,8 @@ def main(argv=None):
 #     tide_cutoff_min = tide_da.median(dim='time')
 #     tide_cutoff_max = np.Inf
 #     tide_cutoff_min = tide_da.median(dim='time')
-    tide_cutoff_min = tide_da.quantile(dim='time', q=0.6)
-    tide_cutoff_max = tide_da.quantile(dim='time', q=0.9)
+    tide_cutoff_min = tide_da.quantile(dim='time', q=0.5)
+    tide_cutoff_max = tide_da.quantile(dim='time', q=1.0)
 
     # Add interpolated tides as measurement in satellite dataset
     ds['tide_m'] = tide_da
@@ -335,6 +333,9 @@ def main(argv=None):
         previous_ds = current_ds
         current_ds = future_ds
         future_ds = []
+        
+    # After rasters are generated, run stats code
+    os.system(f'python3 /g/data/r78/rt1527/dea-notebooks/MAHTS/MAHTS_stats.py {study_area}')
 
         
 if __name__ == "__main__":
