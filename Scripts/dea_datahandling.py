@@ -27,7 +27,7 @@ Functions included:
     pan_sharpen_brovey
     paths_to_datetimeindex
     
-Last modified: January 2020
+Last modified: February 2020
 
 '''
 
@@ -121,10 +121,10 @@ def load_ard(dc,
         Although most missing data issues are resolved by 
         `mask_invalid_data`, this step is important for generating 
         clean and concistent composite datasets. The default
-        is `mask_contiguity='nbart_contiguity'` which will set any 
+        is `mask_contiguity='oa_nbart_contiguity'` which will set any 
         pixels with non-contiguous values to NaN based on NBART data. 
         If you are loading NBAR data instead, you should specify
-        `mask_contiguity='nbar_contiguity'` instead. To ignore non-
+        `mask_contiguity='oa_nbar_contiguity'` instead. To ignore non-
         contiguous values completely, set `mask_contiguity=False`.
         Be aware that masking out non-contiguous values will convert 
         all numeric values to floating point values when -999 values 
@@ -145,11 +145,13 @@ def load_ard(dc,
         'ga_ls5t_ard_3'). Defaults to False.
     **dcload_kwargs : 
         A set of keyword arguments to `dc.load` that define the 
-        spatiotemporal query used to extract data. This can include `x`,
-        `y`, `time`, `resolution`, `resampling`, `group_by`, `crs`
-        etc, and can either be listed directly in the `load_ard` call 
-        (e.g. `x=(150.0, 151.0)`), or by passing in a query kwarg 
-        (e.g. `**query`). For a full list of possible options, see: 
+        spatiotemporal query used to extract data. This typically
+        includes `measurements`, `x`, `y`, `time`, `resolution`, 
+        `resampling`, `group_by` and `crs`. Keyword arguments can 
+        either be listed directly in the `load_ard` call like any 
+        other parameter (e.g. `measurements=['nbart_red']`), or by 
+        passing in a query kwarg dictionary (e.g. `**query`). For a 
+        list of possible options, see the `dc.load` documentation: 
         https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html          
         
     Returns
@@ -252,10 +254,10 @@ def load_ard(dc,
                 print('    Ignoring SLC-off observations for ls7')
                 ds = ds.sel(time=ds.time < np.datetime64('2003-05-31'))
                 
-            # If no measurements are specified, `fmask` is given a 
-            # different name. If necessary, rename it:
-            if 'oa_fmask' in ds:
-                ds = ds.rename({'oa_fmask': 'fmask'})
+#             # If no measurements are specified, `fmask` is given a 
+#             # different name. If necessary, rename it:
+#             if 'oa_fmask' in ds:
+#                 ds = ds.rename({'oa_fmask': 'fmask'})
 
             # Identify all pixels not affected by cloud/shadow/invalid
             good_quality = ds.fmask.isin(fmask_gooddata)
