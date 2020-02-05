@@ -35,11 +35,13 @@ import ipywidgets
 import matplotlib as mpl
 from pyproj import Proj, transform
 from IPython.display import display
-from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps
+from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps, Choropleth
 from skimage import exposure
 import matplotlib.patheffects as PathEffects
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from branca.colormap import linear
+
 
 from datetime import datetime
 import calendar
@@ -326,22 +328,21 @@ def display_map(x, y, crs='EPSG:4326', margin=-0.5, zoom_bias=0):
 
     return interactive_map
 
-
-def map_shapefile(gdf, 
-                  weight=2, 
-                  colormap=mpl.cm.YlOrRd, 
-                  basemap=basemaps.Esri.WorldImagery, 
+def map_shapefile(gdf,
+                  attribute=None,
+                  remap=True,
+                  weight=2,
+                  colormap=linear.YlOrRd_04,
+                  basemap=basemaps.Esri.WorldImagery,
                   default_zoom=None,
-                  hover_col=None,
-                  hover_prefix=''):
-    
+                  hover_col=None):
     """
     Plots a geopandas GeoDataFrame over an interactive ipyleaflet 
     basemap. Optionally, can be set up to print selected data from 
     features in the GeoDataFrame. 
-    
-    Last modified: October 2019
-    
+
+    Last modified: January 2020
+
     Parameters
     ----------  
     gdf : geopandas.GeoDataFrame
@@ -350,11 +351,17 @@ def map_shapefile(gdf,
     weight : float or int, optional
         An optional numeric value giving the weight that line features
         will be plotted as. Defaults to 2; larger numbers = thicker
-    colormap : matplotlib.cm, optional
-        An optional matplotlib.cm colormap used to style the features
-        in the GeoDataFrame. Features will be coloured by the order
-        they appear in the GeoDataFrame. Defaults to the `YlOrRd` 
-        colormap.
+    attribute: string, required
+        An required string giving the name of any column in the
+        GeoDataFrame you wish to have coloured on the choropleth.
+    remap: string, optional
+        Defaults to remapping the attribute which is suitable for
+        categorical data. For continuous data set 'remap' to same string
+        as 'attribute'.
+    colormap : branca.colormap.linear, optional
+        An optional branca.colormap.linear colormap used to style the 
+        features in the GeoDataFrame. Features will be coloured based 
+        on the selected attribute. Defaults to the `YlOrRd_04` colormap.
     basemap : ipyleaflet.basemaps object, optional
         An optional ipyleaflet.basemaps object used as the basemap for 
         the interactive plot. Defaults to `basemaps.Esri.WorldImagery`
@@ -368,68 +375,75 @@ def map_shapefile(gdf,
         Defaults to None which will not print any data. 
 
     """
-    
-    def n_colors(n, colormap=colormap):
-        data = np.linspace(0.0,1.0,n)
-        c = [mpl.colors.rgb2hex(d[0:3]) for d in colormap(data)]
-        return c
 
-    def data_to_colors(data, colormap=colormap):
-        c = [mpl.colors.rgb2hex(d[0:3]) for 
-             d in colormap(mpl.colors.Normalize()(data))]
-        return c 
-    
     def on_hover(event, id, properties):
         with dbg:
             text = properties.get(hover_col, '???')
             lbl.value = f'{hover_col}: {text}'
             # print(properties)
-  
+
     # Convert to WGS 84 and GeoJSON format
     gdf_wgs84 = gdf.to_crs(epsg=4326)
-    data = gdf_wgs84.__geo_interface__    
-    
-    # For each feature in dataset, append colour values
-    n_features = len(data['features'])
-    colors = n_colors(n_features)
-    
-    for feature, color in zip(data['features'], colors):
-        feature['properties']['style'] = {'color': color, 
-                                          'weight': weight, 
-                                          'fillColor': color, 
-                                          'fillOpacity': 1.0}
+    data = gdf_wgs84.__geo_interface__
+
+    if remap:
+        # If remap is True then remap categorical classes for visualisation
+        classes_uni = list(gdf[attribute].unique())
+        classes_clean = list(range(0, len(classes_uni)))
+        # zip together to make a dictionary
+        classes_dict = dict(zip(classes_uni, classes_clean))
+        gdf['remap'] = gdf[attribute].map(
+            classes_dict)  # create new gdf column
+        classes = gdf['remap'].tolist()  # Get values to colour by as a list
+
+    else:
+        # If remap is False then do not remap
+        classes = gdf[attribute].tolist()  # Get values to colour by as a list
+
+    # Create the dictionary to colour map by
+    gdf['id'] = gdf.index  # Get id values as a list
+    keys = gdf['id'].tolist()
+    the_dict = dict(zip(keys, classes))  # zip together to make a dictionary
+    # Convert ids to strings
+    the_dict2 = {str(key): val for key, val in the_dict.items()}
 
     # Get centroid to focus map on
-    lon1, lat1, lon2, lat2  = gdf_wgs84.total_bounds
+    lon1, lat1, lon2, lat2 = gdf_wgs84.total_bounds
     lon = (lon1 + lon2) / 2
     lat = (lat1 + lat2) / 2
-    
+
     if default_zoom is None:
-        
+
         # Calculate default zoom from latitude of features
         default_zoom = _degree_to_zoom_level(lat1, lat2, margin=-0.5)
-    
-    # Plot map 
-    m = Map(center=(lat, lon), 
-            zoom=default_zoom, 
-            basemap=basemap, 
+
+    # Plot map
+    m = Map(center=(lat, lon),
+            zoom=default_zoom,
+            basemap=basemap,
             layout=dict(width='800px', height='600px'))
-    
-    # Add GeoJSON layer to map
-    feature_layer = GeoJSON(data=data)
-    m.add_layer(feature_layer)
-    
+
+    # Create the choropleth
+    choropleth = Choropleth(
+        geo_data=data,
+        choro_data=the_dict2,
+        colormap=colormap,
+        border_color='black',
+        style={'fillOpacity': 0.8, 'dashArray': '1'})
+
+    # Add Choropleth layer to map
+    m.add_layer(choropleth)
+
     # If a column is specified by `hover_col`, print data from the
     # hovered feature above the map
-    if hover_col:        
+    if hover_col:
         lbl = ipywidgets.Label()
-        dbg = ipywidgets.Output()        
-        feature_layer.on_hover(on_hover)
+        dbg = ipywidgets.Output()
+        choropleth.on_hover(on_hover)
         display(lbl)
-      
+
     # Display the map
     display(m)
-
     
 def animated_timeseries(ds,
                         output_path,
