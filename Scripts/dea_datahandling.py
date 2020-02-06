@@ -204,7 +204,8 @@ def load_ard(dc,
                               "'good pixel' percentage. This can "
                               "significantly slow the return of your dataset.")
     
-    # Verify that products were provided    
+    # Verify that products were provided, and that only Sentinel-2 or 
+    # only Landsat products are being loaded at the same time
     if not products:
         raise ValueError("Please provide a list of product names "
                          "to load data from. Valid options are: \n"
@@ -213,6 +214,13 @@ def load_ard(dc,
                          "'s2b_ard_granule'] \nfor Sentinel 2 Definitive, or "
                          "['s2a_nrt_granule', 's2b_nrt_granule'] for "
                          "Sentinel 2 Near Real Time")
+    elif all(['ls' in product for product in products]):
+        product_type = 'ls'
+    elif all(['s2' in product for product in products]):
+        product_type = 's2'
+    else:
+        raise ValueError("Loading both Sentinel-2 and Landsat data "
+                         "at the same time is currently not supported")
 
     # If `measurements` are specified but do not include fmask or 
     # contiguity variables, add these to `measurements`
@@ -233,7 +241,7 @@ def load_ard(dc,
     # with a 'oa_' prefix, but Sentinel-2 bands are not. As a work-around, 
     # we need to rename the default contiguity and fmask bands if loading
     # Landsat data without specifying `measurements`
-    elif all(['ls' in product for product in products]): 
+    elif product_type == 'ls': 
         mask_contiguity = f'oa_{mask_contiguity}' if mask_contiguity else False
         fmask_band = f'oa_{fmask_band}'             
 
