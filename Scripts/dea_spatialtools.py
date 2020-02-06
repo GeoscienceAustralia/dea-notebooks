@@ -163,6 +163,7 @@ def xr_rasterize(gdf,
                  name=None,
                  x_dim='x',
                  y_dim='y',
+                 export_tiff= None,
                  **rasterio_kwargs):    
     """
     Rasterizes a geopandas.GeoDataFrame into an xarray.DataArray.
@@ -199,6 +200,10 @@ def xr_rasterize(gdf,
     y_dim : str, optional
         An optional string allowing you to override the xarray dimension 
         used for y coordinates. Defaults to 'y'.
+    export_tiff: str, optional
+        If a filepath is provided (e.g 'output/output.tif'), will export a
+        geotiff file. A named array is required for this operation, if one
+        is not supplied by the user a default name, 'data', is used
     **rasterio_kwargs : 
         A set of keyword arguments to rasterio.features.rasterize
         Can include: 'all_touched', 'merge_alg', 'dtype'.
@@ -280,7 +285,15 @@ def xr_rasterize(gdf,
                    coords=xy_coords,
                    dims=dims,
                    attrs=da.attrs)
-        
+    
+    if export_tiff:
+        try:
+            print("exporting geotiff with array name: " + name)
+            write_geotiff(export_tiff, xarr.to_dataset(name = name)) 
+        except:
+            print("exporting geotiff with default array name: 'data'")
+            write_geotiff(export_tiff, xarr.to_dataset(name = 'data'))
+            
     return xarr
 
 
