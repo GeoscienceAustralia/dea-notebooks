@@ -114,6 +114,8 @@ def WIT_array(query):
     
     #rescale to exclude invalid px
     cover_array = cover_array/validfrac
+    #steals attributes off original load ###FIXME
+    cover_array.attrs = ls578_ds.attrs
     
     return cover_array
 
@@ -174,5 +176,6 @@ def WIT_da(query):
     #paint the WOfLs waterbodies
     wofs_da = xr.ufuncs.logical_or(xr.ufuncs.logical_or(xr.ufuncs.logical_or(wet_wofs,sea_wofs),shadow_wofs),sea_shadow_wofs)
     np.place(coverclasses.data,wofs_da.data,0)
+    coverclasses.attrs = ls578_ds.attrs
     
     return coverclasses
