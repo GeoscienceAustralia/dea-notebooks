@@ -43,7 +43,7 @@ from scipy import ndimage as nd
 from skimage.measure import label
 from skimage.measure import find_contours
 from shapely.geometry import LineString, MultiLineString, shape
-
+from datacube.helpers import write_geotiff
 
 def xr_vectorize(da, 
                  attribute_col='attribute', 
