@@ -117,7 +117,7 @@ def xr_vectorize(da,
                 # If neither of those options work, raise an exception telling the 
                 # user to provide a transform
                 raise Exception("Please provide an Affine transform object using the "
-                        "`affine` parameter (e.g. `from affine import "
+                        "`transform` parameter (e.g. `from affine import "
                         "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
                         "6886890.0)`")
     
@@ -239,7 +239,7 @@ def xr_rasterize(gdf,
                 # If neither of those options work, raise an exception telling the 
                 # user to provide a transform
                 raise Exception("Please provide an Affine transform object using the "
-                        "`affine` parameter (e.g. `from affine import "
+                        "`transform` parameter (e.g. `from affine import "
                         "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
                         "6886890.0)`")
     
@@ -252,7 +252,13 @@ def xr_rasterize(gdf,
     # Reproject shapefile to match CRS of raster
     print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x}) '
           f'and projection system/CRS (e.g. {crs})')
-    gdf_reproj = gdf.to_crs(crs=crs)
+    
+    try:
+        gdf_reproj = gdf.to_crs(crs=crs)
+    except:
+        #sometimes the crs can be a datacube utils CRS object
+        #so convert to string before reprojecting
+        gdf_reproj = gdf.to_crs(crs={'init':str(crs)})
     
     # If an attribute column is specified, rasterise using vector 
     # attribute values. Otherwise, rasterise into a boolean array
@@ -286,14 +292,26 @@ def xr_rasterize(gdf,
                    dims=dims,
                    attrs=da.attrs)
     
+    #add back crs if da.attrs doesn't have it
+    if 'crs' not in xarr.attrs:
+        xarr.attrs['crs'] = str(crs)
+    
     if export_tiff:
-        try:
-            print("Exporting GeoTIFF with array name: " + name)
-            write_geotiff(export_tiff, xarr.to_dataset(name = name)) 
-        except:
-            print("Exporting GeoTIFF with default array name: 'data'")
-            write_geotiff(export_tiff, xarr.to_dataset(name = 'data'))
-            
+            try:
+                print("Exporting GeoTIFF with array name: " + name)
+                ds = xarr.to_dataset(name = name)
+                #xarray bug removes metadata, add it back
+                ds[name].attrs = xarr.attrs 
+                ds.attrs = xarr.attrs
+                write_geotiff(export_tiff, ds) 
+                
+            except:
+                print("Exporting GeoTIFF with default array name: 'data'")
+                ds = xarr.to_dataset(name = 'data')
+                ds.data.attrs = xarr.attrs
+                ds.attrs = xarr.attrs
+                write_geotiff(export_tiff, ds)
+                
     return xarr
 
 
