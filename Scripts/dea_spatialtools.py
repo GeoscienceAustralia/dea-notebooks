@@ -288,10 +288,10 @@ def xr_rasterize(gdf,
     
     if export_tiff:
         try:
-            print("exporting geotiff with array name: " + name)
+            print("Exporting GeoTIFF with array name: " + name)
             write_geotiff(export_tiff, xarr.to_dataset(name = name)) 
         except:
-            print("exporting geotiff with default array name: 'data'")
+            print("Exporting GeoTIFF with default array name: 'data'")
             write_geotiff(export_tiff, xarr.to_dataset(name = 'data'))
             
     return xarr
