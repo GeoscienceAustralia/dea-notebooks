@@ -371,11 +371,13 @@ def map_shapefile(gdf,
         An optional integer giving a default zoom level for the 
         interactive ipyleaflet plot. Defaults to None, which infers
         the zoom level from the extent of the data.
-    hover_col : boolean, optional
-        An optional boolean indicating whether to print values from the
+    hover_col : boolean or str, optional
+        If True (the default), the function will print  values from the 
         GeoDataFrame's `attribute` column above the interactive map when 
-        a user hovers over the features in the map. Defaults to True 
-        which will print attribute values.
+        a user hovers over the features in the map. Alternatively, a 
+        custom shapefile field can be specified by supplying a string
+        giving the name of the field to print. Set to False to prevent 
+        any attributes from being printed.
     **choropleth_kwargs :
         Optional keyword arguments to pass to the `style` paramemter of
         the `ipyleaflet.Choropleth` function. This can be used to 
@@ -389,14 +391,27 @@ def map_shapefile(gdf,
 
     def on_hover(event, id, properties):
         with dbg:
-            text = properties.get(attribute, '???')
-            lbl.value = f'{attribute}: {text}'
+            text = properties.get(hover_col, '???')
+            lbl.value = f'{hover_col}: {text}'
             
     # Verify that attribute exists in shapefile   
     if attribute not in gdf.columns:
-        raise ValueError(f"The attribute {attribute} does not exist "
-                         f"in the supplied `geopandas.GeoDataFrame`. "
+        raise ValueError(f"The `attribute` {attribute} does not exist "
+                         f"in the geopandas.GeoDataFrame. "
                          f"Valid attributes include {gdf.columns.values}.")
+        
+    # If hover_col is True, use 'attribute' as the default hover attribute.
+    # Otherwise, hover_col will use the supplied attribute field name
+    if hover_col and (hover_col is True):
+        hover_col = attribute
+        
+    # If a custom string if supplied to hover_col, check this exists 
+    elif hover_col and (type(hover_col) == str):
+        if hover_col not in gdf.columns:
+                raise ValueError(f"The `hover_col` field {hover_col} does "
+                                 f"not exist in the geopandas.GeoDataFrame. "
+                                 f"Valid attributes include 
+                                 f"{gdf.columns.values}.")
 
     # Convert to WGS 84 and GeoJSON format
     gdf_wgs84 = gdf.to_crs(epsg=4326)
@@ -410,9 +425,8 @@ def map_shapefile(gdf,
         classes_clean = list(range(0, len(classes_uni)))
         classes_dict = dict(zip(classes_uni, classes_clean))
         
-        # Create new gdf column
-        gdf['remap'] = gdf[attribute].map(classes_dict)  
-        classes = gdf['remap'].tolist()  # Get values to colour by as a list
+        # Get values to colour by as a list 
+        classes = gdf[attribute].map(classes_dict).tolist()  
     
     # If continuous is True then do not remap
     else: 
