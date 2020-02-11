@@ -33,7 +33,8 @@ def tidal_tag(ds,
               tidepost_lat=None, 
               tidepost_lon=None, 
               ebb_flow=False, 
-              swap_dims=False):
+              swap_dims=False,
+              return_tideposts=False):
     """
     Takes an xarray.Dataset and returns the same dataset with a new 
     `tide_height` variable giving the height of the tide at the exact
@@ -64,12 +65,19 @@ def tidal_tag(ds,
         An optional boolean indicating whether to swap the `time` 
         dimension in the original xarray.Dataset to the new 
         `tide_height` variable. Defaults to False.
+    return_tideposts : bool, optional
+        An optional boolean indicating whether to return the `tidepost_lat`
+        and `tidepost_lon` location used to model tides in addition to the
+        xarray.Dataset. Defaults to False.
         
     Returns
     -------
     The original xarray.Dataset with a new `tide_height` variable giving
     the height of the tide (and optionally, its ebb-flow phase) at the 
     exact moment of each satellite acquisition.  
+    
+    (if `return_tideposts=True`, the function will also return the 
+    `tidepost_lon` and `tidepost_lat` location used in the analysis)
     
     """
 
@@ -134,13 +142,16 @@ def tidal_tag(ds,
             ds = ds.swap_dims({'time': 'tide_height'})
             ds = ds.sortby('tide_height')            
             
-        return ds
+        if return_tideposts:
+            return ds, tidepost_lon, tidepost_lat
+        else:
+            return ds
     
     else:
         
         raise ValueError(
             f'Tides could not be modelled for dataset centroid located '
-            f'at {tidepost_lon}, {tidepost_lat}. This can happen if '
+            f'at {tidepost_lon:.2f}, {tidepost_lat:.2f}. This can occur if '
             f'this coordinate occurs over land. Please manually specify '
             f'a tide modelling location located over water using the '
             f'`tidepost_lat` and `tidepost_lon` parameters.'
