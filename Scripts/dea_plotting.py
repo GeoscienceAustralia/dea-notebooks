@@ -410,7 +410,7 @@ def map_shapefile(gdf,
         if hover_col not in gdf.columns:
                 raise ValueError(f"The `hover_col` field {hover_col} does "
                                  f"not exist in the geopandas.GeoDataFrame. "
-                                 f"Valid attributes include 
+                                 f"Valid attributes include " 
                                  f"{gdf.columns.values}.")
 
     # Convert to WGS 84 and GeoJSON format
