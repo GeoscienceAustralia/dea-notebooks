@@ -74,7 +74,7 @@ def rgb(ds,
     This function was designed to work as an easier-to-use wrapper 
     around xarray's `.plot.imshow()` functionality.
     
-    Last modified: October 2019
+    Last modified: February 2020
     
     Parameters
     ----------  
@@ -235,8 +235,7 @@ def rgb(ds,
         else:
 
             img = da.squeeze(dim=index_dim).plot.imshow(robust=robust,
-                                                        size=size,
-                                                        aspect=aspect,
+                                                        **aspect_size_kwarg,
                                                         **kwargs)
 
     # If an export path is provided, save image to file. Individual and 
