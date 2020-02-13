@@ -126,7 +126,9 @@ def rgb(ds,
         all available options, see: 
         https://matplotlib.org/api/_as_gen/matplotlib.pyplot.savefig.html        
     **kwargs : optional
-        Additional keyword arguments to pass to `xarray.plot.imshow()`. 
+        Additional keyword arguments to pass to `xarray.plot.imshow()`.
+        For example, the function can be used to plot into an existing
+        matplotlib axes object by passing an `ax` keyword argument.
         For more options, see:
         http://xarray.pydata.org/en/stable/generated/xarray.plot.imshow.html  
         
