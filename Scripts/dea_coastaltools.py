@@ -150,8 +150,6 @@ def tidal_tag(ds,
         if swap_dims:
 
             # Swap dimensions and sort by tide height
-#             ds['tide_height'] = (ds.tide_height + 
-#             (np.random.rand(len(ds.tide_height)) * 0.001))  
             ds = ds.swap_dims({'time': 'tide_height'})          
             ds = ds.sortby('tide_height')  
             ds = ds.drop('time')
@@ -177,13 +175,15 @@ def tidal_stats(ds,
                 tidepost_lon=None,
                 plain_english=True, 
                 plot=True,
+                modelled_freq='2h',
                 round_stats=3): 
     """
-    Takes an xarray.Dataset and statistically compares the tides modelled 
-    for each satellite observation against the full modelled tidal range.
-    This comparison can be used to evaluate whether the tides observed by
-    satellites (e.g. Landsat) are biased compared to the natural tidal range 
-    (e.g. fail to observe either the highest or lowest tides etc).    
+    Takes an xarray.Dataset and statistically compares the tides 
+    modelled for each satellite observation against the full modelled 
+    tidal range. This comparison can be used to evaluate whether the 
+    tides observed by satellites (e.g. Landsat) are biased compared to 
+    the natural tidal range (e.g. fail to observe either the highest or 
+    lowest tides etc).    
        
     By default, the function models tides for the centroid of the 
     dataset, but a custom tidal modelling location can be specified 
@@ -192,8 +192,8 @@ def tidal_stats(ds,
     Tides are modelled using the OTPS tidal modelling software based on
     the TPXO8 tidal model: http://volkov.oce.orst.edu/tides/tpxo8_atlas.html
     
-    For more information about the tidal statistics computed by this function,
-    refer to Figure 8 in Bishop-Taylor et al. 2018:
+    For more information about the tidal statistics computed by this 
+    function, refer to Figure 8 in Bishop-Taylor et al. 2018:
     https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8
     
     Parameters
@@ -208,8 +208,14 @@ def tidal_stats(ds,
         An optional boolean indicating whether to print a plain english 
         version of the tidal statistics to the screen. Defaults to True.
     plot : bool, optional
-        An optional boolean indicating whether to plot how satellite-observed 
-        tide heights compare against the full tidal range. Defaults to True.
+        An optional boolean indicating whether to plot how satellite-
+        observed tide heights compare against the full tidal range. 
+        Defaults to True.
+    modelled_freq : str, optional
+        An optional string giving the frequency at which to model tides 
+        when computing the full modelled tidal range. Defaults to '2h', 
+        which computes a tide height for every two hours across the
+        temporal extent of `ds`.        
     round_stats : int, optional
         The number of decimal places used to round the output statistics.
         Defaults to 3.
@@ -252,7 +258,7 @@ def tidal_stats(ds,
     # Generate range of times covering entire period of satellite record
     all_timerange = pd.date_range(start=ds_tides.time.min().item(),
                                   end=ds_tides.time.max().item(),
-                                  freq='2h')
+                                  freq=modelled_freq)
     all_datetimes = all_timerange.values.astype('M8[s]').astype('O').tolist()  
 
     # Use the tidal model to compute tide heights for each observation:  
@@ -327,7 +333,7 @@ def tidal_stats(ds,
     if plot:
         
         # Create plot and add all time and observed tide data
-        fig, ax = plt.subplots(figsize=(8, 4))
+        fig, ax = plt.subplots(figsize=(10, 5))
         ax.plot(all_timerange, all_tideheights, alpha=0.4)
         ds_tides.tide_height.plot.line(ax=ax, 
                                        marker='o',
