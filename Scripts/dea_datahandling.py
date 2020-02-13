@@ -41,6 +41,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import xarray as xr
+from copy import deepcopy
 from collections import Counter
 from datacube.storage import masking
 from scipy.ndimage import binary_dilation
@@ -191,8 +192,15 @@ def load_ard(dc,
             return da
         
         except ValueError:        
-            return da
-        
+            return da        
+      
+
+    # To prevent modifications to dcload_kwargs being made by this 
+    # function remaining after the function is run (potentially causing 
+    # different results each time the function is run), first take a 
+    # deep copy of the dcload_kwargs object. 
+    dcload_kwargs = deepcopy(dcload_kwargs)  
+    
     # Determine if lazy loading is required
     lazy_load = 'dask_chunks' in dcload_kwargs
     
@@ -226,16 +234,17 @@ def load_ard(dc,
     # contiguity variables, add these to `measurements`
     to_drop = []  # store loaded var names here to later drop
     fmask_band = 'fmask'
-    if 'measurements' in dcload_kwargs:
+    
+    if 'measurements' in dcload_kwargs:        
 
-        if 'fmask' not in dcload_kwargs['measurements']:
-            dcload_kwargs['measurements'].append('fmask')
-            to_drop.append('fmask')
+        if fmask_band not in dcload_kwargs['measurements']:
+            dcload_kwargs['measurements'].append(fmask_band)
+            to_drop.append(fmask_band)
 
         if (mask_contiguity and 
             (mask_contiguity not in dcload_kwargs['measurements'])):
             dcload_kwargs['measurements'].append(mask_contiguity)
-            to_drop.append(mask_contiguity)              
+            to_drop.append(mask_contiguity)  
             
     # If no `measurements` are specified, Landsat ancillary bands are loaded
     # with a 'oa_' prefix, but Sentinel-2 bands are not. As a work-around, 
@@ -243,7 +252,7 @@ def load_ard(dc,
     # Landsat data without specifying `measurements`
     elif product_type == 'ls': 
         mask_contiguity = f'oa_{mask_contiguity}' if mask_contiguity else False
-        fmask_band = f'oa_{fmask_band}'             
+        fmask_band = f'oa_{fmask_band}' 
 
     # Create a list to hold data for each product
     product_data = []
