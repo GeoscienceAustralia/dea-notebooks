@@ -272,8 +272,8 @@ def main(argv=None):
 #     tide_cutoff_min = tide_da.median(dim='time')
 #     tide_cutoff_max = np.Inf
 #     tide_cutoff_min = tide_da.median(dim='time')
-    tide_cutoff_min = tide_da.quantile(dim='time', q=0.5)
-    tide_cutoff_max = tide_da.quantile(dim='time', q=1.0)
+    tide_cutoff_min = tide_da.quantile(dim='time', q=0.6)
+    tide_cutoff_max = tide_da.quantile(dim='time', q=0.9)
 
     # Add interpolated tides as measurement in satellite dataset
     ds['tide_m'] = tide_da

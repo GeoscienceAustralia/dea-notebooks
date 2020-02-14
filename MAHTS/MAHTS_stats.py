@@ -431,7 +431,7 @@ def main(argv=None):
     contours_gdf.to_file(f'{contour_path}.shp')
     points_towrite.to_file(f'{stats_path}.shp')
 
-    shutil.make_archive(base_name=f'output_data/outputs_{study_area}', 
+    shutil.make_archive(base_name=f'output_data/outputs_{study_area}_tidetest', 
                         format='zip', 
                         root_dir=f'output_data/{study_area}/vectors/')
 
