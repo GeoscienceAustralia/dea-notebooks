@@ -188,6 +188,7 @@ def run_filmstrip_app(output_name,
                  'gqa_iterative_mean_xy': [0, 1],
                  'cloud_cover': [0, max_cloud],
                  'resolution': resolution,
+                 'dask_chunks': {'x': 500, 'y': 500},
                  'align': (resolution[1] / 2.0, resolution[1] / 2.0)}
 
         # Load data from all three Landsats
@@ -199,7 +200,6 @@ def run_filmstrip_app(output_name,
                                 'ga_ls7e_ard_3', 
                                 'ga_ls8c_ard_3'], 
                       min_gooddata=0.0,
-                      lazy_load=True,
                       ls7_slc_off=ls7_slc_off,
                       **query)
         
