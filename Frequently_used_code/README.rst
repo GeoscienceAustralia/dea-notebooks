@@ -22,6 +22,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Opening_GeoTIFFs_NetCDFs.ipynb
    Pan_sharpening_Brovey.ipynb
    Rasterize_vectorize.ipynb
+   SARA_SLC_download.ipynb
    Using_load_ard.ipynb
    Virtual_products.ipynb
    Working_with_time.ipynb
