@@ -23,7 +23,7 @@ Functions included:
     map_shapefile
     animated_timeseries
 
-Last modified: October 2019
+Last modified: February 2020
 
 '''
 
@@ -74,7 +74,7 @@ def rgb(ds,
     This function was designed to work as an easier-to-use wrapper 
     around xarray's `.plot.imshow()` functionality.
     
-    Last modified: October 2019
+    Last modified: February 2020
     
     Parameters
     ----------  
@@ -126,7 +126,9 @@ def rgb(ds,
         all available options, see: 
         https://matplotlib.org/api/_as_gen/matplotlib.pyplot.savefig.html        
     **kwargs : optional
-        Additional keyword arguments to pass to `xarray.plot.imshow()`. 
+        Additional keyword arguments to pass to `xarray.plot.imshow()`.
+        For example, the function can be used to plot into an existing
+        matplotlib axes object by passing an `ax` keyword argument.
         For more options, see:
         http://xarray.pydata.org/en/stable/generated/xarray.plot.imshow.html  
         
@@ -235,8 +237,7 @@ def rgb(ds,
         else:
 
             img = da.squeeze(dim=index_dim).plot.imshow(robust=robust,
-                                                        size=size,
-                                                        aspect=aspect,
+                                                        **aspect_size_kwarg,
                                                         **kwargs)
 
     # If an export path is provided, save image to file. Individual and 
