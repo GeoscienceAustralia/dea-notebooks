@@ -42,6 +42,8 @@ from skimage.measure import label
 from skimage.measure import find_contours
 from shapely.geometry import LineString, MultiLineString, shape
 from datacube.helpers import write_geotiff
+from datacube.utils.geometry import CRS, Geometry
+
 
 def xr_vectorize(da, 
                  attribute_col='attribute', 
@@ -703,7 +705,6 @@ def transform_geojson_wgs_to_epsg(geojson, EPSG):
         a geojson dictionary containing a 'coordinates' key, in the desired CRS
 
     """
-    from datacube.utils.geometry import CRS, Geometry
     gg = Geometry(geojson['geometry'], CRS('epsg:4326'))
     gg = gg.to_crs(CRS(f'epsg:{EPSG}'))
     return gg.__geo_interface__
