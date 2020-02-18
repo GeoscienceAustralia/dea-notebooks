@@ -20,7 +20,7 @@ export PATH=$PYTHONUSERBASE/bin:$PATH
 
 QUERY_THREAD=2
 MEM=1000
-NCPUS=24
+NCPUS=16
 JOBDIR=/scratch/r78/$LOGNAME/tmp
 
 ./organize_cluster.sh -q $QUERY_THREAD -c $NCPUS -m $MEM -j $JOBDIR
