@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -l storage=gdata/v10+gdata/r78+gdata/xu18+gdata/u46+scratch/r78
+#PBS -l storage=gdata/v10+gdata/r78+gdata/xu18+gdata/u46+scratch/rs0+gdata/fk4+gdata/fr1+gdata/if87
 #PBS -P r78 
 #PBS -q hugemem
 #PBS -l walltime=24:00:00
