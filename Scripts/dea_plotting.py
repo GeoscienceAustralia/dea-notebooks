@@ -23,7 +23,7 @@ Functions included:
     map_shapefile
     animated_timeseries
 
-Last modified: October 2019
+Last modified: February 2020
 
 '''
 
@@ -74,7 +74,7 @@ def rgb(ds,
     This function was designed to work as an easier-to-use wrapper 
     around xarray's `.plot.imshow()` functionality.
     
-    Last modified: October 2019
+    Last modified: February 2020
     
     Parameters
     ----------  
@@ -126,7 +126,9 @@ def rgb(ds,
         all available options, see: 
         https://matplotlib.org/api/_as_gen/matplotlib.pyplot.savefig.html        
     **kwargs : optional
-        Additional keyword arguments to pass to `xarray.plot.imshow()`. 
+        Additional keyword arguments to pass to `xarray.plot.imshow()`.
+        For example, the function can be used to plot into an existing
+        matplotlib axes object by passing an `ax` keyword argument.
         For more options, see:
         http://xarray.pydata.org/en/stable/generated/xarray.plot.imshow.html  
         
@@ -137,11 +139,20 @@ def rgb(ds,
     
     """
 
-    # Compute image aspect based on the last two dimensions (this will 
-    # exclude the index dim if it is present in the dataset)
-    if not aspect:
-        x_dim, y_dim = list(ds.dims)[-2:]
-        aspect = len(ds[x_dim]) / len(ds[y_dim])
+    # If ax is supplied via kwargs, ignore aspect and size
+    if 'ax' in kwargs:
+        
+        # Create empty aspect size kwarg that will be passed to imshow
+        aspect_size_kwarg = {}    
+    else:
+        # Compute image aspect based on the last two dimensions (this will 
+        # exclude the index dim if it is present in the dataset)
+        if not aspect:
+            x_dim, y_dim = list(ds.dims)[-2:]
+            aspect = len(ds[x_dim]) / len(ds[y_dim])
+        
+        # Populate aspect size kwarg with aspect and size data
+        aspect_size_kwarg = {'aspect': aspect, 'size': size}
 
     # If no value is supplied for `index` (the default), plot using default 
     # values and arguments passed via `**kwargs`
@@ -179,8 +190,7 @@ def rgb(ds,
 
         img = da.plot.imshow(robust=robust,
                              col_wrap=col_wrap,
-                             size=size,
-                             aspect=aspect,
+                             **aspect_size_kwarg,
                              **kwargs)
 
     # If values provided for `index`, extract corresponding observations and 
@@ -219,8 +229,7 @@ def rgb(ds,
             img = da.plot.imshow(robust=robust,
                                  col=index_dim,
                                  col_wrap=col_wrap,
-                                 size=size,
-                                 aspect=aspect,
+                                 **aspect_size_kwarg,
                                  **kwargs)
 
         # If only one index is supplied, squeeze out index_dim and plot as a 
@@ -228,8 +237,7 @@ def rgb(ds,
         else:
 
             img = da.squeeze(dim=index_dim).plot.imshow(robust=robust,
-                                                        size=size,
-                                                        aspect=aspect,
+                                                        **aspect_size_kwarg,
                                                         **kwargs)
 
     # If an export path is provided, save image to file. Individual and 
@@ -410,7 +418,7 @@ def map_shapefile(gdf,
         if hover_col not in gdf.columns:
                 raise ValueError(f"The `hover_col` field {hover_col} does "
                                  f"not exist in the geopandas.GeoDataFrame. "
-                                 f"Valid attributes include " 
+                                 f"Valid attributes include "
                                  f"{gdf.columns.values}.")
 
     # Convert to WGS 84 and GeoJSON format
