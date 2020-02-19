@@ -33,19 +33,19 @@
 
 
 
-# for study_area in WA22.03 WA23.01 WA23.02 WA23.03 WA23.04 WA24.01 WA24.02 \
-#                   WA25.01 WA26.01 WA26.02 WA26.03 WA26.04 WA27.01 WA27.02 \
-#                   WA27.03 WA27.04 WA28.01 WA28.02 WA29.01 WA29.02 WA29.03 \
-#                   WA30.01 WA30.02 WA31.01 WA31.02 WA31.03
+for study_area in WA22.03 WA23.01 WA23.02 WA23.03 WA23.04 WA24.01 WA24.02 \
+                  WA25.01 WA26.01 WA26.02 WA26.03 WA26.04 WA27.01 WA27.02 \
+                  WA27.03 WA27.04 WA28.01 WA28.02 WA29.01 WA29.02 WA29.03 \
+                  WA30.01 WA30.02 WA31.01 WA31.02 WA31.03
                   
 # for study_area in SA07.04 SA06.03 SA07.02 SA07.03 SA08.01 SA07.05 SA05.05 \
 #                   SA06.02 SA05.06 SA05.04 SA06.01 SA05.07 SA05.03 SA06.06 \
 #                   SA05.02 SA05.01 SA09.01 SA03.01 SA10.01 SA08.03 SA04.01 \
 #                   SA03.02 SA02.01 SA04.02 SA07.01 SA04.03 SA01.02 SA01.01
 
-for study_area in VIC04.08 VIC04.05 VIC02.02 VIC04.02 VIC01.02 VIC05.01 VIC04.06 \
-                  VIC04.07 VIC02.03 VIC04.02 VIC04.04 VIC05.02 VIC04.03 VIC06.01 \
-                  VIC06.02 VIC03.01 VIC04.01 VIC01.01 VIC06.03 VIC06.04
+# for study_area in VIC04.08 VIC04.05 VIC02.02 VIC04.02 VIC01.02 VIC05.01 VIC04.06 \
+#                   VIC04.07 VIC02.03 VIC04.02 VIC04.04 VIC05.02 VIC04.03 VIC06.01 \
+#                   VIC06.02 VIC03.01 VIC04.01 VIC01.01 VIC06.03 VIC06.04
 
 do
 
@@ -57,7 +57,7 @@ do
     #PBS -P r78\n\
     #PBS -q normal\n\
     #PBS -l walltime=24:00:00\n\
-    #PBS -l mem=128GB\n\
+    #PBS -l mem=192GB\n\
     #PBS -l jobfs=2GB\n\
     #PBS -l ncpus=1\n\
     #PBS -l wd\n\
