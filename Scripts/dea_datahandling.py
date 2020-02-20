@@ -286,7 +286,7 @@ def load_ard(dc,
     ###############
 
     # Calculate pixel quality mask
-    pq_mask = odc.algo.fmask_to_bool(mask=ds[fmask_band],
+    pq_mask = odc.algo.fmask_to_bool(ds[fmask_band],
                                      categories=fmask_categories)
 
     # Generate good quality data mask
