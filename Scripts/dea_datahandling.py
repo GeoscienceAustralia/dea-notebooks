@@ -207,10 +207,13 @@ def load_ard(dc,
             dcload_kwargs['measurements'].append(fmask_band)
             to_drop.append(fmask_band)
 
-        if (mask_contiguity and
-            (mask_contiguity not in dcload_kwargs['measurements'])):
-            dcload_kwargs['measurements'].append(mask_contiguity)
-            to_drop.append(mask_contiguity)
+        if mask_contiguity:
+            if isinstance(mask_contiguity, bool):
+                mask_contiguity = "nbart_contiguity"  # TODO: nbart vs nbar
+
+            if mask_contiguity not in dcload_kwargs['measurements']:
+                dcload_kwargs['measurements'].append(mask_contiguity)
+                to_drop.append(mask_contiguity)
 
     # If no `measurements` are specified, Landsat ancillary bands are loaded
     # with a 'oa_' prefix, but Sentinel-2 bands are not. As a work-around,
