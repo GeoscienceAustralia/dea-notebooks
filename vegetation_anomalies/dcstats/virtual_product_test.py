@@ -1,8 +1,9 @@
 ## Virtual Product creation to test C3 datacube stats
 
 #Need to link to custom install of dc-stats and dc-core:
-# export PYTHONPATH=/g/data/r78/cb3058/dea-notebooks/vegetation_anomalies/dc_refactor/datacube-stats/:$PYTHONPATH
-# export PYTHONPATH=/g/data/r78/cb3058/dea-notebooks/vegetation_anomalies/dc_core/datacube-core/:$PYTHONPATH
+# export PYTHONUSERBASE=/g/data/r78/cb3058/python_lib
+# export PYTHONPATH=$PYTHONUSERBASE/lib/python3.6/site-packages:$PYTHONPATH
+# export PATH=$PYTHONUSERBASE/bin:$PATH
 
 from datacube.virtual import construct_from_yaml
 from datacube import Datacube
@@ -27,7 +28,7 @@ query = {'lon': (lon - buffer, lon + buffer),
 # datacube_stats.external.ndvi_clim_mean
 print('constructing from yaml')
 ndvi_clim_mean = construct_from_yaml("""
-        aggregate: datacube_stats.external.ndvi_clim_mean
+        aggregate: datacube_stats.external.ndvi_clim_std
         group_by: alltime
         input:
           reproject:
@@ -79,4 +80,4 @@ results = ndvi_clim_mean.fetch(grouped, **query, dask_chunks={'time':-1, 'x':100
 results.load()
 
 print('writing to file')
-write_dataset_to_netcdf(results, 'VP_test_NDVI_climatology_1987_2010.nc')
+write_dataset_to_netcdf(results, 'VP_test_NDVI_climatology_1987_2010_std.nc')
