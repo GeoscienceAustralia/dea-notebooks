@@ -44,7 +44,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from copy import deepcopy
-from itertools import compress
 from collections import Counter
 from scipy.ndimage import binary_dilation
 
@@ -258,11 +257,8 @@ def load_ard(dc,
     # If filter_func is specified, use this function to filter the list
     # of datasets prior to load
     if filter_func:
-
-        # Apply filter func to each dataset and filter list to True
-        dataset_bool = [filter_func(i) for i in dataset_list]
-        dataset_list = list(compress(dataset_list, dataset_bool))
         print(f'Filtering datasets using filter function')
+        dataset_list = [ds for ds in dataset_list if filter_func(ds)]
 
     # Raise exception if filtering removes all datasets
     if len(dataset_list) == 0:
