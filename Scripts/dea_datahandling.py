@@ -43,9 +43,34 @@ import odc.algo
 import numpy as np
 import pandas as pd
 import xarray as xr
-from copy import deepcopy
 from collections import Counter
 from scipy.ndimage import binary_dilation
+
+
+def _dc_query_only(**kw):
+    """ Remove load-only parameters, the rest can be passed to Query
+
+    Returns
+    =======
+
+    dict of query parameters
+    """
+
+    def _impl(measurements=None,
+              output_crs=None,
+              resolution=None,
+              resampling=None,
+              skip_broken_datasets=None,
+              dask_chunks=None,
+              fuse_func=None,
+              align=None,
+              datasets=None,
+              progress_cbk=None,
+              group_by=None,
+              **query):
+        return query
+
+    return _impl(**kw)
 
 
 def load_ard(dc,
@@ -56,7 +81,7 @@ def load_ard(dc,
              mask_contiguity='nbart_contiguity',
              ls7_slc_off=True,
              filter_func=None,
-             **dcload_kwargs):
+             **extras):
 
     '''
     Loads Landsat Collection 3 or Sentinel 2 Definitive and Near Real
@@ -139,7 +164,7 @@ def load_ard(dc,
         For example, a filter function could be used to return True on
         only datasets acquired in January:
         `dataset.time.begin.month == 1`
-    **dcload_kwargs :
+    **extras :
         A set of keyword arguments to `dc.load` that define the
         spatiotemporal query used to extract data. This typically
         includes `measurements`, `x`, `y`, `time`, `resolution`,
@@ -163,17 +188,14 @@ def load_ard(dc,
     # Setup #
     #########
 
-    # To prevent modifications to dcload_kwargs being made by this
-    # function remaining after the function is run (potentially causing
-    # different results each time the function is run), first take a
-    # deep copy of the dcload_kwargs object.
-    dcload_kwargs = deepcopy(dcload_kwargs)
+    query = _dc_query_only(**extras)
 
-    # Determine if lazy loading is required
-    lazy_load = 'dask_chunks' in dcload_kwargs
+    # We deal with `dask_chunks` separately
+    dask_chunks = extras.pop('dask_chunks', None)
+    requested_measurements = extras.pop('measurements', None)
 
     # Warn user if they combine lazy load with min_gooddata
-    if (min_gooddata > 0.0) & lazy_load:
+    if (min_gooddata > 0.0) and dask_chunks is not None:
         warnings.warn("Setting 'min_gooddata' percentage to > 0.0 "
                       "will cause dask arrays to compute when "
                       "loading pixel-quality data to calculate "
@@ -197,22 +219,18 @@ def load_ard(dc,
 
     # If `measurements` are specified but do not include fmask or
     # contiguity variables, add these to `measurements`
-    to_drop = []  # store loaded var names here to later drop
     fmask_band = 'fmask'
+    measurements = requested_measurements.copy() if requested_measurements else None
 
-    if 'measurements' in dcload_kwargs:
-
-        if fmask_band not in dcload_kwargs['measurements']:
-            dcload_kwargs['measurements'].append(fmask_band)
-            to_drop.append(fmask_band)
+    if measurements:
+        if fmask_band not in measurements:
+            measurements.append(fmask_band)
 
         if mask_contiguity:
             if isinstance(mask_contiguity, bool):
                 mask_contiguity = "nbart_contiguity"  # TODO: nbart vs nbar
-
-            if mask_contiguity not in dcload_kwargs['measurements']:
-                dcload_kwargs['measurements'].append(mask_contiguity)
-                to_drop.append(mask_contiguity)
+            if mask_contiguity not in measurements:
+                measurements.append(mask_contiguity)
 
     # If no `measurements` are specified, Landsat ancillary bands are loaded
     # with a 'oa_' prefix, but Sentinel-2 bands are not. As a work-around,
@@ -228,8 +246,6 @@ def load_ard(dc,
 
     # Extract datasets for each product using subset of dcload_kwargs
     dataset_list = []
-    datasets_query = {k: v for k, v in dcload_kwargs.items()
-                      if k in ['time', 'x', 'y']}
 
     # Get list of datasets for each product
     print('Finding datasets')
@@ -237,7 +253,7 @@ def load_ard(dc,
 
         # Obtain list of datasets for product
         print(f'    {product}')
-        datasets = dc.find_datasets(product=product, **datasets_query)
+        datasets = dc.find_datasets(product=product, **query)
 
         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
         if not ls7_slc_off and product == 'ga_ls7e_ard_3':
@@ -269,17 +285,12 @@ def load_ard(dc,
     # Load data #
     #############
 
-    # If dask_chunks is specified, load data using dcload_kwargs only
-    if lazy_load:
-        ds = dc.load(datasets=dataset_list,
-                     **dcload_kwargs)
-
-    # If no dask chunks specified, add this param so that
+    # Note we always load using dask here so that
     # we can lazy load data before filtering by good data
-    else:
-        ds = dc.load(datasets=dataset_list,
-                     dask_chunks={},
-                     **dcload_kwargs)
+    ds = dc.load(datasets=dataset_list,
+                 measurements=measurements,
+                 dask_chunks={} if dask_chunks is None else dask_chunks,
+                 **extras)
 
     ###############
     # Apply masks #
@@ -332,7 +343,8 @@ def load_ard(dc,
               f'good quality pixels')
 
     # Drop bands not originally requested by user
-    ds = ds.drop(to_drop)
+    if requested_measurements:
+        ds = ds[requested_measurements]
 
     ###############
     # Return data #
@@ -342,12 +354,11 @@ def load_ard(dc,
     # use when converting data to a float32 dtype
     ds = odc.algo.to_f32(ds)
 
-    # If `lazy_load` is True, return data as a dask array without
+    # If user supplied dask_chunks, return data as a dask array without
     # actually loading it in
-    if lazy_load:
+    if dask_chunks is not None:
         print(f'Returning {len(ds.time)} time steps as a dask array')
         return ds
-
     else:
         print(f'Loading {len(ds.time)} time steps')
         return ds.compute()
