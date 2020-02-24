@@ -81,7 +81,7 @@ def load_ard(dc,
              mask_contiguity='nbart_contiguity',
              ls7_slc_off=True,
              filter_func=None,
-             **extras):
+             **kwargs):
 
     '''
     Loads Landsat Collection 3 or Sentinel 2 Definitive and Near Real
@@ -164,7 +164,7 @@ def load_ard(dc,
         For example, a filter function could be used to return True on
         only datasets acquired in January:
         `dataset.time.begin.month == 1`
-    **extras :
+    **kwargs :
         A set of keyword arguments to `dc.load` that define the
         spatiotemporal query used to extract data. This typically
         includes `measurements`, `x`, `y`, `time`, `resolution`,
@@ -188,11 +188,11 @@ def load_ard(dc,
     # Setup #
     #########
 
-    query = _dc_query_only(**extras)
+    query = _dc_query_only(**kwargs)
 
     # We deal with `dask_chunks` separately
-    dask_chunks = extras.pop('dask_chunks', None)
-    requested_measurements = extras.pop('measurements', None)
+    dask_chunks = kwargs.pop('dask_chunks', None)
+    requested_measurements = kwargs.pop('measurements', None)
 
     # Warn user if they combine lazy load with min_gooddata
     if (min_gooddata > 0.0) and dask_chunks is not None:
@@ -290,7 +290,7 @@ def load_ard(dc,
     ds = dc.load(datasets=dataset_list,
                  measurements=measurements,
                  dask_chunks={} if dask_chunks is None else dask_chunks,
-                 **extras)
+                 **kwargs)
 
     ###############
     # Apply masks #
