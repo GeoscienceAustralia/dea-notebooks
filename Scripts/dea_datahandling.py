@@ -80,7 +80,7 @@ def load_ard(dc,
              mask_pixel_quality=True,
              mask_contiguity='nbart_contiguity',
              ls7_slc_off=True,
-             filter_func=None,
+             predicate=None,
              **kwargs):
 
     '''
@@ -156,9 +156,9 @@ def load_ard(dc,
         An optional boolean indicating whether to include data from
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to
         True, which keeps all Landsat 7 observations > May 31 2003.
-    filter_func : function, optional
+    predicate : function, optional
         An optional function that can be passed in to restrict the
-        datasets that are loaded by the function. A filter function
+        datasets that are loaded by the function. A predicate function
         should take a `datacube.model.Dataset` object as an input (i.e.
         as returned from `dc.find_datasets`), and return a boolean.
         For example, a filter function could be used to return True on
@@ -270,11 +270,11 @@ def load_ard(dc,
                          "the products specified have data for the "
                          "time and location requested")
 
-    # If filter_func is specified, use this function to filter the list
+    # If predicate is specified, use this function to filter the list
     # of datasets prior to load
-    if filter_func:
+    if predicate:
         print(f'Filtering datasets using filter function')
-        dataset_list = [ds for ds in dataset_list if filter_func(ds)]
+        dataset_list = [ds for ds in dataset_list if predicate(ds)]
 
     # Raise exception if filtering removes all datasets
     if len(dataset_list) == 0:
