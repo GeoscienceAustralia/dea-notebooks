@@ -73,6 +73,20 @@ def _dc_query_only(**kw):
     return _impl(**kw)
 
 
+def _common_bands(products, dc):
+    common = None
+    bands = None
+
+    for p in products:
+        p = dc.index.products.get_by_name(p)
+        if common is None:
+            common = set(p.measurements)
+            bands = list(p.measurements)
+        else:
+            common = common.intersection(set(p.measurements))
+    return [band for band in bands if band in common]
+
+
 def load_ard(dc,
              products=None,
              min_gooddata=0.0,
@@ -190,6 +204,10 @@ def load_ard(dc,
 
     query = _dc_query_only(**kwargs)
 
+    # True -> nbart_contiguity
+    if mask_contiguity is True:
+        mask_contiguity = 'nbart_contiguity'
+
     # We deal with `dask_chunks` separately
     dask_chunks = kwargs.pop('dask_chunks', None)
     requested_measurements = kwargs.pop('measurements', None)
@@ -222,23 +240,22 @@ def load_ard(dc,
     fmask_band = 'fmask'
     measurements = requested_measurements.copy() if requested_measurements else None
 
-    if measurements:
-        if fmask_band not in measurements:
-            measurements.append(fmask_band)
+    if measurements is None:
+        # deal with "load all" case: pick a set of bands common across all products
+        measurements = _common_bands(products, dc)
 
-        if mask_contiguity:
-            if isinstance(mask_contiguity, bool):
-                mask_contiguity = "nbart_contiguity"  # TODO: nbart vs nbar
-            if mask_contiguity not in measurements:
-                measurements.append(mask_contiguity)
+        # If no `measurements` are specified, Landsat ancillary bands are loaded
+        # with a 'oa_' prefix, but Sentinel-2 bands are not. As a work-around,
+        # we need to rename the default contiguity and fmask bands if loading
+        # Landsat data without specifying `measurements`
+        if product_type == 'ls':
+            mask_contiguity = f'oa_{mask_contiguity}' if mask_contiguity else False
+            fmask_band = f'oa_{fmask_band}'
 
-    # If no `measurements` are specified, Landsat ancillary bands are loaded
-    # with a 'oa_' prefix, but Sentinel-2 bands are not. As a work-around,
-    # we need to rename the default contiguity and fmask bands if loading
-    # Landsat data without specifying `measurements`
-    elif product_type == 'ls':
-        mask_contiguity = f'oa_{mask_contiguity}' if mask_contiguity else False
-        fmask_band = f'oa_{fmask_band}'
+    if fmask_band not in measurements:
+        measurements.append(fmask_band)
+    if mask_contiguity and mask_contiguity not in measurements:
+        measurements.append(mask_contiguity)
 
     #################
     # Find datasets #
