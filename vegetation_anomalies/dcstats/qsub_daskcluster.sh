@@ -1,11 +1,11 @@
 #!/bin/bash
 #PBS -l storage=gdata/v10+gdata/r78+gdata/xu18+gdata/u46+scratch/rs0+gdata/fk4+gdata/fr1+gdata/if87
 #PBS -P r78 
-#PBS -q express
-#PBS -l walltime=3:00:00
-#PBS -l mem=192GB
+#PBS -q hugemem
+#PBS -l walltime=30:00:00
+#PBS -l mem=1TB
 #PBS -l jobfs=2GB
-#PBS -l ncpus=16
+#PBS -l ncpus=24
 #PBS -l wd
 
 #wd and module load
@@ -19,8 +19,8 @@ export PYTHONPATH=$PYTHONUSERBASE/lib/python3.6/site-packages:$PYTHONPATH
 export PATH=$PYTHONUSERBASE/bin:$PATH
 
 QUERY_THREAD=2
-MEM=192
-NCPUS=8
+MEM=1000
+NCPUS=18
 JOBDIR=/scratch/r78/$LOGNAME/tmp
 
 ./organize_cluster.sh -q $QUERY_THREAD -c $NCPUS -m $MEM -j $JOBDIR
