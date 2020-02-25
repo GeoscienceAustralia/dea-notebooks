@@ -237,8 +237,6 @@ def load_ard(dc,
     elif all(['s2' in product for product in products]):
         product_type = 's2'
 
-    # If `measurements` are specified but do not include fmask or
-    # contiguity variables, add these to `measurements`
     fmask_band = 'fmask'
     measurements = requested_measurements.copy() if requested_measurements else None
 
@@ -254,10 +252,15 @@ def load_ard(dc,
             mask_contiguity = f'oa_{mask_contiguity}' if mask_contiguity else False
             fmask_band = f'oa_{fmask_band}'
 
+    # If `measurements` are specified but do not include fmask or
+    # contiguity variables, add these to `measurements`
     if fmask_band not in measurements:
         measurements.append(fmask_band)
     if mask_contiguity and mask_contiguity not in measurements:
         measurements.append(mask_contiguity)
+
+    data_bands = [band for band in measurements if band not in (fmask_band, mask_contiguity)]
+    mask_bands = [band for band in measurements if band not in data_bands]
 
     #################
     # Find datasets #
@@ -335,11 +338,6 @@ def load_ard(dc,
         # (keeping only pixels good in both)
         mask = cont_mask if mask is None else mask * cont_mask
 
-    # Mask data if either of the above masks were generated
-    # TODO: do not apply mask to masks
-    if mask is not None:
-        ds = odc.algo.keep_good_only(ds, where=mask)
-
     if dtype == 'auto':
         dtype = 'native' if mask is None else 'float32'
 
@@ -357,13 +355,36 @@ def load_ard(dc,
         print('Counting good quality pixels for each time step')
         data_perc = (pq_mask.sum(axis=[1, 2], dtype='int32') /
                      (pq_mask.shape[1] * pq_mask.shape[2]))
+        keep = data_perc >= min_gooddata
 
         # Filter by `min_gooddata` to drop low quality observations
         total_obs = len(ds.time)
-        ds = ds.sel(time=data_perc >= min_gooddata)
+        ds = ds.sel(time=keep)
+        if mask is not None:
+            mask = mask.sel(time=keep)
+
         print(f'Filtering to {len(ds.time)} out of {total_obs} '
               f'time steps with at least {min_gooddata:.1%} '
               f'good quality pixels')
+
+    # split into data/masks bands, conversion to float and masking should only
+    # be applied to data bands
+    ds_data = ds[data_bands]
+    ds_masks = ds[mask_bands]
+
+    # Mask data if either of the above masks were generated
+    if mask is not None:
+        ds_data = odc.algo.keep_good_only(ds_data, where=mask)
+
+    # Set nodata values using odc.algo tools to reduce peak memory
+    # use when converting data to a float32 dtype
+    if dtype != 'native':
+        ds_data = odc.algo.to_float(ds_data, dtype=dtype)
+
+    # put data and mask bands back together
+    attrs = ds.attrs
+    ds = xr.merge([ds_data, ds_masks])
+    ds.attrs.update(attrs)
 
     # Drop bands not originally requested by user
     if requested_measurements:
@@ -372,12 +393,6 @@ def load_ard(dc,
     ###############
     # Return data #
     ###############
-
-    # Set nodata values using odc.algo tools to reduce peak memory
-    # use when converting data to a float32 dtype
-    if dtype != 'native':
-        # TODO: do not apply to masks
-        ds = odc.algo.to_float(ds, dtype=dtype)
 
     # If user supplied dask_chunks, return data as a dask array without
     # actually loading it in
