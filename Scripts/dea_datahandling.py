@@ -95,6 +95,7 @@ def load_ard(dc,
              mask_contiguity='nbart_contiguity',
              ls7_slc_off=True,
              predicate=None,
+             dtype='auto',
              **kwargs):
 
     '''
@@ -161,11 +162,12 @@ def load_ard(dc,
         Be aware that masking out non-contiguous values will convert
         all numeric values to floating point values when -999 values
         are replaced with NaN, which can cause memory issues.
-    mask_dtype : numpy dtype, optional
+    dtype : numpy dtype, optional
         An optional parameter that controls the data type/dtype that
-        layers are coerced to when when `mask_pixel_quality=True` or
-        `mask_contiguity=True`. Defaults to `np.float32`, which uses
-        approximately 1/2 the memory of `np.float64`.
+        layers are coerced to after loading.
+        Valid values: 'native', 'auto', 'float{16|32|64}'
+        When 'auto' is used, image will be converted to `float32` if masking is used,
+        otherwise will return native data type of the data.
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to
@@ -334,8 +336,12 @@ def load_ard(dc,
         mask = cont_mask if mask is None else mask * cont_mask
 
     # Mask data if either of the above masks were generated
+    # TODO: do not apply mask to masks
     if mask is not None:
         ds = odc.algo.keep_good_only(ds, where=mask)
+
+    if dtype == 'auto':
+        dtype = 'native' if mask is None else 'float32'
 
     ####################
     # Filter good data #
@@ -367,9 +373,11 @@ def load_ard(dc,
     # Return data #
     ###############
 
-    # Set nodata valuses using odc.algo tools to reduce peak memory
+    # Set nodata values using odc.algo tools to reduce peak memory
     # use when converting data to a float32 dtype
-    ds = odc.algo.to_f32(ds)
+    if dtype != 'native':
+        # TODO: do not apply to masks
+        ds = odc.algo.to_float(ds, dtype=dtype)
 
     # If user supplied dask_chunks, return data as a dask array without
     # actually loading it in
