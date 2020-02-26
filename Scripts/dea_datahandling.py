@@ -291,7 +291,7 @@ def load_ard(dc,
         # Obtain list of datasets for product
         print(f'    {product} (ignoring SLC-off observations)' 
               if not ls7_slc_off and product == 'ga_ls7e_ard_3' 
-              else f'    {product} ')
+              else f'    {product}')
         datasets = dc.find_datasets(product=product, **query)
 
         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
