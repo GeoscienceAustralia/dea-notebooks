@@ -48,11 +48,11 @@ from scipy.ndimage import binary_dilation
 
 
 def _dc_query_only(**kw):
-    """ Remove load-only parameters, the rest can be passed to Query
+    """
+    Remove load-only parameters, the rest can be passed to Query
 
     Returns
-    =======
-
+    -------
     dict of query parameters
     """
 
@@ -73,7 +73,15 @@ def _dc_query_only(**kw):
     return _impl(**kw)
 
 
-def _common_bands(products, dc):
+def _common_bands(dc, products):
+    """
+    Takes a list of products and returns a list of measurements/bands
+    that are present in all products
+
+    Returns
+    -------
+    List of band names
+    """
     common = None
     bands = None
 
@@ -98,7 +106,7 @@ def load_ard(dc,
              dtype='auto',
              **kwargs):
 
-    '''
+    """
     Loads and combines Landsat Collection 3 or Sentinel 2 Definitive 
     and Near Real Time data for multiple sensors (i.e. ls5t, ls7e and 
     ls8c for Landsat; s2a and s2b for Sentinel 2), optionally applies 
@@ -161,7 +169,7 @@ def load_ard(dc,
         `mask_contiguity=False`. Non-contiguous pixels will be set to 
         NaN if `dtype='auto'`, or set to the data's native nodata value 
         if `dtype='native'` (which can be useful for reducing memory).
-    dtype : numpy dtype, optional
+    dtype : string, optional
         An optional parameter that controls the data type/dtype that
         layers are coerced to after loading. Valid values: 'native', 
         'auto', 'float{16|32|64}'. When 'auto' is used, the data will be 
@@ -200,7 +208,7 @@ def load_ard(dc,
         contains greater than `min_gooddata` proportion of good quality
         pixels.
 
-    '''
+    """
 
     #########
     # Setup #
@@ -242,13 +250,14 @@ def load_ard(dc,
 
     if measurements is None:
         
-        # Deal with "load all" case: pick a set of bands common across all products
-        measurements = _common_bands(products, dc)
+        # Deal with "load all" case: pick a set of bands common across 
+        # all products
+        measurements = _common_bands(dc, products)
 
-        # If no `measurements` are specified, Landsat ancillary bands are loaded
-        # with a 'oa_' prefix, but Sentinel-2 bands are not. As a work-around,
-        # we need to rename the default contiguity and fmask bands if loading
-        # Landsat data without specifying `measurements`
+        # If no `measurements` are specified, Landsat ancillary bands are 
+        # loaded with a 'oa_' prefix, but Sentinel-2 bands are not. As a 
+        # work-around, we need to rename the default contiguity and fmask 
+        # bands if loading Landsat data without specifying `measurements`
         if product_type == 'ls':
             mask_contiguity = f'oa_{mask_contiguity}' if mask_contiguity else False
             fmask_band = f'oa_{fmask_band}'
@@ -280,12 +289,13 @@ def load_ard(dc,
     for product in products:
 
         # Obtain list of datasets for product
-        print(f'    {product}')
+        print(f'    {product} (ignoring SLC-off observations)' 
+              if not ls7_slc_off and product == 'ga_ls7e_ard_3' 
+              else f'    {product} ')
         datasets = dc.find_datasets(product=product, **query)
 
         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
         if not ls7_slc_off and product == 'ga_ls7e_ard_3':
-            print('    Ignoring SLC-off observations for ls7')
             datasets = [i for i in datasets if i.time.begin <
                         datetime.datetime(2003, 5, 31)]
 
@@ -320,33 +330,13 @@ def load_ard(dc,
                  dask_chunks={} if dask_chunks is None else dask_chunks,
                  **kwargs)
 
-    #################
-    # Generate mask #
-    #################
+    ####################
+    # Filter good data #
+    ####################
 
     # Calculate pixel quality mask
     pq_mask = odc.algo.fmask_to_bool(ds[fmask_band],
                                      categories=fmask_categories)
-
-    # Add pixel quality mask to overall mask
-    mask = None
-    if mask_pixel_quality:
-        print('Applying pixel quality/cloud mask')
-        mask = pq_mask
-
-    # Add contiguity mask to overall mask
-    if mask_contiguity:
-        print('Applying contiguity mask')
-        cont_mask = ds[mask_contiguity] == 1
-
-        # If mask already has data if mask_pixel_quality == True,
-        # multiply with cont_mask to perform a logical 'or' operation
-        # (keeping only pixels good in both)
-        mask = cont_mask if mask is None else mask * cont_mask
-
-    ####################
-    # Filter good data #
-    ####################
 
     # The good data percentage calculation has to load in all `fmask`
     # data, which can be slow. If the user has chosen no filtering
@@ -363,8 +353,7 @@ def load_ard(dc,
         # Filter by `min_gooddata` to drop low quality observations
         total_obs = len(ds.time)
         ds = ds.sel(time=keep)
-        if mask is not None:
-            mask = mask.sel(time=keep)
+        pq_mask = pq_mask.sel(time=keep)
 
         print(f'Filtering to {len(ds.time)} out of {total_obs} '
               f'time steps with at least {min_gooddata:.1%} '
@@ -372,7 +361,25 @@ def load_ard(dc,
         
     ###############
     # Apply masks #
-    ###############
+    ###############      
+    
+    # Create an overall mask to hold both pixel quality and contiguity
+    mask = None    
+    
+    # Add pixel quality mask to overall mask
+    if mask_pixel_quality:
+        print('Applying pixel quality/cloud mask')
+        mask = pq_mask
+
+    # Add contiguity mask to overall mask
+    if mask_contiguity:
+        print('Applying contiguity mask')
+        cont_mask = ds[mask_contiguity] == 1
+
+        # If mask already has data if mask_pixel_quality == True,
+        # multiply with cont_mask to perform a logical 'or' operation
+        # (keeping only pixels good in both)
+        mask = cont_mask if mask is None else mask * cont_mask
 
     # Split into data/masks bands, as conversion to float and masking 
     # should only be applied to data bands
@@ -628,7 +635,7 @@ def dilate(array, dilation=10, invert=True):
 
 
 def pan_sharpen_brovey(band_1, band_2, band_3, pan_band):
-    '''
+    """
     Brovey pan sharpening on surface reflectance input using numexpr
     and return three xarrays.
 
@@ -648,7 +655,7 @@ def pan_sharpen_brovey(band_1, band_2, band_3, pan_band):
         Three numpy arrays equivelent to `band_1`, `band_2` and `band_3`
         pan-sharpened to the spatial resolution of `pan_band`.
 
-    '''
+    """
     # Calculate total
     exp = 'band_1 + band_2 + band_3'
     total = numexpr.evaluate(exp)
@@ -669,7 +676,7 @@ def pan_sharpen_brovey(band_1, band_2, band_3, pan_band):
 
 
 def paths_to_datetimeindex(paths, string_slice=(0, 10)):
-    '''
+    """
     Helper function to generate a Pandas datetimeindex object
     from dates contained in a file path string.
 
@@ -687,7 +694,7 @@ def paths_to_datetimeindex(paths, string_slice=(0, 10)):
     -------
     A pandas.DatetimeIndex object containing a 'datetime64[ns]' derived
     from the file paths provided by `paths`.
-    '''
+    """
 
     date_strings = [os.path.basename(i)[slice(*string_slice)]
                     for i in paths]
