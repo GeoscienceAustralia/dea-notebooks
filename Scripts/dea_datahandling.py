@@ -99,19 +99,22 @@ def load_ard(dc,
              **kwargs):
 
     '''
-    Loads Landsat Collection 3 or Sentinel 2 Definitive and Near Real
-    Time data for multiple sensors (i.e. ls5t, ls7e and ls8c for
-    Landsat; s2a and s2b for Sentinel 2), and returns a single masked
-    xarray dataset containing only observations that contain greater
-    than a given proportion of good quality pixels. This can be used
-    to extract clean time series of observations that are not affected
-    by cloud, for example as an input to the `animated_timeseries`
-    function from `dea_plotting`.
+    Loads and combines Landsat Collection 3 or Sentinel 2 Definitive 
+    and Near Real Time data for multiple sensors (i.e. ls5t, ls7e and 
+    ls8c for Landsat; s2a and s2b for Sentinel 2), optionally applies 
+    pixel quality and contiguity masks, and drops time steps that 
+    contain greater than a minimum proportion of good quality (e.g. non-
+    cloudy or shadowed) pixels. 
 
-    The proportion of good quality pixels is calculated by summing the
-    pixels flagged as good quality in `fmask`. By default non-cloudy or
-    shadowed land, snow and water pixels are treated as good quality,
-    but this can be customised using the `fmask_gooddata` parameter.
+    The function supports loading the following DEA products:
+    
+        ga_ls5t_ard_3
+        ga_ls7e_ard_3
+        ga_ls8c_ard_3
+        s2a_ard_granule
+        s2b_ard_granule
+        s2a_nrt_granule
+        s2b_nrt_granule
 
     Last modified: February 2020
 
@@ -134,40 +137,39 @@ def load_ard(dc,
         more than 99% good quality pixels).
     fmask_categories : list, optional
         An optional list of fmask category names to treat as good
-        quality observations in the above `min_gooddata` calculation.
+        quality pixels in the above `min_gooddata` calculation, and for
+        masking data by pixel quality (if `mask_pixel_quality=True`).
         The default is `['valid', 'snow', 'water']` which will return
         non-cloudy or shadowed land, snow and water pixels. Choose from:
         'nodata', 'valid', 'cloud', 'shadow', 'snow', and 'water'.
     mask_pixel_quality : bool, optional
-        An optional boolean indicating whether to apply the good data
-        mask to all observations that were not filtered out for having
-        less good quality pixels than `min_gooddata`. E.g. if
-        `min_gooddata=0.99`, the filtered observations may still contain
-        up to 1% poor quality pixels. The default of False simply
-        returns the resulting observations without masking out these
-        pixels; True masks them and sets them to NaN using the good data
-        mask. This will convert numeric values to floating point values
-        which can cause memory issues, set to False to prevent this.
+        An optional boolean indicating whether to mask out poor quality
+        pixels using fmask based on the `fmask_categories` provided 
+        above. The default is True, which will set poor quality pixels 
+        to NaN if `dtype='auto'` (which will convert the data to 
+        'float32'), or set poor quality pixels to the data's native 
+        nodata value if `dtype='native' (which can be useful for 
+        reducing memory).         
     mask_contiguity : str or bool, optional
         An optional string or boolean indicating whether to mask out
         pixels missing data in any band (i.e. "non-contiguous" values).
-        Although most missing data issues are resolved by
-        `mask_invalid_data`, this step is important for generating
-        clean and concistent composite datasets. The default
-        is `mask_contiguity='nbart_contiguity'` which will set any
-        pixels with non-contiguous values to NaN based on NBART data.
-        If you are loading NBAR data instead, you should specify
-        `mask_contiguity='nbar_contiguity'` instead. To ignore non-
-        contiguous values completely, set `mask_contiguity=False`.
-        Be aware that masking out non-contiguous values will convert
-        all numeric values to floating point values when -999 values
-        are replaced with NaN, which can cause memory issues.
+        This can be important for generating clean composite datasets. 
+        The default is `mask_contiguity='nbart_contiguity'` which will 
+        mask out non-contiguous values based on NBART data. If you are 
+        loading NBAR data, specify `mask_contiguity='nbar_contiguity'` 
+        instead. To ignore non-contiguous values completely, set 
+        `mask_contiguity=False`. Non-contiguous pixels will be set to 
+        NaN if `dtype='auto'`, or set to the data's native nodata value 
+        if `dtype='native'` (which can be useful for reducing memory).
     dtype : numpy dtype, optional
         An optional parameter that controls the data type/dtype that
-        layers are coerced to after loading.
-        Valid values: 'native', 'auto', 'float{16|32|64}'
-        When 'auto' is used, image will be converted to `float32` if masking is used,
-        otherwise will return native data type of the data.
+        layers are coerced to after loading. Valid values: 'native', 
+        'auto', 'float{16|32|64}'. When 'auto' is used, the data will be 
+        converted to `float32` if masking is used, otherwise data will 
+        be returned in the native data type of the data. Be aware that
+        if data is loaded in its native dtype, nodata and masked 
+        pixels will be returned with the data's native nodata value 
+        (typically -999), not NaN. 
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to
@@ -177,18 +179,18 @@ def load_ard(dc,
         datasets that are loaded by the function. A predicate function
         should take a `datacube.model.Dataset` object as an input (i.e.
         as returned from `dc.find_datasets`), and return a boolean.
-        For example, a filter function could be used to return True on
-        only datasets acquired in January:
+        For example, a predicate function could be used to return True 
+        for only datasets acquired in January:
         `dataset.time.begin.month == 1`
     **kwargs :
         A set of keyword arguments to `dc.load` that define the
-        spatiotemporal query used to extract data. This typically
-        includes `measurements`, `x`, `y`, `time`, `resolution`,
-        `resampling`, `group_by` and `crs`. Keyword arguments can
-        either be listed directly in the `load_ard` call like any
-        other parameter (e.g. `measurements=['nbart_red']`), or by
-        passing in a query kwarg dictionary (e.g. `**query`). For a
-        list of possible options, see the `dc.load` documentation:
+        spatiotemporal query and load parameters used to extract data. 
+        Keyword arguments can either be listed directly in the 
+        `load_ard` call like any other parameter (e.g. 
+        `measurements=['nbart_red']`), or by passing in a query kwarg 
+        dictionary (e.g. `**query`). Keywords can include `measurements`, 
+        `x`, `y`, `time`, `resolution`, `resampling`, `group_by`, `crs`;
+        see the `dc.load` documentation for all possible options:
         https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html
 
     Returns
@@ -204,9 +206,7 @@ def load_ard(dc,
     # Setup #
     #########
 
-    query = _dc_query_only(**kwargs)
-
-    # True -> nbart_contiguity
+    # Use 'nbart_contiguity' by default if mask_contiguity is true
     if mask_contiguity is True:
         mask_contiguity = 'nbart_contiguity'
 
@@ -222,8 +222,8 @@ def load_ard(dc,
                       "'good pixel' percentage. This can "
                       "slow the return of your dataset.")
 
-    # Verify that products were provided, and that only Sentinel-2 or
-    # only Landsat products are being loaded at the same time
+    # Verify that products were provided, and determine if Sentinel-2
+    # or Landsat data is being loaded
     if not products:
         raise ValueError("Please provide a list of product names "
                          "to load data from. Valid options are: \n"
@@ -241,7 +241,8 @@ def load_ard(dc,
     measurements = requested_measurements.copy() if requested_measurements else None
 
     if measurements is None:
-        # deal with "load all" case: pick a set of bands common across all products
+        
+        # Deal with "load all" case: pick a set of bands common across all products
         measurements = _common_bands(products, dc)
 
         # If no `measurements` are specified, Landsat ancillary bands are loaded
@@ -259,6 +260,8 @@ def load_ard(dc,
     if mask_contiguity and mask_contiguity not in measurements:
         measurements.append(mask_contiguity)
 
+    # Get list of data and mask bands so that we can later exclude
+    # mask bands from being masked themselves
     data_bands = [band for band in measurements if band not in (fmask_band, mask_contiguity)]
     mask_bands = [band for band in measurements if band not in data_bands]
 
@@ -266,6 +269,9 @@ def load_ard(dc,
     # Find datasets #
     #################
 
+    # Pull out query params only to pass to dc.find_datasets
+    query = _dc_query_only(**kwargs)
+    
     # Extract datasets for each product using subset of dcload_kwargs
     dataset_list = []
 
@@ -295,40 +301,40 @@ def load_ard(dc,
     # If predicate is specified, use this function to filter the list
     # of datasets prior to load
     if predicate:
-        print(f'Filtering datasets using filter function')
+        print(f'Filtering datasets using predicate function')
         dataset_list = [ds for ds in dataset_list if predicate(ds)]
 
     # Raise exception if filtering removes all datasets
     if len(dataset_list) == 0:
         raise ValueError("No data available after filtering with "
-                         "filter function")
+                         "predicate function")
 
     #############
     # Load data #
     #############
 
-    # Note we always load using dask here so that
-    # we can lazy load data before filtering by good data
+    # Note we always load using dask here so that we can lazy load data 
+    # before filtering by good data
     ds = dc.load(datasets=dataset_list,
                  measurements=measurements,
                  dask_chunks={} if dask_chunks is None else dask_chunks,
                  **kwargs)
 
-    ###############
-    # Apply masks #
-    ###############
+    #################
+    # Generate mask #
+    #################
 
     # Calculate pixel quality mask
     pq_mask = odc.algo.fmask_to_bool(ds[fmask_band],
                                      categories=fmask_categories)
 
-    # Generate good quality data mask
+    # Add pixel quality mask to overall mask
     mask = None
     if mask_pixel_quality:
         print('Applying pixel quality/cloud mask')
         mask = pq_mask
 
-    # Generate contiguity mask
+    # Add contiguity mask to overall mask
     if mask_contiguity:
         print('Applying contiguity mask')
         cont_mask = ds[mask_contiguity] == 1
@@ -337,9 +343,6 @@ def load_ard(dc,
         # multiply with cont_mask to perform a logical 'or' operation
         # (keeping only pixels good in both)
         mask = cont_mask if mask is None else mask * cont_mask
-
-    if dtype == 'auto':
-        dtype = 'native' if mask is None else 'float32'
 
     ####################
     # Filter good data #
@@ -366,9 +369,13 @@ def load_ard(dc,
         print(f'Filtering to {len(ds.time)} out of {total_obs} '
               f'time steps with at least {min_gooddata:.1%} '
               f'good quality pixels')
+        
+    ###############
+    # Apply masks #
+    ###############
 
-    # split into data/masks bands, conversion to float and masking should only
-    # be applied to data bands
+    # Split into data/masks bands, as conversion to float and masking 
+    # should only be applied to data bands
     ds_data = ds[data_bands]
     ds_masks = ds[mask_bands]
 
@@ -376,23 +383,28 @@ def load_ard(dc,
     if mask is not None:
         ds_data = odc.algo.keep_good_only(ds_data, where=mask)
 
+    # Automatically set dtype to either native or float32 depending
+    # on whether masking was requested
+    if dtype == 'auto':
+        dtype = 'native' if mask is None else 'float32'
+    
     # Set nodata values using odc.algo tools to reduce peak memory
-    # use when converting data to a float32 dtype
+    # use when converting data dtype    
     if dtype != 'native':
         ds_data = odc.algo.to_float(ds_data, dtype=dtype)
 
-    # put data and mask bands back together
+    # Put data and mask bands back together
     attrs = ds.attrs
     ds = xr.merge([ds_data, ds_masks])
     ds.attrs.update(attrs)
+    
+    ###############
+    # Return data #
+    ###############
 
     # Drop bands not originally requested by user
     if requested_measurements:
         ds = ds[requested_measurements]
-
-    ###############
-    # Return data #
-    ###############
 
     # If user supplied dask_chunks, return data as a dask array without
     # actually loading it in
