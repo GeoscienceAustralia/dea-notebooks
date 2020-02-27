@@ -265,8 +265,19 @@ def load_ard(dc,
             # Load data including fmask band
             print(f'Loading {product} data')
             try:
-                ds = dc.load(product=f'{product}',
-                             **dcload_kwargs)
+                
+                # If dask_chunks is specified, load data using query
+                if lazy_load:
+                    ds = dc.load(product=f'{product}',
+                                 **dcload_kwargs)
+                
+                # If no dask chunks specified, add this param so that
+                # we can lazy load data before filtering by good data
+                else:
+                    ds = dc.load(product=f'{product}',
+                                 dask_chunks={},
+                                 **dcload_kwargs) 
+                
             except KeyError as e:
                 raise ValueError(f'Band {e} does not exist in this product. '
                                  f'Verify all requested `measurements` exist '
