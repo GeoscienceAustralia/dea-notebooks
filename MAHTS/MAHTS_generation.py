@@ -214,10 +214,10 @@ def main(argv=None):
                   mask_contiguity=False,
                   **query)
 
-    ds = (calculate_indices(ds, index=['NDWI', 'MNDWI', 'AWEI_ns', 'AWEI_sh'], 
+    ds = (calculate_indices(ds, index=['MNDWI'], 
                             collection='ga_ls_3', 
                             drop=True)
-          .rename({'NDWI': 'ndwi', 'MNDWI': 'mndwi', 'AWEI_ns': 'awei_ns', 'AWEI_sh': 'awei_sh'}))
+          .rename({'MNDWI': 'mndwi'}))
 
     ###############
     # Model tides #
