@@ -175,6 +175,7 @@ def tidal_stats(ds,
                 tidepost_lon=None,
                 plain_english=True, 
                 plot=True,
+                return_tides=False,
                 modelled_freq='2h',
                 round_stats=3): 
     """
@@ -211,6 +212,10 @@ def tidal_stats(ds,
         An optional boolean indicating whether to plot how satellite-
         observed tide heights compare against the full tidal range. 
         Defaults to True.
+    return_tides : bool, optional
+        An optional boolean indicating whether to export the observed 
+        and full modelled tides as two pandas.DataFrame objects in
+        addition to the statistics data.
     modelled_freq : str, optional
         An optional string giving the frequency at which to model tides 
         when computing the full modelled tidal range. Defaults to '2h', 
@@ -222,7 +227,8 @@ def tidal_stats(ds,
         
     Returns
     -------
-    A pandas.Series object containing the following statistics:
+    If `return_tides=False`, the function will return a pandas.Series 
+    object containing the following statistics:
     
         tidepost_lat: latitude used for modelling tide heights
         tidepost_lon: longitude used for modelling tide heights
@@ -246,6 +252,11 @@ def tidal_stats(ds,
                   observed tide heights and time
         all_pval: significance/p-value of any relationship between 
                   all modelled tide heights and time
+    
+    If `return_tides=True`, the function will return a tuple containing
+    the statistics data above, as well as a pandas.DataFrame containing
+    tides observed by the satellite, and a pandas.DataFrame containing 
+    all modelled tide heights.
     
     """
     
@@ -367,21 +378,30 @@ def tidal_stats(ds,
         ax.set_xlabel('');
         ax.margins(x=0.015)
         
-    # Export pandas.Series containing tidal stats
-    return pd.Series({'tidepost_lat': tidepost_lat,
-                      'tidepost_lon': tidepost_lon,
-                      'observed_mean_m': obs_mean,
-                      'all_mean_m': all_mean,
-                      'observed_min_m': obs_min,
-                      'all_min_m': all_min,
-                      'observed_max_m': obs_max,
-                      'all_max_m': all_max,
-                      'observed_range_m': obs_range,
-                      'all_range_m': all_range,
-                      'spread': spread,
-                      'low_tide_offset': low_tide_offset,
-                      'high_tide_offset': high_tide_offset,
-                      'observed_slope': obs_linreg.slope,
-                      'all_slope': all_linreg.slope,
-                      'observed_pval': obs_linreg.pvalue,
-                      'all_pval': all_linreg.pvalue}).round(round_stats)
+    # Create pandas.Series containing tidal stats
+    stats_df = pd.Series({'tidepost_lat': tidepost_lat,
+                          'tidepost_lon': tidepost_lon,
+                          'observed_mean_m': obs_mean,
+                          'all_mean_m': all_mean,
+                          'observed_min_m': obs_min,
+                          'all_min_m': all_min,
+                          'observed_max_m': obs_max,
+                          'all_max_m': all_max,
+                          'observed_range_m': obs_range,
+                          'all_range_m': all_range,
+                          'spread': spread,
+                          'low_tide_offset': low_tide_offset,
+                          'high_tide_offset': high_tide_offset,
+                          'observed_slope': obs_linreg.slope,
+                          'all_slope': all_linreg.slope,
+                          'observed_pval': obs_linreg.pvalue,
+                          'all_pval': all_linreg.pvalue}).round(round_stats)
+        
+    # Export stats only, or tide data if requested
+    if not return_tides:        
+        return stats_df
+    else:
+        return (stats_df, 
+                ds_tides.tide_height.to_dataframe(), 
+                pd.DataFrame(index=all_timerange.rename('time'), 
+                             data={'tide_height': all_tideheights}))

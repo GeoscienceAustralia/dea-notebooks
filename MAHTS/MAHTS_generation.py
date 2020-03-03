@@ -168,7 +168,8 @@ dc = datacube.Datacube(app='MAHTS_testing', env='c3-samples')
 catalog = catalog_from_file('MAHTS_virtual_products.yaml')
 
 points_gdf = gpd.read_file('input_data/tide_points_coastal.geojson')
-comp_gdf = gpd.read_file('input_data/Euc_SCC_coast10kmbuffer.geojson').set_index('ID_Seconda')
+# comp_gdf = gpd.read_file('input_data/Euc_SCC_coast10kmbuffer.geojson').set_index('ID_Seconda')
+comp_gdf = gpd.read_file('/g/data/r78/rt1527/shapefiles/50km_albers_grid/50km_albers_grid.shp').to_crs(epsg=4326).set_index('id')
 
 
 def main(argv=None):
@@ -186,28 +187,31 @@ def main(argv=None):
         sys.exit()
         
     # Set study area for analysis
-    study_area = argv[1]     
-
-    # study_area = 'WA01.01'  # 
-    query = {'geopolygon': get_geopoly(study_area, comp_gdf),
+    study_area = int(argv[1])
+    query = {'geopolygon': get_geopoly(study_area, comp_gdf).buffer(0.05),
              'time': ('1987', '2019'),
-             'cloud_cover': [0, 80]}
-
+             'cloud_cover': [0, 90]}
 
     # ## Load virtual product
-    crs = mostcommon_crs(dc=dc, product='ga_ls5t_ard_3', query=query)
+    crs = mostcommon_crs(dc=dc, product='ga_ls8c_ard_3', query=query)
 
     ds = load_ard(dc=dc, 
-                  measurements=['nbart_blue', 'nbart_green', 'nbart_red', 'nbart_nir', 'nbart_swir_1', 'nbart_swir_2'], 
+                  measurements=['nbart_blue', 'nbart_green', 'nbart_red', 
+                                'nbart_nir', 'nbart_swir_1', 'nbart_swir_2'], 
                   min_gooddata=0.0,
                   products=['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'], 
                   output_crs=crs,
-                  resampling={'*': 'average', 'fmask': 'nearest', 'oa_fmask': 'nearest'},
+                  resampling={'fmask': 'nearest', 
+                              'oa_fmask': 'nearest', 
+                              'nbart_contiguity': 'nearest',
+                              'oa_nbart_contiguity': 'nearest',
+                              '*': 'average'},
                   resolution=(-30, 30),  
                   gqa_iterative_mean_xy=[0, 1],
                   align=(15, 15),
                   group_by='solar_day',
-                  dask_chunks={'time': 1, 'x': 1000, 'y': 1000},
+                  dask_chunks={'time': 1},
+                  mask_contiguity=False,
                   **query)
 
     ds = (calculate_indices(ds, index=['NDWI', 'MNDWI', 'AWEI_ns', 'AWEI_sh'], 
@@ -215,16 +219,13 @@ def main(argv=None):
                             drop=True)
           .rename({'NDWI': 'ndwi', 'MNDWI': 'mndwi', 'AWEI_ns': 'awei_ns', 'AWEI_sh': 'awei_sh'}))
 
+    ###############
+    # Model tides #
+    ###############
 
-    # ## Model tides
-
-    # Pull out subset of modelling points for region around satellite data
-    try:
-        bounds = comp_gdf.loc[study_area].geometry.buffer(0.05)
-    except:
-        bounds = shapely.wkt.loads(ds.geobox.geographic_extent.buffer(0.05).wkt)
-
-    subset_gdf = points_gdf[points_gdf.geometry.intersects(bounds)]
+    from shapely.geometry import shape
+    ds_extent = shape(ds.geobox.geographic_extent.json)
+    subset_gdf = points_gdf[points_gdf.geometry.intersects(ds_extent)]
 
     # Extract lon, lat from tides, and time from satellite data
     x_vals = subset_gdf.geometry.centroid.x
@@ -260,26 +261,51 @@ def main(argv=None):
     tidepoints_gdf['time'] = pd.to_datetime(tidepoints_gdf['time'], utc=True)
     tidepoints_gdf = tidepoints_gdf.set_index('time')
 
+    #####################
+    # Interpolate tides #
+    #####################
 
-    # ### Interpolate tides into each satellite timestep
+#     # Interpolate tides for each timestep into the spatial extent of the data
+#     tide_da = ds.groupby('time').apply(interpolate_tide, 
+#                                        tidepoints_gdf=tidepoints_gdf,
+#                                        factor=50)
+
+#     # Determine tide cutoff
+# #     tide_cutoff_min = tide_da.median(dim='time')
+# #     tide_cutoff_max = np.Inf
+# #     tide_cutoff_min = tide_da.median(dim='time')
+# #     tide_cutoff_min = tide_da.quantile(dim='time', q=0.5)
+# #     tide_cutoff_max = tide_da.quantile(dim='time', q=1.0)
+#     tide_cutoff_buff = ((tide_da.max(dim='time') - 
+#                          tide_da.min(dim='time')) * 0.25).clip(0.0, 1.0)
+#     tide_cutoff_min = 0.0 - tide_cutoff_buff
+#     tide_cutoff_max = 0.0 + tide_cutoff_buff
+
+#     # Add interpolated tides as measurement in satellite dataset
+#     ds['tide_m'] = tide_da
+
+    import multiprocessing
+    from functools import partial
+
+    pool = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
+    print(f'Parallelising {multiprocessing.cpu_count() -1} processes')
+    tide_list = pool.map(partial(interpolate_tide, 
+                                 tidepoints_gdf=tidepoints_gdf, 
+                                 factor=50), 
+                         iterable=[group for (i, group) in ds.groupby('time')])
 
     # Interpolate tides for each timestep into the spatial extent of the data
-    tide_da = ds.groupby('time').apply(interpolate_tide, 
-                                       tidepoints_gdf=tidepoints_gdf,
-                                       factor=50)
+    ds['tide_m'] = xr.concat(tide_list, dim=ds.time)
 
     # Determine tide cutoff
-#     tide_cutoff_min = tide_da.median(dim='time')
-#     tide_cutoff_max = np.Inf
-#     tide_cutoff_min = tide_da.median(dim='time')
-    tide_cutoff_min = tide_da.quantile(dim='time', q=0.6)
-    tide_cutoff_max = tide_da.quantile(dim='time', q=0.9)
+    tide_cutoff_buff = ((ds['tide_m'].max(dim='time') - 
+                         ds['tide_m'].min(dim='time')) * 0.05)  #.clip(0.0, 1.0)
+    tide_cutoff_min = 0.0 - tide_cutoff_buff
+    tide_cutoff_max = 0.0 + tide_cutoff_buff
 
-    # Add interpolated tides as measurement in satellite dataset
-    ds['tide_m'] = tide_da
-
-
-    # ## Generate yearly composites
+    ##############################
+    # Generate yearly composites #
+    ##############################
 
     # If output folder doesn't exist, create it
     output_dir = f'output_data/{study_area}'
