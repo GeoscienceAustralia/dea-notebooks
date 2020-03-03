@@ -27,7 +27,7 @@ Functions included:
     pan_sharpen_brovey
     paths_to_datetimeindex
 
-Last modified: February 2020
+Last modified: March 2020
 
 '''
 
@@ -100,7 +100,7 @@ def load_ard(dc,
              min_gooddata=0.0,
              fmask_categories=['valid', 'snow', 'water'],
              mask_pixel_quality=True,
-             mask_contiguity='nbart_contiguity',
+             mask_contiguity=False,
              ls7_slc_off=True,
              predicate=None,
              dtype='auto',
@@ -124,7 +124,7 @@ def load_ard(dc,
         s2a_nrt_granule
         s2b_nrt_granule
 
-    Last modified: February 2020
+    Last modified: March 2020
 
     Parameters
     ----------
@@ -162,13 +162,13 @@ def load_ard(dc,
         An optional string or boolean indicating whether to mask out
         pixels missing data in any band (i.e. "non-contiguous" values).
         This can be important for generating clean composite datasets. 
-        The default is `mask_contiguity='nbart_contiguity'` which will 
-        mask out non-contiguous values based on NBART data. If you are 
-        loading NBAR data, specify `mask_contiguity='nbar_contiguity'` 
-        instead. To ignore non-contiguous values completely, set 
-        `mask_contiguity=False`. Non-contiguous pixels will be set to 
-        NaN if `dtype='auto'`, or set to the data's native nodata value 
-        if `dtype='native'` (which can be useful for reducing memory).
+        The default is False, which will ignore non-contiguous values 
+        completely. If loading NBART data, set the parameter to:       
+        `mask_contiguity='nbart_contiguity'`. If loading NBAR data, 
+        specify `mask_contiguity='nbar_contiguity'` instead. 
+        Non-contiguous pixels will be set to NaN if `dtype='auto'`, or 
+        set to the data's native nodata value if `dtype='native'` 
+        (which can be useful for reducing memory).
     dtype : string, optional
         An optional parameter that controls the data type/dtype that
         layers are coerced to after loading. Valid values: 'native', 
