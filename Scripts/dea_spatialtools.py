@@ -520,8 +520,13 @@ def subpixel_contours(da,
     return contours_gdf
 
 
-def interpolate_2d(ds, x_coords, y_coords, z_coords, 
-                 method='linear', fill_nearest=False, sigma=None):
+def interpolate_2d(ds, 
+                   x_coords, 
+                   y_coords, 
+                   z_coords, 
+                   method='linear',
+                   factor=1,
+                   **kwargs):
     
     """
     This function takes points with X, Y and Z coordinates, and 
@@ -530,11 +535,15 @@ def interpolate_2d(ds, x_coords, y_coords, z_coords,
     data that can be compared directly against satellite data derived 
     from an OpenDataCube query.
     
-    Last modified: October 2019
+    Supported interpolation methods include 'linear', 'nearest' and
+    'cubic (using `scipy.interpolate.griddata`), and 'rbf' (using 
+    `scipy.interpolate.Rbf`).
+    
+    Last modified: February 2020
     
     Parameters
     ----------  
-    ds_array : xarray DataArray or Dataset
+    ds : xarray DataArray or Dataset
         A two-dimensional or multi-dimensional array from which x and y 
         dimensions will be copied and used for the area in which to 
         interpolate point data. 
@@ -547,21 +556,23 @@ def interpolate_2d(ds, x_coords, y_coords, z_coords,
         between.
     method : string, optional
         The method used to interpolate between point values. This string
-        is passed to `scipy.interpolate.griddata`; the default is 
-        'linear' and options include 'linear', 'nearest' and 'cubic'.
-    fill_nearest : boolean, optional
-        A boolean value indicating whether to fill NaN areas outside of
-        the extent of the input X and Y coordinates with the value of 
-        the nearest pixel. By default, `scipy.interpolate.griddata` only
-        returns interpolated values for the convex hull of the of the 
-        input points, so this variable can be used to provide results 
-        for all pixels instead. Warning: this can produce significant 
-        artefacts for areas located far from the nearest point.
-    sigma : None or int, optional
-        An optional integer value can be provided to smooth the 
-        interpolated surface using a guassian filter. Higher values of 
-        sigma result in a smoother surface that may loose some of the 
-        detail in the original interpolated layer.        
+        is either passed to `scipy.interpolate.griddata` (for 'linear', 
+        'nearest' and 'cubic' methods), or used to specify Radial Basis 
+        Function interpolation using `scipy.interpolate.Rbf` ('rbf').
+        Defaults to 'linear'.
+    factor : int, optional
+        An optional integer that can be used to subsample the spatial 
+        interpolation extent to obtain faster interpolation times, then
+        up-sample this array back to the original dimensions of the 
+        data as a final step. For example, setting `factor=10` will 
+        interpolate data into a grid that has one tenth of the 
+        resolution of `ds`. This approach will be significantly faster 
+        than interpolating at full resolution, but will potentially 
+        produce less accurate or reliable results.
+    **kwargs : 
+        Optional keyword arguments to pass to either 
+        `scipy.interpolate.griddata` (if `method` is 'linear', 'nearest' 
+        or 'cubic'), or `scipy.interpolate.Rbf` (is `method` is 'rbf').
       
     Returns
     -------
@@ -572,35 +583,54 @@ def interpolate_2d(ds, x_coords, y_coords, z_coords,
     
     # Extract xy and elev points
     points_xy = np.vstack([x_coords, y_coords]).T
+    
+    # Extract x and y coordinates to interpolate into. 
+    # If `factor` is greater than 1, the coordinates will be subsampled 
+    # for faster run-times. If the last x or y value in the subsampled 
+    # grid aren't the same as the last x or y values in the original 
+    # full resolution grid, add the final full resolution grid value to 
+    # ensure data is interpolated up to the very edge of the array
+    if ds.x[::factor][-1].item() == ds.x[-1].item():
+        x_grid_coords = ds.x[::factor].values
+    else:
+        x_grid_coords = ds.x[::factor].values.tolist() + [ds.x[-1].item()]
+        
+    if ds.y[::factor][-1].item() == ds.y[-1].item():
+        y_grid_coords = ds.y[::factor].values
+    else:
+        y_grid_coords = ds.y[::factor].values.tolist() + [ds.y[-1].item()]
 
     # Create grid to interpolate into
-    grid_y, grid_x = np.meshgrid(ds.x, ds.y)  
+    grid_y, grid_x = np.meshgrid(x_grid_coords, y_grid_coords)
+    
+    # Apply scipy.interpolate.griddata interpolation methods
+    if method in ('linear', 'nearest', 'cubic'):
+        
+        # Interpolate x, y and z values 
+        interp_2d = scipy.interpolate.griddata(points=points_xy, 
+                                               values=z_coords, 
+                                               xi=(grid_y, grid_x), 
+                                               method=method,
+                                               **kwargs)
+    
+    # Apply Radial Basis Function interpolation
+    elif method == 'rbf':
 
-    # Interpolate x, y and z values using linear/TIN interpolation
-    out = scipy.interpolate.griddata(points=points_xy, 
-                                     values=z_coords, 
-                                     xi=(grid_y, grid_x), 
-                                     method=method)
+        # Interpolate x, y and z values 
+        rbf = scipy.interpolate.Rbf(x_coords, y_coords, z_coords, **kwargs)  
+        interp_2d = rbf(grid_y, grid_x)
 
-    # Calculate nearest
-    if fill_nearest:
-        
-        nearest_inds = nd.distance_transform_edt(input=np.isnan(out), 
-                                                 return_distances=False, 
-                                                 return_indices=True)
-        out = out[tuple(nearest_inds)]
-        
-    # Apply guassian filter        
-    if sigma:
+    # Create xarray dataarray from the data and resample to ds coords
+    interp_2d_da = xr.DataArray(interp_2d, 
+                                coords=[y_grid_coords, x_grid_coords], 
+                                dims=['y', 'x'])
+    
+    # If factor is greater than 1, resample the interpolated array to
+    # match the input `ds` array
+    if factor > 1: 
+        interp_2d_da = interp_2d_da.interp_like(ds)   
 
-        out = nd.filters.gaussian_filter(out, sigma=sigma)
-        
-    # Create xarray dataarray from the data
-    interp_2d_array = xr.DataArray(out, 
-                                   coords=[ds.y, ds.x], 
-                                   dims=['y', 'x']) 
-        
-    return interp_2d_array
+    return interp_2d_da
 
 
 def contours_to_arrays(gdf, col):
