@@ -168,14 +168,14 @@ def WIT_da(query):
     FC_mask=xr.ufuncs.isfinite(maxFC).all(dim='variable')
     BSPVNPV=BSPVNPV.where(FC_mask)
     #transform the FC classes -> 2,3,4 (open water and wet will be classes 0 and 1)
-    coverclasses = BSPVNPV + 2
+    coverclasses = BSPVNPV + 3
     
     #paint the thresholded TCW onto the array
-    np.place(coverclasses.data,tcw.data,1)
+    np.place(coverclasses.data,tcw.data,2)
     
     #paint the WOfLs waterbodies
     wofs_da = xr.ufuncs.logical_or(xr.ufuncs.logical_or(xr.ufuncs.logical_or(wet_wofs,sea_wofs),shadow_wofs),sea_shadow_wofs)
-    np.place(coverclasses.data,wofs_da.data,0)
+    np.place(coverclasses.data,wofs_da.data,1)
     coverclasses.attrs = ls578_ds.attrs
     
     return coverclasses
