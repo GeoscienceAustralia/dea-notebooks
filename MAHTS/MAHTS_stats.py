@@ -35,8 +35,10 @@ from scipy import stats
 from affine import Affine
 import matplotlib.pyplot as plt
 from shapely.wkt import loads
+from shapely.geometry import box
 from shapely.ops import nearest_points
 from rasterio.features import rasterize
+from rasterio.transform import array_bounds
 from skimage.morphology import disk
 from skimage.morphology import square
 from skimage.morphology import binary_opening
@@ -115,6 +117,38 @@ def mask_ocean(bool_array, connectivity=1):
     return ocean_mask
 
 
+def rocky_shores_buffer(smartline_gdf, buffer=50):
+
+    to_keep = (
+               'Bedrock breakdown debris (cobbles/boulders)',
+               'Boulder (rock) beach',
+               'Cliff (>5m) (undiff)',
+               'Colluvium (talus) undiff',
+               'Flat boulder deposit (rock) undiff',
+               'Hard bedrock shore',
+               'Hard bedrock shore inferred',
+               'Hard rock cliff (>5m)',
+               'Hard rocky shore platform',
+               'Rocky shore (undiff)',
+               'Rocky shore platform (undiff)',
+               'Sloping hard rock shore',
+               'Sloping rocky shore (undiff)',
+               'Soft `bedrock¿ cliff (>5m)',
+               'Steep boulder talus',
+               'Hard rocky shore platform'
+    )
+
+    # Extract rocky vs non-rocky
+    rocky_gdf = smartline_gdf[smartline_gdf.INTERTD1_V.isin(to_keep)].copy()
+    nonrocky_gdf = smartline_gdf[~smartline_gdf.INTERTD1_V.isin(to_keep)].copy()
+    
+    # Buffer both features
+    rocky_gdf['geometry'] = rocky_gdf.buffer(buffer)
+    nonrocky_gdf['geometry'] = nonrocky_gdf.buffer(buffer)
+    
+    return gpd.overlay(rocky_gdf, nonrocky_gdf, how='difference')
+
+
 def main(argv=None):
 
     if argv is None:
@@ -132,10 +166,12 @@ def main(argv=None):
     # Set study area for analysis
     study_area = int(argv[1])
 
-    # ## Load in data
+    ################
+    # Load in data #
+    ################
 
     # Read in contours
-    suffix = 'msl10perc'
+    suffix = 'rocky'
     water_index = 'mndwi'
     index_threshold = 0
 
@@ -171,25 +207,48 @@ def main(argv=None):
     count_da.name = 'count'
 
     # Combine into a single dataset and set CRS
-    yearly_ds = xr.merge([index_da, gapfill_index_da, gapfill_tide_da, stdev_da, tidem_da, count_da]).squeeze('band', drop=True)
+    yearly_ds = xr.merge([index_da, 
+                          gapfill_index_da, 
+                          gapfill_tide_da, 
+                          stdev_da, 
+                          tidem_da, 
+                          count_da]).squeeze('band', drop=True)
     yearly_ds.attrs['crs'] = index_da.crs
     yearly_ds.attrs['transform'] = Affine(*index_da.transform)
-
+    
     # Print
     yearly_ds
+    
+    ######################
+    # Load external data #
+    ######################
+    
+    # Get bounding box to load data for
+    bbox = gpd.GeoSeries(box(*array_bounds(height=yearly_ds.sizes['y'], 
+                                           width=yearly_ds.sizes['x'], 
+                                           transform=yearly_ds.transform)), 
+                         crs=yearly_ds.crs)
+
+    # Study area polygon
+    comp_gdf = (gpd.read_file('input_data/50km_albers_grid.shp', bbox=bbox)
+                .set_index('id')
+                .to_crs(str(yearly_ds.crs)))
+
+    # Estaury mask
+    estuary_gdf = (gpd.read_file('input_data/estuary_mask.shp', bbox=bbox)
+                   .to_crs(yearly_ds.crs))
+
+    # Rocky shore mask
+    smartline_gdf = (gpd.read_file('input_data/Smartline.gdb', bbox=bbox)
+                     .to_crs(yearly_ds.crs))
 
 
-    # ## Extract shoreline contours
-    # 
-    # ### Extract ocean-masked contours
-
-    # In[5]:
-
+    ##############################
+    # Extract shoreline contours #
+    ##############################
 
     # Mask to study area
-#     comp_gdf = gpd.read_file('input_data/Euc_SCC_coast10kmbuffer.geojson').set_index('ID_Seconda')
-    comp_gdf = gpd.read_file('/g/data/r78/rt1527/shapefiles/50km_albers_grid/50km_albers_grid.shp').to_crs(epsg=4326).set_index('id')
-    study_area_poly = comp_gdf.to_crs(str(yearly_ds.crs)).loc[study_area]
+    study_area_poly = comp_gdf.loc[study_area]
 
     # Remove low obs and high variance pixels and replace with 3-year gapfill
     gapfill_mask = (yearly_ds['count'] > 5) # & (yearly_ds['stdev'] < 0.5)
@@ -199,16 +258,6 @@ def main(argv=None):
     # Apply water index threshold
     thresholded_ds = (yearly_ds[water_index] > index_threshold)
     thresholded_ds = thresholded_ds.where(~yearly_ds[water_index].isnull())
-
-    # Load estuary mask
-    # bbox = gpd.GeoSeries(loads(yearly_ds.geobox.extent.wkt), crs=yearly_ds.crs)
-    from shapely.geometry import box
-    bbox = gpd.GeoSeries(box(yearly_ds.x.min().item(), 
-                             yearly_ds.y.min().item(), 
-                             yearly_ds.x.max().item(), 
-                             yearly_ds.y.max().item()), crs=yearly_ds.crs)
-    estuary_gdf = (gpd.read_file('./input_data/estuary_mask.shp', bbox=bbox)
-                   .to_crs(yearly_ds.crs))
 
     # Rasterize estuary polygons into a numpy mask. The try-except catches cases
     # where no estuary polygons exist in the study area
@@ -412,6 +461,10 @@ def main(argv=None):
     shutil.make_archive(base_name=f'output_data/outputs_{study_area}_{suffix}', 
                         format='zip', 
                         root_dir=f'output_data/{study_area}/vectors/')
+    
+    rocky_shore_buffer = rocky_shores_buffer(smartline=smartline_gdf, buffer=50)
+    points_gdf = points_gdf[~points_gdf.intersects(rocky_shore_buffer.geometry.unary_union)]
+    points_gdf.to_file(f'{stats_path}_nonrocky.geojson', driver='GeoJSON')
 
 
 

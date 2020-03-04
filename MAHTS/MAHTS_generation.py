@@ -38,11 +38,14 @@ import sys
 import otps
 import datacube
 import shapely.wkt
+import multiprocessing
 import numpy as np
 import pandas as pd
 import xarray as xr
 import geopandas as gpd
 import matplotlib.pyplot as plt
+from functools import partial
+from shapely.geometry import shape
 from datacube.utils.geometry import Geometry, CRS
 from datacube.helpers import write_geotiff
 from datacube.virtual import catalog_from_file
@@ -161,15 +164,12 @@ def tidal_composite(year_ds,
     return median_ds
 
 
-
-
-
 dc = datacube.Datacube(app='MAHTS_testing', env='c3-samples')
-catalog = catalog_from_file('MAHTS_virtual_products.yaml')
 
 points_gdf = gpd.read_file('input_data/tide_points_coastal.geojson')
-# comp_gdf = gpd.read_file('input_data/Euc_SCC_coast10kmbuffer.geojson').set_index('ID_Seconda')
-comp_gdf = gpd.read_file('/g/data/r78/rt1527/shapefiles/50km_albers_grid/50km_albers_grid.shp').to_crs(epsg=4326).set_index('id')
+comp_gdf = (gpd.read_file('input_data/50km_albers_grid.shp')
+            .to_crs(epsg=4326)
+            .set_index('id'))
 
 
 def main(argv=None):
@@ -192,7 +192,7 @@ def main(argv=None):
              'time': ('1987', '2019'),
              'cloud_cover': [0, 90]}
 
-    # ## Load virtual product
+    # Obtain most common CRS within study area
     crs = mostcommon_crs(dc=dc, product='ga_ls8c_ard_3', query=query)
 
     ds = load_ard(dc=dc, 
@@ -212,6 +212,7 @@ def main(argv=None):
                   group_by='solar_day',
                   dask_chunks={'time': 1},
                   mask_contiguity=False,
+#                   mask_pixel_quality=False,
                   **query)
 
     ds = (calculate_indices(ds, index=['MNDWI'], 
@@ -223,7 +224,6 @@ def main(argv=None):
     # Model tides #
     ###############
 
-    from shapely.geometry import shape
     ds_extent = shape(ds.geobox.geographic_extent.json)
     subset_gdf = points_gdf[points_gdf.geometry.intersects(ds_extent)]
 
@@ -265,28 +265,6 @@ def main(argv=None):
     # Interpolate tides #
     #####################
 
-#     # Interpolate tides for each timestep into the spatial extent of the data
-#     tide_da = ds.groupby('time').apply(interpolate_tide, 
-#                                        tidepoints_gdf=tidepoints_gdf,
-#                                        factor=50)
-
-#     # Determine tide cutoff
-# #     tide_cutoff_min = tide_da.median(dim='time')
-# #     tide_cutoff_max = np.Inf
-# #     tide_cutoff_min = tide_da.median(dim='time')
-# #     tide_cutoff_min = tide_da.quantile(dim='time', q=0.5)
-# #     tide_cutoff_max = tide_da.quantile(dim='time', q=1.0)
-#     tide_cutoff_buff = ((tide_da.max(dim='time') - 
-#                          tide_da.min(dim='time')) * 0.25).clip(0.0, 1.0)
-#     tide_cutoff_min = 0.0 - tide_cutoff_buff
-#     tide_cutoff_max = 0.0 + tide_cutoff_buff
-
-#     # Add interpolated tides as measurement in satellite dataset
-#     ds['tide_m'] = tide_da
-
-    import multiprocessing
-    from functools import partial
-
     pool = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
     print(f'Parallelising {multiprocessing.cpu_count() -1} processes')
     tide_list = pool.map(partial(interpolate_tide, 
@@ -299,7 +277,7 @@ def main(argv=None):
 
     # Determine tide cutoff
     tide_cutoff_buff = ((ds['tide_m'].max(dim='time') - 
-                         ds['tide_m'].min(dim='time')) * 0.05)  #.clip(0.0, 1.0)
+                         ds['tide_m'].min(dim='time')) * 0.25)   #.clip(0.0, 1.0)
     tide_cutoff_min = 0.0 - tide_cutoff_buff
     tide_cutoff_max = 0.0 + tide_cutoff_buff
 

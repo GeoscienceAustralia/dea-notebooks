@@ -56,7 +56,7 @@
 #                   WA23.02 WA28.02 WA26.02 NT01.02 WA25.01 WA32.03 WA26.01 \
 #                   WA30.01 WA28.01 WA30.02 WA29.02
 
-for study_area in 1677
+for study_area in 5484
                   
 do
 
