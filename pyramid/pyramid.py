@@ -48,36 +48,45 @@ def shallowpass(chunksize=1024, zoomfactor=2):
     Assuming the output cannot be parallelised, the performance for just this
     level will estimate the performance upper bound for any algorithm.
     """
-    pass
+    size = 4096 * 4
+    chunksize = 512
 
-def dummywrite(chunksize=1024):
-    """
-    Simpler than shallowpass. Just write anything at all.
+    src = Source(size, size)
+    dst = Destination(size // zoomfactor, size // zoomfactor)
 
-    Verify how fast python can write out data to TIFF.
+    Z = np.empty((chunksize, chunksize), dtype=np.float32)
 
-    This should help ascertain the main performance limitation, and
-    whether it is a problem, and whether something must be done about it.
-    """
-    data = np.random.random((chunksize, chunksize), dtype=np.float32)
+    for i in range(0, size, chunksize):
+        for j in range(0, size, chunksize):
+            ii, jj = i//2, j//2
+            X = src[i : i + chunksize*2, j : j + chunksize*2]
+            core(X, Z)
+            dst[i//zoomfactor, j//zoomfactor] = Z
 
 
-    pass
 
-class sourcesink:
-    """
-    This represents a single raster file,
-    such as the input raster or any of the output overview levels.
-    """
-    def __init__(x, y):
-        self.shape = x, y
-    def __getitem__(self, key):
-        assert isinstance(key, slice)
-        raise NotImplementedError
+class Destination:
+    """ Output file """
+    def __init__(self, shape):
+        rows, cols = shape
+        self.file = rasterio.open('test.tif', mode='w',
+                                  driver='GTiff', dtype=np.float32, nodata=0,
+                                  width=cols, height=rows, count=1,
+                                  tiled=True, blockxsize=256, blockysize=256,
+                                  compress='lzw', num_threads='all_cpus')
     def __setitem__(self, key, value):
-        assert isinstance(key, slice)
-        assert len(value.shape) == 2
-        raise NotImplementedError
+        row, col = key
+        rows, cols = value.shape
+        self.file.write(value, window=((row, row+rows), (col, col+cols)))
+
+class Source:
+    """ Input file """
+    def __init__(self, blocksize):
+        self.blocksize = blocksize
+        #self.file = rasterio.open('test.tif', mode='r', driver='GTiff')
+    def __getitem__(self, key):
+        #return self.file.read(1, window=rasterio.windows.Window.from_slice(key))
+        return np.random.random((self.blocksize, self.blocksize))
 
 class task:
     """
