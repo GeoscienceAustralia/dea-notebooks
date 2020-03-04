@@ -33,10 +33,10 @@
 
 
 
-for study_area in WA22.03 WA23.01 WA23.02 WA23.03 WA23.04 WA24.01 WA24.02 \
-                  WA25.01 WA26.01 WA26.02 WA26.03 WA26.04 WA27.01 WA27.02 \
-                  WA27.03 WA27.04 WA28.01 WA28.02 WA29.01 WA29.02 WA29.03 \
-                  WA30.01 WA30.02 WA31.01 WA31.02 WA31.03
+# for study_area in WA22.03 WA23.01 WA23.02 WA23.03 WA23.04 WA24.01 WA24.02 \
+#                   WA25.01 WA26.01 WA26.02 WA26.03 WA26.04 WA27.01 WA27.02 \
+#                   WA27.03 WA27.04 WA28.01 WA28.02 WA29.01 WA29.02 WA29.03 \
+#                   WA30.01 WA30.02 WA31.01 WA31.02 WA31.03
                   
 # for study_area in SA07.04 SA06.03 SA07.02 SA07.03 SA08.01 SA07.05 SA05.05 \
 #                   SA06.02 SA05.06 SA05.04 SA06.01 SA05.07 SA05.03 SA06.06 \
@@ -47,6 +47,17 @@ for study_area in WA22.03 WA23.01 WA23.02 WA23.03 WA23.04 WA24.01 WA24.02 \
 #                   VIC04.07 VIC02.03 VIC04.02 VIC04.04 VIC05.02 VIC04.03 VIC06.01 \
 #                   VIC06.02 VIC03.01 VIC04.01 VIC01.01 VIC06.03 VIC06.04
 
+# for study_area in NT03.01 NT02.05 NT04.01 NT02.03 NT02.04 NT04.04 NT04.02 \
+#                   WA36.01 NT02.01 WA35.03 WA35.01 NT02.02 NT04.03 WA36.02 \
+#                   WA35.04 WA35.02 WA34.03 NT01.01 WA33.02 WA33.01 WA32.01 \
+#                   WA34.02 WA32.02 WA31.04 WA31.03 WA34.01 WA31.01 WA31.02 \
+#                   WA32.04 WA27.03 WA27.01 WA26.03 WA27.04 WA36.03 WA29.03 \
+#                   WA29.01 WA27.02 WA24.01 WA23.04 WA26.04 WA24.02 WA23.03 \
+#                   WA23.02 WA28.02 WA26.02 NT01.02 WA25.01 WA32.03 WA26.01 \
+#                   WA30.01 WA28.01 WA30.02 WA29.02
+
+for study_area in 5484
+                  
 do
 
     PBS="#!/bin/bash\n\
@@ -55,9 +66,9 @@ do
     #PBS -e MAHTS_${study_area}.err\n\
     #PBS -l storage=gdata/v10+gdata/r78+gdata/xu18+gdata/fk4\n\
     #PBS -P r78\n\
-    #PBS -q normal\n\
+    #PBS -q express\n\
     #PBS -l walltime=24:00:00\n\
-    #PBS -l mem=192GB\n\
+    #PBS -l mem=128GB\n\
     #PBS -l jobfs=2GB\n\
     #PBS -l ncpus=1\n\
     #PBS -l wd\n\
@@ -77,3 +88,4 @@ done
 #     export PYTHONPATH=/home/561/rt1527/.local/lib/python3.6/site-packages/:$PYTHONPATH\n\
 
 #     python3 /g/data/r78/rt1527/dea-notebooks/MAHTS/MAHTS_generation.py $study_area\n\ 
+#     python3 /g/data/r78/rt1527/dea-notebooks/MAHTS/MAHTS_stats.py $study_area"

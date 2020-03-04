@@ -35,8 +35,10 @@ from scipy import stats
 from affine import Affine
 import matplotlib.pyplot as plt
 from shapely.wkt import loads
+from shapely.geometry import box
 from shapely.ops import nearest_points
 from rasterio.features import rasterize
+from rasterio.transform import array_bounds
 from skimage.morphology import disk
 from skimage.morphology import square
 from skimage.morphology import binary_opening
@@ -115,6 +117,38 @@ def mask_ocean(bool_array, connectivity=1):
     return ocean_mask
 
 
+def rocky_shores_buffer(smartline_gdf, buffer=50):
+
+    to_keep = (
+               'Bedrock breakdown debris (cobbles/boulders)',
+               'Boulder (rock) beach',
+               'Cliff (>5m) (undiff)',
+               'Colluvium (talus) undiff',
+               'Flat boulder deposit (rock) undiff',
+               'Hard bedrock shore',
+               'Hard bedrock shore inferred',
+               'Hard rock cliff (>5m)',
+               'Hard rocky shore platform',
+               'Rocky shore (undiff)',
+               'Rocky shore platform (undiff)',
+               'Sloping hard rock shore',
+               'Sloping rocky shore (undiff)',
+               'Soft `bedrock¿ cliff (>5m)',
+               'Steep boulder talus',
+               'Hard rocky shore platform'
+    )
+
+    # Extract rocky vs non-rocky
+    rocky_gdf = smartline_gdf[smartline_gdf.INTERTD1_V.isin(to_keep)].copy()
+    nonrocky_gdf = smartline_gdf[~smartline_gdf.INTERTD1_V.isin(to_keep)].copy()
+    
+    # Buffer both features
+    rocky_gdf['geometry'] = rocky_gdf.buffer(buffer)
+    nonrocky_gdf['geometry'] = nonrocky_gdf.buffer(buffer)
+    
+    return gpd.overlay(rocky_gdf, nonrocky_gdf, how='difference')
+
+
 def main(argv=None):
 
     if argv is None:
@@ -130,13 +164,16 @@ def main(argv=None):
         sys.exit()
         
     # Set study area for analysis
-    study_area = argv[1] 
+    study_area = int(argv[1])
 
-    # ## Load in data
+    ################
+    # Load in data #
+    ################
 
     # Read in contours
+    suffix = 'rocky'
     water_index = 'mndwi'
-    index_threshold = 0.00
+    index_threshold = 0
 
     # Create output folder
     output_dir = f'output_data/{study_area}/vectors/'
@@ -170,46 +207,57 @@ def main(argv=None):
     count_da.name = 'count'
 
     # Combine into a single dataset and set CRS
-    yearly_ds = xr.merge([index_da, gapfill_index_da, gapfill_tide_da, stdev_da, tidem_da, count_da]).squeeze('band', drop=True)
+    yearly_ds = xr.merge([index_da, 
+                          gapfill_index_da, 
+                          gapfill_tide_da, 
+                          stdev_da, 
+                          tidem_da, 
+                          count_da]).squeeze('band', drop=True)
     yearly_ds.attrs['crs'] = index_da.crs
     yearly_ds.attrs['transform'] = Affine(*index_da.transform)
-
+    
     # Print
     yearly_ds
+    
+    ######################
+    # Load external data #
+    ######################
+    
+    # Get bounding box to load data for
+    bbox = gpd.GeoSeries(box(*array_bounds(height=yearly_ds.sizes['y'], 
+                                           width=yearly_ds.sizes['x'], 
+                                           transform=yearly_ds.transform)), 
+                         crs=yearly_ds.crs)
+
+    # Study area polygon
+    comp_gdf = (gpd.read_file('input_data/50km_albers_grid.shp', bbox=bbox)
+                .set_index('id')
+                .to_crs(str(yearly_ds.crs)))
+
+    # Estaury mask
+    estuary_gdf = (gpd.read_file('input_data/estuary_mask.shp', bbox=bbox)
+                   .to_crs(yearly_ds.crs))
+
+    # Rocky shore mask
+    smartline_gdf = (gpd.read_file('input_data/Smartline.gdb', bbox=bbox)
+                     .to_crs(yearly_ds.crs))
 
 
-    # ## Extract shoreline contours
-    # 
-    # ### Extract ocean-masked contours
-
-    # In[5]:
-
+    ##############################
+    # Extract shoreline contours #
+    ##############################
 
     # Mask to study area
-    comp_gdf = gpd.read_file('input_data/Euc_SCC_coast10kmbuffer.geojson').set_index('ID_Seconda')
-    study_area_mask = rasterize(shapes=comp_gdf.to_crs(str(yearly_ds.crs)).loc[study_area]['geometry'],
-                             out_shape=yearly_ds[water_index].shape[1:],
-                             transform=yearly_ds.transform,
-                             all_touched=True).astype(bool)
+    study_area_poly = comp_gdf.loc[study_area]
 
     # Remove low obs and high variance pixels and replace with 3-year gapfill
-    gapfill_mask = (yearly_ds['count'] > 5) & (yearly_ds['stdev'] < 0.5)
+    gapfill_mask = (yearly_ds['count'] > 5) # & (yearly_ds['stdev'] < 0.5)
     yearly_ds[water_index] = yearly_ds[water_index].where(gapfill_mask, other=yearly_ds.gapfill_index)
     yearly_ds['tide_m'] = yearly_ds['tide_m'].where(gapfill_mask, other=yearly_ds.gapfill_tide_m)
 
     # Apply water index threshold
     thresholded_ds = (yearly_ds[water_index] > index_threshold)
     thresholded_ds = thresholded_ds.where(~yearly_ds[water_index].isnull())
-
-    # Load estuary mask
-    # bbox = gpd.GeoSeries(loads(yearly_ds.geobox.extent.wkt), crs=yearly_ds.crs)
-    from shapely.geometry import box
-    bbox = gpd.GeoSeries(box(yearly_ds.x.min().item(), 
-                             yearly_ds.y.min().item(), 
-                             yearly_ds.x.max().item(), 
-                             yearly_ds.y.max().item()), crs=yearly_ds.crs)
-    estuary_gdf = (gpd.read_file('./input_data/estuary_mask.shp', bbox=bbox)
-                   .to_crs(yearly_ds.crs))
 
     # Rasterize estuary polygons into a numpy mask. The try-except catches cases
     # where no estuary polygons exist in the study area
@@ -243,23 +291,15 @@ def main(argv=None):
     # full stack, and directly connected to ocean in each yearly timestep
     masked_ds = yearly_ds[water_index].where(yearly_sea_mask & coastal_buffer)
 
-    # Restrict to study area polygon
-    masked_ds = masked_ds.where(study_area_mask)
-
     # Set CRS and trasnform from input data
     masked_ds.attrs['crs'] = yearly_ds.crs[6:]
     masked_ds.attrs['transform'] = yearly_ds.transform
 
     # Extract contours
-    contour_path = f'output_data/{study_area}/vectors/{study_area}_contours_{water_index}_{index_threshold:.2f}'
     contours_gdf = subpixel_contours(da=masked_ds,
                                      z_values=index_threshold,
-                                     output_path=f'{contour_path}.geojson',
                                      min_vertices=10,
                                      dim='year')
-
-    # Plot
-    # contours_gdf.plot(column='year', cmap='YlOrRd')
 
 
     # ## Compute statistics
@@ -286,10 +326,6 @@ def main(argv=None):
 
     # Make a copy of the GeoDataFrame to hold tidal data
     tide_points_gdf = points_gdf.copy()
-    # gapfill_points_gdf = points_gdf.copy()
-
-
-    # In[7]:
 
 
     # Copy geometry to baseline point
@@ -337,12 +373,6 @@ def main(argv=None):
         tide_array = yearly_ds['tide_m'].sel(year=int(comp_year))
         tide_points_gdf[f'{comp_year}'] = tide_array.interp(x=baseline_x_vals, y=baseline_y_vals)
 
-    #     # Add gapfill data
-    #     gapfill_array = gapfill_mask.sel(year=int(comp_year))
-    #     gapfill_points_gdf[f'{comp_year}'] = gapfill_array.astype(int).interp(x=comp_x_vals, 
-    #                                                                           y=comp_y_vals, 
-    #                                                                           method='nearest')
-
     # Keep required columns
     points_gdf = points_gdf[['geometry'] + 
                             contours_index_gdf.index.unique().values.tolist()]
@@ -357,9 +387,6 @@ def main(argv=None):
 
     # ### Calculate regressions
 
-    # In[11]:
-
-
     # Identify SOI values for regression
     climate_df = pd.read_csv('input_data/climate_indices.csv', index_col='year')
     climate_df = climate_df.loc[x_years,:]
@@ -368,19 +395,15 @@ def main(argv=None):
     rate_out = points_gdf[x_years.astype(str)].apply(lambda x: change_regress(row=x, 
                                                          x_vals = x_years, 
                                                          x_labels = x_years, 
-                                                         std_dev=3), axis=1)
+                                                         std_dev=2), axis=1)
     points_gdf[['rate_time', 'incpt_time', 'sig_time', 'outl_time']] = rate_out
 
 
     # Compute tide flag
-    # tide_out = tide_points_gdf[x_years.astype(str)].apply(lambda x: change_regress(row=x, 
-    #                                                x_vals = x_years, 
-    #                                                x_labels = x_years, 
-    #                                                std_dev=3), axis=1)
     tide_out = tide_points_gdf[x_years.astype(str)].apply(lambda x: change_regress(row=points_gdf[x_years.astype(str)].iloc[x.name], 
                                                    x_vals=x, 
                                                    x_labels=x_years, 
-                                                   std_dev=3), axis=1)
+                                                   std_dev=2), axis=1)
     points_gdf[['rate_tide', 'incpt_tide', 'sig_tide', 'outl_tide']] = tide_out 
 
 
@@ -394,7 +417,7 @@ def main(argv=None):
                                                            x_vals = climate_df[ci].values, 
                                                            x_labels = x_years, 
     #                                                        detrend_params=[x.rate_time, x.incpt_time],
-                                                           std_dev=3), axis=1)
+                                                           std_dev=2), axis=1)
 
         # Add data as columns  
         points_gdf[[f'rate_{ci}', f'incpt_{ci}', f'sig_{ci}', f'outl_{ci}']] = ci_out
@@ -418,22 +441,30 @@ def main(argv=None):
         *x_years.astype(str).tolist(), 'geometry'
     ]]
 
-    # Export
-    stats_path = f'output_data/{study_area}/vectors/{study_area}_stats_{water_index}_{index_threshold}'
-    points_towrite.to_file(f'{stats_path}.geojson', driver='GeoJSON')
 
+    # ## Export files
+    
+    # Clip points to extent of polygon
+    stats_path = f'output_data/{study_area}/vectors/{study_area}_stats_{water_index}_{index_threshold:.2f}_{suffix}'
+    points_gdf = points_gdf[points_gdf.intersects(study_area_poly['geometry'])]
+    points_gdf.to_file(f'{stats_path}.geojson', driver='GeoJSON')
 
-    # ## Shapefile package
+    # Overwrite contours after clipping to study area
+    contour_path = f'output_data/{study_area}/vectors/{study_area}_contours_{water_index}_{index_threshold:.2f}_{suffix}'
+    contours_gdf['geometry'] = contours_gdf.intersection(study_area_poly['geometry'])
+    contours_gdf.to_file(f'{contour_path}.geojson', driver='GeoJSON')
 
-    # In[ ]:
-
-
+    # Export as shapefile
     contours_gdf.to_file(f'{contour_path}.shp')
     points_towrite.to_file(f'{stats_path}.shp')
 
-    shutil.make_archive(base_name=f'output_data/outputs_{study_area}_tidetest', 
+    shutil.make_archive(base_name=f'output_data/outputs_{study_area}_{suffix}', 
                         format='zip', 
                         root_dir=f'output_data/{study_area}/vectors/')
+    
+    rocky_shore_buffer = rocky_shores_buffer(smartline=smartline_gdf, buffer=50)
+    points_gdf = points_gdf[~points_gdf.intersects(rocky_shore_buffer.geometry.unary_union)]
+    points_gdf.to_file(f'{stats_path}_nonrocky.geojson', driver='GeoJSON')
 
 
 
