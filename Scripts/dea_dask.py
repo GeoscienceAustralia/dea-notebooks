@@ -20,7 +20,7 @@ Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 Functions included:
     create_local_dask_cluster
     
-Last modified: February 2020
+Last modified: March 2020
 
 '''
 
@@ -35,6 +35,14 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
     """
     Using the datacube utils function `start_local_dask`, generate
     a local dask cluster. Automatically detects if on AWS or NCI.
+    
+    Example use :
+        
+        import sys
+        sys.path.append("../Scripts")
+        from dea_dask import create_local_dask_cluster
+        
+        create_local_dask_cluster(spare_mem='4Gb')
     
     Parameters
     ----------  
