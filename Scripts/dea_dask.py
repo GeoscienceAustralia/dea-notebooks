@@ -27,37 +27,40 @@ Last modified: February 2020
 
 import os
 import dask
-from dask.utils import parse_bytes
 from datacube.utils.dask import start_local_dask
 from datacube.utils.rio import configure_s3_access
 
 
-def create_local_dask_cluster(spare_mem='3Gb'):
+def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
     """
-    Using the datacube utils function 'start_local_dask', generate
-    a local dask cluster. Automatically detects if on AWS or NCI
+    Using the datacube utils function `start_local_dask`, generate
+    a local dask cluster. Automatically detects if on AWS or NCI.
     
     Parameters
     ----------  
     spare_mem : String, optional
         The amount of memory, in Gb, to leave for the notebook to run.
         This memory will not be used by the cluster. e.g '3Gb'
+    display_client : Bool, optional
+        An optional boolean indicating whether to display a summary of
+        the dask client, including a link to monitor progress of the
+        analysis. Set to False to hide this display.
     
     """
 
     if 'AWS_ACCESS_KEY_ID' in os.environ:
         
-        # close previous client if any
+        # Close previous client if any
         client = locals().get('client', None)
         if client is not None:
             client.close()
             del client
         
-        # configure dashboard link to go over proxy
+        # Configure dashboard link to go over proxy
         dask.config.set({"distributed.dashboard.link":
                      os.environ.get('JUPYTERHUB_SERVICE_PREFIX', '/')+"proxy/{port}/status"})
                 
-        # start up a local cluster  
+        # Start up a local cluster
         client = start_local_dask(mem_safety_margin=spare_mem)
 
         ## Configure GDAL for s3 access
@@ -65,14 +68,15 @@ def create_local_dask_cluster(spare_mem='3Gb'):
                             client=client);
     else:        
         
-        # close previous client if any
+        # Close previous client if any
         client = locals().get('client', None)
         if client is not None:
             client.close()
             del client
             
-        # start up a local cluster on NCI
+        # Start up a local cluster on NCI
         client = start_local_dask(mem_safety_margin=spare_mem)
 
-    # show the dask cluster settings
-    display(client)
+    # Show the dask cluster settings
+    if display_client:
+        display(client)
