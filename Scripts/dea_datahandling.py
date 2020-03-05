@@ -53,7 +53,7 @@ def load_ard(dc,
              fmask_gooddata=[1, 4, 5],
              mask_pixel_quality=True,
              mask_invalid_data=True,
-             mask_contiguity='nbart_contiguity',
+             mask_contiguity=False,
              mask_dtype=np.float32,
              ls7_slc_off=True,
              product_metadata=False,
@@ -73,7 +73,7 @@ def load_ard(dc,
     shadowed land, snow and water pixels are treated as good quality, 
     but this can be customised using the `fmask_gooddata` parameter.
     
-    Last modified: February 2020
+    Last modified: March 2020
     
     Parameters
     ----------  
@@ -117,19 +117,16 @@ def load_ard(dc,
         will convert all numeric values to floating point values when 
         -999 values are replaced with NaN, which can cause memory issues.
     mask_contiguity : str or bool, optional
-        An optional string or boolean indicating whether to mask out 
-        pixels missing data in any band (i.e. "non-contiguous" values). 
-        Although most missing data issues are resolved by 
-        `mask_invalid_data`, this step is important for generating 
-        clean and concistent composite datasets. The default
-        is `mask_contiguity='nbart_contiguity'` which will set any 
-        pixels with non-contiguous values to NaN based on NBART data. 
-        If you are loading NBAR data instead, you should specify
-        `mask_contiguity='nbar_contiguity'` instead. To ignore non-
-        contiguous values completely, set `mask_contiguity=False`.
-        Be aware that masking out non-contiguous values will convert 
-        all numeric values to floating point values when -999 values 
-        are replaced with NaN, which can cause memory issues.
+        An optional string or boolean indicating whether to mask out
+        pixels missing data in any band (i.e. "non-contiguous" values).
+        This can be important for generating clean composite datasets. 
+        The default is False, which will ignore non-contiguous values 
+        completely. If loading NBART data, set the parameter to:       
+        `mask_contiguity='nbart_contiguity'`. If loading NBAR data, 
+        specify `mask_contiguity='nbar_contiguity'` instead. 
+        Non-contiguous pixels will be set to NaN if `dtype='auto'`, or 
+        set to the data's native nodata value if `dtype='native'` 
+        (which can be useful for reducing memory).
     mask_dtype : numpy dtype, optional
         An optional parameter that controls the data type/dtype that
         layers are coerced to when when `mask_pixel_quality=True` or 
