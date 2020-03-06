@@ -58,12 +58,6 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
 
     if 'AWS_ACCESS_KEY_ID' in os.environ:
         
-        # Close previous client if any
-        client = locals().get('client', None)
-        if client is not None:
-            client.close()
-            del client
-        
         # Configure dashboard link to go over proxy
         dask.config.set({"distributed.dashboard.link":
                      os.environ.get('JUPYTERHUB_SERVICE_PREFIX', '/')+"proxy/{port}/status"})
@@ -75,12 +69,6 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
         configure_s3_access(aws_unsigned=True,  
                             client=client);
     else:        
-        
-        # Close previous client if any
-        client = locals().get('client', None)
-        if client is not None:
-            client.close()
-            del client
             
         # Start up a local cluster on NCI
         client = start_local_dask(mem_safety_margin=spare_mem)
