@@ -10,7 +10,7 @@ from datacube.helpers import write_geotiff
 
 #import custom functions
 import sys
-sys.path.append("../Scripts")
+sys.path.append("../../Scripts")
 from dea_spatialtools import xr_rasterize
 
 ############
@@ -21,17 +21,18 @@ from dea_spatialtools import xr_rasterize
 cpus = 4
 
 # where are the dcStats mosaics tifs?
-tiffs = "/g/data/r78/cb3058/dea-notebooks/vegetation_anomalies/results/NSW_NDVI_Climatologies_std/mosaics/"
+tiffs = "/g/data/r78/cb3058/dea-notebooks/vegetation_anomalies/results/NSW_NDVI_Climatologies_std/n/"
 
 #Shapefile we're using for clipping the extent? e.g.NSW state polygon
 clip_shp = "/g/data/r78/cb3058/dea-notebooks/vegetation_anomalies/data/NSW_and_ACT.shp"
 
 # where should I put the results?
-results = "/g/data/r78/cb3058/dea-notebooks/vegetation_anomalies/results/NSW_NDVI_Climatologies_std/mosaics/"
+results = "/g/data/r78/cb3058/dea-notebooks/vegetation_anomalies/results/NSW_NDVI_Climatologies_std/"
 
 # script proper-----------------------------
 
 def clip_extent(tif):
+    print(tif)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print("starting processing of " + tif)
     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")

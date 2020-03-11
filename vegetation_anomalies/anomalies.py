@@ -77,104 +77,6 @@ def load_ard(dc,
              dtype='auto',
              **kwargs):
 
-    """
-    Loads and combines Landsat Collection 3 or Sentinel 2 Definitive 
-    and Near Real Time data for multiple sensors (i.e. ls5t, ls7e and 
-    ls8c for Landsat; s2a and s2b for Sentinel 2), optionally applies 
-    pixel quality and contiguity masks, and drops time steps that 
-    contain greater than a minimum proportion of good quality (e.g. non-
-    cloudy or shadowed) pixels. 
-    The function supports loading the following DEA products:
-    
-        ga_ls5t_ard_3
-        ga_ls7e_ard_3
-        ga_ls8c_ard_3
-        s2a_ard_granule
-        s2b_ard_granule
-        s2a_nrt_granule
-        s2b_nrt_granule
-    Last modified: March 2020
-    Parameters
-    ----------
-    dc : datacube Datacube object
-        The Datacube to connect to, i.e. `dc = datacube.Datacube()`.
-        This allows you to also use development datacubes if required.
-    products : list
-        A list of product names to load data from. Valid options are
-        ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] for Landsat,
-        ['s2a_ard_granule', 's2b_ard_granule'] for Sentinel 2 Definitive,
-        and ['s2a_nrt_granule', 's2b_nrt_granule'] for Sentinel 2 Near
-        Real Time (on the DEA Sandbox only).
-    min_gooddata : float, optional
-        An optional float giving the minimum percentage of good quality
-        pixels required for a satellite observation to be loaded.
-        Defaults to 0.0 which will return all observations regardless of
-        pixel quality (set to e.g. 0.99 to return only observations with
-        more than 99% good quality pixels).
-    fmask_categories : list, optional
-        An optional list of fmask category names to treat as good
-        quality pixels in the above `min_gooddata` calculation, and for
-        masking data by pixel quality (if `mask_pixel_quality=True`).
-        The default is `['valid', 'snow', 'water']` which will return
-        non-cloudy or shadowed land, snow and water pixels. Choose from:
-        'nodata', 'valid', 'cloud', 'shadow', 'snow', and 'water'.
-    mask_pixel_quality : bool, optional
-        An optional boolean indicating whether to mask out poor quality
-        pixels using fmask based on the `fmask_categories` provided 
-        above. The default is True, which will set poor quality pixels 
-        to NaN if `dtype='auto'` (which will convert the data to 
-        'float32'), or set poor quality pixels to the data's native 
-        nodata value if `dtype='native' (which can be useful for 
-        reducing memory).         
-    mask_contiguity : str or bool, optional
-        An optional string or boolean indicating whether to mask out
-        pixels missing data in any band (i.e. "non-contiguous" values).
-        This can be important for generating clean composite datasets. 
-        The default is False, which will ignore non-contiguous values 
-        completely. If loading NBART data, set the parameter to:       
-        `mask_contiguity='nbart_contiguity'`. If loading NBAR data, 
-        specify `mask_contiguity='nbar_contiguity'` instead. 
-        Non-contiguous pixels will be set to NaN if `dtype='auto'`, or 
-        set to the data's native nodata value if `dtype='native'` 
-        (which can be useful for reducing memory).
-    dtype : string, optional
-        An optional parameter that controls the data type/dtype that
-        layers are coerced to after loading. Valid values: 'native', 
-        'auto', 'float{16|32|64}'. When 'auto' is used, the data will be 
-        converted to `float32` if masking is used, otherwise data will 
-        be returned in the native data type of the data. Be aware that
-        if data is loaded in its native dtype, nodata and masked 
-        pixels will be returned with the data's native nodata value 
-        (typically -999), not NaN. 
-    ls7_slc_off : bool, optional
-        An optional boolean indicating whether to include data from
-        after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to
-        True, which keeps all Landsat 7 observations > May 31 2003.
-    predicate : function, optional
-        An optional function that can be passed in to restrict the
-        datasets that are loaded by the function. A predicate function
-        should take a `datacube.model.Dataset` object as an input (i.e.
-        as returned from `dc.find_datasets`), and return a boolean.
-        For example, a predicate function could be used to return True 
-        for only datasets acquired in January:
-        `dataset.time.begin.month == 1`
-    **kwargs :
-        A set of keyword arguments to `dc.load` that define the
-        spatiotemporal query and load parameters used to extract data. 
-        Keyword arguments can either be listed directly in the 
-        `load_ard` call like any other parameter (e.g. 
-        `measurements=['nbart_red']`), or by passing in a query kwarg 
-        dictionary (e.g. `**query`). Keywords can include `measurements`, 
-        `x`, `y`, `time`, `resolution`, `resampling`, `group_by`, `crs`;
-        see the `dc.load` documentation for all possible options:
-        https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html
-    Returns
-    -------
-    combined_ds : xarray Dataset
-        An xarray dataset containing only satellite observations that
-        contains greater than `min_gooddata` proportion of good quality
-        pixels.
-    """
 
     #########
     # Setup #
@@ -389,57 +291,55 @@ def load_ard(dc,
         return ds.compute()
     
 
-def calculate_anomalies(from_shape,
-                        shp_fpath,
+def calculate_anomalies(shp_fpath,
                         year,
                         season,
                         query_box,
-                        products,
                         dask_chunks):
     
     # dict of all seasons for indexing datacube
     all_seasons = {'JFM': [1,2,3],
-           'FMA': [2,3,4],
-           'MAM': [3,4,5],
-           'AMJ': [4,5,6],
-           'MJJ': [5,6,7],
-           'JJA': [6,7,8],
-           'JAS': [7,8,9],
-           'ASO': [8,9,10],
-           'SON': [9,10,11],
-           'OND': [10,11,12],
-           'NDJ': [11,12,1],
-           'DJF': [12,1,2],
-          }
-    
-    #error messaging for important inputs
+                   'FMA': [2,3,4],
+                   'MAM': [3,4,5],
+                   'AMJ': [4,5,6],
+                   'MJJ': [5,6,7],
+                   'JJA': [6,7,8],
+                   'JAS': [7,8,9],
+                   'ASO': [8,9,10],
+                   'SON': [9,10,11],
+                   'OND': [10,11,12],
+                   'NDJ': [11,12,1],
+                   'DJF': [12,1,2],
+                  }
+
     if season not in all_seasons:
         raise ValueError("Not a valid season, "
-                         "must be one of " + str(all_seasons.keys()))
-    
-    if from_shape:
-        if len(fiona.open(shp_fpath)) > 1:
-            warnings.warn("This script can only accept shapefiles with a single polygon feature; "
-                          "seasonal anomalies will be calculated for the extent of the "
-                          "first geometry in the shapefile only.")
-        
+                         "must be one of: " + str(all_seasons.keys()))
+         
     #Depending on the season, grab the time for the dc.load
     months=all_seasons.get(season)
         
-    if season == 'DJF':
-        time= (year+"-"+str(months[0]), str(int(year)+1)+"-"+str(months[2]))               
-    
-    if season == 'NDJ':
-        time= (year+"-"+str(months[0]), str(int(year)+1)+"-"+str(months[2]))               
+    if (season == 'DJF') or (season == 'NDJ'):
+        time= (year+"-"+str(months[0]), str(int(year)+1)+"-"+str(months[2]))
     
     else:
         time = (year+"-"+str(months[0]), year+"-"+str(months[2]))
    
     #connect to datacube
-    dc = datacube.Datacube(app='calculate_anomalies', env='c3-samples')
+    try:
+        dc = datacube.Datacube(app='calculate_anomalies', env='c3-samples')
+    except:
+        dc = datacube.Datacube(app='calculate_anomalies')
+    
     
     #get data from shapefile extent and mask
-    if from_shape:
+    if shp_fpath is not None:
+        
+        if len(fiona.open(shp_fpath)) > 1:
+            warnings.warn("This script can only accept shapefiles with a single polygon feature; "
+                          "seasonal anomalies will be calculated for the extent of the "
+                          "first geometry in the shapefile only.")
+        
         print("extracting data based on shapefile extent")
         
         with fiona.open(shp_fpath) as input:
@@ -453,9 +353,10 @@ def calculate_anomalies(from_shape,
                  'time': time}
        
         ds = load_ard(dc=dc,
-                  products=products,
-                  measurements=['nir', 'red'],
-#                   align = (15,15),
+                  products = ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
+                  measurements = ['nbart_nir', 'nbart_red'],
+                  ls7_slc_off = False,
+                  #align = (15,15),
                   resolution=(-30,30),
                   output_crs = 'epsg:3577',
                   dask_chunks = dask_chunks,
@@ -470,6 +371,7 @@ def calculate_anomalies(from_shape,
         
         mask_xr = xr.DataArray(mask, dims = ('y','x'))
         ds = ds.where(mask_xr==False)
+        print(ds)
         
     else: 
         print('Extracting data based on lat, lon coords')
@@ -478,9 +380,10 @@ def calculate_anomalies(from_shape,
                  'time': time}
         
         ds = load_ard(dc=dc,
-                      products=products,
-                      measurements=['nir', 'red'],
-#                       align = (15,15),
+                      products = ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
+                      measurements = ['nbart_nir', 'nbart_red'],
+                      ls7_slc_off = False,
+                      #align = (15,15),
                       resolution=(-30,30),
                       output_crs = 'epsg:3577',
                       dask_chunks = dask_chunks,
@@ -489,7 +392,7 @@ def calculate_anomalies(from_shape,
 
     print('calculating vegetation indice')
         
-    vegIndex = (ds.nir - ds.red) / (ds.nir + ds.red)
+    vegIndex = (ds.nbart_nir - ds.nbart_red) / (ds.nbart_nir + ds.nbart_red)
     vegIndex = vegIndex.mean('time').rename('ndvi_mean')
         
     #get the bounding coords of the input ds to help with indexing the climatology
@@ -499,11 +402,13 @@ def calculate_anomalies(from_shape,
     y_slice = [i for i in range(int(ymin),int(ymax-30),-30)]
     
     #index the climatology dataset to the location of our AOI
-    climatology_mean = xr.open_rasterio('results/NSW_NDVI_Climatologies_mean/mosaics/ndvi_clim_mean_'+season+'_nsw.tif',
-                                        chunks=dask_chunks).sel(x=x_slice, y=y_slice, method='nearest').squeeze()
+    climatology_mean = xr.open_rasterio('results/NSW_NDVI_Climatologies_mean/mosaics/ndvi_clim_mean_'+season+'_nsw.tif').sel(x=x_slice,
+                                                                y=y_slice,
+                                                                method='nearest').chunk(chunks=dask_chunks).squeeze()
     
-    climatology_std = xr.open_rasterio('results/NSW_NDVI_Climatologies_std/mosaics/ndvi_clim_std_'+season+'_nsw.tif',
-                                        chunks=dask_chunks).sel(x=x_slice, y=y_slice, method='nearest').squeeze()
+    climatology_std = xr.open_rasterio('results/NSW_NDVI_Climatologies_std/mosaics/ndvi_clim_std_'+season+'_nsw.tif').sel(x=x_slice,
+                                                                y=y_slice,
+                                                                method='nearest').chunk(chunks=dask_chunks).squeeze()
     
     #test if the arrays match before we calculate the anomalies
     np.testing.assert_allclose(vegIndex.x.values, climatology_mean.x.values,
