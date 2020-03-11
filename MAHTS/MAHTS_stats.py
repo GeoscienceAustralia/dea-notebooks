@@ -39,6 +39,7 @@ from shapely.geometry import box
 from shapely.ops import nearest_points
 from rasterio.features import rasterize
 from rasterio.transform import array_bounds
+from skimage.measure import label
 from skimage.morphology import disk
 from skimage.morphology import square
 from skimage.morphology import binary_opening
@@ -105,13 +106,25 @@ def breakpoints(x, labels, model='rbf', pen=10, min_size=2, jump=1):
         return None
 
     
-def mask_ocean(bool_array, connectivity=1):
+def mask_ocean(bool_array, points_gdf, connectivity=1):
     '''
     Identifies ocean by selecting the largest connected area of water
     pixels, then dilating this region by 1 pixel to include mixed pixels
     '''
     
-    ocean_mask = largest_region(bool_array, connectivity=connectivity)
+#     ocean_mask = largest_region(bool_array, connectivity=connectivity)
+    # First, break boolean array into unique, discrete regions/blobs
+    blobs_labels = xr.apply_ufunc(label, bool_array, None, 0, False, connectivity)
+    
+    # Get blob ID for each tidal modelling point
+    x = xr.DataArray(points_gdf.geometry.x, dims='z')
+    y = xr.DataArray(points_gdf.geometry.y, dims='z')   
+    ocean_blobs = np.unique(blobs_labels.interp(x=x, y=y, method='nearest'))
+
+    # Return only blobs that contained tide modelling point
+    ocean_mask = blobs_labels.isin(ocean_blobs[ocean_blobs != 0])
+    
+    # Dilate mask
     ocean_mask = binary_dilation(ocean_mask, selem=square(3))
 
     return ocean_mask
@@ -230,7 +243,7 @@ def main(argv=None):
                          crs=yearly_ds.crs)
 
     # Study area polygon
-    comp_gdf = (gpd.read_file('input_data/50km_albers_grid.shp', bbox=bbox)
+    comp_gdf = (gpd.read_file('input_data/50km_albers_grid_clipped.shp', bbox=bbox)
                 .set_index('id')
                 .to_crs(str(yearly_ds.crs)))
 
@@ -241,6 +254,10 @@ def main(argv=None):
     # Rocky shore mask
     smartline_gdf = (gpd.read_file('input_data/Smartline.gdb', bbox=bbox)
                      .to_crs(yearly_ds.crs))
+    
+    # Tide points
+    points_gdf = (gpd.read_file('input_data/tide_points_coastal.geojson', bbox=bbox)
+              .to_crs(yearly_ds.crs))
 
 
     ##############################
@@ -277,7 +294,9 @@ def main(argv=None):
     # Identify ocean by identifying the largest connected area of water pixels
     # as water in at least 90% of the entire stack of thresholded data
     all_time_median = (thresholded_ds.mean(dim='year') > 0.9)
-    full_sea_mask = mask_ocean(binary_opening(all_time_median, disk(3)))
+    full_sea_mask = mask_ocean(xr.apply_ufunc(binary_opening, 
+                                              all_time_median, 
+                                              disk(3)), points_gdf)
 
     # Generate all time 750 m buffer from ocean-land boundary
     buffer_ocean = binary_dilation(full_sea_mask, disk(25))
@@ -285,7 +304,8 @@ def main(argv=None):
     coastal_buffer = buffer_ocean & buffer_land
 
     # # Generate sea mask for each timestep
-    yearly_sea_mask = thresholded_ds.groupby('year').apply(mask_ocean)
+    yearly_sea_mask = (thresholded_ds.groupby('year')
+                       .apply(lambda x: mask_ocean(x, points_gdf)))
 
     # Keep only pixels that are within 750 m of the ocean in the
     # full stack, and directly connected to ocean in each yearly timestep
@@ -462,7 +482,7 @@ def main(argv=None):
                         format='zip', 
                         root_dir=f'output_data/{study_area}/vectors/')
     
-    rocky_shore_buffer = rocky_shores_buffer(smartline=smartline_gdf, buffer=50)
+    rocky_shore_buffer = rocky_shores_buffer(smartline_gdf=smartline_gdf, buffer=50)
     points_gdf = points_gdf[~points_gdf.intersects(rocky_shore_buffer.geometry.unary_union)]
     points_gdf.to_file(f'{stats_path}_nonrocky.geojson', driver='GeoJSON')
 

@@ -6,7 +6,6 @@ products:
             product: ga_ls8c_ard_3
             measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir, nbart_swir_1, nbart_swir_2, oa_nbart_contiguity, oa_fmask]
             gqa_iterative_mean_xy: [0, 1]
-            resampling: {'*': 'average', 'oa_fmask': 'nearest'}
             group_by: solar_day
             
     ls7_nbart:
@@ -101,7 +100,14 @@ products:
                     swir1: swir1
                     swir2: swir2
                     fmask: fmask
-
+    
+    ls_nbart_mndwi:
+         recipe:
+             transform: expressions
+             input: *ls_nbart_masked    
+             output:
+                 mndwi:
+                    formula: (green - swir1) / (green + swir1)
                 
     ls_nbart_indices:
          recipe:

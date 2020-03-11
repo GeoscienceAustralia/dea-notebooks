@@ -167,7 +167,7 @@ def tidal_composite(year_ds,
 dc = datacube.Datacube(app='MAHTS_testing', env='c3-samples')
 
 points_gdf = gpd.read_file('input_data/tide_points_coastal.geojson')
-comp_gdf = (gpd.read_file('input_data/50km_albers_grid.shp')
+comp_gdf = (gpd.read_file('input_data/50km_albers_grid_clipped.shp')
             .to_crs(epsg=4326)
             .set_index('id'))
 
@@ -225,7 +225,7 @@ def main(argv=None):
     ###############
 
     ds_extent = shape(ds.geobox.geographic_extent.json)
-    subset_gdf = points_gdf[points_gdf.geometry.intersects(ds_extent)]
+    subset_gdf = points_gdf[points_gdf.geometry.intersects(ds_extent.buffer(0.025))]
 
     # Extract lon, lat from tides, and time from satellite data
     x_vals = subset_gdf.geometry.centroid.x

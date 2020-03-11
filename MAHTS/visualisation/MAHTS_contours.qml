@@ -1,48 +1,48 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis version="3.4.5-Madeira" maxScale="0" simplifyAlgorithm="0" simplifyDrawingHints="1" labelsEnabled="0" simplifyMaxScale="1" simplifyDrawingTol="1" readOnly="0" simplifyLocal="1" styleCategories="AllStyleCategories" hasScaleBasedVisibilityFlag="0" minScale="1e+8">
+<qgis simplifyDrawingTol="1" minScale="50000" simplifyLocal="1" readOnly="0" maxScale="0" styleCategories="AllStyleCategories" simplifyAlgorithm="0" simplifyDrawingHints="1" simplifyMaxScale="1" version="3.4.5-Madeira" labelsEnabled="0" hasScaleBasedVisibilityFlag="1">
   <flags>
     <Identifiable>1</Identifiable>
     <Removable>1</Removable>
     <Searchable>1</Searchable>
   </flags>
-  <renderer-v2 attr="year" type="categorizedSymbol" symbollevels="0" forceraster="0" enableorderby="0">
+  <renderer-v2 symbollevels="0" type="categorizedSymbol" forceraster="0" enableorderby="0" attr="year">
     <categories>
-      <category value="1988" label="1988" render="true" symbol="0"/>
-      <category value="1989" label="1989" render="true" symbol="1"/>
-      <category value="1990" label="1990" render="true" symbol="2"/>
-      <category value="1991" label="1991" render="true" symbol="3"/>
-      <category value="1992" label="1992" render="true" symbol="4"/>
-      <category value="1993" label="1993" render="true" symbol="5"/>
-      <category value="1994" label="1994" render="true" symbol="6"/>
-      <category value="1995" label="1995" render="true" symbol="7"/>
-      <category value="1996" label="1996" render="true" symbol="8"/>
-      <category value="1997" label="1997" render="true" symbol="9"/>
-      <category value="1998" label="1998" render="true" symbol="10"/>
-      <category value="1999" label="1999" render="true" symbol="11"/>
-      <category value="2000" label="2000" render="true" symbol="12"/>
-      <category value="2001" label="2001" render="true" symbol="13"/>
-      <category value="2002" label="2002" render="true" symbol="14"/>
-      <category value="2003" label="2003" render="true" symbol="15"/>
-      <category value="2004" label="2004" render="true" symbol="16"/>
-      <category value="2005" label="2005" render="true" symbol="17"/>
-      <category value="2006" label="2006" render="true" symbol="18"/>
-      <category value="2007" label="2007" render="true" symbol="19"/>
-      <category value="2008" label="2008" render="true" symbol="20"/>
-      <category value="2009" label="2009" render="true" symbol="21"/>
-      <category value="2010" label="2010" render="true" symbol="22"/>
-      <category value="2011" label="2011" render="true" symbol="23"/>
-      <category value="2012" label="2012" render="true" symbol="24"/>
-      <category value="2013" label="2013" render="true" symbol="25"/>
-      <category value="2014" label="2014" render="true" symbol="26"/>
-      <category value="2015" label="2015" render="true" symbol="27"/>
-      <category value="2016" label="2016" render="true" symbol="28"/>
-      <category value="2017" label="2017" render="true" symbol="29"/>
-      <category value="2018" label="2018" render="true" symbol="30"/>
-      <category value="" label="" render="false" symbol="31"/>
+      <category label="1988" symbol="0" render="true" value="1988"/>
+      <category label="1989" symbol="1" render="true" value="1989"/>
+      <category label="1990" symbol="2" render="true" value="1990"/>
+      <category label="1991" symbol="3" render="true" value="1991"/>
+      <category label="1992" symbol="4" render="true" value="1992"/>
+      <category label="1993" symbol="5" render="true" value="1993"/>
+      <category label="1994" symbol="6" render="true" value="1994"/>
+      <category label="1995" symbol="7" render="true" value="1995"/>
+      <category label="1996" symbol="8" render="true" value="1996"/>
+      <category label="1997" symbol="9" render="true" value="1997"/>
+      <category label="1998" symbol="10" render="true" value="1998"/>
+      <category label="1999" symbol="11" render="true" value="1999"/>
+      <category label="2000" symbol="12" render="true" value="2000"/>
+      <category label="2001" symbol="13" render="true" value="2001"/>
+      <category label="2002" symbol="14" render="true" value="2002"/>
+      <category label="2003" symbol="15" render="true" value="2003"/>
+      <category label="2004" symbol="16" render="true" value="2004"/>
+      <category label="2005" symbol="17" render="true" value="2005"/>
+      <category label="2006" symbol="18" render="true" value="2006"/>
+      <category label="2007" symbol="19" render="true" value="2007"/>
+      <category label="2008" symbol="20" render="true" value="2008"/>
+      <category label="2009" symbol="21" render="true" value="2009"/>
+      <category label="2010" symbol="22" render="true" value="2010"/>
+      <category label="2011" symbol="23" render="true" value="2011"/>
+      <category label="2012" symbol="24" render="true" value="2012"/>
+      <category label="2013" symbol="25" render="true" value="2013"/>
+      <category label="2014" symbol="26" render="true" value="2014"/>
+      <category label="2015" symbol="27" render="true" value="2015"/>
+      <category label="2016" symbol="28" render="true" value="2016"/>
+      <category label="2017" symbol="29" render="true" value="2017"/>
+      <category label="2018" symbol="30" render="true" value="2018"/>
+      <category label="" symbol="31" render="false" value=""/>
     </categories>
     <symbols>
-      <symbol alpha="1" type="line" name="0" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="0" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -68,8 +68,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="1" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="1" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -95,8 +95,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="10" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="10" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -122,8 +122,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="11" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="11" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -149,8 +149,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="12" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="12" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -176,8 +176,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="13" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="13" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -203,8 +203,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="14" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="14" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -230,8 +230,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="15" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="15" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -257,8 +257,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="16" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="16" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -284,8 +284,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="17" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="17" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -311,8 +311,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="18" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="18" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -338,8 +338,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="19" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="19" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -365,8 +365,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="2" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="2" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -392,8 +392,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="20" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="20" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -419,8 +419,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="21" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="21" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -446,8 +446,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="22" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="22" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -473,8 +473,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="23" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="23" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -500,8 +500,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="24" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="24" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -527,8 +527,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="25" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="25" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -554,8 +554,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="26" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="26" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -581,8 +581,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="27" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="27" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -608,8 +608,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="28" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="28" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -635,8 +635,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="29" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="29" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -662,8 +662,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="3" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="3" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -689,8 +689,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="30" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="30" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -716,8 +716,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="31" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="31" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -743,8 +743,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="4" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="4" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -770,8 +770,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="5" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="5" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -797,8 +797,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="6" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="6" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -824,8 +824,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="7" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="7" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -851,8 +851,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="8" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="8" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -878,8 +878,8 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol alpha="1" type="line" name="9" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="9" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -907,8 +907,8 @@
       </symbol>
     </symbols>
     <source-symbol>
-      <symbol alpha="1" type="line" name="0" clip_to_extent="1" force_rhr="0">
-        <layer enabled="1" pass="0" class="SimpleLine" locked="0">
+      <symbol type="line" name="0" clip_to_extent="1" alpha="1" force_rhr="0">
+        <layer enabled="1" class="SimpleLine" pass="0" locked="0">
           <prop k="capstyle" v="square"/>
           <prop k="customdash" v="5;2"/>
           <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/>
@@ -954,11 +954,12 @@
   <featureBlendMode>0</featureBlendMode>
   <layerOpacity>1</layerOpacity>
   <SingleCategoryDiagramRenderer attributeLegend="1" diagramType="Histogram">
-    <DiagramCategory opacity="1" minimumSize="0" height="15" labelPlacementMethod="XHeight" rotationOffset="270" penWidth="0" sizeScale="3x:0,0,0,0,0,0" scaleDependency="Area" sizeType="MM" penColor="#000000" width="15" lineSizeType="MM" scaleBasedVisibility="0" backgroundColor="#ffffff" barWidth="5" maxScaleDenominator="1e+8" enabled="0" backgroundAlpha="255" penAlpha="255" lineSizeScale="3x:0,0,0,0,0,0" minScaleDenominator="0" diagramOrientation="Up">
-      <fontProperties style="" description="Sans Serif,9,-1,5,50,0,0,0,0,0"/>
+    <DiagramCategory backgroundColor="#ffffff" minimumSize="0" penColor="#000000" sizeType="MM" scaleBasedVisibility="0" maxScaleDenominator="1e+8" rotationOffset="270" sizeScale="3x:0,0,0,0,0,0" lineSizeScale="3x:0,0,0,0,0,0" height="15" scaleDependency="Area" lineSizeType="MM" barWidth="5" enabled="0" backgroundAlpha="255" minScaleDenominator="0" opacity="1" penWidth="0" diagramOrientation="Up" penAlpha="255" width="15" labelPlacementMethod="XHeight">
+      <fontProperties description="Sans Serif,9,-1,5,50,0,0,0,0,0" style=""/>
+      <attribute label="" color="#000000" field=""/>
     </DiagramCategory>
   </SingleCategoryDiagramRenderer>
-  <DiagramLayerSettings placement="2" priority="0" showAll="1" obstacle="0" zIndex="0" linePlacementFlags="18" dist="0">
+  <DiagramLayerSettings obstacle="0" zIndex="0" linePlacementFlags="18" dist="0" showAll="1" placement="2" priority="0">
     <properties>
       <Option type="Map">
         <Option type="QString" value="" name="name"/>
@@ -981,24 +982,24 @@
     </field>
   </fieldConfiguration>
   <aliases>
-    <alias name="" index="0" field="year"/>
+    <alias field="year" name="" index="0"/>
   </aliases>
   <excludeAttributesWMS/>
   <excludeAttributesWFS/>
   <defaults>
-    <default expression="" field="year" applyOnUpdate="0"/>
+    <default field="year" applyOnUpdate="0" expression=""/>
   </defaults>
   <constraints>
-    <constraint unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0" field="year"/>
+    <constraint constraints="0" unique_strength="0" field="year" notnull_strength="0" exp_strength="0"/>
   </constraints>
   <constraintExpressions>
-    <constraint desc="" exp="" field="year"/>
+    <constraint exp="" field="year" desc=""/>
   </constraintExpressions>
   <expressionfields/>
   <attributeactions>
     <defaultAction key="Canvas" value="{00000000-0000-0000-0000-000000000000}"/>
   </attributeactions>
-  <attributetableconfig sortOrder="0" actionWidgetStyle="dropDown" sortExpression="">
+  <attributetableconfig actionWidgetStyle="dropDown" sortExpression="" sortOrder="0">
     <columns>
       <column hidden="0" width="-1" type="field" name="year"/>
       <column hidden="1" width="-1" type="actions"/>
@@ -1032,7 +1033,7 @@ def my_form_open(dialog, layer, feature):
   <featformsuppress>0</featformsuppress>
   <editorlayout>generatedlayout</editorlayout>
   <editable>
-    <field editable="1" name="year"/>
+    <field name="year" editable="1"/>
   </editable>
   <labelOnTop>
     <field name="year" labelOnTop="0"/>

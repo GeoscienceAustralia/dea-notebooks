@@ -56,7 +56,7 @@
 #                   WA23.02 WA28.02 WA26.02 NT01.02 WA25.01 WA32.03 WA26.01 \
 #                   WA30.01 WA28.01 WA30.02 WA29.02
 
-for study_area in 5484
+for study_area in 6818
                   
 do
 
@@ -66,9 +66,9 @@ do
     #PBS -e MAHTS_${study_area}.err\n\
     #PBS -l storage=gdata/v10+gdata/r78+gdata/xu18+gdata/fk4\n\
     #PBS -P r78\n\
-    #PBS -q express\n\
-    #PBS -l walltime=24:00:00\n\
-    #PBS -l mem=128GB\n\
+    #PBS -q normal\n\
+    #PBS -l walltime=12:00:00\n\
+    #PBS -l mem=100GB\n\
     #PBS -l jobfs=2GB\n\
     #PBS -l ncpus=1\n\
     #PBS -l wd\n\
