@@ -15,6 +15,16 @@ import pandas as pd
 from shapely.ops import nearest_points
 from scipy import stats
 
+import os
+import sys
+from shapely.geometry import box
+from rasterio.transform import array_bounds
+import shutil
+
+sys.path.append('../Scripts')
+from dea_spatialtools import subpixel_contours
+
+
 def change_regress(row, 
                    x_vals, 
                    x_labels, 
@@ -75,7 +85,6 @@ def mask_ocean(bool_array, points_gdf, connectivity=1):
     pixels, then dilating this region by 1 pixel to include mixed pixels
     '''
     
-#     ocean_mask = largest_region(bool_array, connectivity=connectivity)
     # First, break boolean array into unique, discrete regions/blobs
     blobs_labels = xr.apply_ufunc(label, bool_array, None, 0, False, connectivity)
     
@@ -381,6 +390,10 @@ def calculate_regressions(yearly_ds,
 
     
 def main(argv=None):
+    
+    #########
+    # Setup #
+    #########
 
     if argv is None:
 
@@ -397,7 +410,126 @@ def main(argv=None):
     # Set study area and name for analysis
     study_area = int(argv[1])
     output_name = str(argv[2])
+        
+    # Set params
+    water_index = 'mndwi'
+    index_threshold = 0.00
+    baseline_year = '2018'
+
+    # Create output vector folder
+    output_dir = f'output_data/{output_name}_{study_area}/vectors'
+    os.makedirs(f'{output_dir}/shapefiles', exist_ok=True)
+
+    ###############################
+    # Load DEA CoastLines rasters #
+    ###############################
     
+    yearly_ds = load_rasters(output_name, study_area, water_index)
+
+    ######################
+    # Load external data #
+    ######################
+
+    # Get bounding box to load data for
+    bbox = gpd.GeoSeries(box(*array_bounds(height=yearly_ds.sizes['y'], 
+                                           width=yearly_ds.sizes['x'], 
+                                           transform=yearly_ds.transform)), 
+                         crs=yearly_ds.crs)
+
+    # Estaury mask
+    estuary_gdf = (gpd.read_file('input_data/estuary_mask.shp', bbox=bbox)
+                   .to_crs(yearly_ds.crs))
+
+    # Rocky shore mask
+    smartline_gdf = (gpd.read_file('input_data/Smartline.gdb', bbox=bbox)
+                     .to_crs(yearly_ds.crs))
+
+    # Tide points
+    points_gdf = (gpd.read_file('input_data/tide_points_coastal.geojson', bbox=bbox)
+                  .to_crs(yearly_ds.crs))
+
+    # Study area polygon
+    comp_gdf = (gpd.read_file('input_data/50km_albers_grid.shp', bbox=bbox)
+                .set_index('id')
+                .to_crs(str(yearly_ds.crs)))
+
+    # Mask to study area
+    study_area_poly = comp_gdf.loc[study_area]
+
+    # Load climate indices
+    climate_df = pd.read_csv('input_data/climate_indices.csv', index_col='year')
+
+    ##############################
+    # Extract shoreline contours #
+    ##############################
+
+    # Mask dataset to focus on coastal zone only
+    masked_ds = contours_preprocess(yearly_ds, 
+                                    water_index, 
+                                    index_threshold, 
+                                    estuary_gdf, 
+                                    points_gdf)
+
+    # Extract contours
+    contours_gdf = subpixel_contours(da=masked_ds,
+                                     z_values=index_threshold,
+                                     min_vertices=10,
+                                     dim='year').set_index('year')
+
+    ######################
+    # Compute statistics #
+    ######################    
+    
+    # Extract statistics modelling points along baseline contour
+    points_gdf = stats_points(contours_gdf, baseline_year, distance=30)
+
+    # Make a copy of the points GeoDataFrame to hold tidal data
+    tide_points_gdf = points_gdf.copy()
+
+    # Calculate annual coastline movements and residual tide heights for 
+    # every contour compared to the baseline year
+    points_gdf, tide_points_gdf = annual_movements(yearly_ds, 
+                                                   points_gdf, 
+                                                   tide_points_gdf, 
+                                                   contours_gdf, 
+                                                   baseline_year,
+                                                   water_index)
+
+    # Calculate regressions
+    points_gdf = calculate_regressions(yearly_ds, 
+                                       points_gdf, 
+                                       tide_points_gdf, 
+                                       climate_df)
+
+    ################
+    # Export files #
+    ################
+
+    # Extract a 50 m buffer around rocky shore features which is used to clip stats
+    rocky_shore_buffer = rocky_shores_buffer(smartline_gdf=smartline_gdf, 
+                                             buffer=50)
+
+    # Clip stats to study area extent, remove rocky shores and export to GeoJSON
+    stats_path = f'{output_dir}/stats_{study_area}_{output_name}_{water_index}_{index_threshold:.2f}'
+    points_gdf = points_gdf[points_gdf.intersects(study_area_poly['geometry'])]
+    points_gdf = points_gdf[~points_gdf.intersects(rocky_shore_buffer.geometry.unary_union)]
+    points_gdf.to_file(f'{stats_path}.geojson', driver='GeoJSON')
+
+    # Clip annual shoreline contours to study area extent and export to GeoJSON
+    contour_path = f'{output_dir}/contours_{study_area}_{output_name}_{water_index}_{index_threshold:.2f}'
+    contours_gdf['geometry'] = contours_gdf.intersection(study_area_poly['geometry'])
+    contours_gdf.reset_index().to_file(f'{contour_path}.geojson', driver='GeoJSON')
+
+    # Export stats and contours as ESRI shapefiles
+    contour_path = contour_path.replace('vectors', 'vectors/shapefiles')
+    stats_path = stats_path.replace('vectors', 'vectors/shapefiles')
+    contours_gdf.to_file(f'{contour_path}.shp')
+    points_gdf.to_file(f'{stats_path}.shp')
+
+    # Create a zip file containing all vector files
+    shutil.make_archive(base_name=f'output_data/outputs_{study_area}_{output_name}', 
+                        format='zip', 
+                        root_dir=output_dir)    
 
         
 if __name__ == "__main__":

@@ -51,7 +51,7 @@ def custom_native_geobox(ds, measurements=None, basis=None):
 
 def load_mndwi(dc, 
                query,
-               yaml_path='MAHTS_virtual_products.yaml', 
+               yaml_path, 
                product_name='ls_nbart_mndwi',
                virtual_products=True):
     """
@@ -376,6 +376,10 @@ def export_annual_gapfill(ds,
         
 
 def main(argv=None):
+    
+    #########
+    # Setup #
+    #########
 
     if argv is None:
 
@@ -429,7 +433,10 @@ def main(argv=None):
              'dask_chunks': {'time': 1, 'x': 1000, 'y': 1000}}
 
     # Load virtual product    
-    ds = load_mndwi(dc, query, virtual_products=False)
+    ds = load_mndwi(dc, 
+                    query, 
+                    yaml_path='deacoastlines_virtual_products.yaml',
+                    virtual_products=False)
     
     ###################
     # Tidal modelling #
@@ -438,19 +445,19 @@ def main(argv=None):
     # Model tides at point locations
     tidepoints_gdf = model_tides(ds, points_gdf)
 
-#     # Interpolate tides for each timestep into the spatial extent of the data    
-#     interp_tide = partial(interpolate_tide,
-#                           tidepoints_gdf=tidepoints_gdf,
-#                           factor=50, dask=False)
-#     ds['tide_m'] = multiprocess_apply(ds=ds,
-#                                               dim='time',
-#                                               func=interp_tide)   
-
-    # Interpolate tides for each timestep into the spatial extent of the data     
+    # Interpolate tides for each timestep into the spatial extent of the data    
     interp_tide = partial(interpolate_tide,
                           tidepoints_gdf=tidepoints_gdf,
-                          factor=50, dask=True)
-    ds['tide_m'] = ds.groupby('time').apply(interp_tide)
+                          factor=50, dask=False)
+    ds['tide_m'] = multiprocess_apply(ds=ds,
+                                              dim='time',
+                                              func=interp_tide)   
+
+    # Interpolate tides for each timestep into the spatial extent of the data     
+#     interp_tide = partial(interpolate_tide,
+#                           tidepoints_gdf=tidepoints_gdf,
+#                           factor=50, dask=True)
+#     ds['tide_m'] = ds.groupby('time').apply(interp_tide)
     
 
     # Determine tide cutoff
@@ -470,6 +477,13 @@ def main(argv=None):
                           tide_cutoff_max)    
 
     print(f'{(datetime.datetime.now() - start_time).seconds / 60:.1f} minutes')
+    
+    ##################
+    # Run statistics #
+    ##################
+    
+    # Once all rasters have been generated, compute contours and statistics
+    os.system(f'python /g/data/r78/rt1527/dea-notebooks/MAHTS/deacoastlines_statistics.py {study_area} {output_name}')
     
         
 if __name__ == "__main__":
