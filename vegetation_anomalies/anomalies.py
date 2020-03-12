@@ -371,7 +371,7 @@ def calculate_anomalies(shp_fpath,
         
         mask_xr = xr.DataArray(mask, dims = ('y','x'))
         ds = ds.where(mask_xr==False)
-        print(ds)
+        print(ds.time.values)
         
     else: 
         print('Extracting data based on lat, lon coords')
@@ -427,7 +427,8 @@ def calculate_anomalies(shp_fpath,
     #calculate standardised anomalies
     anomalies = xr.apply_ufunc(lambda x, m, s: (x - m) / s,
                                vegIndex, climatology_mean, climatology_std,
-                               dask='allowed')
+                               output_dtypes=[float],
+                               dask='parallelized')
     
     #add back metadata
     anomalies = anomalies.rename('std_anomalies').to_dataset()
