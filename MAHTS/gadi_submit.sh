@@ -1,6 +1,6 @@
 #!/bin/bash
 
-output_name="multi"
+output_name="dask"
 
 for study_area in 7832
                   

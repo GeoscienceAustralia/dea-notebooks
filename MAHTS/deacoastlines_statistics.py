@@ -10,7 +10,10 @@ from skimage.morphology import binary_dilation
 from skimage.morphology import disk, square
 from skimage.measure import label
 import numpy as np
-
+import geopandas as gpd
+import pandas as pd
+from shapely.ops import nearest_points
+from scipy import stats
 
 def change_regress(row, 
                    x_vals, 
@@ -220,6 +223,162 @@ def contours_preprocess(yearly_ds,
     masked_ds.attrs['transform'] = yearly_ds.transform
 
     return masked_ds
+
+
+def stats_points(contours_gdf, baseline_year, distance=30):
+    
+    # Set annual shoreline to use as a baseline
+    baseline_contour = contours_gdf.loc[[baseline_year]].geometry
+
+    # Generate points along line and convert to geopandas.GeoDataFrame
+    points_line = [baseline_contour.iloc[0].interpolate(i) 
+                   for i in range(0, int(baseline_contour.length), distance)]
+    points_gdf = gpd.GeoDataFrame(geometry=points_line, crs=contours_gdf.crs)
+    
+    return points_gdf
+
+
+def annual_movements(yearly_ds, 
+                     points_gdf, 
+                     tide_points_gdf, 
+                     contours_gdf, 
+                     baseline_year, 
+                     water_index):
+
+    # Get array of water index values for baseline time period 
+    baseline_array = yearly_ds[water_index].sel(year=int(baseline_year))
+
+    # Copy baseline point geometry to new column in points dataset
+    points_gdf['p_baseline'] = points_gdf.geometry
+    baseline_x_vals = points_gdf.geometry.x
+    baseline_y_vals = points_gdf.geometry.y
+
+    # Years to analyse
+    years = contours_gdf.index.unique().values
+
+    # Iterate through all comparison years in contour gdf
+    for comp_year in years:
+
+        print(comp_year, end='\r')
+
+        # Set comparison contour
+        comp_contour = contours_gdf.loc[[comp_year]].geometry.iloc[0]
+
+        # Find nearest point on comparison contour, and add these to points dataset
+        points_gdf[f'p_{comp_year}'] = points_gdf.apply(lambda x: 
+                                                        nearest_points(x.p_baseline, 
+                                                                       comp_contour)[1], 
+                                                        axis=1)
+
+        # Compute distance between baseline and comparison year points and add
+        # this distance as a new field named by the current year being analysed
+        points_gdf[f'{comp_year}'] = points_gdf.apply(lambda x: 
+                                                      x.geometry.distance(x[f'p_{comp_year}']), 
+                                                      axis=1)
+
+        # Extract comparison array containing water index values for the 
+        # current year being analysed
+        comp_array = yearly_ds[water_index].sel(year=int(comp_year))
+
+        # Convert baseline and comparison year points to geoseries to allow 
+        # easy access to x and y coords
+        comp_x_vals = gpd.GeoSeries(points_gdf[f'p_{comp_year}']).x
+        comp_y_vals = gpd.GeoSeries(points_gdf[f'p_{comp_year}']).y
+
+        # Sample water index values from arrays for baseline and comparison points
+        baseline_x_vals = xr.DataArray(baseline_x_vals, dims='z')
+        baseline_y_vals = xr.DataArray(baseline_y_vals, dims='z')
+        comp_x_vals = xr.DataArray(comp_x_vals, dims='z')
+        comp_y_vals = xr.DataArray(comp_y_vals, dims='z')   
+        points_gdf['index_comp_p1'] = comp_array.interp(x=baseline_x_vals, 
+                                                        y=baseline_y_vals)
+        points_gdf['index_baseline_p2'] = baseline_array.interp(x=comp_x_vals, 
+                                                                y=comp_y_vals)
+
+        # Compute change directionality (negative = erosion, positive = accretion)    
+        points_gdf['loss_gain'] = np.where(points_gdf.index_baseline_p2 > 
+                                           points_gdf.index_comp_p1, 1, -1)
+        points_gdf[f'{comp_year}'] = (points_gdf[f'{comp_year}'] * 
+                                      points_gdf.loss_gain)
+
+        # Add tide data
+        tide_array = yearly_ds['tide_m'].sel(year=int(comp_year))
+        tide_points_gdf[f'{comp_year}'] = tide_array.interp(x=baseline_x_vals, 
+                                                            y=baseline_y_vals)
+
+    # Keep required columns
+    points_gdf = points_gdf[['geometry'] + years.tolist()]
+    points_gdf = points_gdf.round(2)
+
+    # Zero values to 1988
+    points_gdf.iloc[:,1:] = points_gdf.iloc[:, 1:].subtract(points_gdf['1988'], axis=0)
+    
+    return points_gdf, tide_points_gdf
+
+
+def calculate_regressions(yearly_ds, 
+                          points_gdf, 
+                          tide_points_gdf, 
+                          climate_df):
+
+    # Restrict climate and points data to years in datasets
+    x_years = yearly_ds.year.values
+    points_subset = points_gdf[x_years.astype(str)]
+    tide_subset = tide_points_gdf[x_years.astype(str)]
+    climate_subset = climate_df.loc[x_years, :]
+
+    # Compute coastal change rates by linearly regressing annual movements vs. time
+    print(f'Comparing annual movements with time')
+    rate_out = (points_subset
+                .apply(lambda x: change_regress(row=x,
+                                                x_vals=x_years,
+                                                x_labels=x_years,
+                                                std_dev=2), axis=1))
+    points_gdf[['rate_time', 'incpt_time', 'sig_time', 'outl_time']] = rate_out
+
+    # Compute whether coastal change estimates are influenced by tide by linearly
+    # regressing residual tide heights against annual movements. A significant 
+    # relationship indicates that it may be difficult to isolate true erosion/
+    # accretion from the influence of tide
+    print(f'Comparing annual movements with tide heights')
+    tide_out = (tide_subset
+                .apply(lambda x: change_regress(row=points_subset.iloc[x.name],
+                                                x_vals=x, 
+                                                x_labels=x_years,
+                                                std_dev=2), axis=1))
+    points_gdf[['rate_tide', 'incpt_tide', 'sig_tide', 'outl_tide']] = tide_out 
+
+    # Identify possible relationships between climate indices and coastal change 
+    # by linearly regressing climate indices against annual movements. Significant 
+    # results indicate that annual movements may be influenced by climate phenomena
+    for ci in climate_subset:
+
+        print(f'Comparing annual movements with {ci}')
+
+        # Compute stats for each row
+        ci_out = (points_subset
+                  .apply(lambda x: change_regress(row=x, 
+                                                  x_vals=climate_subset[ci].values, 
+                                                  x_labels=x_years, 
+                                                  std_dev=2), axis=1))
+
+        # Add data as columns  
+        points_gdf[[f'rate_{ci}', f'incpt_{ci}', f'sig_{ci}', f'outl_{ci}']] = ci_out
+
+    # Set CRS
+    points_gdf.crs = yearly_ds.crs
+
+    # Custom sorting
+    column_order = [
+        'rate_time', 'rate_SOI', 'rate_IOD', 'rate_SAM', 'rate_IPO', 'rate_PDO',
+        'rate_tide', 'sig_time', 'sig_SOI', 'sig_IOD', 'sig_SAM', 'sig_IPO',
+        'sig_PDO', 'sig_tide', 'outl_time', 'outl_SOI', 'outl_IOD', 'outl_SAM',
+        'outl_IPO', 'outl_PDO', 'outl_tide', *x_years.astype(str).tolist(),
+        'geometry'
+    ]
+
+    return points_gdf.loc[:, column_order]
+
     
 def main(argv=None):
 

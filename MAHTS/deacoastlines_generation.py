@@ -438,19 +438,19 @@ def main(argv=None):
     # Model tides at point locations
     tidepoints_gdf = model_tides(ds, points_gdf)
 
-    # Interpolate tides for each timestep into the spatial extent of the data    
-    interp_tide = partial(interpolate_tide,
-                          tidepoints_gdf=tidepoints_gdf,
-                          factor=50, dask=False)
-    ds['tide_m'] = multiprocess_apply(ds=ds,
-                                              dim='time',
-                                              func=interp_tide)   
-
-#     # Interpolate tides for each timestep into the spatial extent of the data     
+#     # Interpolate tides for each timestep into the spatial extent of the data    
 #     interp_tide = partial(interpolate_tide,
 #                           tidepoints_gdf=tidepoints_gdf,
-#                           factor=50, dask=True)
-#     ds['tide_m'] = ds.groupby('time').apply(interp_tide)
+#                           factor=50, dask=False)
+#     ds['tide_m'] = multiprocess_apply(ds=ds,
+#                                               dim='time',
+#                                               func=interp_tide)   
+
+    # Interpolate tides for each timestep into the spatial extent of the data     
+    interp_tide = partial(interpolate_tide,
+                          tidepoints_gdf=tidepoints_gdf,
+                          factor=50, dask=True)
+    ds['tide_m'] = ds.groupby('time').apply(interp_tide)
     
 
     # Determine tide cutoff
