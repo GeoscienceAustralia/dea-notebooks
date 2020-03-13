@@ -2,7 +2,7 @@
 
 output_name="refactor"
 
-for study_area in 1194 1195
+for study_area in 881
                   
 do
 
@@ -12,7 +12,7 @@ do
     #PBS -e DEACoastLines_${study_area}_${output_name}.err\n\
     #PBS -l storage=gdata/v10+gdata/r78+gdata/xu18+gdata/fk4\n\
     #PBS -P r78\n\
-    #PBS -q normal\n\
+    #PBS -q hugemem\n\
     #PBS -l walltime=12:00:00\n\
     #PBS -l mem=64GB\n\
     #PBS -l jobfs=2GB\n\

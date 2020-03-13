@@ -224,7 +224,7 @@ def stats_points(contours_gdf, baseline_year, distance=30):
 
 def rocky_shores_clip(points_gdf, smartline_gdf, buffer=50):
 
-    to_keep = (
+    rocky = [
                'Bedrock breakdown debris (cobbles/boulders)',
                'Boulder (rock) beach',
                'Cliff (>5m) (undiff)',
@@ -241,11 +241,15 @@ def rocky_shores_clip(points_gdf, smartline_gdf, buffer=50):
                'Soft `bedrock¿ cliff (>5m)',
                'Steep boulder talus',
                'Hard rocky shore platform'
-    )
+    ]
+    
+    # Identify rocky features
+    rocky_bool = (smartline_gdf.INTERTD1_V.isin(rocky) & 
+                  smartline_gdf.INTERTD2_V.isin(rocky + ['Unclassified']))
 
     # Extract rocky vs non-rocky
-    rocky_gdf = smartline_gdf[smartline_gdf.INTERTD1_V.isin(to_keep)].copy()
-    nonrocky_gdf = smartline_gdf[~smartline_gdf.INTERTD1_V.isin(to_keep)].copy()
+    rocky_gdf = smartline_gdf[rocky_bool].copy()
+    nonrocky_gdf = smartline_gdf[~rocky_bool].copy()
 
     # If both rocky and non-rocky shorelines exist, clip points to remove
     # rocky shorelines from the stats dataset
