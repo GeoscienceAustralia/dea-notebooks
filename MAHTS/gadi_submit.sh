@@ -2,7 +2,7 @@
 
 output_name="refactor"
 
-for study_area in 881
+for study_area in 5328 2585 2384
                   
 do
 
