@@ -371,7 +371,7 @@ def calculate_anomalies(shp_fpath,
         
         mask_xr = xr.DataArray(mask, dims = ('y','x'))
         ds = ds.where(mask_xr==False)
-        print(ds.time.values)
+        print("start: "+ str(ds.time.values[0]), "end: " + str(ds.time.values[-1]))
         
     else: 
         print('Extracting data based on lat, lon coords')
