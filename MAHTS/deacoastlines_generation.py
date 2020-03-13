@@ -398,7 +398,7 @@ def main(argv=None):
     output_name = str(argv[2])
     
     # If output folder doesn't exist, create it
-    output_dir = f'output_data/{output_name}_{study_area}'
+    output_dir = f'output_data/{study_area}_{output_name}'
     os.makedirs(output_dir, exist_ok=True)
     
     # Connect to datacube    

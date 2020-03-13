@@ -1,8 +1,8 @@
 #!/bin/bash
 
-output_name="dask"
+output_name="refactor"
 
-for study_area in 3742
+for study_area in 1194 1195
                   
 do
 

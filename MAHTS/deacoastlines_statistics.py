@@ -102,51 +102,26 @@ def mask_ocean(bool_array, points_gdf, connectivity=1):
     return ocean_mask
 
 
-def rocky_shores_buffer(smartline_gdf, buffer=50):
-
-    to_keep = (
-               'Bedrock breakdown debris (cobbles/boulders)',
-               'Boulder (rock) beach',
-               'Cliff (>5m) (undiff)',
-               'Colluvium (talus) undiff',
-               'Flat boulder deposit (rock) undiff',
-               'Hard bedrock shore',
-               'Hard bedrock shore inferred',
-               'Hard rock cliff (>5m)',
-               'Hard rocky shore platform',
-               'Rocky shore (undiff)',
-               'Rocky shore platform (undiff)',
-               'Sloping hard rock shore',
-               'Sloping rocky shore (undiff)',
-               'Soft `bedrock¿ cliff (>5m)',
-               'Steep boulder talus',
-               'Hard rocky shore platform'
-    )
-
-    # Extract rocky vs non-rocky
-    rocky_gdf = smartline_gdf[smartline_gdf.INTERTD1_V.isin(to_keep)].copy()
-    nonrocky_gdf = smartline_gdf[~smartline_gdf.INTERTD1_V.isin(to_keep)].copy()
-    
-    # Buffer both features
-    rocky_gdf['geometry'] = rocky_gdf.buffer(buffer)
-    nonrocky_gdf['geometry'] = nonrocky_gdf.buffer(buffer)
-    
-    return gpd.overlay(rocky_gdf, nonrocky_gdf, how='difference')
-
-
 def load_rasters(output_name, 
                  study_area, 
                  water_index='mndwi'):
-
+    
     # Get file paths
-    gapfill_index_files = sorted(glob.glob(f'output_data/{output_name}_{study_area}/*_{water_index}_gapfill.tif'))
-    gapfill_tide_files = sorted(glob.glob(f'output_data/{output_name}_{study_area}/*_tide_m_gapfill.tif'))
-    gapfill_count_files = sorted(glob.glob(f'output_data/{output_name}_{study_area}/*_count_gapfill.tif'))
-    index_files = sorted(glob.glob(f'output_data/{output_name}_{study_area}/*_{water_index}.tif'))[1:len(gapfill_index_files)+1]
-    stdev_files = sorted(glob.glob(f'output_data/{output_name}_{study_area}/*_stdev.tif'))[1:len(gapfill_index_files)+1]
-    tidem_files = sorted(glob.glob(f'output_data/{output_name}_{study_area}/*_tide_m.tif'))[1:len(gapfill_index_files)+1]
-    count_files = sorted(glob.glob(f'output_data/{output_name}_{study_area}/*_count.tif'))[1:len(gapfill_index_files)+1]
+    gapfill_index_files = sorted(glob.glob(f'output_data/{study_area}_{output_name}/*_{water_index}_gapfill.tif'))
+    gapfill_tide_files = sorted(glob.glob(f'output_data/{study_area}_{output_name}/*_tide_m_gapfill.tif'))
+    gapfill_count_files = sorted(glob.glob(f'output_data/{study_area}_{output_name}/*_count_gapfill.tif'))
+    index_files = sorted(glob.glob(f'output_data/{study_area}_{output_name}/*_{water_index}.tif'))[1:len(gapfill_index_files)+1]
+    stdev_files = sorted(glob.glob(f'output_data/{study_area}_{output_name}/*_stdev.tif'))[1:len(gapfill_index_files)+1]
+    tidem_files = sorted(glob.glob(f'output_data/{study_area}_{output_name}/*_tide_m.tif'))[1:len(gapfill_index_files)+1]
+    count_files = sorted(glob.glob(f'output_data/{study_area}_{output_name}/*_count.tif'))[1:len(gapfill_index_files)+1]
 
+    # Test if data was returned
+    if len(index_files) == 0:
+        raise ValueError(f"No rasters found for grid cell {study_area} "
+                         f"(analysis name '{output_name}'). Verify that "
+                         f"`deacoastlines_generation.py` has been run "
+                         "for this grid cell.")
+    
     # Create variable used for time axis
     time_var = xr.Variable('year', [int(i.split('/')[2][0:4]) for i in index_files])
 
@@ -247,6 +222,59 @@ def stats_points(contours_gdf, baseline_year, distance=30):
     return points_gdf
 
 
+def rocky_shores_clip(points_gdf, smartline_gdf, buffer=50):
+
+    to_keep = (
+               'Bedrock breakdown debris (cobbles/boulders)',
+               'Boulder (rock) beach',
+               'Cliff (>5m) (undiff)',
+               'Colluvium (talus) undiff',
+               'Flat boulder deposit (rock) undiff',
+               'Hard bedrock shore',
+               'Hard bedrock shore inferred',
+               'Hard rock cliff (>5m)',
+               'Hard rocky shore platform',
+               'Rocky shore (undiff)',
+               'Rocky shore platform (undiff)',
+               'Sloping hard rock shore',
+               'Sloping rocky shore (undiff)',
+               'Soft `bedrock¿ cliff (>5m)',
+               'Steep boulder talus',
+               'Hard rocky shore platform'
+    )
+
+    # Extract rocky vs non-rocky
+    rocky_gdf = smartline_gdf[smartline_gdf.INTERTD1_V.isin(to_keep)].copy()
+    nonrocky_gdf = smartline_gdf[~smartline_gdf.INTERTD1_V.isin(to_keep)].copy()
+
+    # If both rocky and non-rocky shorelines exist, clip points to remove
+    # rocky shorelines from the stats dataset
+    if (len(rocky_gdf) > 0) & (len(nonrocky_gdf) > 0):
+
+        # Buffer both features
+        rocky_gdf['geometry'] = rocky_gdf.buffer(buffer)
+        nonrocky_gdf['geometry'] = nonrocky_gdf.buffer(buffer)
+        rocky_shore_buffer = (gpd.overlay(rocky_gdf, 
+                                          nonrocky_gdf, 
+                                          how='difference')
+                              .geometry
+                              .unary_union)
+        
+        # Keep only non-rocky shore features and reset index         
+        points_gdf = points_gdf[~points_gdf.intersects(rocky_shore_buffer)]        
+        points_gdf = points_gdf.reset_index(drop=True)        
+        
+        return points_gdf
+
+    # If no rocky shorelines exist, return the points data as-is
+    elif len(nonrocky_gdf) > 0:          
+        return points_gdf
+   
+    # If no sandy shorelines exist, return nothing
+    else:
+        return None
+
+
 def annual_movements(yearly_ds, 
                      points_gdf, 
                      tide_points_gdf, 
@@ -335,6 +363,8 @@ def calculate_regressions(yearly_ds,
     points_subset = points_gdf[x_years.astype(str)]
     tide_subset = tide_points_gdf[x_years.astype(str)]
     climate_subset = climate_df.loc[x_years, :]
+    
+#     return points_subset, tide_subset
 
     # Compute coastal change rates by linearly regressing annual movements vs. time
     print(f'Comparing annual movements with time')
@@ -417,7 +447,7 @@ def main(argv=None):
     baseline_year = '2018'
 
     # Create output vector folder
-    output_dir = f'output_data/{output_name}_{study_area}/vectors'
+    output_dir = f'output_data/{study_area}_{output_name}/vectors'
     os.makedirs(f'{output_dir}/shapefiles', exist_ok=True)
 
     ###############################
@@ -482,55 +512,70 @@ def main(argv=None):
     
     # Extract statistics modelling points along baseline contour
     points_gdf = stats_points(contours_gdf, baseline_year, distance=30)
+    
+    # Clip to remove rocky shoreline points
+    points_gdf = rocky_shores_clip(points_gdf, smartline_gdf, buffer=50)
+    
+    # If any points remain after rocky shoreline clip
+    if points_gdf is not None:
 
-    # Make a copy of the points GeoDataFrame to hold tidal data
-    tide_points_gdf = points_gdf.copy()
+        # Make a copy of the points GeoDataFrame to hold tidal data
+        tide_points_gdf = points_gdf.copy()
 
-    # Calculate annual coastline movements and residual tide heights for 
-    # every contour compared to the baseline year
-    points_gdf, tide_points_gdf = annual_movements(yearly_ds, 
-                                                   points_gdf, 
-                                                   tide_points_gdf, 
-                                                   contours_gdf, 
-                                                   baseline_year,
-                                                   water_index)
+        # Calculate annual coastline movements and residual tide heights 
+        # for every contour compared to the baseline year
+        points_gdf, tide_points_gdf = annual_movements(yearly_ds, 
+                                                       points_gdf, 
+                                                       tide_points_gdf, 
+                                                       contours_gdf, 
+                                                       baseline_year,
+                                                       water_index)
 
-    # Calculate regressions
-    points_gdf = calculate_regressions(yearly_ds, 
-                                       points_gdf, 
-                                       tide_points_gdf, 
-                                       climate_df)
+        # Calculate regressions
+        points_gdf = calculate_regressions(yearly_ds, 
+                                           points_gdf, 
+                                           tide_points_gdf, 
+                                           climate_df)
 
-    ################
-    # Export files #
-    ################
+        ################
+        # Export stats #
+        ################
 
-    # Extract a 50 m buffer around rocky shore features which is used to clip stats
-    rocky_shore_buffer = rocky_shores_buffer(smartline_gdf=smartline_gdf, 
-                                             buffer=50)
+        # Clip stats to study area extent, remove rocky shores
+        stats_path = f'{output_dir}/stats_{study_area}_{output_name}_' \
+                     f'{water_index}_{index_threshold:.2f}'
+        points_gdf = points_gdf[points_gdf.intersects(study_area_poly['geometry'])]
 
-    # Clip stats to study area extent, remove rocky shores and export to GeoJSON
-    stats_path = f'{output_dir}/stats_{study_area}_{output_name}_{water_index}_{index_threshold:.2f}'
-    points_gdf = points_gdf[points_gdf.intersects(study_area_poly['geometry'])]
-    points_gdf = points_gdf[~points_gdf.intersects(rocky_shore_buffer.geometry.unary_union)]
-    points_gdf.to_file(f'{stats_path}.geojson', driver='GeoJSON')
+        # Export to GeoJSON
+        points_gdf.to_file(f'{stats_path}.geojson', driver='GeoJSON')
 
-    # Clip annual shoreline contours to study area extent and export to GeoJSON
-    contour_path = f'{output_dir}/contours_{study_area}_{output_name}_{water_index}_{index_threshold:.2f}'
+        # Export as ESRI shapefiles
+        stats_path = stats_path.replace('vectors', 'vectors/shapefiles')
+        points_gdf.to_file(f'{stats_path}.shp')
+    
+    ###################
+    # Export contours #
+    ###################    
+    
+    # Clip annual shoreline contours to study area extent
+    contour_path = f'{output_dir}/contours_{study_area}_{output_name}_' \
+                   f'{water_index}_{index_threshold:.2f}'
     contours_gdf['geometry'] = contours_gdf.intersection(study_area_poly['geometry'])
     contours_gdf.reset_index().to_file(f'{contour_path}.geojson', driver='GeoJSON')
 
     # Export stats and contours as ESRI shapefiles
     contour_path = contour_path.replace('vectors', 'vectors/shapefiles')
-    stats_path = stats_path.replace('vectors', 'vectors/shapefiles')
     contours_gdf.to_file(f'{contour_path}.shp')
-    points_gdf.to_file(f'{stats_path}.shp')
-
+    
+    #######
+    # Zip #
+    #######
+    
     # Create a zip file containing all vector files
     shutil.make_archive(base_name=f'output_data/outputs_{study_area}_{output_name}', 
                         format='zip', 
-                        root_dir=output_dir)    
+                        root_dir=output_dir)
 
-        
+
 if __name__ == "__main__":
     main()
