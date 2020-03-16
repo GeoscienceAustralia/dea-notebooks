@@ -292,6 +292,7 @@ def load_ard(dc,
     
 
 def calculate_anomalies(shp_fpath,
+                        products,
                         year,
                         season,
                         query_box,
@@ -326,11 +327,12 @@ def calculate_anomalies(shp_fpath,
         time = (year+"-"+str(months[0]), year+"-"+str(months[2]))
    
     #connect to datacube
-    try:
+    if 'ard' in products:
         dc = datacube.Datacube(app='calculate_anomalies', env='c3-samples')
-    except:
+        col = 'c3'
+    else:
         dc = datacube.Datacube(app='calculate_anomalies')
-    
+        col = 'c2'
     
     #get data from shapefile extent and mask
     if shp_fpath is not None:
@@ -351,18 +353,57 @@ def calculate_anomalies(shp_fpath,
 
         query = {'geopolygon': geom,
                  'time': time}
-       
-        ds = load_ard(dc=dc,
-                  products = ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
-                  measurements = ['nbart_nir', 'nbart_red'],
-                  ls7_slc_off = False,
-                  #align = (15,15),
-                  resolution=(-30,30),
-                  output_crs = 'epsg:3577',
-                  dask_chunks = dask_chunks,
-                  group_by='solar_day',
-                  **query)
+        
+        if col == 'c3': 
+        
+            ds = load_ard(dc=dc,
+                      products = products,
+                      measurements = ['nbart_nir', 'nbart_red'],
+                      ls7_slc_off = False,
+                      #align = (15,15),
+                      resolution=(-30,30),
+                      output_crs = 'epsg:3577',
+                      dask_chunks = dask_chunks,
+                      group_by='solar_day',
+                      **query)
+        
+        else:
+            print('loading Landsat collection 2')
+            ds = dc.load(product=products,
+                           group_by='solar_day',
+                           measurements = ['nir', 'red'],
+                           resolution=(-30,30),
+                           output_crs = 'epsg:3577',
+                           dask_chunks=dask_chunks,
+                           **query)             
 
+            # Load PQ data
+            pq = dc.load(product='ls8_pq_albers',
+                         group_by='solar_day',
+                         fuse_func=ga_pq_fuser,
+                         resolution=(-30,30),
+                         output_crs = 'epsg:3577',  
+                         dask_chunks=dask_chunks,
+                         **query)        
+
+            
+            good_quality = masking.make_mask(pq.pixelquality,                         
+                                             cloud_acca='no_cloud',
+                                             cloud_shadow_acca='no_cloud_shadow',
+                                             cloud_shadow_fmask='no_cloud_shadow',
+                                             cloud_fmask='no_cloud',
+                                             blue_saturated=False,
+                                             green_saturated=False,
+                                             red_saturated=False,
+                                             nir_saturated=False,
+                                             swir1_saturated=False,
+                                             swir2_saturated=False,
+                                             contiguous=True)
+            
+            ds = ds.astype(np.float32).assign_attrs(crs=ds.crs)
+            ds = ds.where(good_quality)
+
+        
         mask = rasterio.features.geometry_mask([geom.to_crs(ds.geobox.crs)for geoms in [geom]],
                                        out_shape=ds.geobox.shape,
                                        transform=ds.geobox.affine,
@@ -379,20 +420,60 @@ def calculate_anomalies(shp_fpath,
                  'lat': (query_box[0] - query_box[2], query_box[0] + query_box[2]),
                  'time': time}
         
-        ds = load_ard(dc=dc,
-                      products = ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
-                      measurements = ['nbart_nir', 'nbart_red'],
-                      ls7_slc_off = False,
-                      #align = (15,15),
-                      resolution=(-30,30),
-                      output_crs = 'epsg:3577',
-                      dask_chunks = dask_chunks,
-                      group_by='solar_day',
-                      **query)
+        if col=='c3':
+        
+            ds = load_ard(dc=dc,
+                          products = products,
+                          measurements = ['nbart_nir', 'nbart_red'],
+                          ls7_slc_off = False,
+                          #align = (15,15),
+                          resolution=(-30,30),
+                          output_crs = 'epsg:3577',
+                          dask_chunks = dask_chunks,
+                          group_by='solar_day',
+                          **query)
+        else:
+            print('loading Landsat collection 2')
+            ds = dc.load(product=products,
+                           group_by='solar_day',
+                           measurements = ['nir', 'red'],
+                           resolution=(-30,30),
+                           output_crs = 'epsg:3577',
+                           dask_chunks=dask_chunks,
+                           **query)             
+
+            # Load PQ data
+            pq = dc.load(product='ls8_pq_albers',
+                         group_by='solar_day',
+                         fuse_func=ga_pq_fuser,
+                         resolution=(-30,30),
+                         output_crs = 'epsg:3577',  
+                         dask_chunks=dask_chunks,
+                         **query)        
+
+
+            good_quality = masking.make_mask(pq.pixelquality,                         
+                                             cloud_acca='no_cloud',
+                                             cloud_shadow_acca='no_cloud_shadow',
+                                             cloud_shadow_fmask='no_cloud_shadow',
+                                             cloud_fmask='no_cloud',
+                                             blue_saturated=False,
+                                             green_saturated=False,
+                                             red_saturated=False,
+                                             nir_saturated=False,
+                                             swir1_saturated=False,
+                                             swir2_saturated=False,
+                                             contiguous=True)
+
+            ds = ds.astype(np.float32).assign_attrs(crs=ds.crs)
+            ds = ds.where(good_quality)
 
     print('calculating vegetation indice')
-        
-    vegIndex = (ds.nbart_nir - ds.nbart_red) / (ds.nbart_nir + ds.nbart_red)
+    if col=='c3':
+        vegIndex = (ds.nbart_nir - ds.nbart_red) / (ds.nbart_nir + ds.nbart_red)
+    else:
+        vegIndex = (ds.nir - ds.red) / (ds.nir + ds.red)
+    
     vegIndex = vegIndex.mean('time').rename('ndvi_mean')
         
     #get the bounding coords of the input ds to help with indexing the climatology
