@@ -1,8 +1,8 @@
 #!/bin/bash
 
-output_name="refactor"
+output_name="nbar"
 
-for study_area in 5328 2585 2384
+for study_area in 2585
                   
 do
 
@@ -13,8 +13,8 @@ do
     #PBS -l storage=gdata/v10+gdata/r78+gdata/xu18+gdata/fk4\n\
     #PBS -P r78\n\
     #PBS -q hugemem\n\
-    #PBS -l walltime=12:00:00\n\
-    #PBS -l mem=64GB\n\
+    #PBS -l walltime=06:00:00\n\
+    #PBS -l mem=128GB\n\
     #PBS -l jobfs=2GB\n\
     #PBS -l ncpus=1\n\
     #PBS -l wd\n\
