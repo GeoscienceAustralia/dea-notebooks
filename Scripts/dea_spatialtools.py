@@ -409,9 +409,16 @@ def subpixel_contours(da,
         
         # Extracts contours from array, and converts each discrete
         # contour into a Shapely LineString feature
-        line_features = [LineString(i[:,[1, 0]]) 
-                         for i in find_contours(da_i, z_value) 
-                         if i.shape[0] > min_vertices]
+        try:
+            line_features = [LineString(i[:,[1, 0]]) 
+                             for i in find_contours(da_i, z_value) 
+                             if i.shape[0] > min_vertices]
+            
+        except:
+            line_features = [LineString(i[:,[1, 0]]) 
+                             for i in find_contours(da_i, z_value, 
+                                                    fully_connected='high') 
+                             if i.shape[0] > min_vertices]          
 
         # Output resulting lines into a single combined MultiLineString
         return MultiLineString(line_features)
@@ -520,12 +527,13 @@ def subpixel_contours(da,
     return contours_gdf
 
 
-def interpolate_2d(ds, 
+def interpolate_2d_dask(ds, 
                    x_coords, 
                    y_coords, 
                    z_coords, 
                    method='linear',
                    factor=1,
+                   dask=True,
                    **kwargs):
     
     """
@@ -539,7 +547,7 @@ def interpolate_2d(ds,
     'cubic (using `scipy.interpolate.griddata`), and 'rbf' (using 
     `scipy.interpolate.Rbf`).
     
-    Last modified: February 2020
+    Last modified: March 2020
     
     Parameters
     ----------  
@@ -581,6 +589,22 @@ def interpolate_2d(ds,
         from `ds_array`, and Z-values interpolated from the points data. 
     """
     
+    import dask
+    import dask.array as da
+
+    @dask.delayed
+    def _delayed_griddata(points, values, xi, method, **kwargs):
+        return scipy.interpolate.griddata(points=points, 
+                                          values=values, 
+                                          xi=xi, 
+                                          method=method,
+                                          **kwargs)
+
+    @dask.delayed
+    def _delayed_rbf(x_coords, y_coords, z_coords, grid_y, grid_x, **kwargs):
+        rbf = scipy.interpolate.Rbf(x_coords, y_coords, z_coords, **kwargs)
+        return rbf(grid_y, grid_x)
+    
     # Extract xy and elev points
     points_xy = np.vstack([x_coords, y_coords]).T
     
@@ -602,33 +626,173 @@ def interpolate_2d(ds,
 
     # Create grid to interpolate into
     grid_y, grid_x = np.meshgrid(x_grid_coords, y_grid_coords)
-    
+        
     # Apply scipy.interpolate.griddata interpolation methods
     if method in ('linear', 'nearest', 'cubic'):
         
-        # Interpolate x, y and z values 
-        interp_2d = scipy.interpolate.griddata(points=points_xy, 
-                                               values=z_coords, 
-                                               xi=(grid_y, grid_x), 
-                                               method=method,
-                                               **kwargs)
-    
+        if dask:
+        
+            # Interpolate x, y and z values 
+            interp_2d = da.from_delayed(_delayed_griddata(points_xy, 
+                                                          z_coords,
+                                                          (grid_y, grid_x), 
+                                                          method, 
+                                                          **kwargs), 
+                                        (len(y_grid_coords), 
+                                         len(x_grid_coords)), 
+                                        dtype='float32')
+        
+        else:
+            
+            # Interpolate x, y and z values 
+            interp_2d = scipy.interpolate.griddata(points=points_xy, 
+                                                   values=z_coords, 
+                                                   xi=(grid_y, grid_x), 
+                                                   method=method,
+                                                   **kwargs)
+        
     # Apply Radial Basis Function interpolation
     elif method == 'rbf':
-
-        # Interpolate x, y and z values 
-        rbf = scipy.interpolate.Rbf(x_coords, y_coords, z_coords, **kwargs)  
-        interp_2d = rbf(grid_y, grid_x)
+        
+        if dask:
+        
+            # Interpolate x, y and z values 
+            interp_2d = da.from_delayed(_delayed_rbf(x_coords, 
+                                                     y_coords, 
+                                                     z_coords, 
+                                                     grid_y, 
+                                                     grid_x, **kwargs), 
+                                        (len(y_grid_coords), 
+                                         len(x_grid_coords)), 
+                                        dtype='float32')
+            
+        else:
+            
+            # Interpolate x, y and z values 
+            rbf = scipy.interpolate.Rbf(x_coords, y_coords, z_coords, **kwargs)  
+            interp_2d = rbf(grid_y, grid_x)                
 
     # Create xarray dataarray from the data and resample to ds coords
-    interp_2d_da = xr.DataArray(interp_2d, 
+    interp_2d_da = xr.DataArray(interp_2d,
                                 coords=[y_grid_coords, x_grid_coords], 
                                 dims=['y', 'x'])
     
     # If factor is greater than 1, resample the interpolated array to
     # match the input `ds` array
     if factor > 1: 
-        interp_2d_da = interp_2d_da.interp_like(ds)   
+        interp_2d_da = interp_2d_da.interp_like(ds)
+
+    return interp_2d_da
+
+def interpolate_2d(ds, 
+                   x_coords, 
+                   y_coords, 
+                   z_coords, 
+                   method='linear',
+                   factor=1,
+                   **kwargs):
+    
+    """
+    This function takes points with X, Y and Z coordinates, and 
+    interpolates Z-values across the extent of an existing xarray 
+    dataset. This can be useful for producing smooth surfaces from point
+    data that can be compared directly against satellite data derived 
+    from an OpenDataCube query.
+    
+    Supported interpolation methods include 'linear', 'nearest' and
+    'cubic (using `scipy.interpolate.griddata`), and 'rbf' (using 
+    `scipy.interpolate.Rbf`).
+    
+    Last modified: March 2019
+    
+    Parameters
+    ----------  
+    ds : xarray DataArray or Dataset
+        A two-dimensional or multi-dimensional array from which x and y 
+        dimensions will be copied and used for the area in which to 
+        interpolate point data. 
+    x_coords, y_coords : numpy array
+        Arrays containing X and Y coordinates for all points (e.g. 
+        longitudes and latitudes).
+    z_coords : numpy array
+        An array containing Z coordinates for all points (e.g. 
+        elevations). These are the values you wish to interpolate 
+        between.
+    method : string, optional
+        The method used to interpolate between point values. This string
+        is either passed to `scipy.interpolate.griddata` (for 'linear', 
+        'nearest' and 'cubic' methods), or used to specify Radial Basis 
+        Function interpolation using `scipy.interpolate.Rbf` ('rbf').
+        Defaults to 'linear'.
+    factor : int, optional
+        An optional integer that can be used to subsample the spatial 
+        interpolation extent to obtain faster interpolation times, then
+        up-sample this array back to the original dimensions of the 
+        data as a final step. For example, setting `factor=10` will 
+        interpolate data into a grid that has one tenth of the 
+        resolution of `ds`. This approach will be significantly faster 
+        than interpolating at full resolution, but will potentially 
+        produce less accurate or reliable results.
+    **kwargs : 
+        Optional keyword arguments to pass to either 
+        `scipy.interpolate.griddata` (if `method` is 'linear', 'nearest' 
+        or 'cubic'), or `scipy.interpolate.Rbf` (is `method` is 'rbf').
+      
+    Returns
+    -------
+    interp_2d_array : xarray DataArray
+        An xarray DataArray containing with x and y coordinates copied 
+        from `ds_array`, and Z-values interpolated from the points data. 
+    """    
+  
+    # Extract xy and elev points
+    points_xy = np.vstack([x_coords, y_coords]).T
+    
+    # Extract x and y coordinates to interpolate into. 
+    # If `factor` is greater than 1, the coordinates will be subsampled 
+    # for faster run-times. If the last x or y value in the subsampled 
+    # grid aren't the same as the last x or y values in the original 
+    # full resolution grid, add the final full resolution grid value to 
+    # ensure data is interpolated up to the very edge of the array
+    if ds.x[::factor][-1].item() == ds.x[-1].item():
+        x_grid_coords = ds.x[::factor].values
+    else:
+        x_grid_coords = ds.x[::factor].values.tolist() + [ds.x[-1].item()]
+        
+    if ds.y[::factor][-1].item() == ds.y[-1].item():
+        y_grid_coords = ds.y[::factor].values
+    else:
+        y_grid_coords = ds.y[::factor].values.tolist() + [ds.y[-1].item()]
+
+    # Create grid to interpolate into
+    grid_y, grid_x = np.meshgrid(x_grid_coords, y_grid_coords)
+        
+    # Apply scipy.interpolate.griddata interpolation methods
+    if method in ('linear', 'nearest', 'cubic'):       
+
+        # Interpolate x, y and z values 
+        interp_2d = scipy.interpolate.griddata(points=points_xy, 
+                                                values=z_coords, 
+                                                xi=(grid_y, grid_x), 
+                                                method=method,
+                                                **kwargs)
+        
+    # Apply Radial Basis Function interpolation
+    elif method == 'rbf':
+        
+        # Interpolate x, y and z values 
+        rbf = scipy.interpolate.Rbf(x_coords, y_coords, z_coords, **kwargs)  
+        interp_2d = rbf(grid_y, grid_x)                
+
+    # Create xarray dataarray from the data and resample to ds coords
+    interp_2d_da = xr.DataArray(interp_2d,
+                                coords=[y_grid_coords, x_grid_coords], 
+                                dims=['y', 'x'])
+    
+    # If factor is greater than 1, resample the interpolated array to
+    # match the input `ds` array
+    if factor > 1: 
+        interp_2d_da = interp_2d_da.interp_like(ds)
 
     return interp_2d_da
 
