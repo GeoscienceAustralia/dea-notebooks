@@ -23,32 +23,31 @@ Functions included:
     map_shapefile
     animated_timeseries
 
-Last modified: February 2020
+Last modified: March 2020
 
 '''
 
 # Import required packages
-import folium  
 import math
-import numpy as np
+import folium
+import calendar
 import ipywidgets
+import numpy as np
+import geopandas as gpd
 import matplotlib as mpl
-from pyproj import Proj, transform
-from IPython.display import display
-from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps, Choropleth
-from skimage import exposure
 import matplotlib.patheffects as PathEffects
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from branca.colormap import linear
-
-
 from datetime import datetime
-import calendar
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-import geopandas as gpd
+from pyproj import Proj, transform
+from IPython.display import display
 from matplotlib.colors import ListedColormap
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps, Choropleth
+from skimage import exposure
+from branca.colormap import linear
+from odc.ui import image_aspect
 
 
 def rgb(ds,
@@ -74,7 +73,7 @@ def rgb(ds,
     This function was designed to work as an easier-to-use wrapper 
     around xarray's `.plot.imshow()` functionality.
     
-    Last modified: February 2020
+    Last modified: March 2020
     
     Parameters
     ----------  
@@ -145,11 +144,9 @@ def rgb(ds,
         # Create empty aspect size kwarg that will be passed to imshow
         aspect_size_kwarg = {}    
     else:
-        # Compute image aspect based on the last two dimensions (this will 
-        # exclude the index dim if it is present in the dataset)
+        # Compute image aspect
         if not aspect:
-            x_dim, y_dim = list(ds.dims)[-2:]
-            aspect = len(ds[x_dim]) / len(ds[y_dim])
+            aspect = image_aspect(ds)
         
         # Populate aspect size kwarg with aspect and size data
         aspect_size_kwarg = {'aspect': aspect, 'size': size}
