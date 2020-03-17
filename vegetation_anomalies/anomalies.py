@@ -402,8 +402,11 @@ def calculate_anomalies(shp_fpath,
                                              swir2_saturated=False,
                                              contiguous=True)
             
-            ds = ds.astype(np.float32).assign_attrs(crs=ds.crs)
+            attrs = ds.attrs
+            ds = ds.astype(np.float32)
             ds = ds.where(good_quality)
+            ds = masking.mask_invalid_data(ds)
+            ds.attrs.update(attrs)
 
         
         mask = rasterio.features.geometry_mask([geom.to_crs(ds.geobox.crs)for geoms in [geom]],
@@ -434,9 +437,10 @@ def calculate_anomalies(shp_fpath,
                           dask_chunks = dask_chunks,
                           group_by='solar_day',
                           **query)
+            
         if collection=='c2':
             print('loading Landsat collection 2')
-            ds = dc.load(product='ls8_pq_albers',
+            ds = dc.load(product='ls8_nbart_albers',
                            group_by='solar_day',
                            measurements = ['nir', 'red'],
                            resolution=(-30,30),
@@ -467,8 +471,12 @@ def calculate_anomalies(shp_fpath,
                                              swir2_saturated=False,
                                              contiguous=True)
 
-            ds = ds.astype(np.float32).assign_attrs(crs=ds.crs)
+            attrs = ds.attrs
+            ds = ds.astype(np.float32)
             ds = ds.where(good_quality)
+            ds = masking.mask_invalid_data(ds)
+            ds.attrs.update(attrs)
+
             
     print("start: "+str(ds.time.values[0])+", end: "+str(ds.time.values[-1])+", time dim length: "+str(len(ds.time.values)))
     print('calculating vegetation indice')
@@ -509,13 +517,13 @@ def calculate_anomalies(shp_fpath,
     
     np.testing.assert_allclose(vegIndex.x.values, climatology_std.x.values,
                               err_msg="The X coordinates on the AOI dataset do not match "
-                                      "the X coordinates on the climatology std dataset. "
+                                      "the X coordinates on the climatology std dev dataset. "
                                        "You're AOI may be beyond the extent of the pre-computed "
                                        "climatology dataset.")
     
     np.testing.assert_allclose(vegIndex.y.values, climatology_std.y.values,
                           err_msg="The Y coordinates on the AOI dataset do not match "
-                                  "the Y coordinates on the climatology std dataset. "
+                                  "the Y coordinates on the climatology std dev dataset. "
                                    "You're AOI may be beyond the extent of the pre-computed "
                                    "climatology dataset.")
     
@@ -523,7 +531,7 @@ def calculate_anomalies(shp_fpath,
     #calculate standardised anomalies
     anomalies = xr.apply_ufunc(lambda x, m, s: (x - m) / s,
                                vegIndex, climatology_mean, climatology_std,
-                               output_dtypes=[float],
+                               output_dtypes=[np.float32],
                                dask='parallelized')
     
     #add back metadata
