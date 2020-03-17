@@ -292,7 +292,7 @@ def load_ard(dc,
     
 
 def calculate_anomalies(shp_fpath,
-                        products,
+                        collection,
                         year,
                         season,
                         query_box,
@@ -327,12 +327,13 @@ def calculate_anomalies(shp_fpath,
         time = (year+"-"+str(months[0]), year+"-"+str(months[2]))
    
     #connect to datacube
-    if 'ard' in products:
-        dc = datacube.Datacube(app='calculate_anomalies', env='c3-samples')
-        col = 'c3'
-    else:
-        dc = datacube.Datacube(app='calculate_anomalies')
-        col = 'c2'
+    try:
+        if collection == 'c3':
+            dc = datacube.Datacube(app='calculate_anomalies', env='c3-samples')
+        if collection == 'c2':
+            dc = datacube.Datacube(app='calculate_anomalies')
+    except:
+        raise ValueError("collection must be either 'c3' or 'c2'")
     
     #get data from shapefile extent and mask
     if shp_fpath is not None:
@@ -354,10 +355,10 @@ def calculate_anomalies(shp_fpath,
         query = {'geopolygon': geom,
                  'time': time}
         
-        if col == 'c3': 
+        if collection == 'c3': 
         
             ds = load_ard(dc=dc,
-                      products = products,
+                      products = ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
                       measurements = ['nbart_nir', 'nbart_red'],
                       ls7_slc_off = False,
                       #align = (15,15),
@@ -367,17 +368,18 @@ def calculate_anomalies(shp_fpath,
                       group_by='solar_day',
                       **query)
         
-        else:
-            print('loading Landsat collection 2')
-            ds = dc.load(product=products,
+        if collection == 'c2':
+            print('loading Landsat C2')
+            ds = dc.load(product='ls8_nbart_albers',
                            group_by='solar_day',
                            measurements = ['nir', 'red'],
                            resolution=(-30,30),
                            output_crs = 'epsg:3577',
                            dask_chunks=dask_chunks,
                            **query)             
-
+            
             # Load PQ data
+            print('loading Landsat C2 pq data')
             pq = dc.load(product='ls8_pq_albers',
                          group_by='solar_day',
                          fuse_func=ga_pq_fuser,
@@ -385,8 +387,8 @@ def calculate_anomalies(shp_fpath,
                          output_crs = 'epsg:3577',  
                          dask_chunks=dask_chunks,
                          **query)        
-
             
+            print('making pq mask')
             good_quality = masking.make_mask(pq.pixelquality,                         
                                              cloud_acca='no_cloud',
                                              cloud_shadow_acca='no_cloud_shadow',
@@ -412,7 +414,7 @@ def calculate_anomalies(shp_fpath,
         
         mask_xr = xr.DataArray(mask, dims = ('y','x'))
         ds = ds.where(mask_xr==False)
-        print("start: "+ str(ds.time.values[0]), "end: " + str(ds.time.values[-1]))
+        
         
     else: 
         print('Extracting data based on lat, lon coords')
@@ -420,10 +422,10 @@ def calculate_anomalies(shp_fpath,
                  'lat': (query_box[0] - query_box[2], query_box[0] + query_box[2]),
                  'time': time}
         
-        if col=='c3':
+        if collection=='c3':
         
             ds = load_ard(dc=dc,
-                          products = products,
+                          products =['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
                           measurements = ['nbart_nir', 'nbart_red'],
                           ls7_slc_off = False,
                           #align = (15,15),
@@ -432,9 +434,9 @@ def calculate_anomalies(shp_fpath,
                           dask_chunks = dask_chunks,
                           group_by='solar_day',
                           **query)
-        else:
+        if collection=='c2':
             print('loading Landsat collection 2')
-            ds = dc.load(product=products,
+            ds = dc.load(product='ls8_pq_albers',
                            group_by='solar_day',
                            measurements = ['nir', 'red'],
                            resolution=(-30,30),
@@ -467,11 +469,12 @@ def calculate_anomalies(shp_fpath,
 
             ds = ds.astype(np.float32).assign_attrs(crs=ds.crs)
             ds = ds.where(good_quality)
-
+            
+    print("start: "+str(ds.time.values[0])+", end: "+str(ds.time.values[-1])+", time dim length: "+str(len(ds.time.values)))
     print('calculating vegetation indice')
-    if col=='c3':
+    if collection=='c3':
         vegIndex = (ds.nbart_nir - ds.nbart_red) / (ds.nbart_nir + ds.nbart_red)
-    else:
+    if collection=='c2':
         vegIndex = (ds.nir - ds.red) / (ds.nir + ds.red)
     
     vegIndex = vegIndex.mean('time').rename('ndvi_mean')
@@ -494,13 +497,25 @@ def calculate_anomalies(shp_fpath,
     #test if the arrays match before we calculate the anomalies
     np.testing.assert_allclose(vegIndex.x.values, climatology_mean.x.values,
                               err_msg="The X coordinates on the AOI dataset do not match "
-                                      "the X coordinates on the climatology dataset. "
+                                      "the X coordinates on the climatology mean dataset. "
                                        "You're AOI may be beyond the extent of the pre-computed "
                                        "climatology dataset.")
     
     np.testing.assert_allclose(vegIndex.y.values, climatology_mean.y.values,
                           err_msg="The Y coordinates on the AOI dataset do not match "
-                                  "the Y coordinates on the climatology dataset. "
+                                  "the Y coordinates on the climatology mean dataset. "
+                                   "You're AOI may be beyond the extent of the pre-computed "
+                                   "climatology dataset.")
+    
+    np.testing.assert_allclose(vegIndex.x.values, climatology_std.x.values,
+                              err_msg="The X coordinates on the AOI dataset do not match "
+                                      "the X coordinates on the climatology std dataset. "
+                                       "You're AOI may be beyond the extent of the pre-computed "
+                                       "climatology dataset.")
+    
+    np.testing.assert_allclose(vegIndex.y.values, climatology_std.y.values,
+                          err_msg="The Y coordinates on the AOI dataset do not match "
+                                  "the Y coordinates on the climatology std dataset. "
                                    "You're AOI may be beyond the extent of the pre-computed "
                                    "climatology dataset.")
     
