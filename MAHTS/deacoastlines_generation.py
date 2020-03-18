@@ -22,7 +22,7 @@ from datacube.virtual import catalog_from_file, construct
 sys.path.append('../Scripts')
 from dea_datahandling import mostcommon_crs
 from dea_spatialtools import interpolate_2d
-from dea_spatialtools import interpolate_2d_dask
+from dea_spatialtools import interpolate_2d_dask, interpolate_2d_nods
 
 start_time = datetime.datetime.now()
 
@@ -171,7 +171,7 @@ def model_tides(ds, points_gdf, extent_buffer=0.025):
                                       crs={'init': 'EPSG:4326'})
 
     # Reproject to satellite data CRS
-    tidepoints_gdf = tidepoints_gdf.to_crs(epsg=ds.crs.epsg)
+    tidepoints_gdf = tidepoints_gdf.to_crs(crs={'init': ds.crs})
 
     # Fix time and set to index
     tidepoints_gdf['time'] = pd.to_datetime(tidepoints_gdf['time'], utc=True)
@@ -191,37 +191,39 @@ def interpolate_tide(timestep_ds,
     """  
   
     # Extract subset of observations based on timestamp of imagery
-    time_string = str(timestep_ds.time.values)[0:19].replace('T', ' ')
+    time_string = str(timestep_ds[2])[0:19].replace('T', ' ')
     tidepoints_subset = tidepoints_gdf.loc[time_string]
     print(time_string, end='\r')
     
     # Get lists of x, y and z (tide height) data to interpolate
-    x_coords = tidepoints_subset.geometry.x,
-    y_coords = tidepoints_subset.geometry.y,
-    z_coords = tidepoints_subset.tide_m
+    x_coords = tidepoints_subset.geometry.x.values.astype('float32')
+    y_coords = tidepoints_subset.geometry.y.values.astype('float32')
+    z_coords = tidepoints_subset.tide_m.values.astype('float32')
     
     if dask:
     
         # Interpolate tides into the extent of the satellite timestep
         out_tide = interpolate_2d_dask(ds=timestep_ds,
-                                  x_coords=x_coords,
-                                  y_coords=y_coords,
-                                  z_coords=z_coords,
-                                  method=method,
-                                  factor=factor)
+                                       x_coords=x_coords,
+                                       y_coords=y_coords,
+                                       z_coords=z_coords,
+                                       method=method,
+                                       factor=factor)
         
     else:
         
         # Interpolate tides into the extent of the satellite timestep
-        out_tide = interpolate_2d(ds=timestep_ds,
+        out_tide = interpolate_2d_nods(ds=timestep_ds,
                                   x_coords=x_coords,
                                   y_coords=y_coords,
                                   z_coords=z_coords,
+                                  grid_x_ds=timestep_ds[0],
+                                  grid_y_ds=timestep_ds[1],
                                   method=method,
                                   factor=factor)
     
     # Return data as a Float32 to conserve memory
-    return out_tide.astype(np.float32)
+    return out_tide.astype('float32')
 
 
 def multiprocess_apply(ds, dim, func):
@@ -445,19 +447,19 @@ def main(argv=None):
     # Model tides at point locations
     tidepoints_gdf = model_tides(ds, points_gdf)
 
-    # Interpolate tides for each timestep into the spatial extent of the data    
-    interp_tide = partial(interpolate_tide,
-                          tidepoints_gdf=tidepoints_gdf,
-                          factor=50, dask=False)
-    ds['tide_m'] = multiprocess_apply(ds=ds,
-                                              dim='time',
-                                              func=interp_tide)   
-
-    # Interpolate tides for each timestep into the spatial extent of the data     
+#     # Interpolate tides for each timestep into the spatial extent of the data    
 #     interp_tide = partial(interpolate_tide,
 #                           tidepoints_gdf=tidepoints_gdf,
-#                           factor=50, dask=True)
-#     ds['tide_m'] = ds.groupby('time').apply(interp_tide)
+#                           factor=50, dask=False)
+#     ds['tide_m'] = multiprocess_apply(ds=ds,
+#                                               dim='time',
+#                                               func=interp_tide)   
+
+    # Interpolate tides for each timestep into the spatial extent of the data     
+    interp_tide = partial(interpolate_tide,
+                          tidepoints_gdf=tidepoints_gdf,
+                          factor=50, dask=True)
+    ds['tide_m'] = ds.groupby('time').apply(interp_tide)
     
 
     # Determine tide cutoff

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-output_name="nbar"
+output_name="refactor"
 
-for study_area in 2585
+for study_area in 5898 6000 6001 6103 6205 6206 6308 6410 6512 6511 6613
                   
 do
 
@@ -14,12 +14,12 @@ do
     #PBS -P r78\n\
     #PBS -q hugemem\n\
     #PBS -l walltime=06:00:00\n\
-    #PBS -l mem=128GB\n\
+    #PBS -l mem=64GB\n\
     #PBS -l jobfs=2GB\n\
     #PBS -l ncpus=1\n\
     #PBS -l wd\n\
     module use /g/data/v10/public/modules/modulefiles\n\
-    module load dea/20191127\n\
+    module load dea/unstable\n\
     module load otps\n\
     python3 /g/data/r78/rt1527/dea-notebooks/MAHTS/deacoastlines_generation.py $study_area $output_name"
 
