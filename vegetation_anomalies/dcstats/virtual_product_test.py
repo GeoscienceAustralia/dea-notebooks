@@ -1,13 +1,16 @@
 ## Virtual Product creation to test C3 datacube stats
 
 #Need to link to custom install of dc-stats and dc-core:
-# export PYTHONPATH=/g/data/r78/cb3058/dea-notebooks/vegetation_anomalies/dc_refactor/datacube-stats/:$PYTHONPATH
-# export PYTHONPATH=/g/data/r78/cb3058/dea-notebooks/vegetation_anomalies/dc_core/datacube-core/:$PYTHONPATH
+# export PYTHONUSERBASE=/g/data/r78/cb3058/python_lib
+# export PYTHONPATH=$PYTHONUSERBASE/lib/python3.6/site-packages:$PYTHONPATH
+# export PATH=$PYTHONUSERBASE/bin:$PATH
 
 from datacube.virtual import construct_from_yaml
 from datacube import Datacube
 from datacube.drivers.netcdf import create_netcdf_storage_unit, write_dataset_to_netcdf
 from dask.distributed import LocalCluster, Client
+import numpy as np
+import xarray as xr
 
 #user inputs
 lat, lon = -33.2, 149.1
@@ -22,9 +25,10 @@ query = {'lon': (lon - buffer, lon + buffer),
          'time': time}
 
 #create VP from yaml
+# datacube_stats.external.ndvi_clim_mean
 print('constructing from yaml')
 ndvi_clim_mean = construct_from_yaml("""
-        aggregate: datacube_stats.external.ndvi_clim_mean
+        aggregate: datacube_stats.external.ndvi_clim_std
         group_by: alltime
         input:
           reproject:
@@ -68,13 +72,12 @@ ndvi_clim_mean = construct_from_yaml("""
     """)
 
 #load the VP and export
-print('actually computing...')
 datasets = ndvi_clim_mean.query(dc, **query)
 print(datasets)
+print('actually computing...')
 grouped = ndvi_clim_mean.group(datasets, **query)
-print(grouped)
-results = ndvi_clim_mean.fetch(grouped, **query, dask_chunks={'time':-1, 'x':250, 'y':250})
+results = ndvi_clim_mean.fetch(grouped, **query, dask_chunks={'time':-1, 'x':100, 'y':100})
 results.load()
 
 print('writing to file')
-write_dataset_to_netcdf(results, 'VP_test_NDVI_climatology_1987_2010.nc')
+write_dataset_to_netcdf(results, 'VP_test_NDVI_climatology_1987_2010_std.nc')

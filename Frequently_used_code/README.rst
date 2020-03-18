@@ -17,10 +17,13 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Image_segmentation.ipynb
    Imagery_on_web_map.ipynb
    Integrating_external_data.ipynb
+   Machine_learning_with_ODC.ipynb
    Masking_data.ipynb
    Opening_GeoTIFFs_NetCDFs.ipynb
    Pan_sharpening_Brovey.ipynb
    Rasterize_vectorize.ipynb
+   SARA_SLC_download.ipynb
+   Tidal_modelling.ipynb
    Using_load_ard.ipynb
    Virtual_products.ipynb
    Working_with_time.ipynb
