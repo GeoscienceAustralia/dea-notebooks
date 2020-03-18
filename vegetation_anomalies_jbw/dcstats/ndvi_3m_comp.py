@@ -27,7 +27,7 @@ class ndvi_3m_comp(Transformation):
                          12: 'DJF',
                          }
 
-    def calculate_composite(data):
+    def compute(self, data):
         def attrs_reassign(da, dtype=np.float32):
             da_attr = data.attrs
             da = da.assign_attrs(**da_attr)
@@ -47,7 +47,7 @@ class ndvi_3m_comp(Transformation):
         # add back metadata
         ndvi_mean = ndvi_mean.to_array(name=self.measurement_name)
         ndvi_mean.attrs = data.attrs
-        ndvi_mean = ndvi_mean.apply(attrs_reassign, keep_attrs=True)
+#         ndvi_mean = ndvi_mean.apply(attrs_reassign, keep_attrs=True)
 
         return ndvi_mean
 
