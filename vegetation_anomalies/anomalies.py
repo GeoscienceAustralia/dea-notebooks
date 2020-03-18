@@ -424,9 +424,9 @@ def calculate_anomalies(shp_fpath,
         query = {'lon': (query_box[1] - query_box[2], query_box[1] + query_box[2]),
                  'lat': (query_box[0] - query_box[2], query_box[0] + query_box[2]),
                  'time': time}
-        
+            
         if collection=='c3':
-        
+            
             ds = load_ard(dc=dc,
                           products =['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
                           measurements = ['nbart_nir', 'nbart_red'],
@@ -439,6 +439,7 @@ def calculate_anomalies(shp_fpath,
                           **query)
             
         if collection=='c2':
+            
             print('loading Landsat collection 2')
             ds = dc.load(product='ls8_nbart_albers',
                            group_by='solar_day',
@@ -455,7 +456,7 @@ def calculate_anomalies(shp_fpath,
                          resolution=(-30,30),
                          output_crs = 'epsg:3577',  
                          dask_chunks=dask_chunks,
-                         **query)        
+                         **query)         
 
 
             good_quality = masking.make_mask(pq.pixelquality,                         
