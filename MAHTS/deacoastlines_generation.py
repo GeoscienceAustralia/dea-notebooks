@@ -12,6 +12,7 @@ import numpy as np
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
+import scipy.interpolate
 from affine import Affine
 from functools import partial
 from shapely.geometry import shape
@@ -21,8 +22,6 @@ from datacube.virtual import catalog_from_file, construct
 
 sys.path.append('../Scripts')
 from dea_datahandling import mostcommon_crs
-from dea_spatialtools import interpolate_2d
-from dea_spatialtools import interpolate_2d_dask, interpolate_2d_nods
 
 start_time = datetime.datetime.now()
 
@@ -99,16 +98,16 @@ def load_mndwi(dc,
         from dea_bandindices import calculate_indices
         
         ds = load_ard(dc=dc, 
-              measurements=['nbar_blue', 'nbar_green', 'nbar_red', 
-                            'nbar_nir', 'nbar_swir_1', 'nbar_swir_2'], 
+              measurements=['nbart_blue', 'nbart_green', 'nbart_red', 
+                            'nbart_nir', 'nbart_swir_1', 'nbart_swir_2'], 
               min_gooddata=0.0,
               products=['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'], 
               output_crs=crs,
               resampling={'fmask': 'nearest', 
                           'oa_fmask': 'nearest', 
-                          'nbar_contiguity': 'nearest',
-                          'oa_nbar_contiguity': 'nearest',
-                          '*': 'average'},
+                          'nbart_contiguity': 'nearest',
+                          'oa_nbart_contiguity': 'nearest',
+                          '*': 'cubic'},
               resolution=(-30, 30),  
               gqa_iterative_mean_xy=[0, 1],
               align=(15, 15),
@@ -116,10 +115,10 @@ def load_mndwi(dc,
               mask_contiguity=False,
               **query)
 
-        ds = (calculate_indices(ds, index=['MNDWI'], 
+        ds = (calculate_indices(ds, index=['MNDWI', 'TCB'], 
                                 collection='ga_ls_3', 
                                 drop=True)
-              .rename({'MNDWI': 'mndwi'}))
+              .rename({'MNDWI': 'mndwi', 'TCB': 'tcb'}))
         
         
     return ds
@@ -180,47 +179,147 @@ def model_tides(ds, points_gdf, extent_buffer=0.025):
     return tidepoints_gdf
 
 
-def interpolate_tide(timestep_ds, 
+def interpolate_2d(x_coords, 
+                   y_coords, 
+                   z_coords, 
+                   grid_x_ds,
+                   grid_y_ds,
+                   method='linear',
+                   factor=1,
+                   **kwargs):
+    
+    """
+    This function takes points with X, Y and Z coordinates, and 
+    interpolates Z-values across the extent of an existing xarray 
+    dataset. This can be useful for producing smooth surfaces from point
+    data that can be compared directly against satellite data derived 
+    from an OpenDataCube query.
+    
+    Supported interpolation methods include 'linear', 'nearest' and
+    'cubic (using `scipy.interpolate.griddata`), and 'rbf' (using 
+    `scipy.interpolate.Rbf`).
+    
+    Last modified: March 2019
+    
+    Parameters
+    ----------  
+    x_coords, y_coords : numpy array
+        Arrays containing X and Y coordinates for all points (e.g. 
+        longitudes and latitudes).
+    z_coords : numpy array
+        An array containing Z coordinates for all points (e.g. 
+        elevations). These are the values you wish to interpolate 
+        between.
+    method : string, optional
+        The method used to interpolate between point values. This string
+        is either passed to `scipy.interpolate.griddata` (for 'linear', 
+        'nearest' and 'cubic' methods), or used to specify Radial Basis 
+        Function interpolation using `scipy.interpolate.Rbf` ('rbf').
+        Defaults to 'linear'.
+    factor : int, optional
+        An optional integer that can be used to subsample the spatial 
+        interpolation extent to obtain faster interpolation times, then
+        up-sample this array back to the original dimensions of the 
+        data as a final step. For example, setting `factor=10` will 
+        interpolate data into a grid that has one tenth of the 
+        resolution of `ds`. This approach will be significantly faster 
+        than interpolating at full resolution, but will potentially 
+        produce less accurate or reliable results.
+    **kwargs : 
+        Optional keyword arguments to pass to either 
+        `scipy.interpolate.griddata` (if `method` is 'linear', 'nearest' 
+        or 'cubic'), or `scipy.interpolate.Rbf` (is `method` is 'rbf').
+      
+    Returns
+    -------
+    interp_2d_array : xarray DataArray
+        An xarray DataArray containing with x and y coordinates copied 
+        from `ds_array`, and Z-values interpolated from the points data. 
+    """    
+  
+    # Extract xy and elev points
+    points_xy = np.vstack([x_coords, y_coords]).T
+    
+    # Extract x and y coordinates to interpolate into. 
+    # If `factor` is greater than 1, the coordinates will be subsampled 
+    # for faster run-times. If the last x or y value in the subsampled 
+    # grid aren't the same as the last x or y values in the original 
+    # full resolution grid, add the final full resolution grid value to 
+    # ensure data is interpolated up to the very edge of the array
+    if grid_x_ds[::factor][-1] == grid_x_ds[-1]:
+        x_grid_coords = grid_x_ds[::factor]
+    else:
+        x_grid_coords = grid_x_ds[::factor].tolist() + [grid_x_ds[-1]]
+        
+    if grid_y_ds[::factor][-1] == grid_y_ds[-1]:
+        y_grid_coords = grid_y_ds[::factor]
+    else:
+        y_grid_coords = grid_y_ds[::factor].tolist() + [grid_y_ds[-1]]
+
+    # Create grid to interpolate into
+    grid_y, grid_x = np.meshgrid(x_grid_coords, y_grid_coords)
+        
+    # Apply scipy.interpolate.griddata interpolation methods
+    if method in ('linear', 'nearest', 'cubic'):       
+
+        # Interpolate x, y and z values 
+        interp_2d = scipy.interpolate.griddata(points=points_xy, 
+                                                values=z_coords, 
+                                                xi=(grid_y, grid_x), 
+                                                method=method,
+                                                **kwargs)
+        
+    # Apply Radial Basis Function interpolation
+    elif method == 'rbf':
+        
+        # Interpolate x, y and z values 
+        rbf = scipy.interpolate.Rbf(x_coords, y_coords, z_coords, **kwargs)  
+        interp_2d = rbf(grid_y, grid_x)
+
+    # Create xarray dataarray from the data and resample to ds coords
+    interp_2d_da = xr.DataArray(interp_2d,
+                                coords=[y_grid_coords, x_grid_coords], 
+                                dims=['y', 'x'])
+    
+    # If factor is greater than 1, resample the interpolated array to
+    # match the input `ds` array
+    ds_to_interp = xr.DataArray(np.ones(shape=(len(grid_y_ds), len(grid_x_ds))),
+             coords=[grid_y_ds, grid_x_ds], 
+             dims=['y', 'x'])
+    
+    if factor > 1: 
+        interp_2d_da = interp_2d_da.interp_like(ds_to_interp)
+
+    return interp_2d_da
+
+
+def interpolate_tide(timestep_tuple, 
                      tidepoints_gdf, 
                      method='rbf', 
-                     factor=20, 
-                     dask=True):    
+                     factor=20):    
     """
     Extract a subset of tide modelling point data for a given time-step,
     then interpolate these tides into the extent of the xarray dataset.
     """  
   
     # Extract subset of observations based on timestamp of imagery
-    time_string = str(timestep_ds[2])[0:19].replace('T', ' ')
+    time_string = str(timestep_tuple[2])[0:19].replace('T', ' ')
     tidepoints_subset = tidepoints_gdf.loc[time_string]
     print(time_string, end='\r')
     
     # Get lists of x, y and z (tide height) data to interpolate
     x_coords = tidepoints_subset.geometry.x.values.astype('float32')
     y_coords = tidepoints_subset.geometry.y.values.astype('float32')
-    z_coords = tidepoints_subset.tide_m.values.astype('float32')
-    
-    if dask:
-    
-        # Interpolate tides into the extent of the satellite timestep
-        out_tide = interpolate_2d_dask(ds=timestep_ds,
-                                       x_coords=x_coords,
-                                       y_coords=y_coords,
-                                       z_coords=z_coords,
-                                       method=method,
-                                       factor=factor)
-        
-    else:
-        
-        # Interpolate tides into the extent of the satellite timestep
-        out_tide = interpolate_2d_nods(ds=timestep_ds,
-                                  x_coords=x_coords,
-                                  y_coords=y_coords,
-                                  z_coords=z_coords,
-                                  grid_x_ds=timestep_ds[0],
-                                  grid_y_ds=timestep_ds[1],
-                                  method=method,
-                                  factor=factor)
+    z_coords = tidepoints_subset.tide_m.values.astype('float32')    
+      
+    # Interpolate tides into the extent of the satellite timestep
+    out_tide = interpolate_2d(x_coords=x_coords,
+                              y_coords=y_coords,
+                              z_coords=z_coords,
+                              grid_x_ds=timestep_tuple[0],
+                              grid_y_ds=timestep_tuple[1],
+                              method=method,
+                              factor=factor)
     
     # Return data as a Float32 to conserve memory
     return out_tide.astype('float32')
@@ -447,20 +546,19 @@ def main(argv=None):
     # Model tides at point locations
     tidepoints_gdf = model_tides(ds, points_gdf)
 
-#     # Interpolate tides for each timestep into the spatial extent of the data    
-#     interp_tide = partial(interpolate_tide,
-#                           tidepoints_gdf=tidepoints_gdf,
-#                           factor=50, dask=False)
-#     ds['tide_m'] = multiprocess_apply(ds=ds,
-#                                               dim='time',
-#                                               func=interp_tide)   
+    # Interpolate tides for each timestep into the spatial extent of the data 
+    pool = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
+    print(f'Parallelising {multiprocessing.cpu_count() - 1} processes')
+    out_list = pool.map(partial(interpolate_tide,
+                                tidepoints_gdf=tidepoints_gdf,
+                                factor=50), 
+                        iterable=[(group.x.values, 
+                                   group.y.values, 
+                                   group.time.values) 
+                                  for (i, group) in ds.groupby('time')])
 
-    # Interpolate tides for each timestep into the spatial extent of the data     
-    interp_tide = partial(interpolate_tide,
-                          tidepoints_gdf=tidepoints_gdf,
-                          factor=50, dask=True)
-    ds['tide_m'] = ds.groupby('time').apply(interp_tide)
-    
+    # Combine to match the original dataset
+    ds['tide_m'] = xr.concat(out_list, dim=ds['time'])    
 
     # Determine tide cutoff
     tide_cutoff_buff = (

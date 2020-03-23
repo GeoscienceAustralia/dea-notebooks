@@ -6,7 +6,7 @@ import xarray as xr
 from affine import Affine
 from rasterio.features import rasterize
 from skimage.morphology import binary_opening
-from skimage.morphology import binary_dilation
+from skimage.morphology import binary_dilation, binary_erosion
 from skimage.morphology import disk, square
 from skimage.measure import label
 import numpy as np
@@ -23,6 +23,40 @@ import shutil
 
 sys.path.append('../Scripts')
 from dea_spatialtools import subpixel_contours
+
+
+def is_outlier(points, thresh=3.5):
+    """
+    Returns a boolean array with True if points are outliers and False 
+    otherwise.
+
+    Parameters:
+    -----------
+        points : An numobservations by numdimensions array of observations
+        thresh : The modified z-score to use as a threshold. Observations with
+            a modified z-score (based on the median absolute deviation) greater
+            than this value will be classified as outliers.
+
+    Returns:
+    --------
+        mask : A numobservations-length boolean array.
+
+    References:
+    ----------
+        Boris Iglewicz and David Hoaglin (1993), "Volume 16: How to Detect and
+        Handle Outliers", The ASQC Basic References in Quality Control:
+        Statistical Techniques, Edward F. Mykytka, Ph.D., Editor. 
+    """
+    if len(points.shape) == 1:
+        points = points[:,None]
+    median = np.median(points, axis=0)
+    diff = np.sum((points - median)**2, axis=-1)
+    diff = np.sqrt(diff)
+    med_abs_deviation = np.median(diff)
+
+    modified_z_score = 0.6745 * diff / med_abs_deviation
+
+    return modified_z_score > thresh
 
 
 def change_regress(row, 
@@ -51,7 +85,8 @@ def change_regress(row,
         xy_df[:,1] = xy_df[:,1]-(detrend_params[0]*xy_df[:,0]+detrend_params[1])    
     
     # Remove outliers
-    outlier_bool = (np.abs(stats.zscore(xy_df)) < float(std_dev)).all(axis=1)
+#     outlier_bool = (np.abs(stats.zscore(xy_df)) < float(std_dev)).all(axis=1)
+    outlier_bool = ~is_outlier(y, thresh=3.5)
     xy_df = xy_df[outlier_bool]
         
     # Compute linear regression
@@ -156,7 +191,12 @@ def contours_preprocess(yearly_ds,
                         water_index, 
                         index_threshold, 
                         estuary_gdf, 
-                        points_gdf):
+                        points_gdf):    
+    
+    # Identify pixels with less than 5 observations on average for every year.
+    # Apply erosion to focus on only large contiguous regions
+    always_poor_data = binary_erosion(image = (yearly_ds['count'].mean(dim='year')) < 5, 
+                                      selem = disk(3))   
 
     # Remove low obs and high variance pixels and replace with 3-year gapfill
     gapfill_mask = (yearly_ds['count'] > 5) # & (yearly_ds['stdev'] < 0.5)
@@ -177,10 +217,10 @@ def contours_preprocess(yearly_ds,
     except:
         estuary_mask = np.full(yearly_ds[water_index].shape[1:], False, dtype=bool)
 
-    # Drop empty timesteps and apply estuary mask
+    # Drop empty timesteps and apply estuary and always poor data mask
     thresholded_ds = (thresholded_ds
                       .sel(year=thresholded_ds.sum(dim=['x', 'y']) > 0)
-                      .where(~estuary_mask, 0))
+                      .where((~estuary_mask & ~always_poor_data), 0))
 
     # Identify ocean by identifying the largest connected area of water pixels
     # as water in at least 90% of the entire stack of thresholded data
@@ -194,7 +234,7 @@ def contours_preprocess(yearly_ds,
     buffer_land = binary_dilation(~full_sea_mask, disk(25))
     coastal_buffer = buffer_ocean & buffer_land
 
-    # # Generate sea mask for each timestep
+    # Generate sea mask for each timestep
     yearly_sea_mask = (thresholded_ds.groupby('year')
                        .apply(lambda x: mask_ocean(x, points_gdf)))
 
@@ -367,8 +407,6 @@ def calculate_regressions(yearly_ds,
     points_subset = points_gdf[x_years.astype(str)]
     tide_subset = tide_points_gdf[x_years.astype(str)]
     climate_subset = climate_df.loc[x_years, :]
-    
-#     return points_subset, tide_subset
 
     # Compute coastal change rates by linearly regressing annual movements vs. time
     print(f'Comparing annual movements with time')
@@ -507,7 +545,7 @@ def main(argv=None):
     # Extract contours
     contours_gdf = subpixel_contours(da=masked_ds,
                                      z_values=index_threshold,
-                                     min_vertices=10,
+                                     min_vertices=30,
                                      dim='year').set_index('year')
 
     ######################
