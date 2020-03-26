@@ -295,43 +295,47 @@ def calculate_composite(shp_fpath,
                         collection,
                         year,
                         season,
+                        month,
                         query_box,
                         dask_chunks):
-    
+    if season is not None:
     # dict of all seasons for indexing datacube
-    all_seasons = {'JFM': [1,2,3],
-                   'FMA': [2,3,4],
-                   'MAM': [3,4,5],
-                   'AMJ': [4,5,6],
-                   'MJJ': [5,6,7],
-                   'JJA': [6,7,8],
-                   'JAS': [7,8,9],
-                   'ASO': [8,9,10],
-                   'SON': [9,10,11],
-                   'OND': [10,11,12],
-                   'NDJ': [11,12,1],
-                   'DJF': [12,1,2],
-                  }
+        all_seasons = {'JFM': [1,2,3],
+                       'FMA': [2,3,4],
+                       'MAM': [3,4,5],
+                       'AMJ': [4,5,6],
+                       'MJJ': [5,6,7],
+                       'JJA': [6,7,8],
+                       'JAS': [7,8,9],
+                       'ASO': [8,9,10],
+                       'SON': [9,10,11],
+                       'OND': [10,11,12],
+                       'NDJ': [11,12,1],
+                       'DJF': [12,1,2],
+                      }
 
-    if season not in all_seasons:
-        raise ValueError("Not a valid season, "
-                         "must be one of: " + str(all_seasons.keys()))
-         
-    #Depending on the season, grab the time for the dc.load
-    months=all_seasons.get(season)
-        
-    if (season == 'DJF') or (season == 'NDJ'):
-        time= (year+"-"+str(months[0]), str(int(year)+1)+"-"+str(months[2]))
-    
+        if season not in all_seasons:
+            raise ValueError("Not a valid season, "
+                             "must be one of: " + str(all_seasons.keys()))
+
+        #Depending on the season, grab the time for the dc.load
+        months=all_seasons.get(season)
+
+        if (season == 'DJF') or (season == 'NDJ'):
+            time= (year+"-"+str(months[0]), str(int(year)+1)+"-"+str(months[2]))
+
+        else:
+            time = (year+"-"+str(months[0]), year+"-"+str(months[2]))
+            
     else:
-        time = (year+"-"+str(months[0]), year+"-"+str(months[2]))
+        time=(year+"-"+str(month))
    
     #connect to datacube
     try:
         if collection == 'c3':
-            dc = datacube.Datacube(app='calculate_anomalies', env='c3-samples')
+            dc = datacube.Datacube(app='calculate_composite', env='c3-samples')
         if collection == 'c2':
-            dc = datacube.Datacube(app='calculate_anomalies')
+            dc = datacube.Datacube(app='calculate_composite')
     except:
         raise ValueError("collection must be either 'c3' or 'c2'")
     
@@ -487,59 +491,8 @@ def calculate_composite(shp_fpath,
         vegIndex = (ds.nir - ds.red) / (ds.nir + ds.red)
     
     vegIndex = vegIndex.mean('time').rename('ndvi_mean')
-        
-#     #get the bounding coords of the input ds to help with indexing the climatology
-#     xmin, xmax = vegIndex.x.values[0], vegIndex.x.values[-1]
-#     ymin,ymax = vegIndex.y.values[0], vegIndex.y.values[-1]
-#     x_slice = [i for i in range(int(xmin),int(xmax+30),30)]
-#     y_slice = [i for i in range(int(ymin),int(ymax-30),-30)]
-    
-#     #index the climatology dataset to the location of our AOI
-#     climatology_mean = xr.open_rasterio('results/NSW_NDVI_Climatologies_mean/mosaics/ndvi_clim_mean_'+season+'_nsw.tif').sel(x=x_slice,
-#                                                                 y=y_slice,
-#                                                                 method='nearest').chunk(chunks=dask_chunks).squeeze()
-    
-#     climatology_std = xr.open_rasterio('results/NSW_NDVI_Climatologies_std/mosaics/ndvi_clim_std_'+season+'_nsw.tif').sel(x=x_slice,
-#                                                                 y=y_slice,
-#                                                                 method='nearest').chunk(chunks=dask_chunks).squeeze()
-    
-#     #test if the arrays match before we calculate the anomalies
-#     np.testing.assert_allclose(vegIndex.x.values, climatology_mean.x.values,
-#                               err_msg="The X coordinates on the AOI dataset do not match "
-#                                       "the X coordinates on the climatology mean dataset. "
-#                                        "You're AOI may be beyond the extent of the pre-computed "
-#                                        "climatology dataset.")
-    
-#     np.testing.assert_allclose(vegIndex.y.values, climatology_mean.y.values,
-#                           err_msg="The Y coordinates on the AOI dataset do not match "
-#                                   "the Y coordinates on the climatology mean dataset. "
-#                                    "You're AOI may be beyond the extent of the pre-computed "
-#                                    "climatology dataset.")
-    
-#     np.testing.assert_allclose(vegIndex.x.values, climatology_std.x.values,
-#                               err_msg="The X coordinates on the AOI dataset do not match "
-#                                       "the X coordinates on the climatology std dev dataset. "
-#                                        "You're AOI may be beyond the extent of the pre-computed "
-#                                        "climatology dataset.")
-    
-#     np.testing.assert_allclose(vegIndex.y.values, climatology_std.y.values,
-#                           err_msg="The Y coordinates on the AOI dataset do not match "
-#                                   "the Y coordinates on the climatology std dev dataset. "
-#                                    "You're AOI may be beyond the extent of the pre-computed "
-#                                    "climatology dataset.")
-    
-#     print('calculating anomalies')
-#     #calculate standardised anomalies
-#     anomalies = xr.apply_ufunc(lambda x, m, s: (x - m) / s,
-#                                vegIndex, climatology_mean, climatology_std,
-#                                output_dtypes=[np.float32],
-#                                dask='parallelized')
-    
-#     #add back metadata
-#     anomalies = anomalies.rename('std_anomalies').to_dataset()
-#     anomalies.attrs = ds.attrs
-#     anomalies.attrs['units'] = 1
 
-    return ds, vegIndex
+    metadata=[ds.sizes,ds.time]    
+    return metadata, vegIndex
 
 
