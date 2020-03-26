@@ -293,6 +293,7 @@ def load_ard(dc,
 
 def calculate_composite(shp_fpath,
                         collection,
+                        method,
                         year,
                         season,
                         month,
@@ -490,9 +491,22 @@ def calculate_composite(shp_fpath,
     if collection=='c2':
         vegIndex = (ds.nir - ds.red) / (ds.nir + ds.red)
     
-    vegIndex = vegIndex.mean('time').rename('ndvi_mean')
+    if method == 'mean':
+        vegIndex = vegIndex.mean('time').rename('ndvi_mean')
+        vegIndex = vegIndex.rename('ndvi_mean').to_dataset()
+    elif method == 'min':
+        vegIndex = vegIndex.min('time').rename('ndvi_min')
+        vegIndex = vegIndex.rename('ndvi_min').to_dataset()
+    elif method == 'max':
+        vegIndex = vegIndex.max('time').rename('ndvi_max')
+        vegIndex = vegIndex.rename('ndvi_max').to_dataset()
+    
+    
+    
+    vegIndex.attrs = ds.attrs
+    vegIndex.attrs['units'] = 1
 
     metadata=[ds.sizes,ds.time]    
-    return metadata, vegIndex
+    return ds, vegIndex
 
 
