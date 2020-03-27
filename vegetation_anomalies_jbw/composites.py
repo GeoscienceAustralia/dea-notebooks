@@ -507,6 +507,6 @@ def calculate_composite(shp_fpath,
     vegIndex.attrs['units'] = 1
 
     metadata=[ds.sizes,ds.time]    
-    return ds, vegIndex
+    return metadata, vegIndex
 
 
