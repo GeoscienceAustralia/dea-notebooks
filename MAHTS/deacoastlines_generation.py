@@ -115,10 +115,10 @@ def load_mndwi(dc,
               mask_contiguity=False,
               **query)
 
-        ds = (calculate_indices(ds, index=['MNDWI', 'TCB'], 
+        ds = (calculate_indices(ds, index=['MNDWI'], 
                                 collection='ga_ls_3', 
                                 drop=True)
-              .rename({'MNDWI': 'mndwi', 'TCB': 'tcb'}))
+              .rename({'MNDWI': 'mndwi'}))
         
         
     return ds
