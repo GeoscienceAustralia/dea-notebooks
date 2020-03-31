@@ -488,7 +488,7 @@ def subpixel_contours(da,
     # Convert output contours to a geopandas.GeoDataFrame
     contours_gdf = gpd.GeoDataFrame(data=attribute_df, 
                                     geometry=list(contour_arrays.values()),
-                                    crs={'init': str(crs)})   
+                                    crs=crs)   
 
     # Define affine and use to convert array coords to geographic coords.
     # We need to add 0.5 x pixel size to the x and y to obtain the centre 
