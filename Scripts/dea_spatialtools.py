@@ -440,7 +440,8 @@ def subpixel_contours(da,
                             "6886890.0)`")
 
     # If z_values is supplied is not a list, convert to list:
-    z_values = z_values if isinstance(z_values, list) else [z_values]
+    z_values = z_values if (isinstance(z_values, list) or 
+                            isinstance(z_values, np.ndarray)) else [z_values]
 
     # Test number of dimensions in supplied data array
     if len(da.shape) == 2:
@@ -486,7 +487,7 @@ def subpixel_contours(da,
     # Convert output contours to a geopandas.GeoDataFrame
     contours_gdf = gpd.GeoDataFrame(data=attribute_df, 
                                     geometry=list(contour_arrays.values()),
-                                    crs={'init': str(crs)})   
+                                    crs=crs)   
 
     # Define affine and use to convert array coords to geographic coords.
     # We need to add 0.5 x pixel size to the x and y to obtain the centre 
