@@ -26,7 +26,7 @@ Functions included:
     largest_region
     transform_geojson_wgs_to_epsg
 
-Last modified: February 2020
+Last modified: April 2020
 
 '''
 
@@ -447,11 +447,9 @@ def subpixel_contours(da,
 
         print(f'Operating in multiple z-value, single array mode')
         dim = 'z_value'
-        da = da.expand_dims({'z_value': z_values})
-
         contour_arrays = {str(i)[0:10]: 
-                          contours_to_multiline(da_i, i, min_vertices) 
-                          for i, da_i in da.groupby(dim)}        
+                          contours_to_multiline(da, i, min_vertices) 
+                          for i in z_values}    
 
     else:
 
