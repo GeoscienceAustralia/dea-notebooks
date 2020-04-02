@@ -22,7 +22,7 @@ Citing this work and/or code:
 
 ## `subpixel_contours` function
 
-The [`subpixel_contours` function from the `dea_spatialtools.py` script](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Scripts/dea_spatialtools.py#L42-L244) uses `skimage.measure.find_contours` to extract multiple z-value contour lines from a two-dimensional array (e.g. multiple elevations from a single digital elevation model), or one z-value for each array along a specified dimension of a multi-dimensional array (e.g. to map waterlines across time by extracting a 0 Normalised Difference Water Index contour from each individual timestep in an `xarray` timeseries).    
+The [`subpixel_contours` function from the `dea_spatialtools.py` script](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Scripts/dea_spatialtools.py#L318-L519) uses `skimage.measure.find_contours` to extract multiple z-value contour lines from a two-dimensional array (e.g. multiple elevations from a single digital elevation model), or one z-value for each array along a specified dimension of a multi-dimensional array (e.g. to map waterlines across time by extracting a 0 Normalised Difference Water Index contour from each individual timestep in an `xarray` timeseries).    
     
 Contours are returned as a `geopandas.GeoDataFrame` with one row per z-value or one row per array along a specified dimension. The     `attribute_df` parameter can be used to pass custom attributes to the output contour features.
 
@@ -66,4 +66,4 @@ Digital Earth Australia data is licensed under the [Creative Commons by Attribut
 **Contact:** If you need assistance, please post a question on the [Open Data Cube Slack channel](http://slack.opendatacube.org/) or on the [GIS Stack Exchange](https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using the `open-data-cube` tag (you can view previously asked questions [here](https://gis.stackexchange.com/questions/tagged/open-data-cube)).
 If you would like to report an issue with this notebook, you can file one on [Github](https://github.com/GeoscienceAustralia/dea-notebooks).
 
-**Last modified:** December 2019
+**Last modified:** April 2020
