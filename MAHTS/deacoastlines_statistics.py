@@ -192,87 +192,6 @@ def load_rasters(output_name,
     return yearly_ds
 
 
-def contours_preprocess_old(yearly_ds, 
-                        water_index, 
-                        index_threshold, 
-                        estuary_gdf, 
-                        points_gdf,
-                        output_path):
-
-    # Remove low obs and high variance pixels and replace with 3-year gapfill
-    gapfill_mask = (yearly_ds['count'] > 5) # & (yearly_ds['stdev'] < 0.5)
-    yearly_ds[water_index] = yearly_ds[water_index].where(gapfill_mask, other=yearly_ds.gapfill_index)
-    yearly_ds['tide_m'] = yearly_ds['tide_m'].where(gapfill_mask, other=yearly_ds.gapfill_tide_m)
-
-    # Apply water index threshold
-    thresholded_ds = (yearly_ds[water_index] > index_threshold)
-    thresholded_ds = thresholded_ds.where(~yearly_ds[water_index].isnull())
-
-    # Rasterize estuary polygons into a numpy mask. The try-except catches cases
-    # where no estuary polygons exist in the study area
-    try:
-        estuary_mask = rasterize(shapes=estuary_gdf['geometry'],
-                                 out_shape=yearly_ds[water_index].shape[1:],
-                                 transform=yearly_ds.transform,
-                                 all_touched=True).astype(bool)
-    except:
-        estuary_mask = np.full(yearly_ds[water_index].shape[1:], False, dtype=bool)
-
-    # Drop empty timesteps and apply estuary mask
-    thresholded_ds = (thresholded_ds
-                      .sel(year=thresholded_ds.sum(dim=['x', 'y']) > 0)
-                      .where(~estuary_mask, 0))
-
-    # Identify ocean by identifying the largest connected area of water pixels
-    # as water in at least 90% of the entire stack of thresholded data
-    all_time_median = (thresholded_ds.mean(dim='year') > 0.9)
-    full_sea_mask = mask_ocean(xr.apply_ufunc(binary_opening, 
-                                              all_time_median, 
-                                              disk(3)), points_gdf)
-
-    # Generate all time 750 m buffer from ocean-land boundary
-    buffer_ocean = binary_dilation(full_sea_mask, disk(25))
-    buffer_land = binary_dilation(~full_sea_mask, disk(25))
-    coastal_buffer = buffer_ocean & buffer_land
-
-    # # Generate sea mask for each timestep
-    yearly_sea_mask = (thresholded_ds.groupby('year')
-                       .apply(lambda x: mask_ocean(x, points_gdf)))
-
-    # Keep only pixels that are within 750 m of the ocean in the
-    # full stack, and directly connected to ocean in each yearly timestep
-    masked_ds = yearly_ds[water_index].where(yearly_sea_mask & coastal_buffer)
-
-    # Set CRS and trasnform from input data
-    masked_ds.attrs['crs'] = yearly_ds.crs[6:]
-    masked_ds.attrs['transform'] = yearly_ds.transform
-
-    # Create raster containg all time mask data
-    all_time_mask = np.full(yearly_ds[water_index].shape[1:], 0, dtype='int8')
-    all_time_mask[buffer_land & ~coastal_buffer] = 1
-    all_time_mask[buffer_ocean & ~coastal_buffer] = 2
-    all_time_mask[estuary_mask & coastal_buffer] = 3
-    
-    # Export mask raster to assist evaluating results
-    all_time_mask_da = xr.DataArray(data = all_time_mask, 
-                                    coords={'x': yearly_ds.x, 
-                                            'y': yearly_ds.y},
-                                    dims=['y', 'x'],
-                                    name='all_time_mask')
-    all_time_mask_ds = all_time_mask_da.to_dataset()
-    all_time_mask_ds.attrs = yearly_ds.attrs
-    write_geotiff(filename=f'{output_path}/all_time_mask2.tif', 
-                  dataset=all_time_mask_ds,
-                  profile_override={'blockxsize': 1024, 
-                                    'blockysize': 1024, 
-                                    'compress': 'deflate', 
-                                    'zlevel': 5})
-
-    return masked_ds
-
-
-
-
 def contours_preprocess(yearly_ds, 
                         water_index, 
                         index_threshold, 
@@ -331,9 +250,10 @@ def contours_preprocess(yearly_ds,
     # Keep only pixels that are within 1000 m of the ocean in the
     # full stack, and directly connected to ocean in each yearly timestep
     masked_ds = yearly_ds[water_index].where((yearly_sea_mask & 
-                                              coastal_buffer &
-                                              ~persistent_stdev &
-                                              ~persistent_nodata))
+                                              coastal_buffer #&
+                                              #~persistent_stdev &
+                                              #~persistent_nodata
+                                             ))
     masked_ds.attrs['crs'] = yearly_ds.crs[6:]
     masked_ds.attrs['transform'] = yearly_ds.transform    
     
@@ -724,7 +644,7 @@ def main(argv=None):
 
     # Export stats and contours as ESRI shapefiles
     contour_path = contour_path.replace('vectors', 'vectors/shapefiles')
-    contours_gdf.to_file(f'{contour_path}.shp')
+    contours_gdf.reset_index().to_file(f'{contour_path}.shp')
     
     #######
     # Zip #
