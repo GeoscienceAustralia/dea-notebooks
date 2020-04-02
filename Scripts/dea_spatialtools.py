@@ -440,7 +440,8 @@ def subpixel_contours(da,
                             "6886890.0)`")
 
     # If z_values is supplied is not a list, convert to list:
-    z_values = z_values if isinstance(z_values, list) else [z_values]
+    z_values = z_values if (isinstance(z_values, list) or 
+                            isinstance(z_values, np.ndarray)) else [z_values]
 
     # Test number of dimensions in supplied data array
     if len(da.shape) == 2:
