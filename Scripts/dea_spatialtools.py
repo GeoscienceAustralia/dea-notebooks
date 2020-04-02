@@ -337,7 +337,7 @@ def subpixel_contours(da,
     `attribute_df` parameter can be used to pass custom attributes 
     to the output contour features.
     
-    Last modified: November 2019
+    Last modified: April 2019
     
     Parameters
     ----------  
