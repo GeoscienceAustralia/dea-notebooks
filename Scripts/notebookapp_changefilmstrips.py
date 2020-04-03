@@ -6,7 +6,7 @@ change filmstrips notebook, inside the Real_world_examples folder.
 Available functions:
     run_filmstrip_app
 
-Last modified: January 2020
+Last modified: April 2020
 '''
 
 # Load modules
@@ -24,6 +24,7 @@ from dask.utils import parse_bytes
 from datacube.utils.geometry import CRS
 from datacube.utils.rio import configure_s3_access
 from datacube.utils.dask import start_local_dask
+from ipyleaflet import basemaps, basemap_to_tiles
 
 
 # Load utility functions
@@ -58,7 +59,7 @@ def run_filmstrip_app(output_name,
     only satellite images obtained during a specific tidal range 
     (e.g. low, average or high tide).
     
-    Last modified: January 2020
+    Last modified: April 2020
 
     Parameters
     ----------  
@@ -104,17 +105,6 @@ def run_filmstrip_app(output_name,
         
     '''    
     
-    #########
-    # Setup #
-    #########
-    
-    # Connect to datacube database
-    dc = datacube.Datacube(app='DEA_notebooks_template')    
-    
-    # Configure local dask cluster
-    create_local_dask_cluster()
-    
-    
     ########################
     # Select and load data #
     ########################
@@ -128,7 +118,9 @@ def run_filmstrip_app(output_name,
         centre_coords = (-33.9719, 151.1934)
     
     # Plot interactive map to select area
-    geopolygon = select_on_a_map(height='600px', 
+    basemap = basemap_to_tiles(basemaps.Esri.WorldImagery)
+    geopolygon = select_on_a_map(height='600px',
+                                 layers=(basemap,),
                                  center=centre_coords , zoom=12)
         
     # Set centre coords based on most recent selection to re-focus
@@ -147,6 +139,12 @@ def run_filmstrip_app(output_name,
         
         print('Starting analysis...')
         
+        # Connect to datacube database
+        dc = datacube.Datacube(app='Change_filmstrips')   
+        
+        # Configure local dask cluster
+        create_local_dask_cluster()
+        
         # Obtain native CRS 
         crs = mostcommon_crs(dc=dc, 
                              product='ga_ls5t_ard_3', 
@@ -160,7 +158,7 @@ def run_filmstrip_app(output_name,
                  'gqa_iterative_mean_xy': [0, 1],
                  'cloud_cover': [0, max_cloud],
                  'resolution': resolution,
-                 'dask_chunks': {'x': 500, 'y': 500},
+                 'dask_chunks': {'time': 1, 'x': 2000, 'y': 2000},
                  'align': (resolution[1] / 2.0, resolution[1] / 2.0)}
 
         # Load data from all three Landsats
