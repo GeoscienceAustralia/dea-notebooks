@@ -105,17 +105,6 @@ def run_filmstrip_app(output_name,
         
     '''    
     
-    #########
-    # Setup #
-    #########
-    
-    # Connect to datacube database
-    dc = datacube.Datacube(app='DEA_notebooks_template')    
-    
-    # Configure local dask cluster
-    create_local_dask_cluster()
-    
-    
     ########################
     # Select and load data #
     ########################
@@ -149,6 +138,12 @@ def run_filmstrip_app(output_name,
     else:
         
         print('Starting analysis...')
+        
+        # Connect to datacube database
+        dc = datacube.Datacube(app='Change_filmstrips')   
+        
+        # Configure local dask cluster
+        create_local_dask_cluster()
         
         # Obtain native CRS 
         crs = mostcommon_crs(dc=dc, 
@@ -272,3 +267,4 @@ def run_filmstrip_app(output_name,
                     pad_inches=0.1)
 
         return ds_geomedian
+
