@@ -6,7 +6,7 @@ change filmstrips notebook, inside the Real_world_examples folder.
 Available functions:
     run_filmstrip_app
 
-Last modified: January 2020
+Last modified: April 2020
 '''
 
 # Load modules
@@ -24,6 +24,7 @@ from dask.utils import parse_bytes
 from datacube.utils.geometry import CRS
 from datacube.utils.rio import configure_s3_access
 from datacube.utils.dask import start_local_dask
+from ipyleaflet import basemaps, basemap_to_tiles
 
 
 # Load utility functions
@@ -31,6 +32,7 @@ sys.path.append('../Scripts')
 from dea_datahandling import load_ard
 from dea_coastaltools import tidal_tag
 from dea_datahandling import mostcommon_crs
+from dea_dask import create_local_dask_cluster
 
 
 def run_filmstrip_app(output_name,
@@ -40,7 +42,7 @@ def run_filmstrip_app(output_name,
                       resolution=(-30, 30),
                       max_cloud=50,
                       ls7_slc_off=False,
-                      size_limit=100):
+                      size_limit=20000):
     '''
     An interactive app that allows the user to select a region from a
     map, then load Digital Earth Australia Landsat data and combine it
@@ -57,7 +59,7 @@ def run_filmstrip_app(output_name,
     only satellite images obtained during a specific tidal range 
     (e.g. low, average or high tide).
     
-    Last modified: January 2020
+    Last modified: April 2020
 
     Parameters
     ----------  
@@ -103,43 +105,6 @@ def run_filmstrip_app(output_name,
         
     '''    
     
-    #########
-    # Setup #
-    #########
-    
-    # Connect to datacube database
-    dc = datacube.Datacube(app='DEA_notebooks_template')    
-    
-    # Configure dashboard link to go over proxy
-    dask.config.set({"distributed.dashboard.link":
-                     os.environ.get('JUPYTERHUB_SERVICE_PREFIX', '/')+"proxy/{port}/status"});
-
-    # Figure out how much memory/cpu we really have (those are set by jupyterhub)
-    mem_limit = int(os.environ.get('MEM_LIMIT', '0'))
-    cpu_limit = float(os.environ.get('CPU_LIMIT', '0'))
-    cpu_limit = int(cpu_limit) if cpu_limit > 0 else 4
-    mem_limit = mem_limit if mem_limit > 0 else parse_bytes('8Gb')
-
-    # Leave 4Gb for notebook itself
-    mem_limit -= parse_bytes('4Gb')
-
-    # Close previous client if any, so that one can re-run this cell
-    client = locals().get('client', None)
-    if client is not None:
-        client.close()
-        del client
-
-    # Start dask client
-    client = start_local_dask(n_workers=1,
-                              threads_per_worker=cpu_limit, 
-                              memory_limit=mem_limit)
-    display(client)
-
-    # Configure GDAL for s3 access 
-    configure_s3_access(aws_unsigned=True,  
-                        client=client);
-
-    
     ########################
     # Select and load data #
     ########################
@@ -153,7 +118,9 @@ def run_filmstrip_app(output_name,
         centre_coords = (-33.9719, 151.1934)
     
     # Plot interactive map to select area
-    geopolygon = select_on_a_map(height='600px', 
+    basemap = basemap_to_tiles(basemaps.Esri.WorldImagery)
+    geopolygon = select_on_a_map(height='600px',
+                                 layers=(basemap,),
                                  center=centre_coords , zoom=12)
         
     # Set centre coords based on most recent selection to re-focus
@@ -161,19 +128,22 @@ def run_filmstrip_app(output_name,
     centre_coords = geopolygon.centroid.points[0][::-1]
 
     # Test size of selected area
-    area = (geopolygon.to_crs(crs = CRS('epsg:3577')).area / 
-            (size_limit * 1000000))
-    radius = np.round(np.sqrt(size_limit), 1)
+    area = geopolygon.to_crs(crs = CRS('epsg:3577')).area / 10000
     if area > size_limit: 
-        print(f'Warning: Your selected area is {area:.00f} square '
-              f'kilometers. \nPlease select an area of less than '
-              f'{size_limit} square kilometers (e.g. {radius} x {radius}'
-              f' km) . \nTo select a smaller area, re-run the cell '
+        print(f'Warning: Your selected area is {area:.00f} hectares. '
+              f'Please select an area of less than {size_limit} ha.'
+              f'\nTo select a smaller area, re-run the cell '
               f'above and draw a new polygon.')
         
     else:
         
         print('Starting analysis...')
+        
+        # Connect to datacube database
+        dc = datacube.Datacube(app='Change_filmstrips')   
+        
+        # Configure local dask cluster
+        create_local_dask_cluster()
         
         # Obtain native CRS 
         crs = mostcommon_crs(dc=dc, 
@@ -188,7 +158,7 @@ def run_filmstrip_app(output_name,
                  'gqa_iterative_mean_xy': [0, 1],
                  'cloud_cover': [0, max_cloud],
                  'resolution': resolution,
-                 'dask_chunks': {'x': 500, 'y': 500},
+                 'dask_chunks': {'time': 1, 'x': 2000, 'y': 2000},
                  'align': (resolution[1] / 2.0, resolution[1] / 2.0)}
 
         # Load data from all three Landsats
