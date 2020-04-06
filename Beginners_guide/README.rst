@@ -12,3 +12,5 @@ Introductory notebooks aimed at introducing Jupyter Notebooks and how to load, p
    03_Products_and_measurements.ipynb
    04_Loading_data.ipynb
    05_Plotting.ipynb
+   06_Basic_analysis.ipynb
+   07_Parallel_processing_with_Dask.ipynb
