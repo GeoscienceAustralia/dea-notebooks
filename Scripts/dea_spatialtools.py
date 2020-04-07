@@ -18,15 +18,15 @@ If you would like to report an issue with this script, file one on
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
 Functions included:
+    xr_vectorize
+    xr_rasterize
     subpixel_contours
     interpolate_2d
     contours_to_array
     largest_region
-    array_to_geotiff
-    geotransform
     transform_geojson_wgs_to_epsg
 
-Last modified: November 2019
+Last modified: April 2020
 
 '''
 
@@ -35,13 +35,284 @@ import collections
 import numpy as np
 import xarray as xr
 import geopandas as gpd
-import osr
-import ogr
+import rasterio.features
 import scipy.interpolate
 from scipy import ndimage as nd
 from skimage.measure import label
 from skimage.measure import find_contours
-from shapely.geometry import LineString, MultiLineString
+from shapely.geometry import LineString, MultiLineString, shape
+from datacube.helpers import write_geotiff
+from datacube.utils.geometry import CRS, Geometry
+
+
+def xr_vectorize(da, 
+                 attribute_col='attribute', 
+                 transform=None, 
+                 crs=None, 
+                 dtype='float32',
+                 export_shp=False,
+                 **rasterio_kwargs):    
+    """
+    Vectorises a xarray.DataArray into a geopandas.GeoDataFrame.
+    
+    Parameters
+    ----------
+    da : xarray dataarray or a numpy ndarray  
+    attribute_col : str, optional
+        Name of the attribute column in the resulting geodataframe. 
+        Values of the raster object converted to polygons will be 
+        assigned to this column. Defaults to 'attribute'.
+    transform : affine.Affine object, optional
+        An affine.Affine object (e.g. `from affine import Affine; 
+        Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "6886890.0) giving the 
+        affine transformation used to convert raster coordinates 
+        (e.g. [0, 0]) to geographic coordinates. If none is provided, 
+        the function will attempt to obtain an affine transformation 
+        from the xarray object (e.g. either at `da.transform` or
+        `da.geobox.transform`).
+    crs : str or CRS object, optional
+        An EPSG string giving the coordinate system of the array 
+        (e.g. 'EPSG:3577'). If none is provided, the function will 
+        attempt to extract a CRS from the xarray object's `crs` 
+        attribute.
+    dtype : str, optional
+         Data type must be one of int16, int32, uint8, uint16, 
+         or float32
+    export_shp : Boolean or string path, optional
+        To export the output vectorised features to a shapefile, supply
+        an output path (e.g. 'output_dir/output.shp'. The default is 
+        False, which will not write out a shapefile. 
+    **rasterio_kwargs : 
+        A set of keyword arguments to rasterio.features.shapes
+        Can include `mask` and `connectivity`.
+    
+    Returns
+    -------
+    gdf : Geopandas GeoDataFrame
+    
+    """
+
+    
+    # Check for a crs object
+    try:
+        crs = da.crs
+    except:
+        if crs is None:
+            raise Exception("Please add a `crs` attribute to the "
+                            "xarray.DataArray, or provide a CRS using the "
+                            "function's `crs` parameter (e.g. 'EPSG:3577')")
+            
+    # Check if transform is provided as a xarray.DataArray method.
+    # If not, require supplied Affine
+    if transform is None:
+        try:
+            # First, try to take transform info from geobox
+            transform = da.geobox.transform
+        # If no geobox
+        except:
+            try:
+                # Try getting transform from 'transform' attribute
+                transform = da.transform
+            except:
+                # If neither of those options work, raise an exception telling the 
+                # user to provide a transform
+                raise Exception("Please provide an Affine transform object using the "
+                        "`transform` parameter (e.g. `from affine import "
+                        "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
+                        "6886890.0)`")
+    
+    # Check to see if the input is a numpy array
+    if type(da) is np.ndarray:
+        vectors = rasterio.features.shapes(source=da.astype(dtype),
+                                           transform=transform,
+                                           **rasterio_kwargs)
+    
+    else:
+        # Run the vectorizing function
+        vectors = rasterio.features.shapes(source=da.data.astype(dtype),
+                                           transform=transform,
+                                           **rasterio_kwargs)
+    
+    # Convert the generator into a list
+    vectors = list(vectors)
+    
+    # Extract the polygon coordinates and values from the list
+    polygons = [polygon for polygon, value in vectors]
+    values = [value for polygon, value in vectors]
+    
+    # Convert polygon coordinates into polygon shapes
+    polygons = [shape(polygon) for polygon in polygons]
+    
+    # Create a geopandas dataframe populated with the polygon shapes
+    gdf = gpd.GeoDataFrame(data={attribute_col: values},
+                           geometry=polygons,
+                           crs={'init': str(crs)})
+    
+    # If a file path is supplied, export a shapefile
+    if export_shp:
+        gdf.to_file(export_shp) 
+        
+    return gdf
+
+
+def xr_rasterize(gdf,
+                 da,
+                 attribute_col=False,
+                 crs=None,
+                 transform=None,
+                 name=None,
+                 x_dim='x',
+                 y_dim='y',
+                 export_tiff= None,
+                 **rasterio_kwargs):    
+    """
+    Rasterizes a geopandas.GeoDataFrame into an xarray.DataArray.
+    
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        A geopandas.GeoDataFrame object containing the vector/shapefile
+        data you want to rasterise.
+    da : xarray.DataArray
+        The shape, coordinates, dimensions, and transform of this object 
+        are used to build the rasterized shapefile. It effectively 
+        provides a template. The attributes of this object are also 
+        appended to the output xarray.DataArray.
+    attribute_col : string, optional
+        Name of the attribute column in the geodataframe that the pixels 
+        in the raster will contain.  If set to False, output will be a 
+        boolean array of 1's and 0's.
+    crs : str, optional
+        CRS metadata to add to the output xarray. e.g. 'epsg:3577'.
+        The function will attempt get this info from the input 
+        GeoDataFrame first.
+    transform : affine.Affine object, optional
+        An affine.Affine object (e.g. `from affine import Affine; 
+        Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "6886890.0) giving the 
+        affine transformation used to convert raster coordinates 
+        (e.g. [0, 0]) to geographic coordinates. If none is provided, 
+        the function will attempt to obtain an affine transformation 
+        from the xarray object (e.g. either at `da.transform` or
+        `da.geobox.transform`).
+    x_dim : str, optional
+        An optional string allowing you to override the xarray dimension 
+        used for x coordinates. Defaults to 'x'.    
+    y_dim : str, optional
+        An optional string allowing you to override the xarray dimension 
+        used for y coordinates. Defaults to 'y'.
+    export_tiff: str, optional
+        If a filepath is provided (e.g 'output/output.tif'), will export a
+        geotiff file. A named array is required for this operation, if one
+        is not supplied by the user a default name, 'data', is used
+    **rasterio_kwargs : 
+        A set of keyword arguments to rasterio.features.rasterize
+        Can include: 'all_touched', 'merge_alg', 'dtype'.
+    
+    Returns
+    -------
+    xarr : xarray.DataArray
+    
+    """
+    
+    # Check for a crs object
+    try:
+        crs = da.crs
+    except:
+        if crs is None:
+            raise Exception("Please add a `crs` attribute to the "
+                            "xarray.DataArray, or provide a CRS using the "
+                            "function's `crs` parameter (e.g. 'EPSG:3577')")
+    
+
+    # Check if transform is provided as a xarray.DataArray method.
+    # If not, require supplied Affine
+    if transform is None:
+        try:
+            # First, try to take transform info from geobox
+            transform = da.geobox.transform
+        # If no geobox
+        except:
+            try:
+                # Try getting transform from 'transform' attribute
+                transform = da.transform
+            except:
+                # If neither of those options work, raise an exception telling the 
+                # user to provide a transform
+                raise Exception("Please provide an Affine transform object using the "
+                        "`transform` parameter (e.g. `from affine import "
+                        "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
+                        "6886890.0)`")
+    
+    # Get the dims, coords, and output shape from da
+    da = da.squeeze()
+    y, x = da.shape
+    dims = list(da.dims)
+    xy_coords = [da[y_dim], da[x_dim]]   
+    
+    # Reproject shapefile to match CRS of raster
+    print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x}) '
+          f'and projection system/CRS (e.g. {crs})')
+    
+    try:
+        gdf_reproj = gdf.to_crs(crs=crs)
+    except:
+        #sometimes the crs can be a datacube utils CRS object
+        #so convert to string before reprojecting
+        gdf_reproj = gdf.to_crs(crs={'init':str(crs)})
+    
+    # If an attribute column is specified, rasterise using vector 
+    # attribute values. Otherwise, rasterise into a boolean array
+    if attribute_col:
+        
+        # Use the geometry and attributes from `gdf` to create an iterable
+        shapes = zip(gdf_reproj.geometry, gdf_reproj[attribute_col])
+
+        # Convert polygons into a numpy array using attribute values
+        arr = rasterio.features.rasterize(shapes=shapes,
+                                          out_shape=(y, x),
+                                          transform=transform,
+                                          **rasterio_kwargs)
+    else:
+        # Convert polygons into a boolean numpy array 
+        arr = rasterio.features.rasterize(shapes=gdf_reproj.geometry,
+                                          out_shape=(y, x),
+                                          transform=transform,
+                                          **rasterio_kwargs)
+        
+    # Convert result to a xarray.DataArray
+    if name is not None:
+        xarr = xr.DataArray(arr,
+                           coords=xy_coords,
+                           dims=dims,
+                           attrs=da.attrs,
+                           name=name)
+    else:
+        xarr = xr.DataArray(arr,
+                   coords=xy_coords,
+                   dims=dims,
+                   attrs=da.attrs)
+    
+    #add back crs if da.attrs doesn't have it
+    if 'crs' not in xarr.attrs:
+        xarr.attrs['crs'] = str(crs)
+    
+    if export_tiff:
+            try:
+                print("Exporting GeoTIFF with array name: " + name)
+                ds = xarr.to_dataset(name = name)
+                #xarray bug removes metadata, add it back
+                ds[name].attrs = xarr.attrs 
+                ds.attrs = xarr.attrs
+                write_geotiff(export_tiff, ds) 
+                
+            except:
+                print("Exporting GeoTIFF with default array name: 'data'")
+                ds = xarr.to_dataset(name = 'data')
+                ds.data.attrs = xarr.attrs
+                ds.attrs = xarr.attrs
+                write_geotiff(export_tiff, ds)
+                
+    return xarr
 
 
 def subpixel_contours(da,
@@ -66,7 +337,7 @@ def subpixel_contours(da,
     `attribute_df` parameter can be used to pass custom attributes 
     to the output contour features.
     
-    Last modified: November 2019
+    Last modified: April 2019
     
     Parameters
     ----------  
@@ -169,18 +440,17 @@ def subpixel_contours(da,
                             "6886890.0)`")
 
     # If z_values is supplied is not a list, convert to list:
-    z_values = z_values if isinstance(z_values, list) else [z_values]
+    z_values = z_values if (isinstance(z_values, list) or 
+                            isinstance(z_values, np.ndarray)) else [z_values]
 
     # Test number of dimensions in supplied data array
     if len(da.shape) == 2:
 
         print(f'Operating in multiple z-value, single array mode')
         dim = 'z_value'
-        da = da.expand_dims({'z_value': z_values})
-
         contour_arrays = {str(i)[0:10]: 
-                          contours_to_multiline(da_i, i, min_vertices) 
-                          for i, da_i in da.groupby(dim)}        
+                          contours_to_multiline(da, i, min_vertices) 
+                          for i in z_values}    
 
     else:
 
@@ -217,7 +487,7 @@ def subpixel_contours(da,
     # Convert output contours to a geopandas.GeoDataFrame
     contours_gdf = gpd.GeoDataFrame(data=attribute_df, 
                                     geometry=list(contour_arrays.values()),
-                                    crs={'init': str(crs)})   
+                                    crs=crs)   
 
     # Define affine and use to convert array coords to geographic coords.
     # We need to add 0.5 x pixel size to the x and y to obtain the centre 
@@ -249,8 +519,13 @@ def subpixel_contours(da,
     return contours_gdf
 
 
-def interpolate_2d(ds, x_coords, y_coords, z_coords, 
-                 method='linear', fill_nearest=False, sigma=None):
+def interpolate_2d(ds, 
+                   x_coords, 
+                   y_coords, 
+                   z_coords, 
+                   method='linear',
+                   factor=1,
+                   **kwargs):
     
     """
     This function takes points with X, Y and Z coordinates, and 
@@ -259,11 +534,15 @@ def interpolate_2d(ds, x_coords, y_coords, z_coords,
     data that can be compared directly against satellite data derived 
     from an OpenDataCube query.
     
-    Last modified: October 2019
+    Supported interpolation methods include 'linear', 'nearest' and
+    'cubic (using `scipy.interpolate.griddata`), and 'rbf' (using 
+    `scipy.interpolate.Rbf`).
+    
+    Last modified: February 2020
     
     Parameters
     ----------  
-    ds_array : xarray DataArray or Dataset
+    ds : xarray DataArray or Dataset
         A two-dimensional or multi-dimensional array from which x and y 
         dimensions will be copied and used for the area in which to 
         interpolate point data. 
@@ -276,21 +555,23 @@ def interpolate_2d(ds, x_coords, y_coords, z_coords,
         between.
     method : string, optional
         The method used to interpolate between point values. This string
-        is passed to `scipy.interpolate.griddata`; the default is 
-        'linear' and options include 'linear', 'nearest' and 'cubic'.
-    fill_nearest : boolean, optional
-        A boolean value indicating whether to fill NaN areas outside of
-        the extent of the input X and Y coordinates with the value of 
-        the nearest pixel. By default, `scipy.interpolate.griddata` only
-        returns interpolated values for the convex hull of the of the 
-        input points, so this variable can be used to provide results 
-        for all pixels instead. Warning: this can produce significant 
-        artefacts for areas located far from the nearest point.
-    sigma : None or int, optional
-        An optional integer value can be provided to smooth the 
-        interpolated surface using a guassian filter. Higher values of 
-        sigma result in a smoother surface that may loose some of the 
-        detail in the original interpolated layer.        
+        is either passed to `scipy.interpolate.griddata` (for 'linear', 
+        'nearest' and 'cubic' methods), or used to specify Radial Basis 
+        Function interpolation using `scipy.interpolate.Rbf` ('rbf').
+        Defaults to 'linear'.
+    factor : int, optional
+        An optional integer that can be used to subsample the spatial 
+        interpolation extent to obtain faster interpolation times, then
+        up-sample this array back to the original dimensions of the 
+        data as a final step. For example, setting `factor=10` will 
+        interpolate data into a grid that has one tenth of the 
+        resolution of `ds`. This approach will be significantly faster 
+        than interpolating at full resolution, but will potentially 
+        produce less accurate or reliable results.
+    **kwargs : 
+        Optional keyword arguments to pass to either 
+        `scipy.interpolate.griddata` (if `method` is 'linear', 'nearest' 
+        or 'cubic'), or `scipy.interpolate.Rbf` (is `method` is 'rbf').
       
     Returns
     -------
@@ -301,35 +582,54 @@ def interpolate_2d(ds, x_coords, y_coords, z_coords,
     
     # Extract xy and elev points
     points_xy = np.vstack([x_coords, y_coords]).T
+    
+    # Extract x and y coordinates to interpolate into. 
+    # If `factor` is greater than 1, the coordinates will be subsampled 
+    # for faster run-times. If the last x or y value in the subsampled 
+    # grid aren't the same as the last x or y values in the original 
+    # full resolution grid, add the final full resolution grid value to 
+    # ensure data is interpolated up to the very edge of the array
+    if ds.x[::factor][-1].item() == ds.x[-1].item():
+        x_grid_coords = ds.x[::factor].values
+    else:
+        x_grid_coords = ds.x[::factor].values.tolist() + [ds.x[-1].item()]
+        
+    if ds.y[::factor][-1].item() == ds.y[-1].item():
+        y_grid_coords = ds.y[::factor].values
+    else:
+        y_grid_coords = ds.y[::factor].values.tolist() + [ds.y[-1].item()]
 
     # Create grid to interpolate into
-    grid_y, grid_x = np.meshgrid(ds.x, ds.y)  
+    grid_y, grid_x = np.meshgrid(x_grid_coords, y_grid_coords)
+    
+    # Apply scipy.interpolate.griddata interpolation methods
+    if method in ('linear', 'nearest', 'cubic'):
+        
+        # Interpolate x, y and z values 
+        interp_2d = scipy.interpolate.griddata(points=points_xy, 
+                                               values=z_coords, 
+                                               xi=(grid_y, grid_x), 
+                                               method=method,
+                                               **kwargs)
+    
+    # Apply Radial Basis Function interpolation
+    elif method == 'rbf':
 
-    # Interpolate x, y and z values using linear/TIN interpolation
-    out = scipy.interpolate.griddata(points=points_xy, 
-                                     values=z_coords, 
-                                     xi=(grid_y, grid_x), 
-                                     method=method)
+        # Interpolate x, y and z values 
+        rbf = scipy.interpolate.Rbf(x_coords, y_coords, z_coords, **kwargs)  
+        interp_2d = rbf(grid_y, grid_x)
 
-    # Calculate nearest
-    if fill_nearest:
-        
-        nearest_inds = nd.distance_transform_edt(input=np.isnan(out), 
-                                                 return_distances=False, 
-                                                 return_indices=True)
-        out = out[tuple(nearest_inds)]
-        
-    # Apply guassian filter        
-    if sigma:
+    # Create xarray dataarray from the data and resample to ds coords
+    interp_2d_da = xr.DataArray(interp_2d, 
+                                coords=[y_grid_coords, x_grid_coords], 
+                                dims=['y', 'x'])
+    
+    # If factor is greater than 1, resample the interpolated array to
+    # match the input `ds` array
+    if factor > 1: 
+        interp_2d_da = interp_2d_da.interp_like(ds)   
 
-        out = nd.filters.gaussian_filter(out, sigma=sigma)
-        
-    # Create xarray dataarray from the data
-    interp_2d_array = xr.DataArray(out, 
-                                   coords=[ds.y, ds.x], 
-                                   dims=['y', 'x']) 
-        
-    return interp_2d_array
+    return interp_2d_da
 
 
 def contours_to_arrays(gdf, col):
@@ -416,164 +716,24 @@ def largest_region(bool_array, **kwargs):
     
     return largest_region
 
-def array_to_geotiff(fname, data, geo_transform, projection,
-                     nodata_val=0, dtype=gdal.GDT_Float32):
-    """
-    Create a single band GeoTIFF file with data from an array. 
-    
-    Because this works with simple arrays rather than xarray datasets from DEA, it requires
-    geotransform info ("(upleft_x, x_size, x_rotation, upleft_y, y_rotation, y_size)") and 
-    projection data (in "WKT" format) for the output raster. These are typically obtained from 
-    an existing raster using the following GDAL calls:
-    
-        import gdal
-        gdal_dataset = gdal.Open(raster_path)
-        geotrans = gdal_dataset.GetGeoTransform()
-        prj = gdal_dataset.GetProjection()
-    
-    ...or alternatively, directly from an xarray dataset:
-    
-        geotrans = xarraydataset.geobox.transform.to_gdal()
-        prj = xarraydataset.geobox.crs.wkt
-    
-    Last modified: March 2018
-    Author: Robbi Bishop-Taylor
-    
-    :param fname: 
-        Output geotiff file path including extension
-        
-    :param data: 
-        Input array to export as a geotiff
-        
-    :param geo_transform: 
-        Geotransform for output raster; e.g. "(upleft_x, x_size, x_rotation, 
-        upleft_y, y_rotation, y_size)"
-        
-    :param projection:
-        Projection for output raster (in "WKT" format)
-        
-    :param nodata_val: 
-        Value to convert to nodata in the output raster; default 0
-        
-    :param dtype: 
-        Optionally set the dtype of the output raster; can be useful when exporting 
-        an array of float or integer values. Defaults to gdal.GDT_Float32
-        
-    """
-
-    # Set up driver
-    driver = gdal.GetDriverByName('GTiff')
-
-    # Create raster of given size and projection
-    rows, cols = data.shape
-    dataset = driver.Create(fname, cols, rows, 1, dtype)
-    dataset.SetGeoTransform(geo_transform)
-    dataset.SetProjection(projection)
-
-    # Write data to array and set nodata values
-    band = dataset.GetRasterBand(1)
-    band.WriteArray(data)
-    band.SetNoDataValue(nodata_val)
-
-    # Close file
-    dataset = None
-
-def geotransform(ds, coords, epsg=3577, alignment = 'centre', rotation=0.0):
-    """
-    Creates a GDAL geotransform tuple from an xarray object, along with
-    a projection object in the form of WKT. Basically provides everything you need to use
-    the 'array_to_geotiff' function from '10_Scripts/SpatialTools', and that is the express
-    purpose for this function.
-    
-    :param ds:
-        xarray dataset or dataArray object
-    :param coords:
-        Tuple. The georeferencing coordinate data in the xarray object. 
-        e.g (ds.long,ds.lat) or (ds.x,ds.y). Order MUST BE X then Y
-    :param epsg:
-        Integer. A projection number in epsg format, defaults to 3577 (albers equal area).
-    :param pixelSize:
-        float. The size of the pixels in metres. defaults to 25m, as per Landsat pixel size
-    :param alignment:
-        Str. How should the coords be aligned with respect to the pixels? 
-        If "centre", then the transform will align coordinates with the centre of the pixel.
-        If 'upper_left', then coords will be aligned with the upperleftmost corner of array
-    :param rotation:
-        Float. the degrees of rotation of the image. If North is up, rotation = 0.0.
-    
-        Example:
-        #Open an xarray object
-        ds = xr.open_rasterio(input_file.tif).squeeze()
-        #grab the trasnform and projection info from the dataset
-        transform, projection = geotransform(ds, (ds.x, ds.y), epsg=3577)
-        #use the transform object in a 'array_to_geotiff' function
-        width,height = a.shape
-        SpatialTools.array_to_geotiff("output_file.tif",
-          ds.values, geo_transform = transform, 
-          projection = projection, 
-          nodata_val=-999)
-    
-      :Returns:
-          A tuple containing the geotransform tuple and WKT projection information
-          i.e. (transform_tuple, projection)
-      -------------------------------------------------------------------------    
-    """
-    print("This function is written for use with the GDAL backed 'array_to_geotiff' function and should be used with extreme caution elsewhere.")
-    
-    
-    if alignment == 'centre':
-        EW_pixelRes = float(coords[1][0] - coords[1][1])
-        NS_pixelRes = float(coords[0][0] - coords[0][1])        
-        east = float(coords[0][0]) - (EW_pixelRes/2)
-        north = float(coords[1][0]) + (NS_pixelRes/2)
-        
-        transform = (east, EW_pixelRes, rotation, north, rotation, NS_pixelRes)
-    
-    elif alignment == 'upper_left':
-        EW_pixelRes = float(coords[1][0] - coords[1][1])
-        NS_pixelRes = float(coords[0][0] - coords[0][1])        
-        east = float(coords[0][0])
-        north = float(coords[1][0])
-        
-        transform = (east, EW_pixelRes, rotation, north, rotation, NS_pixelRes)
-    
-    srs = osr.SpatialReference()
-    srs.ImportFromEPSG(epsg)
-    prj_wkt = srs.ExportToWkt()
-    
-    return transform, prj_wkt
 
 def transform_geojson_wgs_to_epsg(geojson, EPSG):
-    
     """
     Takes a geojson dictionary and converts it from WGS84 (EPSG:4326) to desired EPSG
-    
+
     Parameters
     ----------
     geojson: dict
         a geojson dictionary containing a 'geometry' key, in WGS84 coordinates
     EPSG: int
         numeric code for the EPSG coordinate referecnce system to transform into
-        
+
     Returns
     -------
     transformed_geojson: dict
         a geojson dictionary containing a 'coordinates' key, in the desired CRS
-        
+
     """
-
-    geojson_geom = geojson['geometry']
-    polygon = ogr.CreateGeometryFromJson(str(geojson_geom))
-
-    source = osr.SpatialReference()
-    source.ImportFromEPSG(4326)
-
-    target = osr.SpatialReference()
-    target.ImportFromEPSG(EPSG)
-
-    transform = osr.CoordinateTransformation(source, target)
-    polygon.Transform(transform)
-    
-    transformed_geojson = eval(polygon.ExportToJson())
-
-    return transformed_geojson
+    gg = Geometry(geojson['geometry'], CRS('epsg:4326'))
+    gg = gg.to_crs(CRS(f'epsg:{EPSG}'))
+    return gg.__geo_interface__
