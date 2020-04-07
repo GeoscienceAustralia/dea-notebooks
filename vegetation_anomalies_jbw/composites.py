@@ -10,6 +10,7 @@ from datacube.utils import geometry
 from datacube.helpers import ga_pq_fuser
 import folium
 from pyproj import Proj, transform
+import pandas
 import os
 import gdal
 import zipfile
