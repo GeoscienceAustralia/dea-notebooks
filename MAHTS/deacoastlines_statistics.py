@@ -24,6 +24,7 @@ import shutil
 
 sys.path.append('../Scripts')
 from dea_spatialtools import subpixel_contours
+from dea_spatialtools import xr_vectorize
 
 
 def outlier_mad(points, thresh=3.5):
@@ -219,7 +220,7 @@ def contours_preprocess(yearly_ds,
                                        selem = disk(3)) 
 
     # Remove low obs pixels and replace with 3-year gapfill
-    gapfill_mask = (yearly_ds['count'] > 5)
+    gapfill_mask = (yearly_ds['count'] > 5) & (yearly_ds['stdev'] > 0.5)
     yearly_ds[water_index] = yearly_ds[water_index].where(gapfill_mask, 
                                                           other=yearly_ds.gapfill_index)
     yearly_ds['tide_m'] = yearly_ds['tide_m'].where(gapfill_mask, 
@@ -353,6 +354,16 @@ def rocky_shores_clip(points_gdf, smartline_gdf, buffer=50):
         return None
 
 
+import numpy as np
+
+def azimuth(point1, point2):
+    '''
+    Azimuth between two shapely points (interval 0 - 360)
+    '''
+    angle = np.arctan2(point2.x - point1.x, point2.y - point1.y)
+    return np.degrees(angle) if angle > 0 else np.degrees(angle) + 360
+
+    
 def annual_movements(yearly_ds, 
                      points_gdf, 
                      tide_points_gdf, 
@@ -385,11 +396,17 @@ def annual_movements(yearly_ds,
                                                                        comp_contour)[1], 
                                                         axis=1)
 
-        # Compute distance between baseline and comparison year points and add
-        # this distance as a new field named by the current year being analysed
+#         Compute distance between baseline and comparison year points and add
+#         this distance as a new field named by the current year being analysed
         points_gdf[f'{comp_year}'] = points_gdf.apply(lambda x: 
                                                       x.geometry.distance(x[f'p_{comp_year}']), 
                                                       axis=1)
+        
+#         # Angle test
+#         points_gdf[f'{comp_year}'] = points_gdf.apply(lambda x: 
+#                                                       azimuth(x.geometry, x[f'p_{comp_year}']), 
+#                                                       axis=1)        
+        
 
         # Extract comparison array containing water index values for the 
         # current year being analysed
@@ -491,6 +508,29 @@ def calculate_regressions(yearly_ds,
 
     return points_gdf.loc[:, column_order]
 
+
+def contour_certainty(output_path, uncertain_classes=[4, 5]):
+
+    # Load in mask data and identify uncertain classes
+    all_time_mask = xr.open_rasterio(f'{output_path}/all_time_mask.tif')
+    raster_mask = all_time_mask.isin(uncertain_classes) 
+    
+    # Vectorise mask data and strip any invalid geometries
+    vector_mask = xr_vectorize(da=raster_mask,
+                               crs=all_time_mask.geobox.crs,
+                               transform=all_time_mask.geobox.transform,
+                               mask=raster_mask.values)
+    vector_mask = vector_mask[vector_mask.geometry.is_valid]
+    
+    # Clip and overlay to seperate into uncertain and certain classes
+    contours_good = gpd.overlay(contours_gdf, vector_mask, how='difference')
+    contours_good['certainty'] = 'good'
+    contours_uncertain = gpd.clip(contours_gdf, vector_mask)
+    contours_uncertain['certainty'] = 'uncertain'    
+    
+    # Combine both datasets and return as one
+    return pd.concat([contours_good, contours_uncertain])
+
     
 def main(argv=None):
     
@@ -545,7 +585,8 @@ def main(argv=None):
     to_keep = estuary_gdf.FEATURETYPE.isin(['Foreshore Flat', 
                                             'Land Subject To Inundation', 
                                             'Saline Coastal Flat', 
-                                            'Marine Swamp'])
+                                            'Marine Swamp',
+                                            'Swamp'])
     estuary_gdf = estuary_gdf[~to_keep]
 
     # Rocky shore mask

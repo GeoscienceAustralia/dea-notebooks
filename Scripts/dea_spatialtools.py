@@ -146,7 +146,7 @@ def xr_vectorize(da,
     # Create a geopandas dataframe populated with the polygon shapes
     gdf = gpd.GeoDataFrame(data={attribute_col: values},
                            geometry=polygons,
-                           crs={'init': str(crs)})
+                           crs=crs)
     
     # If a file path is supplied, export a shapefile
     if export_shp:
