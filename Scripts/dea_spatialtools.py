@@ -249,11 +249,14 @@ def xr_rasterize(gdf,
     xy_coords = [da[y_dim], da[x_dim]]
     #shape
     try:
-        y, x = ds.geobox.shape
+        y, x = da.geobox.shape
     except:
         y, x = len(xy_coords[0]), len(xy_coords[1])
     #just the 2D dims (not time)    
-    dims = y_dim, x_dim  
+    try:
+        dims = da.geobox.dims
+    except:
+        dims = y_dim, x_dim  
     
     # Reproject shapefile to match CRS of raster
     print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x}) '
