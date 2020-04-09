@@ -173,7 +173,7 @@ def xr_rasterize(gdf,
     gdf : geopandas.GeoDataFrame
         A geopandas.GeoDataFrame object containing the vector/shapefile
         data you want to rasterise.
-    da : xarray.DataArray
+    da : xarray.DataArray or xarray.Dataset
         The shape, coordinates, dimensions, and transform of this object 
         are used to build the rasterized shapefile. It effectively 
         provides a template. The attributes of this object are also 
@@ -196,10 +196,12 @@ def xr_rasterize(gdf,
         `da.geobox.transform`).
     x_dim : str, optional
         An optional string allowing you to override the xarray dimension 
-        used for x coordinates. Defaults to 'x'.    
+        used for x coordinates. Defaults to 'x'. Useful, for example, 
+        if x and y dims instead called 'lat' and 'lon'.   
     y_dim : str, optional
         An optional string allowing you to override the xarray dimension 
-        used for y coordinates. Defaults to 'y'.
+        used for y coordinates. Defaults to 'y'. Useful, for example, 
+        if x and y dims instead called 'lat' and 'lon'.
     export_tiff: str, optional
         If a filepath is provided (e.g 'output/output.tif'), will export a
         geotiff file. A named array is required for this operation, if one
@@ -243,11 +245,15 @@ def xr_rasterize(gdf,
                         "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
                         "6886890.0)`")
     
-    # Get the dims, coords, and output shape from da
-    da = da.squeeze()
-    y, x = da.shape
-    dims = list(da.dims)
-    xy_coords = [da[y_dim], da[x_dim]]   
+    #coords
+    xy_coords = [da[y_dim], da[x_dim]]
+    #shape
+    try:
+        y, x = ds.geobox.shape
+    except:
+        y, x = len(xy_coords[0]), len(xy_coords[1])
+    #just the 2D dims (not time)    
+    dims = y_dim, x_dim  
     
     # Reproject shapefile to match CRS of raster
     print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x}) '
