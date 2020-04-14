@@ -218,14 +218,16 @@ def xr_rasterize(gdf,
     
     # Check for a crs object
     try:
-        crs = da.crs
+        crs = da.geobox.crs
     except:
-        if crs is None:
-            raise Exception("Please add a `crs` attribute to the "
+        try:
+            crs = da.crs
+        except:
+            if crs is None:
+                raise Exception("Please add a `crs` attribute to the "
                             "xarray.DataArray, or provide a CRS using the "
-                            "function's `crs` parameter (e.g. 'EPSG:3577')")
+                            "function's `crs` parameter (e.g. crs='EPSG:3577')")
     
-
     # Check if transform is provided as a xarray.DataArray method.
     # If not, require supplied Affine
     if transform is None:
@@ -245,18 +247,20 @@ def xr_rasterize(gdf,
                         "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
                         "6886890.0)`")
     
+    #Grab the 2D dims (not time)    
+    try:
+        dims = da.geobox.dims
+    except:
+        dims = y_dim, x_dim  
+    
     #coords
-    xy_coords = [da[y_dim], da[x_dim]]
+    xy_coords = [da[dims[0]], da[dims[1]]]
+    
     #shape
     try:
         y, x = da.geobox.shape
     except:
         y, x = len(xy_coords[0]), len(xy_coords[1])
-    #just the 2D dims (not time)    
-    try:
-        dims = da.geobox.dims
-    except:
-        dims = y_dim, x_dim  
     
     # Reproject shapefile to match CRS of raster
     print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x}) '
