@@ -5,6 +5,8 @@ import math
 import rasterio.features
 import datacube 
 import warnings
+import geopandas as gpd
+import sys
 from datacube.storage import masking
 from datacube.utils import geometry
 from datacube.helpers import ga_pq_fuser
@@ -290,13 +292,230 @@ def load_ard(dc,
         print(f'Loading {len(ds.time)} time steps')
         return ds.compute()
     
+    
+def xr_rasterize(gdf,
+                 da,
+                 attribute_col=False,
+                 crs=None,
+                 transform=None,
+                 name=None,
+                 x_dim='x',
+                 y_dim='y',
+                 export_tiff= None,
+                 **rasterio_kwargs):    
+    """
+    Rasterizes a geopandas.GeoDataFrame into an xarray.DataArray.
+    
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        A geopandas.GeoDataFrame object containing the vector/shapefile
+        data you want to rasterise.
+    da : xarray.DataArray or xarray.Dataset
+        The shape, coordinates, dimensions, and transform of this object 
+        are used to build the rasterized shapefile. It effectively 
+        provides a template. The attributes of this object are also 
+        appended to the output xarray.DataArray.
+    attribute_col : string, optional
+        Name of the attribute column in the geodataframe that the pixels 
+        in the raster will contain.  If set to False, output will be a 
+        boolean array of 1's and 0's.
+    crs : str, optional
+        CRS metadata to add to the output xarray. e.g. 'epsg:3577'.
+        The function will attempt get this info from the input 
+        GeoDataFrame first.
+    transform : affine.Affine object, optional
+        An affine.Affine object (e.g. `from affine import Affine; 
+        Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "6886890.0) giving the 
+        affine transformation used to convert raster coordinates 
+        (e.g. [0, 0]) to geographic coordinates. If none is provided, 
+        the function will attempt to obtain an affine transformation 
+        from the xarray object (e.g. either at `da.transform` or
+        `da.geobox.transform`).
+    x_dim : str, optional
+        An optional string allowing you to override the xarray dimension 
+        used for x coordinates. Defaults to 'x'. Useful, for example, 
+        if x and y dims instead called 'lat' and 'lon'.   
+    y_dim : str, optional
+        An optional string allowing you to override the xarray dimension 
+        used for y coordinates. Defaults to 'y'. Useful, for example, 
+        if x and y dims instead called 'lat' and 'lon'.
+    export_tiff: str, optional
+        If a filepath is provided (e.g 'output/output.tif'), will export a
+        geotiff file. A named array is required for this operation, if one
+        is not supplied by the user a default name, 'data', is used
+    **rasterio_kwargs : 
+        A set of keyword arguments to rasterio.features.rasterize
+        Can include: 'all_touched', 'merge_alg', 'dtype'.
+    
+    Returns
+    -------
+    xarr : xarray.DataArray
+    
+    """
+    
+    # Check for a crs object
+    try:
+        crs = da.geobox.crs
+    except:
+        try:
+            crs = da.crs
+        except:
+            if crs is None:
+                raise Exception("Please add a `crs` attribute to the "
+                            "xarray.DataArray, or provide a CRS using the "
+                            "function's `crs` parameter (e.g. crs='EPSG:3577')")
+    
+    # Check if transform is provided as a xarray.DataArray method.
+    # If not, require supplied Affine
+    if transform is None:
+        try:
+            # First, try to take transform info from geobox
+            transform = da.geobox.transform
+        # If no geobox
+        except:
+            try:
+                # Try getting transform from 'transform' attribute
+                transform = da.transform
+            except:
+                # If neither of those options work, raise an exception telling the 
+                # user to provide a transform
+                raise Exception("Please provide an Affine transform object using the "
+                        "`transform` parameter (e.g. `from affine import "
+                        "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
+                        "6886890.0)`")
+    
+    #Grab the 2D dims (not time)    
+    try:
+        dims = da.geobox.dims
+    except:
+        dims = y_dim, x_dim  
+    
+    #coords
+    xy_coords = [da[dims[0]], da[dims[1]]]
+    
+    #shape
+    try:
+        y, x = da.geobox.shape
+    except:
+        y, x = len(xy_coords[0]), len(xy_coords[1])
+    
+    # Reproject shapefile to match CRS of raster
+    print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x}) '
+          f'and projection system/CRS (e.g. {crs})')
+    
+    try:
+        gdf_reproj = gdf.to_crs(crs=crs)
+    except:
+        #sometimes the crs can be a datacube utils CRS object
+        #so convert to string before reprojecting
+        gdf_reproj = gdf.to_crs(crs={'init':str(crs)})
+    
+    # If an attribute column is specified, rasterise using vector 
+    # attribute values. Otherwise, rasterise into a boolean array
+    if attribute_col:
+        
+        # Use the geometry and attributes from `gdf` to create an iterable
+        shapes = zip(gdf_reproj.geometry, gdf_reproj[attribute_col])
 
+        # Convert polygons into a numpy array using attribute values
+        arr = rasterio.features.rasterize(shapes=shapes,
+                                          out_shape=(y, x),
+                                          transform=transform,
+                                          **rasterio_kwargs)
+    else:
+        # Convert polygons into a boolean numpy array 
+        arr = rasterio.features.rasterize(shapes=gdf_reproj.geometry,
+                                          out_shape=(y, x),
+                                          transform=transform,
+                                          **rasterio_kwargs)
+        
+    # Convert result to a xarray.DataArray
+    if name is not None:
+        xarr = xr.DataArray(arr,
+                           coords=xy_coords,
+                           dims=dims,
+                           attrs=da.attrs,
+                           name=name)
+    else:
+        xarr = xr.DataArray(arr,
+                   coords=xy_coords,
+                   dims=dims,
+                   attrs=da.attrs)
+    
+    #add back crs if da.attrs doesn't have it
+    if 'crs' not in xarr.attrs:
+        xarr.attrs['crs'] = str(crs)
+    
+    if export_tiff:
+            try:
+                print("Exporting GeoTIFF with array name: " + name)
+                ds = xarr.to_dataset(name = name)
+                #xarray bug removes metadata, add it back
+                ds[name].attrs = xarr.attrs 
+                ds.attrs = xarr.attrs
+                write_geotiff(export_tiff, ds) 
+                
+            except:
+                print("Exporting GeoTIFF with default array name: 'data'")
+                ds = xarr.to_dataset(name = 'data')
+                ds.data.attrs = xarr.attrs
+                ds.attrs = xarr.attrs
+                write_geotiff(export_tiff, ds)
+                
+    return xarr
+
+class HiddenPrints:
+    """
+    For concealing unwanted print statements called by other functions
+    """
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+    
+    
 def calculate_anomalies(shp_fpath,
                         collection,
                         year,
                         season,
                         query_box,
                         dask_chunks):
+    
+    """
+    This function will load three months worth of satellite 
+    images using the specified season, calculate the seasonal NDVI mean
+    of the input timeseries, then calculate a standardised seasonal
+    NDVI anomaly by comparing the NDVI seasonal mean with
+    pre-calculate NDVI climatology means and standard deviations.
+    
+    Parameters
+    ----------
+    shp_fpath`: string 
+        Provide a filepath to a shapefile that defines your AOI
+    query_box; tuple
+        A tuple of the form (lat,lon,buffer) to delineate an AOI if not
+        providing a shapefile
+    collection`: string
+        The landsat collection to load data from. either 'c3' or 'c2'
+    year : string
+        The year of interest to e.g. '2018'. This will be combined with
+        the 'season' to generate a time period to load data from.
+    season : string
+        The season of interest, e.g `DJF','JFM','FMA' etc
+    dask_chunks : Dict 
+        Dictionary of values to chunk the data using dask e.g. `{'x':3000, 'y':3000}`
+    
+    Returns
+    -------
+    xarr : xarray.DataArray
+        A data array showing the seasonl NDVI standardised anomalies.
+    
+    """
+    
     
     # dict of all seasons for indexing datacube
     all_seasons = {'JFM': [1,2,3],
@@ -337,21 +556,21 @@ def calculate_anomalies(shp_fpath,
     
     #get data from shapefile extent and mask
     if shp_fpath is not None:
+        #open shapefile with geopandas
+        gdf = gpd.read_file(shp_fpath).to_crs(crs={'init':str('epsg:4326')})
         
-        if len(fiona.open(shp_fpath)) > 1:
+        if len(gdf) > 1:
             warnings.warn("This script can only accept shapefiles with a single polygon feature; "
                           "seasonal anomalies will be calculated for the extent of the "
                           "first geometry in the shapefile only.")
         
         print("extracting data based on shapefile extent")
         
-        with fiona.open(shp_fpath) as input:
-            crs = geometry.CRS(input.crs_wkt)
+        # set up query based on polygon (convert to WGS84)
+        geom = geometry.Geometry(
+                gdf.geometry.values[0].__geo_interface__, geometry.CRS(
+                    'epsg:4326'))
         
-        feat = fiona.open(shp_fpath)[0]
-        first_geom = feat['geometry']
-        geom = geometry.Geometry(first_geom, crs=crs)
-
         query = {'geopolygon': geom,
                  'time': time}
         
@@ -407,17 +626,12 @@ def calculate_anomalies(shp_fpath,
             ds = ds.where(good_quality)
             ds = masking.mask_invalid_data(ds)
             ds.attrs.update(attrs)
-
         
-        mask = rasterio.features.geometry_mask([geom.to_crs(ds.geobox.crs)for geoms in [geom]],
-                                       out_shape=ds.geobox.shape,
-                                       transform=ds.geobox.affine,
-                                       all_touched=False,
-                                       invert=False)
-        
-        mask_xr = xr.DataArray(mask, dims = ('y','x'))
-        ds = ds.where(mask_xr==False)
-        
+        # create polygon mask
+        with HiddenPrints():
+            mask = xr_rasterize(gdf.iloc[[0]], ds)
+        #mask dataset
+        ds = ds.where(mask)
         
     else: 
         print('Extracting data based on lat, lon coords')
