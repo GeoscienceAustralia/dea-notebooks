@@ -418,22 +418,23 @@ def subpixel_contours(da,
 
     # Check if CRS is provided as a xarray.DataArray attribute.
     # If not, require supplied CRS
-    try:
-        crs = da.crs
-    except:
-        if crs is None:
+    if crs is None:
+        try:
+            crs = da.crs
+        except:
             raise Exception("Please add a `crs` attribute to the "
                             "xarray.DataArray, or provide a CRS using the "
                             "function's `crs` parameter (e.g. 'EPSG:3577')")
 
     # Check if Affine transform is provided as a xarray.DataArray method.
     # If not, require supplied Affine
-    try:
-        affine = da.geobox.transform
-    except KeyError:
-        affine = da.transform
-    except:
-        if affine is None:
+    if affine is None:
+        try:
+            affine = da.geobox.transform
+        except KeyError:
+            affine = da.transform
+        except:
+        
             raise Exception("Please provide an Affine object using the "
                             "`affine` parameter (e.g. `from affine import "
                             "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
