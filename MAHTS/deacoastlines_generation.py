@@ -32,7 +32,7 @@ def get_geopoly(index, gdf):
     into a geopolygon feature as an input to dc.load
     """
     return Geometry(geo=gdf.loc[index].geometry.__geo_interface__, 
-                    crs=CRS(gdf.crs['init']))
+                    crs=CRS(f'EPSG:{gdf.crs.to_epsg()}'))
 
 
 def custom_native_geobox(ds, measurements=None, basis=None):
@@ -124,7 +124,7 @@ def load_mndwi(dc,
     return ds
 
 
-def model_tides(ds, points_gdf, extent_buffer=0.025):
+def model_tides(ds, points_gdf, extent_buffer=0.05):
     """
     Takes an xarray.Dataset (`ds`), extracts a subset of tide modelling 
     points from a geopandas.GeoDataFrame based on`ds`'s extent, then 
@@ -136,7 +136,7 @@ def model_tides(ds, points_gdf, extent_buffer=0.025):
     tide heights at each point location.
     """
     
-    # Obtain extent of loaded data, and buffer to ensure that tides are
+    # Obtain extent of loaded data, and f to ensure that tides are
     # modelled reliably and comparably across grid tiles
     ds_extent = shape(ds.geobox.geographic_extent.json)
     buffered = ds_extent.buffer(extent_buffer)

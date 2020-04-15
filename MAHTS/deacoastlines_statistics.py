@@ -288,6 +288,10 @@ def stats_points(contours_gdf, baseline_year, distance=30):
     
     # Set annual shoreline to use as a baseline
     baseline_contour = contours_gdf.loc[[baseline_year]].geometry
+    
+    # If multiple features are returned, take unary union
+    if baseline_contour.shape[0] > 0:
+        baseline_contour = baseline_contour.unary_union
 
     # Generate points along line and convert to geopandas.GeoDataFrame
     points_line = [baseline_contour.iloc[0].interpolate(i) 
@@ -509,18 +513,21 @@ def calculate_regressions(yearly_ds,
     return points_gdf.loc[:, column_order]
 
 
-def contour_certainty(output_path, uncertain_classes=[4, 5]):
+def contour_certainty(contours_gdf, 
+                      output_path, 
+                      uncertain_classes=[4, 5],
+                      buffer=0):
 
     # Load in mask data and identify uncertain classes
     all_time_mask = xr.open_rasterio(f'{output_path}/all_time_mask.tif')
     raster_mask = all_time_mask.isin(uncertain_classes) 
     
-    # Vectorise mask data and strip any invalid geometries
+    # Vectorise mask data and fix any invalid geometries
     vector_mask = xr_vectorize(da=raster_mask,
                                crs=all_time_mask.geobox.crs,
                                transform=all_time_mask.geobox.transform,
                                mask=raster_mask.values)
-    vector_mask = vector_mask[vector_mask.geometry.is_valid]
+    vector_mask.geometry = vector_mask.buffer(0)
     
     # Clip and overlay to seperate into uncertain and certain classes
     contours_good = gpd.overlay(contours_gdf, vector_mask, how='difference')
@@ -667,21 +674,28 @@ def main(argv=None):
         points_gdf = points_gdf[points_gdf.intersects(study_area_poly['geometry'])]
 
         # Export to GeoJSON
-        points_gdf.to_file(f'{stats_path}.geojson', driver='GeoJSON')
+        points_gdf.to_crs('EPSG:4326').to_file(f'{stats_path}.geojson', 
+                                               driver='GeoJSON')
 
         # Export as ESRI shapefiles
         stats_path = stats_path.replace('vectors', 'vectors/shapefiles')
         points_gdf.to_file(f'{stats_path}.shp')
+
     
     ###################
     # Export contours #
     ###################    
     
+    # Assign certainty to contours based on underlying masks
+    contours_gdf = contour_certainty(contours_gdf, 
+                                     output_path=f'output_data/{study_area}_{output_name}')
+
     # Clip annual shoreline contours to study area extent
     contour_path = f'{output_dir}/contours_{study_area}_{output_name}_' \
                    f'{water_index}_{index_threshold:.2f}'
     contours_gdf['geometry'] = contours_gdf.intersection(study_area_poly['geometry'])
-    contours_gdf.reset_index().to_file(f'{contour_path}.geojson', driver='GeoJSON')
+    contours_gdf.reset_index().to_crs('EPSG:4326').to_file(f'{contour_path}.geojson', 
+                                                           driver='GeoJSON')
 
     # Export stats and contours as ESRI shapefiles
     contour_path = contour_path.replace('vectors', 'vectors/shapefiles')
