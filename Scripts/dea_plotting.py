@@ -49,6 +49,14 @@ from skimage import exposure
 from branca.colormap import linear
 from odc.ui import image_aspect
 
+from matplotlib.animation import FuncAnimation
+import pandas as pd
+from pathlib import Path
+from shapely.geometry import box
+from skimage.exposure import rescale_intensity
+from tqdm.auto import tqdm
+import warnings
+
 
 def rgb(ds,
         bands=['nbart_red', 'nbart_green', 'nbart_blue'],
@@ -517,7 +525,255 @@ def map_shapefile(gdf,
     # Display the map
     display(m)
     
+
+def xr_animation(ds,
+                 bands=None,
+                 output_path='animation.mp4',
+                 width_pixels=500,
+                 interval=100,                 
+                 percentile_stretch=(0.02, 0.98),
+                 image_proc_funcs=None,
+                 show_gdf=None,
+                 show_date='%d %b %Y',
+                 show_text=None,
+                 show_colorbar=True,
+                 gdf_kwargs={},
+                 annotation_kwargs={},
+                 imshow_kwargs={},
+                 colorbar_kwargs={},
+                 limit=None):
+
+    def _start_end_times(gdf, ds):
+
+        # Make copy of gdf so we do not modify original data
+        gdf = gdf.copy()
+
+        # Get min and max times from input dataset
+        minmax_times = pd.to_datetime(ds.time.isel(time=[0, -1]).values)
+
+        # Update both `start_time` and `end_time` columns
+        for time_col, time_val in zip(['start_time', 'end_time'], minmax_times):
+
+            # Add time_col if it does not exist
+            if time_col not in gdf:
+                gdf[time_col] = np.nan
+
+            # Convert values to datetimes and fill gaps with relevant time value
+            gdf[time_col] = pd.to_datetime(gdf[time_col], errors='ignore')
+            gdf[time_col] = gdf[time_col].fillna(time_val)
+
+        return gdf
+
+
+    def _add_colorbar(fig, ax, vmin, vmax, imshow_defaults, colorbar_defaults):
+
+        # Create new axis object for colorbar
+        cax = fig.add_axes([0.02, 0.02, 0.96, 0.03])
+
+        # Initialise color bar using plot min and max values
+        img = ax.imshow(np.array([[vmin, vmax]]), **imshow_defaults)
+        fig.colorbar(img,
+                     cax=cax,
+                     orientation='horizontal',
+                     ticks=np.linspace(vmin, vmax, 2))
+
+        # Fine-tune appearance of colorbar
+        cax.xaxis.set_ticks_position('top')
+        cax.tick_params(axis='x', **colorbar_defaults)
+        cax.get_xticklabels()[0].set_horizontalalignment('left')
+        cax.get_xticklabels()[-1].set_horizontalalignment('right')
+
+
+    def _frame_annotation(times, show_date, show_text):
+
+        # Test if show_text is supplied as a list
+        is_sequence = isinstance(show_text, (list, tuple, np.ndarray))
+
+        # Raise exception if it is shorter than number of dates
+        if is_sequence and (len(show_text) == 1):
+            show_text, is_sequence = show_text[0], False
+        elif is_sequence and (len(show_text) < len(times)):
+            raise ValueError(f'Annotations supplied via `show_text` must have '
+                             f'either a length of 1, or a length >= the number '
+                             f'of timesteps in `ds` (n={len(times)})')
+
+        times_list = (times.dt.strftime(show_date).values if show_date else [None] *
+                      len(times))
+        text_list = show_text if is_sequence else [show_text] * len(times)
+        annotation_list = [
+            '\n'.join([str(i)
+                       for i in (a, b)
+                       if i])
+            for a, b in zip(times_list, text_list)
+        ]
+
+        return annotation_list
+
+
+    def _update_frames(i, ax, extent, annotation_text, gdf, gdf_defaults,
+                       annotation_defaults, imshow_defaults):
+
+        # Clear previous frame to optimise render speed
+        ax.clear()
+
+        # Plot imagery into frame
+        ax.imshow(array[i, ...].clip(0.0, 1.0), extent=extent, **imshow_defaults)
+
+        # Add annotation text
+        ax.annotate(annotation_text[i], **annotation_defaults)
+
+        # Add geodataframe annotation
+        if show_gdf is not None:
+
+            # Obtain start and end times to filter geodataframe features
+            time_i = ds.time.isel(time=i).values
+
+            # Subset geodataframe using start and end dates
+            gdf_subset = show_gdf.loc[(show_gdf.start_time <= time_i) &
+                                      (show_gdf.end_time >= time_i)]           
+
+            if len(gdf_subset.index) > 0:
+
+                # Set color to geodataframe field if supplied
+                if ('color' in gdf_subset) and ('color' not in gdf_kwargs):
+                    gdf_defaults.update({'color': gdf_subset['color'].tolist()})
+
+                gdf_subset.plot(ax=ax, **gdf_defaults)
+
+        # Remove axes to show imagery only
+        ax.axis('off')
+        
+        # Update progress bar
+        progress_bar.update(1)
+        
     
+    # Test if bands have been supplied
+    if bands is None:
+        raise ValueError(f'Please use the `bands` parameter to supply '
+                         f'a list of one or three bands that exist as '
+                         f'variables in `ds`, e.g. {list(ds.data_vars)}')
+    
+    # Test if bands exist in dataset
+    missing_bands = [b for b in bands if b not in ds.data_vars]
+    if missing_bands:
+        raise ValueError(f'Band(s) {missing_bands} do not exist as '
+                         f'variables in `ds` {list(ds.data_vars)}')
+    
+    # Test if time dimension exists in dataset
+    if 'time' not in ds.dims:
+        raise ValueError(f"`ds` does not contain a 'time' dimension "
+                         f"required for generating an animation")
+                
+    # Set default parameters
+    outline = [PathEffects.withStroke(linewidth=2.5, foreground='black')]
+    annotation_defaults = {
+        'xy': (1, 1),
+        'xycoords': 'axes fraction',
+        'xytext': (-5, -5),
+        'textcoords': 'offset points',
+        'horizontalalignment': 'right',
+        'verticalalignment': 'top',
+        'fontsize': 20,
+        'color': 'white',
+        'path_effects': outline
+    }
+    imshow_defaults = {'cmap': 'magma', 'interpolation': 'nearest'}
+    colorbar_defaults = {'colors': 'white', 'labelsize': 12, 'length': 0}
+    gdf_defaults = {'linewidth': 1.5}
+
+    # Update defaults with kwargs
+    annotation_defaults.update(annotation_kwargs)
+    imshow_defaults.update(imshow_kwargs)
+    colorbar_defaults.update(colorbar_kwargs)
+    gdf_defaults.update(gdf_kwargs)
+
+    # Get info on dataset dimensions
+    height, width = ds.geobox.shape
+    scale = width_pixels / width
+    left, bottom, right, top = ds.geobox.extent.boundingbox
+
+    # Prepare annotations
+    annotation_list = _frame_annotation(ds.time, show_date, show_text)
+
+    # Prepare geodataframe
+    if show_gdf is not None:
+        show_gdf = show_gdf.to_crs(ds.geobox.crs)
+        show_gdf = gpd.clip(show_gdf, mask=box(left, bottom, right, top))
+        show_gdf = _start_end_times(show_gdf, ds)
+
+    # Convert data to 4D numpy array of shape [time, y, x, bands]
+    ds = ds[bands].to_array().transpose(..., 'variable')[0:limit, ...]
+    array = ds.values
+
+    # Optionally apply image processing along axis 0 (e.g. to each timestep)
+    bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} ({remaining_s:.1f} ' \
+                   'seconds remaining at {rate_fmt}{postfix})'
+    if image_proc_funcs:
+        print('Applying custom image processing functions')
+        for i, array_i in tqdm(enumerate(array),
+                               total=len(ds.time),
+                               leave=False,
+                               bar_format=bar_format,
+                               unit=' frames'):
+            for func in image_proc_funcs:
+                array_i = func(array_i)
+            array[i, ...] = array_i
+
+    # Clip to percentiles and rescale between 0.0 and 1.0 for plotting
+    vmin, vmax = np.quantile(array[np.isfinite(array)], q=percentile_stretch)
+    
+    # Replace with vmin and vmax if present in `imshow_defaults`
+    if 'vmin' in imshow_defaults:
+        vmin = imshow_defaults['vmin']
+    if 'vmax' in imshow_defaults:
+        vmax = imshow_defaults['vmax']
+    
+    array = rescale_intensity(array, in_range=(vmin, vmax), out_range=(0.0, 1.0))
+    array = np.squeeze(array)  # remove final axis if only one band
+
+    # Set up figure
+    fig, ax = plt.subplots()
+    fig.set_size_inches(width * scale / 72, height * scale / 72, forward=True)
+    fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+
+    # Optionally add colorbar
+    if show_colorbar & (len(bands) == 1):
+        _add_colorbar(fig, ax, vmin, vmax, imshow_defaults, colorbar_defaults)
+
+    # Animate
+    print(f'Exporting animation to {output_path}') 
+    anim = FuncAnimation(
+        fig=fig,
+        func=_update_frames,
+        fargs=(
+            ax,  # axis to plot into
+            [left, right, bottom, top],  # imshow extent
+            annotation_list,  # list of text annotations
+            show_gdf,  # geodataframe to plot over imagery
+            gdf_defaults,  # any kwargs used to plot gdf
+            annotation_defaults,  # kwargs for annotations
+            imshow_defaults),  # kwargs for imshow
+        frames=len(ds.time),
+        interval=interval,
+        repeat=False)
+    
+    # Set up progress bar
+    progress_bar = tqdm(total=len(ds.time), 
+                        unit=' frames', 
+                        bar_format=bar_format) 
+
+    # Export animation to file
+    if Path(output_path).suffix == '.gif':
+        anim.save(output_path, writer='pillow')
+    else:
+        anim.save(output_path, dpi=72)
+
+    # Update progress bar to fix progress bar moving past end
+    if progress_bar.n != len(ds.time):
+        progress_bar.n = len(ds.time)
+        progress_bar.last_print_n = len(ds.time)
+
+
 def animated_timeseries(ds,
                         output_path,
                         width_pixels=500,
@@ -653,6 +909,12 @@ def animated_timeseries(ds,
         used for y coordinates. Defaults to 'y'.
         
     """
+    
+    warnings.warn("The `animated_timeseries` function is being depreciated, "
+                  "and will soon be replaced with the more powerful and "
+                  "easier-to-use `xr_animation` function. Please update "
+                  "your code to use `xr_animation` instead.", 
+                  DeprecationWarning, stacklevel=2)
 
     ###############
     # Setup steps #
