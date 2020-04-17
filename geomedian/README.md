@@ -3,7 +3,7 @@ Instructions:
 
 ## Step 2: run for the whole continent
 
-single-thread database scrape:
+single-thread database scrape (note long line):
 
     module add dea/unstable
     cat allcells | while read i j ; do datacube-stats --save-tasks tasks/task_$i\_$j --tile-index $i $j config.yaml ; echo $(date) $i $j ; done 
@@ -42,7 +42,7 @@ or
     cat > dummylist << EOF
     16 -40
     EOF
-    qsub -v inputfile dummylist job.pbs
+    qsub -v inputfile=dummylist job.pbs
     
 The former option will probably get killed on a Gadi login node. 
 The latter option will produce some `geomedian.e/o####` files when it finishes, containing any errors/warnings.
@@ -55,7 +55,7 @@ Check that the output folder contains many `.nc` files.
 
 Look at some in QGIS. When specifying the raster path to QGIS, may need to prepend `NetCDF:` and append `:red` (or another band) to get QGIS to tolerate the NetCDF format.
 
-Then use GDAL tools to mosaic into a virtual raster, and generate a pyramid, so that the entire continental image can be glanced at in QGIS. The commands resemble are similar but different to:
+Then use GDAL tools to mosaic into a virtual raster, and generate a pyramid, so that the entire continental image can be glanced at in QGIS. The commands probably resemble but different to:
 
     find output -iname \*.tif | xargs gdalbuildvrt geomedian.vrt
     gdaladdo geomedian.vrt -ro --config BIGTIFF_OVERVIEW YES --config SPARSE_OK TRUE --config COMPRESS_OVERVIEW LZW --config NUM_THREADS ALL_CPUS
