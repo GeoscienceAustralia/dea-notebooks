@@ -21,9 +21,9 @@ Functions included:
     rgb
     display_map
     map_shapefile
-    animated_timeseries
+    xr_animation
 
-Last modified: March 2020
+Last modified: April 2020
 
 '''
 
@@ -542,8 +542,135 @@ def xr_animation(ds,
                  imshow_kwargs={},
                  colorbar_kwargs={},
                  limit=None):
+    
+    """
+    Takes an `xarray` timeseries and animates the data as either a 
+    three-band (e.g. true or false colour) or single-band animation, 
+    allowing changes in the landscape to be compared across time.
+    
+    Animations can be customised to include text and date annotations 
+    or use specific combinations of input bands. Vector data can be 
+    overlaid and animated on top of imagery, and custom image 
+    processing functions can be applied to each frame.
+    
+    Supports .mp4 (ideal for Twitter/social media) and .gif (ideal 
+    for all purposes, but can have large file sizes) format files. 
+    
+    Last modified: April 2020
+    
+    Parameters
+    ----------  
+    ds : xarray.Dataset
+        An xarray dataset with multiple time steps (i.e. multiple 
+        observations along the `time` dimension).        
+    bands : list of strings
+        An list of either one or three band names to be plotted, 
+        all of which must exist in `ds`. 
+    output_path : str, optional
+        A string giving the output location and filename of the 
+        resulting animation. File extensions of '.mp4' and '.gif' are 
+        accepted. Defaults to 'animation.mp4'.
+    width_pixels : int, optional
+        An integer defining the output width in pixels for the 
+        resulting animation. The height of the animation is set 
+        automatically based on the dimensions/ratio of the input 
+        xarray dataset. Defaults to 500 pixels wide.        
+    interval : int, optional
+        An integer defining the milliseconds between each animation 
+        frame used to control the speed of the output animation. Higher
+        values result in a slower animation. Defaults to 100 
+        milliseconds between each frame.         
+    percentile_stretch : tuple of floats, optional
+        An optional tuple of two floats that can be used to clip one or
+        three-band arrays by percentiles to produce a more vibrant, 
+        visually attractive image that is not affected by outliers/
+        extreme values. The default is `(0.02, 0.98)` which is 
+        equivalent to xarray's `robust=True`.        
+    image_proc_funcs : list of funcs, optional
+        An optional list containing functions that will be applied to 
+        each animation frame (timestep) prior to animating. This can 
+        include image processing functions such as increasing contrast, 
+        unsharp masking, saturation etc. The function should take AND 
+        return a `numpy.ndarray` with shape [y, x, bands]. If your 
+        function has parameters, you can pass in custom values using 
+        a lambda function:
+        `image_proc_funcs=[lambda x: custom_func(x, param1=10)]`.
+    show_gdf: geopandas.GeoDataFrame, optional
+        Vector data (e.g. ESRI shapefiles or GeoJSON) can be optionally
+        plotted over the top of imagery by supplying a 
+        `geopandas.GeoDataFrame` object. To customise colours used to
+        plot the vector features, create a new column in the
+        GeoDataFrame called 'colors' specifying the colour used to plot 
+        each feature: e.g. `gdf['colors'] = 'red'`.
+        To plot vector features at specific moments in time during the
+        animation, create new 'start_time' and/or 'end_time' columns in
+        the GeoDataFrame that define the time range used to plot each 
+        feature. Dates can be provided in any string format that can be 
+        converted using the `pandas.to_datetime()`. e.g.
+         `gdf['end_time'] = ['2001', '2005-01', '2009-01-01']`    
+    show_date : string or bool, optional
+        An optional string or bool that defines how (or if) to plot 
+        date annotations for each animation frame. Defaults to 
+        '%d %b %Y'; can be customised to any format understood by 
+        strftime (https://strftime.org/). Set to False to remove date 
+        annotations completely.       
+    show_text : str or list of strings, optional
+        An optional string or list of strings with a length equal to 
+        the number of timesteps in `ds`. This can be used to display a 
+        static text annotation (using a string), or a dynamic title 
+        (using a list) that displays different text for each timestep. 
+        By default, no text annotation will be plotted.        
+    show_colorbar : bool, optional
+        An optional boolean indicating whether to include a colourbar 
+        for single-band animations. Defaults to True.
+    gdf_kwargs : dict, optional
+        An optional dictionary of keyword arguments to customise the 
+        appearance of a `geopandas.GeoDataFrame` supplied to 
+        `show_gdf`. Keyword arguments are passed to `GeoSeries.plot` 
+        (see http://geopandas.org/reference.html#geopandas.GeoSeries.plot). 
+        For example: `gdf_kwargs = {'linewidth': 2}`. 
+    annotation_kwargs : dict, optional
+        An optional dict of keyword arguments for controlling the 
+        appearance of  text annotations. Keyword arguments are passed 
+        to `matplotlib`'s `plt.annotate` 
+        (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.annotate.html 
+        for options). For example, `annotation_kwargs={'fontsize':20, 
+        'color':'red', 'family':'serif'}.  
+    imshow_kwargs : dict, optional
+        An optional dict of keyword arguments for controlling the 
+        appearance of arrays passed to `matplotlib`'s `plt.imshow` 
+        (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.imshow.html 
+        for options). For example, a green colour scheme and custom
+        stretch could be specified using: 
+        `onebandplot_kwargs={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}`.
+        (some parameters like 'cmap' will only have an effect for 
+        single-band animations, not three-band RGB animations).
+    colorbar_kwargs : dict, optional
+        An optional dict of keyword arguments used to control the 
+        appearance of the colourbar. Keyword arguments are passed to
+        `matplotlib.pyplot.tick_params` 
+        (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.tick_params.html
+        for options). This can be used to customise the colourbar 
+        ticks, e.g. changing tick label colour depending on the 
+        background of the animation: 
+        `colorbar_kwargs={'colors': 'black'}`.
+    limit: int, optional
+        An optional integer specifying how many animation frames to 
+        render (e.g. `limit=50` will render the first 50 frames). This
+        can be useful for quickly testing animations without rendering 
+        the entire time-series.    
+            
+    """
 
     def _start_end_times(gdf, ds):
+        """
+        Converts 'start_time' and 'end_time' columns in a 
+        `geopandas.GeoDataFrame` to datetime objects to allow vector
+        features to be plotted at specific moments in time during an
+        animation, and sets default values based on the first
+        and last time in `ds` if this information is missing from the
+        dataset.
+        """
 
         # Make copy of gdf so we do not modify original data
         gdf = gdf.copy()
@@ -566,6 +693,10 @@ def xr_animation(ds,
 
 
     def _add_colorbar(fig, ax, vmin, vmax, imshow_defaults, colorbar_defaults):
+        """
+        Adds a new colorbar axis to the animation with custom minimum 
+        and maximum values and styling.
+        """
 
         # Create new axis object for colorbar
         cax = fig.add_axes([0.02, 0.02, 0.96, 0.03])
@@ -585,6 +716,13 @@ def xr_animation(ds,
 
 
     def _frame_annotation(times, show_date, show_text):
+        """
+        Creates a custom annotation for the top-right of the animation
+        by converting a `xarray.DataArray` of times into strings, and
+        combining this with a custom text annotation. Handles cases 
+        where `show_date=False/None`, `show_text=False/None`, or where
+        `show_text` is a list of strings.
+        """
 
         # Test if show_text is supplied as a list
         is_sequence = isinstance(show_text, (list, tuple, np.ndarray))
@@ -600,23 +738,24 @@ def xr_animation(ds,
         times_list = (times.dt.strftime(show_date).values if show_date else [None] *
                       len(times))
         text_list = show_text if is_sequence else [show_text] * len(times)
-        annotation_list = [
-            '\n'.join([str(i)
-                       for i in (a, b)
-                       if i])
-            for a, b in zip(times_list, text_list)
-        ]
+        annotation_list = ['\n'.join([str(i) for i in (a, b) if i])
+                           for a, b in zip(times_list, text_list)]
 
         return annotation_list
 
 
     def _update_frames(i, ax, extent, annotation_text, gdf, gdf_defaults,
                        annotation_defaults, imshow_defaults):
+        """
+        Animation called by `matplotlib.animation.FuncAnimation` to 
+        animate each frame in the animation. Plots array and any text
+        annotations, as well as a temporal subset of `gdf` data based
+        on the times specified in 'start_time' and 'end_time' columns.
+        """
+        
 
-        # Clear previous frame to optimise render speed
+        # Clear previous frame to optimise render speed and plot imagery
         ax.clear()
-
-        # Plot imagery into frame
         ax.imshow(array[i, ...].clip(0.0, 1.0), extent=extent, **imshow_defaults)
 
         # Add annotation text
@@ -647,11 +786,14 @@ def xr_animation(ds,
         progress_bar.update(1)
         
     
-    # Test if bands have been supplied
+    # Test if bands have been supplied, or convert to list to allow
+    # iteration if a single band is provided as a string
     if bands is None:
         raise ValueError(f'Please use the `bands` parameter to supply '
                          f'a list of one or three bands that exist as '
                          f'variables in `ds`, e.g. {list(ds.data_vars)}')
+    elif isinstance(bands, str):
+        bands = [bands]
     
     # Test if bands exist in dataset
     missing_bands = [b for b in bands if b not in ds.data_vars]
@@ -792,6 +934,13 @@ def animated_timeseries(ds,
                         x_dim='x',
                         y_dim='y'):
     """
+    ------------------------------------------------------------------
+    APRIL 2020 UPDATE: The `animated_timeseries` function is being 
+    depreciated, and will soon be replaced with the more powerful 
+    and easier-to-use `xr_animation` function. Please update your code 
+    to use `xr_animation` instead.
+    ------------------------------------------------------------------
+    
     Takes an xarray time series and animates the data as either a 
     three-band (e.g. true or false colour) or single-band animation, 
     allowing changes in the landscape to be compared across time.
