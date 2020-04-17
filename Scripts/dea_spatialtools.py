@@ -163,7 +163,7 @@ def xr_rasterize(gdf,
                  name=None,
                  x_dim='x',
                  y_dim='y',
-                 export_tiff= None,
+                 export_tiff=None,
                  **rasterio_kwargs):    
     """
     Rasterizes a geopandas.GeoDataFrame into an xarray.DataArray.
@@ -247,16 +247,16 @@ def xr_rasterize(gdf,
                         "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
                         "6886890.0)`")
     
-    #Grab the 2D dims (not time)    
+    # Grab the 2D dims (not time)    
     try:
         dims = da.geobox.dims
     except:
         dims = y_dim, x_dim  
     
-    #coords
+    # Coords
     xy_coords = [da[dims[0]], da[dims[1]]]
     
-    #shape
+    # Shape
     try:
         y, x = da.geobox.shape
     except:
@@ -269,61 +269,41 @@ def xr_rasterize(gdf,
     try:
         gdf_reproj = gdf.to_crs(crs=crs)
     except:
-        #sometimes the crs can be a datacube utils CRS object
-        #so convert to string before reprojecting
-        gdf_reproj = gdf.to_crs(crs={'init':str(crs)})
+        # Sometimes the crs can be a datacube utils CRS object
+        # so convert to string before reprojecting
+        gdf_reproj = gdf.to_crs(crs={'init': str(crs)})
     
     # If an attribute column is specified, rasterise using vector 
     # attribute values. Otherwise, rasterise into a boolean array
-    if attribute_col:
-        
+    if attribute_col:        
         # Use the geometry and attributes from `gdf` to create an iterable
         shapes = zip(gdf_reproj.geometry, gdf_reproj[attribute_col])
-
-        # Convert polygons into a numpy array using attribute values
-        arr = rasterio.features.rasterize(shapes=shapes,
-                                          out_shape=(y, x),
-                                          transform=transform,
-                                          **rasterio_kwargs)
     else:
-        # Convert polygons into a boolean numpy array 
-        arr = rasterio.features.rasterize(shapes=gdf_reproj.geometry,
-                                          out_shape=(y, x),
-                                          transform=transform,
-                                          **rasterio_kwargs)
+        # Use geometry directly (will produce a boolean numpy array)
+        shapes = gdf_reproj.geometry
+
+    # Rasterise shapes into an array
+    arr = rasterio.features.rasterize(shapes=shapes,
+                                      out_shape=(y, x),
+                                      transform=transform,
+                                      **rasterio_kwargs)
         
     # Convert result to a xarray.DataArray
-    if name is not None:
-        xarr = xr.DataArray(arr,
-                           coords=xy_coords,
-                           dims=dims,
-                           attrs=da.attrs,
-                           name=name)
-    else:
-        xarr = xr.DataArray(arr,
-                   coords=xy_coords,
-                   dims=dims,
-                   attrs=da.attrs)
+    xarr = xr.DataArray(arr,
+                        coords=xy_coords,
+                        dims=dims,
+                        attrs=da.attrs,
+                        name=name if name else None)
     
-    #add back crs if da.attrs doesn't have it
+    # Add back crs if xarr.attrs doesn't have it
     if 'crs' not in xarr.attrs:
         xarr.attrs['crs'] = str(crs)
     
-    if export_tiff:
-            try:
-                print("Exporting GeoTIFF with array name: " + name)
-                ds = xarr.to_dataset(name = name)
-                #xarray bug removes metadata, add it back
-                ds[name].attrs = xarr.attrs 
-                ds.attrs = xarr.attrs
-                write_geotiff(export_tiff, ds) 
-                
-            except:
-                print("Exporting GeoTIFF with default array name: 'data'")
-                ds = xarr.to_dataset(name = 'data')
-                ds.data.attrs = xarr.attrs
-                ds.attrs = xarr.attrs
-                write_geotiff(export_tiff, ds)
+    if export_tiff:        
+        print(f"Exporting GeoTIFF to {export_tiff}")
+        ds = xarr.to_dataset(name=name if name else 'data')      
+        ds.attrs = xarr.attrs  # xarray bug removes metadata, add it back
+        write_geotiff(export_tiff, ds) 
                 
     return xarr
 
