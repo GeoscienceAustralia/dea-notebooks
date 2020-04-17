@@ -27,7 +27,7 @@ process currently has access.
 
 Address space is usually a much more plentiful resource than physical memory.
 (several thousand PB for each process.)
-This facilitates having multiple growable areas of memory,
+This facilitates having mmore than two growable areas of memory,
 without collisions occuring before the physical memory is exhausted.
 (Growable areas include: the traditional heap, the area for new memory maps,
 and each individual thread's stack.)
@@ -65,10 +65,47 @@ to service new allocation requests.
 However, insufficient cache may dramatically impair performance
 (especially for interactive tasks).
 
+This simply means that if reported free memory is scarce,
+but reported cache is substantial, then there is no problem.
+
+Note, there is also a very small amount of memory cache in the CPU,
+so that the CPU is less interrupted by latency accessing the main RAM.
+Consequently, some calculations can be made faster if arranged so as to
+complete all operations on each tiny chunk of memory
+before starting on the next.
+
 ## Dynamic allocations
+
+In most compiled languages, while the stack area is used for storing
+local variables, the heap is the memory area for all longer lived objects
+which are dynamically created and discarded.
+(Examples include arrays returned by the function that produces them.)
+The language expects each basic object (such as a variable or array)
+to be located in a continuous address range interval.
+The heap is susceptible to fragmentation.
+(For example as a program replaces objects,
+freeing and re-allocating for them, then,
+even if the sum total of the program's allocation demands does not exceed
+a previous high water mark,
+the heap may still need to continue growing if,
+due to packing order,
+the freed gaps are not contiguous.)
+
+
+The heap is specific to the process, not shared across the system.
+The low level functions to allocate (or to subsequently free) space in the heap
+are implemented in the C runtime libraries, which execute as part of the
+user process.
+Traditionally, these functions were implemented using (sbrk) calls to adjust the
+length of the data segment memory area that is allocated to the process by the
+kernel.
+Alternatively, implementations may make calls for the kernel to establish
+("anonymous" rather than file-backed) memory mappings.
 
 
 ## Python memory management
+
+Allocating memory is generally considered slow.
 
 ## Conclusion
 

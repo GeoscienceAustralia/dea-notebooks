@@ -58,7 +58,6 @@ def shallowpass(chunksize=1024, zoomfactor=2):
 
     for i in range(0, size, chunksize):
         for j in range(0, size, chunksize):
-            ii, jj = i//2, j//2
             X = src[i : i + chunksize*2, j : j + chunksize*2]
             core(X, Z)
             dst[i//zoomfactor, j//zoomfactor] = Z
