@@ -60,3 +60,4 @@ Then use GDAL tools to mosaic into a virtual raster, and generate a pyramid, so 
     find output -iname \*.tif | xargs gdalbuildvrt geomedian.vrt
     gdaladdo geomedian.vrt -ro --config BIGTIFF_OVERVIEW YES --config SPARSE_OK TRUE --config COMPRESS_OVERVIEW LZW --config NUM_THREADS ALL_CPUS
 
+From memory, the difference when using `.nc` files is that the output from `find` should be first piped through commands such as `sed s/^/NetCDF:/ | sed s/$/:red` before to produce a virtual raster for three different bands. These can then be combined as an RGB image using `gdalbuildvrt -separate`. If it works it would probably be preferable to generate overviews for the individual bands rather than the RGB directly.
