@@ -937,8 +937,9 @@ def animated_timeseries(ds,
     ------------------------------------------------------------------
     APRIL 2020 UPDATE: The `animated_timeseries` function is being 
     depreciated, and will soon be replaced with the more powerful 
-    and easier-to-use `xr_animation` function. Please update your code 
-    to use `xr_animation` instead.
+    and easier-to-use `xr_animation` function from 
+    `Scripts/dea_plotting`. Please update your code to use 
+    `xr_animation` instead.
     ------------------------------------------------------------------
     
     Takes an xarray time series and animates the data as either a 
@@ -1061,8 +1062,9 @@ def animated_timeseries(ds,
     
     warnings.warn("The `animated_timeseries` function is being depreciated, "
                   "and will soon be replaced with the more powerful and "
-                  "easier-to-use `xr_animation` function. Please update "
-                  "your code to use `xr_animation` instead.", 
+                  "easier-to-use `xr_animation` function from "
+                  "`Scripts/dea_plotting`. Please update your code to use "
+                  "`xr_animation` instead.", 
                   DeprecationWarning, stacklevel=2)
 
     ###############
