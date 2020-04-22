@@ -445,9 +445,6 @@ def annual_movements(yearly_ds,
     # Keep required columns
     points_gdf = points_gdf[['geometry'] + years.tolist()]
     points_gdf = points_gdf.round(2)
-
-    # Zero values to 1988
-    points_gdf.iloc[:,1:] = points_gdf.iloc[:, 1:].subtract(points_gdf['1988'], axis=0)
     
     return points_gdf, tide_points_gdf
 
