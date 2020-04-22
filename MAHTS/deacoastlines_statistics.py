@@ -589,12 +589,11 @@ def main(argv=None):
     # Estaury mask
     estuary_gdf = (gpd.read_file('input_data/SurfaceHydrologyPolygonsRegional.gdb', bbox=bbox)
                    .to_crs(yearly_ds.crs))
-    to_keep = estuary_gdf.FEATURETYPE.isin(['Foreshore Flat', 
-                                            'Land Subject To Inundation', 
-                                            'Saline Coastal Flat', 
-                                            'Marine Swamp',
-                                            'Swamp'])
-    estuary_gdf = estuary_gdf[~to_keep]
+    to_keep = (estuary_gdf.FEATURETYPE.isin(['Aquaculture Area', 'Estuary', 
+               'Watercourse Area', 'Salt Evaporator', 'Settling Pond']) | 
+               ((estuary_gdf.FEATURETYPE == 'Lake') &
+                (estuary_gdf.PERENNIALITY == 'Perennial')))
+    estuary_gdf = estuary_gdf[to_keep]
 
     # Rocky shore mask
     smartline_gdf = (gpd.read_file('input_data/Smartline.gdb', bbox=bbox)
