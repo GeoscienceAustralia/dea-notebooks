@@ -528,7 +528,7 @@ def main(argv=None):
     
     # Create query
     study_area_geopoly = get_geopoly(study_area, gridcell_gdf)
-    query = {'geopolygon': study_area_geopoly,
+    query = {'geopolygon': study_area_geopoly.buffer(0.05),
              'time': ('1987', '2019'),
              'cloud_cover': [0, 90],
              'dask_chunks': {'time': 1, 'x': 1000, 'y': 1000}}
