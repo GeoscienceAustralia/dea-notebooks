@@ -238,9 +238,9 @@ def contours_preprocess(yearly_ds,
                                               all_time_median, 
                                               disk(3)), points_gdf)
 
-    # Generate all time 1000 m buffer (~33 pixels) from ocean-land boundary
-    buffer_ocean = binary_dilation(full_sea_mask, disk(33))
-    buffer_land = binary_dilation(~full_sea_mask, disk(33))
+    # Generate all time 1500 m buffer (~50 pixels) from ocean-land boundary
+    buffer_ocean = binary_dilation(full_sea_mask, disk(50))
+    buffer_land = binary_dilation(~full_sea_mask, disk(50))
     coastal_buffer = buffer_ocean & buffer_land
 
     # Generate sea mask for each timestep
@@ -248,13 +248,10 @@ def contours_preprocess(yearly_ds,
                        .groupby('year')
                        .apply(lambda x: mask_ocean(x, points_gdf)))
 
-    # Keep only pixels that are within 1000 m of the ocean in the
+    # Keep only pixels that are within 1500 m of the ocean in the
     # full stack, and directly connected to ocean in each yearly timestep
     masked_ds = yearly_ds[water_index].where((yearly_sea_mask & 
-                                              coastal_buffer #&
-                                              #~persistent_stdev &
-                                              #~persistent_nodata
-                                             ))
+                                              coastal_buffer))
     masked_ds.attrs['crs'] = yearly_ds.crs[6:]
     masked_ds.attrs['transform'] = yearly_ds.transform    
     
