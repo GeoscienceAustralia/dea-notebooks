@@ -10,8 +10,8 @@
 **Bug fixes**
 * Fixed missing shorelines caused by the estuary mask by limiting mask to specific waterbody features (`'Aquaculture Area', 'Estuary', 'Watercourse Area', 'Salt Evaporator', 'Settling Pond'` and perennial `'Lakes'`)
 * Fixed missing grid cell areas by buffering both the input grid cell extent and tide modelling extent by 0.05 degrees (i.e. a total of 0.10 degrees)
+* Break `deacoastlines_generation.py` script early if grid cell correspondes to 1 or less tidal modelling points, as this makes tidal interpolation impossible
 * Fix CRS of exported GeoJSON by converting to `EPSG:4326`
-
 
 ### v0.1.0 (April 1, 2020)
 

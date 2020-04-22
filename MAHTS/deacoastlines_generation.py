@@ -545,6 +545,10 @@ def main(argv=None):
     
     # Model tides at point locations
     tidepoints_gdf = model_tides(ds, points_gdf)
+    
+    # Test if there is data and skip rest of the analysis if not
+    if tidepoints_gdf.geometry.unique().shape[0] <= 1:
+        sys.exit('Gridcell has 1 or less tidal points; cannot interpolate data')
 
     # Interpolate tides for each timestep into the spatial extent of the data 
     pool = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
