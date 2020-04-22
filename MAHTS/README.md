@@ -6,6 +6,8 @@
 
 **Features**
 * Added 'uncertainty' column to contour data for pixels with either less than 5 observations or > 0.25 MNDWI standard deviation in over 75% of years
+* Added new `DEACoastLines_utilities.ipynb` notebook containing additional functions for using DEA CoastLines data
+* Added `rates_hist` utility function for plotting DEACoastLine statistics data as a histogram based on an interactive selection
 
 **Bug fixes**
 * Fixed missing shorelines caused by the estuary mask by limiting mask to specific waterbody features (`'Aquaculture Area', 'Estuary', 'Watercourse Area', 'Salt Evaporator', 'Settling Pond'` and perennial `'Lakes'`)
