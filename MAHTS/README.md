@@ -14,6 +14,7 @@
 * Fix CRS of exported GeoJSON by converting to `EPSG:4326`
 * Remove previous zeroing of yearly distance values to 1988. Yearly distances are now relative to the 2018 baseline (e.g. 0 for the 2018 contour), which should be simpler easier to interpret
 * Update all time coastal buffer to 1500 m (from 1000 m) to prevent lost contours in extremely dynamic regions
+* Update `dask_chunks` to `{'time': 1, 'x': 2000, 'y': 2000}` 
 
 ### v0.1.0 (April 1, 2020)
 

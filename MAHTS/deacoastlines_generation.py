@@ -531,7 +531,7 @@ def main(argv=None):
     query = {'geopolygon': study_area_geopoly.buffer(0.05),
              'time': ('1987', '2019'),
              'cloud_cover': [0, 90],
-             'dask_chunks': {'time': 1, 'x': 1000, 'y': 1000}}
+             'dask_chunks': {'time': 1, 'x': 2000, 'y': 2000}}
 
     # Load virtual product    
     ds = load_mndwi(dc, 
