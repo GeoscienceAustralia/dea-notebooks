@@ -193,34 +193,79 @@ def load_rasters(output_name,
     return yearly_ds
 
 
+def waterbody_mask(input_data,
+                   modification_data,
+                   bbox,
+                   yearly_ds):
+    """
+    Generates a raster mask for DEACoastLines based on the 
+    SurfaceHydrologyPolygonsRegional.gdb dataset, and a vector 
+    file containing minor modifications to this dataset (e.g. 
+    features to remove or add to the dataset).
+    
+    The mask returns True for perennial 'Lake' features, any 
+    'Aquaculture Area', 'Estuary', 'Watercourse Area', 'Salt 
+    Evaporator', and 'Settling Pond' features. Features of 
+    type 'add' from the modification data file are added to the
+    mask, while features of type 'remove' are removed.
+    """
+
+    # Import SurfaceHydrologyPolygonsRegional data
+    waterbody_gdf = gpd.read_file(input_data, bbox=bbox).to_crs(yearly_ds.crs)
+
+    # Restrict to coastal features
+    lakes_bool = ((waterbody_gdf.FEATURETYPE == 'Lake') &
+                  (waterbody_gdf.PERENNIALITY == 'Perennial'))
+    other_bool = waterbody_gdf.FEATURETYPE.isin(['Aquaculture Area', 
+                                                 'Estuary', 
+                                                 'Watercourse Area', 
+                                                 'Salt Evaporator', 
+                                                 'Settling Pond'])
+    waterbody_gdf = waterbody_gdf[lakes_bool | other_bool]
+
+    # Load in modification dataset and select features to remove/add
+    mod_gdf = gpd.read_file(modification_data, bbox=bbox).to_crs(yearly_ds.crs)
+    to_remove = mod_gdf[mod_gdf['type'] == 'remove']
+    to_add = mod_gdf[mod_gdf['type'] == 'add']
+
+    # Remove and add features
+    if len(to_remove.index) > 0:
+        waterbody_gdf = gpd.overlay(waterbody_gdf, to_remove, how='difference')
+    if len(to_add.index) > 0:
+        waterbody_gdf = gpd.overlay(waterbody_gdf, to_add, how='union')
+        
+    # Rasterize waterbody polygons into a numpy mask. The try-except catches 
+    # cases where no waterbody polygons exist in the study area
+    try:
+        waterbody_mask = rasterize(shapes=waterbody_gdf['geometry'],
+                                   out_shape=yearly_ds.geobox.shape,
+                                   transform=yearly_ds.geobox.transform,
+                                   all_touched=True).astype(bool)
+    except:
+        waterbody_mask = np.full(yearly_ds.geobox.shape, False, dtype=bool)
+        
+    return waterbody_mask
+
+
 def contours_preprocess(yearly_ds, 
                         water_index, 
                         index_threshold, 
-                        estuary_gdf, 
+                        waterbody_array, 
                         points_gdf,
                         output_path):  
     
-    # Rasterize estuary polygons into a numpy mask. The try-except catches cases
-    # where no estuary polygons exist in the study area
-    try:
-        estuary_mask = rasterize(shapes=estuary_gdf['geometry'],
-                                 out_shape=yearly_ds[water_index].shape[1:],
-                                 transform=yearly_ds.transform,
-                                 all_touched=True).astype(bool)
-    except:
-        estuary_mask = np.full(yearly_ds[water_index].shape[1:], False, dtype=bool)
-    
     # Identify pixels with less than 5 annual observations or > 0.25 MNDWI 
-    # standard deviation in at least 75 % of years. Apply erosion to 
-    # focus on only large contiguous regions 
-    quantile_ds = yearly_ds[['stdev', 'count']].quantile(q=0.75, dim='year')
-    persistent_stdev = binary_erosion(image = quantile_ds['stdev'] > 0.25, 
+    # standard deviation in at least 75 % of years. Apply binary opening
+    # to clean mask data to remove noisy pixels
+#     quantile_ds = yearly_ds[['stdev', 'count']].quantile(q=0.75, dim='year')
+    quantile_ds = yearly_ds[['stdev', 'count']].median(dim='year')
+    persistent_stdev = binary_opening(image = quantile_ds['stdev'] > 0.25, 
                                       selem = disk(3)) 
-    persistent_nodata = binary_erosion(image = quantile_ds['count'] < 5, 
+    persistent_nodata = binary_opening(image = quantile_ds['count'] < 5, 
                                        selem = disk(3)) 
 
     # Remove low obs pixels and replace with 3-year gapfill
-    gapfill_mask = (yearly_ds['count'] > 5) & (yearly_ds['stdev'] > 0.5)
+    gapfill_mask = (yearly_ds['count'] > 5)  # & (yearly_ds['stdev'] > 0.5)
     yearly_ds[water_index] = yearly_ds[water_index].where(gapfill_mask, 
                                                           other=yearly_ds.gapfill_index)
     yearly_ds['tide_m'] = yearly_ds['tide_m'].where(gapfill_mask, 
@@ -229,7 +274,7 @@ def contours_preprocess(yearly_ds,
     # Apply water index threshold
     thresholded_ds = ((yearly_ds[water_index] > index_threshold)
                       .where(~yearly_ds[water_index].isnull())
-                      .where((~estuary_mask), 0))
+                      .where((~waterbody_array), 0))
 
     # Identify ocean by identifying the largest connected area of water pixels
     # as water in at least 90% of the entire stack of thresholded data
@@ -238,9 +283,9 @@ def contours_preprocess(yearly_ds,
                                               all_time_median, 
                                               disk(3)), points_gdf)
 
-    # Generate all time 1500 m buffer (~50 pixels) from ocean-land boundary
-    buffer_ocean = binary_dilation(full_sea_mask, disk(50))
-    buffer_land = binary_dilation(~full_sea_mask, disk(50))
+    # Generate all time 1200 m buffer (~40 pixels) from ocean-land boundary
+    buffer_ocean = binary_dilation(full_sea_mask, disk(40))
+    buffer_land = binary_dilation(~full_sea_mask, disk(40))
     coastal_buffer = buffer_ocean & buffer_land
 
     # Generate sea mask for each timestep
@@ -248,7 +293,7 @@ def contours_preprocess(yearly_ds,
                        .groupby('year')
                        .apply(lambda x: mask_ocean(x, points_gdf)))
 
-    # Keep only pixels that are within 1500 m of the ocean in the
+    # Keep only pixels that are within 1200 m of the ocean in the
     # full stack, and directly connected to ocean in each yearly timestep
     masked_ds = yearly_ds[water_index].where((yearly_sea_mask & 
                                               coastal_buffer))
@@ -256,10 +301,10 @@ def contours_preprocess(yearly_ds,
     masked_ds.attrs['transform'] = yearly_ds.transform    
     
     # Create raster containg all time mask data
-    all_time_mask = np.full(yearly_ds[water_index].shape[1:], 0, dtype='int8')
+    all_time_mask = np.full(yearly_ds.geobox.shape, 0, dtype='int8')
     all_time_mask[buffer_land & ~coastal_buffer] = 1
     all_time_mask[buffer_ocean & ~coastal_buffer] = 2
-    all_time_mask[estuary_mask & coastal_buffer] = 3
+    all_time_mask[waterbody_array & coastal_buffer] = 3
     all_time_mask[persistent_stdev & coastal_buffer] = 4
     all_time_mask[persistent_nodata & coastal_buffer] = 5
     
@@ -560,34 +605,25 @@ def main(argv=None):
     index_threshold = 0.00
     baseline_year = '2018'
 
-    # Create output vector folder
-    output_dir = f'output_data/{study_area}_{output_name}/vectors'
-    os.makedirs(f'{output_dir}/shapefiles', exist_ok=True)
-
     ###############################
     # Load DEA CoastLines rasters #
     ###############################
     
     yearly_ds = load_rasters(output_name, study_area, water_index)
+    
+    # Create output vector folder
+    output_dir = f'output_data/{study_area}_{output_name}/vectors'
+    os.makedirs(f'{output_dir}/shapefiles', exist_ok=True)
 
-    ######################
-    # Load external data #
-    ######################
+    ####################
+    # Load vector data #
+    ####################
 
     # Get bounding box to load data for
     bbox = gpd.GeoSeries(box(*array_bounds(height=yearly_ds.sizes['y'], 
                                            width=yearly_ds.sizes['x'], 
                                            transform=yearly_ds.transform)), 
                          crs=yearly_ds.crs)
-
-    # Estaury mask
-    estuary_gdf = (gpd.read_file('input_data/SurfaceHydrologyPolygonsRegional.gdb', bbox=bbox)
-                   .to_crs(yearly_ds.crs))
-    to_keep = (estuary_gdf.FEATURETYPE.isin(['Aquaculture Area', 'Estuary', 
-               'Watercourse Area', 'Salt Evaporator', 'Settling Pond']) | 
-               ((estuary_gdf.FEATURETYPE == 'Lake') &
-                (estuary_gdf.PERENNIALITY == 'Perennial')))
-    estuary_gdf = estuary_gdf[to_keep]
 
     # Rocky shore mask
     smartline_gdf = (gpd.read_file('input_data/Smartline.gdb', bbox=bbox)
@@ -611,20 +647,27 @@ def main(argv=None):
     ##############################
     # Extract shoreline contours #
     ##############################
+    
+    # Generate waterbody mask
+    waterbody_array = waterbody_mask(
+        input_data='input_data/SurfaceHydrologyPolygonsRegional.gdb',
+        modification_data='input_data/estuary_mask_modifications.geojson',
+        bbox=bbox,
+        yearly_ds=yearly_ds)
 
     # Mask dataset to focus on coastal zone only
     masked_ds = contours_preprocess(yearly_ds, 
-                                    water_index, 
-                                    index_threshold, 
-                                    estuary_gdf, 
-                                    points_gdf,
-                                    output_path=f'output_data/{study_area}_{output_name}')
+        water_index, 
+        index_threshold, 
+        estuary_gdf, 
+        points_gdf,
+        output_path=f'output_data/{study_area}_{output_name}')
 
     # Extract contours
     contours_gdf = subpixel_contours(da=masked_ds,
-                                     z_values=index_threshold,
-                                     min_vertices=10,
-                                     dim='year').set_index('year')
+        z_values=index_threshold,
+        min_vertices=10,
+        dim='year').set_index('year')
 
     ######################
     # Compute statistics #

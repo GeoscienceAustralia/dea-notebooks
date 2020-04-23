@@ -17,6 +17,7 @@ from affine import Affine
 from functools import partial
 from shapely.geometry import shape
 from datacube.helpers import write_geotiff
+from datacube.utils.dask import start_local_dask
 from datacube.utils.geometry import GeoBox, Geometry, CRS
 from datacube.virtual import catalog_from_file, construct
 
@@ -496,17 +497,12 @@ def main(argv=None):
         
     # Set study area and name for analysis
     study_area = int(argv[1])
-    output_name = str(argv[2])
-    
-    # If output folder doesn't exist, create it
-    output_dir = f'output_data/{study_area}_{output_name}'
-    os.makedirs(output_dir, exist_ok=True)
-    
+    output_name = str(argv[2])    
+   
     # Connect to datacube    
     dc = datacube.Datacube(app='DEACoastLines_generation', env='c3-samples')
     
     # Start local dask client
-    from datacube.utils.dask import start_local_dask
     client = start_local_dask(mem_safety_margin='3gb')
     print(client)    
 
@@ -573,6 +569,10 @@ def main(argv=None):
     ##############################
     # Generate yearly composites #
     ##############################
+    
+    # If output folder doesn't exist, create it
+    output_dir = f'output_data/{study_area}_{output_name}'
+    os.makedirs(output_dir, exist_ok=True)
 
     # Iterate through each year and export annual and 3-year gapfill composites
     export_annual_gapfill(ds, 
