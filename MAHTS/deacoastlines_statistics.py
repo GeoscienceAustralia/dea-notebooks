@@ -319,7 +319,7 @@ def contours_preprocess(yearly_ds,
                                     attrs=yearly_ds.attrs)
     write_cog(geo_im=all_time_mask_da, 
               fname=f'{output_path}/all_time_mask.tif', 
-              blocksize=128, 
+              blocksize=256, 
               overwrite=True)
     
     # Reset attributes and return data
