@@ -33,6 +33,8 @@ from datacube.utils.dask import start_local_dask
 from datacube.utils.rio import configure_s3_access
 
 _HAVE_PROXY = bool(find_spec('jupyter_server_proxy'))
+_IS_AWS = ('AWS_ACCESS_KEY_ID' in os.environ or
+           'AWS_DEFAULT_REGION' in os.environ)
 
 
 def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
@@ -69,7 +71,7 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
     # Start up a local cluster
     client = start_local_dask(mem_safety_margin=spare_mem)
 
-    if 'AWS_ACCESS_KEY_ID' in os.environ:
+    if _IS_AWS:
         # Configure GDAL for s3 access
         configure_s3_access(aws_unsigned=True,
                             client=client)
