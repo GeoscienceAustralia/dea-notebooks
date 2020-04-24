@@ -25,10 +25,14 @@ Last modified: March 2020
 '''
 
 
+from importlib.util import find_spec
 import os
 import dask
+from IPython.display import display
 from datacube.utils.dask import start_local_dask
 from datacube.utils.rio import configure_s3_access
+
+_HAVE_PROXY = bool(find_spec('jupyter_server_proxy'))
 
 
 def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
@@ -56,34 +60,19 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
 
     """
 
-    if 'AWS_ACCESS_KEY_ID' in os.environ:
-
-        # Close previous client if any
-        client = locals().get('client', None)
-        if client is not None:
-            client.close()
-            del client
-
+    if _HAVE_PROXY:
         # Configure dashboard link to go over proxy
+        prefix = os.environ.get('JUPYTERHUB_SERVICE_PREFIX', '/')
         dask.config.set({"distributed.dashboard.link":
-                     os.environ.get('JUPYTERHUB_SERVICE_PREFIX', '/')+"proxy/{port}/status"})
+                         prefix + "proxy/{port}/status"})
 
-        # Start up a local cluster
-        client = start_local_dask(mem_safety_margin=spare_mem)
+    # Start up a local cluster
+    client = start_local_dask(mem_safety_margin=spare_mem)
 
-        ## Configure GDAL for s3 access
+    if 'AWS_ACCESS_KEY_ID' in os.environ:
+        # Configure GDAL for s3 access
         configure_s3_access(aws_unsigned=True,
-                            client=client);
-    else:
-
-        # Close previous client if any
-        client = locals().get('client', None)
-        if client is not None:
-            client.close()
-            del client
-
-        # Start up a local cluster on NCI
-        client = start_local_dask(mem_safety_margin=spare_mem)
+                            client=client)
 
     # Show the dask cluster settings
     if display_client:
