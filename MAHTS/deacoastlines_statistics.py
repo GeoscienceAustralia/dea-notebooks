@@ -277,10 +277,10 @@ def contours_preprocess(yearly_ds,
                            .where(gapfill_mask, 
                                   other=yearly_ds.gapfill_tide_m))
 
-    # Apply water index threshold, masking result to set both nodata
-    # pixels or pixels within the waterbody mask to NaN to exclude them
+    # Apply water index threshold, restore nodata values back to NaN, 
+    # and assign pixels within waterbody mask to 0 so they are excluded
     thresholded_ds = ((yearly_ds[water_index] > index_threshold)
-                      .where(~nodata & ~waterbody_array))
+                      .where(~nodata).where(~waterbody_array, 0))
     
     # Identify ocean by identifying the largest connected area of water pixels
     # as water in at least 90% of the entire stack of thresholded data.
