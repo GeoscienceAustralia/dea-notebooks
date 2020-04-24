@@ -13,7 +13,7 @@ import numpy as np
 import geopandas as gpd
 import pandas as pd
 from shapely.ops import nearest_points
-from datacube.helpers import write_geotiff
+from datacube.utils.cog import write_cog
 from scipy import stats
 
 import os
@@ -137,8 +137,10 @@ def mask_ocean(bool_array, points_gdf, connectivity=1):
     # Return only blobs that contained tide modelling point
     ocean_mask = blobs_labels.isin(ocean_blobs[ocean_blobs != 0])
     
-    # Dilate mask
-    ocean_mask = binary_dilation(ocean_mask, selem=square(3))
+    # Dilate mask so that we include land pixels on the inland side
+    # of each shoreline to ensure contour extraction accurately
+    # seperates land and water spectra
+    ocean_mask = binary_dilation(ocean_mask, selem=disk(3))
 
     return ocean_mask
 
@@ -254,51 +256,51 @@ def contours_preprocess(yearly_ds,
                         points_gdf,
                         output_path):  
     
-    # Identify pixels with less than 5 annual observations or > 0.25 MNDWI 
-    # standard deviation in at least 75 % of years. Apply binary opening
-    # to clean mask data to remove noisy pixels
-#     quantile_ds = yearly_ds[['stdev', 'count']].quantile(q=0.75, dim='year')
-    quantile_ds = yearly_ds[['stdev', 'count']].median(dim='year')
-    persistent_stdev = binary_opening(image = quantile_ds['stdev'] > 0.25, 
-                                      selem = disk(3)) 
-    persistent_nodata = binary_opening(image = quantile_ds['count'] < 5, 
-                                       selem = disk(3)) 
+    # Flag nodata pixels
+    nodata = yearly_ds[water_index].isnull()
+    
+    # Identify pixels with less than 5 annual observations or > 0.25 
+    # MNDWI standard deviation in more than 25% of years. Apply binary 
+    # erosion to isolate large connected areas of problematic pixels
+    mean_stdev = (yearly_ds['stdev'] > 0.25).where(~nodata).mean(dim='year')
+    mean_count = (yearly_ds['count'] < 5).where(~nodata).mean(dim='year')
+    persistent_stdev = binary_erosion(mean_stdev > 0.25, selem = disk(2))
+    persistent_lowobs = binary_erosion(mean_count > 0.25, selem = disk(2))
 
     # Remove low obs pixels and replace with 3-year gapfill
-    gapfill_mask = (yearly_ds['count'] > 5)  # & (yearly_ds['stdev'] > 0.5)
-    yearly_ds[water_index] = yearly_ds[water_index].where(gapfill_mask, 
-                                                          other=yearly_ds.gapfill_index)
-    yearly_ds['tide_m'] = yearly_ds['tide_m'].where(gapfill_mask, 
-                                                    other=yearly_ds.gapfill_tide_m)
+    # TODO: simplify by substituting entire identical gapfill array
+    gapfill_mask = yearly_ds['count'] > 5
+    yearly_ds[water_index] = (yearly_ds[water_index]
+                              .where(gapfill_mask, 
+                                     other=yearly_ds.gapfill_index))
+    yearly_ds['tide_m'] = (yearly_ds['tide_m']
+                           .where(gapfill_mask, 
+                                  other=yearly_ds.gapfill_tide_m))
 
-    # Apply water index threshold
+    # Apply water index threshold, masking result to set both nodata
+    # pixels or pixels within the waterbody mask to NaN to exclude them
     thresholded_ds = ((yearly_ds[water_index] > index_threshold)
-                      .where(~yearly_ds[water_index].isnull())
-                      .where((~waterbody_array), 0))
-
+                      .where(~nodata & ~waterbody_array))
+    
     # Identify ocean by identifying the largest connected area of water pixels
-    # as water in at least 90% of the entire stack of thresholded data
-    all_time_median = (thresholded_ds.mean(dim='year') > 0.9)
-    full_sea_mask = mask_ocean(xr.apply_ufunc(binary_opening, 
-                                              all_time_median, 
-                                              disk(3)), points_gdf)
-
+    # as water in at least 90% of the entire stack of thresholded data.
+    # Apply a binary opening step to clean noisy pixels
+    all_time = thresholded_ds.mean(dim='year') > 0.9
+    all_time_cleaned = xr.apply_ufunc(binary_opening, all_time, disk(3))
+    all_time_ocean = mask_ocean(all_time_cleaned, points_gdf)   
+    
     # Generate all time 1200 m buffer (~40 pixels) from ocean-land boundary
-    buffer_ocean = binary_dilation(full_sea_mask, disk(40))
-    buffer_land = binary_dilation(~full_sea_mask, disk(40))
-    coastal_buffer = buffer_ocean & buffer_land
-
-    # Generate sea mask for each timestep
-    yearly_sea_mask = (thresholded_ds
-                       .groupby('year')
-                       .apply(lambda x: mask_ocean(x, points_gdf)))
-
-    # Keep only pixels that are within 1200 m of the ocean in the
-    # full stack, and directly connected to ocean in each yearly timestep
-    masked_ds = yearly_ds[water_index].where((yearly_sea_mask & 
-                                              coastal_buffer))
-    masked_ds.attrs['crs'] = yearly_ds.crs[6:]
-    masked_ds.attrs['transform'] = yearly_ds.transform    
+    buffer_ocean = binary_dilation(all_time_ocean, disk(40))
+    buffer_land = binary_dilation(~all_time_ocean, disk(40))
+    coastal_buffer = buffer_ocean & buffer_land    
+    
+    # Generate annual masks by selecting only water pixels that are 
+    # directly connected to the ocean in each yearly timestep
+    annual_masks = (thresholded_ds.groupby('year')
+                    .apply(lambda x: mask_ocean(x, points_gdf)))
+    
+    # Keep pixels within both all time coastal buffer and annual mask
+    masked_ds = yearly_ds[water_index].where(annual_masks & coastal_buffer)
     
     # Create raster containg all time mask data
     all_time_mask = np.full(yearly_ds.geobox.shape, 0, dtype='int8')
@@ -306,22 +308,22 @@ def contours_preprocess(yearly_ds,
     all_time_mask[buffer_ocean & ~coastal_buffer] = 2
     all_time_mask[waterbody_array & coastal_buffer] = 3
     all_time_mask[persistent_stdev & coastal_buffer] = 4
-    all_time_mask[persistent_nodata & coastal_buffer] = 5
-    
+    all_time_mask[persistent_lowobs & coastal_buffer] = 5
+
     # Export mask raster to assist evaluating results
     all_time_mask_da = xr.DataArray(data = all_time_mask, 
                                     coords={'x': yearly_ds.x, 
                                             'y': yearly_ds.y},
                                     dims=['y', 'x'],
-                                    name='all_time_mask')
-    all_time_mask_ds = all_time_mask_da.to_dataset()
-    all_time_mask_ds.attrs = yearly_ds.attrs
-    write_geotiff(filename=f'{output_path}/all_time_mask.tif', 
-                  dataset=all_time_mask_ds,
-                  profile_override={'blockxsize': 1024, 
-                                    'blockysize': 1024, 
-                                    'compress': 'deflate', 
-                                    'zlevel': 5})
+                                    name='all_time_mask',
+                                    attrs=yearly_ds.attrs)
+    write_cog(geo_im=all_time_mask_da, 
+              fname=f'{output_path}/all_time_mask.tif', 
+              blocksize=128, 
+              overwrite=True)
+    
+    # Reset attributes and return data
+    masked_ds.attrs = yearly_ds.attrs
 
     return masked_ds
 
@@ -334,9 +336,11 @@ def stats_points(contours_gdf, baseline_year, distance=30):
     # If multiple features are returned, take unary union
     if baseline_contour.shape[0] > 0:
         baseline_contour = baseline_contour.unary_union
+    else:
+        baseline_contour = baseline_contour.iloc[0]
 
     # Generate points along line and convert to geopandas.GeoDataFrame
-    points_line = [baseline_contour.iloc[0].interpolate(i) 
+    points_line = [baseline_contour.interpolate(i) 
                    for i in range(0, int(baseline_contour.length), distance)]
     points_gdf = gpd.GeoDataFrame(geometry=points_line, crs=contours_gdf.crs)
     
@@ -566,7 +570,7 @@ def contour_certainty(contours_gdf,
                                crs=all_time_mask.geobox.crs,
                                transform=all_time_mask.geobox.transform,
                                mask=raster_mask.values)
-    vector_mask.geometry = vector_mask.buffer(0)
+    vector_mask.geometry = vector_mask.buffer(0).simplify(30)
     
     # Clip and overlay to seperate into uncertain and certain classes
     contours_good = gpd.overlay(contours_gdf, vector_mask, how='difference')
@@ -659,7 +663,7 @@ def main(argv=None):
     masked_ds = contours_preprocess(yearly_ds, 
         water_index, 
         index_threshold, 
-        estuary_gdf, 
+        waterbody_array, 
         points_gdf,
         output_path=f'output_data/{study_area}_{output_name}')
 
@@ -736,15 +740,6 @@ def main(argv=None):
     # Export stats and contours as ESRI shapefiles
     contour_path = contour_path.replace('vectors', 'vectors/shapefiles')
     contours_gdf.reset_index().to_file(f'{contour_path}.shp')
-    
-    #######
-    # Zip #
-    #######
-    
-    # Create a zip file containing all vector files
-    shutil.make_archive(base_name=f'output_data/outputs_{study_area}_{output_name}', 
-                        format='zip', 
-                        root_dir=output_dir)
 
 
 if __name__ == "__main__":
