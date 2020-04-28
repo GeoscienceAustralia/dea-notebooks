@@ -16,7 +16,7 @@ import scipy.interpolate
 from affine import Affine
 from functools import partial
 from shapely.geometry import shape
-from datacube.helpers import write_geotiff
+from datacube.utils.cog import write_cog
 from datacube.utils.dask import start_local_dask
 from datacube.utils.geometry import GeoBox, Geometry, CRS
 from datacube.virtual import catalog_from_file, construct
@@ -386,25 +386,19 @@ def tidal_composite(year_ds,
     # Write each variable to file  
     if export_geotiff:
         for i in median_ds:
-            try:
-                
-                # Write using float nodata type
-                geotiff_profile = {'blockxsize': 1024, 
-                                   'blockysize': 1024, 
-                                   'compress': 'deflate', 
-                                   'zlevel': 5,
-                                   'nodata': np.nan}
-                
-                write_geotiff(filename=f'{output_dir}/{str(label)}_{i}{output_suffix}.tif', 
-                              dataset=median_ds[[i]],
-                              profile_override=geotiff_profile)
+            try:                
+               
+                write_cog(geo_im=median_ds[[i]], 
+                          fname=f'{output_dir}/{str(label)}_{i}{output_suffix}.tif',
+                          nodata=np.nan,
+                          overwrite=True)
+
             except:
                 
-                # Update nodata value for int data type
-                geotiff_profile.update(nodata=-999)
-                write_geotiff(filename=f'{output_dir}/{str(label)}_{i}{output_suffix}.tif', 
-                              dataset=median_ds[[i]],
-                              profile_override=geotiff_profile)
+                write_cog(geo_im=median_ds[[i]],
+                          fname=f'{output_dir}/{str(label)}_{i}{output_suffix}.tif',
+                          nodata=-999,
+                          overwrite=True)
             
     # Set coordinate and dim
     median_ds = (median_ds
@@ -515,16 +509,17 @@ def main(argv=None):
 
     # Albers grid cells used to process the analysis
     gridcell_gdf = (gpd.read_file('input_data/50km_albers_grid_clipped.shp')
-                .to_crs(epsg=4326)
-                .set_index('id'))
+                    .to_crs(epsg=4326)
+                    .set_index('id')
+                    .loc[[study_area]])
 
     ################
     # Loading data #
     ################
     
     # Create query
-    study_area_geopoly = get_geopoly(study_area, gridcell_gdf)
-    query = {'geopolygon': study_area_geopoly.buffer(0.05),
+    geopoly = Geometry(gridcell_gdf.iloc[0].geometry, crs=gridcell_gdf.crs)
+    query = {'geopolygon': geopoly.buffer(0.05),
              'time': ('1987', '2019'),
              'cloud_cover': [0, 90],
              'dask_chunks': {'time': 1, 'x': 2000, 'y': 2000}}
