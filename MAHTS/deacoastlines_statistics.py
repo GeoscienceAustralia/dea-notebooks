@@ -22,6 +22,9 @@ from shapely.geometry import box
 from rasterio.transform import array_bounds
 import shutil
 
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 sys.path.append('../Scripts')
 from dea_spatialtools import subpixel_contours
 from dea_spatialtools import xr_vectorize

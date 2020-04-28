@@ -21,6 +21,9 @@ from datacube.utils.dask import start_local_dask
 from datacube.utils.geometry import GeoBox, Geometry, CRS
 from datacube.virtual import catalog_from_file, construct
 
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 sys.path.append('../Scripts')
 from dea_datahandling import mostcommon_crs
 
@@ -383,22 +386,18 @@ def tidal_composite(year_ds,
                           .astype('int16'))
     median_ds['stdev'] = year_ds.mndwi.std(dim='time', keep_attrs=True)
     
+    # Set nodata values
+    median_ds['mndwi'].attrs['nodata'] = np.nan
+    median_ds['tide_m'].attrs['nodata'] = np.nan
+    median_ds['stdev'].attrs['nodata'] = np.nan
+    median_ds['count'].attrs['nodata'] = -999
+    
     # Write each variable to file  
     if export_geotiff:
-        for i in median_ds:
-            try:                
-               
-                write_cog(geo_im=median_ds[[i]], 
-                          fname=f'{output_dir}/{str(label)}_{i}{output_suffix}.tif',
-                          nodata=np.nan,
-                          overwrite=True)
-
-            except:
-                
-                write_cog(geo_im=median_ds[[i]],
-                          fname=f'{output_dir}/{str(label)}_{i}{output_suffix}.tif',
-                          nodata=-999,
-                          overwrite=True)
+        for i in median_ds:              
+            write_cog(geo_im=median_ds[i].compute(), 
+                      fname=f'{output_dir}/{str(label)}_{i}{output_suffix}.tif',
+                      overwrite=True)
             
     # Set coordinate and dim
     median_ds = (median_ds
