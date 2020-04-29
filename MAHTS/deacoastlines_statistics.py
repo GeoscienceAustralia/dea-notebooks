@@ -408,8 +408,6 @@ def rocky_shores_clip(points_gdf, smartline_gdf, buffer=50):
         return None
 
 
-import numpy as np
-
 def azimuth(point1, point2):
     '''
     Azimuth between two shapely points (interval 0 - 360)
@@ -562,8 +560,7 @@ def calculate_regressions(yearly_ds,
 
 def contour_certainty(contours_gdf, 
                       output_path, 
-                      uncertain_classes=[4, 5],
-                      buffer=0):
+                      uncertain_classes=[4, 5]):
 
     # Load in mask data and identify uncertain classes
     all_time_mask = xr.open_rasterio(f'{output_path}/all_time_mask.tif')
@@ -582,8 +579,12 @@ def contour_certainty(contours_gdf,
     contours_uncertain = gpd.clip(contours_gdf, vector_mask)
     contours_uncertain['certainty'] = 'uncertain'    
     
-    # Combine both datasets and return as one
-    return pd.concat([contours_good, contours_uncertain])
+    # Combine both datasets and filter to line features
+    contours_df = pd.concat([contours_good, contours_uncertain])
+    is_line = contours_gdf.geometry.type.isin(['MultiLineString', 'LineString'])
+    contours_gdf = contours_gdf.loc[is_line]    
+    
+    return contours_gdf
 
     
 def main(argv=None):
