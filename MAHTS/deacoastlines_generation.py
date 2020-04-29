@@ -16,9 +16,13 @@ import scipy.interpolate
 from affine import Affine
 from functools import partial
 from shapely.geometry import shape
-from datacube.helpers import write_geotiff
+from datacube.utils.cog import write_cog
+from datacube.utils.dask import start_local_dask
 from datacube.utils.geometry import GeoBox, Geometry, CRS
 from datacube.virtual import catalog_from_file, construct
+
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 sys.path.append('../Scripts')
 from dea_datahandling import mostcommon_crs
@@ -382,28 +386,18 @@ def tidal_composite(year_ds,
                           .astype('int16'))
     median_ds['stdev'] = year_ds.mndwi.std(dim='time', keep_attrs=True)
     
+    # Set nodata values
+    median_ds['mndwi'].attrs['nodata'] = np.nan
+    median_ds['tide_m'].attrs['nodata'] = np.nan
+    median_ds['stdev'].attrs['nodata'] = np.nan
+    median_ds['count'].attrs['nodata'] = -999
+    
     # Write each variable to file  
     if export_geotiff:
-        for i in median_ds:
-            try:
-                
-                # Write using float nodata type
-                geotiff_profile = {'blockxsize': 1024, 
-                                   'blockysize': 1024, 
-                                   'compress': 'deflate', 
-                                   'zlevel': 5,
-                                   'nodata': np.nan}
-                
-                write_geotiff(filename=f'{output_dir}/{str(label)}_{i}{output_suffix}.tif', 
-                              dataset=median_ds[[i]],
-                              profile_override=geotiff_profile)
-            except:
-                
-                # Update nodata value for int data type
-                geotiff_profile.update(nodata=-999)
-                write_geotiff(filename=f'{output_dir}/{str(label)}_{i}{output_suffix}.tif', 
-                              dataset=median_ds[[i]],
-                              profile_override=geotiff_profile)
+        for i in median_ds:              
+            write_cog(geo_im=median_ds[i].compute(), 
+                      fname=f'{output_dir}/{str(label)}_{i}{output_suffix}.tif',
+                      overwrite=True)
             
     # Set coordinate and dim
     median_ds = (median_ds
@@ -496,17 +490,12 @@ def main(argv=None):
         
     # Set study area and name for analysis
     study_area = int(argv[1])
-    output_name = str(argv[2])
-    
-    # If output folder doesn't exist, create it
-    output_dir = f'output_data/{study_area}_{output_name}'
-    os.makedirs(output_dir, exist_ok=True)
-    
+    output_name = str(argv[2])    
+   
     # Connect to datacube    
     dc = datacube.Datacube(app='DEACoastLines_generation', env='c3-samples')
     
     # Start local dask client
-    from datacube.utils.dask import start_local_dask
     client = start_local_dask(mem_safety_margin='3gb')
     print(client)    
 
@@ -519,19 +508,20 @@ def main(argv=None):
 
     # Albers grid cells used to process the analysis
     gridcell_gdf = (gpd.read_file('input_data/50km_albers_grid_clipped.shp')
-                .to_crs(epsg=4326)
-                .set_index('id'))
+                    .to_crs(epsg=4326)
+                    .set_index('id')
+                    .loc[[study_area]])
 
     ################
     # Loading data #
     ################
     
     # Create query
-    study_area_geopoly = get_geopoly(study_area, gridcell_gdf)
-    query = {'geopolygon': study_area_geopoly,
+    geopoly = Geometry(gridcell_gdf.iloc[0].geometry, crs=gridcell_gdf.crs)
+    query = {'geopolygon': geopoly.buffer(0.05),
              'time': ('1987', '2019'),
              'cloud_cover': [0, 90],
-             'dask_chunks': {'time': 1, 'x': 1000, 'y': 1000}}
+             'dask_chunks': {'time': 1, 'x': 2000, 'y': 2000}}
 
     # Load virtual product    
     ds = load_mndwi(dc, 
@@ -545,6 +535,10 @@ def main(argv=None):
     
     # Model tides at point locations
     tidepoints_gdf = model_tides(ds, points_gdf)
+    
+    # Test if there is data and skip rest of the analysis if not
+    if tidepoints_gdf.geometry.unique().shape[0] <= 1:
+        sys.exit('Gridcell has 1 or less tidal points; cannot interpolate data')
 
     # Interpolate tides for each timestep into the spatial extent of the data 
     pool = multiprocessing.Pool(multiprocessing.cpu_count() - 1)
@@ -569,6 +563,10 @@ def main(argv=None):
     ##############################
     # Generate yearly composites #
     ##############################
+    
+    # If output folder doesn't exist, create it
+    output_dir = f'output_data/{study_area}_{output_name}'
+    os.makedirs(output_dir, exist_ok=True)
 
     # Iterate through each year and export annual and 3-year gapfill composites
     export_annual_gapfill(ds, 
