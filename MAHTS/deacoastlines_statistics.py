@@ -580,7 +580,7 @@ def contour_certainty(contours_gdf,
     contours_uncertain['certainty'] = 'uncertain'    
     
     # Combine both datasets and filter to line features
-    contours_df = pd.concat([contours_good, contours_uncertain])
+    contours_gdf = pd.concat([contours_good, contours_uncertain])
     is_line = contours_gdf.geometry.type.isin(['MultiLineString', 'LineString'])
     contours_gdf = contours_gdf.loc[is_line]    
     
