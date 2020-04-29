@@ -34,7 +34,7 @@ do
     module use /g/data/v10/public/modules/modulefiles\n\
     module load dea/unstable\n\
     module load otps\n\
-    python3 /g/data/r78/rt1527/dea-notebooks/MAHTS/deacoastlines_generation.py $study_area $output_name"
+    python3 /g/data/r78/rt1527/dea-notebooks/MAHTS/deacoastlines_statistics.py $study_area $output_name"
 
     echo -e ${PBS} | qsub || echo "${study_area} failed" >> log.txt
     sleep 0.2

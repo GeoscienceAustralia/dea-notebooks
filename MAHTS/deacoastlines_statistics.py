@@ -143,7 +143,7 @@ def mask_ocean(bool_array, points_gdf, connectivity=1):
     # Dilate mask so that we include land pixels on the inland side
     # of each shoreline to ensure contour extraction accurately
     # seperates land and water spectra
-    ocean_mask = binary_dilation(ocean_mask, selem=disk(3))
+    ocean_mask = binary_dilation(ocean_mask, selem=square(3))
 
     return ocean_mask
 
@@ -257,7 +257,8 @@ def contours_preprocess(yearly_ds,
                         index_threshold, 
                         waterbody_array, 
                         points_gdf,
-                        output_path):  
+                        output_path,
+                        buffer_pixels=33):  
     
     # Flag nodata pixels
     nodata = yearly_ds[water_index].isnull()
@@ -267,8 +268,8 @@ def contours_preprocess(yearly_ds,
     # erosion to isolate large connected areas of problematic pixels
     mean_stdev = (yearly_ds['stdev'] > 0.25).where(~nodata).mean(dim='year')
     mean_count = (yearly_ds['count'] < 5).where(~nodata).mean(dim='year')
-    persistent_stdev = binary_erosion(mean_stdev > 0.25, selem = disk(2))
-    persistent_lowobs = binary_erosion(mean_count > 0.25, selem = disk(2))
+    persistent_stdev = binary_erosion(mean_stdev > 0.5, selem = disk(2))
+    persistent_lowobs = binary_erosion(mean_count > 0.5, selem = disk(2))
 
     # Remove low obs pixels and replace with 3-year gapfill
     # TODO: simplify by substituting entire identical gapfill array
@@ -292,9 +293,9 @@ def contours_preprocess(yearly_ds,
     all_time_cleaned = xr.apply_ufunc(binary_opening, all_time, disk(3))
     all_time_ocean = mask_ocean(all_time_cleaned, points_gdf)   
     
-    # Generate all time 1200 m buffer (~40 pixels) from ocean-land boundary
-    buffer_ocean = binary_dilation(all_time_ocean, disk(40))
-    buffer_land = binary_dilation(~all_time_ocean, disk(40))
+    # Generate coastal buffer (30m * `buffer_pixels`) from ocean-land boundary
+    buffer_ocean = binary_dilation(all_time_ocean, disk(buffer_pixels))
+    buffer_land = binary_dilation(~all_time_ocean, disk(buffer_pixels))
     coastal_buffer = buffer_ocean & buffer_land    
     
     # Generate annual masks by selecting only water pixels that are 
@@ -673,7 +674,7 @@ def main(argv=None):
     # Extract contours
     contours_gdf = subpixel_contours(da=masked_ds,
         z_values=index_threshold,
-        min_vertices=10,
+        min_vertices=30,
         dim='year').set_index('year')
 
     ######################

@@ -17,8 +17,6 @@
 * In `deacoastlines_statistics.py`: Fixed missing shorelines caused by the waterbody mask by limiting mask to specific waterbody features (`'Aquaculture Area', 'Estuary', 'Watercourse Area', 'Salt Evaporator', 'Settling Pond'` and perennial `'Lakes'`)
 * In `deacoastlines_statistics.py`: Fix CRS of exported GeoJSON contours and statistics files by converting to `EPSG:4326`
 * In `deacoastlines_statistics.py`: Remove previous zeroing of yearly distance values to 1988. Yearly distances are now relative to the 2018 baseline (e.g. 0 for the 2018 contour), which should be simpler easier to interpret
-* In `deacoastlines_statistics.py`: Update all time coastal buffer to 1200 m (from 1000 m) to prevent lost contours in extremely dynamic regions
-
 * In `deacoastlines_statistics.py`: Increase `min_vertices` for contour extraction to 30 to reduce noise
 * In `deacoastlines_statistics.py`: Move vector directory creation until after data load, so no directory is created if rasters do not exist
 
