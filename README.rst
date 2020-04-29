@@ -44,6 +44,7 @@ The Jupyter notebooks on the ``master`` branch of this repository are used to ge
 
 All notebooks in the dea-notebooks repository contain tags describing their functionality. If you are searching for a specific functionality, use the `Tags Index <https://docs.dea.ga.gov.au/genindex.html>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an 'Issue' in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
 
+----------
 
 Getting started with DEA Notebooks
 ==================================
@@ -60,16 +61,17 @@ Once you're set up, there are two main options for interacting with ``dea-notebo
 
   * Refer to the repository's `Guide to DEA Notebooks using the Github website <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-the-Github-website>`_ wiki article.
 
+----------
 
 Contributing to DEA Notebooks
 =============================
 
-Master, develop and working branches
+Develop, master and working branches
 ------------------------------------
 
 The ``dea-notebooks`` repository uses 'branches' to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared. There are two main types of branches:
 
-* `Develop branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop>`_: The ``develop`` branch is ``dea-notebooks``' **default branch**, and where notebooks are put as they are being prepared to be shared publicly. Notebooks added to this branch will be periodically merged into the ``master`` branch after testing and evaluation. The ``develop`` branch is protected, and requires changes to be approved via a 'pull request' and review checklist before they appear on the branch.
+* `Develop branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop>`_: The ``develop`` branch is the **default branch** where notebooks are put as they are being prepared to be shared publicly. Notebooks added to this branch will be periodically merged into the ``master`` branch after testing and evaluation. The ``develop`` branch is protected, and requires changes to be approved via a 'pull request' and review checklist before they appear on the branch.
 * `Master branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/master>`_: The ``master`` branch contains DEA's collection of publicly available notebooks. Notebooks added to this branch will become part of the offical DEA documentation and are published on the `DEA User Guide <https://docs.dea.ga.gov.au/>`_. The ``master`` branch is protected, and is periodically updated with new content from the ``develop`` branch via a 'pull request' (for ``develop`` > ``master`` pull requests, *merge using the 'Create a merge commit' option*).
 * `Working branches <https://github.com/GeoscienceAustralia/dea-notebooks/branches>`_: All other branches in the repository are working spaces for users of ``dea-notebooks``. They have a unique name (typically named after the user, e.g. ``ClaireK``, ``BexDunn``). The notebooks on these branches can be works-in-progress and do not need to be pretty or complete. By using a working branch, it is easy to use scripts and algorithms from ``dea-notebooks`` in your own work, or share and collaborate on a working version of a notebook or code.
 
