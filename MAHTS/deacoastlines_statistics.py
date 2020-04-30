@@ -235,9 +235,13 @@ def waterbody_mask(input_data,
 
     # Remove and add features
     if len(to_remove.index) > 0:
-        waterbody_gdf = gpd.overlay(waterbody_gdf, to_remove, how='difference')
+        if len(waterbody_gdf.index) > 0:
+            waterbody_gdf = gpd.overlay(waterbody_gdf, to_remove, how='difference')        
     if len(to_add.index) > 0:
-        waterbody_gdf = gpd.overlay(waterbody_gdf, to_add, how='union')
+        if len(waterbody_gdf.index) > 0:
+            waterbody_gdf = gpd.overlay(waterbody_gdf, to_add, how='union')
+        else:
+            waterbody_gdf = to_add
         
     # Rasterize waterbody polygons into a numpy mask. The try-except catches 
     # cases where no waterbody polygons exist in the study area
@@ -713,18 +717,22 @@ def main(argv=None):
         # Export stats #
         ################
 
-        # Clip stats to study area extent, remove rocky shores
-        stats_path = f'{output_dir}/stats_{study_area}_{output_name}_' \
-                     f'{water_index}_{index_threshold:.2f}'
-        points_gdf = points_gdf[points_gdf.intersects(study_area_poly['geometry'])]
+        try:
+            
+            # Clip stats to study area extent, remove rocky shores
+            stats_path = f'{output_dir}/stats_{study_area}_{output_name}_' \
+                         f'{water_index}_{index_threshold:.2f}'
+            points_gdf = points_gdf[points_gdf.intersects(study_area_poly['geometry'])]
 
-        # Export to GeoJSON
-        points_gdf.to_crs('EPSG:4326').to_file(f'{stats_path}.geojson', 
-                                               driver='GeoJSON')
+            # Export to GeoJSON
+            points_gdf.to_crs('EPSG:4326').to_file(f'{stats_path}.geojson', 
+                                                   driver='GeoJSON')
 
-        # Export as ESRI shapefiles
-        stats_path = stats_path.replace('vectors', 'vectors/shapefiles')
-        points_gdf.to_file(f'{stats_path}.shp')
+            # Export as ESRI shapefiles
+            stats_path = stats_path.replace('vectors', 'vectors/shapefiles')
+            points_gdf.to_file(f'{stats_path}.shp')
+        except:
+            print('No points file to write')
 
     
     ###################
