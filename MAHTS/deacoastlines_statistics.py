@@ -577,16 +577,24 @@ def contour_certainty(contours_gdf,
                                mask=raster_mask.values)
     vector_mask.geometry = vector_mask.buffer(0).simplify(30)
     
-    # Clip and overlay to seperate into uncertain and certain classes
-    contours_good = gpd.overlay(contours_gdf, vector_mask, how='difference')
-    contours_good['certainty'] = 'good'
-    contours_uncertain = gpd.clip(contours_gdf, vector_mask)
-    contours_uncertain['certainty'] = 'uncertain'    
-    
-    # Combine both datasets and filter to line features
-    contours_gdf = pd.concat([contours_good, contours_uncertain])
-    is_line = contours_gdf.geometry.type.isin(['MultiLineString', 'LineString'])
-    contours_gdf = contours_gdf.loc[is_line]    
+    if len(vector_mask.index) > 0:
+
+        # Clip and overlay to seperate into uncertain and certain classes
+        contours_good = gpd.overlay(contours_gdf, vector_mask, how='difference')
+        contours_good['certainty'] = 'good'
+        contours_uncertain = gpd.clip(contours_gdf, vector_mask)
+        contours_uncertain['certainty'] = 'uncertain'   
+
+        # Combine both datasets and filter to line features
+        contours_gdf = pd.concat([contours_good, contours_uncertain])
+        is_line = contours_gdf.geometry.type.isin(['MultiLineString', 'LineString'])
+        contours_gdf = contours_gdf.loc[is_line]    
+
+        # Enforce index name (can be removed if one dataset is empty)
+        contours_gdf.index.name = 'year'
+
+    else:
+        contours_gdf['certainty'] = 'good'
     
     return contours_gdf
 
