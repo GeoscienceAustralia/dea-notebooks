@@ -12,7 +12,7 @@
 ### v0.2.0 (May 5, 2020)
 
 **Features**
-* Add 'uncertainty' column to contour data for pixels with either less than 5 observations or > 0.25 MNDWI standard deviation in over 75% of years
+* Add 'uncertainty' column to contour data for pixels with either less than 5 observations or > 0.25 MNDWI standard deviation in more than 50% of years
 * Add new `DEACoastLines_utilities.ipynb` notebook containing additional functions for using DEA CoastLines data
 * Add `rates_hist` utility function for plotting DEACoastLine statistics data as a histogram based on an interactive selection
 * Add ability to modify waterbody mask by providing a vector files of features to add or remove from the mask
