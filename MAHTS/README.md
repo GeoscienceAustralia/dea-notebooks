@@ -2,13 +2,21 @@
 
 ## Change log
 
-### v0.2.0 (April 28, 2020)
+### v0.3.0 (upcoming)
+
+**Outstanding issues**
+* Missing contours on western end of Rottnest Island, WA
+* Missing oldest contours on eastern side of Fraser Island, QLD (caused by missing path/row 890770)
+
+
+### v0.2.0 (May 5, 2020)
 
 **Features**
 * Add 'uncertainty' column to contour data for pixels with either less than 5 observations or > 0.25 MNDWI standard deviation in over 75% of years
 * Add new `DEACoastLines_utilities.ipynb` notebook containing additional functions for using DEA CoastLines data
 * Add `rates_hist` utility function for plotting DEACoastLine statistics data as a histogram based on an interactive selection
 * Add ability to modify waterbody mask by providing a vector files of features to add or remove from the mask
+* Add new `deacoastlines_summary.py` script for generating continental summary of point statistics based on average values within a buffer of X km of a subset of points. This allows hotspots to be visualised at full zoom out
 
 **Bug fixes**
 * In `deacoastlines_generation.py`: Fixed missing grid cell areas by buffering both the input grid cell extent and tide modelling extent by 0.05 degrees (i.e. a total of 0.10 degrees). This ensures that enough tidal modelling points are available for interpolation, and improves tidal modelling consistency between neighbouring grid cells 
