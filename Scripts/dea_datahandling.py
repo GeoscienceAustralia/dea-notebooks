@@ -666,8 +666,3 @@ def paths_to_datetimeindex(paths, string_slice=(0, 10)):
     date_strings = [os.path.basename(i)[slice(*string_slice)] 
                     for i in paths]
     return pd.to_datetime(date_strings)
-
-
-# Test PEP8Speaks
-foo = long_function_name(var_one, var_two,
-    var_three, var_four)
