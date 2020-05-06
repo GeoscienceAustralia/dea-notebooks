@@ -20,10 +20,8 @@ def points_in_poly(points, polygons):
     # Iterate through points
     out_dict = {}
     for i, point in enumerate(tqdm(points, desc='Processing points')):
-
         poly_ids = [j for j in idx.intersection((point.coords[0]))
                     if point.within(polygons[j])]
-
         out_dict[i] = poly_ids
 
 #     # Re-order output dictionary
@@ -35,7 +33,7 @@ def points_in_poly(points, polygons):
     return out_dict
 
 
-def get_matching_data(key, stats_gdf, poly_points_dict, min_n=50):
+def get_matching_data(key, stats_gdf, poly_points_dict, min_n=100):
 
     matching_points = stats_gdf.iloc[poly_points_dict[key]].copy()
 
