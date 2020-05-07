@@ -63,7 +63,7 @@ def main(argv=None):
     # If no user arguments provided
     if len(argv) < 2:
 
-        str_usage = "You must specify a study area ID and name"
+        str_usage = "You must specify an analysis name"
         print(str_usage)
         sys.exit()
         
