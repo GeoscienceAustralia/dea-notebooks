@@ -148,7 +148,7 @@ def rgb(ds,
 
     # Get names of x and y dims
     y_dim, x_dim = ds.geobox.dimensions
-    
+
     # If ax is supplied via kwargs, ignore aspect and size
     if 'ax' in kwargs:
         
@@ -243,7 +243,7 @@ def rgb(ds,
                                  col_wrap=col_wrap,
                                  **aspect_size_kwarg,
                                  **kwargs)
-
+        
         # If only one index is supplied, squeeze out index_dim and plot as a 
         # single panel
         else:
