@@ -196,7 +196,7 @@ def rgb(ds,
                 'call'
             )
 
-        img = da.plot.imshow(x=x_dim, 
+        img = da.plot.imshow(x=x_dim,
                              y=y_dim,
                              robust=robust,
                              col_wrap=col_wrap,
@@ -236,14 +236,14 @@ def rgb(ds,
         # If multiple index values are supplied, plot as a faceted plot
         if len(index) > 1:
 
-            img = da.plot.imshow(x=x_dim, 
+            img = da.plot.imshow(x=x_dim,
                                  y=y_dim,
                                  robust=robust,
                                  col=index_dim,
                                  col_wrap=col_wrap,
                                  **aspect_size_kwarg,
                                  **kwargs)
-        
+
         # If only one index is supplied, squeeze out index_dim and plot as a 
         # single panel
         else:
