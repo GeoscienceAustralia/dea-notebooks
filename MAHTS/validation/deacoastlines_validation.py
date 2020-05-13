@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import pandas as pd
-import numpy as np
-from shapely.geometry import box, LinearRing, Point, LineString
-import geopandas as gpd
+import re
 import os.path
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
 from pathlib import Path
 from io import StringIO
-import re
 from pyproj import Transformer
+from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+from shapely.geometry import box, Point, LineString
 
 
 def dms2dd(s):
@@ -285,6 +289,108 @@ def preprocess_narrabeen(fname, fname_out, overwrite=False):
             
     else:
         print(f'Skipping {fname}             ', end='\r')
+        
+        
+
+def deacl_validation(val_path,
+                     deacl_path,
+                     sat_label='DEA CoastLines beach width (m)',
+                     val_label='Validation beach width (m)'):
+    
+    # Load validation data
+    val_df = pd.read_csv(val_path, parse_dates=['date'])
+    
+    # Get title for plot
+    title = val_df.beach.iloc[0].capitalize()
+
+    # Get bounding box to load data for
+    minx, maxy = val_df.min().loc[['0_x', '0_y']]
+    maxx, miny = val_df.max().loc[['0_x', '0_y']]
+    bbox = gpd.GeoSeries(box(minx, miny, maxx, maxy), crs='EPSG:28356')
+
+    # Import corresponding waterline contours
+    deacl_gdf = gpd.read_file(deacl_path, bbox=bbox).to_crs(epsg=28356)
+    
+    if len(deacl_gdf.index) > 0:
+    
+        # Set year dtype to allow merging
+        deacl_gdf['year'] = deacl_gdf.year.astype('int64')
+
+        # Add year column
+        val_df['year'] = val_df.date.dt.year
+
+        # Aggregate by year and save count number and source
+        source = val_df.groupby(['year', 'site']).source.agg(pd.Series.mode)
+        counts = val_df.groupby(['year', 'site']).date.count()
+        val_df = val_df.groupby(['year', 'site']).median()
+        val_df['n'] = counts
+        val_df['source'] = source
+        val_df = val_df.reset_index()
+
+        # Convert validation start and end locations to linestrings
+        val_geometry = val_df.apply(
+            lambda x: LineString([(x.start_x, x.start_y), 
+                                  (x.end_x, x.end_y)]), axis=1)
+
+        # Convert geometries to GeoDataFrame
+        val_gdf = gpd.GeoDataFrame(data=val_df,
+                                         geometry=val_geometry,
+                                         crs='EPSG:28356').reset_index()
+
+        # Combine to match each shoreline contour to each date in validation data
+        results_df = val_gdf.merge(deacl_gdf,
+                                   on='year',
+                                   suffixes=('_val', '_deacl'))
+
+        # For each row, compute distance between origin and location where 
+        # profile intersects with waterline contour
+        results_df[sat_label] = results_df.apply(
+            lambda x: x.geometry_val.intersection(x.geometry_deacl)
+            .hausdorff_distance(Point(x.start_x, x.start_y)), axis=1)
+        results_df = results_df.rename({'0_dist': val_label}, axis=1)
+        results_df = results_df[(results_df[sat_label] > 0) & 
+                                (results_df[val_label] > 0)]
+        
+        # Select validation and satellite data
+        sat_data = results_df[sat_label]
+        val_data = results_df[val_label] 
+
+        # Calculate stats
+        rmse = mean_squared_error(val_data, sat_data) ** 0.5
+        mae = mean_absolute_error(val_data, sat_data)
+        r2 = r2_score(val_data, sat_data)
+        cor = results_df[[sat_label, val_label]].corr().iloc[0, 1]
+
+        # Plot image
+        fig, ax = plt.subplots(figsize=(8.5, 7))
+        results_df.plot.scatter(x=val_label,
+                                y=sat_label,
+                                c=results_df.year,
+                                s=15,
+                                cmap='YlOrRd',
+                                vmin=1987,
+                                vmax=2018,
+                                ax=ax)
+        ax.plot(np.linspace(0, max(val_data.max(), sat_data.max())),
+                np.linspace(0, max(val_data.max(), sat_data.max())),
+                color='black',
+                linestyle='dashed')
+        ax.set_title(title)
+        ax.annotate(f'RMSE: {rmse:.2f} m\n' \
+                    f'MAE: {mae:.2f} m\n' \
+                    f'R-squared: {r2:.2f}\n' \
+                    f'Correlation: {cor:.2f}', 
+                    xy=(0.05, 0.85),
+                    xycoords='axes fraction',
+                    fontsize=11)
+
+        # Export to file
+        fig.savefig(f'figures/{Path(val_path).stem}.png', 
+                    bbox_inches='tight', 
+                    dpi=150)
+        
+        return {'site': Path(val_path).stem, 
+                'rmse': rmse, 'mae': mae, 'r2': r2, 'cor': cor}
         
         
     
