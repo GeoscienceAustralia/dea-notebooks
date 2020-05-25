@@ -24,7 +24,7 @@ from datacube.utils.cog import write_cog
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-sys.path.append('../Scripts')
+sys.path.append('/g/data/r78/rt1527/dea-notebooks/Scripts')
 from dea_spatialtools import subpixel_contours
 from dea_spatialtools import xr_vectorize
 
@@ -622,7 +622,7 @@ def main(argv=None):
         
     # Set params
     water_index = 'mndwi'
-    index_threshold = 0.00
+    index_threshold = 0.20
     baseline_year = '2018'
 
     ###############################

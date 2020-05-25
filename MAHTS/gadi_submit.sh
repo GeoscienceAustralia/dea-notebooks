@@ -9,7 +9,10 @@ output_name="v0.2.0"
 # for study_area in 5229 4410 1473 763 864 2684 2887 2988 2585 2583 2481 2081 3090 3398 863 2483 671 672 5851 5850 5952 5953 5954 5955 6159 6158 6259 6455 6454 6552 6654 6865 7070 7173 7280 7695 7902 7901 8005 8004 8109 8318 8317 8526 8525 8524 8528 8532 8031 8110 8316 7281 5382 4559 4661 4662 5279 5280 5382 6613 6716 7128 7129 5277
 
 # 256gb memory
-for study_area in 5852 2584 5030 5228 4106 3903 3704 2989 5338 4411 4105 1067 2484 1195 2485 2586 2685 2686 2281 762 5126 5125 5227
+# for study_area in 5852 2584 5030 5228 4106 3903 3704 2989 5338 4411 4105 1067 2484 1195 2485 2586 2685 2686 2281 762 5126 5125 5227
+
+# Threshold test
+for study_area in 7931 7932 7829 7830 7831 7729 7730 7832 7731 7628 7629 7930 8032 8031 8132 8234 8334 8133 8235 8333 7530 7632 8532 7631 8432 8233 8335 8232 8531 8431 8533 7630 8331 8332 8433 8434 7531 7633 7529 8330 8227 8228 8329 8529 8530 8427 8428 8534 8430 8429 8131 8528 8630 8631 8527 8426 8632 8030 7928 8231 7828 7727 7929
 
 do
 
@@ -21,14 +24,14 @@ do
     #PBS -P r78\n\
     #PBS -q hugemem\n\
     #PBS -l walltime=06:00:00\n\
-    #PBS -l mem=256GB\n\
+    #PBS -l mem=96GB\n\
     #PBS -l jobfs=2GB\n\
     #PBS -l ncpus=1\n\
     #PBS -l wd\n\
     module use /g/data/v10/public/modules/modulefiles\n\
     module load dea/unstable\n\
     module load otps\n\
-    python3 /g/data/r78/rt1527/dea-notebooks/MAHTS/deacoastlines_generation.py $study_area $output_name"
+    python3 /g/data/r78/rt1527/dea-notebooks/MAHTS/deacoastlines_statistics.py $study_area $output_name"
 
     echo -e ${PBS} | qsub || echo "${study_area} failed" >> log.txt
     sleep 0.2
