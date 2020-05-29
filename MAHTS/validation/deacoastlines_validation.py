@@ -580,7 +580,7 @@ def preprocess_tasmarc(site, overwrite=True):
             print(f'Skipping {fname_out}             ', end='\r')
         
         
-def export_eval(results_df, output_name, datum=0, output_crs='EPSG:28356'):
+def export_eval(results_df, output_name, datum=0, output_crs='EPSG:3577'):
 
     results_sub = results_df[['site', 'year', f'{datum}_x', f'{datum}_y', 
                               'Validation beach width (m)',
@@ -601,7 +601,7 @@ def export_eval(results_df, output_name, datum=0, output_crs='EPSG:28356'):
 
     gpd.GeoDataFrame(data=results_sub,
                      geometry=results_df.geometry_val,
-                     crs='EPSG:28356').to_crs('EPSG:4326').to_file(
+                     crs=output_crs).to_crs('EPSG:4326').to_file(
                          f'figures/eval/{output_name}_val_transects.geojson', driver='GeoJSON')
 
     gpd.GeoDataFrame(data=results_sub,
@@ -727,11 +727,19 @@ def deacl_validation(val_path,
                                    on='year',
                                    suffixes=('_val', '_deacl'))
 
-        # For each row, compute distance between origin and location where 
-        # profile intersects with waterline contour
+        # For each row, identify where profile intersects with waterline 
+        results_df['intersect'] = results_df.apply(
+            lambda x: x.geometry_val.intersection(x.geometry_deacl), 
+            axis=1)
+        
+        # Drop any multipart geometries as these are invalid comparisons
+        results_df = results_df[results_df.apply(
+            lambda x: x.intersect.type == 'Point', axis=1)]
+        
+        # For each row, compute distance between origin and intersect
         results_df[sat_label] = results_df.apply(
-            lambda x: x.geometry_val.intersection(x.geometry_deacl)
-            .hausdorff_distance(Point(x.start_x, x.start_y)), axis=1)
+            lambda x: x.intersect.distance(Point(x.start_x, x.start_y)), 
+            axis=1)               
         results_df = results_df.rename({f'{datum}_dist': val_label}, axis=1)
         results_df = results_df[(results_df[sat_label] > 0) & 
                                 (results_df[val_label] > 0)]
@@ -766,8 +774,10 @@ def deacl_validation(val_path,
 #                                 markeredgewidth=1.5, 
 #                                 markeredgecolor='black',
                                )
-        ax.plot(np.linspace(0, max(val_data.max(), sat_data.max())),
-                np.linspace(0, max(val_data.max(), sat_data.max())),
+        ax.plot(np.linspace(min(val_data.min(), sat_data.min()), 
+                            max(val_data.max(), sat_data.max())),
+                np.linspace(min(val_data.min(), sat_data.min()), 
+                            max(val_data.max(), sat_data.max())),
                 color='black',
                 linestyle='dashed')
         ax.set_title(title)
