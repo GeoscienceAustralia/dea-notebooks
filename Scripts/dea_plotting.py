@@ -23,7 +23,7 @@ Functions included:
     map_shapefile
     xr_animation
 
-Last modified: May 2020
+Last modified: June 2020
 
 '''
 
@@ -147,7 +147,12 @@ def rgb(ds,
     """
 
     # Get names of x and y dims
-    y_dim, x_dim = ds.geobox.dimensions
+    # TODO: remove geobox and try/except once datacube 1.8 is default
+    try:
+        y_dim, x_dim = ds.geobox.dimensions
+    except:
+        from datacube.utils import spatial_dims
+        y_dim, x_dim = spatial_dims(ds)
 
     # If ax is supplied via kwargs, ignore aspect and size
     if 'ax' in kwargs:
