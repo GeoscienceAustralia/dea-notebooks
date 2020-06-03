@@ -150,7 +150,7 @@ def rgb(ds,
     # TODO: remove geobox and try/except once datacube 1.8 is default
     try:
         y_dim, x_dim = ds.geobox.dimensions
-    except:
+    except AttributeError:
         from datacube.utils import spatial_dims
         y_dim, x_dim = spatial_dims(ds)
 
