@@ -1,30 +1,30 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import glob
-import xarray as xr
-from affine import Affine
-from rasterio.features import rasterize
-from skimage.morphology import binary_opening
-from skimage.morphology import binary_dilation, binary_erosion
-from skimage.morphology import disk, square
-from skimage.measure import label
-import numpy as np
-import geopandas as gpd
-import pandas as pd
-from shapely.ops import nearest_points
-from datacube.utils.cog import write_cog
-from scipy import stats
-
 import os
 import sys
+import glob
+import numpy as np
+import pandas as pd
+import xarray as xr
+import geopandas as gpd
+from scipy import stats
+from affine import Affine
 from shapely.geometry import box
+from shapely.ops import nearest_points
+from rasterio.features import rasterize
 from rasterio.transform import array_bounds
+from skimage.measure import label
+from skimage.morphology import binary_opening
+from skimage.morphology import binary_erosion
+from skimage.morphology import binary_dilation
+from skimage.morphology import disk, square
+from datacube.utils.cog import write_cog
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-sys.path.append('../Scripts')
+sys.path.append('/g/data/r78/rt1527/dea-notebooks/Scripts')
 from dea_spatialtools import subpixel_contours
 from dea_spatialtools import xr_vectorize
 
@@ -622,7 +622,7 @@ def main(argv=None):
         
     # Set params
     water_index = 'mndwi'
-    index_threshold = 0.00
+    index_threshold = 0.20
     baseline_year = '2018'
 
     ###############################
