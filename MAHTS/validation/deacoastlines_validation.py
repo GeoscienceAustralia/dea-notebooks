@@ -296,7 +296,7 @@ def preprocess_nswbpd(fname, datum=0, overwrite=False):
     if not os.path.exists(fname_out) or overwrite:  
         
         # Read in data
-        print(f'Processing {fname_out}             ', end='\r')            
+        print(f'Processing {fname_out:<80}', end='\r')            
         profiles_df = pd.read_csv(fname, skiprows=5)
         profiles_df['Year/Date'] = pd.to_datetime(profiles_df['Year/Date'],
                                                   dayfirst=True,
@@ -309,51 +309,33 @@ def preprocess_nswbpd(fname, datum=0, overwrite=False):
         profiles_df['Beach'] = profiles_df['Beach'].str.lower().str.replace(' ', '')
         profiles_df['Block'] = profiles_df['Block'].astype(str).str.lower()
         profiles_df['Profile'] = profiles_df['Profile'].astype(str).str.lower()
-        profiles_df['site'] = profiles_df[['Beach', 'Block',
-                                           'Profile']].apply('_'.join, 1)
+        profiles_df['id'] = (profiles_df.Beach + '_' + 
+                             profiles_df.Block + '_' + 
+                             profiles_df.Profile)
 
         # Rename columns
-        profiles_df.columns = ['beach', 'section', 'profile', 'date', 'chainage', 
-                               'elevation', 'easting', 'northing', 'source', 'site']
+        profiles_df.columns = ['beach', 'section', 'profile', 'date', 'distance', 
+                               'z', 'x', 'y', 'source', 'id']
         
-        # Compute origin points for each profile
-        start_xy = profiles_df.loc[profiles_df.groupby(['site']).chainage.idxmin(), 
-                                    ['site', 'easting', 'northing']]
-        start_xy = start_xy.rename({'easting': 'start_x', 
-                                    'northing': 'start_y'}, axis=1)
-        start_xy = start_xy.reset_index(drop=True)
-
-        # Compute end points for each profile
-        end_xy = profiles_df.loc[profiles_df.groupby(['site']).chainage.idxmax(), 
-                                 ['site', 'easting', 'northing']]
-        end_xy = end_xy.rename({'easting': 'end_x', 
-                                'northing': 'end_y'}, axis=1)
-        end_xy = end_xy.reset_index(drop=True)
-
-        # Join origin and end points into dataframe
-        profiles_df = pd.merge(left=profiles_df, right=start_xy)
-        profiles_df = pd.merge(left=profiles_df, right=end_xy)        
-   
-#         Remove any points not aligned with transects
-#         profiles_df = profiles_df.loc[detect_misaligned_points(profiles_df,
-#                                                                x='easting', 
-#                                                                y='northing',
-#                                                                threshold=10)]
+        # Reproject coords to Albers
+        trans = Transformer.from_crs('EPSG:32756', 'EPSG:3577', always_xy=True)
+        profiles_df['x'], profiles_df['y'] = trans.transform(
+            profiles_df.x.values, profiles_df.y.values)
+        
+        # Compute origin and end points for each profile and merge into data
+        start_end_xy = profiles_from_dist(profiles_df)
+        profiles_df = pd.merge(left=profiles_df, right=start_end_xy)      
 
         # Find location and distance to water for datum height (0 m AHD)
-        out = profiles_df.groupby(['site', 'date']).apply(waterline_intercept, 
-                                                          dist_col='chainage',
-                                                          x_col='easting', 
-                                                          y_col='northing', 
-                                                          z_col='elevation', 
-                                                          z_val=datum).dropna()
+        intercept_df = profiles_df.groupby(['id', 'date']).apply(
+            waterline_intercept, z_val=datum).dropna()
         
         # If the output contains data
-        if len(out.index) > 0:
+        if len(intercept_df.index) > 0:
 
             # Join into dataframe
-            shoreline_dist = out.join(
-                profiles_df.groupby(['site', 'date']).first())
+            shoreline_dist = intercept_df.join(
+                profiles_df.groupby(['id', 'date']).first())
 
             # Keep required columns
             shoreline_dist = shoreline_dist[['beach', 'section', 'profile',  
@@ -365,7 +347,7 @@ def preprocess_nswbpd(fname, datum=0, overwrite=False):
             shoreline_dist.to_csv(f'{fname_out}')
     
     else:
-        print(f'Skipping {fname}             ', end='\r')
+        print(f'Skipping {fname:<80}', end='\r')
 
 
 def preprocess_narrabeen(fname, 
@@ -402,7 +384,7 @@ def preprocess_narrabeen(fname,
         coords = coords.rename({'y': 'start_y', 'x': 'start_x'}, axis=1)
 
         # Reproject coords to Albers and create geodataframe
-        trans = Transformer.from_crs("EPSG:4326", "EPSG:3577", always_xy=True)
+        trans = Transformer.from_crs('EPSG:4326', 'EPSG:3577', always_xy=True)
         coords['start_x'], coords['start_y'] = trans.transform(
             coords.start_x.values, coords.start_y.values)
         coords['end_x'], coords['end_y'] = trans.transform(
