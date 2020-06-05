@@ -107,7 +107,7 @@ def waterline_intercept(x,
                         dist_col='distance', 
                         x_col='x', 
                         y_col='y', 
-                        z_col='elevation', 
+                        z_col='z', 
                         z_val=0): 
     
     dist_int = interp_intercept(x[dist_col].values, x[z_col].values, z_val)
@@ -128,6 +128,135 @@ def detect_misaligned_points(profiles_df, x='x', y='y', threshold=10):
     
     return [t.contains(s) for t, s in zip(transect_lines, survey_points)]
 
+
+def reproj_crs(in_data, 
+               in_crs, 
+               x='x', 
+               y='y', 
+               out_crs='EPSG:3577'):
+
+    # Reset index to allow merging new data with original data
+    in_data = in_data.reset_index(drop=True)
+
+    # Reproject coords to Albers and create geodataframe
+    trans = Transformer.from_crs(in_crs, out_crs, always_xy=True) 
+    coords = trans.transform(in_data[x].values, in_data[y].values)
+    in_data[['x', 'y']] = pd.DataFrame(zip(*coords))
+
+    return in_data
+
+
+def profiles_from_dist(profiles_df, 
+                       id_col='id', 
+                       dist_col='distance', 
+                       x_col='x', 
+                       y_col='y'):
+    
+    # Compute origin points for each profile
+    min_ids = profiles_df.groupby(id_col)[dist_col].idxmin()
+    start_xy = profiles_df.loc[min_ids, [id_col, x_col, y_col]]
+    start_xy = start_xy.rename({x_col: f'start_{x_col}', 
+                                y_col: f'start_{y_col}'}, 
+                               axis=1)
+    
+    # Compute end points for each profile
+    max_ids = profiles_df.groupby(id_col)[dist_col].idxmax()
+    end_xy = profiles_df.loc[max_ids, [x_col, y_col]]
+    
+    # Add end coords into same dataframe
+    start_xy = start_xy.reset_index(drop=True)
+    end_xy = end_xy.reset_index(drop=True)
+    start_xy[[f'end_{x_col}', f'end_{y_col}']] = end_xy
+    
+    return start_xy
+
+
+def preprocess_vicdeakin(fname,
+                         datum=0):
+    
+    # Dictionary to map correct CRSs to locations
+    crs_dict = {'apo': 'epsg:32754', 
+                'cow': 'epsg:32755',
+                'inv': 'epsg:32755',
+                'leo': 'epsg:32755',
+                'mar': 'epsg:32754',
+                'pfa': 'epsg:32754',
+                'por': 'epsg:32755',
+                'prd': 'epsg:32755',
+                'sea': 'epsg:32755',
+                'wbl': 'epsg:32754'}
+
+    # Read data
+    profiles_df = pd.read_csv(fname,
+                              parse_dates=['survey_date']).dropna()
+
+    # Restrict to pre-2019
+    profiles_df = profiles_df.loc[profiles_df.survey_date.dt.year < 2019]
+    profiles_df = profiles_df.reset_index(drop=True)
+
+    # Remove invalid profiles
+    invalid = ((profiles_df.location == 'leo') & (profiles_df.tr_id == 94))
+    profiles_df = profiles_df.loc[~invalid].reset_index(drop=True)
+
+    # Extract coordinates
+    coords = profiles_df.coordinates.str.findall(r'\d+\.\d+')
+    profiles_df[['x', 'y']] = pd.DataFrame(coords.values.tolist(), 
+                                           dtype=np.float32)
+
+    # Add CRS and convert to Albers
+    profiles_df['crs'] = profiles_df.location.apply(lambda x: crs_dict[x])
+    profiles_df = profiles_df.groupby('crs', as_index=False).apply(
+        lambda x: reproj_crs(x, in_crs=x.crs.iloc[0])).drop('crs', axis=1)
+    profiles_df = profiles_df.reset_index(drop=True)
+
+    # Convert columns to strings and add unique ID column
+    profiles_df = profiles_df.rename({'location': 'beach', 
+                                      'tr_id': 'profile', 
+                                      'survey_date': 'date',
+                                      'z': 'z_dirty',
+                                      'z_clean': 'z'}, axis=1)
+    profiles_df['profile'] = profiles_df['profile'].astype(str)
+    profiles_df['section'] = 'all'
+    profiles_df['source'] = 'drone'
+    profiles_df['id'] = (profiles_df.beach + '_' + 
+                         profiles_df.section + '_' + 
+                         profiles_df.profile)
+    
+    # Reverse profile distances by subtracting max distance from each
+    prof_max = profiles_df.groupby('id')['distance'].transform('max')
+    profiles_df['distance'] = (profiles_df['distance'] - prof_max).abs()
+
+    # Compute origin and end points for each profile and merge into data
+    start_end_xy = profiles_from_dist(profiles_df)
+    profiles_df = pd.merge(left=profiles_df, right=start_end_xy)
+    
+    # Export each beach
+    for beach_name, beach in profiles_df.groupby('beach'):
+
+        # Create output file name
+        fname_out = f'output_data/vicdeakin_{beach_name}.csv'
+        print(fname_out)
+
+        # Find location and distance to water for datum height (0 m AHD)
+        intercept_df = beach.groupby(['id', 'date']).apply(
+            waterline_intercept, z_val=datum).dropna()
+
+        # If the output contains data
+        if len(intercept_df.index) > 0:
+
+            # Join into dataframe
+            shoreline_dist = intercept_df.join(
+                beach.groupby(['id', 'date']).first())
+
+            # Keep required columns
+            shoreline_dist = shoreline_dist[['beach', 'section', 'profile',  
+                                             'source', 'start_x', 'start_y', 
+                                             'end_x', 'end_y', f'{datum}_dist', 
+                                             f'{datum}_x', f'{datum}_y']]
+
+        # Export to file
+        shoreline_dist.to_csv(fname_out)
+        
 
 def tasmarc_metadata(profile):
     
@@ -220,7 +349,7 @@ def preprocess_nswbpd(fname, datum=0, overwrite=False):
                                                           z_val=datum).dropna()
         
         # If the output contains data
-        if len(out.index):
+        if len(out.index) > 0:
 
             # Join into dataframe
             shoreline_dist = out.join(
@@ -582,13 +711,14 @@ def preprocess_tasmarc(site, overwrite=True):
         
 def export_eval(results_df, output_name, datum=0, output_crs='EPSG:3577'):
 
-    results_sub = results_df[['site', 'year', f'{datum}_x', f'{datum}_y', 
+    results_sub = results_df[['id', 'year', f'{datum}_x', f'{datum}_y', 
                               'Validation beach width (m)',
                               'DEA CoastLines beach width (m)']]
 
     gpd.GeoDataFrame(
         data=results_sub,
-        geometry=gpd.points_from_xy(x=results_df[f'{datum}_x'], y=results_df[f'{datum}_y']),
+        geometry=gpd.points_from_xy(x=results_df[f'{datum}_x'], 
+                                    y=results_df[f'{datum}_y']),
         crs=output_crs).to_crs('EPSG:4326').to_file(
             f'figures/eval/{output_name}_val_points.geojson', driver='GeoJSON')
 
@@ -705,9 +835,10 @@ def deacl_validation(val_path,
         val_df['year'] = val_df.date.dt.year
 
         # Aggregate by year and save count number and source
-        source = val_df.groupby(['year', 'site']).source.agg(lambda x: pd.Series.mode(x).iloc[0])
-        counts = val_df.groupby(['year', 'site']).date.count()
-        val_df = val_df.groupby(['year', 'site']).median()
+        source = val_df.groupby(['year', 'id']).source.agg(
+            lambda x: pd.Series.mode(x).iloc[0])
+        counts = val_df.groupby(['year', 'id']).date.count()
+        val_df = val_df.groupby(['year', 'id']).median()
         val_df['n'] = counts
         val_df['source'] = source
         val_df = val_df.reset_index()
@@ -756,7 +887,7 @@ def deacl_validation(val_path,
         mae = mean_absolute_error(val_data, sat_data)
         r2 = r2_score(val_data, sat_data)
         cor = results_df[[sat_label, val_label]].corr().iloc[0, 1]
-        stats_dict = {'site': Path(val_path).stem, 
+        stats_dict = {'id': Path(val_path).stem, 
                       'rmse': rmse, 'mae': mae, 'r2': r2, 'cor': cor}
 
         # Plot image       
@@ -771,8 +902,6 @@ def deacl_validation(val_path,
                                 ax=ax, 
                                 edgecolors='black',
                                 linewidth=0.5
-#                                 markeredgewidth=1.5, 
-#                                 markeredgecolor='black',
                                )
         ax.plot(np.linspace(min(val_data.min(), sat_data.min()), 
                             max(val_data.max(), sat_data.max())),
