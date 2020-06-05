@@ -31,9 +31,9 @@ def dms2dd(s):
 
 
 def dist_angle(lon, lat, dist, angle):
-    lon_2 = lon + dist *  np.sin(angle * np.pi / 180)
-    lat_2 = lat + dist *  np.cos(angle * np.pi / 180)
-    return pd.Series({'y2': lat_2, 'x2': lon_2})
+    lon_end = lon + dist *  np.sin(angle * np.pi / 180)
+    lat_end = lat + dist *  np.cos(angle * np.pi / 180)
+    return pd.Series({'end_y': lat_end, 'end_x': lon_end})
 
 
 def interp_intercept(x, y1, y2, reverse=False):
@@ -370,6 +370,7 @@ def preprocess_nswbpd(fname, datum=0, overwrite=False):
 
 def preprocess_narrabeen(fname, 
                          fname_out='output_data/wrl_narrabeen.csv', 
+                         datum=0,
                          overwrite=False):
 
     # Test if file exists
@@ -380,7 +381,7 @@ def preprocess_narrabeen(fname,
         #################
 
         # Import data and parse DMS to DD
-        print(f'Processing {fname_out}             ', end='\r')
+        print(f'Processing {fname_out:<80}', end='\r')
         data = "PF1 -33°42'20.65 151°18'16.30 118.42\n" \
                "PF2 -33°42'33.45 151°18'10.33 113.36\n" \
                "PF4 -33°43'01.55 151°17'58.84 100.26\n" \
@@ -394,17 +395,14 @@ def preprocess_narrabeen(fname,
 
         # Extend survey lines out from start coordinates using supplied angle
         coords_end = coords.apply(
-            lambda x: dist_angle(x.x, x.y, 0.005, x.angle), axis=1)
+            lambda x: dist_angle(x.x, x.y, 0.002, x.angle), axis=1)
         coords = pd.concat([coords, coords_end], axis=1).drop('angle', axis=1)
 
-        # Rename fields
-        coords = coords.rename({'y': 'start_y',
-                                'x': 'start_x',
-                                'y2': 'end_y',
-                                'x2': 'end_x'}, axis=1)
+        # Rename initial x and y values to indicate profile starting coords
+        coords = coords.rename({'y': 'start_y', 'x': 'start_x'}, axis=1)
 
         # Reproject coords to Albers and create geodataframe
-        trans = Transformer.from_crs("EPSG:4326", "EPSG:28356", always_xy=True)
+        trans = Transformer.from_crs("EPSG:4326", "EPSG:3577", always_xy=True)
         coords['start_x'], coords['start_y'] = trans.transform(
             coords.start_x.values, coords.start_y.values)
         coords['end_x'], coords['end_y'] = trans.transform(
@@ -414,8 +412,9 @@ def preprocess_narrabeen(fname,
         coords['profile'] = coords['profile'].astype(str).str.lower()
         coords['beach'] = 'narrabeen'
         coords['section'] = 'all'
-        coords['site'] = coords[['beach', 'section',
-                                 'profile']].apply('_'.join, 1)
+        coords['id'] = (coords.beach + '_' + 
+                        coords.section + '_' + 
+                        coords.profile)
 
         ###############
         # Survey data #
@@ -427,47 +426,45 @@ def preprocess_narrabeen(fname,
             usecols=[1, 2, 3, 4, 5],
             skiprows=1,
             parse_dates=['date'],
-            names=['profile', 'date', 'distance', 'elevation', 'source'])
+            names=['profile', 'date', 'distance', 'z', 'source'])
 
         # Restrict to post 1987
         profiles_df = profiles_df[(profiles_df.date.dt.year > 1987)]
 
-        # Add transect site and origin/end points into dataframe
+        # Merge profile coordinate data into transect data
         profiles_df['profile'] = profiles_df['profile'].astype(str).str.lower()
         profiles_df = profiles_df.merge(coords, on='profile')
 
-        # Add coordinates for every distance along transects
-        profiles_df[['x', 'y']] = profiles_df.apply(lambda x: pd.Series(
-            dist_along_transect(x.distance, 
-                                x.start_x, x.start_y, 
-                                x.end_x, x.end_y)), axis=1)
+        # Add coordinates at every supplied distance along transects
+        profiles_df[['x', 'y']] = profiles_df.apply(
+            lambda x: pd.Series(dist_along_transect(x.distance, 
+                                                    x.start_x, 
+                                                    x.start_y, 
+                                                    x.end_x, 
+                                                    x.end_y)), axis=1)
 
         # Find location and distance to water for datum height (0 m AHD)
-        out = profiles_df.groupby(['site', 'date']).apply(waterline_intercept,
-                                                          dist_col='distance',
-                                                          x_col='x',
-                                                          y_col='y',
-                                                          z_col='elevation',
-                                                          z_val=0).dropna()
+        intercept_df= profiles_df.groupby(['id', 'date']).apply(
+            waterline_intercept, z_val=datum).dropna()
 
         # If the output contains data
-        if len(out.index):
+        if len(intercept_df.index) > 0:
 
             # Join into dataframe
-            shoreline_dist = out.join(
-                profiles_df.groupby(['site', 'date']).first())
+            shoreline_dist = intercept_df.join(
+                profiles_df.groupby(['id', 'date']).first())
 
             # Keep required columns
             shoreline_dist = shoreline_dist[['beach', 'section', 'profile', 
                                              'source', 'start_x', 'start_y',
-                                             'end_x', 'end_y', '0_dist', 
-                                             '0_x', '0_y']]
+                                             'end_x', 'end_y', f'{datum}_dist', 
+                                             f'{datum}_x', f'{datum}_y']]
 
             # Export to file
             shoreline_dist.to_csv(fname_out)
             
     else:
-        print(f'Skipping {fname}             ', end='\r')
+        print(f'Skipping {fname:<80}', end='\r')
         
         
 def preprocess_cgc(site, overwrite=True):
