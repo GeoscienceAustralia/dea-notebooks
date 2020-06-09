@@ -622,7 +622,7 @@ def main(argv=None):
         
     # Set params
     water_index = 'mndwi'
-    index_threshold = 0.20
+    index_threshold = 0.10
     baseline_year = '2018'
 
     ###############################
@@ -667,7 +667,7 @@ def main(argv=None):
     ##############################
     # Extract shoreline contours #
     ##############################
-    
+
     # Generate waterbody mask
     waterbody_array = waterbody_mask(
         input_data='input_data/SurfaceHydrologyPolygonsRegional.gdb',
