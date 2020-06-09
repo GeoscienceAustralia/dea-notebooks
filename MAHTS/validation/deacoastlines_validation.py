@@ -171,6 +171,175 @@ def profiles_from_dist(profiles_df,
     return start_xy
 
 
+def perpendicular_line(input_line, length):
+
+    # Generate parallel lines either side of input line
+    left = input_line.parallel_offset(length / 2.0, 'left')
+    right = input_line.parallel_offset(length / 2.0, 'right')
+    
+    # Create new line between centroids of parallel line.
+    # This should be perpendicular to the original line
+    return LineString([left.centroid, right.centroid])
+
+
+def generate_transects(line_geom,
+                       length=400,
+                       interval=200, 
+                       buffer=20):
+    
+    # Create tangent line at equal intervals along line geom
+    interval_dists = np.arange(buffer, line_geom.length, interval)
+    tangent_geom = [LineString([line_geom.interpolate(dist - buffer), 
+                                line_geom.interpolate(dist + buffer)]) 
+                    for dist in interval_dists]
+
+    # Convert to geoseries and remove erroneous lines by length
+    tangent_gs = gpd.GeoSeries(tangent_geom)
+    tangent_gs = tangent_gs.loc[tangent_gs.length.round(1) <= buffer * 2]
+
+    # Compute perpendicular lines
+    return tangent_gs.apply(perpendicular_line, length=length)
+
+
+def coastal_transects(bbox, 
+                      interval=200,
+                      transect_length=400,
+                      simplify_length=200,
+                      output_crs='EPSG:3577',
+                      coastline='../input_data/Smartline.gdb',
+                      land_poly='/g/data/r78/rt1527/shapefiles/australia/australia/cstauscd_r.shp'):
+
+    # Load smartline
+    coastline_gdf = gpd.read_file(coastline, bbox=bbox).to_crs(output_crs)
+    coastline_geom = coastline_gdf.geometry.unary_union.simplify(simplify_length)
+
+    # Load Australian land water polygon
+    land_gdf = gpd.read_file(land_poly, bbox=bbox).to_crs('EPSG:3577')
+    land_gdf = land_gdf.loc[land_gdf.FEAT_CODE.isin(["mainland", "island"])]
+    land_geom = gpd.overlay(df1=land_gdf, df2=bbox).unary_union
+
+    # Extract transects along line
+    geoms = generate_transects(coastline_geom,
+                               length=transect_length,
+                               interval=interval)
+
+    # Test if end points of transects fall in water or land
+    p1 = gpd.GeoSeries([Point(i.coords[0]) for i in geoms])
+    p2 = gpd.GeoSeries([Point(i.coords[1]) for i in geoms])
+    p1_within_land = p1.within(land_geom)
+    p2_within_land = p2.within(land_geom)
+
+    # Create geodataframe, remove invalid land-land/water-water transects 
+    transect_gdf = gpd.GeoDataFrame(data={'p1': p1_within_land, 
+                                          'p2': p2_within_land}, 
+                                    geometry=geoms.values, 
+                                    crs=output_crs)
+    transect_gdf = transect_gdf[~(transect_gdf.p1 == transect_gdf.p2)]
+
+    # Reverse transects so all point away from land
+    transect_gdf['geometry'] = transect_gdf.apply(
+        lambda i: LineString([i.geometry.coords[1], 
+                              i.geometry.coords[0]]) 
+        if i.p1 < i.p2 else i.geometry, axis=1) 
+    
+    return transect_gdf
+
+
+def preprocess_wadot(regions_gdf,
+                     fname='input_data/wadot/Coastline_Movements_20190819.gdb',
+                     smartline='../input_data/Smartline.gdb',
+                     aus_poly='/g/data/r78/rt1527/shapefiles/australia/australia/cstauscd_r.shp'):
+    
+    # Iterate through all features in regions gdf
+    for i, _ in regions_gdf.iterrows():
+
+        # Extract compartment as a GeoDataFrame so it can be used to clip other data
+        compartment = regions_gdf.loc[[i]]
+        beach = str(i).replace(' ', '').replace('/', '').lower()
+        print(f'Processing {beach:<80}', end='\r')
+
+        # Read file and filter to AHD 0 shorelines
+        val_gdf = gpd.read_file(fname, 
+                                bbox=compartment).to_crs('EPSG:3577')
+        val_gdf = val_gdf[(val_gdf.TYPE == 'AHD 0m') | 
+                          (val_gdf.TYPE == 'AHD 0m ')]
+
+        # Filter to post 1987 shorelines and set index to year
+        val_gdf = val_gdf[val_gdf.PHOTO_YEAR > 1987]
+        val_gdf = val_gdf.set_index('PHOTO_YEAR')
+
+        # If no data is returned, skip this iteration
+        if len(val_gdf.index) == 0:
+            print(f'Failed: {beach:<80}', end='\r')
+            continue
+
+        ######################
+        # Generate transects #
+        ######################
+
+        transect_gdf = coastal_transects(bbox=compartment)
+
+        ################################
+        # Identify 0 MSL intersections #
+        ################################
+
+        output_list = []
+
+        # Select one year
+        for year in val_gdf.index.unique().sort_values(): 
+
+            # Extract validation contour
+            print(f'Processing {beach} {year:<80}', end='\r')
+            val_contour = val_gdf.loc[[year]].geometry.unary_union
+
+            # Copy transect data, and find intersects 
+            # between transects and contour
+            intersect_gdf = transect_gdf.copy()
+            intersect_gdf['val_point'] = transect_gdf.intersection(val_contour)
+            to_keep = gpd.GeoSeries(intersect_gdf['val_point']).geom_type == 'Point'
+            intersect_gdf = intersect_gdf.loc[to_keep]
+
+            # If no data is returned, skip this iteration
+            if len(intersect_gdf.index) == 0:
+                print(f'Failed: {beach} {year:<80}', end='\r')
+                continue
+
+            # Add generic metadata
+            intersect_gdf['date'] = pd.to_datetime(str(year))
+            intersect_gdf['beach'] = beach
+            intersect_gdf['section'] = 'all'
+            intersect_gdf['profile'] = list(map(str, range(0, len(intersect_gdf.index))))
+            intersect_gdf['source'] = 'photogrammetry' 
+            intersect_gdf['id'] = (intersect_gdf.beach + '_' + 
+                                   intersect_gdf.section + '_' + 
+                                   intersect_gdf.profile)
+
+            # Add measurement metadata
+            intersect_gdf[['start_x', 'start_y']] = intersect_gdf.apply(
+                lambda x: pd.Series(x.geometry.coords[0]), axis=1)
+            intersect_gdf[['end_x', 'end_y']] = intersect_gdf.apply(
+                lambda x: pd.Series(x.geometry.coords[1]), axis=1)
+            intersect_gdf['0_dist'] = intersect_gdf.apply(
+                lambda x: Point(x.start_x, x.start_y).distance(x['val_point']), axis=1)
+            intersect_gdf[['0_x', '0_y']] = intersect_gdf.apply(
+                lambda x: pd.Series(x.val_point.coords[0]), axis=1)
+
+            # Keep required columns
+            intersect_gdf = intersect_gdf[['id', 'date', 'beach', 
+                                           'section', 'profile',  
+                                           'source', 'start_x', 
+                                           'start_y', 'end_x', 'end_y', 
+                                           '0_dist', '0_x', '0_y']]
+
+            # Append to file
+            output_list.append(intersect_gdf)
+
+        # Combine all year data and export to file
+        if len(output_list) > 0:
+            shoreline_df = pd.concat(output_list)
+            shoreline_df.to_csv(f'output_data/wadot_{beach:<80}.csv', index=False)
+
+
 def preprocess_vicdeakin(fname,
                          datum=0):
     
