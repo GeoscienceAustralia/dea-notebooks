@@ -26,7 +26,7 @@ Functions included:
     largest_region
     transform_geojson_wgs_to_epsg
 
-Last modified: April 2020
+Last modified: June 2020
 
 '''
 
@@ -404,12 +404,12 @@ def subpixel_contours(da,
         # contour into a Shapely LineString feature
         try:
             line_features = [LineString(i[:,[1, 0]]) 
-                             for i in find_contours(da_i, z_value) 
+                             for i in find_contours(da_i.data, z_value) 
                              if i.shape[0] > min_vertices]
             
         except:
             line_features = [LineString(i[:,[1, 0]]) 
-                             for i in find_contours(da_i, z_value, 
+                             for i in find_contours(da_i.data, z_value, 
                                                     fully_connected='high') 
                              if i.shape[0] > min_vertices]          
 

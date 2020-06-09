@@ -23,7 +23,7 @@ Functions included:
     map_shapefile
     xr_animation
 
-Last modified: April 2020
+Last modified: June 2020
 
 '''
 
@@ -146,6 +146,14 @@ def rgb(ds,
     
     """
 
+    # Get names of x and y dims
+    # TODO: remove geobox and try/except once datacube 1.8 is default
+    try:
+        y_dim, x_dim = ds.geobox.dimensions
+    except AttributeError:
+        from datacube.utils import spatial_dims
+        y_dim, x_dim = spatial_dims(ds)
+
     # If ax is supplied via kwargs, ignore aspect and size
     if 'ax' in kwargs:
         
@@ -193,7 +201,9 @@ def rgb(ds,
                 'call'
             )
 
-        img = da.plot.imshow(robust=robust,
+        img = da.plot.imshow(x=x_dim,
+                             y=y_dim,
+                             robust=robust,
                              col_wrap=col_wrap,
                              **aspect_size_kwarg,
                              **kwargs)
@@ -231,7 +241,9 @@ def rgb(ds,
         # If multiple index values are supplied, plot as a faceted plot
         if len(index) > 1:
 
-            img = da.plot.imshow(robust=robust,
+            img = da.plot.imshow(x=x_dim,
+                                 y=y_dim,
+                                 robust=robust,
                                  col=index_dim,
                                  col_wrap=col_wrap,
                                  **aspect_size_kwarg,
