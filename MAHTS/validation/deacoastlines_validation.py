@@ -235,7 +235,7 @@ def preprocess_vicdeakin(fname,
 
         # Create output file name
         fname_out = f'output_data/vicdeakin_{beach_name}.csv'
-        print(fname_out)
+        print(f'Processing {fname_out:<80}', end='\r')
 
         # Find location and distance to water for datum height (0 m AHD)
         intercept_df = beach.groupby(['id', 'date']).apply(
@@ -257,34 +257,6 @@ def preprocess_vicdeakin(fname,
         # Export to file
         shoreline_dist.to_csv(fname_out)
         
-
-def tasmarc_metadata(profile):
-    
-    # Open file 
-    with open(profile, 'r') as profile_data:
-        
-        # Load header data (first 20 rows starting with "#")
-        header = takewhile(lambda x: x.startswith(('#', '&', ' ')), profile_data)
-        header = list(header)[0:19]
-
-        # List of metadata to extract
-        meta_list = ['LONGITUDE', 'LATITUDE',  
-                     'START DATE/TIME', 'TRUE BEARING TRANSECT DEGREES', 
-                     'SURVEY METHOD']
-
-        # Extract metadata for each metadata type in list
-        meta_extract = map(
-            lambda m: [row.replace(f'# {m} ', '').strip(' \n') 
-                       for row in header if m in row][0], meta_list)
-        lon, lat, date, bearing, source = meta_extract
-        
-        # Return metadata
-        return {'lon': lon, 
-                'lat': lat, 
-                'date': date[0:10], 
-                'bearing': bearing, 
-                'source': source}
-    
 
 def preprocess_nswbpd(fname, datum=0, overwrite=False):   
     
@@ -314,8 +286,9 @@ def preprocess_nswbpd(fname, datum=0, overwrite=False):
                              profiles_df.Profile)
 
         # Rename columns
-        profiles_df.columns = ['beach', 'section', 'profile', 'date', 'distance', 
-                               'z', 'x', 'y', 'source', 'id']
+        profiles_df.columns = ['beach', 'section', 'profile', 
+                               'date', 'distance', 'z', 'x', 'y', 
+                               'source', 'id']
         
         # Reproject coords to Albers
         trans = Transformer.from_crs('EPSG:32756', 'EPSG:3577', always_xy=True)
@@ -326,7 +299,7 @@ def preprocess_nswbpd(fname, datum=0, overwrite=False):
         start_end_xy = profiles_from_dist(profiles_df)
         profiles_df = pd.merge(left=profiles_df, right=start_end_xy)      
 
-        # Find location and distance to water for datum height (0 m AHD)
+        # Find location and distance to water for datum height (e.g. 0 m AHD)
         intercept_df = profiles_df.groupby(['id', 'date']).apply(
             waterline_intercept, z_val=datum).dropna()
         
@@ -425,8 +398,8 @@ def preprocess_narrabeen(fname,
                                                     x.end_x, 
                                                     x.end_y)), axis=1)
 
-        # Find location and distance to water for datum height (0 m AHD)
-        intercept_df= profiles_df.groupby(['id', 'date']).apply(
+        # Find location and distance to water for datum height (e.g. 0 m AHD)
+        intercept_df = profiles_df.groupby(['id', 'date']).apply(
             waterline_intercept, z_val=datum).dropna()
 
         # If the output contains data
@@ -449,7 +422,7 @@ def preprocess_narrabeen(fname,
         print(f'Skipping {fname:<80}', end='\r')
         
         
-def preprocess_cgc(site, overwrite=True):
+def preprocess_cgc(site, datum=0, overwrite=True):
     
     # Dictionary to manually rename problematic surveys
     manual_rename = {'BILINGA K37A': 'BILINGA', 
@@ -471,7 +444,7 @@ def preprocess_cgc(site, overwrite=True):
     beach = manual_rename[site] if site in manual_rename.keys() else site
     beach = beach.replace(' ', '').lower()
     fname_out = f'output_data/cgc_{beach}.csv'
-    print(f'Processing {fname_out}             ', end='\r')
+    print(f'Processing {fname_out:<80}', end='\r')
           
     # Test if file exists
     if not os.path.exists(fname_out) or overwrite:  
@@ -486,6 +459,7 @@ def preprocess_cgc(site, overwrite=True):
         # Output list to hold data
         site_profiles = []
 
+        # For each profile, import and standardise data then add to list
         for profile_i in profile_list:
 
             # Identify unique field values from file string
@@ -504,7 +478,7 @@ def preprocess_cgc(site, overwrite=True):
                 else:
                     section, profile = 'none', section_profile
 
-            # Remove any special characters from beach/section/profile names and create ID 
+            # Set location metadata and ID 
             profile_df = pd.read_csv(profile_i,
                                      usecols=[1, 2, 3],
                                      delim_whitespace=True, 
@@ -514,24 +488,30 @@ def preprocess_cgc(site, overwrite=True):
             profile_df['profile'] = profile.lower()
             profile_df['section'] = section.lower()
             profile_df['beach'] = beach
-            profile_df['site'] = profile_df[['beach', 'section', 'profile']].apply('_'.join, 1)
+            profile_df['id'] = (profile_df.beach + '_' + 
+                                profile_df.section + '_' + 
+                                profile_df.profile)
 
             # Filter to drop pre-1987 and deep water samples, add to list if any 
             # data is available above 0 MSL
-            profile_df = profile_df[profile_df.z > -3.0]
             profile_df = profile_df[profile_df.date > '1987']
-            if profile_df.z.max() > 0:
+            if (profile_df.z.min() < 0) & (profile_df.z.max() > 0):
                 site_profiles.append(profile_df)
 
         # If list of profiles contain valid data
         if len(site_profiles) > 0:
 
-            # Combine into a single dataframe
+            # Combine individual profiles into a single dataframe
             profiles_df = pd.concat(site_profiles)
+            
+            # Reproject coords to Albers
+            trans = Transformer.from_crs('EPSG:32756', 'EPSG:3577', always_xy=True)
+            profiles_df['x'], profiles_df['y'] = trans.transform(
+                profiles_df.x.values, profiles_df.y.values)
 
             # Compute origin and end points for each profile
-            start_xy = profiles_df.groupby(['site'], as_index=False).first()[['site', 'x', 'y']]
-            end_xy = profiles_df.groupby(['site'], as_index=False).last()[['site', 'x', 'y']]
+            start_xy = profiles_df.groupby(['id'], as_index=False).first()[['id', 'x', 'y']]
+            end_xy = profiles_df.groupby(['id'], as_index=False).last()[['id', 'x', 'y']]
             start_xy = start_xy.rename({'x': 'start_x', 'y': 'start_y'}, axis=1)
             end_xy = end_xy.rename({'x': 'end_x', 'y': 'end_y'}, axis=1)
 
@@ -540,59 +520,83 @@ def preprocess_cgc(site, overwrite=True):
             profiles_df = pd.merge(left=profiles_df, right=end_xy)
 
             # Compute chainage
-            profiles_df['chainage'] = profiles_df.apply(
+            profiles_df['distance'] = profiles_df.apply(
                 lambda x: math.hypot(x.x - x.start_x, x.y - x.start_y), axis = 1)
 
-    #         # Remove any points not aligned with transects
-    #         profiles_df = profiles_df.loc[deacl_val.detect_misaligned_points(profiles_df, 
-    #                                                                threshold=10)]
-
-            # Find location and distance to water for datum height (0 m AHD)
-            out = (profiles_df
-                   .groupby(['site', 'date'])
-                   .apply(waterline_intercept, 
-                          dist_col='chainage',
-                          x_col='x', 
-                          y_col='y', 
-                          z_col='z', 
-                          z_val=0).dropna())
+            # Find location and distance to water for datum height (e.g. 0 m AHD)
+            intercept_df = profiles_df.groupby(['id', 'date']).apply(
+                waterline_intercept, z_val=datum).dropna()
 
             # If the output contains data
-            if len(out.index):
+            if len(intercept_df.index) > 0:
 
                 # Join into dataframe
-                shoreline_dist = out.join(
-                    profiles_df.groupby(['site', 'date']).first())
+                shoreline_dist = intercept_df.join(
+                    profiles_df.groupby(['id', 'date']).first())
 
                 # Keep required columns
                 shoreline_dist = shoreline_dist[['beach', 'section', 'profile',  
                                                  'source', 'start_x', 'start_y', 
-                                                 'end_x', 'end_y', '0_dist', 
-                                                 '0_x', '0_y']]
+                                                 'end_x', 'end_y', f'{datum}_dist', 
+                                                 f'{datum}_x', f'{datum}_y']]
 
                 # Export to file
                 shoreline_dist.to_csv(fname_out)
                 
     else:
-        print(f'Skipping {fname_out}             ', end='\r')
+        print(f'Skipping {fname_out:<80}', end='\r')
         
         
-def preprocess_tasmarc(site, overwrite=True):
+def preprocess_tasmarc(site, datum=0, overwrite=True):
+    
+    def _tasmarc_metadata(profile):
+    
+        # Open file 
+        with open(profile, 'r') as profile_data:
 
+            # Load header data (first 20 rows starting with "#")
+            header = takewhile(lambda x: x.startswith(('#', '&', ' ')), profile_data)
+            header = list(header)[0:19]
+
+            # List of metadata to extract
+            meta_list = ['LONGITUDE', 'LATITUDE',  
+                         'START DATE/TIME', 'TRUE BEARING TRANSECT DEGREES', 
+                         'SURVEY METHOD']
+
+            # Extract metadata for each metadata type in list
+            meta_extract = map(
+                lambda m: [row.replace(f'# {m} ', '').strip(' \n') 
+                           for row in header if m in row][0], meta_list)
+            lon, lat, date, bearing, source = meta_extract
+
+            # Return metadata
+            return {'lon': lon, 
+                    'lat': lat, 
+                    'date': date[0:10], 
+                    'bearing': bearing, 
+                    'source': source}
+
+    # List of invalid profiles
+    invalid_list = ['shelly_beach_north']  # incorrect starting coord
+        
     # Set output name
     fname_out = f'output_data/tasmarc_{site}.csv'
+    print(f'Processing {fname_out:<80}', end='\r')
 
     # Test if file exists
-    if not os.path.exists(fname_out) or overwrite:  
+    if not os.path.exists(fname_out) or overwrite:         
 
         # List of profile datasets to iterate through
-        print(f'Processing {fname_out}             ', end='\r')
-        profiles = glob.glob(f'input_data/tasmarc/{site}/*.txt')
+        profile_list = glob.glob(f'input_data/tasmarc/{site}/*.txt')
+        
+        # Remove invalid profiles
+        profile_list = [profile for profile in profile_list if not 
+                        any(invalid in profile for invalid in invalid_list)]
 
         # Output list to hold data
         site_profiles = []
 
-        for profile in profiles:
+        for profile in profile_list:
 
             # Load data and remove invalid data
             profile_df = pd.read_csv(profile, 
@@ -601,31 +605,32 @@ def preprocess_tasmarc(site, overwrite=True):
                                      header=None,
                                      usecols=[0, 1, 2], 
                                      engine='python',
-                                     names = ['distance', 'elevation', 'flag'])
+                                     names = ['distance', 'z', 'flag'])
 
             # Remove invalid data
             profile_df = profile_df[profile_df.flag == 2]
             profile_df = profile_df.drop('flag', axis=1)
 
             # Add metadata from file and coerce to floats
-            profile_df = profile_df.assign(**tasmarc_metadata(profile))
+            profile_df = profile_df.assign(**_tasmarc_metadata(profile))
             profile_df = profile_df.apply(pd.to_numeric, errors='ignore')
 
             # Set to datetime
             profile_df['date'] = pd.to_datetime(profile_df['date'])
+            profile_df = profile_df[profile_df.date > '1987']
 
-            # Set remaining location metadata
+            # Set remaining location metadata and ID
             profile_i = os.path.basename(profile).replace(site, '')[1:-15]
             profile_df['profile'] = profile_i.replace('_', '') if len(profile_i) > 0 else 'middle'  
             profile_df['beach'] = site.replace('_', '') 
             profile_df['section'] = 'all'
-            profile_df['site'] = profile_df[['beach', 'section', 'profile']].apply('_'.join, 1)
+            profile_df['id'] = (profile_df.beach + '_' + 
+                                profile_df.section + '_' + 
+                                profile_df.profile)
 
             # Filter to drop pre-1987 and deep water samples, add to list if any 
             # data is available above 0 MSL
-            profile_df = profile_df[profile_df.elevation > -3.0]
-            profile_df = profile_df[profile_df.date > '1987']
-            if profile_df.elevation.min() < 0:
+            if (profile_df.z.min() < 0) & (profile_df.z.max() > 0):
                 site_profiles.append(profile_df)
 
         # If list of profiles contain valid data
@@ -636,56 +641,49 @@ def preprocess_tasmarc(site, overwrite=True):
 
             # Extend survey lines out from start coordinates using supplied angle
             coords_end = profiles_df.apply(
-                lambda x: dist_angle(x.lon, x.lat, 0.005, x.bearing), axis=1)
+                lambda x: dist_angle(x.lon, x.lat, 0.002, x.bearing), axis=1)
             profiles_df = pd.concat([profiles_df, coords_end], axis=1).drop('bearing', axis=1)
 
             # Rename fields
-            profiles_df = profiles_df.rename({'lat': 'start_y',
-                                              'lon': 'start_x',
-                                              'y2': 'end_y',
-                                              'x2': 'end_x'}, axis=1)
+            profiles_df = profiles_df.rename({'lat': 'start_y', 'lon': 'start_x'}, axis=1)
 
             # Reproject coords to Albers and create geodataframe
-            trans = Transformer.from_crs("EPSG:4326", "EPSG:28356", always_xy=True)
+            trans = Transformer.from_crs('EPSG:4326', 'EPSG:3577', always_xy=True)
             profiles_df['start_x'], profiles_df['start_y'] = trans.transform(
                 profiles_df.start_x.values, profiles_df.start_y.values)
             profiles_df['end_x'], profiles_df['end_y'] = trans.transform(
                 profiles_df.end_x.values, profiles_df.end_y.values)
 
             # Add coordinates for every distance along transects
-            profiles_df[['x', 'y']] = profiles_df.apply(lambda x: pd.Series(
-                dist_along_transect(x.distance, 
-                                    x.start_x, x.start_y, 
-                                    x.end_x, x.end_y)), axis=1)
+            profiles_df[['x', 'y']] = profiles_df.apply(
+                lambda x: pd.Series(dist_along_transect(x.distance,
+                                                        x.start_x, 
+                                                        x.start_y,
+                                                        x.end_x, 
+                                                        x.end_y)), axis=1)
 
             # Find location and distance to water for datum height (0 m AHD)
-            out = (profiles_df
-                   .groupby(['site', 'date'])
-                   .apply(waterline_intercept, 
-                          dist_col='distance',
-                          x_col='x', 
-                          y_col='y', 
-                          z_col='elevation', 
-                          z_val=0).dropna())
+            intercept_df = (profiles_df.groupby(['id', 'date']).apply(
+                waterline_intercept, z_val=datum).dropna())
 
             # If the output contains data
-            if len(out.index) > 0:
+            if len(intercept_df.index) > 0:
 
                 # Join into dataframe
-                shoreline_dist = out.join(
-                    profiles_df.groupby(['site', 'date']).first())
+                shoreline_dist = intercept_df.join(
+                    profiles_df.groupby(['id', 'date']).first())
 
                 # Keep required columns
                 shoreline_dist = shoreline_dist[['beach', 'section', 'profile', 
                                                  'source', 'start_x', 'start_y',
-                                                 'end_x', 'end_y', '0_dist', 
-                                                 '0_x', '0_y']]
+                                                 'end_x', 'end_y', f'{datum}_dist', 
+                                                 f'{datum}_x', f'{datum}_y']]
 
                 # Export to file
                 shoreline_dist.to_csv(fname_out)
 
         else:
-            print(f'Skipping {fname_out}             ', end='\r')
+            print(f'Skipping {fname_out:<80}', end='\r')
         
         
 def export_eval(results_df, output_name, datum=0, output_crs='EPSG:3577'):
