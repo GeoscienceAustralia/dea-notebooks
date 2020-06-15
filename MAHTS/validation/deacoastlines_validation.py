@@ -110,14 +110,27 @@ def waterline_intercept(x,
                         z_col='z', 
                         z_val=0): 
     
+    # Extract distance and coordinates of where the z_val first 
+    # intersects with the profile line
     dist_int = interp_intercept(x[dist_col].values, x[z_col].values, z_val)
     x_int = interp_intercept(x[x_col].values, x[z_col].values, z_val)
     y_int = interp_intercept(x[y_col].values, x[z_col].values, z_val)
     
-    return pd.Series({f'{z_val}_dist': dist_int, 
-                      f'{z_val}_x': x_int, 
-                      f'{z_val}_y': y_int})
-
+    # Identify last distance where the z_value intersects the profile
+    rev_int = interp_intercept(x[dist_col].values, x[z_col].values, z_val, 
+                               reverse=True)
+    
+    # If first and last intersects are the identical, return data. 
+    # If not, the comparison is invalid (i.e. NaN)
+    if dist_int == rev_int:
+        return pd.Series({f'{z_val}_dist': dist_int, 
+                          f'{z_val}_x': x_int, 
+                          f'{z_val}_y': y_int})
+    else:
+        return pd.Series({f'{z_val}_dist': np.NaN, 
+                          f'{z_val}_x': np.NaN, 
+                          f'{z_val}_y': np.NaN})
+    
 
 def detect_misaligned_points(profiles_df, x='x', y='y', threshold=10):
 
@@ -443,9 +456,6 @@ def preprocess_nswbpd(fname, datum=0, overwrite=False):
                                                   dayfirst=True,
                                                   errors='coerce')
 
-        # Restrict to post 1987
-        profiles_df = profiles_df[profiles_df['Year/Date'] > '1987']
-
         # Convert columns to strings and add unique ID column
         profiles_df['Beach'] = profiles_df['Beach'].str.lower().str.replace(' ', '')
         profiles_df['Block'] = profiles_df['Block'].astype(str).str.lower()
@@ -464,29 +474,57 @@ def preprocess_nswbpd(fname, datum=0, overwrite=False):
         profiles_df['x'], profiles_df['y'] = trans.transform(
             profiles_df.x.values, profiles_df.y.values)
         
+        # Restrict to post 1987
+        profiles_df = profiles_df[profiles_df['date'] > '1987']
+        
         # Compute origin and end points for each profile and merge into data
         start_end_xy = profiles_from_dist(profiles_df)
-        profiles_df = pd.merge(left=profiles_df, right=start_end_xy)      
-
-        # Find location and distance to water for datum height (e.g. 0 m AHD)
-        intercept_df = profiles_df.groupby(['id', 'date']).apply(
-            waterline_intercept, z_val=datum).dropna()
+        profiles_df = pd.merge(left=profiles_df, right=start_end_xy) 
         
-        # If the output contains data
-        if len(intercept_df.index) > 0:
+        # Drop profiles that have been assigned incorrect profile IDs. 
+        # To do this, we use a correlation test to determine whether x 
+        # and y coordinates within each individual profiles fall along a 
+        # straight line. If a profile has a low correlation (e.g. less 
+        # than 99.9), it is likely that multiple profile lines have been 
+        # incorrectly labelled with a single profile ID.
+        valid_profiles = lambda x: x[['x', 'y']].corr().abs().iloc[0, 1] > 0.99
+        drop = (~profiles_df.groupby('id').apply(valid_profiles)).sum()
+        profiles_df = profiles_df.groupby('id').filter(valid_profiles)        
+        if drop.sum() > 0: print(f'\nDropping invalid profiles: {drop:<80}')            
+    
+        # If profile data remains
+        if len(profiles_df.index) > 0:
+            
+            # Restrict profiles to data that falls ocean-ward of the top of 
+            # the foredune (the highest point in the profile) to remove 
+            # spurious validation points, e.g. due to a non-shoreline lagoon 
+            # at the back of the profile   
+            foredune_dist = profiles_df.groupby(['id', 'date']).apply(
+                lambda x: x.distance.loc[x.z.idxmax()]).reset_index(name='foredune_dist')
+            profiles_df = pd.merge(left=profiles_df, right=foredune_dist) 
+            profiles_df = profiles_df.loc[(profiles_df.distance >= 
+                                           profiles_df.foredune_dist)]
 
-            # Join into dataframe
-            shoreline_dist = intercept_df.join(
-                profiles_df.groupby(['id', 'date']).first())
+            # Find location and distance to water for datum height (e.g. 0 m AHD)
+            intercept_df = profiles_df.groupby(['id', 'date']).apply(
+                waterline_intercept, z_val=datum).dropna()            
+        
+            # If any datum intercepts are found
+            if len(intercept_df.index) > 0:
 
-            # Keep required columns
-            shoreline_dist = shoreline_dist[['beach', 'section', 'profile',  
-                                             'source', 'start_x', 'start_y', 
-                                             'end_x', 'end_y', f'{datum}_dist', 
-                                             f'{datum}_x', f'{datum}_y']]
+                # Join into dataframe
+                shoreline_dist = intercept_df.join(
+                    profiles_df.groupby(['id', 'date']).first())
 
-            # Export to file
-            shoreline_dist.to_csv(f'{fname_out}')
+                # Keep required columns
+                shoreline_dist = shoreline_dist[['beach', 'section', 'profile',  
+                                                 'source', 'foredune_dist', 
+                                                 'start_x', 'start_y', 
+                                                 'end_x', 'end_y', f'{datum}_dist', 
+                                                 f'{datum}_x', f'{datum}_y']]
+
+                # Export to file
+                shoreline_dist.to_csv(f'{fname_out}')
     
     else:
         print(f'Skipping {fname:<80}', end='\r')
@@ -965,6 +1003,8 @@ def deacl_validation(val_path,
     in_buffer = val_df.apply(
         lambda x: buffered_mask.contains(Point(x[f'{datum}_x'], 
                                                x[f'{datum}_y'])), axis=1)
+    
+#     return val_df
 
     # Remove points that fall within buffer
     val_df = val_df.loc[~in_buffer]
@@ -972,7 +1012,7 @@ def deacl_validation(val_path,
     # Import corresponding waterline contours
     deacl_gdf = gpd.read_file(deacl_path, bbox=bbox.buffer(100)).to_crs('EPSG:3577')
     
-    if len(deacl_gdf.index) > 0:
+    if (len(deacl_gdf.index) > 0) & (len(val_df.index) > 0):
     
         # Set year dtype to allow merging
         deacl_gdf['year'] = deacl_gdf.year.astype('int64')
@@ -1021,63 +1061,75 @@ def deacl_validation(val_path,
         results_df = results_df[(results_df[sat_label] > 0) & 
                                 (results_df[val_label] > 0)]
         
+        # If data contains a foredune distance field, drop invalid 
+        # validation points where DEA CoastLines intersection occurs 
+        # behind the foredune 
+        if 'foredune_dist' in results_df:
+            valid = results_df[sat_label] >= results_df.foredune_dist
+            results_df = results_df.loc[valid]
+        
         # Add optional offset
         results_df[sat_label] += sat_offset
         
         # Select validation and satellite data
         sat_data = results_df[sat_label]
         val_data = results_df[val_label] 
-
-        # Calculate stats
-        rmse = mean_squared_error(val_data, sat_data) ** 0.5
-        mae = mean_absolute_error(val_data, sat_data)
-        r2 = r2_score(val_data, sat_data)
-        cor = results_df[[sat_label, val_label]].corr().iloc[0, 1]
-        stats_dict = {'id': Path(val_path).stem, 
-                      'rmse': rmse, 'mae': mae, 'r2': r2, 'cor': cor}
-
-        # Plot image       
-        fig, ax = plt.subplots(figsize=(8.5, 7))
-        results_df.plot.scatter(x=val_label,
-                                y=sat_label,
-                                c=results_df.year,
-                                s=25,
-                                cmap='YlOrRd',
-                                vmin=1987,
-                                vmax=2018,
-                                ax=ax, 
-                                edgecolors='black',
-                                linewidth=0.5
-                               )
-        ax.plot(np.linspace(min(val_data.min(), sat_data.min()), 
-                            max(val_data.max(), sat_data.max())),
-                np.linspace(min(val_data.min(), sat_data.min()), 
-                            max(val_data.max(), sat_data.max())),
-                color='black',
-                linestyle='dashed')
-        ax.set_title(title)
-        ax.annotate(f'RMSE: {rmse:.2f} m\n' \
-                    f'MAE: {mae:.2f} m\n' \
-                    f'R-squared: {r2:.2f}\n' \
-                    f'Correlation: {cor:.2f}', 
-                    xy=(0.05, 0.85),
-                    xycoords='axes fraction',
-                    fontsize=11)
-
-        # Export to file
-        fig.savefig(f'figures/{Path(val_path).stem}.png', 
-                    bbox_inches='tight', 
-                    dpi=150)
         
-        if eval_shapes:
-            export_eval(results_df, 
-                        datum=datum,
-                        output_name=f'{Path(val_path).stem}')
+        return results_df
         
-        if return_df:
-            return [results_df, stats_dict]
-        else:
-            return stats_dict
+        # If enough data is returned:
+        if len(results_df.index) > 1:
+
+            # Calculate stats
+            rmse = mean_squared_error(val_data, sat_data) ** 0.5
+            mae = mean_absolute_error(val_data, sat_data)
+            r2 = r2_score(val_data, sat_data)
+            cor = results_df[[sat_label, val_label]].corr().iloc[0, 1]
+            stats_dict = {'id': Path(val_path).stem, 
+                          'rmse': rmse, 'mae': mae, 'r2': r2, 'cor': cor}
+
+            # Plot image       
+            fig, ax = plt.subplots(figsize=(8.5, 7))
+            results_df.plot.scatter(x=val_label,
+                                    y=sat_label,
+                                    c=results_df.year,
+                                    s=25,
+                                    cmap='YlOrRd',
+                                    vmin=1987,
+                                    vmax=2018,
+                                    ax=ax, 
+                                    edgecolors='black',
+                                    linewidth=0.5
+                                   )
+            ax.plot(np.linspace(min(val_data.min(), sat_data.min()), 
+                                max(val_data.max(), sat_data.max())),
+                    np.linspace(min(val_data.min(), sat_data.min()), 
+                                max(val_data.max(), sat_data.max())),
+                    color='black',
+                    linestyle='dashed')
+            ax.set_title(title)
+            ax.annotate(f'RMSE: {rmse:.2f} m\n' \
+                        f'MAE: {mae:.2f} m\n' \
+                        f'R-squared: {r2:.2f}\n' \
+                        f'Correlation: {cor:.2f}', 
+                        xy=(0.05, 0.85),
+                        xycoords='axes fraction',
+                        fontsize=11)
+
+            # Export to file
+            fig.savefig(f'figures/{Path(val_path).stem}.png', 
+                        bbox_inches='tight', 
+                        dpi=50)
+
+            if eval_shapes:
+                export_eval(results_df, 
+                            datum=datum,
+                            output_name=f'{Path(val_path).stem}')
+
+            if return_df:
+                return [results_df, stats_dict]
+            else:
+                return stats_dict
         
         
     
