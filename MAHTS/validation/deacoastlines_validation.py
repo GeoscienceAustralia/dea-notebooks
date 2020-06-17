@@ -291,6 +291,7 @@ def preprocess_wadot(regions_gdf,
         ######################
 
         transect_gdf = coastal_transects(bbox=compartment)
+        transect_gdf['profile'] = list(map(str, range(0, len(transect_gdf.index))))
 
         ################################
         # Identify 0 MSL intersections #
@@ -321,12 +322,11 @@ def preprocess_wadot(regions_gdf,
             intersect_gdf['date'] = pd.to_datetime(str(year))
             intersect_gdf['beach'] = beach
             intersect_gdf['section'] = 'all'
-            intersect_gdf['profile'] = list(map(str, range(0, len(intersect_gdf.index))))
             intersect_gdf['source'] = 'photogrammetry' 
             intersect_gdf['id'] = (intersect_gdf.beach + '_' + 
                                    intersect_gdf.section + '_' + 
                                    intersect_gdf.profile)
-
+            
             # Add measurement metadata
             intersect_gdf[['start_x', 'start_y']] = intersect_gdf.apply(
                 lambda x: pd.Series(x.geometry.coords[0]), axis=1)
@@ -336,6 +336,8 @@ def preprocess_wadot(regions_gdf,
                 lambda x: Point(x.start_x, x.start_y).distance(x['val_point']), axis=1)
             intersect_gdf[['0_x', '0_y']] = intersect_gdf.apply(
                 lambda x: pd.Series(x.val_point.coords[0]), axis=1)
+            
+#             return intersect_gdf
 
             # Keep required columns
             intersect_gdf = intersect_gdf[['id', 'date', 'beach', 
@@ -828,7 +830,8 @@ def preprocess_tasmarc(site, datum=0, overwrite=True):
 
             # Set remaining location metadata and ID
             profile_i = os.path.basename(profile).replace(site, '')[1:-15]
-            profile_df['profile'] = profile_i.replace('_', '') if len(profile_i) > 0 else 'middle'  
+            profile_df['profile'] = (profile_i.replace('_', '') if 
+                                     len(profile_i) > 0 else 'middle')
             profile_df['beach'] = site.replace('_', '') 
             profile_df['section'] = 'all'
             profile_df['id'] = (profile_df.beach + '_' + 
@@ -891,37 +894,6 @@ def preprocess_tasmarc(site, datum=0, overwrite=True):
 
         else:
             print(f'Skipping {fname_out:<80}', end='\r')
-        
-        
-def export_eval(results_df, output_name, datum=0, output_crs='EPSG:3577'):
-
-    results_sub = results_df[['id', 'year', f'{datum}_x', f'{datum}_y', 
-                              'Validation beach width (m)',
-                              'DEA CoastLines beach width (m)']]
-
-    gpd.GeoDataFrame(
-        data=results_sub,
-        geometry=gpd.points_from_xy(x=results_df[f'{datum}_x'], 
-                                    y=results_df[f'{datum}_y']),
-        crs=output_crs).to_crs('EPSG:4326').to_file(
-            f'figures/eval/{output_name}_val_points.geojson', driver='GeoJSON')
-
-    gpd.GeoDataFrame(
-        data=results_sub,
-        geometry=results_df.apply(
-            lambda x: x.geometry_val.intersection(x.geometry_deacl), axis=1),
-        crs=output_crs).to_crs('EPSG:4326').to_file(
-        f'figures/eval/{output_name}_deacl_points.geojson', driver='GeoJSON')
-
-    gpd.GeoDataFrame(data=results_sub,
-                     geometry=results_df.geometry_val,
-                     crs=output_crs).to_crs('EPSG:4326').to_file(
-                         f'figures/eval/{output_name}_val_transects.geojson', driver='GeoJSON')
-
-    gpd.GeoDataFrame(data=results_sub,
-                     geometry=results_df.geometry_deacl,
-                     crs=output_crs).to_crs('EPSG:4326').to_file(
-                         f'figures/eval/{output_name}_deacl_coastlines.geojson', driver='GeoJSON')    
     
 
 def waterbody_mask(input_data,
@@ -974,11 +946,8 @@ def waterbody_mask(input_data,
 def deacl_validation(val_path,
                      deacl_path,
                      datum=0,
-                     sat_label='DEA CoastLines beach width (m)',
-                     val_label='Validation beach width (m)',
-                     sat_offset=0,
-                     return_df=False,
-                     eval_shapes=False):
+                     sat_label='deacl',
+                     val_label='val'):
     
     # Load validation data
     val_df = pd.read_csv(val_path, parse_dates=['date'])
@@ -1003,14 +972,13 @@ def deacl_validation(val_path,
     in_buffer = val_df.apply(
         lambda x: buffered_mask.contains(Point(x[f'{datum}_x'], 
                                                x[f'{datum}_y'])), axis=1)
-    
-#     return val_df
 
     # Remove points that fall within buffer
     val_df = val_df.loc[~in_buffer]
-
+    
     # Import corresponding waterline contours
-    deacl_gdf = gpd.read_file(deacl_path, bbox=bbox.buffer(100)).to_crs('EPSG:3577')
+    deacl_gdf = gpd.read_file(deacl_path, 
+                              bbox=bbox.buffer(100)).to_crs('EPSG:3577')
     
     if (len(deacl_gdf.index) > 0) & (len(val_df.index) > 0):
     
@@ -1020,13 +988,15 @@ def deacl_validation(val_path,
         # Add year column
         val_df['year'] = val_df.date.dt.year
 
-        # Aggregate by year and save count number and source
-        source = val_df.groupby(['year', 'id']).source.agg(
+        # Aggregate by year and take most common categorical
+        modal_vals = val_df[['source', 'beach', 'section', 'profile']].agg(
             lambda x: pd.Series.mode(x).iloc[0])
+        
+        # Aggregate by year and save count number and source
         counts = val_df.groupby(['year', 'id']).date.count()
         val_df = val_df.groupby(['year', 'id']).median()
         val_df['n'] = counts
-        val_df['source'] = source
+        val_df = val_df.assign(**modal_vals.to_dict())
         val_df = val_df.reset_index()
 
         # Convert validation start and end locations to linestrings
@@ -1039,7 +1009,7 @@ def deacl_validation(val_path,
                                    geometry=val_geometry,
                                    crs='EPSG:3577').reset_index()
 
-        # Combine to match each shoreline contour to each date in validation data
+        # Match each shoreline contour to each date in validation data
         results_df = val_gdf.merge(deacl_gdf,
                                    on='year',
                                    suffixes=('_val', '_deacl'))
@@ -1052,84 +1022,91 @@ def deacl_validation(val_path,
         # Drop any multipart geometries as these are invalid comparisons
         results_df = results_df[results_df.apply(
             lambda x: x.intersect.type == 'Point', axis=1)]
+        results_df[f'{sat_label}_x'] = gpd.GeoSeries(results_df['intersect']).x
+        results_df[f'{sat_label}_y'] = gpd.GeoSeries(results_df['intersect']).y
         
         # For each row, compute distance between origin and intersect
-        results_df[sat_label] = results_df.apply(
+        results_df[f'{sat_label}_dist'] = results_df.apply(
             lambda x: x.intersect.distance(Point(x.start_x, x.start_y)), 
             axis=1)               
-        results_df = results_df.rename({f'{datum}_dist': val_label}, axis=1)
-        results_df = results_df[(results_df[sat_label] > 0) & 
-                                (results_df[val_label] > 0)]
         
         # If data contains a foredune distance field, drop invalid 
         # validation points where DEA CoastLines intersection occurs 
         # behind the foredune 
         if 'foredune_dist' in results_df:
-            valid = results_df[sat_label] >= results_df.foredune_dist
+            valid = (results_df[f'{sat_label}_dist'] >= 
+                     results_df.foredune_dist)
             results_df = results_df.loc[valid]
         
-        # Add optional offset
-        results_df[sat_label] += sat_offset
-        
-        # Select validation and satellite data
-        sat_data = results_df[sat_label]
-        val_data = results_df[val_label] 
-        
-        return results_df
-        
         # If enough data is returned:
-        if len(results_df.index) > 1:
+        if len(results_df.index) > 0:
+            
+            # Rename for consistency    
+            results_df = results_df.rename(
+                    {f'{datum}_dist': f'{val_label}_dist',
+                     f'{datum}_x': f'{val_label}_x',
+                     f'{datum}_y': f'{val_label}_y'}, axis=1)
+            
+            # Calculate difference
+            results_df['diff_dist'] = results_df.val_dist - results_df.deacl_dist
+            
+            return results_df[['id', 'year', 'beach', 'section', 
+                               'profile', 'source', 'certainty', 'n', 
+                               'start_x', 'start_y', 'end_x', 'end_y', 
+                               f'{val_label}_x', f'{val_label}_y', f'{val_label}_dist', 
+                               f'{sat_label}_x', f'{sat_label}_y', f'{sat_label}_dist',
+                               'diff_dist']]
 
-            # Calculate stats
-            rmse = mean_squared_error(val_data, sat_data) ** 0.5
-            mae = mean_absolute_error(val_data, sat_data)
-            r2 = r2_score(val_data, sat_data)
-            cor = results_df[[sat_label, val_label]].corr().iloc[0, 1]
-            stats_dict = {'id': Path(val_path).stem, 
-                          'rmse': rmse, 'mae': mae, 'r2': r2, 'cor': cor}
+#             # Calculate stats
+#             rmse = mean_squared_error(val_data, sat_data) ** 0.5
+#             mae = mean_absolute_error(val_data, sat_data)
+#             r2 = r2_score(val_data, sat_data)
+#             cor = results_df[[sat_label, val_label]].corr().iloc[0, 1]
+#             stats_dict = {'id': Path(val_path).stem, 
+#                           'rmse': rmse, 'mae': mae, 'r2': r2, 'cor': cor}
 
-            # Plot image       
-            fig, ax = plt.subplots(figsize=(8.5, 7))
-            results_df.plot.scatter(x=val_label,
-                                    y=sat_label,
-                                    c=results_df.year,
-                                    s=25,
-                                    cmap='YlOrRd',
-                                    vmin=1987,
-                                    vmax=2018,
-                                    ax=ax, 
-                                    edgecolors='black',
-                                    linewidth=0.5
-                                   )
-            ax.plot(np.linspace(min(val_data.min(), sat_data.min()), 
-                                max(val_data.max(), sat_data.max())),
-                    np.linspace(min(val_data.min(), sat_data.min()), 
-                                max(val_data.max(), sat_data.max())),
-                    color='black',
-                    linestyle='dashed')
-            ax.set_title(title)
-            ax.annotate(f'RMSE: {rmse:.2f} m\n' \
-                        f'MAE: {mae:.2f} m\n' \
-                        f'R-squared: {r2:.2f}\n' \
-                        f'Correlation: {cor:.2f}', 
-                        xy=(0.05, 0.85),
-                        xycoords='axes fraction',
-                        fontsize=11)
+#             # Plot image       
+#             fig, ax = plt.subplots(figsize=(8.5, 7))
+#             results_df.plot.scatter(x=val_label,
+#                                     y=sat_label,
+#                                     c=results_df.year,
+#                                     s=25,
+#                                     cmap='YlOrRd',
+#                                     vmin=1987,
+#                                     vmax=2018,
+#                                     ax=ax, 
+#                                     edgecolors='black',
+#                                     linewidth=0.5
+#                                    )
+#             ax.plot(np.linspace(min(val_data.min(), sat_data.min()), 
+#                                 max(val_data.max(), sat_data.max())),
+#                     np.linspace(min(val_data.min(), sat_data.min()), 
+#                                 max(val_data.max(), sat_data.max())),
+#                     color='black',
+#                     linestyle='dashed')
+#             ax.set_title(title)
+#             ax.annotate(f'RMSE: {rmse:.2f} m\n' \
+#                         f'MAE: {mae:.2f} m\n' \
+#                         f'R-squared: {r2:.2f}\n' \
+#                         f'Correlation: {cor:.2f}', 
+#                         xy=(0.05, 0.85),
+#                         xycoords='axes fraction',
+#                         fontsize=11)
 
-            # Export to file
-            fig.savefig(f'figures/{Path(val_path).stem}.png', 
-                        bbox_inches='tight', 
-                        dpi=50)
+#             # Export to file
+#             fig.savefig(f'figures/{Path(val_path).stem}.png', 
+#                         bbox_inches='tight', 
+#                         dpi=50)
 
-            if eval_shapes:
-                export_eval(results_df, 
-                            datum=datum,
-                            output_name=f'{Path(val_path).stem}')
+#             if eval_shapes:
+#                 export_eval(results_df, 
+#                             datum=datum,
+#                             output_name=f'{Path(val_path).stem}')
 
-            if return_df:
-                return [results_df, stats_dict]
-            else:
-                return stats_dict
+#             if return_df:
+#                 return [results_df, stats_dict]
+#             else:
+#                 return stats_dict
         
         
     
