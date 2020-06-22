@@ -336,8 +336,6 @@ def preprocess_wadot(regions_gdf,
                 lambda x: Point(x.start_x, x.start_y).distance(x['val_point']), axis=1)
             intersect_gdf[['0_x', '0_y']] = intersect_gdf.apply(
                 lambda x: pd.Series(x.val_point.coords[0]), axis=1)
-            
-#             return intersect_gdf
 
             # Keep required columns
             intersect_gdf = intersect_gdf[['id', 'date', 'beach', 
@@ -354,6 +352,164 @@ def preprocess_wadot(regions_gdf,
             shoreline_df = pd.concat(output_list)
             shoreline_df.to_csv(f'output_data/wadot_{beach:<80}.csv', index=False)
 
+            
+def preprocess_stirling(fname_out, datum=0):
+
+    # List containing files to import and all params to extract data
+    survey_xl = [
+                 {'fname': 'input_data/stirling/2015 05 28 - From Stirling - Coastal Profiles 2014-2015 April-Feb with updated reef#2.xlsm',
+                  'skiprows': 2,
+                  'skipcols': 5,
+                  'nrows': 100, 
+                  'meta_skiprows': 0,
+                  'meta_nrows': 1,
+                  'meta_usecols': [6, 7]}, 
+                 {'fname': 'input_data/stirling/Coastal Profiles 2013-2014 JUL-MAY#2.xlsx',
+                  'skiprows': 2,
+                  'skipcols': 5,
+                  'nrows': 100, 
+                  'meta_skiprows': 0,
+                  'meta_nrows': 1,
+                  'meta_usecols': [6, 7]}, 
+                 {'fname': 'input_data/stirling/COASTAL PROFILES 2013 JAN - JUNE#2.xls',
+                  'skiprows': 3,
+                  'skipcols': 0,
+                  'nrows': 40, 
+                  'meta_skiprows': 1,
+                  'meta_nrows': 2,
+                  'meta_usecols': [1, 2]}, 
+                 {'fname': 'input_data/stirling/COASTAL PROFILES 2012 JUN - DEC#2.xls',
+                  'skiprows': 3,
+                  'skipcols': 0,
+                  'nrows': 40, 
+                  'meta_skiprows': 1,
+                  'meta_nrows': 2,
+                  'meta_usecols': [1, 2]}, 
+                 {'fname': 'input_data/stirling/COASTAL PROFILES 2011-2012 NOV - MAY#2.xls',
+                  'skiprows': 3,
+                  'skipcols': 0,
+                  'nrows': 40, 
+                  'meta_skiprows': 1,
+                  'meta_nrows': 2,
+                  'meta_usecols': [1, 2]}
+                ]
+
+    # List to contain processed profile data
+    output = []
+
+    # For each survey excel file in the list above:
+    for survey in survey_xl:
+
+        # Load profile start metadata
+        all_meta = pd.read_excel(survey['fname'],
+                                 sheet_name=None, 
+                                 nrows=survey['meta_nrows'], 
+                                 skiprows=survey['meta_skiprows'],
+                                 usecols=survey['meta_usecols'], 
+                                 header=None, 
+                                 on_demand=True)
+
+        # Load data
+        all_sheets = pd.read_excel(survey['fname'],
+                                   sheet_name=None, 
+                                   skiprows=survey['skiprows'], 
+                                   nrows=survey['nrows'], 
+                                   parse_dates=False,
+                                   usecols=lambda x: 'Unnamed' not in str(x))
+
+        # Iterate through each profile in survey data
+        for profile_id in np.arange(1, 20).astype('str'):
+
+            # Extract profile start metadata and profile data    
+            start_x, start_y = all_meta[profile_id].values[0]
+            sheet = all_sheets[profile_id].iloc[:,survey['skipcols']:]
+
+            # First set all column names to lower case strings
+            sheet.columns = (sheet.columns.astype(str)
+                             .str.slice(0, 10)
+                             .str.lower())
+
+            # Drop note columns and distance/angle offset
+            sheet = sheet.loc[:,~sheet.columns.str.contains('note|notes')]
+            sheet = sheet.drop(['dist', 'angle dd'], axis=1, errors='ignore')
+
+            # Expand date column values into rows for each sampling event
+            sheet.loc[:,sheet.columns[::4]] = sheet.columns[::4]
+
+            # Number date columns incrementally to match other fields
+            start_num = 1 if survey['skipcols'] > 0 else 0
+            rename_dict = {name: f'date.{i + start_num}' for 
+                           i, name in enumerate(sheet.columns[::4])}
+            sheet = sheet.rename(rename_dict, axis=1).reset_index()
+            sheet = sheet.rename({'x': 'x.0', 'y': 'y.0', 'z': 'z.0'}, axis=1)
+
+            # Reshape data into long format
+            profile_df = pd.wide_to_long(sheet, 
+                                         stubnames=['date', 'x', 'y', 'z'], 
+                                         i='index', 
+                                         j='dropme', 
+                                         sep='.').reset_index(drop=True)
+
+            # Set datetimes
+            profile_df['date'] = pd.to_datetime(profile_df.date, 
+                                                errors='coerce',
+                                                dayfirst=True)
+
+            # Add profile metadata
+            profile_df['beach'] = 'stirling'
+            profile_df['section'] = 'all'
+            profile_df['profile'] = profile_id
+            profile_df['source'] = 'GPS survey'
+            profile_df['start_x'] = start_x
+            profile_df['start_y'] = start_y
+            profile_df['id'] = (profile_df.beach + '_' + 
+                                profile_df.section + '_' + 
+                                profile_df.profile)
+
+            # Add results to list
+            output.append(profile_df.dropna())
+
+    # Combine all survey and profile data
+    profiles_df = pd.concat(output)
+
+    # Reproject Perth Coastal Grid coordinates into Australian Albers
+    pcg_crs = '+proj=tmerc +lat_0=0 +lon_0=115.8166666666667 ' \
+              '+k=0.9999990600000001 +x_0=50000 +y_0=3800000 ' \
+              '+ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
+    trans = Transformer.from_crs(pcg_crs, 'EPSG:3577', always_xy=True)
+    profiles_df['x'], profiles_df['y'] =  trans.transform(
+        profiles_df.y.values, profiles_df.x.values)
+    profiles_df['start_x'], profiles_df['start_y'] =  trans.transform(
+        profiles_df.start_y.values, profiles_df.start_x.values)
+
+    # Calculate per-point distance from start of profile
+    profiles_df['distance'] = profiles_df.apply(
+        lambda x: Point(x.start_x, x.start_y).distance(Point(x.x, x.y)), axis=1)
+
+    # Identify end of profiles by max distance from start, and merge back
+    max_dist = (profiles_df.sort_values('distance', ascending=False)
+                .groupby('id')['x', 'y']
+                .first()
+                .rename({'x': 'end_x', 'y': 'end_y'}, axis=1))
+    profiles_df = profiles_df.merge(max_dist, on='id')
+
+    # Find location and distance to water for datum height (e.g. 0 m AHD)
+    intercept_df = profiles_df.groupby(['id', 'date']).apply(
+        waterline_intercept, z_val=datum).dropna()   
+
+     # Join into dataframe
+    shoreline_dist = intercept_df.join(
+        profiles_df.groupby(['id', 'date']).first())
+
+    # Keep required columns
+    shoreline_dist = shoreline_dist[['beach', 'section', 'profile',  
+                                     'source', 'start_x', 'start_y', 
+                                     'end_x', 'end_y', f'{datum}_dist', 
+                                     f'{datum}_x', f'{datum}_y']]
+
+    # Export to file
+    shoreline_dist.to_csv(fname_out)
+    
 
 def preprocess_vicdeakin(fname,
                          datum=0):
