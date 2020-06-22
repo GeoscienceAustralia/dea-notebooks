@@ -246,7 +246,7 @@ def load_ard(dc,
         product_type = 's2'
 
     fmask_band = 'fmask'
-    measurements = (requested_measurements.copy() if 
+    measurements = (requested_measurements.copy() if
                     requested_measurements else None)
 
     if measurements is None:
@@ -260,7 +260,7 @@ def load_ard(dc,
         # work-around, we need to rename the default contiguity and fmask
         # bands if loading Landsat data without specifying `measurements`
         if product_type == 'ls':
-            mask_contiguity = (f'oa_{mask_contiguity}' if 
+            mask_contiguity = (f'oa_{mask_contiguity}' if
                                mask_contiguity else False)
             fmask_band = f'oa_{fmask_band}'
 
@@ -273,7 +273,7 @@ def load_ard(dc,
 
     # Get list of data and mask bands so that we can later exclude
     # mask bands from being masked themselves
-    data_bands = [band for band in measurements if 
+    data_bands = [band for band in measurements if
                   band not in (fmask_band, mask_contiguity)]
     mask_bands = [band for band in measurements if band not in data_bands]
 
@@ -384,7 +384,7 @@ def load_ard(dc,
         # (keeping only pixels good in both)
         mask = cont_mask if mask is None else mask * cont_mask
 
-    # Split into data/masks bands, as conversion to float and masking 
+    # Split into data/masks bands, as conversion to float and masking
     # should only be applied to data bands
     ds_data = ds[data_bands]
     ds_masks = ds[mask_bands]
@@ -399,7 +399,7 @@ def load_ard(dc,
         dtype = 'native' if mask is None else 'float32'
 
     # Set nodata values using odc.algo tools to reduce peak memory
-    # use when converting data dtype    
+    # use when converting data dtype
     if dtype != 'native':
         ds_data = odc.algo.to_float(ds_data, dtype=dtype)
 
