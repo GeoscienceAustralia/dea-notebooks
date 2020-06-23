@@ -383,8 +383,8 @@ def subpixel_contours(da,
         dimension.
     errors : string, optional
         If 'raise', then any failed contours will raise an exception.
-        If 'ignore' (the default), a list of failed contours will be 
-        printed. If no contours are returned, an exception will always 
+        If 'ignore' (the default), a list of failed contours will be
+        printed. If no contours are returned, an exception will always
         be raised.
         
     Returns
@@ -503,16 +503,16 @@ def subpixel_contours(da,
     empty_contours = contours_gdf.geometry.is_empty
     failed = ', '.join(map(str, contours_gdf[empty_contours][dim].to_list()))
     contours_gdf = contours_gdf[~empty_contours]
-    
-    # Raise exception if no data is returned, or if any contours fail 
+
+    # Raise exception if no data is returned, or if any contours fail
     # when `errors='raise'. Otherwise, print failed contours
     if empty_contours.all():
         raise Exception("Failed to generate any valid contours; verify that "
                         "values passed to `z_values` are valid and present "
                         "in `da`")
-    elif empty_contours.any() and errors == 'raise':  
+    elif empty_contours.any() and errors == 'raise':
         raise Exception(f'Failed to generate contours: {failed}')
-    elif empty_contours.any() and errors == 'ignore':  
+    elif empty_contours.any() and errors == 'ignore':
         print(f'Failed to generate contours: {failed}')
 
     # If asked to write out file, test if geojson or shapefile
