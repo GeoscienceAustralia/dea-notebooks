@@ -196,23 +196,23 @@ def run_filmstrip_app(output_name,
                       .fillna(labels[-1])) 
         time_steps_var = xr.DataArray(time_steps, [('time', ds.time)], 
                                       name='timestep')
-        
+
         # Try to load geomedian code. If this fails, fall back to median
         try:
 
             # Resample data temporally into time steps, and compute geomedians
-            from odc.algo import xr_geomedian 
+            from odc.algo import xr_geomedian
             ds_geomedian = (ds.groupby(time_steps_var)
-                            .apply(lambda ds_subset: 
-                                   xr_geomedian(ds_subset, 
-                                      num_threads=1,  # disable internal threading, dask will run several concurrently
-                                      eps=0.2 * (1 / 10_000),  # 1/5 pixel value resolution
-                                      nocheck=True)))  # disable some checks inside geomedian library that use too much ram
-        except:
-            
+                            .apply(lambda ds_subset:
+                                   xr_geomedian(ds_subset,
+                                                num_threads=1,
+                                                eps=0.2 * (1 / 10_000),
+                                                nocheck=True)))
+        except ImportError:
+
             # Resample data temporally into time steps, and compute geomedians
             print('Unable to load geomedian code; computing median instead')
-            ds_geomedian = ds.groupby(time_steps_var).median()            
+            ds_geomedian = ds.groupby(time_steps_var).median()
 
         print('\nGenerating geomedian composites and plotting '
               'filmstrips... (click the Dashboard link above for status)')
@@ -228,7 +228,7 @@ def run_filmstrip_app(output_name,
         
         # Convert to array and extract vmin/vmax
         output_array = (ds_geomedian[['nbart_red', 'nbart_green',
-                                    'nbart_blue']]
+                                      'nbart_blue']]
                         .to_array()
                         .drop('spatial_ref'))
         percentiles = output_array.quantile(q=(0.02, 0.98)).values
