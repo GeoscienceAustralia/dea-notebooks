@@ -312,16 +312,16 @@ def display_map(x, y, crs='EPSG:4326', margin=-0.5, zoom_bias=0):
     # Convert each corner coordinates to lat-lon
     all_x = (x[0], x[1], x[0], x[1])
     all_y = (y[0], y[0], y[1], y[1])
-    all_longitude, all_latitude = transform(Proj(init=crs),
-                                            Proj(init='EPSG:4326'), 
+    all_longitude, all_latitude = transform(Proj(crs),
+                                            Proj('EPSG:4326'),
                                             all_x, all_y)
 
     # Calculate zoom level based on coordinates
     lat_zoom_level = _degree_to_zoom_level(min(all_latitude),
                                            max(all_latitude),
                                            margin=margin) + zoom_bias
-    lon_zoom_level = _degree_to_zoom_level(min(all_longitude), 
-                                           max(all_longitude), 
+    lon_zoom_level = _degree_to_zoom_level(min(all_longitude),
+                                           max(all_longitude),
                                            margin=margin) + zoom_bias
     zoom_level = min(lat_zoom_level, lon_zoom_level)
 
