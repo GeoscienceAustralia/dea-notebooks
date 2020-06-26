@@ -682,7 +682,7 @@ def preprocess_nswbpd(fname, datum=0, overwrite=False):
                                                  f'{datum}_x', f'{datum}_y']]
 
                 # Export to file
-                shoreline_dist.to_csv(f'{fname_out}')
+                shoreline_dist.to_csv(fname_out)
     
     else:
         print(f'Skipping {fname:<80}', end='\r')
@@ -793,17 +793,18 @@ def preprocess_cgc(site, datum=0, overwrite=True):
     manual_rename = {'BILINGA K37A': 'BILINGA', 
                      'CURRUMBIN (27A)': 'CURRUMBIN', 
                      'NORTH KIRRA (confirmed)': 'NORTH KIRRA', 
+                     'NOTH KIRRA': 'NORTH KIRRA',
                      'PALM BEACH (28A)': 'PALM BEACH', 
                      'PALM BEACH (30A)': 'PALM BEACH', 
                      'PALM BEACH (31A)': 'PALM BEACH', 
                      'SURFERS PARADISE (no longer used)': 'SURFERS PARADISE'}
     
     # List of invalid profiles
-    invalid_list = ['SOUTH STRADBROKE - SSI 01 - (26324) 2014-05-07',
-                    'SOUTH STRADBROKE - SSI 01 - (25410) 2013-05-16',
-                    'WHOLE OF COAST - Whole of Coast (UNCRACKED) - (23215) 2011-06-23',
-                    'WHOLE OF COAST - Whole of Coast (UNCRACKED) - (25180) 2013-01-01',
-                    'WHOLE OF COAST - Whole of Coast (UNCRACKED) - (25181) 2012-01-01'] 
+    invalid_list = [
+#         'PALM BEACH - '
+#         'SOUTH STRADBROKE - SSI 01 - (26324) 2014-05-07',
+#         'SOUTH STRADBROKE - SSI 01 - (25410) 2013-05-16'
+    ] 
     
     # Standardise beach name from site name
     beach = manual_rename[site] if site in manual_rename.keys() else site
@@ -817,9 +818,9 @@ def preprocess_cgc(site, datum=0, overwrite=True):
         # List of profile datasets to iterate through
         profile_list = glob.glob(f'input_data/cityofgoldcoast/{site}*.txt')
 
-        # Remove invalid profiles
-        profile_list = [profile for profile in profile_list if not 
-                        any(invalid in profile for invalid in invalid_list)]
+#         # Remove invalid profiles
+#         profile_list = [profile for profile in profile_list if not 
+#                         any(invalid in profile for invalid in invalid_list)]
 
         # Output list to hold data
         site_profiles = []
@@ -841,7 +842,10 @@ def preprocess_cgc(site, datum=0, overwrite=True):
                     section, profile = section_profile.split(' ')
 
                 else:
-                    section, profile = 'none', section_profile
+                    section, profile = 'all', section_profile
+                    
+                    if profile == '':
+                        profile = 'a'
 
             # Set location metadata and ID 
             profile_df = pd.read_csv(profile_i,
@@ -857,9 +861,10 @@ def preprocess_cgc(site, datum=0, overwrite=True):
                                 profile_df.section + '_' + 
                                 profile_df.profile)
 
-            # Filter to drop pre-1987 and deep water samples, add to list if any 
-            # data is available above 0 MSL
+            # Filter to drop pre-1987 and deep water samples, add to 
+            # list if profile crosses 0
             profile_df = profile_df[profile_df.date > '1987']
+            profile_df = profile_df[profile_df.z > -3.0]
             if (profile_df.z.min() < 0) & (profile_df.z.max() > 0):
                 site_profiles.append(profile_df)
 
@@ -887,6 +892,29 @@ def preprocess_cgc(site, datum=0, overwrite=True):
             # Compute chainage
             profiles_df['distance'] = profiles_df.apply(
                 lambda x: math.hypot(x.x - x.start_x, x.y - x.start_y), axis = 1)
+            
+            # Drop profiles that have been assigned incorrect profile IDs. 
+            # To do this, we use a correlation test to determine whether x 
+            # and y coordinates within each individual profiles fall along a 
+            # straight line. If a profile has a low correlation (e.g. less 
+            # than 99.9), it is likely that multiple profile lines have been 
+            # incorrectly labelled with a single profile ID.
+            valid_profiles = lambda x: x[['x', 'y']].corr().abs().iloc[0, 1] > 0.99
+            drop = (~profiles_df.groupby('id').apply(valid_profiles)).sum()
+            profiles_df = profiles_df.groupby('id').filter(valid_profiles)        
+            if drop.sum() > 0: print(f'\nDropping invalid profiles: {drop:<80}')  
+            
+#             return profiles_df
+
+            # Restrict profiles to data that falls ocean-ward of the top of 
+            # the foredune (the highest point in the profile) to remove 
+            # spurious validation points, e.g. due to a non-shoreline lagoon 
+            # at the back of the profile   
+            foredune_dist = profiles_df.groupby(['id', 'date']).apply(
+                lambda x: x.distance.loc[x.z.idxmax()]).reset_index(name='foredune_dist')
+            profiles_df = pd.merge(left=profiles_df, right=foredune_dist) 
+            profiles_df = profiles_df.loc[(profiles_df.distance >= 
+                                           profiles_df.foredune_dist)]
 
             # Find location and distance to water for datum height (e.g. 0 m AHD)
             intercept_df = profiles_df.groupby(['id', 'date']).apply(
@@ -898,10 +926,13 @@ def preprocess_cgc(site, datum=0, overwrite=True):
                 # Join into dataframe
                 shoreline_dist = intercept_df.join(
                     profiles_df.groupby(['id', 'date']).first())
+                
+#                 return shoreline_dist
 
                 # Keep required columns
                 shoreline_dist = shoreline_dist[['beach', 'section', 'profile',  
-                                                 'source', 'start_x', 'start_y', 
+                                                 'source', 'foredune_dist', 
+                                                 'start_x', 'start_y', 
                                                  'end_x', 'end_y', f'{datum}_dist', 
                                                  f'{datum}_x', f'{datum}_y']]
 
