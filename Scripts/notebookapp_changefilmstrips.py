@@ -6,7 +6,7 @@ change filmstrips notebook, inside the Real_world_examples folder.
 Available functions:
     run_filmstrip_app
 
-Last modified: April 2020
+Last modified: June 2020
 '''
 
 # Load modules
@@ -18,13 +18,13 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
+from odc.algo import xr_geomedian
 from odc.ui import select_on_a_map
 from dask.utils import parse_bytes
 from datacube.utils.geometry import CRS
 from datacube.utils.rio import configure_s3_access
 from datacube.utils.dask import start_local_dask
 from ipyleaflet import basemaps, basemap_to_tiles
-
 
 # Load utility functions
 sys.path.append('../Scripts')
@@ -41,7 +41,7 @@ def run_filmstrip_app(output_name,
                       resolution=(-30, 30),
                       max_cloud=50,
                       ls7_slc_off=False,
-                      size_limit=20000):
+                      size_limit=200):
     '''
     An interactive app that allows the user to select a region from a
     map, then load Digital Earth Australia Landsat data and combine it
@@ -58,7 +58,7 @@ def run_filmstrip_app(output_name,
     only satellite images obtained during a specific tidal range 
     (e.g. low, average or high tide).
     
-    Last modified: April 2020
+    Last modified: June 2020
 
     Parameters
     ----------  
@@ -94,7 +94,10 @@ def run_filmstrip_app(output_name,
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from 
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to 
-        False, which removes all Landsat 7 observations > May 31 2003.    
+        False, which removes all Landsat 7 observations > May 31 2003.
+    size_limit : int, optional
+        An optional size limit for the area selection in sq km. 
+        Defaults to 200 sq km.
         
     Returns
     -------
@@ -127,10 +130,10 @@ def run_filmstrip_app(output_name,
     centre_coords = geopolygon.centroid.points[0][::-1]
 
     # Test size of selected area
-    area = geopolygon.to_crs(crs = CRS('epsg:3577')).area / 10000
+    area = geopolygon.to_crs(crs = CRS('epsg:3577')).area / 1000000
     if area > size_limit: 
-        print(f'Warning: Your selected area is {area:.00f} hectares. '
-              f'Please select an area of less than {size_limit} ha.'
+        print(f'Warning: Your selected area is {area:.00f} sq km. '
+              f'Please select an area of less than {size_limit} sq km.'
               f'\nTo select a smaller area, re-run the cell '
               f'above and draw a new polygon.')
         
@@ -197,29 +200,20 @@ def run_filmstrip_app(output_name,
         time_steps_var = xr.DataArray(time_steps, [('time', ds.time)], 
                                       name='timestep')
 
-        # Try to load geomedian code. If this fails, fall back to median
-        try:
-
-            # Resample data temporally into time steps, and compute geomedians
-            from odc.algo import xr_geomedian
-            ds_geomedian = (ds.groupby(time_steps_var)
-                            .apply(lambda ds_subset:
-                                   xr_geomedian(ds_subset,
-                                                num_threads=1,
-                                                eps=0.2 * (1 / 10_000),
-                                                nocheck=True)))
-        except ImportError:
-
-            # Resample data temporally into time steps, and compute geomedians
-            print('Unable to load geomedian code; computing median instead')
-            ds_geomedian = ds.groupby(time_steps_var).median()
+        # Resample data temporally into time steps, and compute geomedians           
+        geomedian_ds = (ds.groupby(time_steps_var)
+                        .apply(lambda ds_subset:
+                               xr_geomedian(ds_subset,
+                                            num_threads=1,
+                                            eps=0.2 * (1 / 10_000),
+                                            nocheck=True)))
 
         print('\nGenerating geomedian composites and plotting '
               'filmstrips... (click the Dashboard link above for status)')
-        ds_geomedian = ds_geomedian.compute()
+        geomedian_ds = geomedian_ds.compute()
 
         # Reset CRS that is lost during geomedian compositing
-        ds_geomedian.attrs['crs'] = ds.crs
+        geomedian_ds.attrs['crs'] = ds.crs
         
 
         ############
@@ -227,12 +221,18 @@ def run_filmstrip_app(output_name,
         ############
         
         # Convert to array and extract vmin/vmax
-        output_array = (ds_geomedian[['nbart_red', 'nbart_green',
-                                      'nbart_blue']]
-                        .to_array()
-                        .drop('spatial_ref'))
+        output_array = geomedian_ds[['nbart_red', 'nbart_green',
+                                     'nbart_blue']].to_array()
         percentiles = output_array.quantile(q=(0.02, 0.98)).values
-
+        
+        # Compute heatmap by first taking the log of the array (so 
+        # change in dark areas can be identified), then computing 
+        # standard deviation between all timesteps
+        heatmap_ds = (np.log(output_array)
+                      .std(dim=['timestep'])
+                      .mean(dim='variable'))
+        heatmap_ds.attrs['crs'] = ds.crs
+        
         # Create the plot with one subplot more than timesteps in the 
         # dataset. Figure width is set based on the number of subplots 
         # and aspect ratio
@@ -241,6 +241,10 @@ def run_filmstrip_app(output_name,
         fig, axes = plt.subplots(1, n_obs + 1, 
                                  figsize=(5 * ratio * (n_obs + 1), 5))
         fig.subplots_adjust(wspace=0.05, hspace=0.05)
+        
+        # If 'spatial_ref' coord exists, drop it before plotting
+        if 'spatial_ref' in output_array.coords:
+            output_array = output_array.drop('spatial_ref')
 
         # Add timesteps to the plot, set aspect to equal to preserve shape
         for i, ax_i in enumerate(axes.flatten()[:n_obs]):
@@ -250,18 +254,12 @@ def run_filmstrip_app(output_name,
             ax_i.get_xaxis().set_visible(False)
             ax_i.get_yaxis().set_visible(False)
             ax_i.set_aspect('equal')
-
-        # Add change heatmap panel to final subplot. Heatmap is computed 
-        # by first taking the log of the array (so change in dark areas 
-        # can be identified), then computing standard deviation between 
-        # all timesteps
-        (np.log(output_array)
-         .std(dim=['timestep'])
-         .mean(dim='variable')
-         .plot.imshow(ax=axes.flatten()[-1], 
-                      robust=True, 
-                      cmap='magma', 
-                      add_colorbar=False))
+    
+        # Add change heatmap panel to final subplot.              
+        heatmap_ds.plot.imshow(ax=axes.flatten()[-1], 
+                               robust=True, 
+                               cmap='magma', 
+                               add_colorbar=False)
         axes.flatten()[-1].get_xaxis().set_visible(False)
         axes.flatten()[-1].get_yaxis().set_visible(False)
         axes.flatten()[-1].set_aspect('equal')
@@ -276,5 +274,4 @@ def run_filmstrip_app(output_name,
                     bbox_inches='tight',
                     pad_inches=0.1)
 
-        return ds_geomedian
-
+        return geomedian_ds, heatmap_ds
