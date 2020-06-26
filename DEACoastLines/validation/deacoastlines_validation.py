@@ -789,25 +789,8 @@ def preprocess_narrabeen(fname,
         
 def preprocess_cgc(site, datum=0, overwrite=True):
     
-    # Dictionary to manually rename problematic surveys
-    manual_rename = {'BILINGA K37A': 'BILINGA', 
-                     'CURRUMBIN (27A)': 'CURRUMBIN', 
-                     'NORTH KIRRA (confirmed)': 'NORTH KIRRA', 
-                     'NOTH KIRRA': 'NORTH KIRRA',
-                     'PALM BEACH (28A)': 'PALM BEACH', 
-                     'PALM BEACH (30A)': 'PALM BEACH', 
-                     'PALM BEACH (31A)': 'PALM BEACH', 
-                     'SURFERS PARADISE (no longer used)': 'SURFERS PARADISE'}
-    
-    # List of invalid profiles
-    invalid_list = [
-#         'PALM BEACH - '
-#         'SOUTH STRADBROKE - SSI 01 - (26324) 2014-05-07',
-#         'SOUTH STRADBROKE - SSI 01 - (25410) 2013-05-16'
-    ] 
-    
     # Standardise beach name from site name
-    beach = manual_rename[site] if site in manual_rename.keys() else site
+    beach = site.replace('NO*TH KIRRA', 'NORTH KIRRA').lower()
     beach = beach.replace(' ', '').lower()
     fname_out = f'output_data/cgc_{beach}.csv'
     print(f'Processing {fname_out:<80}', end='\r')
@@ -818,10 +801,6 @@ def preprocess_cgc(site, datum=0, overwrite=True):
         # List of profile datasets to iterate through
         profile_list = glob.glob(f'input_data/cityofgoldcoast/{site}*.txt')
 
-#         # Remove invalid profiles
-#         profile_list = [profile for profile in profile_list if not 
-#                         any(invalid in profile for invalid in invalid_list)]
-
         # Output list to hold data
         site_profiles = []
 
@@ -830,29 +809,23 @@ def preprocess_cgc(site, datum=0, overwrite=True):
 
             # Identify unique field values from file string
             profile_string = os.path.basename(profile_i)
+            date = profile_string.split(' - (')[1][-14:-4]
+            section_profile = profile_string.split(' - (')[0].split(' - ')[1]
+            section = section_profile.split(' ')[0]
+            profile = ''.join(section_profile.split(' ')[1:])
 
-            # Treat data file string differently depending on format
-            if len(profile_string.split(' - ')) > 3:
-                _, section, profile, id_date = profile_string.split(' - ')            
-
-            else:
-                _, section_profile, id_date = profile_string.split(' - ')
-
-                if len(section_profile.split(' ')) == 2:
-                    section, profile = section_profile.split(' ')
-
-                else:
-                    section, profile = 'all', section_profile
-                    
-                    if profile == '':
-                        profile = 'a'
+            # Fix missing section or profile info
+            if section and not profile:
+                section, profile = 'na', section
+            elif not section and not profile:
+                section, profile = 'na', 'na'
 
             # Set location metadata and ID 
             profile_df = pd.read_csv(profile_i,
                                      usecols=[1, 2, 3],
                                      delim_whitespace=True, 
                                      names=['x', 'y', 'z'])
-            profile_df['date'] = pd.to_datetime(id_date[-14:-4]) 
+            profile_df['date'] = pd.to_datetime(date) 
             profile_df['source'] = 'hydrographic survey'
             profile_df['profile'] = profile.lower()
             profile_df['section'] = section.lower()
@@ -903,8 +876,6 @@ def preprocess_cgc(site, datum=0, overwrite=True):
             drop = (~profiles_df.groupby('id').apply(valid_profiles)).sum()
             profiles_df = profiles_df.groupby('id').filter(valid_profiles)        
             if drop.sum() > 0: print(f'\nDropping invalid profiles: {drop:<80}')  
-            
-#             return profiles_df
 
             # Restrict profiles to data that falls ocean-ward of the top of 
             # the foredune (the highest point in the profile) to remove 
@@ -926,8 +897,6 @@ def preprocess_cgc(site, datum=0, overwrite=True):
                 # Join into dataframe
                 shoreline_dist = intercept_df.join(
                     profiles_df.groupby(['id', 'date']).first())
-                
-#                 return shoreline_dist
 
                 # Keep required columns
                 shoreline_dist = shoreline_dist[['beach', 'section', 'profile',  
