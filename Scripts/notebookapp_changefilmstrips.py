@@ -255,7 +255,7 @@ def run_filmstrip_app(output_name,
             ax_i.get_yaxis().set_visible(False)
             ax_i.set_aspect('equal')
 
-        # Add change heatmap panel to final subplot      
+        # Add change heatmap panel to final subplot
         heatmap_ds.plot.imshow(ax=axes.flatten()[-1],
                                robust=True,
                                cmap='magma',
