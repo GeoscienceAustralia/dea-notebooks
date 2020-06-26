@@ -96,7 +96,7 @@ def run_filmstrip_app(output_name,
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to 
         False, which removes all Landsat 7 observations > May 31 2003.
     size_limit : int, optional
-        An optional size limit for the area selection in sq km. 
+        An optional size limit for the area selection in sq km.
         Defaults to 200 sq km.
         
     Returns
@@ -130,7 +130,7 @@ def run_filmstrip_app(output_name,
     centre_coords = geopolygon.centroid.points[0][::-1]
 
     # Test size of selected area
-    area = geopolygon.to_crs(crs = CRS('epsg:3577')).area / 1000000
+    area = geopolygon.to_crs(crs=CRS('epsg:3577')).area / 1000000
     if area > size_limit: 
         print(f'Warning: Your selected area is {area:.00f} sq km. '
               f'Please select an area of less than {size_limit} sq km.'
@@ -200,7 +200,7 @@ def run_filmstrip_app(output_name,
         time_steps_var = xr.DataArray(time_steps, [('time', ds.time)], 
                                       name='timestep')
 
-        # Resample data temporally into time steps, and compute geomedians           
+        # Resample data temporally into time steps, and compute geomedians
         geomedian_ds = (ds.groupby(time_steps_var)
                         .apply(lambda ds_subset:
                                xr_geomedian(ds_subset,
@@ -224,15 +224,15 @@ def run_filmstrip_app(output_name,
         output_array = geomedian_ds[['nbart_red', 'nbart_green',
                                      'nbart_blue']].to_array()
         percentiles = output_array.quantile(q=(0.02, 0.98)).values
-        
-        # Compute heatmap by first taking the log of the array (so 
-        # change in dark areas can be identified), then computing 
+
+        # Compute heatmap by first taking the log of the array (so
+        # change in dark areas can be identified), then computing
         # standard deviation between all timesteps
         heatmap_ds = (np.log(output_array)
                       .std(dim=['timestep'])
                       .mean(dim='variable'))
         heatmap_ds.attrs['crs'] = ds.crs
-        
+
         # Create the plot with one subplot more than timesteps in the 
         # dataset. Figure width is set based on the number of subplots 
         # and aspect ratio
@@ -241,7 +241,7 @@ def run_filmstrip_app(output_name,
         fig, axes = plt.subplots(1, n_obs + 1, 
                                  figsize=(5 * ratio * (n_obs + 1), 5))
         fig.subplots_adjust(wspace=0.05, hspace=0.05)
-        
+
         # If 'spatial_ref' coord exists, drop it before plotting
         if 'spatial_ref' in output_array.coords:
             output_array = output_array.drop('spatial_ref')
@@ -254,11 +254,11 @@ def run_filmstrip_app(output_name,
             ax_i.get_xaxis().set_visible(False)
             ax_i.get_yaxis().set_visible(False)
             ax_i.set_aspect('equal')
-    
-        # Add change heatmap panel to final subplot.              
-        heatmap_ds.plot.imshow(ax=axes.flatten()[-1], 
-                               robust=True, 
-                               cmap='magma', 
+
+        # Add change heatmap panel to final subplot      
+        heatmap_ds.plot.imshow(ax=axes.flatten()[-1],
+                               robust=True,
+                               cmap='magma',
                                add_colorbar=False)
         axes.flatten()[-1].get_xaxis().set_visible(False)
         axes.flatten()[-1].get_yaxis().set_visible(False)
