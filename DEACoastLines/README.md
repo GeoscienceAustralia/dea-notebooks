@@ -5,8 +5,10 @@
 ### v0.3.0 (upcoming)
 
 **Outstanding issues**
-* Missing contours on western end of Rottnest Island, WA
 * Missing oldest contours on eastern side of Fraser Island, QLD (caused by missing path/row 890770)
+
+**Bug fixes**
+* In `deacoastlines_statistics.py`: Restored missing contours on western end of Rottnest Island, WA
 
 
 ### v0.2.0 (May 5, 2020)
