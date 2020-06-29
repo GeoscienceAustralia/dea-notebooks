@@ -1,5 +1,33 @@
-*.zip
-*.err
-*.out
+# Ignore shapefiles
+*.dbf
+*.fix
+*.prj
+*.qix
+*.cpg
+*.shp
+*.shx
 
+# Ignore geodatabase
+*.gdb
+
+# Ignore rasters
+*.tif
+*.tiff
+*.jpeg
+*.jpg
+*.JPG
+*.png
+*.PNG
+
+# Ignore QGIS projects
+*.qgz
+*.qgs
+
+# Ignore directories
+dask-worker-space/*
 output_data/*
+packages/*
+PBS/*
+validation/input_data/*
+validation/output_data/*
+validation/figures/*

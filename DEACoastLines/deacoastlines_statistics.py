@@ -622,7 +622,7 @@ def main(argv=None):
         
     # Set params
     water_index = 'mndwi'
-    index_threshold = 0.10
+    index_threshold = 0.00
     baseline_year = '2018'
 
     ###############################
@@ -646,15 +646,18 @@ def main(argv=None):
                          crs=yearly_ds.crs)
 
     # Rocky shore mask
-    smartline_gdf = (gpd.read_file('input_data/Smartline.gdb', bbox=bbox)
+    smartline_gdf = (gpd.read_file('input_data/Smartline.gdb', 
+                                   bbox=bbox)
                      .to_crs(yearly_ds.crs))
 
     # Tide points
-    points_gdf = (gpd.read_file('input_data/tide_points_coastal.geojson', bbox=bbox)
+    points_gdf = (gpd.read_file('input_data/tide_points_coastal.geojson', 
+                                bbox=bbox)
                   .to_crs(yearly_ds.crs))
 
     # Study area polygon
-    comp_gdf = (gpd.read_file('input_data/50km_albers_grid_clipped.shp', bbox=bbox)
+    comp_gdf = (gpd.read_file('input_data/50km_albers_grid_clipped.geojson', 
+                              bbox=bbox)
                 .set_index('id')
                 .to_crs(str(yearly_ds.crs)))
 

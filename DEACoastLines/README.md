@@ -9,7 +9,7 @@
 
 **Bug fixes**
 * In `deacoastlines_statistics.py`: Restored missing contours on western end of Rottnest Island, WA
-
+* In `deacoastlines_statistics.py`: Removed Papua New Guinea territory from map
 
 ### v0.2.0 (May 5, 2020)
 
