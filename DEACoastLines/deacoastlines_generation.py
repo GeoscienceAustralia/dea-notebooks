@@ -72,7 +72,7 @@ def load_mndwi(dc,
     # Identify the most common CRS in the region, so data can be loaded with 
     # minimal distortion. The dictionary comprehension is required as 
     # dc.find_datasets does not work in combination with dask_chnks
-    crs = mostcommon_crs(dc=dc, product='ga_ls8c_ard_3', 
+    crs = mostcommon_crs(dc=dc, product='ga_ls5t_ard_3', 
                          query={k: v for k, v in query.items() if 
                                 k not in ['dask_chunks']})
     
@@ -493,7 +493,7 @@ def main(argv=None):
     output_name = str(argv[2])    
    
     # Connect to datacube    
-    dc = datacube.Datacube(app='DEACoastLines_generation', env='c3-samples')
+    dc = datacube.Datacube(app='DEACoastLines_generation')
     
     # Start local dask client
     client = start_local_dask(mem_safety_margin='3gb')
@@ -581,7 +581,7 @@ def main(argv=None):
     ##################
     
     # Once all rasters have been generated, compute contours and statistics
-    os.system(f'python /g/data/r78/rt1527/dea-notebooks/MAHTS/deacoastlines_statistics.py {study_area} {output_name}')
+    os.system(f'python /g/data/r78/rt1527/dea-notebooks/DEACoastLines/deacoastlines_statistics.py {study_area} {output_name}')
     
         
 if __name__ == "__main__":

@@ -654,7 +654,7 @@ def main(argv=None):
                   .to_crs(yearly_ds.crs))
 
     # Study area polygon
-    comp_gdf = (gpd.read_file('input_data/50km_albers_grid.shp', bbox=bbox)
+    comp_gdf = (gpd.read_file('input_data/50km_albers_grid_clipped.shp', bbox=bbox)
                 .set_index('id')
                 .to_crs(str(yearly_ds.crs)))
 
