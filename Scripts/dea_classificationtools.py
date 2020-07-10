@@ -46,9 +46,6 @@ import rasterio
 import sys
 import os
 
-#sys.path.append('../Scripts')
-
-
 def sklearn_flatten(input_xr):
     """
     Reshape a DataArray or Dataset with spatial (and optionally 
@@ -432,7 +429,7 @@ def get_training_data_for_shp(gdf,
 
         if calc_indices is not None:
             # determine which collection is being loaded
-            #TODO verify this works
+            # TODO verify this works
             if '2' in products[0]:
                 collection = 'ga_ls_2'
             elif '3' in products[0]:
