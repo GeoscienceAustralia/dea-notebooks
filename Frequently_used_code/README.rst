@@ -7,6 +7,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    :maxdepth: 1
    :caption: Frequently Used Code
 
+   Analyse_multiple_polygons.ipynb
    Animated_timeseries.ipynb
    Applying_WOfS_bitmasking.ipynb
    Calculating_band_indices.ipynb
@@ -22,7 +23,6 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Opening_GeoTIFFs_NetCDFs.ipynb
    Pan_sharpening_Brovey.ipynb
    Rasterize_vectorize.ipynb
-   SARA_SLC_download.ipynb
    Tidal_modelling.ipynb
    Using_load_ard.ipynb
    Virtual_products.ipynb
