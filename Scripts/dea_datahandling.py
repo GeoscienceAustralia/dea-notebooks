@@ -45,6 +45,7 @@ import pandas as pd
 import xarray as xr
 from collections import Counter
 from scipy.ndimage import binary_dilation
+from datacube.utils.dates import normalise_dt
 
 
 def _dc_query_only(**kw):
@@ -299,7 +300,8 @@ def load_ard(dc,
 
         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
         if not ls7_slc_off and product == 'ga_ls7e_ard_3':
-            datasets = [i for i in datasets if i.time.begin <
+            datasets = [i for i in datasets if
+                        normalise_dt(i.time.begin) <
                         datetime.datetime(2003, 5, 31)]
 
         # Add any returned datasets to list
