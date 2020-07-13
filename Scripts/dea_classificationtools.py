@@ -315,7 +315,7 @@ def get_training_data_for_shp(gdf,
     Function to extract data from the ODC for training a machine learning classifier 
     using a geopandas geodataframe of labelled geometries. 
     This function provides a number of pre-defined methods for producing training data, 
-    including calcuating band indices, reducing time series using several summary statistics, 
+    including: calcuating band indices, reducing time series using summary statistics, 
     and/or generating zonal statistics across polygons.  The 'custom_func' parameter provides 
     a method for the user to supply a custom function for generating features rather than using the
     pre-defined methods.
@@ -326,7 +326,7 @@ def get_training_data_for_shp(gdf,
         geometry data in the form of a geopandas geodataframe
     products : list
         a list of products to load from the datacube. 
-        e.g. ['ls8_usgs_sr_scene', 'ls7_usgs_sr_scene']
+        e.g. ['ga_ls7e_ard_3', 'ga_ls8c_ard_3']
     dc_query : dictionary
         Datacube query object, should not contain lat and long (x or y)
         variables as these are supplied by the 'gdf' variable
@@ -342,9 +342,7 @@ def get_training_data_for_shp(gdf,
         is set, all other options (excluding 'zonal_stats'), will be ignored.
         The result of the 'custom_func' must be a single xarray dataset 
         containing 2D coordinates (i.e x, y - no time dimension). The custom function
-        has access to the datacube dataset extracted using the 'dc_query' params,
-        along with access to the 'dc_query' dictionary itself, which could be used
-        to load other products besides those specified under 'products'.
+        has access to the datacube dataset extracted using the 'dc_query' params.
     calc_indices: list, optional
         If not using a custom func, then this parameter provides a method for
         calculating a number of remote sensing indices (e.g. `['NDWI', 'NDVI']`).
@@ -352,7 +350,7 @@ def get_training_data_for_shp(gdf,
         Function to reduce the data from multiple time steps to
         a single timestep. Options are 'mean', 'median', 'std',
         'max', 'min', 'geomedian'.  Ignored if 'custom_func' is provided.
-    drop : boolean, optional , 
+    drop : boolean, optional 
         If this variable is set to True, and 'calc_indices' are supplied, the
         spectral bands will be dropped from the dataset leaving only the
         band indices as data variables in the dataset. Default is True.
@@ -360,7 +358,7 @@ def get_training_data_for_shp(gdf,
         An optional string giving the names of zonal statistics to calculate 
         for each polygon. Default is None (all pixel values are returned). Supported 
         values are 'mean', 'median', 'max', 'min', and 'std'. Will work in 
-        conjuction with a 'custom_func'.
+        conjunction with a 'custom_func'.
 
 
     Returns
@@ -374,32 +372,34 @@ def get_training_data_for_shp(gdf,
     dc_query = deepcopy(dc_query)
 
     # remove dask chunks if supplied as using
-    # mulitprocessing for parallization
+    # mulitprocessing for parallelization
     if 'dask_chunks' in dc_query.keys():
         dc_query.pop('dask_chunks', None)
 
     # connect to datacube
     dc = datacube.Datacube(app='training_data')
 
-    # set up query based on polygon (convert to WGS84)
+    # set up query based on polygon (convert to albers)
     geom = geometry.Geometry(
         gdf.geometry.values[index].__geo_interface__, geometry.CRS(
-            'EPSG:3577'))
+            'epsg:3577'))
 
-    # print(geom)
     q = {"geopolygon": geom}
 
     # merge polygon query with user supplied query params
     dc_query.update(q)
 
-    # load_ard doesn't handle geomedians
-    # TODO: Add support for other sensors
-    if 'ls8_nbart_geomedian_annual' in products:
-        ds = dc.load(product='ls8_nbart_geomedian_annual', **dc_query)
+    # load_ard doesn't handle derivative products, so check
+    # products aren't one of those below
+    others = ['ls5_nbart_geomedian_annual', 'ls7_nbart_geomedian_annual',
+              'ls8_nbart_geomedian_annual', 'ls5_nbart_tmad_annual', 
+              'ls7_nbart_tmad_annual', 'ls8_nbart_tmad_annual', 
+              'landsat_barest_earth', 'ls8_barest_earth_albers']
+
+    if products[0] in others:
+        ds = dc.load(product=products[0], **dc_query)
         ds = ds.where(ds != 0, np.nan)
-    elif 'ls8_nbart_tmad_annual' in products:
-        ds = dc.load(product='ls8_nbart_tmad_annual', **dc_query)
-        ds = ds.where(ds != 0, np.nan)
+
     else:
         # load data
         with HiddenPrints():
@@ -429,8 +429,7 @@ def get_training_data_for_shp(gdf,
 
         if calc_indices is not None:
             # determine which collection is being loaded
-            # TODO verify this works
-            if '2' in products[0]:
+            if products[0] in others:
                 collection = 'ga_ls_2'
             elif '3' in products[0]:
                 collection = 'ga_ls_3'
@@ -469,7 +468,7 @@ def get_training_data_for_shp(gdf,
                                              collection=collection)
 
         # when band indices are not required, reduce the
-        # dataset to a 2d array through means or (geo)medians
+        # dataset to a 2d array through reduce function
         if calc_indices is None:
 
             if len(ds.time.values) > 1:
@@ -562,8 +561,8 @@ def collect_training_data(gdf, products, dc_query, ncpus=1,
     ----------
     ncpus : int
         The number of cpus/processes over which to parallelize the gathering
-        of training data (only if ncpus is > 1). Use 'mp.cpu_count()' to determine the number of
-        cpus available on a machine. Defaults to 1.
+        of training data (only if ncpus is > 1). Use 'mp.cpu_count()' to determine
+        the number of cpus available on a machine. Defaults to 1.
 
     See function 'get_training_data_for_shp' for descriptions of other input
     parameters.
@@ -577,7 +576,7 @@ def collect_training_data(gdf, products, dc_query, ncpus=1,
     """
     # set up some print statements
     if custom_func is not None:
-        print("Reducing data using user supplied custom function")
+        print("Reducing data with user supplied custom function")
     if calc_indices is not None and custom_func is None:
         print("Calculating indices: " + str(calc_indices))
     if reduce_func is not None and custom_func is None:
@@ -629,7 +628,7 @@ def collect_training_data(gdf, products, dc_query, ncpus=1,
             drop=drop,
             zonal_stats=zonal_stats)
 
-    # column names are appeneded during each iteration
+    # column names are appended during each iteration
     # but they are identical, grab only the first instance
     column_names = column_names[0]
 
@@ -637,7 +636,7 @@ def collect_training_data(gdf, products, dc_query, ncpus=1,
     model_input = np.vstack(results)
     print(f'\nOutput training data has shape {model_input.shape}')
 
-    # Remove any potential nans
+    # Remove any nans
     model_input = model_input[~np.isnan(model_input).any(axis=1)]
     print("Removed NaNs, cleaned input shape: ", model_input.shape)
 
