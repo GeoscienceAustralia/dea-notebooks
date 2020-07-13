@@ -27,7 +27,7 @@ Functions included:
     pan_sharpen_brovey
     paths_to_datetimeindex
 
-Last modified: March 2020
+Last modified: June 2020
 
 '''
 
@@ -45,6 +45,55 @@ import pandas as pd
 import xarray as xr
 from collections import Counter
 from scipy.ndimage import binary_dilation
+from datacube.utils.dates import normalise_dt
+
+
+def _dc_query_only(**kw):
+    """
+    Remove load-only parameters, the rest can be passed to Query
+
+    Returns
+    -------
+    dict of query parameters
+    """
+
+    def _impl(measurements=None,
+              output_crs=None,
+              resolution=None,
+              resampling=None,
+              skip_broken_datasets=None,
+              dask_chunks=None,
+              fuse_func=None,
+              align=None,
+              datasets=None,
+              progress_cbk=None,
+              group_by=None,
+              **query):
+        return query
+
+    return _impl(**kw)
+
+
+def _common_bands(dc, products):
+    """
+    Takes a list of products and returns a list of measurements/bands
+    that are present in all products
+
+    Returns
+    -------
+    List of band names
+    """
+    common = None
+    bands = None
+
+    for p in products:
+        p = dc.index.products.get_by_name(p)
+        if common is None:
+            common = set(p.measurements)
+            bands = list(p.measurements)
+        else:
+            common = common.intersection(set(p.measurements))
+    return [band for band in bands if band in common]
 
 
 def _dc_query_only(**kw):
@@ -107,15 +156,15 @@ def load_ard(dc,
              **kwargs):
 
     """
-    Loads and combines Landsat Collection 3 or Sentinel 2 Definitive 
-    and Near Real Time data for multiple sensors (i.e. ls5t, ls7e and 
-    ls8c for Landsat; s2a and s2b for Sentinel 2), optionally applies 
-    pixel quality and contiguity masks, and drops time steps that 
+    Loads and combines Landsat Collection 3 or Sentinel 2 Definitive
+    and Near Real Time data for multiple sensors (i.e. ls5t, ls7e and
+    ls8c for Landsat; s2a and s2b for Sentinel 2), optionally applies
+    pixel quality and contiguity masks, and drops time steps that
     contain greater than a minimum proportion of good quality (e.g. non-
-    cloudy or shadowed) pixels. 
+    cloudy or shadowed) pixels.
 
     The function supports loading the following DEA products:
-    
+
         ga_ls5t_ard_3
         ga_ls7e_ard_3
         ga_ls8c_ard_3
@@ -124,7 +173,7 @@ def load_ard(dc,
         s2a_nrt_granule
         s2b_nrt_granule
 
-    Last modified: March 2020
+    Last modified: June 2020
 
     Parameters
     ----------
@@ -152,32 +201,32 @@ def load_ard(dc,
         'nodata', 'valid', 'cloud', 'shadow', 'snow', and 'water'.
     mask_pixel_quality : bool, optional
         An optional boolean indicating whether to mask out poor quality
-        pixels using fmask based on the `fmask_categories` provided 
-        above. The default is True, which will set poor quality pixels 
-        to NaN if `dtype='auto'` (which will convert the data to 
-        'float32'), or set poor quality pixels to the data's native 
-        nodata value if `dtype='native' (which can be useful for 
-        reducing memory).         
+        pixels using fmask based on the `fmask_categories` provided
+        above. The default is True, which will set poor quality pixels
+        to NaN if `dtype='auto'` (which will convert the data to
+        'float32'), or set poor quality pixels to the data's native
+        nodata value if `dtype='native' (which can be useful for
+        reducing memory).
     mask_contiguity : str or bool, optional
         An optional string or boolean indicating whether to mask out
         pixels missing data in any band (i.e. "non-contiguous" values).
-        This can be important for generating clean composite datasets. 
-        The default is False, which will ignore non-contiguous values 
-        completely. If loading NBART data, set the parameter to:       
-        `mask_contiguity='nbart_contiguity'`. If loading NBAR data, 
-        specify `mask_contiguity='nbar_contiguity'` instead. 
-        Non-contiguous pixels will be set to NaN if `dtype='auto'`, or 
-        set to the data's native nodata value if `dtype='native'` 
+        This can be important for generating clean composite datasets.
+        The default is False, which will ignore non-contiguous values
+        completely. If loading NBART data, set the parameter to:
+        `mask_contiguity='nbart_contiguity'`. If loading NBAR data,
+        specify `mask_contiguity='nbar_contiguity'` instead.
+        Non-contiguous pixels will be set to NaN if `dtype='auto'`, or
+        set to the data's native nodata value if `dtype='native'`
         (which can be useful for reducing memory).
     dtype : string, optional
         An optional parameter that controls the data type/dtype that
-        layers are coerced to after loading. Valid values: 'native', 
-        'auto', 'float{16|32|64}'. When 'auto' is used, the data will be 
-        converted to `float32` if masking is used, otherwise data will 
+        layers are coerced to after loading. Valid values: 'native',
+        'auto', 'float{16|32|64}'. When 'auto' is used, the data will be
+        converted to `float32` if masking is used, otherwise data will
         be returned in the native data type of the data. Be aware that
-        if data is loaded in its native dtype, nodata and masked 
-        pixels will be returned with the data's native nodata value 
-        (typically -999), not NaN. 
+        if data is loaded in its native dtype, nodata and masked
+        pixels will be returned with the data's native nodata value
+        (typically -999), not NaN.
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to
@@ -187,16 +236,16 @@ def load_ard(dc,
         datasets that are loaded by the function. A predicate function
         should take a `datacube.model.Dataset` object as an input (i.e.
         as returned from `dc.find_datasets`), and return a boolean.
-        For example, a predicate function could be used to return True 
+        For example, a predicate function could be used to return True
         for only datasets acquired in January:
         `dataset.time.begin.month == 1`
     **kwargs :
         A set of keyword arguments to `dc.load` that define the
-        spatiotemporal query and load parameters used to extract data. 
-        Keyword arguments can either be listed directly in the 
-        `load_ard` call like any other parameter (e.g. 
-        `measurements=['nbart_red']`), or by passing in a query kwarg 
-        dictionary (e.g. `**query`). Keywords can include `measurements`, 
+        spatiotemporal query and load parameters used to extract data.
+        Keyword arguments can either be listed directly in the
+        `load_ard` call like any other parameter (e.g.
+        `measurements=['nbart_red']`), or by passing in a query kwarg
+        dictionary (e.g. `**query`). Keywords can include `measurements`,
         `x`, `y`, `time`, `resolution`, `resampling`, `group_by`, `crs`;
         see the `dc.load` documentation for all possible options:
         https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html
@@ -246,20 +295,22 @@ def load_ard(dc,
         product_type = 's2'
 
     fmask_band = 'fmask'
-    measurements = requested_measurements.copy() if requested_measurements else None
+    measurements = (requested_measurements.copy() if
+                    requested_measurements else None)
 
     if measurements is None:
-        
-        # Deal with "load all" case: pick a set of bands common across 
+
+        # Deal with "load all" case: pick a set of bands common across
         # all products
         measurements = _common_bands(dc, products)
 
-        # If no `measurements` are specified, Landsat ancillary bands are 
-        # loaded with a 'oa_' prefix, but Sentinel-2 bands are not. As a 
-        # work-around, we need to rename the default contiguity and fmask 
+        # If no `measurements` are specified, Landsat ancillary bands are
+        # loaded with a 'oa_' prefix, but Sentinel-2 bands are not. As a
+        # work-around, we need to rename the default contiguity and fmask
         # bands if loading Landsat data without specifying `measurements`
         if product_type == 'ls':
-            mask_contiguity = f'oa_{mask_contiguity}' if mask_contiguity else False
+            mask_contiguity = (f'oa_{mask_contiguity}' if
+                               mask_contiguity else False)
             fmask_band = f'oa_{fmask_band}'
 
     # If `measurements` are specified but do not include fmask or
@@ -271,7 +322,8 @@ def load_ard(dc,
 
     # Get list of data and mask bands so that we can later exclude
     # mask bands from being masked themselves
-    data_bands = [band for band in measurements if band not in (fmask_band, mask_contiguity)]
+    data_bands = [band for band in measurements if
+                  band not in (fmask_band, mask_contiguity)]
     mask_bands = [band for band in measurements if band not in data_bands]
 
     #################
@@ -280,7 +332,7 @@ def load_ard(dc,
 
     # Pull out query params only to pass to dc.find_datasets
     query = _dc_query_only(**kwargs)
-    
+
     # Extract datasets for each product using subset of dcload_kwargs
     dataset_list = []
 
@@ -289,14 +341,15 @@ def load_ard(dc,
     for product in products:
 
         # Obtain list of datasets for product
-        print(f'    {product} (ignoring SLC-off observations)' 
-              if not ls7_slc_off and product == 'ga_ls7e_ard_3' 
+        print(f'    {product} (ignoring SLC-off observations)'
+              if not ls7_slc_off and product == 'ga_ls7e_ard_3'
               else f'    {product}')
         datasets = dc.find_datasets(product=product, **query)
 
         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
         if not ls7_slc_off and product == 'ga_ls7e_ard_3':
-            datasets = [i for i in datasets if i.time.begin <
+            datasets = [i for i in datasets if
+                        normalise_dt(i.time.begin) <
                         datetime.datetime(2003, 5, 31)]
 
         # Add any returned datasets to list
@@ -323,7 +376,7 @@ def load_ard(dc,
     # Load data #
     #############
 
-    # Note we always load using dask here so that we can lazy load data 
+    # Note we always load using dask here so that we can lazy load data
     # before filtering by good data
     ds = dc.load(datasets=dataset_list,
                  measurements=measurements,
@@ -358,14 +411,14 @@ def load_ard(dc,
         print(f'Filtering to {len(ds.time)} out of {total_obs} '
               f'time steps with at least {min_gooddata:.1%} '
               f'good quality pixels')
-        
+
     ###############
     # Apply masks #
-    ###############      
-    
+    ###############
+
     # Create an overall mask to hold both pixel quality and contiguity
-    mask = None    
-    
+    mask = None
+
     # Add pixel quality mask to overall mask
     if mask_pixel_quality:
         print('Applying pixel quality/cloud mask')
@@ -381,7 +434,7 @@ def load_ard(dc,
         # (keeping only pixels good in both)
         mask = cont_mask if mask is None else mask * cont_mask
 
-    # Split into data/masks bands, as conversion to float and masking 
+    # Split into data/masks bands, as conversion to float and masking
     # should only be applied to data bands
     ds_data = ds[data_bands]
     ds_masks = ds[mask_bands]
@@ -394,9 +447,9 @@ def load_ard(dc,
     # on whether masking was requested
     if dtype == 'auto':
         dtype = 'native' if mask is None else 'float32'
-    
+
     # Set nodata values using odc.algo tools to reduce peak memory
-    # use when converting data dtype    
+    # use when converting data dtype
     if dtype != 'native':
         ds_data = odc.algo.to_float(ds_data, dtype=dtype)
 
@@ -404,7 +457,7 @@ def load_ard(dc,
     attrs = ds.attrs
     ds = xr.merge([ds_data, ds_masks])
     ds.attrs.update(attrs)
-    
+
     ###############
     # Return data #
     ###############

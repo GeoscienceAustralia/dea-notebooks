@@ -1,0 +1,126 @@
+about: Catalog of virtual products for MAHTS analysis
+products:
+    ls8_nbart:
+        recipe:
+            &ls8_nbart
+            product: ga_ls8c_ard_3
+            measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir, nbart_swir_1, nbart_swir_2, oa_nbart_contiguity, oa_fmask]
+            gqa_iterative_mean_xy: [0, 1]
+            group_by: solar_day
+            
+    ls7_nbart:
+         recipe:
+            &ls7_nbart
+             <<: *ls8_nbart
+             product: ga_ls7e_ard_3
+
+    ls5_nbart:
+         recipe:
+            &ls5_nbart
+             <<: *ls8_nbart
+             product: ga_ls5t_ard_3
+             
+    ls_nbart:
+         recipe:
+             &ls_nbart
+             transform: expressions
+             input:
+                 collate:
+                     - *ls5_nbart
+                     - *ls7_nbart
+                     - *ls8_nbart
+             output:
+                 blue:
+                     formula: nbart_blue
+                     dtype: float32
+                 green:
+                     formula: nbart_green
+                     dtype: float32
+                 red: 
+                     formula: nbart_red
+                     dtype: float32
+                 nir: 
+                     formula: nbart_nir
+                     dtype: float32
+                 swir1: 
+                     formula: nbart_swir_1
+                     dtype: float32
+                 swir2: 
+                     formula: nbart_swir_2
+                     dtype: float32
+                 fmask: 
+                     formula: ((oa_fmask == 1) | (oa_fmask == 4) | (oa_fmask == 5))
+                 contiguity:
+                     formula: oa_nbart_contiguity
+                     dtype: bool
+
+                     
+    ls_nbart_norm:
+         recipe:
+             &ls_nbart_norm
+             transform: expressions
+             input: *ls_nbart
+             output:
+                 blue:
+                     formula: blue * 0.0001
+                     dtype: float32
+                 green:
+                     formula: green * 0.0001
+                     dtype: float32
+                 red: 
+                     formula: red * 0.0001
+                     dtype: float32
+                 nir: 
+                     formula: nir * 0.0001
+                     dtype: float32
+                 swir1: 
+                     formula: swir1 * 0.0001
+                     dtype: float32
+                 swir2: 
+                     formula: swir2 * 0.0001
+                     dtype: float32
+                 fmask: 
+                     formula: fmask
+                 contiguity:
+                     formula: contiguity
+                     
+    ls_nbart_masked:
+        recipe:
+            &ls_nbart_masked
+            transform: apply_mask
+            mask_measurement_name: fmask
+            input:
+                transform: expressions
+                input: *ls_nbart_norm
+                output:
+                    blue: blue
+                    green: green
+                    red: red
+                    nir: nir
+                    swir1: swir1
+                    swir2: swir2
+                    fmask: fmask
+    
+    ls_nbart_mndwi:
+         recipe:
+             transform: expressions
+             input: *ls_nbart_masked    
+             output:
+                 mndwi:
+                    formula: (green - swir1) / (green + swir1)
+                
+    ls_nbart_indices:
+         recipe:
+             transform: expressions
+             input: *ls_nbart_masked    
+             output:
+                 mndwi:
+                    formula: (green - swir1) / (green + swir1)
+                 ndwi:
+                    formula: (green - nir) / (green + nir)
+                 awei_ns:
+                    formula: (4 * (green - swir1) - (0.25 * nir * + 2.75 * swir2))
+                 awei_sh:
+                    formula: (blue + 2.5 * green - 1.5 * (nir + swir1) - 0.25 * swir2)
+          
+                
