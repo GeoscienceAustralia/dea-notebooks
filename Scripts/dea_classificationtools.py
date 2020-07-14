@@ -334,6 +334,12 @@ def get_training_data_for_shp(gdf,
         The result of the 'custom_func' must be a single xarray dataset 
         containing 2D coordinates (i.e x, y - no time dimension). The custom function
         has access to the datacube dataset extracted using the 'dc_query' params.
+        Example custom function to return multiple products:
+        `def custom_function(ds):
+            dc = datacube.Datacube(app='custom_function')
+            mad = dc.load(product='ls8_nbart_tmad_annual', like=ds.geobox)
+            output = xr.merge([ds, mad])
+            return output`
     calc_indices: list, optional
         If not using a custom func, then this parameter provides a method for
         calculating a number of remote sensing indices (e.g. `['NDWI', 'NDVI']`).
