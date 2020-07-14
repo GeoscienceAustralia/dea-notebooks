@@ -421,7 +421,7 @@ def get_training_data_for_shp(gdf,
     else:
         # Mask dataset
         ds = ds.where(mask)
-                # first check enough variables are set to run functions
+        # first check enough variables are set to run functions
         if (len(ds.time.values) > 1) and (reduce_func == None):
             raise ValueError("You're dataset has " + str(len(ds.time.values)) +
                              " time-steps, please provide a reduction function," +
