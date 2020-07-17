@@ -735,7 +735,7 @@ def calc_geomedian(ds,
     max_value : the maximum value that could be found in the array
     min_value : the minimum value that could be found in the array
     '''
-    da = (odc.algo.reshape_for_geomedian(ds, axis=axis) if 
+    da = (odc.algo.reshape_for_geomedian(ds, axis=axis) if
           isinstance(ds, xr.Dataset) else ds)
 
     if max_value is None:
@@ -775,8 +775,8 @@ def _select_along_axis(values, idx, axis):
     return values[sl]
 
 
-def first(array: xr.DataArray, 
-          dim: str, 
+def first(array: xr.DataArray,
+          dim: str,
           index_name: str = None) -> xr.DataArray:
     """
     Finds the first occuring non-null value along the given dimension.
@@ -801,15 +801,15 @@ def first(array: xr.DataArray,
     axis = array.get_axis_num(dim)
     idx_first = np.argmax(~pd.isnull(array), axis=axis)
     reduced = array.reduce(_select_along_axis, idx=idx_first, axis=axis)
-    reduced[dim] = array[dim].isel({dim: xr.DataArray(idx_first, 
+    reduced[dim] = array[dim].isel({dim: xr.DataArray(idx_first,
                                                       dims=reduced.dims)})
     if index_name is not None:
         reduced[index_name] = xr.DataArray(idx_first, dims=reduced.dims)
     return reduced
 
 
-def last(array: xr.DataArray, 
-         dim: str, 
+def last(array: xr.DataArray,
+         dim: str,
          index_name: str = None) -> xr.DataArray:
     """
     Finds the last occuring non-null value along the given dimension.
@@ -819,21 +819,21 @@ def last(array: xr.DataArray,
     array : xr.DataArray
          The array to search.
     dim : str
-        The name of the dimension to reduce by finding the last non-null 
+        The name of the dimension to reduce by finding the last non-null
         value.
     index_name : str, optional
         If given, the name of a coordinate to be added containing the
         index of where on the dimension the nearest value was found.
-    
+
     Returns
     -------
     reduced : xr.DataArray
         An array of the last non-null values.
-        The `dim` dimension will be removed, and replaced with a coord 
-        of the same name, containing the value of that dimension where 
+        The `dim` dimension will be removed, and replaced with a coord
+        of the same name, containing the value of that dimension where
         the last value was found.
     """
-    
+
     axis = array.get_axis_num(dim)
     rev = (slice(None),) * axis + (slice(None, None, -1),)
     idx_last = -1 - np.argmax(~pd.isnull(array)[rev], axis=axis)
@@ -845,15 +845,15 @@ def last(array: xr.DataArray,
     return reduced
 
 
-def nearest(array: xr.DataArray, 
-            dim: str, target, 
+def nearest(array: xr.DataArray,
+            dim: str, target,
             index_name: str = None) -> xr.DataArray:
     """
     Finds the nearest values to a target label along the given
     dimension, for all other dimensions.
-    
+
     E.g. For a DataArray with dimensions ('time', 'x', 'y')
-    
+
         nearest_array = nearest(array, 'time', '2017-03-12')
 
     will return an array with the dimensions ('x', 'y'), with non-null
@@ -874,22 +874,22 @@ def nearest(array: xr.DataArray,
     index_name : str, optional
         If given, the name of a coordinate to be added containing the
         index of where on the dimension the nearest value was found.
-    
+
     Returns
     -------
     nearest_array : xr.DataArray
         An array of the nearest non-null values to the target label.
-        The `dim` dimension will be removed, and replaced with a coord 
+        The `dim` dimension will be removed, and replaced with a coord
         of the same name, containing the value of that dimension closest
         to the given target label.
     """
-    
+
     before_target = slice(None, target)
     after_target = slice(target, None)
-    
+
     da_before = array.sel({dim: before_target})
     da_after = array.sel({dim: after_target})
-        
+
     da_before = (last(da_before, dim, index_name) if
                  da_before[dim].shape[0] else None)
     da_after = (first(da_after, dim, index_name) if
