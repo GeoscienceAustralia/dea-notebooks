@@ -716,59 +716,6 @@ def paths_to_datetimeindex(paths, string_slice=(0, 10)):
     return pd.to_datetime(date_strings)
 
 
-def calc_geomedian(ds,
-                   axis="time",
-                   max_value=None,
-                   min_value=None,
-                   num_threads=1,
-                   eps=1e-7,
-                   nocheck=True):
-    '''
-    Runs geomedian over a xarray.Dataset or xarray.DataArray.
-
-    Specify min_value and max_value if known for better performance,
-    especially if using dask.
-
-    Parameters
-    ----------
-    da : xarray.DataArray object
-    max_value : the maximum value that could be found in the array
-    min_value : the minimum value that could be found in the array
-    '''
-    da = (odc.algo.reshape_for_geomedian(ds, axis=axis) if
-          isinstance(ds, xr.Dataset) else ds)
-
-    if max_value is None:
-        max_value = da.max(skipna=True)
-    if min_value is None:
-        min_value = da.min(skipna=True)
-
-    offset = min_value
-    scale = max_value - min_value
-
-    da_scaled = odc.algo.to_f32(da,
-                                scale=(1 / scale),
-                                offset=(-offset / scale))
-
-    geomedian = odc.algo.xr_geomedian(da_scaled,
-                                      num_threads=num_threads,
-                                      eps=eps,
-                                      nocheck=nocheck)
-
-    geomedian = odc.algo.from_float(
-        geomedian,
-        dtype=da.dtype,
-        nodata=np.nan,
-        scale=scale,
-        offset=offset,
-    )
-
-    if isinstance(ds, xr.Dataset):
-        geomedian = geomedian.to_dataset(dim='band')
-
-    return geomedian
-
-
 def _select_along_axis(values, idx, axis):
     other_ind = np.ix_(*[np.arange(s) for s in idx.shape])
     sl = other_ind[:axis] + (idx,) + other_ind[axis:]
