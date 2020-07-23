@@ -1,46 +1,42 @@
-## dea_classificationtools.py
+# dea_classificationtools.py
 '''
-Description: This file contains a set of python functions for applying 
-machine learning classifiying remote sensing data from Digital Earth 
-Australia.
-
-License: The code in this notebook is licensed under the Apache License, 
-Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
-Australia data is licensed under the Creative Commons by Attribution 4.0 
+Description: This file contains a set of python functions for handling
+Digital Earth Australia data.
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
-
-Contact: If you need assistance, please post a question on the Open Data 
-Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack 
-Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) 
-using the `open-data-cube` tag (you can view previously asked questions 
+Contact: If you need assistance, please post a question on the Open Data
+Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
+using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
-
-If you would like to report an issue with this script, you can file one on 
+If you would like to report an issue with this script, you can file one on
 Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
-
-Last modified: November 2019
-
-Authors: Richard Taylor, Sean Chua, Dan Clewley
-
 '''
 
+from dea_spatialtools import xr_rasterize
+from dea_bandindices import calculate_indices
+from dea_datahandling import load_ard
 import numpy as np
 import xarray as xr
-import geopandas as gp
+import geopandas as gpd
+from copy import deepcopy
 import datacube
+import multiprocessing as mp
+from tqdm import tqdm
 from dask.diagnostics import ProgressBar
 from rasterio.features import geometry_mask
 from rasterio.features import rasterize
 from sklearn.cluster import KMeans
 from sklearn.base import ClusterMixin
+from datacube.utils import masking
+from datacube.utils import geometry
+from datacube_stats.statistics import GeoMedian
+import rasterio
 import sys
+import os
 
-sys.path.append('../Scripts')
-import dea_bandindices
-
-
-# 'Wrappers' to translate xarrays to np arrays and back for interfacing 
-# with sklearn models
 def sklearn_flatten(input_xr):
     """
     Reshape a DataArray or Dataset with spatial (and optionally 
@@ -79,24 +75,24 @@ def sklearn_flatten(input_xr):
     else:
         stacked = input_xr.stack(z=['x', 'y'])
 
-    # finding 'bands' dimensions in each pixel - these will not be 
+    # finding 'bands' dimensions in each pixel - these will not be
     # flattened as their context is important for sklearn
     pxdims = []
     for dim in stacked.dims:
         if dim != 'z':
             pxdims.append(dim)
 
-    # mask NaNs - we mask pixels with NaNs in *any* band, because 
+    # mask NaNs - we mask pixels with NaNs in *any* band, because
     # sklearn cannot accept NaNs as input
     mask = np.isnan(stacked)
     if len(pxdims) != 0:
         mask = mask.any(dim=pxdims)
 
-    # turn the mask into a numpy array (boolean indexing with xarrays 
+    # turn the mask into a numpy array (boolean indexing with xarrays
     # acts weird)
     mask = mask.data
 
-    # the dimension we are masking along ('z') needs to be the first 
+    # the dimension we are masking along ('z') needs to be the first
     # dimension in the underlying np array for the boolean indexing to work
     stacked = stacked.transpose('z', *pxdims)
     input_np = stacked.data[~mask]
@@ -164,11 +160,11 @@ def sklearn_unflatten(output_np, input_xr):
     # use the mask to put the data in all the right places
     output_ma = np.ma.empty((len(stacked.z), *output_px_shape))
     output_ma[~mask] = output_np
-    output_ma.mask = mask
+    output_ma[mask] = np.ma.masked
 
     # set the stacked coordinate to match the input
     output_xr = xr.DataArray(output_ma, coords={'z': stacked['z']},
-                             dims=['z', *['output_dim_' + str(idx) for 
+                             dims=['z', *['output_dim_' + str(idx) for
                                           idx in range(len(output_px_shape))]])
 
     output_xr = output_xr.unstack()
@@ -233,7 +229,7 @@ def predict_xr(model, input_xr, progress=True):
         # Flatten array
         input_data_flattened = np.array(input_data_flattened).transpose()
 
-        # Mask out no-data in input (not all classifiers can cope with 
+        # Mask out no-data in input (not all classifiers can cope with
         # Inf or NaN values)
         input_data_flattened = np.where(np.isfinite(input_data_flattened),
                                         input_data_flattened, 0)
@@ -265,7 +261,7 @@ def predict_xr(model, input_xr, progress=True):
     for var_name in input_xr.data_vars:
         input_data.append(input_xr[var_name])
 
-    # Run through classification. Need to expand and have a separate 
+    # Run through classification. Need to expand and have a separate
     # dataframe for each variable so chunking in dask works.
     if progress:
         with ProgressBar():
@@ -279,147 +275,369 @@ def predict_xr(model, input_xr, progress=True):
     return output_xr
 
 
-def get_training_data_for_shp(path, 
-                              out, 
-                              product, 
-                              time, 
-                              crs='EPSG:3577', 
-                              field='classnum',
-                              calc_indices=None, 
-                              feature_stats=None, 
-                              collection='ga_ls_2'):
+class HiddenPrints:
     """
-    Function to extract data for training classifier using a shapefile 
-    of labelled polygons. Currently works for single time steps.
+    For concealing unwanted print statements called by other functions
+    """
+
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
+
+
+def get_training_data_for_shp(gdf,
+                              index,
+                              row,
+                              out_arrs,
+                              out_vars,
+                              products,
+                              dc_query,
+                              custom_func=None,
+                              field=None,
+                              calc_indices=None,
+                              reduce_func=None,
+                              drop=True,
+                              zonal_stats=None):
+    """
+    Function to extract data from the ODC for training a machine learning classifier 
+    using a geopandas geodataframe of labelled geometries. 
+    This function provides a number of pre-defined methods for producing training data, 
+    including: calcuating band indices, reducing time series using summary statistics, 
+    and/or generating zonal statistics across polygons.  The 'custom_func' parameter provides 
+    a method for the user to supply a custom function for generating features rather than using the
+    pre-defined methods.
 
     Parameters
     ----------
-    path : string
-        Path to shapefile containing labelled polygons.
-    out : list
-        Empty list to contain output data.
-    product : string
-        String of product name from which to load and extract datacube 
-        data e.g. 'ls8_nbart_tmad_annual'
-    time : tuple 
-        A tuple containing the time period from which to extract 
-        training data e.g. ('2015-01-01', '2015-12-31').
-    crs : string
-        A string containing desired crs e.g. 'EPSG:3577'
+    gdf : geopandas geodataframe
+        geometry data in the form of a geopandas geodataframe
+    products : list
+        a list of products to load from the datacube. 
+        e.g. ['ga_ls7e_ard_3', 'ga_ls8c_ard_3']
+    dc_query : dictionary
+        Datacube query object, should not contain lat and long (x or y)
+        variables as these are supplied by the 'gdf' variable
     field : string 
-        A string containing name of column with labels in shapefile 
-        attribute table. Field must contain numeric values.
+        A string containing the name of column with class labels. 
+        Field must contain numeric values.
+    out_arrs : list 
+        An empty list into which the training data arrays are stored.
+    out_vars : list 
+        An empty list into which the data varaible names are stored.
+    custom_func : function, optional 
+        A custom function for generating feature layers. If this parameter
+        is set, all other options (excluding 'zonal_stats'), will be ignored.
+        The result of the 'custom_func' must be a single xarray dataset 
+        containing 2D coordinates (i.e x, y - no time dimension). The custom function
+        has access to the datacube dataset extracted using the 'dc_query' params.
+        Example custom function to return multiple products:
+        `def custom_function(ds):
+            dc = datacube.Datacube(app='custom_function')
+            mad = dc.load(product='ls8_nbart_tmad_annual', like=ds.geobox)
+            output = xr.merge([ds, mad])
+            return output`
     calc_indices: list, optional
-        An optional list giving the names of any remote sensing indices 
-        to be calculated on the loaded data (e.g. `['NDWI', 'NDVI']`. 
-        This step will be skipped if any of the indices cannot be 
-        computed on the input product.
-    feature_stats: string, optional
-        An optional string giving the names of statistics to calculate 
-        for the polygon. Default is None (all pixel values). Supported 
-        values are 'mean' or 'geomedian' (from the `hdstats` module).
+        If not using a custom func, then this parameter provides a method for
+        calculating a number of remote sensing indices (e.g. `['NDWI', 'NDVI']`).
+    reduce_func : string, optional 
+        Function to reduce the data from multiple time steps to
+        a single timestep. Options are 'mean', 'median', 'std',
+        'max', 'min', 'geomedian'.  Ignored if 'custom_func' is provided.
+    drop : boolean, optional 
+        If this variable is set to True, and 'calc_indices' are supplied, the
+        spectral bands will be dropped from the dataset leaving only the
+        band indices as data variables in the dataset. Default is True.
+    zonal_stats : string, optional
+        An optional string giving the names of zonal statistics to calculate 
+        for each polygon. Default is None (all pixel values are returned). Supported 
+        values are 'mean', 'median', 'max', 'min', and 'std'. Will work in 
+        conjunction with a 'custom_func'.
+
 
     Returns
     --------
-    A list of numpy.arrays containing classes and extracted data for 
-    each pixel or polygon.
+    Two lists, a list of numpy.arrays containing classes and extracted data for 
+    each pixel or polygon, and another containing the data variable names.
 
     """
-    # Import hdstats as only needed for this function
-    if feature_stats == 'geomedian':
-        try:
-            import hdstats
-        except ImportError as err:
-            raise
-            raise ImportError('Can not import hdstats module needed to calculate'
-                              ' geomedian.\n{}'.format(err))
-            
+
+    # prevent function altering dictionary kwargs
+    dc_query = deepcopy(dc_query)
+
+    # remove dask chunks if supplied as using
+    # mulitprocessing for parallelization
+    if 'dask_chunks' in dc_query.keys():
+        dc_query.pop('dask_chunks', None)
+
+    # connect to datacube
     dc = datacube.Datacube(app='training_data')
-    query = {'time': time}
-    query['crs'] = crs
-    shp = gp.read_file(path)
-    bounds = shp.total_bounds
-    minx = bounds[0]
-    maxx = bounds[2]
-    miny = bounds[1]
-    maxy = bounds[3]
-    query['x'] = (minx, maxx)
-    query['y'] = (miny, maxy)
 
-    print("Loading data...")
+    # set up query based on polygon (convert to albers)
+    geom = geometry.Geometry(
+        gdf.geometry.values[index].__geo_interface__, geometry.CRS(
+            'epsg:3577'))
 
-    data = dc.load(product=product, group_by='solar_day', **query)
+    q = {"geopolygon": geom}
 
-    # Check if geomedian is in the product and if indices are wanted
-    if calc_indices is not None:
-        try:
-            print("Calculating indices...")
-            # Calculate indices - will use for all features
-            for index in calc_indices:
-                data = dea_bandindices.calculate_indices(data, 
-                                                         index, 
-                                                         collection=collection)
-        except ValueError:
-            print("Input dataset not suitable for selected indices, just extracting product data")
-            pass 
+    # merge polygon query with user supplied query params
+    dc_query.update(q)
 
-    # Remove time step if present
-    try:
-        data = data.isel(time=0)
-    # Don't worry if it isn't
-    except ValueError:
-        pass
+    # load_ard doesn't handle derivative products, so check
+    # products aren't one of those below
+    others = ['ls5_nbart_geomedian_annual', 'ls7_nbart_geomedian_annual',
+              'ls8_nbart_geomedian_annual', 'ls5_nbart_tmad_annual', 
+              'ls7_nbart_tmad_annual', 'ls8_nbart_tmad_annual', 
+              'landsat_barest_earth', 'ls8_barest_earth_albers']
 
-    print("Rasterizing features and extracting data...")
-    # Initialize counter for status messages.
-    i = 0
-    # Go through each feature
-    for poly_geom, poly_class_id in zip(shp.geometry, shp[field]):
-        print(" Feature {:04}/{:04}\r".format(i + 1, len(shp.geometry)), 
-              end='')
+    if products[0] in others:
+        ds = dc.load(product=products[0], **dc_query)
+        ds = ds.where(ds != 0, np.nan)
 
-        # Rasterise the feature
-        mask = rasterize([(poly_geom, poly_class_id)],
-                         out_shape=(data.y.size, data.x.size),
-                         transform=data.affine)
+    else:
+        # load data
+        with HiddenPrints():
+            ds = load_ard(dc=dc,
+                          products=products,
+                          output_crs='EPSG:3577',
+                          **dc_query)
 
-        # Convert mask from numpy to DataArray
-        mask = xr.DataArray(mask, coords=(data.y, data.x))
-        # Mask out areas that were not within the labelled feature
-        data_masked = data.where(mask == poly_class_id, np.nan)
+    # create polygon mask
+    with HiddenPrints():
+        mask = xr_rasterize(gdf.iloc[[index]], ds)
 
-        if feature_stats is None:
-            # If no summary stats were requested then
-            # extract all pixel values
-            flat_train = sklearn_flatten(data_masked)
-            # Make a labelled array of identical size
-            flat_val = np.repeat(poly_class_id, flat_train.shape[0])
-            stacked = np.hstack((np.expand_dims(flat_val, axis=1), flat_train))
-        elif feature_stats == 'mean':
-            # For the mean of each polygon take the mean over all
-            # axis, ignoring masked out values (nan).
-            # This gives a single pixel value for each band
-            flat_train = data_masked.mean(axis=None, skipna=True)
-            flat_train = flat_train.to_array()
-            stacked = np.hstack((poly_class_id, flat_train))
-        elif feature_stats == 'geomedian':
-            # For the geomedian flatten so have a 2D array with
-            # bands and pixel values. Then use hdstats
-            # to calculate the geomedian
-            flat_train = sklearn_flatten(data_masked)
-            flat_train_median = hdstats.geomedian(flat_train, axis=0)
-            # Geomedian will return a single value for each band so join
-            # this with class id to create a single row in output
-            stacked = np.hstack((poly_class_id, flat_train_median))
+    # Use custom function for training data if it exists
+    if custom_func is not None:
+        with HiddenPrints():
+            data = custom_func(ds)
+            # Mask dataset
+            data = data.where(mask)
+    else:
+        # Mask dataset
+        ds = ds.where(mask)
+        # first check enough variables are set to run functions
+        if (len(ds.time.values) > 1) and (reduce_func == None):
+            raise ValueError("You're dataset has " + str(len(ds.time.values)) +
+                             " time-steps, please provide a reduction function," +
+                             " e.g. reduce_func='mean'")
 
-        # Append training data and label to list
-        out.append(stacked)
+        if calc_indices is not None:
+            # determine which collection is being loaded
+            if products[0] in others:
+                collection = 'ga_ls_2'
+            elif '3' in products[0]:
+                collection = 'ga_ls_3'
+            elif 's2' in products[0]:
+                collection = 'ga_s2_1'
 
-        # Update status counter (feature number)
-        i = i + 1
+            if len(ds.time.values) > 1:
 
-    # Return a list of labels for columns in output array
-    return [field] + list(data.data_vars)
+                if reduce_func in ['mean', 'median', 'std', 'max', 'min']:
+                    with HiddenPrints():
+                        data = calculate_indices(ds,
+                                                 index=calc_indices,
+                                                 drop=drop,
+                                                 collection=collection)
+                        # getattr is equivalent to calling data.reduce_func
+                        method_to_call = getattr(data, reduce_func)
+                        data = method_to_call(dim='time')
+
+                elif reduce_func == 'geomedian':
+                    data = GeoMedian().compute(ds)
+                    with HiddenPrints():
+                        data = calculate_indices(data,
+                                                 index=calc_indices,
+                                                 drop=drop,
+                                                 collection=collection)
+
+                else:
+                    raise Exception(reduce_func + " is not one of the supported" +
+                                    " reduce functions ('mean','median','std','max','min', 'geomedian')")
+
+            else:
+                with HiddenPrints():
+                    data = calculate_indices(ds,
+                                             index=calc_indices,
+                                             drop=drop,
+                                             collection=collection)
+
+        # when band indices are not required, reduce the
+        # dataset to a 2d array through reduce function
+        if calc_indices is None:
+
+            if len(ds.time.values) > 1:
+
+                if reduce_func == 'geomedian':
+                    data = GeoMedian().compute(ds)
+
+                elif reduce_func in ['mean', 'median', 'std', 'max', 'min']:
+                    method_to_call = getattr(ds, reduce_func)
+                    data = method_to_call('time')
+            else:
+                data = ds.squeeze()
+
+    if zonal_stats is None:
+        # If no zonal stats were requested then extract all pixel values
+        flat_train = sklearn_flatten(data)
+        # Make a labelled array of identical size
+        flat_val = np.repeat(row[field], flat_train.shape[0])
+        stacked = np.hstack((np.expand_dims(flat_val, axis=1), flat_train))
+
+    elif zonal_stats in ['mean', 'median', 'std', 'max', 'min']:
+        method_to_call = getattr(data, zonal_stats)
+        flat_train = method_to_call()
+        flat_train = flat_train.to_array()
+        stacked = np.hstack((row[field], flat_train))
+
+    else:
+        raise Exception(zonal_stats + " is not one of the supported" +
+                        " reduce functions ('mean','median','std','max','min')")
+
+    # Append training data and labels to list
+    out_arrs.append(stacked)
+    out_vars.append([field] + list(data.data_vars))
+
+
+def get_training_data_parallel(gdf, products, dc_query, ncpus,
+                               custom_func=None, field=None, calc_indices=None,
+                               reduce_func=None, drop=True, zonal_stats=None):
+    """
+    Function passing the 'get_training_data_for_shp' function
+    to a mulitprocessing.Pool.
+    Inherits variables from 'collect_training_data()'.
+
+    """
+    # instantiate lists that can be shared across processes
+    manager = mp.Manager()
+    results = manager.list()
+    column_names = manager.list()
+
+    # progress bar
+    pbar = tqdm(total=len(gdf))
+
+    def update(*a):
+        pbar.update()
+
+    with mp.Pool(ncpus) as pool:
+        for index, row in gdf.iterrows():
+            pool.apply_async(get_training_data_for_shp,
+                             [gdf,
+                              index,
+                              row,
+                              results,
+                              column_names,
+                              products,
+                              dc_query,
+                              custom_func,
+                              field,
+                              calc_indices,
+                              reduce_func,
+                              drop,
+                              zonal_stats], callback=update)
+
+        pool.close()
+        pool.join()
+        pbar.close()
+
+    return column_names, results
+
+
+def collect_training_data(gdf, products, dc_query, ncpus=1,
+                          custom_func=None, field=None, calc_indices=None,
+                          reduce_func=None, drop=True, zonal_stats=None):
+    """
+    This function executes the training data functions and tidies the results
+    into a 'model_input' object containing stacked training data arrays
+    with all NaNs removed. In the instance where ncpus > 1, a parallel version of the
+    function will be run (functions are passed to a mp.Pool())
+
+    Parameters
+    ----------
+    ncpus : int
+        The number of cpus/processes over which to parallelize the gathering
+        of training data (only if ncpus is > 1). Use 'mp.cpu_count()' to determine
+        the number of cpus available on a machine. Defaults to 1.
+
+    See function 'get_training_data_for_shp' for descriptions of other input
+    parameters.
+
+    Returns
+    --------
+    Two lists, one contains a list of numpy.arrays with classes and extracted data for 
+    each pixel or polygon, and another containing the data variable names.
+
+
+    """
+    # set up some print statements
+    if custom_func is not None:
+        print("Reducing data with user supplied custom function")
+    if calc_indices is not None and custom_func is None:
+        print("Calculating indices: " + str(calc_indices))
+    if reduce_func is not None and custom_func is None:
+        print("Reducing data using: " + reduce_func)
+    if zonal_stats is not None:
+        print("Taking zonal statistic: " + zonal_stats)
+
+    if ncpus == 1:
+        # progress indicator
+        print('Collecting training data in serial mode')
+        i = 0
+
+        # list to store results
+        results = []
+        column_names = []
+
+        # loop through polys and extract training data
+        for index, row in gdf.iterrows():
+            print(" Feature {:04}/{:04}\r".format(i + 1, len(gdf)),
+                  end='')
+
+            get_training_data_for_shp(
+                gdf,
+                index,
+                row,
+                results,
+                column_names,
+                products,
+                dc_query,
+                custom_func,
+                field,
+                calc_indices,
+                reduce_func,
+                drop,
+                zonal_stats)
+            i += 1
+
+    else:
+        print('Collecting training data in parallel mode')
+        column_names, results = get_training_data_parallel(
+            gdf=gdf,
+            products=products,
+            dc_query=dc_query,
+            ncpus=ncpus,
+            custom_func=custom_func,
+            field=field,
+            calc_indices=calc_indices,
+            reduce_func=reduce_func,
+            drop=drop,
+            zonal_stats=zonal_stats)
+
+    # column names are appended during each iteration
+    # but they are identical, grab only the first instance
+    column_names = column_names[0]
+
+    # Stack the extracted training data for each feature into a single array
+    model_input = np.vstack(results)
+    print(f'\nOutput training data has shape {model_input.shape}')
+
+    # Remove any nans
+    model_input = model_input[~np.isnan(model_input).any(axis=1)]
+    print("Removed NaNs, cleaned input shape: ", model_input.shape)
+
+    return column_names, model_input
 
 
 class KMeans_tree(ClusterMixin):
@@ -450,9 +668,9 @@ class KMeans_tree(ClusterMixin):
         self.n_clusters = n_clusters
         # make child models
         if n_levels > 1:
-            self.branches = [KMeans_tree(n_levels=n_levels - 1, 
-                                         n_clusters=n_clusters, 
-                                         **kwargs) 
+            self.branches = [KMeans_tree(n_levels=n_levels - 1,
+                                         n_clusters=n_clusters,
+                                         **kwargs)
                              for _ in range(n_clusters)]
 
     def fit(self, X, y=None, sample_weight=None):
@@ -473,7 +691,7 @@ class KMeans_tree(ClusterMixin):
             observations are assigned equal weight (default: None)
         """
 
-        self.labels_ = self.base_model.fit(X, 
+        self.labels_ = self.base_model.fit(X,
                                            sample_weight=sample_weight).labels_
 
         if self.n_levels > 1:
@@ -484,7 +702,7 @@ class KMeans_tree(ClusterMixin):
             for clu in range(self.n_clusters):
                 # fit child models on their corresponding partition of the training set
                 self.branches[clu].fit(X[labels_old == clu], sample_weight=(
-                    sample_weight[labels_old == clu] 
+                    sample_weight[labels_old == clu]
                     if sample_weight is not None else None))
                 self.labels_[labels_old == clu] += self.branches[clu].labels_
 
@@ -494,7 +712,7 @@ class KMeans_tree(ClusterMixin):
         """
         Send X through the KMeans tree and predict the resultant 
         cluster. Compatible with KMeans.predict().
-        
+
         Parameters
         ----------
         X : {array-like, sparse matrix}, shape = [n_samples, n_features]
@@ -502,7 +720,7 @@ class KMeans_tree(ClusterMixin):
         sample_weight : array-like, shape (n_samples,), optional
             The weights for each observation in X. If None, all 
             observations are assigned equal weight (default: None)
-            
+
         Returns
         -------
         labels : array, shape [n_samples,]
@@ -513,7 +731,7 @@ class KMeans_tree(ClusterMixin):
 
         if self.n_levels > 1:
             rescpy = np.copy(result)
-            
+
             # make room to add the sub-cluster labels
             result *= (self.n_clusters) ** (self.n_levels - 1)
 
