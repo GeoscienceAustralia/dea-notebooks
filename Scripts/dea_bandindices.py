@@ -63,7 +63,7 @@ def calculate_indices(ds,
         'NDMI' (Normalised Difference Moisture Index, Gao 1996)        
         'NDSI' (Normalised Difference Snow Index, Hall 1995)
         'NDTI' (Normalise Difference Tillage Index,
-                Van Deventeret al 1997)
+                Van Deventeret et al. 1997)
         'NDVI' (Normalised Difference Vegetation Index, Rouse 1973)
         'NDWI' (Normalised Difference Water Index, McFeeters 1996)
         'SAVI' (Soil Adjusted Vegetation Index, Huete 1988)
