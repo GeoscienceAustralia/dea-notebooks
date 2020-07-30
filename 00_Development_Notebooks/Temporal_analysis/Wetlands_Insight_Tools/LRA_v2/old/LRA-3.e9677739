@@ -1,0 +1,446 @@
+Usage: pbsdsh [-c copies][-s][-v][-o] -- program [args...]
+       pbsdsh [-n node_index][-s][-v][-o] -- program [args...]
+       pbsdsh --version
+Where -c copies =  run a copy of "program" on the first "copies" nodes,
+      -n node_index = run a copy of "program" on the "node_index"-th node,
+      -s = forces synchronous execution,
+      -v = forces verbose output.
+      -o = no obits are waited for.
+Usage: pbsdsh [-c copies][-s][-v][-o] -- program [args...]
+       pbsdsh [-n node_index][-s][-v][-o] -- program [args...]
+       pbsdsh --version
+Where -c copies =  run a copy of "program" on the first "copies" nodes,
+      -n node_index = run a copy of "program" on the "node_index"-th node,
+      -s = forces synchronous execution,
+      -v = forces verbose output.
+      -o = no obits are waited for.
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+/g/data/v10/public/modules/dea-env/20190329/lib/python3.6/site-packages/fiona/collection.py:336: FionaDeprecationWarning: Collection slicing is deprecated and will be disabled in a future version.
+  return self.session.__getitem__(item)
+parallel: SIGTERM received. No new jobs will be started.
+parallel: Waiting for these 32 jobs to finish. Send SIGTERM again to stop now.
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 214 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 202 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 211 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 201 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 203 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 225 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 226 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 204 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 220 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 230 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 216 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 207 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 224 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 210 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 223 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 227 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 218 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 222 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 228 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 205 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 199 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 200 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 215 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 206 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 221 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 208 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 219 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 229 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 209 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 213 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 217 270
+parallel: python /g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py 212 270

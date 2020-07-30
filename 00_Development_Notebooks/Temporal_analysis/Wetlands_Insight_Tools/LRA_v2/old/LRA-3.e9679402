@@ -1,0 +1,100 @@
+Usage: pbsdsh [-c copies][-s][-v][-o] -- program [args...]
+       pbsdsh [-n node_index][-s][-v][-o] -- program [args...]
+       pbsdsh --version
+Where -c copies =  run a copy of "program" on the first "copies" nodes,
+      -n node_index = run a copy of "program" on the "node_index"-th node,
+      -s = forces synchronous execution,
+      -v = forces verbose output.
+      -o = no obits are waited for.
+Usage: pbsdsh [-c copies][-s][-v][-o] -- program [args...]
+       pbsdsh [-n node_index][-s][-v][-o] -- program [args...]
+       pbsdsh --version
+Where -c copies =  run a copy of "program" on the first "copies" nodes,
+      -n node_index = run a copy of "program" on the "node_index"-th node,
+      -s = forces synchronous execution,
+      -v = forces verbose output.
+      -o = no obits are waited for.
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+  File "/g/data/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2/LRA_WIT_raijin3.py", line 134
+    level=logging.DEBUG)                   )
+                                           ^
+SyntaxError: invalid syntax
+parallel: SIGTERM received. No new jobs will be started.
+parallel: Waiting for these 0 jobs to finish. Send SIGTERM again to stop now.
+parallel: SIGTERM received. No new jobs will be started.
+parallel: Waiting for these 0 jobs to finish. Send SIGTERM again to stop now.
