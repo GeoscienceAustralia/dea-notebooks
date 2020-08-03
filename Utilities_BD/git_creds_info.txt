@@ -1,0 +1,8 @@
+
+#set credential helper
+
+#15 minutes of your login --this will be in plaintext for 15 minutes
+
+git config credential.helper cache 
+
+git config --unset credential.helper
