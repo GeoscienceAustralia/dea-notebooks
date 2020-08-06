@@ -6,3 +6,5 @@
 git config credential.helper cache 
 
 git config --unset credential.helper
+
+sandbox prompts you to chmod permissions on 
