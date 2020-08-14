@@ -1,0 +1,58 @@
+# Config file containing extents of all the test 
+# sites we are using for LCCS tests.
+# Ayr:
+#     min_x: 1500000
+#     max_x: 1600000
+#     min_y: -2200000
+#     max_y: -2100000
+
+# Leichhardt:
+#     min_x: 800000
+#     max_x: 900000
+#     min_y: -2000000
+#     max_y: -1900000
+
+# Kakadu:
+#     min_x: 0
+#     max_x: 100000
+#     min_y: -1350000
+#     max_y: -1250000
+
+Hobart:
+    min_x: 1200000
+    max_x: 1300000
+    min_y: -4800000
+    max_y: -4700000
+
+Perth:
+    min_x: -1550000
+    max_x: -1450000
+    min_y: -3650000
+    max_y: -3550000
+
+
+Adelaide:
+    min_x: 550000
+    max_x: 650000
+    min_y: -3850000
+    max_y: -3750000
+
+Lake Eyre:
+    min_x: 500000
+    max_x: 600000
+    min_y: -3000000
+    max_y: -2900000
+
+
+Coorong:
+    min_x: 600000
+    max_x: 700000
+    min_y: -3950000
+    max_y: -3850000
+
+Brisbane:
+    min_x: 2000000
+    max_x: 2100000
+    min_y: -3200000
+    max_y: -3100000
+

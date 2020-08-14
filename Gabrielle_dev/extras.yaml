@@ -1,0 +1,20 @@
+# Config file containing extents of all the test 
+# sites we are using for LCCS tests.
+# Tile_5_-32:
+#     min_x: 500000
+#     max_x: -3200000
+#     min_y: 600000
+#     max_y: -3100000
+
+   
+# Diamantina:
+#     min_x: 800000
+#     max_x: 900000
+#     min_y: -2800000
+#     max_y: -2700000
+
+Adelaide:
+    min_x: 550000
+    max_x: 650000
+    min_y: -3850000
+    max_y: -3750000

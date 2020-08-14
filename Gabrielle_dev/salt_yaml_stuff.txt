@@ -1,0 +1,232 @@
+    salt_mask:
+        recipe:
+            &salt_mask_recipe
+            transform: salt_mask
+            input: 
+                *ls7_gm_mask
+
+    fc_veg_sum:
+        recipe:
+            &fc_veg_sum
+            transform: FC_summary
+            input:
+                juxtapose:
+                    - *ls_fc_wofs_masked_recipe
+                    - *wofs_daily_recipe
+                    
+    fc_veg:
+        recipe:
+            &fc_veg
+            transform: apply_mask
+            mask_measurement_name: no_data
+            input:
+                juxtapose:
+                - *fc_veg_sum
+                - transform: expressions
+                    output:
+                        no_data:
+                            formula: vssi == 1
+                            masked: False
+                    input: *salt_mask_recipe
+                    measurement: vssi
+                    
+
+    fc_veg:
+        recipe:
+            &fc_veg
+            transform: FC_summary
+            input:
+                juxtapose:
+                    - *ls_fc_wofs_masked_recipe
+                    - *wofs_daily_recipe
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+    ls7_gm_masked:
+        recipe:
+            &ls7_gm_mask
+            transform: apply_mask
+            mask_measurement_name: no_data
+            input:
+               juxtapose:
+                - product: ls7_nbart_geomedian_annual
+                - transform: expressions
+                  output:
+                       no_data:
+                           formula: red < 0
+                           masked: False
+                  input:
+                       collate:
+                         - product: ls8_nbart_geomedian_annual
+                           measurements: [red]
+                         - product: ls5_nbart_geomedian_annual
+                           measurements: [red]
+
+    fc_veg:
+        recipe:
+            &fc_veg
+            transform: apply_mask
+            mask_measurement_name: no_data
+            input:
+               juxtapose:
+                - *mfc_veg
+                - transform: expressions
+                  output:
+                       no_data:
+                           formula: vssi == 1
+                           masked: False
+                  input:
+                       collate:
+                         - *salt_mask_recipe
+                           measurements: [vssi]
+                           
+                           
+### Works
+
+    salt_mask:
+        recipe:
+            &salt_mask_recipe
+            transform: salt_mask
+            input: 
+                *ls7_gm_mask
+
+    fc_veg:
+        recipe:
+            &fc_veg
+            transform: FC_summary
+            input:
+                juxtapose:
+                    - *ls_fc_wofs_masked_recipe
+                    - *wofs_daily_recipe
+                    
+    mfc_veg:
+        recipe:
+            &mfc_veg
+            transform: apply_mask
+            mask_measurement_name: no_data
+            input:
+                juxtapose:
+                - *fc_veg
+                - transform: expressions
+                  output:
+                        no_data:
+                            formula: vssi == 1
+                            masked: False
+                  input: 
+                  - *salt_mask_recipe
+                  measurement: vssi
+
+
+    salt_mask:
+        recipe:
+            transform: expressions
+            output:
+                vssi:
+                    formula: 2 * green - 5 * ( red + nir )
+                    dtype: float32
+                    
+                    
+Monday arvo:
+
+    salt_mask:
+        recipe:
+            &salt_mask_recipe
+            transform: salt_mask
+            input: 
+                *ls7_gm_mask
+
+    mfc_veg:
+        recipe:
+            &mfc_veg
+            transform: FC_summary
+            input:
+                juxtapose:
+                    - *ls_fc_wofs_masked_recipe
+                    - *wofs_daily_recipe
+                    
+    fc_veg:
+        recipe:
+            &fc_veg
+            transform: apply_mask
+            mask_measurement_name: no_data
+            input:
+               juxtapose:
+                - *mfc_veg
+                - transform: expressions
+                  output:
+                       no_data:
+                           formula: vssi == 1
+                           masked: False
+                  input:
+                      *salt_mask_recipe
+                      measurements: [vssi]
+                      
+                      
+    ls7_gm_masked:
+        recipe:
+            &ls7_gm_mask
+            transform: apply_mask
+            mask_measurement_name: no_data
+            input:
+               juxtapose:
+                - product: ls7_nbart_geomedian_annual
+                - transform: expressions
+                  output:
+                       no_data:
+                           formula: red < 0
+                           masked: False
+                  input:
+                       collate:
+                         - product: ls8_nbart_geomedian_annual
+                           measurements: [red]
+                         - product: ls5_nbart_geomedian_annual
+                           measurements: [red]
+                           
+    ls_fc_wofs_masked:
+        recipe:
+            &ls_fc_wofs_masked_recipe
+            transform: apply_mask
+            mask_measurement_name: water
+            input:
+                juxtapose:
+                    - *ls_fc_daily_recipe
+                    - transform: make_mask
+                      input:
+                          *wofs_daily_recipe
+                      flags:
+                          cloud: false
+                          cloud_shadow: false
+                          noncontiguous: false
+                          nodata: false
+                      mask_measurement_name: water
+                      
+    fc_veg:
+        recipe:
+            &fc_veg
+            transform: apply_mask
+            mask_measurement_name: vssi
+            input:
+                juxtapose:
+                    - *raw_fc_veg_recipe
+                    - transform: make_mask
+                      input:
+                          *wofs_daily_recipe
+                          transform: expressions
+                          input: 
+                              *best_pixel_gm_recipe
+                          output:
+                              vssi:
+                                  formula: (2 * green - 5 * (red + nir)) < -40000
+                                  masked: False
+                                  
+"((fc_veg) * (1-(wofs_mask)) * (wcf_mask) * (1-(salt_mask_new)))"

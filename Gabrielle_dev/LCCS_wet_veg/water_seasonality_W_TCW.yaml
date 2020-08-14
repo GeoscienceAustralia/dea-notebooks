@@ -1,0 +1,21 @@
+from datacube.virtual import construct, Transformation, Measurement
+import xarray as xr
+import numpy
+import copy
+
+
+
+# class waterseasonality(Transformation):
+#     def compute(self, data):
+#         # currently copying and making a dataset with same size
+#         watersea = copy.deepcopy(data["frequency"])
+#         watersea.values = numpy.zeros_like(data["frequency"], dtype='float64')
+
+#         # using wofs_annual_summary to seperate Water < 3 months (<= 0.25) and Water > 3 months (> 0.25)
+#         watersea.values = numpy.where(((data['frequency'] > 0) & (data["frequency"] <= 0.25)), 2, watersea.values)
+#         watersea.values = numpy.where(((data['frequency'] > 0.25) & (data["frequency"] <= 1)), 1, watersea.values)
+
+#         return watersea.to_dataset(name='watersea_veg_cat').squeeze().drop('time')
+
+#     def measurements(self, input_measurements):
+#         return {'watersea_veg_cat': Measurement(name='watersea_veg_cat', dtype='float32', nodata=float('nan'), units='1')}
