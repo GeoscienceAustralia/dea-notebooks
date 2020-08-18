@@ -301,7 +301,7 @@ def xr_rasterize(gdf,
     
     if export_tiff:        
         print(f"Exporting GeoTIFF to {export_tiff}")
-        write_cog(ds,
+        write_cog(xarr,
                   export_tiff,
                   overwrite=True)
                 
