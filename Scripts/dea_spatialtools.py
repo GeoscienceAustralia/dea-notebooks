@@ -41,6 +41,7 @@ from scipy import ndimage as nd
 from skimage.measure import label
 from skimage.measure import find_contours
 from shapely.geometry import LineString, MultiLineString, shape
+from datacube.utils.cog import write_cog
 from datacube.helpers import write_geotiff
 from datacube.utils.geometry import CRS, Geometry
 
@@ -263,8 +264,7 @@ def xr_rasterize(gdf,
         y, x = len(xy_coords[0]), len(xy_coords[1])
     
     # Reproject shapefile to match CRS of raster
-    print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x}) '
-          f'and projection system/CRS (e.g. {crs})')
+    print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x})')
     
     try:
         gdf_reproj = gdf.to_crs(crs=crs)
@@ -296,14 +296,14 @@ def xr_rasterize(gdf,
                         name=name if name else None)
     
     # Add back crs if xarr.attrs doesn't have it
-    if 'crs' not in xarr.attrs:
-        xarr.attrs['crs'] = str(crs)
+    if xarr.geobox is None:
+        xarr = assign_crs(xarr, str(crs))
     
     if export_tiff:        
         print(f"Exporting GeoTIFF to {export_tiff}")
-        ds = xarr.to_dataset(name=name if name else 'data')      
-        ds.attrs = xarr.attrs  # xarray bug removes metadata, add it back
-        write_geotiff(export_tiff, ds) 
+        write_cog(xarr,
+                  export_tiff,
+                  overwrite=True)
                 
     return xarr
 
