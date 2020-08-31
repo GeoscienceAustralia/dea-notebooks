@@ -23,7 +23,7 @@ Functions included:
     map_shapefile
     xr_animation
 
-Last modified: June 2020
+Last modified: September 2020
 
 '''
 
@@ -81,7 +81,7 @@ def rgb(ds,
     This function was designed to work as an easier-to-use wrapper 
     around xarray's `.plot.imshow()` functionality.
     
-    Last modified: March 2020
+    Last modified: September 2020
     
     Parameters
     ----------  
@@ -172,11 +172,11 @@ def rgb(ds,
     if index is None:
         
         # Select bands and convert to DataArray
-        da = ds[bands].to_array()
+        da = ds[bands].to_array().compute()
 
         # If percentile_stretch == True, clip plotting to percentile vmin, vmax
         if percentile_stretch:
-            vmin, vmax = da.compute().quantile(percentile_stretch).values
+            vmin, vmax = da.quantile(percentile_stretch).values
             kwargs.update({'vmin': vmin, 'vmax': vmax})        
         
         # If there are more than three dimensions and the index dimension == 1, 
@@ -195,7 +195,7 @@ def rgb(ds,
                 
             raise Exception(
                 f'The input dataset `ds` has more than two dimensions: '
-                '{list(ds.dims.keys())}. Please select a single observation '
+                f'{list(ds.dims.keys())}. Please select a single observation '
                 'using e.g. `index=0`, or enable faceted plotting by adding '
                 'the arguments e.g. `col="time", col_wrap=4` to the function ' 
                 'call'
@@ -231,11 +231,11 @@ def rgb(ds,
         index = index if isinstance(index, list) else [index]
 
         # Select bands and observations and convert to DataArray
-        da = ds[bands].isel(**{index_dim: index}).to_array()
+        da = ds[bands].isel(**{index_dim: index}).to_array().compute()
 
         # If percentile_stretch == True, clip plotting to percentile vmin, vmax
         if percentile_stretch:
-            vmin, vmax = da.compute().quantile(percentile_stretch).values
+            vmin, vmax = da.quantile(percentile_stretch).values
             kwargs.update({'vmin': vmin, 'vmax': vmax})
 
         # If multiple index values are supplied, plot as a faceted plot
