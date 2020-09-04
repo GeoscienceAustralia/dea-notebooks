@@ -539,7 +539,9 @@ def calculate_anomalies(shp_fpath,
     anomalies = anomalies.rename('std_anomalies').to_dataset()
     anomalies.attrs = ds.attrs
     anomalies.attrs['units'] = 1
+    
+    obs=ds.time
 
-    return anomalies
+    return anomalies,obs
 
 
