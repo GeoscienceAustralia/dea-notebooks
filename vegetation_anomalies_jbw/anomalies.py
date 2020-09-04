@@ -370,7 +370,7 @@ def calculate_anomalies(shp_fpath,
         
         if collection == 'c2':
             print('loading Landsat C2')
-            ds = dc.load(product='ls8_nbart_albers',
+            ds = dc.load(product=['ls8_nbart_albers','ls7_nbart_albers'],
                            group_by='solar_day',
                            measurements = ['nir', 'red'],
                            resolution=(-30,30),
@@ -380,7 +380,7 @@ def calculate_anomalies(shp_fpath,
             
             # Load PQ data
             print('loading Landsat C2 pq data')
-            pq = dc.load(product='ls8_pq_albers',
+            pq = dc.load(product=['ls8_pq_albers','ls7_pq_albers'],
                          group_by='solar_day',
                          fuse_func=ga_pq_fuser,
                          resolution=(-30,30),
@@ -441,7 +441,7 @@ def calculate_anomalies(shp_fpath,
         if collection=='c2':
             
             print('loading Landsat collection 2')
-            ds = dc.load(product='ls8_nbart_albers',
+            ds = dc.load(product=['ls8_nbart_albers','ls7_nbart_albers'],
                            group_by='solar_day',
                            measurements = ['nir', 'red'],
                            resolution=(-30,30),
@@ -450,7 +450,7 @@ def calculate_anomalies(shp_fpath,
                            **query)             
 
             # Load PQ data
-            pq = dc.load(product='ls8_pq_albers',
+            pq = dc.load(product=['ls8_pq_albers','ls7_pq_albers'],
                          group_by='solar_day',
                          fuse_func=ga_pq_fuser,
                          resolution=(-30,30),
