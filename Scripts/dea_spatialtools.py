@@ -26,7 +26,7 @@ Functions included:
     largest_region
     transform_geojson_wgs_to_epsg
 
-Last modified: February 2020
+Last modified: June 2020
 
 '''
 
@@ -41,6 +41,7 @@ from scipy import ndimage as nd
 from skimage.measure import label
 from skimage.measure import find_contours
 from shapely.geometry import LineString, MultiLineString, shape
+from datacube.utils.cog import write_cog
 from datacube.helpers import write_geotiff
 from datacube.utils.geometry import CRS, Geometry
 
@@ -163,7 +164,7 @@ def xr_rasterize(gdf,
                  name=None,
                  x_dim='x',
                  y_dim='y',
-                 export_tiff= None,
+                 export_tiff=None,
                  **rasterio_kwargs):    
     """
     Rasterizes a geopandas.GeoDataFrame into an xarray.DataArray.
@@ -173,7 +174,7 @@ def xr_rasterize(gdf,
     gdf : geopandas.GeoDataFrame
         A geopandas.GeoDataFrame object containing the vector/shapefile
         data you want to rasterise.
-    da : xarray.DataArray
+    da : xarray.DataArray or xarray.Dataset
         The shape, coordinates, dimensions, and transform of this object 
         are used to build the rasterized shapefile. It effectively 
         provides a template. The attributes of this object are also 
@@ -196,10 +197,12 @@ def xr_rasterize(gdf,
         `da.geobox.transform`).
     x_dim : str, optional
         An optional string allowing you to override the xarray dimension 
-        used for x coordinates. Defaults to 'x'.    
+        used for x coordinates. Defaults to 'x'. Useful, for example, 
+        if x and y dims instead called 'lat' and 'lon'.   
     y_dim : str, optional
         An optional string allowing you to override the xarray dimension 
-        used for y coordinates. Defaults to 'y'.
+        used for y coordinates. Defaults to 'y'. Useful, for example, 
+        if x and y dims instead called 'lat' and 'lon'.
     export_tiff: str, optional
         If a filepath is provided (e.g 'output/output.tif'), will export a
         geotiff file. A named array is required for this operation, if one
@@ -216,14 +219,16 @@ def xr_rasterize(gdf,
     
     # Check for a crs object
     try:
-        crs = da.crs
+        crs = da.geobox.crs
     except:
-        if crs is None:
-            raise Exception("Please add a `crs` attribute to the "
+        try:
+            crs = da.crs
+        except:
+            if crs is None:
+                raise Exception("Please add a `crs` attribute to the "
                             "xarray.DataArray, or provide a CRS using the "
-                            "function's `crs` parameter (e.g. 'EPSG:3577')")
+                            "function's `crs` parameter (e.g. crs='EPSG:3577')")
     
-
     # Check if transform is provided as a xarray.DataArray method.
     # If not, require supplied Affine
     if transform is None:
@@ -243,74 +248,62 @@ def xr_rasterize(gdf,
                         "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
                         "6886890.0)`")
     
-    # Get the dims, coords, and output shape from da
-    da = da.squeeze()
-    y, x = da.shape
-    dims = list(da.dims)
-    xy_coords = [da[y_dim], da[x_dim]]   
+    # Grab the 2D dims (not time)    
+    try:
+        dims = da.geobox.dims
+    except:
+        dims = y_dim, x_dim  
+    
+    # Coords
+    xy_coords = [da[dims[0]], da[dims[1]]]
+    
+    # Shape
+    try:
+        y, x = da.geobox.shape
+    except:
+        y, x = len(xy_coords[0]), len(xy_coords[1])
     
     # Reproject shapefile to match CRS of raster
-    print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x}) '
-          f'and projection system/CRS (e.g. {crs})')
+    print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x})')
     
     try:
         gdf_reproj = gdf.to_crs(crs=crs)
     except:
-        #sometimes the crs can be a datacube utils CRS object
-        #so convert to string before reprojecting
-        gdf_reproj = gdf.to_crs(crs={'init':str(crs)})
+        # Sometimes the crs can be a datacube utils CRS object
+        # so convert to string before reprojecting
+        gdf_reproj = gdf.to_crs(crs={'init': str(crs)})
     
     # If an attribute column is specified, rasterise using vector 
     # attribute values. Otherwise, rasterise into a boolean array
-    if attribute_col:
-        
+    if attribute_col:        
         # Use the geometry and attributes from `gdf` to create an iterable
         shapes = zip(gdf_reproj.geometry, gdf_reproj[attribute_col])
-
-        # Convert polygons into a numpy array using attribute values
-        arr = rasterio.features.rasterize(shapes=shapes,
-                                          out_shape=(y, x),
-                                          transform=transform,
-                                          **rasterio_kwargs)
     else:
-        # Convert polygons into a boolean numpy array 
-        arr = rasterio.features.rasterize(shapes=gdf_reproj.geometry,
-                                          out_shape=(y, x),
-                                          transform=transform,
-                                          **rasterio_kwargs)
+        # Use geometry directly (will produce a boolean numpy array)
+        shapes = gdf_reproj.geometry
+
+    # Rasterise shapes into an array
+    arr = rasterio.features.rasterize(shapes=shapes,
+                                      out_shape=(y, x),
+                                      transform=transform,
+                                      **rasterio_kwargs)
         
     # Convert result to a xarray.DataArray
-    if name is not None:
-        xarr = xr.DataArray(arr,
-                           coords=xy_coords,
-                           dims=dims,
-                           attrs=da.attrs,
-                           name=name)
-    else:
-        xarr = xr.DataArray(arr,
-                   coords=xy_coords,
-                   dims=dims,
-                   attrs=da.attrs)
+    xarr = xr.DataArray(arr,
+                        coords=xy_coords,
+                        dims=dims,
+                        attrs=da.attrs,
+                        name=name if name else None)
     
-    #add back crs if da.attrs doesn't have it
-    if 'crs' not in xarr.attrs:
-        xarr.attrs['crs'] = str(crs)
+    # Add back crs if xarr.attrs doesn't have it
+    if xarr.geobox is None:
+        xarr = assign_crs(xarr, str(crs))
     
-    if export_tiff:
-            try:
-                print("Exporting GeoTIFF with array name: " + name)
-                ds = xarr.to_dataset(name = name)
-                #xarray bug removes metadata, add it back
-                ds[name].attrs = xarr.attrs 
-                ds.attrs = xarr.attrs
-                write_geotiff(export_tiff, ds) 
-                
-            except:
-                print("Exporting GeoTIFF with default array name: 'data'")
-                ds = xarr.to_dataset(name = 'data')
-                ds.data.attrs = xarr.attrs
-                ds.attrs = xarr.attrs
-                write_geotiff(export_tiff, ds)
+    if export_tiff:        
+        print(f"Exporting GeoTIFF to {export_tiff}")
+        write_cog(xarr,
+                  export_tiff,
+                  overwrite=True)
                 
     return xarr
 
@@ -322,7 +315,8 @@ def subpixel_contours(da,
                       attribute_df=None,
                       output_path=None,
                       min_vertices=2,
-                      dim='time'):
+                      dim='time',
+                      errors='ignore'):
     
     """
     Uses `skimage.measure.find_contours` to extract multiple z-value 
@@ -337,7 +331,7 @@ def subpixel_contours(da,
     `attribute_df` parameter can be used to pass custom attributes 
     to the output contour features.
     
-    Last modified: November 2019
+    Last modified: June 2020
     
     Parameters
     ----------  
@@ -387,6 +381,11 @@ def subpixel_contours(da,
         operating in 'single z-value, multiple arrays' mode. The default
         is 'time', which extracts contours for each array along the time
         dimension.
+    errors : string, optional
+        If 'raise', then any failed contours will raise an exception.
+        If 'ignore' (the default), a list of failed contours will be
+        printed. If no contours are returned, an exception will always
+        be raised.
         
     Returns
     -------
@@ -410,7 +409,7 @@ def subpixel_contours(da,
         # Extracts contours from array, and converts each discrete
         # contour into a Shapely LineString feature
         line_features = [LineString(i[:,[1, 0]]) 
-                         for i in find_contours(da_i, z_value) 
+                         for i in find_contours(da_i.data, z_value)
                          if i.shape[0] > min_vertices]
 
         # Output resulting lines into a single combined MultiLineString
@@ -440,18 +439,17 @@ def subpixel_contours(da,
                             "6886890.0)`")
 
     # If z_values is supplied is not a list, convert to list:
-    z_values = z_values if isinstance(z_values, list) else [z_values]
+    z_values = z_values if (isinstance(z_values, list) or 
+                            isinstance(z_values, np.ndarray)) else [z_values]
 
     # Test number of dimensions in supplied data array
     if len(da.shape) == 2:
 
         print(f'Operating in multiple z-value, single array mode')
         dim = 'z_value'
-        da = da.expand_dims({'z_value': z_values})
-
         contour_arrays = {str(i)[0:10]: 
-                          contours_to_multiline(da_i, i, min_vertices) 
-                          for i, da_i in da.groupby(dim)}        
+                          contours_to_multiline(da, i, min_vertices) 
+                          for i in z_values}    
 
     else:
 
@@ -488,7 +486,7 @@ def subpixel_contours(da,
     # Convert output contours to a geopandas.GeoDataFrame
     contours_gdf = gpd.GeoDataFrame(data=attribute_df, 
                                     geometry=list(contour_arrays.values()),
-                                    crs={'init': str(crs)})   
+                                    crs=crs)   
 
     # Define affine and use to convert array coords to geographic coords.
     # We need to add 0.5 x pixel size to the x and y to obtain the centre 
@@ -505,7 +503,16 @@ def subpixel_contours(da,
     empty_contours = contours_gdf.geometry.is_empty
     failed = ', '.join(map(str, contours_gdf[empty_contours][dim].to_list()))
     contours_gdf = contours_gdf[~empty_contours]
-    if empty_contours.any():  
+
+    # Raise exception if no data is returned, or if any contours fail
+    # when `errors='raise'. Otherwise, print failed contours
+    if empty_contours.all():
+        raise Exception("Failed to generate any valid contours; verify that "
+                        "values passed to `z_values` are valid and present "
+                        "in `da`")
+    elif empty_contours.any() and errors == 'raise':
+        raise Exception(f'Failed to generate contours: {failed}')
+    elif empty_contours.any() and errors == 'ignore':
         print(f'Failed to generate contours: {failed}')
 
     # If asked to write out file, test if geojson or shapefile
