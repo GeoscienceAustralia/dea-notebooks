@@ -35,10 +35,11 @@ def cmi_metadata(product='DEA Intertidal Elevation'):
     cmi_id = {'DEA Intertidal Elevation': 325,
               'DEA Intertidal Extents': 174,
               'DEA Fractional Cover': 119,
-              'DEA Water Observations': 142}[product]
+              'DEA Water Observations': 142,
+              'DEA High and Low Tide Imagery': 133}[product]
        
     # Load JSON metadata
-    json_url = f'https://test.cmi.ga.gov.au/api/v1/data-product/json/{cmi_id}?_format=json'
+    json_url = f'https://cmi.ga.gov.au/api/v1/data-product/json/{cmi_id}?_format=json'
     response = json.loads(requests.get(json_url).text)[0]
     
     # Extract metadata
@@ -61,7 +62,5 @@ def cmi_metadata(product='DEA Intertidal Elevation'):
                    f'{product} product, visit the official [Geoscience ' \
                    f'Australia {product} product description.]({product_url})\n\n' \
                    f'<img align="left" src="{response["product_header_image"]}" width="250" style="padding-left: 20px;">'
-    
-    # To add: <img align="right" src="{response["product_header_image"]}" width="250" style="padding-left: 20px;">
 
     return Markdown(markdown_str)
