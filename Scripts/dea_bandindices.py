@@ -38,35 +38,35 @@ def calculate_indices(ds,
     new variable in the original dataset.  
     
     Note: by default, this function will create a new copy of the data
-    in memory. This can be a memory-expensive operation, so to avoid 
+    in memory. This can be a memory-expensive operation, so to avoid
     this, set `inplace=True`.
-    
+
     Last modified: September 2020
     
     Parameters
-    ----------  
+    ----------
     ds : xarray Dataset
-        A two-dimensional or multi-dimensional array with containing the 
-        spectral bands required to calculate the index. These bands are 
+        A two-dimensional or multi-dimensional array with containing the
+        spectral bands required to calculate the index. These bands are
         used as inputs to calculate the selected water index.
     index : str or list of strs
-        A string giving the name of the index to calculate or a list of 
+        A string giving the name of the index to calculate or a list of
         strings giving the names of the indices to calculate:
         'AWEI_ns (Automated Water Extraction Index,
                   no shadows, Feyisa 2014)
         'AWEI_sh' (Automated Water Extraction Index,
                    shadows, Feyisa 2014)
-        'BAEI' (Built-Up Area Extraction Index, Bouzekri et al. 2015) 
+        'BAEI' (Built-Up Area Extraction Index, Bouzekri et al. 2015)
         'BAI' (Burn Area Index, Martin 1998)
         'BSI' (Bare Soil Index, Rikimaru et al. 2002)
         'BUI' (Built-Up Index, He et al. 2010)
         'CMR' (Clay Minerals Ratio, Drury 1987)
         'EVI' (Enhanced Vegetation Index, Huete 2002)
         'FMR' (Ferrous Minerals Ratio, Segal 1982)
-        'IOR' (Iron Oxide Ratio, Segal 1982)  
+        'IOR' (Iron Oxide Ratio, Segal 1982)
         'LAI' (Leaf Area Index, Boegh 2002)
-        'MNDWI' (Modified Normalised Difference Water Index, Xu 1996) 
-        'MSAVI' (Modified Soil Adjusted Vegetation Index, 
+        'MNDWI' (Modified Normalised Difference Water Index, Xu 1996)
+        'MSAVI' (Modified Soil Adjusted Vegetation Index,
                  Qi et al. 1994)              
         'NBI' (New Built-Up Index, Jieli et al. 2010)
         'NBR' (Normalised Burn Ratio, Lopez Garcia 1991)
@@ -110,8 +110,8 @@ def calculate_indices(ds,
     inplace: bool, optional
         If `inplace=True`, calculate_indices will modify the original
         array in-place, adding bands to the input dataset. The default
-        is `inplace=False`, which will instead make a new copy of the 
-        original data (and use twice the memory).    
+        is `inplace=False`, which will instead make a new copy of the
+        original data (and use twice the memory).
         
     Returns
     -------
@@ -123,7 +123,7 @@ def calculate_indices(ds,
     """
     
     # Set ds equal to a copy of itself in order to prevent the function 
-    # from editing the input dataset. This can prevent unexpected 
+    # from editing the input dataset. This can prevent unexpected
     # behaviour though it uses twice as much memory.    
     if not inplace:
         ds = ds.copy(deep=True)
@@ -379,13 +379,13 @@ def calculate_indices(ds,
         ds[output_band_name] = index_array
     
     # Once all indexes are calculated, drop input bands if inplace=False
-    if drop and not inplace: 
+    if drop and not inplace:
         ds = ds.drop(bands_to_drop)
-        
+
     # If inplace == True, delete bands in-place instead of using drop
     if drop and inplace:
         for band_to_drop in bands_to_drop:
             del ds[band_to_drop]
-        
+
     # Return input dataset with added water index variable
-    return ds  
+    return ds
