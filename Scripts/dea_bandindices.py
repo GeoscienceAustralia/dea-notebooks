@@ -1,14 +1,23 @@
 ## dea_bandindices.py
 '''
-Description: This file contains a set of python functions for computing remote sensing band indices on Digital Earth Australia data.
+Description: This file contains a set of python functions for computing
+remote sensing band indices on Digital Earth Australia data.
 
-License: The code in this notebook is licensed under the Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth Australia data is licensed under the Creative Commons by Attribution 4.0 license (https://creativecommons.org/licenses/by/4.0/).
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
+license (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open Data Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using the `open-data-cube` tag (you can view previously asked questions here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+Contact: If you need assistance, please post a question on the Open Data
+Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
+using the `open-data-cube` tag (you can view previously asked questions
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, you can file one on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+If you would like to report an issue with this script, you can file one
+on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: October 2019
+Last modified: September 2020
 
 '''
 
@@ -22,13 +31,17 @@ def calculate_indices(ds,
                       custom_varname=None,
                       normalise=True,
                       drop=False,
-                      deep_copy=True):
+                      inplace=False):
     """
     Takes an xarray dataset containing spectral bands, calculates one of
     a set of remote sensing indices, and adds the resulting array as a 
     new variable in the original dataset.  
     
-    Last modified: September 2019
+    Note: by default, this function will create a new copy of the data
+    in memory. This can be a memory-expensive operation, so to avoid 
+    this, set `inplace=True`.
+    
+    Last modified: September 2020
     
     Parameters
     ----------  
@@ -94,14 +107,11 @@ def calculate_indices(ds,
     drop : bool, optional
         Provides the option to drop the original input data, thus saving 
         space. if drop = True, returns only the index and its values.
-    deep_copy: bool, optional
-        If deep_copy=False, calculate_indices will modify the original
-        array, adding bands to the input dataset and not removing them.
-        If the calculate_indices function is run more than once, variables
-        may be dropped incorrectly producing unexpected behaviour. This is
-        a bug and may be fixed in future releases. This is only a problem 
-        when drop=True.
-    
+    inplace: bool, optional
+        If `inplace=True`, calculate_indices will modify the original
+        array in-place, adding bands to the input dataset. The default
+        is `inplace=False`, which will instead make a new copy of the 
+        original data (and use twice the memory).    
         
     Returns
     -------
@@ -113,9 +123,9 @@ def calculate_indices(ds,
     """
     
     # Set ds equal to a copy of itself in order to prevent the function 
-    # from editing the input dataset. This is to prevent unexpected 
+    # from editing the input dataset. This can prevent unexpected 
     # behaviour though it uses twice as much memory.    
-    if deep_copy:
+    if not inplace:
         ds = ds.copy(deep=True)
     
     # Capture input band names in order to drop these if drop=True
@@ -368,10 +378,14 @@ def calculate_indices(ds,
         output_band_name = custom_varname if custom_varname else index
         ds[output_band_name] = index_array
     
-    # Once all indexes are calculated, drop input bands if drop=True
-    if drop: 
+    # Once all indexes are calculated, drop input bands if inplace=False
+    if drop and not inplace: 
         ds = ds.drop(bands_to_drop)
-
+        
+    # If inplace == True, delete bands in-place instead of using drop
+    if drop and inplace:
+        for band_to_drop in bands_to_drop:
+            del ds[band_to_drop]
+        
     # Return input dataset with added water index variable
-    return ds
-  
+    return ds  
