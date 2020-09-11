@@ -57,7 +57,7 @@ def cmi_metadata(product='DEA Intertidal Elevation'):
     # Create markdown string to plot    
     markdown_str = f'## {product}\n' \
                    f'### Background\n{abstract}\n' \
-                   f'### What this product offers\n{product_offers}\n' \
+                   f'### What this product offers\n{product_offers}\n\n' \
                    f'### Applications\n{product_apps}\n\n' \
                    f'{product_pubs}\n\n' \
                    f'> **Note:** For more technical information about the ' \
