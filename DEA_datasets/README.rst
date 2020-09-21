@@ -9,3 +9,4 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
 
    Sentinel_2.ipynb
    TSmask.ipynb
+   DEA_Coastlines.ipynb
