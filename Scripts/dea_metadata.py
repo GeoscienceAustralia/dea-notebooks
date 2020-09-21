@@ -108,4 +108,7 @@ def cmi_metadata(product=None):
                    f'Australia {product} product description.]({product_url})\n\n' \
                    f'<img align="left" src="{response["product_header_image"]}" width="250" style="padding-left: 20px;">'
 
+    # Strip out non-compatible code
+    markdown_str = markdown_str.replace(' lang="EN-US" xml:lang="EN-US" xml:lang="EN-US"', '')
+    
     return Markdown(markdown_str)
