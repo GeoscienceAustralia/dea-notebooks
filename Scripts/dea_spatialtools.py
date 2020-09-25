@@ -408,9 +408,16 @@ def subpixel_contours(da,
         
         # Extracts contours from array, and converts each discrete
         # contour into a Shapely LineString feature
-        line_features = [LineString(i[:,[1, 0]]) 
-                         for i in find_contours(da_i.data, z_value)
-                         if i.shape[0] > min_vertices]
+        try:
+            line_features = [LineString(i[:,[1, 0]]) 
+                             for i in find_contours(da_i.data, z_value) 
+                             if i.shape[0] > min_vertices]
+            
+        except:
+            line_features = [LineString(i[:,[1, 0]]) 
+                             for i in find_contours(da_i.data, z_value, 
+                                                    fully_connected='high') 
+                             if i.shape[0] > min_vertices]          
 
         # Output resulting lines into a single combined MultiLineString
         return MultiLineString(line_features)
@@ -518,8 +525,8 @@ def subpixel_contours(da,
     # If asked to write out file, test if geojson or shapefile
     if output_path and output_path.endswith('.geojson'):
         print(f'Writing contours to {output_path}')
-        contours_gdf.to_crs({'init': 'EPSG:4326'}).to_file(filename=output_path, 
-                                                           driver='GeoJSON')
+        contours_gdf.to_crs('EPSG:4326').to_file(filename=output_path, 
+                                                 driver='GeoJSON')
     if output_path and output_path.endswith('.shp'):
         print(f'Writing contours to {output_path}')
         contours_gdf.to_file(filename=output_path)
