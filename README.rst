@@ -93,9 +93,16 @@ Using the template is not required for working branch notebooks, but is *highly 
 Approving pull requests
 -----------------------
 
-Anyone with admin access to the ``dea-notebooks`` repository can approve 'pull requests'. You can see a list of the 'pull requests' ready for review in the `Pull requests tab at the top of the repository <https://github.com/GeoscienceAustralia/dea-notebooks/pulls>`_. Click this tab, then click on the open pull request. You will need to review the code before you can approve the request. Ensure that all items in the pull request checklist have been ticked off and incorperated into the notebook.
+Anyone with admin access to the ``dea-notebooks`` repository can approve 'pull requests'. You can see a list of the 'pull requests' ready for review in the `Pull requests tab at the top of the repository <https://github.com/GeoscienceAustralia/dea-notebooks/pulls>`_. Click this tab, then click on the open pull request. You will need to review the code before you can approve the request. Ensure that all items in the pull request checklist have been ticked off and incorperated into the notebook. To make changes to someone else's pull request directly, first check out the branch you want to edit (e.g. ``pull_request_branch``):
+
+.. code-block:: console
+
+   git pull
+   git checkout --track origin/pull_request_branch
+
+Commit and push any changes you make, which will become part of the open pull request.
 
 If the notebook meets all the checklist requirements, click the green 'Review' button and click 'Approve' (with an optional comment). You can also 'Request changes' here if any of the checklist items are not complete.
 
-Once the pull request has been approved, you can merge it into the ``master`` branch. Select the 'Squash and merge' option from the drop down menu to the right of the green 'merge' button. Once you have merged the new branch in, you need to delete the branch. There is a button on the page that asks you if you would like to delete the now merged branch. Select 'Yes' to delete it.
+Once the pull request has been approved, you can merge it into the ``develop`` branch. Select the 'Squash and merge' option from the drop down menu to the right of the green 'merge' button. Once you have merged the new branch in, you need to delete the branch. There is a button on the page that asks you if you would like to delete the now merged branch. Select 'Yes' to delete it.
 
