@@ -1,0 +1,7 @@
+*.shp
+*.shx
+*.prj
+*.db
+*.cpg
+*.nc
+*.geojson
