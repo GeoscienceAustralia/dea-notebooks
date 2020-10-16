@@ -316,7 +316,8 @@ def subpixel_contours(da,
                       output_path=None,
                       min_vertices=2,
                       dim='time',
-                      errors='ignore'):
+                      errors='ignore',
+                      find_contours_kwargs={}):
     
     """
     Uses `skimage.measure.find_contours` to extract multiple z-value 
@@ -410,7 +411,8 @@ def subpixel_contours(da,
         # contour into a Shapely LineString feature
         try:
             line_features = [LineString(i[:,[1, 0]]) 
-                             for i in find_contours(da_i.data, z_value) 
+                             for i in find_contours(da_i.data, z_value, 
+                                                    **find_contours_kwargs) 
                              if i.shape[0] > min_vertices]
             
         except:
