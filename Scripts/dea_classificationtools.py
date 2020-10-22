@@ -1074,7 +1074,7 @@ def SKCV(X, y, coordinates, n_splits, cluster_method, kfold_method,
                                 balance=balance,
                                 **kwargs)
 
-    return splitter.split(coordinates)
+    return splitter
 
 
 def spatial_train_test_split(X, y, coordinates, cluster_method, kfold_method,
