@@ -765,8 +765,7 @@ def xr_animation(ds,
         animate each frame in the animation. Plots array and any text
         annotations, as well as a temporal subset of `gdf` data based
         on the times specified in 'start_time' and 'end_time' columns.
-        """
-        
+        """        
 
         # Clear previous frame to optimise render speed and plot imagery
         ax.clear()
@@ -862,7 +861,7 @@ def xr_animation(ds,
 
     # Convert data to 4D numpy array of shape [time, y, x, bands]
     ds = ds[bands].to_array().transpose(..., 'variable')[0:limit, ...]
-    array = ds.values
+    array = ds.astype(np.float32).values
 
     # Optionally apply image processing along axis 0 (e.g. to each timestep)
     bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} ({remaining_s:.1f} ' \
