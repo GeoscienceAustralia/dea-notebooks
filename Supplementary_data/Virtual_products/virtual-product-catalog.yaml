@@ -1,4 +1,28 @@
 about: Catalog of virtual products for DEA Notebooks
+
+transforms:
+    nbart_ndvi_transform:
+        recipe:
+            transform: expressions
+            output:
+                NDVI:
+                    formula: (nbart_nir_1 - nbart_red) / (nbart_nir_1 + nbart_red)
+                    dtype: float32
+
+    nbart_tasseled_cap_transform:
+        recipe:
+            transform: expressions
+            output:
+                brightness:
+                    formula: 0.2043 * nbart_blue + 0.4158 * nbart_green + 0.5524 * nbart_red + 0.5741 * nbart_nir_1 + 0.3124 * nbart_swir_2 + -0.2303 * nbart_swir_3
+                    dtype: float32
+                greenness:
+                    formula: -0.1603 * nbart_blue + -0.2819 * nbart_green + -0.4934 * nbart_red + 0.7940 * nbart_nir_1 + -0.0002 * nbart_swir_2 + -0.1446 * nbart_swir_3
+                    dtype: float32
+                wetness:
+                    formula: 0.0315 * nbart_blue + 0.2021 * nbart_green + 0.3102 * nbart_red + 0.1594 * nbart_nir_1 + -0.6806 * nbart_swir_2 + -0.6109 * nbart_swir_3
+                    dtype: float32
+
 products:
 
     s2a_ard_granule_simple:
@@ -123,6 +147,27 @@ products:
             input:
                 product: s2a_ard_granule
                 measurements: [nbart_red, nbart_nir_1]
+                
+    s2a_optical_albers:
+        recipe:
+            &s2a_optical_albers_recipe
+            product: s2a_ard_granule
+            measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir_1, nbart_swir_2, nbart_swir_3]
+            output_crs: EPSG:3577
+            resolution: [-20, 20]
+            resampling: average
+
+    s2a_optical_and_fmask_albers:
+        recipe:
+            &s2a_optical_and_fmask_albers_recipe
+            product: s2a_ard_granule
+            measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir_1, nbart_swir_2, nbart_swir_3, fmask]
+            output_crs: EPSG:3577
+            resolution: [-20, 20]
+            resampling:
+                fmask: nearest
+                '*': average
+
 
     s2a_tasseled_cap:
         recipe:
@@ -137,12 +182,7 @@ products:
                 wetness:
                     formula: 0.0315 * nbart_blue + 0.2021 * nbart_green + 0.3102 * nbart_red + 0.1594 * nbart_nir_1 + -0.6806 * nbart_swir_2 + -0.6109 * nbart_swir_3
                     dtype: float32
-            input:
-                product: s2a_ard_granule
-                measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir_1, nbart_swir_2, nbart_swir_3]
-                output_crs: EPSG:3577
-                resolution: [-20, 20]
-                resampling: average
+            input: *s2a_optical_albers_recipe
 
     s2a_cloud_free_tasseled_cap:
         recipe:
@@ -165,14 +205,7 @@ products:
                     flags:
                         fmask: valid
                     mask_measurement_name: fmask
-                    input:
-                        product: s2a_ard_granule
-                        measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir_1, nbart_swir_2, nbart_swir_3, fmask]
-                        output_crs: EPSG:3577
-                        resolution: [-20, 20]
-                        resampling:
-                            fmask: nearest
-                            '*': average
+                    input: *s2a_optical_and_fmask_albers_recipe
                             
 
     s2a_mean:
