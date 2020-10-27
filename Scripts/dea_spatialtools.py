@@ -52,6 +52,7 @@ def xr_vectorize(da,
                  crs=None, 
                  dtype='float32',
                  export_shp=False,
+                 verbose=False,
                  **rasterio_kwargs):    
     """
     Vectorises a xarray.DataArray into a geopandas.GeoDataFrame.
@@ -83,6 +84,8 @@ def xr_vectorize(da,
         To export the output vectorised features to a shapefile, supply
         an output path (e.g. 'output_dir/output.shp'. The default is 
         False, which will not write out a shapefile. 
+    verbose : bool, optional
+        Print debugging messages. Default False.
     **rasterio_kwargs : 
         A set of keyword arguments to rasterio.features.shapes
         Can include `mask` and `connectivity`.
@@ -117,10 +120,10 @@ def xr_vectorize(da,
             except:
                 # If neither of those options work, raise an exception telling the 
                 # user to provide a transform
-                raise Exception("Please provide an Affine transform object using the "
-                        "`transform` parameter (e.g. `from affine import "
-                        "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
-                        "6886890.0)`")
+                raise TypeError("Please provide an Affine transform object using the "
+                                "`transform` parameter (e.g. `from affine import "
+                                "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
+                                "6886890.0)`")
     
     # Check to see if the input is a numpy array
     if type(da) is np.ndarray:
@@ -165,6 +168,7 @@ def xr_rasterize(gdf,
                  x_dim='x',
                  y_dim='y',
                  export_tiff=None,
+                 verbose=False,
                  **rasterio_kwargs):    
     """
     Rasterizes a geopandas.GeoDataFrame into an xarray.DataArray.
@@ -207,6 +211,8 @@ def xr_rasterize(gdf,
         If a filepath is provided (e.g 'output/output.tif'), will export a
         geotiff file. A named array is required for this operation, if one
         is not supplied by the user a default name, 'data', is used
+    verbose : bool, optional
+        Print debugging messages. Default False.
     **rasterio_kwargs : 
         A set of keyword arguments to rasterio.features.rasterize
         Can include: 'all_touched', 'merge_alg', 'dtype'.
@@ -225,9 +231,9 @@ def xr_rasterize(gdf,
             crs = da.crs
         except:
             if crs is None:
-                raise Exception("Please add a `crs` attribute to the "
-                            "xarray.DataArray, or provide a CRS using the "
-                            "function's `crs` parameter (e.g. crs='EPSG:3577')")
+                raise ValueError("Please add a `crs` attribute to the "
+                                 "xarray.DataArray, or provide a CRS using the "
+                                 "function's `crs` parameter (e.g. crs='EPSG:3577')")
     
     # Check if transform is provided as a xarray.DataArray method.
     # If not, require supplied Affine
@@ -243,10 +249,10 @@ def xr_rasterize(gdf,
             except:
                 # If neither of those options work, raise an exception telling the 
                 # user to provide a transform
-                raise Exception("Please provide an Affine transform object using the "
-                        "`transform` parameter (e.g. `from affine import "
-                        "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
-                        "6886890.0)`")
+                raise TypeError("Please provide an Affine transform object using the "
+                                "`transform` parameter (e.g. `from affine import "
+                                "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
+                                "6886890.0)`")
     
     # Grab the 2D dims (not time)    
     try:
@@ -264,7 +270,8 @@ def xr_rasterize(gdf,
         y, x = len(xy_coords[0]), len(xy_coords[1])
     
     # Reproject shapefile to match CRS of raster
-    print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x})')
+    if verbose:
+        print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x})')
     
     try:
         gdf_reproj = gdf.to_crs(crs=crs)
@@ -299,8 +306,9 @@ def xr_rasterize(gdf,
     if xarr.geobox is None:
         xarr = assign_crs(xarr, str(crs))
     
-    if export_tiff:        
-        print(f"Exporting GeoTIFF to {export_tiff}")
+    if export_tiff: 
+        if verbose:
+            print(f"Exporting GeoTIFF to {export_tiff}")
         write_cog(xarr,
                   export_tiff,
                   overwrite=True)
@@ -545,6 +553,7 @@ def interpolate_2d(ds,
                    z_coords, 
                    method='linear',
                    factor=1,
+                   verbose=False,
                    **kwargs):
     
     """
@@ -588,6 +597,8 @@ def interpolate_2d(ds,
         resolution of `ds`. This approach will be significantly faster 
         than interpolating at full resolution, but will potentially 
         produce less accurate or reliable results.
+    verbose : bool, optional
+        Print debugging messages. Default False.
     **kwargs : 
         Optional keyword arguments to pass to either 
         `scipy.interpolate.griddata` (if `method` is 'linear', 'nearest' 
