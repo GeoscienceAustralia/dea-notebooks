@@ -424,9 +424,9 @@ def subpixel_contours(da,
         crs = da.crs
     except:
         if crs is None:
-            raise Exception("Please add a `crs` attribute to the "
-                            "xarray.DataArray, or provide a CRS using the "
-                            "function's `crs` parameter (e.g. 'EPSG:3577')")
+            raise ValueError("Please add a `crs` attribute to the "
+                             "xarray.DataArray, or provide a CRS using the "
+                             "function's `crs` parameter (e.g. 'EPSG:3577')")
 
     # Check if Affine transform is provided as a xarray.DataArray method.
     # If not, require supplied Affine
@@ -436,7 +436,7 @@ def subpixel_contours(da,
         affine = da.transform
     except:
         if affine is None:
-            raise Exception("Please provide an Affine object using the "
+            raise TypeError("Please provide an Affine object using the "
                             "`affine` parameter (e.g. `from affine import "
                             "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
                             "6886890.0)`")
@@ -461,8 +461,8 @@ def subpixel_contours(da,
         if verbose:
             print(f'Operating in single z-value, multiple arrays mode')
         if len(z_values) > 1:
-            raise Exception('Please provide a single z-value when operating '
-                            'in single z-value, multiple arrays mode')
+            raise ValueError('Please provide a single z-value when operating '
+                             'in single z-value, multiple arrays mode')
 
         contour_arrays = {str(i)[0:10]: 
                           contours_to_multiline(da_i, z_values[0], min_vertices) 
@@ -475,13 +475,13 @@ def subpixel_contours(da,
             attribute_df.insert(0, dim, contour_arrays.keys())
         except ValueError:
 
-            raise Exception("One of the following issues occured:\n\n"
-                            "1) `attribute_df` contains a different number of "
-                            "rows than the number of supplied `z_values` ("
-                            "'multiple z-value, single array mode')\n"
-                            "2) `attribute_df` contains a different number of "
-                            "rows than the number of arrays along the `dim` "
-                            "dimension ('single z-value, multiple arrays mode')")
+            raise ValueError("One of the following issues occured:\n\n"
+                             "1) `attribute_df` contains a different number of "
+                             "rows than the number of supplied `z_values` ("
+                             "'multiple z-value, single array mode')\n"
+                             "2) `attribute_df` contains a different number of "
+                             "rows than the number of arrays along the `dim` "
+                             "dimension ('single z-value, multiple arrays mode')")
 
     # Otherwise, use the contour keys as the only main attributes
     else:
@@ -510,10 +510,15 @@ def subpixel_contours(da,
 
     # Raise exception if no data is returned, or if any contours fail
     # when `errors='raise'. Otherwise, print failed contours
-    if empty_contours.all():
-        raise Exception("Failed to generate any valid contours; verify that "
-                        "values passed to `z_values` are valid and present "
-                        "in `da`")
+    if empty_contours.all() and errors == 'raise':
+        raise RuntimeError("Failed to generate any valid contours; verify that "
+                           "values passed to `z_values` are valid and present "
+                           "in `da`")
+    elif empty_contours.all() and errors == 'ignore':
+        if verbose:
+            print ("Failed to generate any valid contours; verify that "
+                    "values passed to `z_values` are valid and present "
+                    "in `da`")
     elif empty_contours.any() and errors == 'raise':
         raise Exception(f'Failed to generate contours: {failed}')
     elif empty_contours.any() and errors == 'ignore':
