@@ -108,3 +108,20 @@ Kangaroo Island:
     min_y: -3945800
     max_y: -3716500
 
+Tassie no data:
+    min_x: 1137731
+    max_x: 1163232
+    min_y: -4714560
+    max_y: -4731291
+
+Tassie no data 2:
+    min_x: 1137670
+    max_x: 1185691
+    min_y: -4750259
+    max_y: -4793417
+    
+South Alligator:
+    min_x: 11850
+    max_x: 47600
+    min_y: -1305550
+    max_y: -1279900

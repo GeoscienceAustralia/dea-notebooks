@@ -1,0 +1,62 @@
+about: Catalog of virtual products for DEA Notebooks
+products:
+
+    s2a_ard_granule_simple:
+        recipe:
+            product: s2a_ard_granule
+            
+    ls_cloud_free_nbart_rgb_albers:
+        recipe:
+            &ls_cloud_free_recipe
+            transform: apply_mask
+            mask_measurement_name: oa_fmask
+            preserve_dtype: False
+            input:
+                transform: make_mask
+                mask_measurement_name: oa_fmask
+                flags:
+                    fmask: valid
+                input:
+                    collate:
+                        - product: ga_ls8c_ard_3
+                          measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir, nbart_swir_1, nbart_swir_2, oa_fmask]
+                          group_by: solar_day
+                        - product: ga_ls5t_ard_3
+                          measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir, nbart_swir_1, nbart_swir_2, oa_fmask]
+                          group_by: solar_day
+                          
+    ls7:
+        recipe:
+            &ls7_recipe
+            transform: apply_mask
+            mask_measurement_name: oa_fmask
+            preserve_dtype: False
+            input:
+                transform: make_mask
+                mask_measurement_name: oa_fmask
+                flags:
+                    fmask: valid
+                input:
+                    product: ga_ls7e_ard_3
+                    measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir, nbart_swir_1, nbart_swir_2, oa_fmask]
+                    group_by: solar_day
+                    
+    ls7_masked:
+        recipe:
+            &ls7_mask
+            transform: apply_mask
+            mask_measurement_name: no_data
+            input:
+               juxtapose:
+                - product: ga_ls7e_ard_3
+                - transform: expressions
+                  output:
+                       no_data:
+                           formula: nbart_red < 0
+                           masked: False
+                  input:
+                       collate:
+                         - product: ga_ls8c_ard_3
+                           measurements: [nbart_red]
+                         - product: ga_ls5t_ard_3
+                           measurements: [nbart_red]

@@ -1,22 +1,22 @@
 # Config file containing extents of all the test 
 # sites we are using for LCCS tests.
-# Ayr:
-#     min_x: 1500000
-#     max_x: 1600000
-#     min_y: -2200000
-#     max_y: -2100000
+Ayr:
+    min_x: 1500000
+    max_x: 1600000
+    min_y: -2200000
+    max_y: -2100000
 
-# Leichhardt:
-#     min_x: 800000
-#     max_x: 900000
-#     min_y: -2000000
-#     max_y: -1900000
+Leichhardt:
+    min_x: 800000
+    max_x: 900000
+    min_y: -2000000
+    max_y: -1900000
 
-# Kakadu:
-#     min_x: 0
-#     max_x: 100000
-#     min_y: -1350000
-#     max_y: -1250000
+Kakadu:
+    min_x: 0
+    max_x: 100000
+    min_y: -1350000
+    max_y: -1250000
 
 Hobart:
     min_x: 1200000
