@@ -1,4 +1,4 @@
-# deafrica_load_era5.py
+# dea_load_era5.py
 '''
 Description: A set of python functions to retrieve ERA5 gridded climiate data.
 
@@ -6,7 +6,7 @@ Adpated from scripts by Andrew Cherry and Brian Killough.
 
 License: The code in this notebook is licensed under the Apache License,
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
-Africa data is licensed under the Creative Commons by Attribution 4.0 
+Australua data is licensed under the Creative Commons by Attribution 4.0 
 license (https://creativecommons.org/licenses/by/4.0/).
 
 Contact: If you need assistance, please post a question on the Open Data 
