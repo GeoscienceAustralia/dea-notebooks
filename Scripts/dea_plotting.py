@@ -568,7 +568,7 @@ def xr_animation(ds,
     Supports .mp4 (ideal for Twitter/social media) and .gif (ideal 
     for all purposes, but can have large file sizes) format files. 
     
-    Last modified: April 2020
+    Last modified: October 2020
     
     Parameters
     ----------  
@@ -597,7 +597,9 @@ def xr_animation(ds,
         three-band arrays by percentiles to produce a more vibrant, 
         visually attractive image that is not affected by outliers/
         extreme values. The default is `(0.02, 0.98)` which is 
-        equivalent to xarray's `robust=True`.        
+        equivalent to xarray's `robust=True`. This parameter is ignored
+        completely if `vmin` and `vmax` are provided as kwargs to
+        `imshow_kwargs`.
     image_proc_funcs : list of funcs, optional
         An optional list containing functions that will be applied to 
         each animation frame (timestep) prior to animating. This can 
@@ -768,7 +770,10 @@ def xr_animation(ds,
 
         # Clear previous frame to optimise render speed and plot imagery
         ax.clear()
-        ax.imshow(array[i, ...].clip(0.0, 1.0), extent=extent, **imshow_defaults)
+        ax.imshow(array[i, ...].clip(0.0, 1.0), 
+                  extent=extent, 
+                  vmin=0.0, vmax=1.0, 
+                  **imshow_defaults)
 
         # Add annotation text
         ax.annotate(annotation_text[i], **annotation_defaults)
@@ -875,14 +880,17 @@ def xr_animation(ds,
 
     # Clip to percentiles and rescale between 0.0 and 1.0 for plotting
     vmin, vmax = np.quantile(array[np.isfinite(array)], q=percentile_stretch)
-    
+        
     # Replace with vmin and vmax if present in `imshow_defaults`
     if 'vmin' in imshow_defaults:
-        vmin = imshow_defaults['vmin']
+        vmin = imshow_defaults.pop('vmin')
     if 'vmax' in imshow_defaults:
-        vmax = imshow_defaults['vmax']
+        vmax = imshow_defaults.pop('vmax')
     
-    array = rescale_intensity(array, in_range=(vmin, vmax), out_range=(0.0, 1.0))
+    # Rescale between 0 and 1
+    array = rescale_intensity(array, 
+                              in_range=(vmin, vmax), 
+                              out_range=(0.0, 1.0))
     array = np.squeeze(array)  # remove final axis if only one band
 
     # Set up figure
