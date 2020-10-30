@@ -15,7 +15,7 @@ The Beginners Guide contains introductory notebooks aimed at introducing Jupyter
    06_Basic_analysis.ipynb
    07_Intro_to_numpy.ipynb
    08_Intro_to_xarray.ipynb
-   09_Parallel_processing_with_dask.ipynb
+   09_Parallel_processing_with_Dask.ipynb
    
    Once you have you have completed the beginner tutorials, join advanced users in exploring:
 
