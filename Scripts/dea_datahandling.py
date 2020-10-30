@@ -26,7 +26,6 @@ Functions included:
     dilate
     pan_sharpen_brovey
     paths_to_datetimeindex
-    calc_geomedian
     _select_along_axis
     nearest
     last
