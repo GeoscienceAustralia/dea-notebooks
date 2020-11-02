@@ -162,10 +162,15 @@ def load_ard(dc,
               else f'    {product}')
         datasets = dc.find_datasets(product=product, **query)
 
-        # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
+#         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
+#         if not ls7_slc_off and product == 'ga_ls7e_ard_3':
+#             datasets = [i for i in datasets if i.time.begin <
+#                         datetime.datetime(2003, 5, 31)]
+        # Remove Landsat 7 SLC-off observations if ls7_slc_off=False %jbw added from develop
         if not ls7_slc_off and product == 'ga_ls7e_ard_3':
-            datasets = [i for i in datasets if i.time.begin <
-                        datetime.datetime(2003, 5, 31)]
+            print('    Ignoring SLC-off observations for ls7')
+            ds = ds.sel(time=ds.time < np.datetime64('2003-05-30'))
+                
 
         # Add any returned datasets to list
         dataset_list.extend(datasets)
