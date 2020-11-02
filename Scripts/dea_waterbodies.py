@@ -18,8 +18,10 @@ If you would like to report an issue with this script, file one on
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
 Functions included:
-    get_waterbody_polygon
-    get_waterbody_time_series
+    get_waterbody
+    get_waterbodies
+    get_geohashes
+    get_time_series
 
 Last modified: November 2020
 """
