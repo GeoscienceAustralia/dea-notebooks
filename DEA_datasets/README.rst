@@ -10,3 +10,4 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
    DEA_High_and_Low_Tide_Imagery.ipynb
    Sentinel_2.ipynb
    TSmask.ipynb
+   DEA_Waterbodies.ipynb
