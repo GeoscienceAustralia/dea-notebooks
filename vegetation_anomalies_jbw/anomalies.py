@@ -329,7 +329,8 @@ def calculate_anomalies(shp_fpath,
     #connect to datacube
     try:
         if collection == 'c3':
-            dc = datacube.Datacube(app='calculate_anomalies', env='c3-samples')
+#             dc = datacube.Datacube(app='calculate_anomalies', env='c3-samples')
+            dc = datacube.Datacube(app='calculate_anomalies') #jbw
         if collection == 'c2':
             dc = datacube.Datacube(app='calculate_anomalies')
     except:
