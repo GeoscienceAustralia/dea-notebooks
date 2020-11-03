@@ -14,17 +14,21 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Contour_extraction.ipynb
    Exporting_GeoTIFFs.ipynb
    Exporting_NetCDFs.ipynb
+   External_data_CSVs.ipynb
+   External_data_ERA5_Climate.ipynb
    Generating_composites.ipynb
    Generating_geomedian_composites.ipynb
    Image_segmentation.ipynb
    Imagery_on_web_map.ipynb
-   Integrating_external_data.ipynb
    Machine_learning_with_ODC.ipynb
    Masking_data.ipynb
    Opening_GeoTIFFs_NetCDFs.ipynb
    Pan_sharpening_Brovey.ipynb
+   Polygon_drill.ipynb
    Polygonise_pixel_edges.ipynb
+   Principal_component_analysis.ipynb
    Rasterize_vectorize.ipynb
+   Reprojecting_data.ipynb
    Tidal_modelling.ipynb
    Using_load_ard.ipynb
    Virtual_products.ipynb
