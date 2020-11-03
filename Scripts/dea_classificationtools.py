@@ -588,11 +588,13 @@ def _get_training_data_for_shp(gdf,
     else:
         raise Exception(zonal_stats + " is not one of the supported" +
                         " reduce functions ('mean','median','std','max','min')")
-
+    
+    #return unique-id so we can index if load failed silently
+    _id=gdf.iloc[index]['id']
+    
     # Append training data and labels to list
-    out_arrs.append(stacked)
-    out_vars.append([field] + list(data.data_vars))
-
+    out_arrs.append(np.append(stacked, _id))
+    out_vars.append([field]+list(data.data_vars)+['id'])
 
 def _get_training_data_parallel(gdf,
                                 products,
@@ -661,7 +663,9 @@ def collect_training_data(
     reduce_func=None,
     drop=True,
     zonal_stats=None,
-    clean=True
+    clean=True,
+    fail_threshold=0.02,
+    max_retries=3
 ):
     """
     
@@ -702,6 +706,8 @@ def collect_training_data(
         containing 2D coordinates (i.e x, y - no time dimension). The custom function
         has access to the datacube dataset extracted using the 'dc_query' params. To load
         other datasets, you can use the 'like=ds.geobox' parameter in dc.load
+    field : str
+        Name of the column in the gdf that contains the class labels
     calc_indices: list, optional
         If not using a custom func, then this parameter provides a method for
         calculating a number of remote sensing indices (e.g. `['NDWI', 'NDVI']`).
@@ -722,6 +728,16 @@ def collect_training_data(
         Whether or not to remove missing values in the training dataset. If True,
         training labels with any NaNs or Infs in the feature layers will be dropped
         from the dataset.
+    fail_threshold : float, default 0.05
+        Silent read fails on S3 during multiprocessing can result in some rows of the 
+        returned data containing all NaN values. Set the 'fail_threshold' fraction to
+        specify a minimum number of acceptable fails e.g. setting 'fail_threshold' to 0.05
+        means 5 % no-data in the returned dataset is acceptable. Above this fraction the
+        function will attempt to recollect the samples that have failed.
+        A sample is defined as having failed if it returns > 50 % NaN values.
+    max_retries: int, default 3
+        Number of times to retry collecting a sample. This number is invoked if the 'fail_threshold' is 
+        not reached.
 
     Returns
     --------
@@ -745,7 +761,11 @@ def collect_training_data(
         print("Reducing data using: " + reduce_func)
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
-
+    
+    #add unique id to gdf to help later with indexing failed rows
+    #during muliprocessing
+    gdf['id'] = range(0, len(gdf))
+    
     if ncpus == 1:
         # progress indicator
         print('Collecting training data in serial mode')
@@ -787,9 +807,58 @@ def collect_training_data(
     # Stack the extracted training data for each feature into a single array
     model_input=np.vstack(results)
 
-    # Remove any potential nans or infs
-    num = np.count_nonzero(np.isnan(model_input).any(axis=1))        
+    # this code block iteratively retries failed rows
+    # up to max_retries or until fail_threshold is
+    # reached - whichever occurs first
+    if ncpus > 1:
+        i=1
+        while (i < max_retries):
+            # Count number of fails
+            num = np.count_nonzero(np.isnan(model_input), axis=1) > int(model_input.shape[1]*0.5)
+            num = num.sum()
+            fail_rate = num / len(gdf)
+            print('Percentage of possible fails after run '+str(i)+' = '+str(round(fail_rate*100, 2))+' %')
+            if fail_rate > fail_threshold:
+                print('Recollecting samples that failed')
+                
+                #find rows where NaNs account for more than half the values
+                nans=model_input[np.count_nonzero(np.isnan(model_input), axis=1) > int(model_input.shape[1]*0.5)]
+                #remove nan rows from model_input object
+                model_input=model_input[np.count_nonzero(np.isnan(model_input), axis=1) <= int(model_input.shape[1]*0.5)]
+
+                #get id of NaN rows and index original gdf
+                idx_nans = nans[:, [-1]].flatten()
+                gdf_rerun = gdf.loc[gdf['id'].isin(idx_nans)]
+                gdf_rerun=gdf_rerun.reset_index(drop=True)
+
+                time.sleep(60) #sleep for 60 sec to rest api 
+                column_names_again, results_again=_get_training_data_parallel(
+                        gdf=gdf_rerun,
+                        products=products,
+                        dc_query=dc_query,
+                        ncpus=ncpus,
+                        return_coords=return_coords,
+                        custom_func=custom_func,
+                        field=field,
+                        calc_indices=calc_indices,
+                        reduce_func=reduce_func,
+                        drop=drop,
+                        zonal_stats=zonal_stats
+                        )
+
+                # Stack the extracted training data for each feature into a single array
+                model_input_again=np.vstack(results_again)
+
+                #merge results of the re-run with original run
+                model_input=np.vstack((model_input,model_input_again))
+                
+                i += 1
+                
+            else:
+                break
+
     if clean == True:
+        num = np.count_nonzero(np.isnan(model_input).any(axis=1))
         model_input=model_input[~np.isnan(model_input).any(axis=1)]
         model_input=model_input[~np.isinf(model_input).any(axis=1)]
         print("Removed "+str(num)+" rows wth NaNs &/or Infs")
@@ -798,8 +867,13 @@ def collect_training_data(
     else:
         print('Returning data without cleaning')
         print('Output shape: ', model_input.shape)
-
-    return column_names, model_input
+    
+    # remove id column
+    idx_var = column_names[0:-1]
+    model_col_indices = [column_names.index(var_name) for var_name in idx_var]
+    model_input=model_input[:, model_col_indices] 
+                                 
+    return column_names[0:-1], model_input
 
 
 class KMeans_tree(ClusterMixin):
