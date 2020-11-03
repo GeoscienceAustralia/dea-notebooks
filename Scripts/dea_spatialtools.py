@@ -54,6 +54,7 @@ def xr_vectorize(da,
                  crs=None, 
                  dtype='float32',
                  export_shp=False,
+                 verbose=False,
                  **rasterio_kwargs):    
     """
     Vectorises a xarray.DataArray into a geopandas.GeoDataFrame.
@@ -85,6 +86,8 @@ def xr_vectorize(da,
         To export the output vectorised features to a shapefile, supply
         an output path (e.g. 'output_dir/output.shp'. The default is 
         False, which will not write out a shapefile. 
+    verbose : bool, optional
+        Print debugging messages. Default False.
     **rasterio_kwargs : 
         A set of keyword arguments to rasterio.features.shapes
         Can include `mask` and `connectivity`.
@@ -119,10 +122,10 @@ def xr_vectorize(da,
             except:
                 # If neither of those options work, raise an exception telling the 
                 # user to provide a transform
-                raise Exception("Please provide an Affine transform object using the "
-                        "`transform` parameter (e.g. `from affine import "
-                        "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
-                        "6886890.0)`")
+                raise TypeError("Please provide an Affine transform object using the "
+                                "`transform` parameter (e.g. `from affine import "
+                                "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
+                                "6886890.0)`")
     
     # Check to see if the input is a numpy array
     if type(da) is np.ndarray:
@@ -167,6 +170,7 @@ def xr_rasterize(gdf,
                  x_dim='x',
                  y_dim='y',
                  export_tiff=None,
+                 verbose=False,
                  **rasterio_kwargs):    
     """
     Rasterizes a geopandas.GeoDataFrame into an xarray.DataArray.
@@ -209,6 +213,8 @@ def xr_rasterize(gdf,
         If a filepath is provided (e.g 'output/output.tif'), will export a
         geotiff file. A named array is required for this operation, if one
         is not supplied by the user a default name, 'data', is used
+    verbose : bool, optional
+        Print debugging messages. Default False.
     **rasterio_kwargs : 
         A set of keyword arguments to rasterio.features.rasterize
         Can include: 'all_touched', 'merge_alg', 'dtype'.
@@ -227,9 +233,9 @@ def xr_rasterize(gdf,
             crs = da.crs
         except:
             if crs is None:
-                raise Exception("Please add a `crs` attribute to the "
-                            "xarray.DataArray, or provide a CRS using the "
-                            "function's `crs` parameter (e.g. crs='EPSG:3577')")
+                raise ValueError("Please add a `crs` attribute to the "
+                                 "xarray.DataArray, or provide a CRS using the "
+                                 "function's `crs` parameter (e.g. crs='EPSG:3577')")
     
     # Check if transform is provided as a xarray.DataArray method.
     # If not, require supplied Affine
@@ -245,10 +251,10 @@ def xr_rasterize(gdf,
             except:
                 # If neither of those options work, raise an exception telling the 
                 # user to provide a transform
-                raise Exception("Please provide an Affine transform object using the "
-                        "`transform` parameter (e.g. `from affine import "
-                        "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
-                        "6886890.0)`")
+                raise TypeError("Please provide an Affine transform object using the "
+                                "`transform` parameter (e.g. `from affine import "
+                                "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
+                                "6886890.0)`")
     
     # Grab the 2D dims (not time)    
     try:
@@ -266,7 +272,8 @@ def xr_rasterize(gdf,
         y, x = len(xy_coords[0]), len(xy_coords[1])
     
     # Reproject shapefile to match CRS of raster
-    print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x})')
+    if verbose:
+        print(f'Rasterizing to match xarray.DataArray dimensions ({y}, {x})')
     
     try:
         gdf_reproj = gdf.to_crs(crs=crs)
@@ -301,8 +308,9 @@ def xr_rasterize(gdf,
     if xarr.geobox is None:
         xarr = assign_crs(xarr, str(crs))
     
-    if export_tiff:        
-        print(f"Exporting GeoTIFF to {export_tiff}")
+    if export_tiff: 
+        if verbose:
+            print(f"Exporting GeoTIFF to {export_tiff}")
         write_cog(xarr,
                   export_tiff,
                   overwrite=True)
@@ -318,7 +326,8 @@ def subpixel_contours(da,
                       output_path=None,
                       min_vertices=2,
                       dim='time',
-                      errors='ignore'):
+                      errors='ignore',
+                      verbose=False):
     
     """
     Uses `skimage.measure.find_contours` to extract multiple z-value 
@@ -388,6 +397,8 @@ def subpixel_contours(da,
         If 'ignore' (the default), a list of failed contours will be
         printed. If no contours are returned, an exception will always
         be raised.
+    verbose : bool, optional
+        Print debugging messages. Default False.
         
     Returns
     -------
@@ -423,9 +434,9 @@ def subpixel_contours(da,
         crs = da.crs
     except:
         if crs is None:
-            raise Exception("Please add a `crs` attribute to the "
-                            "xarray.DataArray, or provide a CRS using the "
-                            "function's `crs` parameter (e.g. 'EPSG:3577')")
+            raise ValueError("Please add a `crs` attribute to the "
+                             "xarray.DataArray, or provide a CRS using the "
+                             "function's `crs` parameter (e.g. 'EPSG:3577')")
 
     # Check if Affine transform is provided as a xarray.DataArray method.
     # If not, require supplied Affine
@@ -435,7 +446,7 @@ def subpixel_contours(da,
         affine = da.transform
     except:
         if affine is None:
-            raise Exception("Please provide an Affine object using the "
+            raise TypeError("Please provide an Affine object using the "
                             "`affine` parameter (e.g. `from affine import "
                             "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
                             "6886890.0)`")
@@ -446,8 +457,8 @@ def subpixel_contours(da,
 
     # Test number of dimensions in supplied data array
     if len(da.shape) == 2:
-
-        print(f'Operating in multiple z-value, single array mode')
+        if verbose:
+            print(f'Operating in multiple z-value, single array mode')
         dim = 'z_value'
         contour_arrays = {str(i)[0:10]: 
                           contours_to_multiline(da, i, min_vertices) 
@@ -457,10 +468,11 @@ def subpixel_contours(da,
 
         # Test if only a single z-value is given when operating in 
         # single z-value, multiple arrays mode
-        print(f'Operating in single z-value, multiple arrays mode')
+        if verbose:
+            print(f'Operating in single z-value, multiple arrays mode')
         if len(z_values) > 1:
-            raise Exception('Please provide a single z-value when operating '
-                            'in single z-value, multiple arrays mode')
+            raise ValueError('Please provide a single z-value when operating '
+                             'in single z-value, multiple arrays mode')
 
         contour_arrays = {str(i)[0:10]: 
                           contours_to_multiline(da_i, z_values[0], min_vertices) 
@@ -473,13 +485,13 @@ def subpixel_contours(da,
             attribute_df.insert(0, dim, contour_arrays.keys())
         except ValueError:
 
-            raise Exception("One of the following issues occured:\n\n"
-                            "1) `attribute_df` contains a different number of "
-                            "rows than the number of supplied `z_values` ("
-                            "'multiple z-value, single array mode')\n"
-                            "2) `attribute_df` contains a different number of "
-                            "rows than the number of arrays along the `dim` "
-                            "dimension ('single z-value, multiple arrays mode')")
+            raise ValueError("One of the following issues occured:\n\n"
+                             "1) `attribute_df` contains a different number of "
+                             "rows than the number of supplied `z_values` ("
+                             "'multiple z-value, single array mode')\n"
+                             "2) `attribute_df` contains a different number of "
+                             "rows than the number of arrays along the `dim` "
+                             "dimension ('single z-value, multiple arrays mode')")
 
     # Otherwise, use the contour keys as the only main attributes
     else:
@@ -508,22 +520,30 @@ def subpixel_contours(da,
 
     # Raise exception if no data is returned, or if any contours fail
     # when `errors='raise'. Otherwise, print failed contours
-    if empty_contours.all():
-        raise Exception("Failed to generate any valid contours; verify that "
-                        "values passed to `z_values` are valid and present "
-                        "in `da`")
+    if empty_contours.all() and errors == 'raise':
+        raise RuntimeError("Failed to generate any valid contours; verify that "
+                           "values passed to `z_values` are valid and present "
+                           "in `da`")
+    elif empty_contours.all() and errors == 'ignore':
+        if verbose:
+            print ("Failed to generate any valid contours; verify that "
+                    "values passed to `z_values` are valid and present "
+                    "in `da`")
     elif empty_contours.any() and errors == 'raise':
         raise Exception(f'Failed to generate contours: {failed}')
     elif empty_contours.any() and errors == 'ignore':
-        print(f'Failed to generate contours: {failed}')
+        if verbose:
+            print(f'Failed to generate contours: {failed}')
 
     # If asked to write out file, test if geojson or shapefile
     if output_path and output_path.endswith('.geojson'):
-        print(f'Writing contours to {output_path}')
+        if verbose:
+            print(f'Writing contours to {output_path}')
         contours_gdf.to_crs({'init': 'EPSG:4326'}).to_file(filename=output_path, 
                                                            driver='GeoJSON')
     if output_path and output_path.endswith('.shp'):
-        print(f'Writing contours to {output_path}')
+        if verbose:
+            print(f'Writing contours to {output_path}')
         contours_gdf.to_file(filename=output_path)
         
     return contours_gdf
@@ -535,6 +555,7 @@ def interpolate_2d(ds,
                    z_coords, 
                    method='linear',
                    factor=1,
+                   verbose=False,
                    **kwargs):
     
     """
@@ -578,6 +599,8 @@ def interpolate_2d(ds,
         resolution of `ds`. This approach will be significantly faster 
         than interpolating at full resolution, but will potentially 
         produce less accurate or reliable results.
+    verbose : bool, optional
+        Print debugging messages. Default False.
     **kwargs : 
         Optional keyword arguments to pass to either 
         `scipy.interpolate.griddata` (if `method` is 'linear', 'nearest' 
