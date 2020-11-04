@@ -24,7 +24,7 @@ Functions included:
     deacoastlines_transect
     deacoastlines_histogram
 
-Last modified: September 2020
+Last modified: November 2020
 
 '''
 
@@ -655,7 +655,6 @@ def deacoastlines_transect(transect_mode='distance',
             # Plot data
             fig, ax = plt.subplots(1, 1, figsize=(5, 8))
             transect_df.plot(x='dist', y='year', ax=ax, label='DEA Coastlines')
-            ax.invert_yaxis()
             ax.set_xlabel(f'{transect_mode.title()} (metres)')
             
             # Extract coordinates fore unique file ID
