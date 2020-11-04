@@ -160,6 +160,52 @@ class FuzzyWOfSLeaf:
         """
         return self.id
     
+    def get_fuzzy_leaf(self, means, stdevs, hard_edges=False) -> int:
+        """Get the leaf nodes classifying a pixel.
+        
+        Parameters
+        ----------
+        means : (6, ...) array of floats
+            Array of band indices and pixel values.
+        
+        stdevs : (6, ...) array of floats
+            Array of uncertainties in band indices and pixel values.
+        
+        hard_edges : bool
+            Whether the prediction should be hard rather than fuzzy.
+            Default False.
+        
+        Returns
+        -------
+        [float]
+            Percentage membership to each leaf ID.
+        """
+        return _get_fuzzy_leaf(means, stdevs, hard_edges=hard_edges)
+    
+    def _get_fuzzy_leaf(self, means, stdevs, hard_edges=False) -> int:
+        """Get the leaf nodes classifying a pixel (given band indices and values).
+        
+        Parameters
+        ----------
+        means : (9, ...) array of floats
+            Array of band indices and pixel values.
+        
+        stdevs : (9, ...) array of floats
+            Array of uncertainties in band indices and pixel values.
+        
+        hard_edges : bool
+            Whether the prediction should be hard rather than fuzzy.
+            Default False.
+        
+        Returns
+        -------
+        int
+            Leaf ID.
+        """
+        membership = np.zeros((23,) + means.shape[1:])
+        membership[self.id] = 1
+        return membership
+    
     def name(self) -> str:
         """Get the name of this node."""
         confidence = self.wet_prob if self.wet_prob > 0.5 else 1 - self.wet_prob
@@ -471,6 +517,68 @@ class FuzzyWOfSNode:
         return np.where(values[self.split_index] <= self.split_value,
                         left,
                         right)
+    
+    def get_fuzzy_leaf(self, means, stdevs, hard_edges=False):
+        """Get the leaf nodes classifying a pixel.
+        
+        Parameters
+        ----------
+        means : (6, ...) array of floats
+            Array of pixel values.
+        
+        stdevs : (6, ...) array of floats
+            Array of uncertainties in pixel values.
+        
+        hard_edges : bool
+            Whether the prediction should be hard rather than fuzzy.
+            Default False.
+        
+        Returns
+        -------
+        [float]
+            Array of memberships for each leaf.
+        """
+        means = self.landsat_values(means)
+        stdevs = self.landsat_values_sigma(means, stdevs)
+        return self._get_fuzzy_leaf(means, stdevs, hard_edges=hard_edges)
+    
+    def _get_fuzzy_leaf(self, means, stdevs, hard_edges=False):
+        """Get the leaf nodes classifying a pixel (given band indices and values).
+        
+        Parameters
+        ----------
+        means : (9, ...) array of floats
+            Array of band indices and pixel values.
+        
+        stdevs : (9, ...) array of floats
+            Array of uncertainties in band indices and pixel values.
+        
+        hard_edges : bool
+            Whether the prediction should be hard rather than fuzzy.
+            Default False.
+        
+        Returns
+        -------
+        [float]
+            Array of memberships for each leaf.
+        """
+        left = self.left_child._get_fuzzy_leaf(means, stdevs, hard_edges=hard_edges)
+        right = self.right_child._get_fuzzy_leaf(means, stdevs, hard_edges=hard_edges)
+        mean = means[self.split_index]
+        stdev = stdevs[self.split_index]
+        
+        # How much of the Gaussian goes into the left subtree?
+        # Integrate G(x) from -inf to split value.
+        weight = scipy.special.erf((mean - self.split_value) / stdev)
+        # If the split value is much greater than the mean, then we almost surely go down the left tree.
+        # The weight becomes -1.
+        # Conversely, if the split value is much much less than the mean, then we almost surely go down the right tree.
+        # The weight becomes 1.
+        # If we add 1 and halve, our numbers map from 0 (all left) to 1 (all right).
+        weight = (weight + 1) / 2
+        if hard_edges:
+            weight = (mean - self.split_value) / stdev > 0
+        return left * (1 - weight) + right * weight
     
     def name(self):
         """Get the name of this node."""
