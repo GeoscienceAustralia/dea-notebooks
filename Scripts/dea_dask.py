@@ -28,7 +28,6 @@ Last modified: March 2020
 from importlib.util import find_spec
 import os
 import dask
-from IPython.display import display
 from datacube.utils.dask import start_local_dask
 from datacube.utils.rio import configure_s3_access
 
@@ -78,4 +77,5 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
 
     # Show the dask cluster settings
     if display_client:
+        from IPython.display import display
         display(client)
