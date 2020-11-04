@@ -29,12 +29,14 @@ Last modified: October 2020
 
 # Import required packages
 import math
+import branca
 import folium
 import calendar
 import ipywidgets
 import numpy as np
 import geopandas as gpd
 import matplotlib as mpl
+import matplotlib.cm as cm
 import matplotlib.patheffects as PathEffects
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -46,7 +48,6 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps, Choropleth
 from skimage import exposure
-from branca.colormap import linear
 from odc.ui import image_aspect
 
 from matplotlib.animation import FuncAnimation
@@ -357,7 +358,7 @@ def display_map(x, y, crs='EPSG:4326', margin=-0.5, zoom_bias=0):
 def map_shapefile(gdf,
                   attribute,
                   continuous=False,
-                  colormap='YlOrRd_09',
+                  cmap='viridis',
                   basemap=basemaps.Esri.WorldImagery,
                   default_zoom=None,
                   hover_col=True,
@@ -382,13 +383,11 @@ def map_shapefile(gdf,
         Whether to plot data as a categorical or continuous variable. 
         Defaults to remapping the attribute which is suitable for 
         categorical data. For continuous data set `continuous` to True.
-    colormap : string, optional
-        Either a string giving the name of a `branca.colormap.linear` 
-        colormap or a `branca.colormap` object (for example, 
-        `branca.colormap.linear.YlOrRd_09`) that will be used to style 
-        the features in the GeoDataFrame. Features will be coloured 
-        based on the selected attribute. Defaults to the 'YlOrRd_09' 
-        colormap.
+    cmap : string, optional
+        A string giving the name of a `matplotlib.cm` colormap that will
+        be used to style the features in the GeoDataFrame. Features will
+        be coloured based on the selected attribute. Defaults to the 
+        'viridis' colormap.
     basemap : ipyleaflet.basemaps object, optional
         An optional `ipyleaflet.basemaps` object used as the basemap for 
         the interactive plot. Defaults to `basemaps.Esri.WorldImagery`.
@@ -403,7 +402,7 @@ def map_shapefile(gdf,
         custom shapefile field can be specified by supplying a string
         giving the name of the field to print. Set to False to prevent 
         any attributes from being printed.
-    **choropleth_kwargs :
+    **style_kwargs :
         Optional keyword arguments to pass to the `style` paramemter of
         the `ipyleaflet.Choropleth` function. This can be used to 
         control the appearance of the shapefile, for example 'stroke' 
@@ -484,15 +483,16 @@ def map_shapefile(gdf,
     # overwritten/customised by `choropleth_kwargs` values
     style_kwargs = dict({'fillOpacity': 0.8}, **style_kwargs)
 
-    # Get colormap from either string or `branca.colormap` object
-    if type(colormap) == str:
-        colormap = getattr(linear, colormap)
+    # Get `branca.colormap` object from matplotlib string
+    cm_cmap = cm.get_cmap(cmap, 30)
+    colormap = branca.colormap.LinearColormap([cm_cmap(i) for 
+                                               i in np.linspace(0, 1, 30)])
     
     # Create the choropleth
     choropleth = Choropleth(geo_data=data_geojson,
                             choro_data=id_class_dict,
                             colormap=colormap,
-                            style={**style_kwargs})
+                            style=style_kwargs)
     
     # If the vector data contains line features, they will not be 
     # be coloured by default. To resolve this, we need to manually copy
@@ -509,7 +509,8 @@ def map_shapefile(gdf,
             choropleth.data['features'][i]['properties']['style']['fillColor']
 
         # Add GeoJSON layer to map
-        feature_layer = GeoJSON(data=choropleth.data)
+        feature_layer = GeoJSON(data=choropleth.data,
+                                style=style_kwargs)
         m.add_layer(feature_layer)
         
     else:
