@@ -1,0 +1,9 @@
+*.py~
+*~
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+*.tif
+*.xml
+__pycache__
+Transitory_notebooks/
+dask-worker-space/*
