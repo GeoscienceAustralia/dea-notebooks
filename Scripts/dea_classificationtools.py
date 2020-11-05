@@ -1044,7 +1044,7 @@ def spatial_clusters(coordinates, method='Hierarchical', max_distance=None, n_gr
     return cluster_label
 
 
-def SKCV(X, y, coordinates, n_splits, cluster_method, kfold_method,
+def SKCV(coordinates, n_splits, cluster_method, kfold_method,
          test_size, balance, n_groups=None, max_distance=None, train_size=None,
          random_state=None, **kwargs):
     """
@@ -1063,42 +1063,38 @@ def SKCV(X, y, coordinates, n_splits, cluster_method, kfold_method,
 
     Parameters
     ----------
-    X : np.array
-        Training data features
-    y : np.array
-        Training data labels
-    n_groups : int
-        The number of groups to create. This is passed as 'n_clusters=n_groups'
-        for the KMeans algo, and 'n_components=n_groups' for the GMM. If using
-        cluster_method='Hierarchical' then this parameter is ignored.
     coordinates : np.array
         A numpy array of coordinate values e.g.
         np.array([[3337270.,  262400.],
                   [3441390., -273060.], ...])
+    n_splits : int
+        The number of test-train cross validation splits to generate.
     cluster_method : str
         Which algorithm to use to seperate data points. Either 'KMeans', 'GMM', or
         'Hierarchical'
-    max_distance : int
-        If method is set to 'hierarchical' then maximum distance describes the
-        maximum euclidean distances between all observations in a cluster. 'n_groups'
-        is ignored in this case.
-    n_splits : int
-        The number of test-train cross validation splits to generate.
+    kfold_method : str
+        One of either 'SpatialShuffleSplit' or 'SpatialKFold'. See the docs
+        under class:_SpatialShuffleSplit and class: _SpatialKFold for more
+        information on these options.
     test_size : float, int, None
         If float, should be between 0.0 and 1.0 and represent the proportion
         of the dataset to include in the test split. If int, represents the
         absolute number of test samples. If None, the value is set to the
         complement of the train size. If ``train_size`` is also None, it will
         be set to 0.15.
+    n_groups : int
+        The number of groups to create. This is passed as 'n_clusters=n_groups'
+        for the KMeans algo, and 'n_components=n_groups' for the GMM. If using
+        cluster_method='Hierarchical' then this parameter is ignored.
+    max_distance : int
+        If method is set to 'hierarchical' then maximum distance describes the
+        maximum euclidean distances between all observations in a cluster. 'n_groups'
+        is ignored in this case.
     train_size : float, int, or None
         If float, should be between 0.0 and 1.0 and represent the
         proportion of the dataset to include in the train split. If
         int, represents the absolute number of train samples. If None,
         the value is automatically set to the complement of the test size.
-    kfold_method : str
-        One of either 'SpatialShuffleSplit' or 'SpatialKFold'. See the docs
-        under class:_SpatialShuffleSplit and class: _SpatialKFold for more
-        information on these options.
     random_state : int, RandomState instance or None, optional (default=None)
         If int, random_state is the seed used by the random number generator;
         If RandomState instance, random_state is the random number generator;
