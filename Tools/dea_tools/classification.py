@@ -15,9 +15,9 @@ If you would like to report an issue with this script, you can file one on
 Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 '''
 
-from dea_spatialtools import xr_rasterize
-from dea_bandindices import calculate_indices
-from dea_datahandling import load_ard
+from dea_tools.spatial import xr_rasterize
+from dea_tools.bandindices import calculate_indices
+from dea_tools.datahandling import load_ard
 import numpy as np
 import xarray as xr
 import geopandas as gpd

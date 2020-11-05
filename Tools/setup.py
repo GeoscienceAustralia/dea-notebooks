@@ -56,11 +56,16 @@ REQUIRED = [
     'branca',
     'shapely',
     'scikit-image',
+    # climate
+    'dateutil',
+    # waterbodies
+    'OWSLib',
 ]
 
 # What packages are optional?
 EXTRAS = {
     'jupyter': ['IPython', 'ipywidgets', 'ipyleaflet'],
+    'boto': ['boto3'],
 }
 
 # The rest you shouldn't have to touch too much :)
