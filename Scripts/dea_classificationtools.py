@@ -22,7 +22,10 @@ Last modified: Septemeber 2020
 
 
 '''
-
+try:
+    import dask_ml
+except ModuleNotFoundError:
+    os.system('pip install dask-ml')
 import sys
 import os
 import joblib
