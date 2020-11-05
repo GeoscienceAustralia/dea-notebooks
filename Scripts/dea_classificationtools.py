@@ -23,10 +23,6 @@ Last modified: Septemeber 2020
 
 '''
 import os
-try:
-    import dask_ml
-except ModuleNotFoundError:
-    os.system('pip install dask-ml')
 import sys
 import joblib
 import datacube
