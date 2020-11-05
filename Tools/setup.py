@@ -136,9 +136,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    # packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    # If your package is a single module, use this instead of 'packages':
-    py_modules=['dea_tools'],
+    packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
 
     # entry_points={
     #     'console_scripts': ['mycli=mymodule:cli'],
