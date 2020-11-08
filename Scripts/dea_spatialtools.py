@@ -25,8 +25,9 @@ Functions included:
     contours_to_array
     largest_region
     transform_geojson_wgs_to_epsg
+    zonal_stats_parallel
 
-Last modified: June 2020
+Last modified: November 2020
 
 '''
 
@@ -39,12 +40,13 @@ import rasterio.features
 import scipy.interpolate
 from scipy import ndimage as nd
 from skimage.measure import label
+from rasterstats import zonal_stats
 from skimage.measure import find_contours
-from shapely.geometry import LineString, MultiLineString, shape
 from datacube.utils.cog import write_cog
 from datacube.helpers import write_geotiff
+from datacube.utils.geometry import assign_crs
 from datacube.utils.geometry import CRS, Geometry
-
+from shapely.geometry import LineString, MultiLineString, shape
 
 def xr_vectorize(da, 
                  attribute_col='attribute', 
@@ -340,7 +342,7 @@ def subpixel_contours(da,
     `attribute_df` parameter can be used to pass custom attributes 
     to the output contour features.
     
-    Last modified: June 2020
+    Last modified: November 2020
     
     Parameters
     ----------  
@@ -418,10 +420,12 @@ def subpixel_contours(da,
         '''
         
         # Extracts contours from array, and converts each discrete
-        # contour into a Shapely LineString feature
+        # contour into a Shapely LineString feature. If the function 
+        # returns a KeyError, this may be due to an unresolved issue in
+        # scikit-image: https://github.com/scikit-image/scikit-image/issues/4830
         line_features = [LineString(i[:,[1, 0]]) 
-                         for i in find_contours(da_i.data, z_value)
-                         if i.shape[0] > min_vertices]
+                         for i in find_contours(da_i.data, z_value) 
+                         if i.shape[0] > min_vertices]        
 
         # Output resulting lines into a single combined MultiLineString
         return MultiLineString(line_features)
@@ -537,8 +541,9 @@ def subpixel_contours(da,
     if output_path and output_path.endswith('.geojson'):
         if verbose:
             print(f'Writing contours to {output_path}')
-        contours_gdf.to_crs({'init': 'EPSG:4326'}).to_file(filename=output_path, 
-                                                           driver='GeoJSON')
+        contours_gdf.to_crs('EPSG:4326').to_file(filename=output_path, 
+                                                 driver='GeoJSON')
+
     if output_path and output_path.endswith('.shp'):
         if verbose:
             print(f'Writing contours to {output_path}')
@@ -768,3 +773,88 @@ def transform_geojson_wgs_to_epsg(geojson, EPSG):
     gg = Geometry(geojson['geometry'], CRS('epsg:4326'))
     gg = gg.to_crs(CRS(f'epsg:{EPSG}'))
     return gg.__geo_interface__
+
+
+def zonal_stats_parallel(shp,
+                         raster,
+                         statistics,
+                         out_shp,
+                         ncpus,
+                         **kwargs):
+
+    """
+    Summarizing raster datasets based on vector geometries in parallel.
+    Each cpu recieves an equal chunk of the dataset. 
+    Utilizes the perrygeo/rasterstats package.
+    
+    Parameters
+    ----------
+    shp : str
+        Path to shapefile that contains polygons over
+        which zonal statistics are calculated
+    raster: str
+        Path to the raster from which the statistics are calculated.
+        This can be a virtual raster (.vrt).
+    statistics: list
+        list of statistics to calculate. e.g.
+            ['min', 'max', 'median', 'majority', 'sum']
+    out_shp: str
+        Path to export shapefile containing zonal statistics.
+    ncpus: int
+        number of cores to parallelize the operations over. 
+    kwargs: 
+        Any other keyword arguments to rasterstats.zonal_stats()
+        See https://github.com/perrygeo/python-rasterstats for
+        all options
+            
+    Returns
+    -------
+    Exports a shapefile to disk containing the zonal statistics requested
+    
+    """
+    
+    #yields n sized chunks from list l (used for splitting task to multiple processes)
+    def chunks(l, n):
+        for i in range(0, len(l), n):
+            yield l[i:i + n]
+
+    #calculates zonal stats and adds results to a dictionary
+    def worker(z,raster,d):	
+        z_stats = zonal_stats(z,raster,stats=statistics,**kwargs)	
+        for i in range(0,len(z_stats)):
+            d[z[i]['id']]=z_stats[i]
+
+    #write output polygon
+    def write_output(zones, out_shp,d):
+        #copy schema and crs from input and add new fields for each statistic			
+        schema = zones.schema.copy()
+        crs = zones.crs
+        for stat in statistics:			
+            schema['properties'][stat] = 'float'
+
+        with fiona.open(out_shp, 'w', 'ESRI Shapefile', schema, crs) as output:
+            for elem in zones:
+                for stat in statistics:			
+                    elem['properties'][stat]=d[elem['id']][stat]
+                output.write({'properties':elem['properties'],'geometry': mapping(shape(elem['geometry']))})
+    
+    with fiona.open(shp) as zones:
+        jobs = []
+
+        # create manager dictionary (polygon ids=keys, stats=entries)
+        # where multiple processes can write without conflicts
+        man = mp.Manager()	
+        d = man.dict()	
+
+        #split zone polygons into 'ncpus' chunks for parallel processing 
+        # and call worker() for each
+        split = chunks(zones, len(zones)//ncpus)
+        for z in split:
+            p = mp.Process(target=worker,args=(z, raster,d))
+            p.start()
+            jobs.append(p)
+
+        #wait that all chunks are finished
+        [j.join() for j in jobs]
+
+        write_output(zones,out_shp,d)		
