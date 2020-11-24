@@ -72,7 +72,7 @@ class FuzzyWOfSLeaf:
         """
         return self.wet_prob > 0.5
     
-    def fuzzy_predict(self, means, stdevs, hard_edges=False) -> float:
+    def fuzzy_predict(self, means, stdevs, hard_edges=False, hard_leaves=False) -> float:
         """Predict the probability that a pixel is wet.
         
         Parameters
@@ -87,13 +87,17 @@ class FuzzyWOfSLeaf:
             Whether the prediction should be hard rather than fuzzy.
             Default False.
         
+        hard_leaves : bool
+            Whether the leaves should be considered pure.
+            Default False.
+        
         Returns
         -------
         float
         """
-        return self._fuzzy_predict(means, stdevs, hard_edges=hard_edges)
+        return self._fuzzy_predict(means, stdevs, hard_edges=hard_edges, hard_leaves=hard_leaves)
     
-    def _fuzzy_predict(self, means, stdevs, hard_edges=False) -> float:
+    def _fuzzy_predict(self, means, stdevs, hard_edges=False, hard_leaves=False) -> float:
         """Predict the probability that a pixel is wet (given band indices and values).
         
         Parameters
@@ -108,11 +112,15 @@ class FuzzyWOfSLeaf:
             Whether the prediction should be hard rather than fuzzy.
             Default False.
         
+        hard_leaves : bool
+            Whether the leaves should be considered pure.
+            Default False.
+        
         Returns
         -------
         float
         """
-        if not hard_edges:
+        if not hard_edges and not hard_leaves:
             return self.wet_prob
         return self.wet_prob > 0.5
     
@@ -160,7 +168,7 @@ class FuzzyWOfSLeaf:
         """
         return self.id
     
-    def get_fuzzy_leaf(self, means, stdevs, hard_edges=False) -> int:
+    def get_fuzzy_leaf(self, means, stdevs, hard_edges=False, hard_leaves=False) -> int:
         """Get the leaf nodes classifying a pixel.
         
         Parameters
@@ -175,14 +183,18 @@ class FuzzyWOfSLeaf:
             Whether the prediction should be hard rather than fuzzy.
             Default False.
         
+        hard_leaves : bool
+            Whether the leaves should be considered pure.
+            Default False.
+        
         Returns
         -------
         [float]
             Percentage membership to each leaf ID.
         """
-        return _get_fuzzy_leaf(means, stdevs, hard_edges=hard_edges)
+        return _get_fuzzy_leaf(means, stdevs, hard_edges=hard_edges, hard_leaves=hard_leaves)
     
-    def _get_fuzzy_leaf(self, means, stdevs, hard_edges=False) -> int:
+    def _get_fuzzy_leaf(self, means, stdevs, hard_edges=False, hard_leaves=False) -> int:
         """Get the leaf nodes classifying a pixel (given band indices and values).
         
         Parameters
@@ -195,6 +207,10 @@ class FuzzyWOfSLeaf:
         
         hard_edges : bool
             Whether the prediction should be hard rather than fuzzy.
+            Default False.
+        
+        hard_leaves : bool
+            Whether the leaves should be considered pure.
             Default False.
         
         Returns
@@ -394,7 +410,7 @@ class FuzzyWOfSNode:
                         left,
                         right)
     
-    def fuzzy_predict(self, means, stdevs, hard_edges=False):
+    def fuzzy_predict(self, means, stdevs, hard_edges=False, hard_leaves=False):
         """Predict the probability that a pixel is wet.
         
         Parameters
@@ -409,15 +425,19 @@ class FuzzyWOfSNode:
             Whether the prediction should be hard rather than fuzzy.
             Default False.
         
+        hard_leaves : bool
+            Whether the leaves should be considered pure.
+            Default False.
+        
         Returns
         -------
         float
         """
         means = self.landsat_values(means)
         stdevs = self.landsat_values_sigma(means, stdevs)
-        return self._fuzzy_predict(means, stdevs, hard_edges=hard_edges)
+        return self._fuzzy_predict(means, stdevs, hard_edges=hard_edges, hard_leaves=hard_leaves)
     
-    def _fuzzy_predict(self, means, stdevs, hard_edges=False):
+    def _fuzzy_predict(self, means, stdevs, hard_edges=False, hard_leaves=False):
         """Predict the probability that a pixel is wet (given band indices and values).
         
         Parameters
@@ -432,12 +452,16 @@ class FuzzyWOfSNode:
             Whether the prediction should be hard rather than fuzzy.
             Default False.
         
+        hard_leaves : bool
+            Whether the leaves should be considered pure.
+            Default False.
+        
         Returns
         -------
         float
         """
-        left = self.left_child._fuzzy_predict(means, stdevs, hard_edges=hard_edges)
-        right = self.right_child._fuzzy_predict(means, stdevs, hard_edges=hard_edges)
+        left = self.left_child._fuzzy_predict(means, stdevs, hard_edges=hard_edges, hard_leaves=hard_leaves)
+        right = self.right_child._fuzzy_predict(means, stdevs, hard_edges=hard_edges, hard_leaves=hard_leaves)
         mean = means[self.split_index]
         stdev = stdevs[self.split_index]
         
@@ -452,6 +476,7 @@ class FuzzyWOfSNode:
         weight = (weight + 1) / 2
         if hard_edges:
             weight = (mean - self.split_value) / stdev > 0
+
         return left * (1 - weight) + right * weight
     
     def to_string(self):
