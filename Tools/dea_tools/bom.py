@@ -9,12 +9,6 @@ import requests
 import lxml
 import lxml.etree
 
-__all__ = (
-    'get_stations',
-    'get_station_data',
-    'mk_station_selector',
-)
-
 def get_stations(time=None,
                  observation='http://bom.gov.au/waterdata/services/parameters/Water Course Discharge',
                  url='http://www.bom.gov.au/waterdata/services'):
