@@ -23,6 +23,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Masking_data.ipynb
    Opening_GeoTIFFs_NetCDFs.ipynb
    Pan_sharpening_Brovey.ipynb
+   Polygon_drill.ipynb
    Polygonise_pixel_edges.ipynb
    Rasterize_vectorize.ipynb
 <<<<<<< HEAD

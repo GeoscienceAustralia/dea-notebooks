@@ -20,12 +20,14 @@ Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 Functions included:
     time_buffer
 
-Last modified: April 2020
+Last modified: September 2020
 
 '''
 
 # Import required packages
+import numpy as np
 import pandas as pd
+import scipy.signal
 
 
 def time_buffer(input_date, buffer='30 days', output_format='%Y-%m-%d'):
@@ -70,3 +72,67 @@ def time_buffer(input_date, buffer='30 days', output_format='%Y-%m-%d'):
     late_buffer = late_buffer.strftime(output_format)
     
     return early_buffer, late_buffer
+
+
+def calculate_vector_stat(
+    vec: "data dim",
+    stat: "data dim -> target dim",
+    window_size=365,
+    step=10,
+    target_dim=365,
+    progress=None,
+    window="hann",
+):
+    """Calculates a vector statistic over a rolling window.
+    
+    Parameters
+    ----------
+    vec : d-dimensional np.ndarray
+        Vector to calculate over, e.g. a time series.
+    stat : R^d -> R^t function
+        Statistic function.
+    window_size : int
+        Sliding window size (default 365).
+    step : int
+        Step size (default 10).
+    target_dim : int
+        Dimensionality of the output of `stat` (default 365).
+    progress : iterator -> iterator
+        Optional progress decorator, e.g. tqdm.notebook.tqdm. Default None.
+    window : str
+        What kind of window function to use. Default 'hann', but you might
+        also want to use 'boxcar'. Any scipy window
+        function is allowed (see documentation for scipy.signal.get_window
+        for more information).
+        
+    Returns
+    -------
+    (d / step)-dimensional np.ndarray
+        y values (the time axis)
+    t-dimensional np.ndarray
+        x values (the statistic axis)
+    (d / step) x t-dimensional np.ndarray
+        The vector statistic array.
+    """
+    # Initialise output array.
+    spectrogram_values = np.zeros((vec.shape[0] // step, target_dim))
+
+    # Apply the progress decorator, if specified.
+    r = range(0, vec.shape[0] - window_size, step)
+    if progress:
+        r = progress(r)
+
+    # Convert the window str argument into a window function.
+    window = scipy.signal.get_window(window, window_size)
+
+    # Iterate over the sliding window and compute the statistic.
+    for base in r:
+        win = vec[base : base + window_size] * window
+        sad = stat(win)
+        spectrogram_values[base // step, :] = sad
+
+    return (
+        np.linspace(0, vec.shape[0], vec.shape[0] // step, endpoint=False),
+        np.arange(target_dim),
+        spectrogram_values,
+    )

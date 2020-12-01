@@ -32,6 +32,7 @@ def get_stations(time=None,
 
     data = tpl_get_stations.format(observation=observation,
                                    **_fmt_time(time))
+    data = data.replace('\n', '')
     rr = requests.post(url, data=data)
 
     return _parse_station_data(rr.text)
@@ -55,6 +56,7 @@ def get_station_data(station,
     data = tpl_get_obs.format(station=station.url,
                               observation=observation,
                               **_fmt_time(time))
+    data = data.replace('\n', '')
     rr = requests.post(url, data=data)
     return _parse_get_data(rr.text)
 

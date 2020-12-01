@@ -378,8 +378,7 @@ def get_training_data_for_shp(gdf,
 
     # set up query based on polygon (convert to albers)
     geom = geometry.Geometry(
-        gdf.geometry.values[index].__geo_interface__, geometry.CRS(
-            'epsg:3577'))
+        gdf.geometry.values[index].__geo_interface__, geometry.CRS(f'EPSG:{gdf.crs.to_epsg()}'))
 
     q = {"geopolygon": geom}
 

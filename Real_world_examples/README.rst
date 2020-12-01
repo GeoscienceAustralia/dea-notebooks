@@ -16,3 +16,5 @@ More complex workflows demonstrating how DEA can be used to address real-world p
    Inundation_mapping.ipynb
    Radar_water_detection.ipynb
    Shipping_lane_identification.ipynb
+   Surface_area_duration.ipynb
+   Subpixel_waterbodies.ipynb
