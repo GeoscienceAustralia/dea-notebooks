@@ -1,7 +1,9 @@
 Scripts
 =======
 
-Python functions and algorithms for developed to assist in analysing DEA data (e.g. loading data, plotting, spatial analysis, machine learning).
+This folder originally contained Python functions and algorithms developed to assist in analysing DEA data (e.g. loading data, plotting, spatial analysis, machine learning). These have since been moved to ../Tools/ and incorporated into the `dea-tools` Python module. The files prefixed with `dea_` now import from dea-tools directly for compatibility with existing notebook code. New code should use dea-tools instead of the `dea_*` scripts in this folder.
+
+Scripts beginning with `notebookapp_` are for use with their respective notebooks.
 
 .. toctree::
    :maxdepth: 1

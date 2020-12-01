@@ -33,7 +33,9 @@ The repository is based around the following directory structure (from simple to
 
 The supporting scripts and data for the notebooks are kept in the following directories:
 
-- `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Scripts>`_: *Python functions and algorithms for developed to assist in analysing DEA data (e.g. loading data, plotting, spatial analysis, machine learning)* 
+- `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Scripts>`_: *Supplementary scripts for specific notebooks (e.g. crop health)*
+
+- `Tools <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Tools>`_: *Python module dea-tools, containing functions and algorithms developed to assist in analysing DEA data (e.g. loading data, plotting, spatial analysis, machine learning)* 
 
 - `Supplementary_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Supplementary_data>`_: *Supplementary files required for the analyses above (e.g. images, rasters, shapefiles, training data)*
 
