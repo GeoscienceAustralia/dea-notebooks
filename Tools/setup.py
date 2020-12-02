@@ -48,7 +48,7 @@ REQUIRED = [
     # 'otps',  # Hard to install, but available on Sandbox and NCI
     # datahandling
     'GDAL',
-    'odc',
+    'odc-tools',
     'numexpr',
     # plotting
     'folium',
@@ -57,7 +57,7 @@ REQUIRED = [
     'shapely',
     'scikit-image',
     # climate
-    'dateutil',
+    'python-dateutil',
     # waterbodies
     'OWSLib',
 ]
