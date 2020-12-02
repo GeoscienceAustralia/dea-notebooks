@@ -48,7 +48,7 @@ REQUIRED = [
     # 'otps',  # Hard to install, but available on Sandbox and NCI
     # datahandling
     'GDAL',
-    'odc-tools',
+    'odc-ui',
     'numexpr',
     # plotting
     'folium',
