@@ -87,7 +87,7 @@ shp_fpath = "data/NSW_and_ACT.shp"
 lat, lon, buff = -34.958, 149.281, 1
 collection =  'c2'
 year = '2020'
-season = 'ASO'
+season = 'SON'
 name='NSW'
 dask_chunks = {'x':3000, 'y':3000}
 
