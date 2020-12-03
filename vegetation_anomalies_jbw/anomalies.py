@@ -66,236 +66,236 @@ def _common_bands(dc, products):
     return [band for band in bands if band in common]
 
 
-def load_ard(dc,
-             products=None,
-             min_gooddata=0.0,
-             fmask_categories=['valid', 'snow', 'water'],
-             mask_pixel_quality=True,
-             mask_contiguity=False,
-             ls7_slc_off=True,
-             predicate=None,
-             dtype='auto',
-             **kwargs):
+# def load_ard(dc,
+#              products=None,
+#              min_gooddata=0.0,
+#              fmask_categories=['valid', 'snow', 'water'],
+#              mask_pixel_quality=True,
+#              mask_contiguity=False,
+#              ls7_slc_off=True,
+#              predicate=None,
+#              dtype='auto',
+#              **kwargs):
 
 
-    #########
-    # Setup #
-    #########
+#     #########
+#     # Setup #
+#     #########
 
-    # Use 'nbart_contiguity' by default if mask_contiguity is true
-    if mask_contiguity is True:
-        mask_contiguity = 'nbart_contiguity'
+#     # Use 'nbart_contiguity' by default if mask_contiguity is true
+#     if mask_contiguity is True:
+#         mask_contiguity = 'nbart_contiguity'
 
-    # We deal with `dask_chunks` separately
-    dask_chunks = kwargs.pop('dask_chunks', None)
-    requested_measurements = kwargs.pop('measurements', None)
+#     # We deal with `dask_chunks` separately
+#     dask_chunks = kwargs.pop('dask_chunks', None)
+#     requested_measurements = kwargs.pop('measurements', None)
 
-    # Warn user if they combine lazy load with min_gooddata
-    if (min_gooddata > 0.0) and dask_chunks is not None:
-        warnings.warn("Setting 'min_gooddata' percentage to > 0.0 "
-                      "will cause dask arrays to compute when "
-                      "loading pixel-quality data to calculate "
-                      "'good pixel' percentage. This can "
-                      "slow the return of your dataset.")
+#     # Warn user if they combine lazy load with min_gooddata
+#     if (min_gooddata > 0.0) and dask_chunks is not None:
+#         warnings.warn("Setting 'min_gooddata' percentage to > 0.0 "
+#                       "will cause dask arrays to compute when "
+#                       "loading pixel-quality data to calculate "
+#                       "'good pixel' percentage. This can "
+#                       "slow the return of your dataset.")
 
-    # Verify that products were provided, and determine if Sentinel-2
-    # or Landsat data is being loaded
-    if not products:
-        raise ValueError("Please provide a list of product names "
-                         "to load data from. Valid options are: \n"
-                         "['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] "
-                         "for Landsat, ['s2a_ard_granule', "
-                         "'s2b_ard_granule'] \nfor Sentinel 2 Definitive, or "
-                         "['s2a_nrt_granule', 's2b_nrt_granule'] for "
-                         "Sentinel 2 Near Real Time")
-    elif all(['ls' in product for product in products]):
-        product_type = 'ls'
-    elif all(['s2' in product for product in products]):
-        product_type = 's2'
+#     # Verify that products were provided, and determine if Sentinel-2
+#     # or Landsat data is being loaded
+#     if not products:
+#         raise ValueError("Please provide a list of product names "
+#                          "to load data from. Valid options are: \n"
+#                          "['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] "
+#                          "for Landsat, ['s2a_ard_granule', "
+#                          "'s2b_ard_granule'] \nfor Sentinel 2 Definitive, or "
+#                          "['s2a_nrt_granule', 's2b_nrt_granule'] for "
+#                          "Sentinel 2 Near Real Time")
+#     elif all(['ls' in product for product in products]):
+#         product_type = 'ls'
+#     elif all(['s2' in product for product in products]):
+#         product_type = 's2'
 
-    fmask_band = 'fmask'
-    measurements = requested_measurements.copy() if requested_measurements else None
+#     fmask_band = 'fmask'
+#     measurements = requested_measurements.copy() if requested_measurements else None
 
-    if measurements is None:
+#     if measurements is None:
         
-        # Deal with "load all" case: pick a set of bands common across 
-        # all products
-        measurements = _common_bands(dc, products)
+#         # Deal with "load all" case: pick a set of bands common across 
+#         # all products
+#         measurements = _common_bands(dc, products)
 
-        # If no `measurements` are specified, Landsat ancillary bands are 
-        # loaded with a 'oa_' prefix, but Sentinel-2 bands are not. As a 
-        # work-around, we need to rename the default contiguity and fmask 
-        # bands if loading Landsat data without specifying `measurements`
-        if product_type == 'ls':
-            mask_contiguity = f'oa_{mask_contiguity}' if mask_contiguity else False
-            fmask_band = f'oa_{fmask_band}'
+#         # If no `measurements` are specified, Landsat ancillary bands are 
+#         # loaded with a 'oa_' prefix, but Sentinel-2 bands are not. As a 
+#         # work-around, we need to rename the default contiguity and fmask 
+#         # bands if loading Landsat data without specifying `measurements`
+#         if product_type == 'ls':
+#             mask_contiguity = f'oa_{mask_contiguity}' if mask_contiguity else False
+#             fmask_band = f'oa_{fmask_band}'
 
-    # If `measurements` are specified but do not include fmask or
-    # contiguity variables, add these to `measurements`
-    if fmask_band not in measurements:
-        measurements.append(fmask_band)
-    if mask_contiguity and mask_contiguity not in measurements:
-        measurements.append(mask_contiguity)
+#     # If `measurements` are specified but do not include fmask or
+#     # contiguity variables, add these to `measurements`
+#     if fmask_band not in measurements:
+#         measurements.append(fmask_band)
+#     if mask_contiguity and mask_contiguity not in measurements:
+#         measurements.append(mask_contiguity)
 
-    # Get list of data and mask bands so that we can later exclude
-    # mask bands from being masked themselves
-    data_bands = [band for band in measurements if band not in (fmask_band, mask_contiguity)]
-    mask_bands = [band for band in measurements if band not in data_bands]
+#     # Get list of data and mask bands so that we can later exclude
+#     # mask bands from being masked themselves
+#     data_bands = [band for band in measurements if band not in (fmask_band, mask_contiguity)]
+#     mask_bands = [band for band in measurements if band not in data_bands]
 
-    #################
-    # Find datasets #
-    #################
+#     #################
+#     # Find datasets #
+#     #################
 
-    # Pull out query params only to pass to dc.find_datasets
-    query = _dc_query_only(**kwargs)
+#     # Pull out query params only to pass to dc.find_datasets
+#     query = _dc_query_only(**kwargs)
     
-    # Extract datasets for each product using subset of dcload_kwargs
-    dataset_list = []
+#     # Extract datasets for each product using subset of dcload_kwargs
+#     dataset_list = []
 
-    # Get list of datasets for each product
-    print('Finding datasets')
-    for product in products:
+#     # Get list of datasets for each product
+#     print('Finding datasets')
+#     for product in products:
 
-        # Obtain list of datasets for product
-        print(f'    {product} (ignoring SLC-off observations)' 
-              if not ls7_slc_off and product == 'ga_ls7e_ard_3' 
-              else f'    {product}')
-        datasets = dc.find_datasets(product=product, **query)
+#         # Obtain list of datasets for product
+#         print(f'    {product} (ignoring SLC-off observations)' 
+#               if not ls7_slc_off and product == 'ga_ls7e_ard_3' 
+#               else f'    {product}')
+#         datasets = dc.find_datasets(product=product, **query)
 
-#         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
-#         if not ls7_slc_off and product == 'ga_ls7e_ard_3':
-#             datasets = [i for i in datasets if i.time.begin <
-#                         datetime.datetime(2003, 5, 31)]
+# #         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
+# #         if not ls7_slc_off and product == 'ga_ls7e_ard_3':
+# #             datasets = [i for i in datasets if i.time.begin <
+# #                         datetime.datetime(2003, 5, 31)]
 
-#              # Remove Landsat 7 SLC-off observations if ls7_slc_off=False %from dea_handling
-#         if not ls7_slc_off and product == 'ga_ls7e_ard_3':
-#             datasets = [i for i in datasets if
-#                         normalise_dt(i.time.begin) <
-#                         datetime.datetime(2003, 5, 31)]
+# #              # Remove Landsat 7 SLC-off observations if ls7_slc_off=False %from dea_handling
+# #         if not ls7_slc_off and product == 'ga_ls7e_ard_3':
+# #             datasets = [i for i in datasets if
+# #                         normalise_dt(i.time.begin) <
+# #                         datetime.datetime(2003, 5, 31)]
                 
 
-        # Add any returned datasets to list
-        dataset_list.extend(datasets)
+#         # Add any returned datasets to list
+#         dataset_list.extend(datasets)
 
-    # Raise exception if no datasets are returned
-    if len(dataset_list) == 0:
-        raise ValueError("No data available for query: ensure that "
-                         "the products specified have data for the "
-                         "time and location requested")
+#     # Raise exception if no datasets are returned
+#     if len(dataset_list) == 0:
+#         raise ValueError("No data available for query: ensure that "
+#                          "the products specified have data for the "
+#                          "time and location requested")
 
-    # If predicate is specified, use this function to filter the list
-    # of datasets prior to load
-    if predicate:
-        print(f'Filtering datasets using predicate function')
-        dataset_list = [ds for ds in dataset_list if predicate(ds)]
+#     # If predicate is specified, use this function to filter the list
+#     # of datasets prior to load
+#     if predicate:
+#         print(f'Filtering datasets using predicate function')
+#         dataset_list = [ds for ds in dataset_list if predicate(ds)]
 
-    # Raise exception if filtering removes all datasets
-    if len(dataset_list) == 0:
-        raise ValueError("No data available after filtering with "
-                         "predicate function")
+#     # Raise exception if filtering removes all datasets
+#     if len(dataset_list) == 0:
+#         raise ValueError("No data available after filtering with "
+#                          "predicate function")
 
-    #############
-    # Load data #
-    #############
+#     #############
+#     # Load data #
+#     #############
 
-    # Note we always load using dask here so that we can lazy load data 
-    # before filtering by good data
-    ds = dc.load(datasets=dataset_list,
-                 measurements=measurements,
-                 dask_chunks={} if dask_chunks is None else dask_chunks,
-                 **kwargs)
+#     # Note we always load using dask here so that we can lazy load data 
+#     # before filtering by good data
+#     ds = dc.load(datasets=dataset_list,
+#                  measurements=measurements,
+#                  dask_chunks={} if dask_chunks is None else dask_chunks,
+#                  **kwargs)
 
-    ####################
-    # Filter good data #
-    ####################
+#     ####################
+#     # Filter good data #
+#     ####################
 
-    # Calculate pixel quality mask
-    pq_mask = odc.algo.fmask_to_bool(ds[fmask_band],
-                                     categories=fmask_categories)
+#     # Calculate pixel quality mask
+#     pq_mask = odc.algo.fmask_to_bool(ds[fmask_band],
+#                                      categories=fmask_categories)
 
-    # The good data percentage calculation has to load in all `fmask`
-    # data, which can be slow. If the user has chosen no filtering
-    # by using the default `min_gooddata = 0`, we can skip this step
-    # completely to save processing time
-    if min_gooddata > 0.0:
+#     # The good data percentage calculation has to load in all `fmask`
+#     # data, which can be slow. If the user has chosen no filtering
+#     # by using the default `min_gooddata = 0`, we can skip this step
+#     # completely to save processing time
+#     if min_gooddata > 0.0:
 
-        # Compute good data for each observation as % of total pixels
-        print('Counting good quality pixels for each time step')
-        data_perc = (pq_mask.sum(axis=[1, 2], dtype='int32') /
-                     (pq_mask.shape[1] * pq_mask.shape[2]))
-        keep = data_perc >= min_gooddata
+#         # Compute good data for each observation as % of total pixels
+#         print('Counting good quality pixels for each time step')
+#         data_perc = (pq_mask.sum(axis=[1, 2], dtype='int32') /
+#                      (pq_mask.shape[1] * pq_mask.shape[2]))
+#         keep = data_perc >= min_gooddata
 
-        # Filter by `min_gooddata` to drop low quality observations
-        total_obs = len(ds.time)
-        ds = ds.sel(time=keep)
-        pq_mask = pq_mask.sel(time=keep)
+#         # Filter by `min_gooddata` to drop low quality observations
+#         total_obs = len(ds.time)
+#         ds = ds.sel(time=keep)
+#         pq_mask = pq_mask.sel(time=keep)
 
-        print(f'Filtering to {len(ds.time)} out of {total_obs} '
-              f'time steps with at least {min_gooddata:.1%} '
-              f'good quality pixels')
+#         print(f'Filtering to {len(ds.time)} out of {total_obs} '
+#               f'time steps with at least {min_gooddata:.1%} '
+#               f'good quality pixels')
         
-    ###############
-    # Apply masks #
-    ###############      
+#     ###############
+#     # Apply masks #
+#     ###############      
     
-    # Create an overall mask to hold both pixel quality and contiguity
-    mask = None    
+#     # Create an overall mask to hold both pixel quality and contiguity
+#     mask = None    
     
-    # Add pixel quality mask to overall mask
-    if mask_pixel_quality:
-        print('Applying pixel quality/cloud mask')
-        mask = pq_mask
+#     # Add pixel quality mask to overall mask
+#     if mask_pixel_quality:
+#         print('Applying pixel quality/cloud mask')
+#         mask = pq_mask
 
-    # Add contiguity mask to overall mask
-    if mask_contiguity:
-        print('Applying contiguity mask')
-        cont_mask = ds[mask_contiguity] == 1
+#     # Add contiguity mask to overall mask
+#     if mask_contiguity:
+#         print('Applying contiguity mask')
+#         cont_mask = ds[mask_contiguity] == 1
 
-        # If mask already has data if mask_pixel_quality == True,
-        # multiply with cont_mask to perform a logical 'or' operation
-        # (keeping only pixels good in both)
-        mask = cont_mask if mask is None else mask * cont_mask
+#         # If mask already has data if mask_pixel_quality == True,
+#         # multiply with cont_mask to perform a logical 'or' operation
+#         # (keeping only pixels good in both)
+#         mask = cont_mask if mask is None else mask * cont_mask
 
-    # Split into data/masks bands, as conversion to float and masking 
-    # should only be applied to data bands
-    ds_data = ds[data_bands]
-    ds_masks = ds[mask_bands]
+#     # Split into data/masks bands, as conversion to float and masking 
+#     # should only be applied to data bands
+#     ds_data = ds[data_bands]
+#     ds_masks = ds[mask_bands]
 
-    # Mask data if either of the above masks were generated
-    if mask is not None:
-        ds_data = odc.algo.keep_good_only(ds_data, where=mask)
+#     # Mask data if either of the above masks were generated
+#     if mask is not None:
+#         ds_data = odc.algo.keep_good_only(ds_data, where=mask)
 
-    # Automatically set dtype to either native or float32 depending
-    # on whether masking was requested
-    if dtype == 'auto':
-        dtype = 'native' if mask is None else 'float32'
+#     # Automatically set dtype to either native or float32 depending
+#     # on whether masking was requested
+#     if dtype == 'auto':
+#         dtype = 'native' if mask is None else 'float32'
     
-    # Set nodata values using odc.algo tools to reduce peak memory
-    # use when converting data dtype    
-    if dtype != 'native':
-        ds_data = odc.algo.to_float(ds_data, dtype=dtype)
+#     # Set nodata values using odc.algo tools to reduce peak memory
+#     # use when converting data dtype    
+#     if dtype != 'native':
+#         ds_data = odc.algo.to_float(ds_data, dtype=dtype)
 
-    # Put data and mask bands back together
-    attrs = ds.attrs
-    ds = xr.merge([ds_data, ds_masks])
-    ds.attrs.update(attrs)
+#     # Put data and mask bands back together
+#     attrs = ds.attrs
+#     ds = xr.merge([ds_data, ds_masks])
+#     ds.attrs.update(attrs)
     
-    ###############
-    # Return data #
-    ###############
+#     ###############
+#     # Return data #
+#     ###############
 
-    # Drop bands not originally requested by user
-    if requested_measurements:
-        ds = ds[requested_measurements]
+#     # Drop bands not originally requested by user
+#     if requested_measurements:
+#         ds = ds[requested_measurements]
 
-    # If user supplied dask_chunks, return data as a dask array without
-    # actually loading it in
-    if dask_chunks is not None:
-        print(f'Returning {len(ds.time)} time steps as a dask array')
-        return ds
-    else:
-        print(f'Loading {len(ds.time)} time steps')
-        return ds.compute()
+#     # If user supplied dask_chunks, return data as a dask array without
+#     # actually loading it in
+#     if dask_chunks is not None:
+#         print(f'Returning {len(ds.time)} time steps as a dask array')
+#         return ds
+#     else:
+#         print(f'Loading {len(ds.time)} time steps')
+#         return ds.compute()
     
 
 def calculate_anomalies(shp_fpath,

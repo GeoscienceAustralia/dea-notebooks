@@ -49,7 +49,8 @@ import datacube
 
 sys.path.append('../Scripts')
 from dea_plotting import display_map, map_shapefile
-from anomalies import calculate_anomalies, load_ard
+from anomalies import calculate_anomalies
+from dea_datahandling import load_ard
 from dea_dask import create_local_dask_cluster
 
 # get_ipython().run_line_magic('load_ext', 'autoreload')
