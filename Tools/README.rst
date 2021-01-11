@@ -24,4 +24,4 @@ Install from the source on any other system with `pip`:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/GeoscienceAustralia/dea-notebooks.git#subdirectory=Tools
+    pip install --extra-index-url="https://packages.dea.ga.gov.au" git+https://github.com/GeoscienceAustralia/dea-notebooks.git#subdirectory=Tools
