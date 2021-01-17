@@ -10,7 +10,7 @@ assignees: ''
 **Describe the bug/issue**
 A clear and concise description of what the bug/issue is, including screenshots if relevant. 
 
-**To Reproduce**
+**Steps to reproduce**
 Steps to reproduce the behaviour. For example:
 1. Open DEA Sandbox
 2. Launch the "Beginners_guide/01_Jupyter_notebooks.ipynb" notebook
