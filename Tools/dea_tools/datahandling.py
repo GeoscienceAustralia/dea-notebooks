@@ -521,13 +521,14 @@ def mostcommon_crs(dc, product, query):
 
     """
     
-    try:
+    # List of matching products
+    matching_datasets = dc.find_datasets(product=product, **query)
 
-        # List of matching products
-        matching_datasets = dc.find_datasets(product=product, **query)
-
-        # Extract all CRSs
-        crs_list = [str(i.crs) for i in matching_datasets]
+    # Extract all CRSs
+    crs_list = [str(i.crs) for i in matching_datasets]
+    
+    # If CRSs are returned
+    if len(crs_list) > 0:
 
         # Identify most common CRS
         crs_counts = Counter(crs_list)
@@ -543,7 +544,7 @@ def mostcommon_crs(dc, product, query):
 
         return crs_mostcommon
     
-    except IndexError:
+    else:
         
         raise ValueError(f'No CRS was returned as no data was found for '
                          f'the supplied product ({product}) and query. '
