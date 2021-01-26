@@ -20,7 +20,7 @@ Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 Functions included:
     load_ard
     array_to_geotiff
-    mostcommon_utm
+    mostcommon_crs
     download_unzip
     wofs_fuser
     dilate
@@ -31,7 +31,7 @@ Functions included:
     last
     first
 
-Last modified: July 2020
+Last modified: Jan 2021
 
 '''
 
@@ -520,26 +520,39 @@ def mostcommon_crs(dc, product, query):
     by the query above
 
     """
-
+    
     # List of matching products
     matching_datasets = dc.find_datasets(product=product, **query)
 
     # Extract all CRSs
     crs_list = [str(i.crs) for i in matching_datasets]
+    
+    # If CRSs are returned
+    if len(crs_list) > 0:
 
-    # Identify most common CRS
-    crs_counts = Counter(crs_list)
-    crs_mostcommon = crs_counts.most_common(1)[0][0]
+        # Identify most common CRS
+        crs_counts = Counter(crs_list)
+        crs_mostcommon = crs_counts.most_common(1)[0][0]
 
-    # Warn user if multiple CRSs are encountered
-    if len(crs_counts.keys()) > 1:
+        # Warn user if multiple CRSs are encountered
+        if len(crs_counts.keys()) > 1:
 
-        warnings.warn(f'Multiple UTM zones {list(crs_counts.keys())} '
-                      f'were returned for this query. Defaulting to '
-                      f'the most common zone: {crs_mostcommon}',
-                      UserWarning)
+            warnings.warn(f'Multiple UTM zones {list(crs_counts.keys())} '
+                          f'were returned for this query. Defaulting to '
+                          f'the most common zone: {crs_mostcommon}',
+                          UserWarning)
 
-    return crs_mostcommon
+        return crs_mostcommon
+    
+    else:
+        
+        raise ValueError(f'No CRS was returned as no data was found for '
+                         f'the supplied product ({product}) and query. '
+                         f'Please ensure that data is available for '
+                         f'{product} for the spatial extents and time '
+                         f'period specified in the query (e.g. by using '
+                         f'the Data Cube Explorer for this datacube '
+                         f'instance).')
 
 
 def download_unzip(url,
