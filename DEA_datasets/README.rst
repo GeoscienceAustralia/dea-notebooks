@@ -7,6 +7,7 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
    :maxdepth: 1
    :caption: DEA Datasets
 
+   DEA_Landsat_Surface_Reflectance
    DEA_High_and_Low_Tide_Imagery.ipynb
    DEA_Coastlines.ipynb
    DEA_Waterbodies.ipynb
