@@ -22,8 +22,9 @@ Functions included:
     display_map
     map_shapefile
     xr_animation
+    plot_wo
 
-Last modified: October 2020
+Last modified: February 2021
 
 '''
 
@@ -37,6 +38,7 @@ import numpy as np
 import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.cm as cm
+from matplotlib import colors as mcolours
 import matplotlib.patheffects as PathEffects
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -57,7 +59,6 @@ from shapely.geometry import box
 from skimage.exposure import rescale_intensity
 from tqdm.auto import tqdm
 import warnings
-
 
 def rgb(ds,
         bands=['nbart_red', 'nbart_green', 'nbart_blue'],
@@ -950,3 +951,54 @@ def _degree_to_zoom_level(l1, l2, margin=0.0):
     else:
         zoom_level_int = 18
     return zoom_level_int
+
+
+def plot_wo(wo, **plot_kwargs):
+    """Plot a water observation bit flag image.
+    
+    Parameters
+    ----------
+    wo : xr.DataArray
+        A DataArray containing water observation bit flags.
+    plot_kwargs : dict
+        Keyword arguments passed on to DataArray.plot.
+    
+    Returns
+    -------
+    plot    
+    """
+    cmap = mcolours.ListedColormap([
+          np.array([150, 150, 110]) / 255,   # dry - 0
+          np.array([0, 0, 0]) / 255,   # nodata, - 1
+          np.array([119, 104, 87]) / 255,   # terrain - 16
+          np.array([89, 88, 86]) / 255,     # cloud_shadow - 32
+          np.array([216, 215, 214]) / 255,  # cloud - 64
+          np.array([242, 220, 180]) / 255,  # cloudy terrain - 80
+          np.array([79, 129, 189]) / 255,  # water - 128
+          np.array([51, 82, 119]) / 255,   # shady water - 160
+          np.array([186, 211, 242]) / 255, # cloudy water - 192
+    ])
+    bounds=[
+        0,
+        1,
+        16,
+        32,
+        64,
+        80,
+        128,
+        160,
+        192,
+        255,
+    ]
+    norm = mcolours.BoundaryNorm(bounds, cmap.N)
+    cblabels = ['dry', 'nodata', 'terrain', 'cloud shadow', 'cloud', 'cloudy terrain', 'water', 'shady water', 'cloudy water']
+
+    im = wo.plot(cmap=cmap, norm=norm, **plot_kwargs)
+    try:
+        cb = im.colorbar
+    except AttributeError:
+        cb = im.cbar
+    ticks = cb.get_ticks()
+    cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+    cb.set_ticklabels(cblabels)
+    return im
