@@ -22,9 +22,9 @@ Functions included:
     display_map
     map_shapefile
     xr_animation
-    wofs
+    plot_wo
 
-Last modified: October 2020
+Last modified: February 2021
 
 '''
 
@@ -953,13 +953,13 @@ def _degree_to_zoom_level(l1, l2, margin=0.0):
     return zoom_level_int
 
 
-def wofs(wo, **plot_kwargs):
-    """Plot a WOfS image.
+def plot_wo(wo, **plot_kwargs):
+    """Plot a water observation bit flag image.
     
     Parameters
     ----------
     wo : xr.DataArray
-        A DataArray containing WOfS bit flags.
+        A DataArray containing water observation bit flags.
     plot_kwargs : dict
         Keyword arguments passed on to DataArray.plot.
     
