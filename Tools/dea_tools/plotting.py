@@ -990,10 +990,13 @@ def plot_wo(wo, **plot_kwargs):
         192,
         255,
     ]
-    norm = mcolours.BoundaryNorm(bounds, cmap.N)
+    norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
     cblabels = ['dry', 'nodata', 'terrain', 'cloud shadow', 'cloud', 'cloudy terrain', 'water', 'shady water', 'cloudy water']
 
-    im = wo.plot(cmap=cmap, norm=norm, **plot_kwargs)
+    try:
+        im = wo.plot.imshow(cmap=cmap, norm=norm, **plot_kwargs)
+    except AttributeError:
+        im = wo.plot(cmap=cmap, norm=norm, **plot_kwargs)
     try:
         cb = im.colorbar
     except AttributeError:
