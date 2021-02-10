@@ -996,9 +996,9 @@ def plot_wo(wo, legend=True, **plot_kwargs):
     cblabels = ['dry', 'nodata', 'terrain', 'cloud shadow', 'cloud', 'cloudy terrain', 'water', 'shady water', 'cloudy water']
 
     try:
-        im = wo.plot.imshow(cmap=cmap, norm=norm, **plot_kwargs)
+        im = wo.plot.imshow(cmap=cmap, norm=norm, colorbar=legend, **plot_kwargs)
     except AttributeError:
-        im = wo.plot(cmap=cmap, norm=norm, **plot_kwargs)
+        im = wo.plot(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
     
     if legend:
         try:
