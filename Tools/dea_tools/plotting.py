@@ -953,13 +953,15 @@ def _degree_to_zoom_level(l1, l2, margin=0.0):
     return zoom_level_int
 
 
-def plot_wo(wo, **plot_kwargs):
+def plot_wo(wo, legend=True, **plot_kwargs):
     """Plot a water observation bit flag image.
     
     Parameters
     ----------
     wo : xr.DataArray
         A DataArray containing water observation bit flags.
+    legend : bool
+        Whether to plot a legend. Default True.
     plot_kwargs : dict
         Keyword arguments passed on to DataArray.plot.
     
@@ -997,11 +999,13 @@ def plot_wo(wo, **plot_kwargs):
         im = wo.plot.imshow(cmap=cmap, norm=norm, **plot_kwargs)
     except AttributeError:
         im = wo.plot(cmap=cmap, norm=norm, **plot_kwargs)
-    try:
-        cb = im.colorbar
-    except AttributeError:
-        cb = im.cbar
-    ticks = cb.get_ticks()
-    cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
-    cb.set_ticklabels(cblabels)
+    
+    if legend:
+        try:
+            cb = im.colorbar
+        except AttributeError:
+            cb = im.cbar
+        ticks = cb.get_ticks()
+        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+        cb.set_ticklabels(cblabels)
     return im
