@@ -16,7 +16,7 @@ partition tasks into a job array:
 
 submit job array: 
 
-    for i in $(seq -f %02g 0 19); do qsub -v inputfile=parts/part$i job.pbs ; done
+    for i in $(seq -f %02g 0 04); do qsub -v inputfile=parts/part$i job.pbs ; done
 
 ## Step 0: preparation
 
