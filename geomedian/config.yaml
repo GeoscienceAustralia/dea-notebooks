@@ -26,8 +26,8 @@ sources:
           swir2_saturated: False
 
 date_ranges:
-  start_date: 2019-01-01
-  end_date: 2020-01-01
+  start_date: 2020-01-01
+  end_date: 2021-01-01
   stats_duration: 1y
   step_size: 1y
 
@@ -110,7 +110,7 @@ output_products:
             code: LANDSAT_8
         instrument:
             name: OLI
-    statistic: new_geomedian
+    statistic: geomedian
     statistic_args:
        # assuming 5 workers per node
        num_threads: 24

@@ -4,7 +4,7 @@
 #PBS -l walltime=5:00:00,mem=192GB,wd,storage=gdata/u46+gdata/v10+gdata/rs0,ncpus=48
 #PBS -N geomedian
 
-module add dea/unstable
+module add dea
 
 cat $inputfile | while read i j ; do echo --load-tasks tasks/task_$i\_$j config.yaml ; done | /usr/bin/time xargs -P2 -L1 datacube-stats
 

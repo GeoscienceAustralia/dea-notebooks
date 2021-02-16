@@ -5,13 +5,13 @@ Instructions:
 
 single-thread database scrape (note long line):
 
-    module add dea/unstable
+    module add dea
     cat allcells | while read i j ; do datacube-stats --save-tasks tasks/task_$i\_$j --tile-index $i $j config.yaml ; echo $(date) $i $j ; done 
 
 
 partition tasks into a job array:
 
-    split -n l/20 -d allcells parts/part
+    sort -R allcells | split -n r/5 -d - parts/part
 
 
 submit job array: 
@@ -26,6 +26,8 @@ submit job array:
  
 Note, the `config.yaml` has been optimised for Gadi, particularly in terms of the compute chunk size. 
 The `job.pbs` has then similarly been optimised (to better maximise the number of parallel concurrent tiles done on a single node, without exceeding the available memory). If changing the statistic, it might be a good idea to run one tile (from an *inland* location with high observation frequency) on Gadi interactive worker node, to re-ascertain the memory usage (per tile), and adjust the level of parallelism accordingly.
+
+If too many jobs run in parallel then compute efficiency is likely to suffer due to limited shared-filesystem bandwidth.
 
 ## Step 1: check it is working
 
@@ -60,4 +62,12 @@ Then use GDAL tools to mosaic into a virtual raster, and generate a pyramid, so 
     find output -iname \*.tif | xargs gdalbuildvrt geomedian.vrt
     gdaladdo geomedian.vrt -ro --config BIGTIFF_OVERVIEW YES --config SPARSE_OK TRUE --config COMPRESS_OVERVIEW LZW --config NUM_THREADS ALL_CPUS
 
-From memory, the difference when using `.nc` files is that the output from `find` should be first piped through commands such as `sed s/^/NetCDF:/ | sed s/$/:red` before to produce a virtual raster for three different bands. These can then be combined as an RGB image using `gdalbuildvrt -separate`. If it works it would probably be preferable to generate overviews for the individual bands rather than the RGB directly.
+The difference when using `.nc` files is that the output from `find` should be first piped through commands such as `sed s/^/NetCDF:/ | sed s/$/:red` before to produce a virtual raster for three different bands. These can then be combined as an RGB image using `gdalbuildvrt -separate`. If it worked (upon testing I don't think it does) it would probably be preferable to generate overviews for the individual bands rather than the RGB directly.
+
+    find output -iname \*.nc | sed 's/^/NetCDF:/; s/$/:red/' | xargs gdalbuildvrt red.vrt
+    find output -iname \*.nc | sed 's/^/NetCDF:/; s/$/:blue/' | xargs gdalbuildvrt blue.vrt
+    find output -iname \*.nc | sed 's/^/NetCDF:/; s/$/:green/' | xargs gdalbuildvrt green.vrt
+    gdalbuildvrt -separate geomedian.vrt red.vrt green.vrt blue.vrt
+    gdaladdo geomedian.vrt -ro --config BIGTIFF_OVERVIEW YES --config SPARSE_OK TRUE --config COMPRESS_OVERVIEW LZW --config NUM_THREADS ALL_CPUS
+
+
