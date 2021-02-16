@@ -1,0 +1,120 @@
+location: './output'
+
+sources:
+  - product: ls7_nbart_albers
+    measurements: [blue, green, red, nir, swir1, swir2]
+    group_by: solar_day
+    source_filter:
+      product: ls7_level1_scene
+      gqa_iterative_mean_xy: [0, 1]
+    masks:
+      - product: ls7_pq_albers
+        measurement: pixelquality
+        group_by: solar_day
+        fuse_func: datacube.helpers.ga_pq_fuser
+        flags:
+          contiguous: True
+          cloud_acca: no_cloud
+          cloud_fmask: no_cloud
+          cloud_shadow_acca: no_cloud_shadow
+          cloud_shadow_fmask: no_cloud_shadow
+          blue_saturated: False
+          green_saturated: False
+          red_saturated: False
+          nir_saturated: False
+          swir1_saturated: False
+          swir2_saturated: False
+
+date_ranges:
+  start_date: 2020-01-01
+  end_date: 2021-01-01
+  stats_duration: 1y
+  step_size: 1y
+
+storage:
+  driver: NetCDF CF
+
+  crs: EPSG:3577
+  tile_size:
+    x: 100000.0
+    y: 100000.0
+  resolution:
+    x: 25
+    y: -25
+  chunking:
+    x: 200
+    y: 200
+    time: 1
+  dimension_order: [time, y, x]
+
+## Computational
+computation:
+  # Should keep memory usage under 8gb
+  # this setup is perhaps only feasible for 5 worker per node
+  chunking:
+    x: 4000
+    y: 4000
+
+global_attributes:
+  title: Surface Reflectance Geometric Median
+  description: Surface Reflectance Geometric Median 25 metre, 100km tile, Australian Albers Equal Area projection (EPSG:3577) 
+  summary: >
+    The surface reflectance geometric median (geomedian) is a pixel composite mosaic of a time series of earth observations.
+    The value of a pixel in a geomedian image is the statistical median of all observations for that pixel from a period of
+    time. For example the 2016 Landsat 8 geomedian image over an area will be the median of Landsat 8 pixels observed for 
+    that area in 2016.  
+     
+    The geometric median products are available as annual datasets for years since 1987. Each annual composite is created
+    from one calendar year of surface reflectance and for one sensor, i.e. Thematic Mapper (Landsat 5), Enhanced Thematic
+    Mapper (Landsat 7) or Operational Land Imager (Landsat 8).
+     
+    The algorithm considers concurrent spectral measurements as a multi-dimensional set and outputs a multi-dimensional
+    median that maintains the relationships among the measurements.  This provides a median of the physical conditions
+    measured by the earth observations used to create it, and provides a good representation of a typical pixel observation
+    devoid of outliers.
+
+    More information on the algorithm can be found in the article below:
+
+    - Roberts, D., Mueller, N., & Mcintyre, A. (2017). High-Dimensional Pixel Composites From Earth Observation Time Series.
+      IEEE Transactions on Geoscience and Remote Sensing, 55(11), 6254-6264. https://doi.org/10.1109/tgrs.2017.2723896
+     
+  institution: Commonwealth of Australia (Geoscience Australia)
+  keywords_vocabulary: GCMD
+  keywords: AU/GA,NASA/GSFC/SED/ESD/LANDSAT,REFLECTANCE,ETM+,TM,OLI,EARTH SCIENCE
+  platform: LANDSAT_5,LANDSAT_7,LANDSAT_8
+  instrument: TM,ETM+,OLI
+  publisher_email: earth.observation@ga.gov.au
+  publisher_name: Section Leader, Operations Section, NEMO, Geoscience Australia
+  publisher_url: http://www.ga.gov.au
+  license: CC BY Attribution 4.0 International License
+  cdm_data_type: Grid
+  product_version: '2.0'
+  product_suite: Surface Reflectance Geometric Median 25m
+  source: geometric median v2017 of surface reflectance NBAR+T
+  acknowledgment: |
+    - Landsat data is provided by the United States Geological Survey (USGS) through direct reception of the data at Geoscience Australias satellite reception facility or download.
+      
+  references: |
+    - Roberts, D., Mueller, N., & Mcintyre, A. (2017). High-Dimensional Pixel Composites From Earth Observation Time Series. IEEE Transactions on Geoscience and Remote Sensing, 55(11), 6254-6264. https://doi.org/10.1109/tgrs.2017.2723896
+  coverage_content_type: modelResult
+  cdm_data_type: Grid
+
+
+output_products:
+  - name: ls7_nbart_geomedian_annual
+    product_type: surface_reflectance_statistical_summary
+    metadata:
+        format:
+            name: NetCDF
+        platform:
+            code: LANDSAT_7
+        instrument:
+            name: OLI
+    statistic: geomedian
+    statistic_args:
+       # assuming 5 workers per node
+       num_threads: 24
+    output_params:
+      zlib: True
+      fletcher32: True
+    file_path_template: 'ls7_gm/{x}_{y}/LS7_GM_NBART_{x}_{y}_{epoch_start:%Y%m%d}.nc'
