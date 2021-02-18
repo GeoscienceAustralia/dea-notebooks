@@ -18,7 +18,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one on
 Github https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/issues
 
-Last modified: September 2020
+Last modified: Feb 2020
 
 
 '''
