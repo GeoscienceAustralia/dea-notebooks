@@ -953,13 +953,15 @@ def _degree_to_zoom_level(l1, l2, margin=0.0):
     return zoom_level_int
 
 
-def plot_wo(wo, **plot_kwargs):
+def plot_wo(wo, legend=True, **plot_kwargs):
     """Plot a water observation bit flag image.
     
     Parameters
     ----------
     wo : xr.DataArray
         A DataArray containing water observation bit flags.
+    legend : bool
+        Whether to plot a legend. Default True.
     plot_kwargs : dict
         Keyword arguments passed on to DataArray.plot.
     
@@ -990,15 +992,20 @@ def plot_wo(wo, **plot_kwargs):
         192,
         255,
     ]
-    norm = mcolours.BoundaryNorm(bounds, cmap.N)
+    norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
     cblabels = ['dry', 'nodata', 'terrain', 'cloud shadow', 'cloud', 'cloudy terrain', 'water', 'shady water', 'cloudy water']
 
-    im = wo.plot(cmap=cmap, norm=norm, **plot_kwargs)
     try:
-        cb = im.colorbar
+        im = wo.plot.imshow(cmap=cmap, norm=norm, colorbar=legend, **plot_kwargs)
     except AttributeError:
-        cb = im.cbar
-    ticks = cb.get_ticks()
-    cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
-    cb.set_ticklabels(cblabels)
+        im = wo.plot(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
+    
+    if legend:
+        try:
+            cb = im.colorbar
+        except AttributeError:
+            cb = im.cbar
+        ticks = cb.get_ticks()
+        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+        cb.set_ticklabels(cblabels)
     return im
