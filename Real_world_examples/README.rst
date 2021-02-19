@@ -21,3 +21,4 @@ More complex workflows demonstrating how DEA can be used to address real-world p
    Subpixel_waterbodies.ipynb
    Urban_change_detection.ipynb
    Vegetation_phenology.ipynb
+   Wetness_stream_gauge_correlations.ipynb
