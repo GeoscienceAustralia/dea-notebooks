@@ -790,3 +790,94 @@ def calculate_vector_stat(
         np.arange(target_dim),
         spectrogram_values,
     )
+
+
+class LinregressResult:
+    def __init__(self, cov, cor, slope, intercept, pval, stderr):
+        self.cov = cov
+        self.cor = cor
+        self.slope = slope
+        self.intercept = intercept
+        self.pval = pval
+        self.stderr = stderr
+    
+    def __repr__(self):
+        return 'LinregressResult({})'.format(
+            ', '.join('{}={}'.format(k, getattr(self, k))
+                      for k in dir(self) if not k.startswith('_'))
+        )
+
+
+def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
+    """
+    Takes two xr.Datarrays of any dimensions (input data could be a 1D time series, or for example, have
+    three dimensions e.g. time, lat, lon), and return covariance, correlation, regression slope and intercept,
+    p-value, and standard error on regression between the two datasets along their aligned first dimension.
+
+    Datasets can be provided in any order, but note that the regression slope and intercept will be calculated
+    for y with respect to x.
+
+    Parameters
+    ----------
+    x, y : xarray DataArray
+        Two xarray DataArrays with any number of dimensions, both sharing the same first dimension
+    lagx, lagy : int, optional
+        Optional integers giving lag values to assign to either of the data, with lagx shifting x, and lagy
+        shifting y with the specified lag amount.
+    first_dim : str, optional
+        An optional string giving the name of the first dimension on which to align datasets. The default is
+        'time'.
+
+    Returns
+    -------
+    cov, cor, slope, intercept, pval, stderr : xarray DataArray
+        Covariance, correlation, regression slope and intercept, p-value, and standard error on
+        regression between the two datasets along their aligned first dimension.
+
+    """
+    # 1. Ensure that the data are properly alinged to each other.
+    x, y = xr.align(x, y)
+
+    # 2. Add lag information if any, and shift the data accordingly
+    if lagx != 0:
+
+        # If x lags y by 1, x must be shifted 1 step backwards. But as the 'zero-th' value is nonexistant, xr
+        # assigns it as invalid (nan). Hence it needs to be dropped:
+        x = x.shift(**{first_dim: -lagx}).dropna(dim=first_dim)
+
+        # Next re-align the two datasets so that y adjusts to the changed coordinates of x:
+        x, y = xr.align(x, y)
+
+    if lagy != 0:
+
+        y = y.shift(**{first_dim: -lagy}).dropna(dim=first_dim)
+        x, y = xr.align(x, y)
+
+    # 3. Compute data length, mean and standard deviation along time axis for further use:
+    n = y.notnull().sum(dim=first_dim)
+    xmean = x.mean(axis=0)
+    ymean = y.mean(axis=0)
+    xstd = x.std(axis=0)
+    ystd = y.std(axis=0)
+
+    # 4. Compute covariance along first axis
+    cov = np.sum((x - xmean) * (y - ymean), axis=0) / (n)
+
+    # 5. Compute correlation along time axis
+    cor = cov / (xstd * ystd)
+
+    # 6. Compute regression slope and intercept:
+    slope = cov / (xstd ** 2)
+    intercept = ymean - xmean * slope
+
+    # 7. Compute P-value and standard error
+    # Compute t-statistics
+    tstats = cor * np.sqrt(n - 2) / np.sqrt(1 - cor ** 2)
+    stderr = slope / tstats
+
+    from scipy.stats import t
+
+    pval = t.sf(tstats, n - 2) * 2
+    pval = xr.DataArray(pval, dims=cor.dims, coords=cor.coords)
+
+    return LinregressResult(cov, cor, slope, intercept, pval, stderr)
