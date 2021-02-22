@@ -18,7 +18,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one on
 Github https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/issues
 
-Last modified: September 2020
+Last modified: Feb 2020
 
 
 '''
@@ -28,6 +28,7 @@ import joblib
 import datacube
 import rasterio
 import numpy as np
+import pandas as pd
 import xarray as xr
 from tqdm import tqdm
 import dask.array as da
@@ -535,7 +536,7 @@ def _get_training_data_for_shp(gdf,
                         data = method_to_call(dim='time')
 
                 elif reduce_func == 'geomedian':
-                    data = GeoMedian().compute(ds)
+                    data = GeoMedian(num_threads=1).compute(ds)
                     with HiddenPrints():
                         data = calculate_indices(data,
                                                  index=calc_indices,
@@ -562,7 +563,7 @@ def _get_training_data_for_shp(gdf,
             if len(ds.time.values) > 1:
 
                 if reduce_func == 'geomedian':
-                    data = GeoMedian().compute(ds)
+                    data = GeoMedian().compute(ds, num_threads=1)
 
                 elif reduce_func in ['mean', 'median', 'std', 'max', 'min']:
                     method_to_call = getattr(ds, reduce_func)
@@ -574,14 +575,20 @@ def _get_training_data_for_shp(gdf,
         # turn coords into a variable in the ds
         data['x_coord'] = ds.x + 0 * ds.y
         data['y_coord'] = ds.y + 0 * ds.x
-
+    
+    # append ID measurement to dataset for tracking failures
+    band = [m for m in data.data_vars][0]
+    _id = xr.zeros_like(data[band]) 
+    data['id'] = _id
+    data['id'] = data['id'] + gdf.iloc[index]['id']
+    
+    # If no zonal stats were requested then extract all pixel values
     if zonal_stats is None:
-        # If no zonal stats were requested then extract all pixel values
         flat_train = sklearn_flatten(data)
         flat_val = np.repeat(row[field], flat_train.shape[0])
         stacked = np.hstack((np.expand_dims(flat_val, axis=1), flat_train))
 
-    elif zonal_stats in ['mean', 'median', 'std', 'max', 'min']:
+    elif zonal_stats in ['mean', 'median', 'max', 'min']:
         method_to_call = getattr(data, zonal_stats)
         flat_train = method_to_call()
         flat_train = flat_train.to_array()
@@ -589,14 +596,10 @@ def _get_training_data_for_shp(gdf,
 
     else:
         raise Exception(zonal_stats + " is not one of the supported" +
-                        " reduce functions ('mean','median','std','max','min')")
+                        " reduce functions ('mean','median','max','min')")
 
-    #return unique-id so we can index if load failed silently
-    _id = gdf.iloc[index]['id']
-
-    # Append training data and labels to list
-    out_arrs.append(np.append(stacked, _id))
-    out_vars.append([field] + list(data.data_vars) + ['id'])
+    out_arrs.append(stacked)
+    out_vars.append([field] + list(data.data_vars))
 
 
 def _get_training_data_parallel(gdf,
@@ -668,28 +671,26 @@ def collect_training_data(gdf,
                           zonal_stats=None,
                           clean=True,
                           fail_threshold=0.02,
+                          fail_ratio=0.5,
                           max_retries=3):
     """
-    
     This function executes the training data functions and tidies the results
     into a 'model_input' object containing stacked training data arrays
     with all NaNs & Infs removed. In the instance where ncpus > 1, a parallel version of the
     function will be run (functions are passed to a mp.Pool())
-
     This function provides a number of pre-defined feature layer methods,
     including calculating band indices, reducing time series using several summary statistics,
     and/or generating zonal statistics across polygons.  The 'custom_func' parameter provides
     a method for the user to supply a custom function for generating features rather than using the
     pre-defined methods.
-
+    
     Parameters
     ----------
-
     gdf : geopandas geodataframe
         geometry data in the form of a geopandas geodataframe
     products : list
         a list of products to load from the datacube.
-        e.g. ['ls8_usgs_sr_scene', 'ls7_usgs_sr_scene']
+        e.g. ['s2a_ard_granule', 's2b_ard_granule']
     dc_query : dictionary
         Datacube query object, should not contain lat and long (x or y)
         variables as these are supplied by the 'gdf' variable
@@ -724,28 +725,31 @@ def collect_training_data(gdf,
     zonal_stats : string, optional
         An optional string giving the names of zonal statistics to calculate
         for each polygon. Default is None (all pixel values are returned). Supported
-        values are 'mean', 'median', 'max', 'min', and 'std'. Will work in
+        values are 'mean', 'median', 'max', 'min'. Will work in
         conjuction with a 'custom_func'.
     clean : bool
         Whether or not to remove missing values in the training dataset. If True,
         training labels with any NaNs or Infs in the feature layers will be dropped
         from the dataset.
-    fail_threshold : float, default 0.05
-        Silent read fails on S3 during multiprocessing can result in some rows of the 
-        returned data containing all NaN values. Set the 'fail_threshold' fraction to
-        specify a minimum number of acceptable fails e.g. setting 'fail_threshold' to 0.05
-        means 5 % no-data in the returned dataset is acceptable. Above this fraction the
-        function will attempt to recollect the samples that have failed.
-        A sample is defined as having failed if it returns > 50 % NaN values.
-    max_retries: int, default 3
-        Number of times to retry collecting a sample. This number is invoked if the 'fail_threshold' is 
-        not reached.
-
+     fail_threshold : float, default 0.02
+        Silent read fails on S3 can result in some rows of the returned data containing NaN values.
+        The'fail_threshold' fraction specifies a % of acceptable fails.
+        e.g. Setting 'fail_threshold' to 0.05 means if >5% of the samples in the training dataset
+        fail then those samples will be reutnred to the multiprocessing queue. Below this fraction
+        the function will accept the failures and return the results.
+     fail_ratio: float
+        A float between 0 and 1 that defines if a given training sample has failed.
+        Default is 0.5, which means if 50 % of the measurements in a given sample return null
+        values, and the number of total fails is more than the fail_threshold, the samplewill be
+        passed to the retry queue.
+     max_retries: int, default 3
+        Maximum number of times to retry collecting samples. This number is invoked
+        if the 'fail_threshold' is not reached.
+        
     Returns
     --------
     Two lists, a list of numpy.arrays containing classes and extracted data for
     each pixel or polygon, and another containing the data variable names.
-
     """
 
     # check the dtype of the class field
@@ -764,8 +768,9 @@ def collect_training_data(gdf,
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
 
-    #add unique id to gdf to help later with indexing failed rows
-    #during muliprocessing
+    #add unique id to gdf to help with indexing failed rows
+    # during multiprocessing
+    #if zonal_stats is not None:
     gdf['id'] = range(0, len(gdf))
 
     if ncpus == 1:
@@ -802,44 +807,49 @@ def collect_training_data(gdf,
             drop=drop,
             zonal_stats=zonal_stats)
 
-    # column names are appeneded during each iteration
+    # column names are appended during each iteration
     # but they are identical, grab only the first instance
     column_names = column_names[0]
-
+    
     # Stack the extracted training data for each feature into a single array
     model_input = np.vstack(results)
-
-    # this code block iteratively retries failed rows
+    
+    # this code block below iteratively retries failed rows
     # up to max_retries or until fail_threshold is
     # reached - whichever occurs first
     if ncpus > 1:
         i = 1
         while (i <= max_retries):
-            # Count number of fails
-            num = np.count_nonzero(np.isnan(model_input), axis=1) > int(
-                model_input.shape[1] * 0.5)
-            num = num.sum()
-            fail_rate = num / len(gdf)
+            # Find % of fails (null values) in data. Use Pandas for simplicity
+            df = pd.DataFrame(data=model_input[:,0:-1], index=model_input[:,-1])
+            #how many nan values per id?
+            num_nans = df.isnull().sum(axis=1)
+            num_nans = num_nans.groupby(num_nans.index).sum()
+            #how many valid values per id?
+            num_valid = df.notnull().sum(axis=1)
+            num_valid = num_valid.groupby(num_valid.index).sum()
+            #find fail rate
+            perc_fail = num_nans / (num_nans+num_valid)
+            fail_ids = perc_fail[perc_fail > fail_ratio]
+            fail_rate = len(fail_ids) / len(gdf)
+            
             print('Percentage of possible fails after run ' + str(i) + ' = ' +
                   str(round(fail_rate * 100, 2)) + ' %')
+            
             if fail_rate > fail_threshold:
                 print('Recollecting samples that failed')
-
-                #find rows where NaNs account for more than half the values
-                nans = model_input[np.count_nonzero(
-                    np.isnan(model_input), axis=1) > int(model_input.shape[1] *
-                                                         0.5)]
-                #remove nan rows from model_input object
-                model_input = model_input[np.count_nonzero(
-                    np.isnan(model_input), axis=1) <= int(model_input.shape[1] *
-                                                          0.5)]
-
-                #get id of NaN rows and index original gdf
-                idx_nans = nans[:, [-1]].flatten()
-                gdf_rerun = gdf.loc[gdf['id'].isin(idx_nans)]
+                
+                fail_ids = list(fail_ids.index)
+                # keep only the ids in model_input object that didn't fail
+                model_input = model_input[~np.isin(model_input[:,-1], fail_ids)]
+                
+                # index out the fail_ids from the original gdf
+                gdf_rerun = gdf.loc[gdf['id'].isin(fail_ids)]
                 gdf_rerun = gdf_rerun.reset_index(drop=True)
-
-                time.sleep(60)  #sleep for 60 sec to rest api
+            
+                time.sleep(5)  #sleep for 5s to rest api
+                
+                #recollect failed rows
                 column_names_again, results_again = _get_training_data_parallel(
                     gdf=gdf_rerun,
                     products=products,
@@ -864,6 +874,13 @@ def collect_training_data(gdf,
             else:
                 break
 
+    # -----------------------------------------------
+
+    # remove id column 
+    idx_var = column_names[0:-1]
+    model_col_indices = [column_names.index(var_name) for var_name in idx_var]
+    model_input = model_input[:, model_col_indices]
+    
     if clean == True:
         num = np.count_nonzero(np.isnan(model_input).any(axis=1))
         model_input = model_input[~np.isnan(model_input).any(axis=1)]
@@ -874,11 +891,6 @@ def collect_training_data(gdf,
     else:
         print('Returning data without cleaning')
         print('Output shape: ', model_input.shape)
-
-    # remove id column
-    idx_var = column_names[0:-1]
-    model_col_indices = [column_names.index(var_name) for var_name in idx_var]
-    model_input = model_input[:, model_col_indices]
 
     return column_names[0:-1], model_input
 
