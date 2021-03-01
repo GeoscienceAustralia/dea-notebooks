@@ -28,7 +28,9 @@ Contours are returned as a `geopandas.GeoDataFrame` with one row per z-value or 
 
 ## Installing `dea-tools` from source using Pip
 
-`pip install --extra-index-url="https://packages.dea.ga.gov.au" git+https://github.com/GeoscienceAustralia/dea-notebooks.git#subdirectory=Tools`
+```
+pip install --extra-index-url="https://packages.dea.ga.gov.au" git+https://github.com/GeoscienceAustralia/dea-notebooks.git#subdirectory=Tools
+```
 
 ## Code examples
 
