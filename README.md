@@ -26,7 +26,7 @@ The [`subpixel_contours` function from the `dea-tools.spatial.py` module](https:
     
 Contours are returned as a `geopandas.GeoDataFrame` with one row per z-value or one row per array along a specified dimension. The     `attribute_df` parameter can be used to pass custom attributes to the output contour features.
 
-### Installing `dea-tools` from source using Pip
+### Installing `dea-tools` from source using pip
 
 ```
 pip install --extra-index-url="https://packages.dea.ga.gov.au" git+https://github.com/GeoscienceAustralia/dea-notebooks.git#subdirectory=Tools
