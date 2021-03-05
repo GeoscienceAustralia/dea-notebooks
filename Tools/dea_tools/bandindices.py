@@ -85,7 +85,7 @@ def calculate_indices(ds,
         'TCG' (Tasseled Cap Greeness, Crist 1985)
         'TCW' (Tasseled Cap Wetness, Crist 1985)
         'WI' (Water Index, Fisher 2016)
-        'zNDVI' (Non-linear Normalised Difference Vegation Index,
+        'kNDVI' (Non-linear Normalised Difference Vegation Index,
                  Camps-Valls et al. 2021)
     collection : str
         An string that tells the function what data collection is 
@@ -144,7 +144,7 @@ def calculate_indices(ds,
         
                   # Non-linear Normalised Difference Vegation Index,
                   # Camps-Valls et al. 2021
-                  'zNDVI': lambda ds: np.tanh(((ds.nir - ds.red) /
+                  'kNDVI': lambda ds: np.tanh(((ds.nir - ds.red) /
                                                (ds.nir + ds.red)) ** 2),
 
                   # Enhanced Vegetation Index, Huete 2002
