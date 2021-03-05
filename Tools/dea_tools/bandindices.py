@@ -17,12 +17,13 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: September 2020
+Last modified: March 2021
 
 '''
 
 # Import required packages
 import warnings
+import numpy as np
 
 # Define custom functions
 def calculate_indices(ds,
@@ -41,7 +42,7 @@ def calculate_indices(ds,
     in memory. This can be a memory-expensive operation, so to avoid
     this, set `inplace=True`.
 
-    Last modified: September 2020
+    Last modified: March 2021
     
     Parameters
     ----------
@@ -83,7 +84,9 @@ def calculate_indices(ds,
         'TCB' (Tasseled Cap Brightness, Crist 1985)
         'TCG' (Tasseled Cap Greeness, Crist 1985)
         'TCW' (Tasseled Cap Wetness, Crist 1985)
-        'WI' (Water Index, Fisher 2016) 
+        'WI' (Water Index, Fisher 2016)
+        'zNDVI' (Non-linear Normalised Difference Vegation Index,
+                 Camps-Valls et al. 2021)
     collection : str
         An string that tells the function what data collection is 
         being used to calculate the index. This is necessary because 
@@ -138,6 +141,11 @@ def calculate_indices(ds,
                   # Normalised Difference Vegation Index, Rouse 1973
                   'NDVI': lambda ds: (ds.nir - ds.red) /
                                      (ds.nir + ds.red),
+        
+                  # Non-linear Normalised Difference Vegation Index,
+                  # Camps-Valls et al. 2021
+                  'zNDVI': lambda ds: np.tanh(((ds.nir - ds.red) /
+                                               (ds.nir + ds.red)) ** 2),
 
                   # Enhanced Vegetation Index, Huete 2002
                   'EVI': lambda ds: ((2.5 * (ds.nir - ds.red)) /
