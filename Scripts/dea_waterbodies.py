@@ -3,11 +3,11 @@
 import pathlib
 import warnings
 
-warnings.warn("Scripts/dea_* scripts have been deprecated in favour of the dea-tools module. Please import dea_tools.classification instead.", DeprecationWarning)
+warnings.warn("Scripts/dea_* scripts have been deprecated in favour of the dea-tools module. Please import dea_tools.waterbodies instead.", DeprecationWarning)
 
 current_dir = pathlib.Path(__file__).parent.absolute()
 
 import sys
 sys.path.insert(1, str(current_dir.parent.absolute() / 'Tools'))
 
-from dea_tools.classification import *
+from dea_tools.waterbodies import *
