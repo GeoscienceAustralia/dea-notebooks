@@ -4,50 +4,35 @@ These materials will introduce working with Digital Earth Australia (DEA) data
 in the DEA Sandbox environment for the Open Data Cube (ODC). The tutorial is
 broken into the following sections:
 
-1. Getting started - access the sandbox
-
-- ODC (Alex's feeling is to leave this part out of the tutorial notes for now)
-  - Open Data Cube
-  - Digital Earth Australia
-  - Analysis Ready Data
-
-2. Learning Jupyter – explore what a Jupyter Notebook is
-1. Using Apps – run some simple apps demonstrating case studies
-1. Do it yourself – run and modify Python code to load, analyse and visualise data
-1. Build it yourself - explore the dea-notebooks code repository and build your own
+1. Getting started: Accessing the Sandbox.
+2. Learning Jupyter: Explore what a Jupyter Notebook is.
+3. Using Apps: Run some simple apps demonstrating case studies.
+4. Do it yourself: Run and modify Python code to load, analyse and visualise data
+5. Build it yourself: Explore the dea-notebooks code repository and build your own
    notebooks to answer specific analysis questions.
 
 At the end of the tutorial you will know how to use a Jupyter Notebook in
 conjunction with the ODC to access and analyse Earth observation data. The
 tutorial should take around two hours to complete.
 
-# 1. Getting started
+## 1. Getting started
 
-## Sign up for a DEA Sandbox Account
+### Sign up for a DEA Sandbox Account
 
 The DEA Sandbox uses requires you to create an account to log in. Please visit
 [https://app.sandbox.dea.ga.gov.au/](https://app.sandbox.dea.ga.gov.au/) to sign
-up for a new account, or log in if you already have one
+up for a new account, or log in if you already have one.
 
-![](sandbox_signup.jpg)
+### Accessing the DEA Sandbox
 
-## Accessing the DEA Sandbox
-
-After signing intothe DEA Sandbox, your Jupyter environment will be created and
-you should see a loading screen (also shown below) while the system is working
+After signing into the DEA Sandbox, your Jupyter environment will be created and
+you should see a loading screen while the system is working
 to prepare the environment.
 
-![](sandbox_loading.jpg)
-
-Once signed in, the Jupyter Lab homepage should appear (see below). The folders
-on the left may look different but the launcher tab should appear the same.
-
-![](sandbox_homepage.jpg)
+Once signed in, the JupyterLab homepage should appear.
 
 # What is ODC, DEA and ARD?
 
-For more background on Open Data Cube, Digital Earth Australia and DEA Analysis
-Ready Data, see: [Digital Earth Australia](../02_DEA.ipynb)
 
 # 2. Learning Jupyter
 
@@ -222,3 +207,7 @@ one of the following analysis questions to try and answer on your own:
 ```python
 
 ```
+
+
+For more background on Open Data Cube, Digital Earth Australia and DEA Analysis
+Ready Data, see: [Digital Earth Australia](../02_DEA.ipynb)
