@@ -399,7 +399,7 @@ def get_training_data_for_shp(gdf,
 
     else:
         # load data
-        with HiddenPrints():
+#         with HiddenPrints():
             ds = load_ard(dc=dc,
                           products=products,
                           output_crs='EPSG:3577',

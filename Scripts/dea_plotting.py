@@ -44,10 +44,21 @@ from IPython.display import display
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps, Choropleth
+from ipyleaflet import (Map, 
+                        Marker, 
+                        Popup, 
+                        GeoJSON, 
+                        basemaps, 
+                        Choropleth, 
+                        LegendControl, 
+                        WidgetControl,
+#                         Polyline, Polygon, Rectangle, Circle, CircleMarker,
+                        DrawControl
+                       )
 from skimage import exposure
 from branca.colormap import linear
 from odc.ui import image_aspect
+from ipywidgets import Text, HTML, HBox
 
 from matplotlib.animation import FuncAnimation
 import pandas as pd
@@ -57,6 +68,7 @@ from skimage.exposure import rescale_intensity
 from tqdm.auto import tqdm
 import warnings
 
+from sidecar import Sidecar #https://github.com/jupyter-widgets/jupyterlab-sidecar
 
 def rgb(ds,
         bands=['nbart_red', 'nbart_green', 'nbart_blue'],
@@ -361,6 +373,7 @@ def map_shapefile(gdf,
                   basemap=basemaps.Esri.WorldImagery,
                   default_zoom=None,
                   hover_col=True,
+                  sidecar=False,
                   **style_kwargs):
     """
     Plots a geopandas GeoDataFrame over an interactive ipyleaflet 
@@ -368,7 +381,7 @@ def map_shapefile(gdf,
     Optionally, can be set up to print selected data from features in 
     the GeoDataFrame. 
 
-    Last modified: February 2020
+    Last modified: December 2020 by CP
 
     Parameters
     ----------  
@@ -413,12 +426,7 @@ def map_shapefile(gdf,
         https://ipyleaflet.readthedocs.io/en/latest/api_reference/choropleth.html
 
     """
-
-    def on_hover(event, id, properties):
-        with dbg:
-            text = properties.get(hover_col, '???')
-            lbl.value = f'{hover_col}: {text}'
-            
+    
     # Verify that attribute exists in shapefile   
     if attribute not in gdf.columns:
         raise ValueError(f"The `attribute` {attribute} does not exist "
@@ -461,7 +469,13 @@ def map_shapefile(gdf,
 
     # Create the dictionary to colour map by
     keys = gdf.index
-    id_class_dict = dict(zip(keys.astype(str), classes))  
+    
+    if str(type(gdf.index)) == "<class 'pandas.core.indexes.multi.MultiIndex'>":
+        keys=[str(x) for x in keys]
+        id_class_dict = dict(zip(str(keys), classes))
+        
+    else:
+        id_class_dict = dict(zip(keys.astype(str), classes))
 
     # Get centroid to focus map on
     lon1, lat1, lon2, lat2 = gdf_wgs84.total_bounds
@@ -517,25 +531,104 @@ def map_shapefile(gdf,
         # Add Choropleth layer to map
         m.add_layer(choropleth)
 
+#     # If a column is specified by `hover_col`, print data from the
+#     # hovered feature above the map
+#     if hover_col and not linefeatures:
+        
+#         # Use cholopleth object if data is polygon
+#         lbl = ipywidgets.Label()
+#         dbg = ipywidgets.Output()
+#         choropleth.on_hover(on_hover)
+#         display(lbl)
+        
+#     else:
+        
+#         lbl = ipywidgets.Label()
+#         dbg = ipywidgets.Output()
+#         feature_layer.on_hover(on_hover)
+#         display(lbl)
+
+##  ------------------New
+    ## Enable hover features
+    ##  Add a text box
+    html = HTML('''
+        <h4>Intertidal habitat characterisation</h4>
+        Hover over a polygon
+    ''')
+    html.layout.margin = '0px 10px 10px 10px'
+    control = WidgetControl(widget=html, position='topright')
+    m.add_control(control)
+    
+    ##  Function to update the text box
+    def update_html(properties, **kwargs):
+        html.value = '''
+            <h4>{}</h4>
+            <h4>Unique polygon ID: <h2><b>{}</b></h2>
+            <h5>{}: {}</h5>
+            <h5>Dominant habitat type:<h5>
+            <h5>{}</h5>
+        '''.format(properties['BRD_HAB'],
+                   properties['pgid'], 
+                   str(attribute), 
+                   round(properties[str(attribute)],3), 
+                   properties['DOM_LABEL']
+                  )
+
+
+
+
     # If a column is specified by `hover_col`, print data from the
     # hovered feature above the map
     if hover_col and not linefeatures:
-        
-        # Use cholopleth object if data is polygon
-        lbl = ipywidgets.Label()
-        dbg = ipywidgets.Output()
-        choropleth.on_hover(on_hover)
-        display(lbl)
+        ##  Attach the hover and text update functionality to the data later
+        choropleth.on_hover(update_html)
         
     else:
-        
-        lbl = ipywidgets.Label()
-        dbg = ipywidgets.Output()
-        feature_layer.on_hover(on_hover)
-        display(lbl)
+        ##  Attach the hover and text update functionality to the data later
+        feature_layer.on_hover(update_html)
 
+##  ------------------End new
+
+        # Set the legend conditions and round to 2 decimal places
+    if continuous:
+        legend = LegendControl({np.around(np.quantile(classes, 0.00),2): colormap.rgb_hex_str(0.00),
+                                np.around(np.quantile(classes, 0.25),2): colormap.rgb_hex_str(0.25),
+                                np.around(np.quantile(classes, 0.50),2): colormap.rgb_hex_str(0.50),
+                                np.around(np.quantile(classes, 0.75),2): colormap.rgb_hex_str(0.75),
+                                np.around(np.quantile(classes, 1.00),2): colormap.rgb_hex_str(1.00) }, 
+                               name=attribute, position="bottomleft")
+        m.add_control(legend)
+    
+    ## Select regions of interest for further analysis
+    dc = DrawControl(marker={'shapeOptions': {'color': '#0000FF'}},
+                 rectangle={'shapeOptions': {'color': '#0000FF'}},
+                 circle={'shapeOptions': {'color': '#0000FF'}},
+                 circlemarker={},
+                 )
+    roi = []
+    roi.append(gdf)
+    
+    def handle_draw(target, action, geo_json):
+        print(action)
+        print(geo_json)
+        roi.append(geo_json)#['geometry']['coordinates'])
+
+    dc.on_draw(handle_draw)
+    m.add_control(dc)
+    
+    ## Show map in sidecar panel
+    if sidecar == True:
+        if continuous:
+            sc = Sidecar(title=gdf.iloc[0]['BRD_HAB'])
+            with sc:
+                m.layout.height=''
+                # Display the map
+                display(m)
+    
     # Display the map
     display(m)
+    
+    return roi
     
 
 def xr_animation(ds,
