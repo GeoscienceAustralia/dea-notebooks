@@ -6,7 +6,7 @@ broken into the following sections:
 
 1. Getting started: Accessing the Sandbox.
 2. Learning Jupyter: Explore what a Jupyter Notebook is.
-3. Using Apps: Run some simple apps demonstrating case studies.
+3. Using Notebooks: Run some simple notebooks demonstrating case studies.
 4. Do it yourself: Run and modify Python code to load, analyse and visualise data
 5. Build it yourself: Explore the dea-notebooks code repository and build your own
    notebooks to answer specific analysis questions.
@@ -31,12 +31,7 @@ to prepare the environment.
 
 Once signed in, the JupyterLab homepage should appear.
 
-# What is ODC, DEA and ARD?
-
-
-# 2. Learning Jupyter
-
-## Overview
+## 2. Learning Jupyter
 
 Jupyter is an interactive coding environment. The name ‘Jupyter’ comes from
 Julia, Python and R, which are all programming languages that are used in
@@ -45,21 +40,19 @@ called iPython, but there has been rapid progress over the last few years, and
 now many large organisations like Netflix (*1*) are using the system to analyse
 data.
 
-## Since the ODC is a Python library, the workshop will cover working with Earth observation data in Python
-
-based notebooks.
+Since the ODC is a Python library, the workshop will cover working with Earth observation data in Python-based notebooks.
 
 *1*
 [https://medium.com/netflix-techblog/notebook-innovation-591ee3221233](https://medium.com/netflix-techblog/notebook-innovation-591ee3221233)
 
-## Getting started with Jupyter
+### Getting started with Jupyter
 
 The first exercise is to explore and understand some key features of the Jupyter
 notebook.
 
 *If you’ve used Jupyter before, you may want to skip this step.*
 
-### Running (executing) a cell
+#### Running (executing) a cell
 
 Jupyter Notebooks allow code to be separated into sections that can be executed
 independent of one another. These sections are called cells.
@@ -69,22 +62,7 @@ cursor in the cell and typing `Shift-Enter` on the keyboard or selecting the ►
 "Run the selected cells and advance" button in the ribbon at the top of the
 notebook. These options will run a single cell at a time.
 
-To automatically run all cells in a notebook, navigate to the "Run" tab of the
-menu bar at the top of JupyterLab and select "Run All Cells" (or the option that
-best suits your needs). When a cell is run, the cell's content is executed. Any
-output produced from running the cell will appear directly below it.
-
-Run the cell below:
-
-```python
-print("I ran a cell!")
-```
-
-```
-I ran a cell!
-```
-
-### Cell status
+#### Cell status
 
 The `[ ]:` symbol to the left of each Code cell describes the state of the cell:
 
@@ -99,9 +77,9 @@ The number indicates the order that the cells were run in.
 > grey ("Kernel busy") when the cell is running, and return to empty ("Kernel
 > idle") when the process is complete.
 
-## Jupyter notebook cell types
+### Jupyter notebook cell types
 
-Cells are identified as either Code, Markdown, or Raw. This designation can be
+Cells are identified as either Code or Markdown. This designation can be
 changed using the ribbon at the top of the notebook.
 
 #### Code cells
@@ -115,33 +93,20 @@ running analyses.
 Markdown cells provide the narrative to a notebook. They are used for text and
 are useful to describe the code operations in the following cells.
 
-#### Raw cells
-
-Information in Raw cells is stored in the notebook metadata and can be used to
-render different code formats into HTML or 𝐿𝐴𝑇𝐸𝑋 . For the purposes of this
-tutorial, raw cells are not used by the authors and are not required for most
-notebook users.
-
-#### For more on Jupyter notebooks
+### For more on Jupyter notebooks
 
 For more on Jupyter notebooks, including further definition of the cell types,
 stopping and restarting your notebook or saving and exporting your work, see
-[this notebook](../01_Jupyter_notebooks.ipynb) in the DEA Beginners Guide
+[this notebook](../01_Jupyter_notebooks.ipynb) in the DEA Beginners Guide.
 
-# 3. Using apps
-
-This example makes use of ‘macros’, which is where more complex code has been
-wrapped up into simple expressions. In this document, these ‘macros’ are
-referred to as ‘apps’. The ‘apps’ make it simple to change an analysis, as they
-provide ways to interact with the analysis that don’t require changes to the
-underlying code.
+## 3. Using notebooks
 
 Click the link to run the following notebook
 [Crop_health](../../Real_world_examples/Crop_health.ipynb)
 
 Return to this notebook when you are done.
 
-# 4. Do it yourself
+## 4. Do it yourself
 
 This activity uses a code-based (rather than app-based) notebook, to demonstrate
 how the ODC Python API works. This will be a simple example of:
@@ -167,7 +132,7 @@ and aquatic environment to detect water bodies or water stressed vegetation.
 
 Return to this notebook when you are done.
 
-# 5. Exercises
+## 5. Exercises
 
 Now it's time to build it yourself.
 
@@ -186,7 +151,7 @@ one of the following analysis questions to try and answer on your own:
   - Explore DEA products/measurements, Load a product (fractional cover)
   - **EXTENSION: Compare wet/dry season results for your area of interest**
 
-#### *Hints*
+### *Hints*
 
 - Model your answers on the workflow introduced in section 4,
   [Do it yourself](../06_Basic_analysis.ipynb).
