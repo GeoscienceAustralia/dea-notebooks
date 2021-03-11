@@ -88,7 +88,7 @@ For example, consider setting a new study location, and/or changing the time per
 
 ## 5. Build it yourself
 
-For the next excercise, we will build a new analysis focused around a specific scientific question: 
+For the next exercise, we will build a new analysis focused around a specific scientific question: 
 
 *Monitor how waterbodies in Australia have changed over time using satellite data.*
 
