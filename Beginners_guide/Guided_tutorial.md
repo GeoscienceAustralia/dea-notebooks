@@ -141,6 +141,8 @@ Starting from a blank notebook ([hint](../01_Jupyter_notebooks.ipynb)), build a 
 
 For a more detailed introduction to Digital Earth Australia and the Open Data Cube, we recommend running the entire set of Beginner's Guide notebooks located in this folder, starting with [Performing a basic analysis](../06_Basic_analysis.ipynb) and continuing on to [Parallel processing with Dask.ipynb](../09_Parallel_processing_with_Dask.ipynb).
 
+![Dask notebook](../Supplementary_data/ODC_workshop/dask.PNG)
+
 You can now join more advanced users in exploring:
 
 - The "DEA datasets" directory in the repository, where you can explore DEA products in depth.
