@@ -17,8 +17,16 @@ The Beginners Guide contains introductory notebooks aimed at introducing Jupyter
    08_Intro_to_xarray.ipynb
    09_Parallel_processing_with_Dask.ipynb
    
-   Once you have you have completed the beginner tutorials, join advanced users in exploring:
+:: Once you have you have completed the beginner tutorials, join advanced users in exploring:
 
     - The "Datasets" directory in the repository, where you can explore DEA products in depth.
     - The "Frequently used code" directory, which contains a recipe book of common techniques and methods for analysing DEA data.
-    - The "Real-world examples" directory, which provides more complex workflows and analysis case studies.
+    - The "Real-world examples" directory, which provides more complex workflows and analysis case studies.  
+   
+.. toctree::
+   :maxdepth: 1   
+   :caption: Guided Tutorial
+   
+   Guided_tutorial.md
+ 
+ :: Workshop participants follow the Guided tutorial link above please ::
