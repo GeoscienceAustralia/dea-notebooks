@@ -29,4 +29,4 @@ Once you have you have completed the beginner tutorials, join advanced users in 
    
    Guided_tutorial.md
  
-Workshop participants follow the Guided tutorial link above please.
+Workshop participants follow the Guided tutorial links above please.
