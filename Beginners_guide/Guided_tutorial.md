@@ -1,4 +1,4 @@
-# Open Data Cube Workshop material
+# Open Data Cube workshop material
 
 These materials will introduce working with Digital Earth Australia (DEA) data in the DEA Sandbox environment for the Open Data Cube (ODC). 
 The tutorial is broken into the following sections:
@@ -46,11 +46,10 @@ As the ODC is a Python library, the workshop will cover working with Earth obser
 #### Getting started with Jupyter
 
 The first exercise is to explore and understand some key features of the Jupyter notebook, including how to run cells containing code, and edit documentation. 
-Click the link to run the following notebook:
+
+Click the link to run the following notebook and return here when you have worked through the examples:
 
 [Introduction to Jupyter notebooks](../../Beginners_guide/01_Jupyter_notebooks.ipynb). 
-
-Return here when you have worked through the examples in the notebook.
 
 ---
 
@@ -58,15 +57,13 @@ Return here when you have worked through the examples in the notebook.
 
 A major feature of the Open Data Cube approach is its spatiotemporal data richness and searchability. 
 The following notebook has been designed as an application, with almost all of the code stored in the background as a function.
-It's purpose is to show users the temporal data richness that is stored in the DEA archive.
+Its purpose is to show users the temporal data richness that is stored in the DEA archive.
 In this notebook, the most recent 12 months worth of Sentinel 2 data is loaded over a predetermined location.
 Users can select small sub-locations to compare changes in the relative greenness (NDVI) response over time.
 
-Click the link to run the following notebook:
+Click the link to run the following notebook and return here when you have worked through the examples:
 
 [Measuring crop health](../../Real_world_examples/Crop_health.ipynb)
-
-Return here when you have worked through the examples in the notebook.
 
 ---
 
@@ -81,16 +78,15 @@ This example includes the following analysis steps:
 - Using a vegetation index to calculate the "greenness" of an image
 - Exporting your data to a raster file
 
-Click the link to run the following notebook:
-
-[Performing a basic analysis](../06_Basic_analysis.ipynb)
-
 #### Next steps
 Once you have run the notebook in its entirety, return to the top and experiment with changing some of the variables. 
 For example, consider setting a new study location, and/or changing the time period of the analysis.
 
----
+Click the link to run the following notebook and return here when you have worked through the examples:
 
+[Performing a basic analysis](../06_Basic_analysis.ipynb)
+
+---
 
 ## 5. Build it yourself
 
@@ -100,7 +96,7 @@ For the next excercise, we will build a new analysis focused around a specific s
 
 Choose one of the following options depending on difficulty: 
 
-#### Intermediate level: Update the basic analysis notebook to study changes in water over time
+#### *Intermediate level*: Update the basic analysis notebook to study changes in water over time
 
 Starting at the top of the [Performing a basic analysis](../06_Basic_analysis.ipynb) notebook, modify the notebook to change the analysis to focus on monitoring changes in water over time. 
 This could involve:
@@ -114,7 +110,7 @@ For example, the Normalised Difference Water Index (NDWI) that is used to monito
 - Plot the output water index results for different timesteps to compare how distributions of water have changed over time.
 
 
-#### Advanced level: Build a new analysis from scratch
+#### *Advanced level*: Build a new analysis from scratch
 
 Starting from a blank notebook ([hint](../01_Jupyter_notebooks.ipynb)), build a new analysis from scratch using content from the [Performing a basic analysis](../06_Basic_analysis.ipynb) notebook, and code from other notebooks in the [Digital Earth Australia Notebooks repository](https://github.com/GeoscienceAustralia/dea-notebooks/). For example, this could involve:
 
@@ -123,15 +119,8 @@ Starting from a blank notebook ([hint](../01_Jupyter_notebooks.ipynb)), build a 
 - Plot the output water index results for different timesteps to compare how distributions of water have changed over time.
 
 
-#### *Hints*
+#### *Tips*
 
-- Model your answers on the workflow introduced in section 4,
-  [Do it yourself](../06_Basic_analysis.ipynb).
-- Explore other notebooks in the dea-notebooks repository, particularly those in
-  the 'Real_world_examples' folder, e.g.
-  - [Burnt_area_mapping](../../Real_world_examples/Burnt_area_mapping.ipynb)
-  - [Change_detection](../../Real_world_examples/Change_detection.ipynb)
-  - [Coastal_erosion](../../Real_world_examples/Coastal_erosion.ipynb) *Advanced*
 - You can view multiple notebooks simultaneously in Jupyter Lab. Simply click and
   drag your notebook tab to the right hand side of your screen for a side by side
   view.
