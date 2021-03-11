@@ -1,4 +1,4 @@
-# Workshop material
+# ODC Workshop material
 
 These materials will introduce working with Digital Earth Australia (DEA) data
 in the DEA Sandbox environment for the Open Data Cube (ODC). The tutorial is
@@ -83,6 +83,7 @@ Click the link to run the following notebook:
 #### Next steps
 Once you have run the notebook in its entirety, return to the top and experiment with changing some of the variables. 
 For example, consider setting a new study location, and/or changing the time period of the analysis.
+
 ---
 
 
@@ -94,32 +95,30 @@ Choose one of the following options
 
 #### Intermediate level: Update the basic analysis notebook to study changes in water over time
 
-After attempting the extension activities in the notebook, if you are keen to
-continue experimenting then try and calculate a different index over a new study
-area. For example, calculate the
-[Normalised Difference Water Index](https://eos.com/ndwi/) over a terrestrial
-and aquatic environment to detect water bodies or water stressed vegetation.
+Starting at the top of the [Performing a basic analysis](../06_Basic_analysis.ipynb) notebook, modify the notebook to change the analysis to focus on monitoring changes in water over time. This could involve:
 
-Return to this notebook when you are done.
+- Changing the study area to a location with a waterbody (e.g. Canberra's Lake Tuggeranong, or Lake Menindee in western New South Wales)
+- Change the  Normalised Difference Vegetation Index (NDVI) used in the notebook to a new index that is better for monitoring water. For example, the Normalised Difference Water Index (NDWI) that is used to monitor changes related to water content in water bodies:
 
-#### Advanced level: Build a new analysis from stratch
+$$
+\begin{aligned}
+\text{NDWI} & = \frac{(\text{Green} - \text{NIR})}{(\text{Green} + \text{NIR})}, \\
+\end{aligned}
+$$
 
-Starting with a blank notebook ([hint](../01_Jupyter_notebooks.ipynb)), select
-one of the following analysis questions to try and answer on your own:
+- Plot the output water index results for different timesteps to compare how distributions of water have changed over time.
 
-- **How has urban development changed the layout/footprint of your hometown between 2014 and 2020?**
-  - Copy/paste of the `Urban_change_detection.ipynb`. Practices dask, geomedians,
-    plot rgb, index calculation (ENDISI)
-- **How soon after the (non-lethal) bushfires in x location, y year, did remote sensing begin to detect a return of greenness to the local vegetation?**
-  - Practices burnt area mapping, NDVI calculation, change detection/filmstrips
-- **How did the annual median surface area/perimeter of the Menindee Lakes (lake Eyre?) change between the peak of the drought compared to 2020?**
-  - Practices index and median calculation, index thresholding, subpixel contours
-    (Frequently_used_code folder)
-- **What is the annual median spatial distribution of bare, dry and vegetated ground cover for an area of your interest?**
-  - Explore DEA products/measurements, Load a product (fractional cover)
-  - **EXTENSION: Compare wet/dry season results for your area of interest**
 
-### *Hints*
+#### Advanced level: Build a new analysis from scratch
+
+Starting from a blank notebook ([hint](../01_Jupyter_notebooks.ipynb)), build a new analysis from scratch using content from the [Performing a basic analysis](../06_Basic_analysis.ipynb) notebook, and code from other notebooks in the [Digital Earth Australia Notebooks repository](https://github.com/GeoscienceAustralia/dea-notebooks/). For example, this could involve:
+
+- Using the `load_ard` function to load cloud-free Landsat or Sentinel-2 imagery (see the [Using load_ard](../../Frequently_used_code/Using_load_ard.ipynb) notebook)
+- Calculating a water index using the `calculate_indices` function (see the [Calculating_band_indices](../../Frequently_used_code/Calculating_band_indices.ipynb) notebook)
+- Plotting the 
+
+
+#### *Hints*
 
 - Model your answers on the workflow introduced in section 4,
   [Do it yourself](../06_Basic_analysis.ipynb).
@@ -136,11 +135,15 @@ one of the following analysis questions to try and answer on your own:
   right-clicking inside a cell, selecting `Copy Cells` and then navigating to your
   desired paste-location and right click any cell then selecting 'Paste Cells
   Below'
+  
+---
 
-```python
+## 6. Learning more
 
-```
+For a more detailed introduction to Digital Earth Australia and the Open Data Cube, we recommend running the entire set of Beginner's Guide notebooks located in this folder, starting with [Performing a basic analysis](../06_Basic_analysis.ipynb) and continuing on to [Parallel processing with Dask.ipynb](../09_Parallel_processing_with_Dask.ipynb).
 
+You can now join more advanced users in exploring:
 
-For more background on Open Data Cube, Digital Earth Australia and DEA Analysis
-Ready Data, see: [Digital Earth Australia](../02_DEA.ipynb)
+The "DEA datasets" directory in the repository, where you can explore DEA products in depth.
+The "Frequently used code" directory, which contains a recipe book of common techniques and methods for analysing DEA data.
+The "Real-world examples" directory, which provides more complex workflows and analysis case studies focused on answering real-world scientific and management problems using the Open Data Cube.
