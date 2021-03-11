@@ -92,9 +92,9 @@ For the next exercise, we will build a new analysis focused around a specific sc
 
 *Monitor how waterbodies in Australia have changed over time using satellite data.*
 
-Choose one of the following options depending on difficulty: 
+Choose one of the following options depending on your preferred level of difficulty (*Intermediate* or *Advanced*): 
 
-#### Intermediate level: Update the basic analysis notebook to study changes in water over time
+#### *Intermediate* level: Update the basic analysis notebook to study changes in water over time
 
 Starting at the top of the [Performing a basic analysis](../06_Basic_analysis.ipynb) notebook, modify the notebook to change the analysis to focus on monitoring changes in water over time. 
 This could involve:
@@ -108,7 +108,7 @@ For example, the Normalised Difference Water Index (NDWI) that is used to monito
 - Plot the output water index results for different timesteps to compare how distributions of water have changed over time.
 
 
-#### Advanced level: Build a new analysis from scratch
+#### *Advanced* level: Build a new analysis from scratch
 
 Starting from a blank notebook ([hint](../01_Jupyter_notebooks.ipynb)), build a new analysis from scratch using content from the [Performing a basic analysis](../06_Basic_analysis.ipynb) notebook, and code from other notebooks in the [Digital Earth Australia Notebooks repository](https://github.com/GeoscienceAustralia/dea-notebooks/). For example, this could involve:
 
