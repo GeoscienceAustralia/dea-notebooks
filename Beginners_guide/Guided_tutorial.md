@@ -1,14 +1,14 @@
-# ODC Workshop material
+# Open Data Cube Workshop material
 
 These materials will introduce working with Digital Earth Australia (DEA) data in the DEA Sandbox environment for the Open Data Cube (ODC). 
 The tutorial is broken into the following sections:
 
-1. Getting started: Accessing the Sandbox.
-2. Learning Jupyter: Explore what a Jupyter Notebook is.
-3. Using Notebooks: Run some simple notebooks demonstrating case studies.
+1. Getting started: Accessing the Sandbox
+2. Jupyter Notebooks: What are they and how to use them? 
+3. Using interactive notebooks: Run a simple interactive notebook to perform a temporal analysis using DEA data
 4. Do it yourself: Run and modify Python code to load, analyse and visualise data
-5. Build it yourself: Explore the dea-notebooks code repository and build your own
-   notebooks to answer specific analysis questions.
+5. Build it yourself: Explore the dea-notebooks code repository and build your own notebooks to answer specific analysis questions.
+6. Learning more: How to continue exploring DEA data and resources   
 
 At the end of the tutorial you will know how to use a Jupyter Notebook in conjunction with the ODC to access and analyse Earth observation data. 
 The tutorial should take around two hours to complete.
@@ -20,12 +20,12 @@ The tutorial should take around two hours to complete.
 The DEA Sandbox is a learning and analysis environment for getting started with Digital Earth Australia and the Open Data Cube. 
 It includes sample data and Jupyter notebooks that demonstrate the capability of the Open Data Cube.
 
-### Sign up for a DEA Sandbox Account
+#### Sign up for a DEA Sandbox Account
 
 The DEA Sandbox uses requires you to create an account to log in. 
 Please visit [https://app.sandbox.dea.ga.gov.au/](https://app.sandbox.dea.ga.gov.au/) to sign up for a new account (a verification code will be sent to the email address you register with), or log in if you already have one. 
 
-### Accessing the DEA Sandbox
+#### Accessing the DEA Sandbox
 
 After signing into the DEA Sandbox, your Jupyter environment will be created and you should see a loading screen while the system is working to prepare the environment.
 
@@ -35,9 +35,10 @@ The JupyterLab interface consists of the main work area (right-hand panel), the 
 ![Sandbox work area](https://docs.dea.ga.gov.au/_images/sandbox-jupyterlab-startup.png)
 
 
-## 2. Learning Jupyter
+## 2. Jupyter Notebooks
 
-Jupyter is an interactive coding environment. 
+Jupyter is an interactive coding environment that allows you to create and share documents, as Jupyter Notebooks, that contain live code, equations, visualizations and narrative text. Uses include: data cleaning and transformation, numerical simulation, statistical modeling, data visualization, machine learning, and much more [jupyter.org](jupyter.org).
+
 The name ‘Jupyter’ comes from Julia, Python and R, which are all programming languages that are used in scientific computing. Jupyter started as a purely Python-based environment called iPython, but there has been rapid progress over the last few years, and now many large organisations like [Netflix](https://netflixtechblog.com/notebook-innovation-591ee3221233) are using the system to analyse data.
 
 As the ODC is a Python library, the workshop will cover working with Earth observation data in Python-based notebooks.
