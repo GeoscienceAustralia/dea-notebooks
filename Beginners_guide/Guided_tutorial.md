@@ -101,7 +101,7 @@ This could involve:
 - Change the  Normalised Difference Vegetation Index (NDVI) used in the notebook to a new index that is better for monitoring water. 
 For example, the Normalised Difference Water Index (NDWI) that is used to monitor changes related to water content in water bodies:
 
-![NDWI](../Supplementary_data/ODC_workshop/ndwi.png)
+![NDWI](../Supplementary_data/ODC_workshop/ndwi.jpg)
 
 - Plot the output water index results for different timesteps to compare how distributions of water have changed over time.
 
