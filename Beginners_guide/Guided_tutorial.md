@@ -61,6 +61,8 @@ Its purpose is to show users the temporal data richness that is stored in the DE
 In this notebook, the most recent 12 months worth of Sentinel 2 data is loaded over a predetermined location.
 Users can select small sub-locations to compare changes in the relative greenness (NDVI) response over time.
 
+![Crop_health](../Supplementary_data/ODC_workshop/crop_health.PNG)
+
 Click the link to run the following notebook and return here when you have worked through the examples:
 
 [Measuring crop health](../../Real_world_examples/Crop_health.ipynb)
