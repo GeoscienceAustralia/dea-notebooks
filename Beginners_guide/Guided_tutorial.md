@@ -38,7 +38,7 @@ The JupyterLab interface consists of the main work area (right-hand panel), the 
 ## 2. Learning Jupyter
 
 Jupyter is an interactive coding environment. 
-The name ‘Jupyter’ comes from Julia, Python and R, which are all programming languages that are used in scientific computing. Jupyter started as a purely Python-based environment called iPython, but there has been rapid progress over the last few years, and now many large organisations like Netflix (*1*) are using the system to analyse data.
+The name ‘Jupyter’ comes from Julia, Python and R, which are all programming languages that are used in scientific computing. Jupyter started as a purely Python-based environment called iPython, but there has been rapid progress over the last few years, and now many large organisations like [Netflix](https://netflixtechblog.com/notebook-innovation-591ee3221233) are using the system to analyse data.
 
 As the ODC is a Python library, the workshop will cover working with Earth observation data in Python-based notebooks.
 
@@ -53,10 +53,11 @@ Return here when you have worked through the examples in the notebook.
 
 ---
 
-## 3. Using notebooks
+## 3. Using interactive notebooks
 
 Click the link to run the following notebook:
-[Crop_health](../../Real_world_examples/Crop_health.ipynb)
+
+[Measuring crop health](../../Real_world_examples/Crop_health.ipynb)
 
 Return here when you have worked through the examples in the notebook.
 
