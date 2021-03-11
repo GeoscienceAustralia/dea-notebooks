@@ -37,7 +37,7 @@ The JupyterLab interface consists of the main work area (right-hand panel), the 
 
 ## 2. Jupyter Notebooks
 
-Jupyter is an interactive coding environment that allows you to create and share documents, as Jupyter Notebooks, that contain live code, equations, visualizations and narrative text. Uses include: data cleaning and transformation, numerical simulation, statistical modeling, data visualization, machine learning, and much more [jupyter.org](jupyter.org).
+[Jupyter](jupyter.org) is an interactive coding environment that allows you to create and share documents, as Jupyter Notebooks, that contain live code, equations, visualizations and narrative text. Uses include: data cleaning and transformation, numerical simulation, statistical modeling, data visualization, machine learning, and much more.
 
 The name ‘Jupyter’ comes from Julia, Python and R, which are all programming languages that are used in scientific computing. Jupyter started as a purely Python-based environment called iPython, but there has been rapid progress over the last few years, and now many large organisations like [Netflix](https://netflixtechblog.com/notebook-innovation-591ee3221233) are using the system to analyse data.
 
@@ -55,6 +55,12 @@ Return here when you have worked through the examples in the notebook.
 ---
 
 ## 3. Using interactive notebooks
+
+A major feature of the Open Data Cube approach is its spatiotemporal data richness and searchability. 
+The following notebook has been designed as an application, with almost all of the code stored in the background as a function.
+It's purpose is to show users the temporal data richness that is stored in the DEA archive.
+In this notebook, the most recent 12 months worth of Sentinel 2 data is loaded over a predetermined location.
+Users can select small sub-locations to compare changes in the relative greenness (NDVI) response over time.
 
 Click the link to run the following notebook:
 
@@ -88,13 +94,13 @@ For example, consider setting a new study location, and/or changing the time per
 
 ## 5. Build it yourself
 
-For the next exercise, we will build a new analysis focused around a specific scientific question: 
+For the next excercise, we will build a new analysis focused around a specific scientific question: 
 
 *Monitor how waterbodies in Australia have changed over time using satellite data.*
 
-Choose one of the following options depending on your preferred level of difficulty (*Intermediate* or *Advanced*): 
+Choose one of the following options depending on difficulty: 
 
-#### *Intermediate* level: Update the basic analysis notebook to study changes in water over time
+#### Intermediate level: Update the basic analysis notebook to study changes in water over time
 
 Starting at the top of the [Performing a basic analysis](../06_Basic_analysis.ipynb) notebook, modify the notebook to change the analysis to focus on monitoring changes in water over time. 
 This could involve:
@@ -108,7 +114,7 @@ For example, the Normalised Difference Water Index (NDWI) that is used to monito
 - Plot the output water index results for different timesteps to compare how distributions of water have changed over time.
 
 
-#### *Advanced* level: Build a new analysis from scratch
+#### Advanced level: Build a new analysis from scratch
 
 Starting from a blank notebook ([hint](../01_Jupyter_notebooks.ipynb)), build a new analysis from scratch using content from the [Performing a basic analysis](../06_Basic_analysis.ipynb) notebook, and code from other notebooks in the [Digital Earth Australia Notebooks repository](https://github.com/GeoscienceAustralia/dea-notebooks/). For example, this could involve:
 
@@ -140,8 +146,6 @@ Starting from a blank notebook ([hint](../01_Jupyter_notebooks.ipynb)), build a 
 ## 6. Learning more
 
 For a more detailed introduction to Digital Earth Australia and the Open Data Cube, we recommend running the entire set of Beginner's Guide notebooks located in this folder, starting with [Performing a basic analysis](../06_Basic_analysis.ipynb) and continuing on to [Parallel processing with Dask.ipynb](../09_Parallel_processing_with_Dask.ipynb).
-
-![Dask notebook](../Supplementary_data/ODC_workshop/dask.PNG)
 
 You can now join more advanced users in exploring:
 
