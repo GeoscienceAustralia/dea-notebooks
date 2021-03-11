@@ -1,4 +1,4 @@
-# Introduction
+# Workshop material
 
 These materials will introduce working with Digital Earth Australia (DEA) data
 in the DEA Sandbox environment for the Open Data Cube (ODC). The tutorial is
@@ -14,6 +14,8 @@ broken into the following sections:
 At the end of the tutorial you will know how to use a Jupyter Notebook in
 conjunction with the ODC to access and analyse Earth observation data. The
 tutorial should take around two hours to complete.
+
+---
 
 ## 1. Getting started
 
@@ -40,89 +42,57 @@ called iPython, but there has been rapid progress over the last few years, and
 now many large organisations like Netflix (*1*) are using the system to analyse
 data.
 
-Since the ODC is a Python library, the workshop will cover working with Earth observation data in Python-based notebooks.
+As the ODC is a Python library, the workshop will cover working with Earth observation data in Python-based notebooks.
 
-*1*
-[https://medium.com/netflix-techblog/notebook-innovation-591ee3221233](https://medium.com/netflix-techblog/notebook-innovation-591ee3221233)
-
-### Getting started with Jupyter
+#### Getting started with Jupyter
 
 The first exercise is to explore and understand some key features of the Jupyter
-notebook.
+notebook, including how to run cells containing code, and edit documentation. 
+Click the link to run the following notebook:
 
-*If you’ve used Jupyter before, you may want to skip this step.*
+[Introduction to Jupyter notebooks](../../Beginners_guide/01_Jupyter_notebooks.ipynb). 
 
-#### Running (executing) a cell
+Return here when you have worked through the examples in the notebook.
 
-Jupyter Notebooks allow code to be separated into sections that can be executed
-independent of one another. These sections are called cells.
-
-Python code is written into individual cells that can be executed by placing the
-cursor in the cell and typing `Shift-Enter` on the keyboard or selecting the ►
-"Run the selected cells and advance" button in the ribbon at the top of the
-notebook. These options will run a single cell at a time.
-
-#### Cell status
-
-The `[ ]:` symbol to the left of each Code cell describes the state of the cell:
-
-- `[ ]:` means that the cell has not been run yet.
-- `[*]:` means that the cell is currently running.
-- `[1]:` means that the cell has finished running and was the first cell run.
-
-The number indicates the order that the cells were run in.
-
-> **Note:** To check whether a cell is currently executing in a Jupyter notebook,
-> inspect the small circle in the top-right of the window. The circle will turn
-> grey ("Kernel busy") when the cell is running, and return to empty ("Kernel
-> idle") when the process is complete.
-
-### Jupyter notebook cell types
-
-Cells are identified as either Code or Markdown. This designation can be
-changed using the ribbon at the top of the notebook.
-
-#### Code cells
-
-All code operations are performed in Code cells. Code cells can be used to edit
-and write new code, and perform tasks like loading data, plotting data and
-running analyses.
-
-#### Markdown cells
-
-Markdown cells provide the narrative to a notebook. They are used for text and
-are useful to describe the code operations in the following cells.
-
-### For more on Jupyter notebooks
-
-For more on Jupyter notebooks, including further definition of the cell types,
-stopping and restarting your notebook or saving and exporting your work, see
-[this notebook](../01_Jupyter_notebooks.ipynb) in the DEA Beginners Guide.
+---
 
 ## 3. Using notebooks
 
 Click the link to run the following notebook
 [Crop_health](../../Real_world_examples/Crop_health.ipynb)
 
-Return to this notebook when you are done.
+Return here when you have worked through the examples in the notebook.
+
+---
 
 ## 4. Do it yourself
 
-This activity uses a code-based (rather than app-based) notebook, to demonstrate
-how the ODC Python API works. This will be a simple example of:
+This activity uses a code-based Jupyter notebook to demonstrate how the ODC Python API works. 
+This example includes the following analysis steps:
 
-- picking a study site in Australia
-- loading data for that area
-- plotting bands into the red, green and blue channels of an image
-- using a vegetation indice to calculate greenness in the image
-- exporting your data to geotiff
+- Picking a study site in Australia
+- Loading satellite data for that area
+- Plotting red, green and blue satellite bands as a true colour image
+- Using a vegetation index to calculate the "greenness" of an image
+- Exporting your data to a raster file
 
-Click the link to run the following notebook
-[Basic analysis](../06_Basic_analysis.ipynb)
+Click the link to run the following notebook:
 
-Run the notebook in its entirety to begin with then return to the top and have a
-go yourself at changing some of the variables. Consider setting a new study
-location and/or changing the time period of the analysis.
+[Performing a basic analysis](../06_Basic_analysis.ipynb)
+
+#### Next steps
+Once you have run the notebook in its entirety, return to the top and experiment with changing some of the variables. 
+For example, consider setting a new study location, and/or changing the time period of the analysis.
+---
+
+
+## 5. Built it yourself
+
+For the next excercise, we will build a new analysis focused around a specific scientific question: **using satellite data to monitor how waterbodies in Australia have changed over time.**
+
+Choose one of the following options 
+
+#### Intermediate level: Update the basic analysis notebook to study changes in water over time
 
 After attempting the extension activities in the notebook, if you are keen to
 continue experimenting then try and calculate a different index over a new study
@@ -132,9 +102,7 @@ and aquatic environment to detect water bodies or water stressed vegetation.
 
 Return to this notebook when you are done.
 
-## 5. Exercises
-
-Now it's time to build it yourself.
+#### Advanced level: Build a new analysis from stratch
 
 Starting with a blank notebook ([hint](../01_Jupyter_notebooks.ipynb)), select
 one of the following analysis questions to try and answer on your own:
