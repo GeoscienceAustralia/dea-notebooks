@@ -142,6 +142,6 @@ For a more detailed introduction to Digital Earth Australia and the Open Data Cu
 
 You can now join more advanced users in exploring:
 
-The "DEA datasets" directory in the repository, where you can explore DEA products in depth.
-The "Frequently used code" directory, which contains a recipe book of common techniques and methods for analysing DEA data.
-The "Real-world examples" directory, which provides more complex workflows and analysis case studies focused on answering real-world scientific and management problems using the Open Data Cube.
+- The "DEA datasets" directory in the repository, where you can explore DEA products in depth.
+- The "Frequently used code" directory, which contains a recipe book of common techniques and methods for analysing DEA data.
+- The "Real-world examples" directory, which provides more complex workflows and analysis case studies focused on answering real-world scientific and management problems using the Open Data Cube.
