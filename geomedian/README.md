@@ -41,9 +41,7 @@ then, either
     
 or
 
-    cat > dummylist << EOF
-    16 -40
-    EOF
+    echo 16 -40 > dummylist
     qsub -v inputfile=dummylist job.pbs
     
 The former option will probably get killed on a Gadi login node. 
@@ -68,6 +66,6 @@ The difference when using `.nc` files is that the output from `find` should be f
     find output -iname \*.nc | sed 's/^/NetCDF:/; s/$/:blue/' | xargs gdalbuildvrt blue.vrt
     find output -iname \*.nc | sed 's/^/NetCDF:/; s/$/:green/' | xargs gdalbuildvrt green.vrt
     gdalbuildvrt -separate geomedian.vrt red.vrt green.vrt blue.vrt
-    gdaladdo geomedian.vrt -ro --config BIGTIFF_OVERVIEW YES --config SPARSE_OK TRUE --config COMPRESS_OVERVIEW LZW --config NUM_THREADS ALL_CPUS
+    gdaladdo geomedian.vrt -ro--config BIGTIFF_OVERVIEW YES --config SPARSE_OK TRUE --config COMPRESS_OVERVIEW LZW --config NUM_THREADS ALL_CPUS
 
 
