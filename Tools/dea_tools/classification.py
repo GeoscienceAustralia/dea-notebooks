@@ -500,7 +500,7 @@ def _get_training_data_for_shp(gdf,
 
     # Use custom function for training data if it exists
     if custom_func is not None:
-        #with HiddenPrints():
+        with HiddenPrints():
             data = custom_func(ds)
             data = data.where(mask)
 
