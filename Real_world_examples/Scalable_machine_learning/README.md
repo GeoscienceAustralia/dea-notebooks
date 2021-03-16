@@ -18,7 +18,7 @@ There are four primary notebooks in this notebook series (along with an optional
 4. `Classify_satellite_data.ipynb`: This is where we load in satellite data and classify it using the model created in the previous notebook. The notebook initially asks you to provide a number of small test locations so we can observe visually how well the model is going at classifying real data. The last part of the notebook attempts to classify a much larger region.  
 5. `Object-based_filtering.ipynb`: This notebook is provided as an optional extra. It guides you through converting your pixel-based classification into an object-based classification using image segmentation.
 
-The default example in the notebooks uses a training dataset containing "crop" and "non-crop" labels (labelled as 1 and 0 in the geojson file, respectively) from SOMEWHERE. The training data is called `"SOMETHING.geojson"`, and is located in the `'data/'` folder.  By the end of this notebook series we will have produced a model for identifying cropland areas in Egypt, and we will output a cropland mask (as a geotiff) for the region around the city of Faiyum, Egypt.
+The default example in the notebooks uses a training dataset containing "crop" and "non-crop" labels (labelled as 1 and 0 in the geojson, respectively) from across Australia. The training data is called `"crop_training.geojson"`, and is located in the `'data/'` folder. This reference data was acquired and pre-processed from the USGS's Global Food Security Analysis Data portal [here](https://croplands.org/app/data/search?page=1&page_size=200) and [here](https://e4ftl01.cr.usgs.gov/MEASURES/GFSAD30VAL.001/2008.01.01/).  By the end of this notebook series we will have produced a model for identifying cropland areas in Australia, and we will output a cropland mask (as a geotiff) for around region around south-east WA.
 
 If you wish to begin running your own classification workflow, the first step is to replace this training data with your own in the `Extract_training_data.ipynb` notebook. Though of course its best to run through the default example first to ensure you understand the content before altering the notebooks for your specific use case. 
 
@@ -32,19 +32,13 @@ If you wish to begin running your own classification workflow, the first step is
 * There are many online courses that can help you understand the fundamentals of machine learning with python e.g. [edX](https://www.edx.org/course/machine-learning-with-python-a-practical-introduct), [coursera](https://www.coursera.org/learn/machine-learning-with-python). 
 * The [Scikit-learn](https://scikit-learn.org/stable/supervised_learning.html) documentation provides information on the available models and their parameters.
 * This [review article](https://www.tandfonline.com/doi/full/10.1080/01431161.2018.1433343) provides a nice overview of machine learning in the context of remote sensing.
-* The stand alone notebook, [Machine_learning_with_ODC.ipynb](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Frequently_used_code/Machine_learning_with_ODC.ipynb), in the `Real_world_examples/` folder is a companion piece to these notebooks and provides a more succint (but less descriptive) version of the workflow demonstrated here.
+* The stand alone notebook, [Machine_learning_with_ODC](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Frequently_used_code/Machine_learning_with_ODC.ipynb), in the `Real_world_examples/` folder is a companion piece to these notebooks and provides a more succint (but less descriptive) version of the workflow demonstrated here.
 ___
 
 
 ## Getting Started
 
 To begin working through the notebooks in this `Scalable ML on the ODC` workflow, go to the first notebook `Extracting_training_data.ipynb`.
-
-1. [Extracting_training_data](https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/blob/scalable_ml/Real_world_examples/Scalable_machine_learning/1_Extract_training_data.ipynb) 
-2. [Inspect_training_data](https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/blob/scalable_ml/Real_world_examples/Scalable_machine_learning/2_Inspect_training_data.ipynb)
-3. [Evaluate_optimize_fit_classifier](https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/blob/scalable_ml/Real_world_examples/Scalable_machine_learning/3_Evaluate_optimize_fit_classifier.ipynb)
-4. [Classify_satellite_data](https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/blob/scalable_ml/Real_world_examples/Scalable_machine_learning/4_Classify_satellite_data.ipynb)
-5. [Object-based_filtering](https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/blob/scalable_ml/Real_world_examples/Scalable_machine_learning/5_Object-based_filtering.ipynb)
 
 
 ***
