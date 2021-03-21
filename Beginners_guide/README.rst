@@ -27,6 +27,6 @@ Once you have you have completed the beginner tutorials, join advanced users in 
    :maxdepth: 2   
    :caption: Guided Tutorial
    
-   Guided_tutorial.md
+   Guided_tutorial.ipynb
  
-Workshop participants follow the Guided tutorial link above please.
+Workshop participants follow the Guided tutorial links above please.
