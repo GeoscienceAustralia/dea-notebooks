@@ -31,7 +31,7 @@ Functions included:
     last
     first
 
-Last modified: Jan 2021
+Last modified: March 2021
 
 '''
 
@@ -362,7 +362,7 @@ def load_ard(dc,
         print('Counting good quality pixels for each time step')
         data_perc = (pq_mask.sum(axis=[1, 2], dtype='int32') /
                      (pq_mask.shape[1] * pq_mask.shape[2]))
-        keep = data_perc >= min_gooddata
+        keep = (data_perc >= min_gooddata).persist()
 
         # Filter by `min_gooddata` to drop low quality observations
         total_obs = len(ds.time)
