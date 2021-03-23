@@ -21,7 +21,7 @@ Functions included:
     tidal_tag
     tidal_stats
 
-Last modified: January 2021 by CP
+Last modified: February 2020
 
 '''
 
@@ -41,10 +41,8 @@ register_matplotlib_converters()
 
 
 def tidal_tag(ds,
-              last_tidepost, # append tideposts successfully used for each polygon to list (defined outside of the function)
               tidepost_lat=None, 
               tidepost_lon=None, 
-             
               ebb_flow=False, 
               swap_dims=False,
               return_tideposts=False):
@@ -93,7 +91,7 @@ def tidal_tag(ds,
     `tidepost_lon` and `tidepost_lat` location used in the analysis)
     
     """
-    
+
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
     if not tidepost_lat or not tidepost_lon:
@@ -102,17 +100,10 @@ def tidal_tag(ds,
             crs=CRS('EPSG:4326')).coords[0]
         print(f'Setting tide modelling location from dataset centroid: '
               f'{tidepost_lon:.2f}, {tidepost_lat:.2f}')
-         
-#     else:
-#         print(f'Using user-supplied tide modelling location: '
-#           f'{tidepost_lon:.2f}, {tidepost_lat:.2f}')
 
-#     else:
-#         if last_tidepost:
-#             tidepost_lon =  last_tidepost[-1][0]
-#             tidepost_lat = last_tidepost[-1][1]
-#             print(f'Using the last valid tidepost: '
-#                   f'{tidepost_lon:.2f}, {tidepost_lat:.2f}')
+    else:
+        print(f'Using user-supplied tide modelling location: '
+              f'{tidepost_lon:.2f}, {tidepost_lat:.2f}')
 
     # Use the tidal model to compute tide heights for each observation:
     obs_datetimes = ds.time.data.astype('M8[s]').astype('O').tolist()    
@@ -170,88 +161,14 @@ def tidal_tag(ds,
     
     else:
         
-        if len(obs_predictedtides) == 0:
-            
-                # If custom tide modelling locations are not provided, use the
-        # dataset centroid
-#         if not tidepost_lat or not tidepost_lon:
+        raise ValueError(
+            f'Tides could not be modelled for dataset centroid located '
+            f'at {tidepost_lon:.2f}, {tidepost_lat:.2f}. This can occur if '
+            f'this coordinate occurs over land. Please manually specify '
+            f'a tide modelling location located over water using the '
+            f'`tidepost_lat` and `tidepost_lon` parameters.'
+        )
 
-    #         tidepost_lon, tidepost_lat = ds.extent.centroid.to_crs(
-    #             crs=CRS('EPSG:4326')).coords[0]
-    #         print(f'Setting tide modelling location from dataset centroid: '
-    #               f'{tidepost_lon:.2f}, {tidepost_lat:.2f}')
-    # #     else:
-    # #         print(f'Using user-supplied tide modelling location: '
-    # #           f'{tidepost_lon:.2f}, {tidepost_lat:.2f}')
-
-    #     else:
-#             if last_tidepost:
-            tidepost_lon =  last_tidepost[0]
-            tidepost_lat = last_tidepost[1]
-            print(f'Using the last valid tidepost: '
-                  f'{tidepost_lon:.2f}, {tidepost_lat:.2f}')
-
-        # Use the tidal model to compute tide heights for each observation:
-        obs_datetimes = ds.time.data.astype('M8[s]').astype('O').tolist()    
-        obs_timepoints = [TimePoint(tidepost_lon, tidepost_lat, dt) 
-                          for dt in obs_datetimes]
-        obs_predictedtides = predict_tide(obs_timepoints)   
-
-        # If tides cannot be successfully modeled (e.g. if the centre of the 
-        # xarray dataset is located is over land), raise an exception
-        if len(obs_predictedtides) > 0:
-
-            # Extract tide heights
-            obs_tideheights = [predictedtide.tide_m for predictedtide 
-                               in obs_predictedtides]
-
-            # Assign tide heights to the dataset as a new variable
-            ds['tide_height'] = xr.DataArray(obs_tideheights, [('time', ds.time)])
-
-            # Optionally calculate the tide phase for each observation
-            if ebb_flow:
-
-                # Model tides for a time 15 minutes prior to each previously
-                # modelled satellite acquisition time. This allows us to compare
-                # tide heights to see if they are rising or falling.
-                print('Modelling tidal phase (e.g. ebb or flow)')
-                pre_times = (ds.time - pd.Timedelta('15 min'))
-                pre_datetimes = pre_times.data.astype('M8[s]').astype('O').tolist()   
-                pre_timepoints = [TimePoint(tidepost_lon, tidepost_lat, dt) 
-                                  for dt in pre_datetimes]
-                pre_predictedtides = predict_tide(pre_timepoints)
-
-                # Compare tides computed for each timestep. If the previous tide 
-                # was higher than the current tide, the tide is 'ebbing'. If the
-                # previous tide was lower, the tide is 'flowing'
-                tidal_phase = ['Ebb' if pre.tide_m > obs.tide_m else 'Flow'
-                               for pre, obs in zip(pre_predictedtides, 
-                                                   obs_predictedtides)]
-
-                # Assign tide phase to the dataset as a new variable
-                ds['ebb_flow'] = xr.DataArray(tidal_phase, [('time', ds.time)]) 
-
-            # If swap_dims = True, make tide height the primary dimension 
-            # instead of time
-            if swap_dims:
-
-                # Swap dimensions and sort by tide height
-                ds = ds.swap_dims({'time': 'tide_height'})          
-                ds = ds.sortby('tide_height')  
-                ds = ds.drop('time')
-
-            if return_tideposts:
-                return ds, tidepost_lon, tidepost_lat
-            else:
-                return ds
-        
-#         raise ValueError(
-#             f'Tides could not be modelled for dataset centroid located '
-#             f'at {tidepost_lon:.2f}, {tidepost_lat:.2f}. This can occur if '
-#             f'this coordinate occurs over land. Please manually specify '
-#             f'a tide modelling location located over water using the '
-#             f'`tidepost_lat` and `tidepost_lon` parameters.'
-#         )
 
 def tidal_stats(ds, 
                 tidepost_lat=None,
