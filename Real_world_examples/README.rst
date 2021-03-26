@@ -1,7 +1,7 @@
 Real-world examples
 ===================
 
-More complex workflows demonstrating how DEA can be used to address real-world problems.
+More complex case study-based workflows demonstrating how DEA can be used to address real-world problems:
 
 .. toctree::
    :maxdepth: 1
@@ -22,3 +22,11 @@ More complex workflows demonstrating how DEA can be used to address real-world p
    Urban_change_detection.ipynb
    Vegetation_phenology.ipynb
    Wetness_stream_gauge_correlations.ipynb
+
+Scalable Supervised Machine Learning on the Open Data Cube:
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Scaleable machine learning
+   
+   Scalable_machine_learning/index
