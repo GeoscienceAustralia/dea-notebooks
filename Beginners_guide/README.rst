@@ -22,14 +22,14 @@ Once you have you have completed the beginner tutorials, join advanced users in 
     - The "Datasets" directory in the repository, where you can explore DEA products in depth.
     - The "Frequently used code" directory, which contains a recipe book of common techniques and methods for analysing DEA data.
     - The "Real-world examples" directory, which provides more complex workflows and analysis case studies.  
-  
-Open Data Cube workshop participants follow the guided tutorial below:
 
 .. toctree::
    :maxdepth: 2   
    :caption: Guided Tutorial
    
    Guided_tutorial.ipynb
+
+Open Data Cube workshop participants follow the guided tutorial above.
 
 
 Citing DEA Notebooks
