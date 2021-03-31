@@ -15,7 +15,7 @@ Digital Earth Australia Notebooks
 
 **Contact:** If you need assistance with any of the Jupyter Notebooks or Python code in this repository, please post a question on the `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/ask?tags=open-data-cube>`_ using the ``open-data-cube`` tag (you can view `previously asked questions here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_). If you would like to report an issue with this notebook, you can `file one on Github <https://github.com/GeoscienceAustralia/dea-notebooks>`_.
 
-**Citing DEA Notebooks:** If you use any of the notebooks, code or tools in your work, please reference them using the following citation:
+**Citing DEA Notebooks:** If you use any of the notebooks, code or tools in this repository in your work, please reference them using the following citation:
 
     Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234
 
