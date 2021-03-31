@@ -4,8 +4,8 @@
   :width: 900
   :alt: Digital Earth Australia logo
 
-Digital Earth Australia Notebooks
-#################################
+Digital Earth Australia notebooks and tools repository
+######################################################
 
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
   :target: https://opensource.org/licenses/Apache-2.0
@@ -13,7 +13,6 @@ Digital Earth Australia Notebooks
 .. image:: https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg
   :target: https://doi.org/10.26186/145234
   :alt: DOI 
-
 
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
