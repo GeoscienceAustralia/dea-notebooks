@@ -1,7 +1,7 @@
 Real-world examples
 ===================
 
-More complex workflows demonstrating how DEA can be used to address real-world problems.
+More complex case study-based workflows demonstrating how DEA can be used to address real-world problems:
 
 .. toctree::
    :maxdepth: 1
@@ -22,3 +22,18 @@ More complex workflows demonstrating how DEA can be used to address real-world p
    Urban_change_detection.ipynb
    Vegetation_phenology.ipynb
    Wetness_stream_gauge_correlations.ipynb
+
+Scalable Supervised Machine Learning on the Open Data Cube:
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Scaleable machine learning
+   
+   Scalable_machine_learning/index
+   
+Citing DEA Notebooks
+--------------------
+
+If you use any of the notebooks, code or tools in this repository in your work, please reference them using the following citation:
+
+    Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234

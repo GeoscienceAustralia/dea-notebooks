@@ -4,20 +4,27 @@
   :width: 900
   :alt: Digital Earth Australia logo
 
-Digital Earth Australia Notebooks
-#################################
+Digital Earth Australia notebooks and tools repository
+######################################################
 
+.. image:: https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg
+  :target: https://doi.org/10.26186/145234
+  :alt: DOI
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
   :target: https://opensource.org/licenses/Apache-2.0
-  :alt: Digital Earth Australia logo
+  :alt: Apache license
 
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
 **Contact:** If you need assistance with any of the Jupyter Notebooks or Python code in this repository, please post a question on the `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/ask?tags=open-data-cube>`_ using the ``open-data-cube`` tag (you can view `previously asked questions here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_). If you would like to report an issue with this notebook, you can `file one on Github <https://github.com/GeoscienceAustralia/dea-notebooks>`_.
 
+**Citing DEA Notebooks:** If you use any of the notebooks, code or tools in this repository in your work, please reference them using the following citation:
+
+    Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234
+
 ----------
 
-The Digital Earth Australia Notebooks repository (``dea-notebooks``) hosts Jupyter Notebooks, Python scripts and workflows for analysing `Digital Earth Australia (DEA) <https://www.ga.gov.au/dea>`_ satellite data and derived products. This documentation is designed to provide a guide to getting started with DEA, and to showcase the wide range of geospatial analyses that can be achieved using DEA data and open-source software including `Open Data Cube <https://www.opendatacube.org/>`_ and `xarray <http://xarray.pydata.org/en/stable/>`_.
+The Digital Earth Australia notebooks and tools repository (``dea-notebooks``) hosts Jupyter Notebooks, Python scripts and workflows for analysing `Digital Earth Australia (DEA) <https://www.ga.gov.au/dea>`_ satellite data and derived products. This documentation is designed to provide a guide to getting started with DEA, and to showcase the wide range of geospatial analyses that can be achieved using DEA data and open-source software including `Open Data Cube <https://www.opendatacube.org/>`_ and `xarray <http://xarray.pydata.org/en/stable/>`_.
 
 The repository is based around the following directory structure (from simple to increasingly complex applications):
 
@@ -41,7 +48,7 @@ The supporting scripts and data for the notebooks are kept in the following dire
 
 The Jupyter notebooks on the ``stable`` branch of this repository are used to generate the **Digital Earth Australia User Guide** located at: `<https://docs.dea.ga.gov.au/>`_
 
-All notebooks in the dea-notebooks repository contain tags describing their functionality. If you are searching for a specific functionality, use the `Tags Index <https://docs.dea.ga.gov.au/genindex.html>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an 'Issue' in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
+All notebooks in the ``dea-notebooks`` repository contain tags describing their functionality. If you are searching for a specific functionality, use the `Tags Index <https://docs.dea.ga.gov.au/genindex.html>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an 'Issue' in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
 
 ----------
 
