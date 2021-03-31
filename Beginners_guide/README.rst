@@ -22,11 +22,19 @@ Once you have you have completed the beginner tutorials, join advanced users in 
     - The "Datasets" directory in the repository, where you can explore DEA products in depth.
     - The "Frequently used code" directory, which contains a recipe book of common techniques and methods for analysing DEA data.
     - The "Real-world examples" directory, which provides more complex workflows and analysis case studies.  
-   
+  
+Open Data Cube workshop participants follow the guided tutorial below:
+
 .. toctree::
    :maxdepth: 2   
    :caption: Guided Tutorial
    
    Guided_tutorial.ipynb
- 
-Workshop participants follow the Guided tutorial links above please.
+
+
+Citing DEA Notebooks
+--------------------
+
+If you use any of the notebooks, code or tools in this repository in your work, please reference them using the following citation:
+
+    Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234
