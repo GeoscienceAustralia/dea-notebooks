@@ -998,7 +998,10 @@ def plot_wo(wo, legend=True, **plot_kwargs):
     try:
         im = wo.plot.imshow(cmap=cmap, norm=norm, colorbar=legend, **plot_kwargs)
     except AttributeError:
-        im = wo.plot(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
+        try:
+            im = wo.plot.imshow(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
+        except AttributeError:
+            im = wo.plot(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
     
     if legend:
         try:
