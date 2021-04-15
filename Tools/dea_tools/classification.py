@@ -30,7 +30,7 @@ import rasterio
 import numpy as np
 import pandas as pd
 import xarray as xr
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import dask.array as da
 import geopandas as gpd
 from copy import deepcopy
