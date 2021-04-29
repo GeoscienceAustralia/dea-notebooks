@@ -12,7 +12,6 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
    DEA_Coastlines.ipynb
    DEA_Waterbodies.ipynb
    Sentinel_2.ipynb
-   TSmask.ipynb
 
 Citing DEA Notebooks
 --------------------
