@@ -17,7 +17,7 @@ from datacube_stats.statistics import TCWStats
 
 TasseledCapTools is intended for applications where TCWStats doesn't return intermediate
 results, or where TCWStats handles memory differently to TasseledCapTools.
-Last modified: June 2018
+Last modified: April 2021
 Authors: Bex Dunn, Robbi Bishop-Taylor
 
 Available functions:
@@ -33,7 +33,8 @@ import xarray as xr
 
 # Import external functions from dea-notebooks
 sys.path.append(os.path.expanduser('~/dea-notebooks/Scripts/'))
-from BandIndices import tasseled_cap
+#from BandIndices import tasseled_cap --this needs to be replaced with bandindices
+#mport dea_tools.bandindices
 
 
 def thresholded_tasseled_cap(sensor_data, tc_bands=['greenness', 'brightness', 'wetness'],
@@ -102,52 +103,52 @@ def thresholded_tasseled_cap(sensor_data, tc_bands=['greenness', 'brightness', '
 
     return output_array
 
-def pct_exceedance_tasseled_cap(sensor_data, tc_bands=['greenness', 'brightness', 'wetness'],
-                             greenness_threshold=700,brightness_threshold=4000,
-                             wetness_threshold=-600, drop=True, drop_tc_bands=True):
-    '''counts the number of thresholded tasseled cap scenes per pixel and divides by the 
-    number of tasseled cap scenes per pixel. Returns the percentage of scenes exceeding the
-    tasselled cap thresholds for the requested tasseled cap bands as an xarray.
+# def pct_exceedance_tasseled_cap(sensor_data, tc_bands=['greenness', 'brightness', 'wetness'],
+#                              greenness_threshold=700,brightness_threshold=4000,
+#                              wetness_threshold=-600, drop=True, drop_tc_bands=True):
+#     '''counts the number of thresholded tasseled cap scenes per pixel and divides by the 
+#     number of tasseled cap scenes per pixel. Returns the percentage of scenes exceeding the
+#     tasselled cap thresholds for the requested tasseled cap bands as an xarray.
 
-    Last modified: June 2018
-    Authors: Bex Dunn, Robbi Bishop-Taylor
+#     Last modified: June 2018
+#     Authors: Bex Dunn, Robbi Bishop-Taylor
 
-    :attr sensor_data: input xarray dataset with six Landsat bands
-    :attr tc_bands: list of tasseled cap bands to compute
-    (valid options: 'wetness', 'greenness','brightness')
-    :attr greenness_threshold: optional threshold as float
-    :attr brightness_threshold: optional threshold as float
-    :attr wetness_threshold: optional threshold as float
-    :attr drop: if 'drop = False', return all original Landsat bands
-    :attr drop_tc_bands: if 'drop_tc_bands = False', return all unthresholded tasseled 
-    cap bands as well as the thresholded bands
-    :attr tc_kwargs: a dictionary of this function's input arguments needed by
-    the nested tasseled_cap function
-    :attr thresholded tc_kwargs:a dictionary of this function's input arguments needed by
-    the nested thresholded_tasseled_cap function
-    :returns: xarray dataset with the percentage exceedance of each threshold. 
-    ##FIXME - may want to change this so that you don't get the same thing for all time.
-    """
-    '''
-    tc_kwargs={'sensor_data':sensor_data, 
-               'tc_bands':tc_bands,
-               'drop':drop}
+#     :attr sensor_data: input xarray dataset with six Landsat bands
+#     :attr tc_bands: list of tasseled cap bands to compute
+#     (valid options: 'wetness', 'greenness','brightness')
+#     :attr greenness_threshold: optional threshold as float
+#     :attr brightness_threshold: optional threshold as float
+#     :attr wetness_threshold: optional threshold as float
+#     :attr drop: if 'drop = False', return all original Landsat bands
+#     :attr drop_tc_bands: if 'drop_tc_bands = False', return all unthresholded tasseled 
+#     cap bands as well as the thresholded bands
+#     :attr tc_kwargs: a dictionary of this function's input arguments needed by
+#     the nested tasseled_cap function
+#     :attr thresholded tc_kwargs:a dictionary of this function's input arguments needed by
+#     the nested thresholded_tasseled_cap function
+#     :returns: xarray dataset with the percentage exceedance of each threshold. 
+#     ##FIXME - may want to change this so that you don't get the same thing for all time.
+#     """
+#     '''
+#     tc_kwargs={'sensor_data':sensor_data, 
+#                'tc_bands':tc_bands,
+#                'drop':drop}
     
-    thresholded_tc_kwargs={**tc_kwargs, 
-                           'greenness_threshold': greenness_threshold,
-                           'brightness_threshold': brightness_threshold,
-                           'wetness_threshold':wetness_threshold,
-                           'drop_tc_bands':drop_tc_bands}
+#     thresholded_tc_kwargs={**tc_kwargs, 
+#                            'greenness_threshold': greenness_threshold,
+#                            'brightness_threshold': brightness_threshold,
+#                            'wetness_threshold':wetness_threshold,
+#                            'drop_tc_bands':drop_tc_bands}
                                
-    pct_exceedance_array = sensor_data.copy(deep=True)
-    tc_bands=['greenness', 'brightness', 'wetness']
-    for tc_band in tc_bands:
-        pct_exceedance_array[str(tc_band+'_pct_exceedance')] = thresholded_tasseled_cap(**thresholded_tc_kwargs)[str(tc_band+'_thresholded')].count(dim='time')/        tasseled_cap(**tc_kwargs)[tc_band].count(dim='time')
-    # If drop = True, remove original bands
-    if drop:
-        bands_to_drop = list(sensor_data.data_vars)
-        pct_exceedance_array = pct_exceedance_array.drop(bands_to_drop)
+#     pct_exceedance_array = sensor_data.copy(deep=True)
+#     tc_bands=['greenness', 'brightness', 'wetness']
+#     for tc_band in tc_bands:
+#         pct_exceedance_array[str(tc_band+'_pct_exceedance')] = thresholded_tasseled_cap(**thresholded_tc_kwargs)[str(tc_band+'_thresholded')].count(dim='time')/        tasseled_cap(**tc_kwargs)[tc_band].count(dim='time')
+#     # If drop = True, remove original bands
+#     if drop:
+#         bands_to_drop = list(sensor_data.data_vars)
+#         pct_exceedance_array = pct_exceedance_array.drop(bands_to_drop)
 
-    return pct_exceedance_array
+#     return pct_exceedance_array
    
 
