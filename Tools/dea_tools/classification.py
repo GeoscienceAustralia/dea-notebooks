@@ -30,7 +30,7 @@ import rasterio
 import numpy as np
 import pandas as pd
 import xarray as xr
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import dask.array as da
 import geopandas as gpd
 from copy import deepcopy
@@ -503,7 +503,17 @@ def _get_training_data_for_shp(gdf,
         with HiddenPrints():
             data = custom_func(ds)
             data = data.where(mask)
-
+        
+        #Check that custom_func has removed time
+        if 'time' in data.dims:
+            t = data.dims['time']
+            if t > 1:
+                raise ValueError(
+                    "After running the custom_func, the dataset still has "+
+                     str(t) + " time-steps, dataset must only have"+
+                    " x and y dimensions."
+                    )
+                
     else:
         # mask dataset
         ds = ds.where(mask)
