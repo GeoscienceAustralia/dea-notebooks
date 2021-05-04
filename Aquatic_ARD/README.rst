@@ -34,6 +34,8 @@ The database requires access to the r78 project at NCI. To access the database y
 
 ``Sentinel 2A``
 
+.. image:: water-atcor-s2a-coverage.png
+
   Zone 50, tile HMJ, data period 2016.12 -2020.12
   
   Zone 52, tile KDG, data period 2016.11 -2020.12
