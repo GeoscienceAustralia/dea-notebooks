@@ -33,10 +33,11 @@ The database requires access to the r78 project at NCI. To access the database y
 *Database Coverage and Time Periods*
 
 ``Sentinel 2A``
-.. code-block:: console
 
   Zone 50, tile HMJ, data period 2016.12 -2020.12
+  
   Zone 52, tile KDG, data period 2016.11 -2020.12
+  
   Zone 52, tile LDH, data period 2016.09 -2020.12
   Zone 54, tile HXK, data period 2016.12 -2020.12
   Zone 55, tile HBT, data period 2016.11 -2020.12
@@ -52,7 +53,7 @@ The database requires access to the r78 project at NCI. To access the database y
   Zone 55, tile KET, data period 2016.12 -2020.12
 
 ``Sentinel 2A``
-.. code-block:: console
+
 
   Zone 50, tile HMJ, data period 2017.07 -2020.12
   Zone 52, tile KDG, data period 2017.07 -2020.12
@@ -71,7 +72,7 @@ The database requires access to the r78 project at NCI. To access the database y
   Zone 55, tile KET, data period 2017.07 -2020.12
 
 ``Landsat 8``
-.. code-block:: console
+
 
   Path 91, row 081, data period 2013.04 -2020.12
   Path 92, row 084, data period 2013.03 -2020.12
