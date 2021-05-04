@@ -1,15 +1,11 @@
 .. Notebook Gallery Instructions:
 
-.. image:: Supplementary_data/dea_logo_wide.jpg
-  :width: 900
-  :alt: Digital Earth Australia logo
+
 
 Digital Earth Australia Aquatic ARD Test Database
 ######################################################
 
-.. image:: https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg
-  :target: https://doi.org/10.26186/145234
-  :alt: DOI
+
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
   :target: https://opensource.org/licenses/Apache-2.0
   :alt: Apache license
@@ -38,49 +34,87 @@ The database requires access to the r78 project at NCI. To access the database y
 
 ``Sentinel 2A``
 
-Zone 50, tile HMJ, data period 2016.12 -2020.12
-Zone 52, tile KDG, data period 2016.11 -2020.12
-Zone 52, tile LDH, data period 2016.09 -2020.12
-Zone 54, tile HXK, data period 2016.12 -2020.12
-Zone 55, tile HBT, data period 2016.11 -2020.12
-Zone 55, tile HBU, data period 2016.11 -2020.12
-Zone 55, tile HCT, data period 2016.11 -2020.12
-Zone 55, tile HCU, data period 2016.11 -2020.12
-Zone 55, tile HCV, data period 2016.11 -2020.12
-Zone 55, tile HEA, data period 2016.04 -2020.12
-Zone 55, tile HEV, data period 2016.11 -2020.12
-Zone 55, tile HFA, data period 2016.04 -2020.12
-Zone 55, tile HFB, data period 2016.04 -2020.12
-Zone 55, tile KDT, data period 2016.12 -2020.12
-Zone 55, tile KET, data period 2016.12 -2020.12
 
-``Sentinel 2A``
+  Zone 50, tile HMJ, data period 2016.12 -2020.12
+  
+  Zone 52, tile KDG, data period 2016.11 -2020.12
+  
+  Zone 52, tile LDH, data period 2016.09 -2020.12
+  
+  Zone 54, tile HXK, data period 2016.12 -2020.12
+  
+  Zone 55, tile HBT, data period 2016.11 -2020.12
+  
+  Zone 55, tile HBU, data period 2016.11 -2020.12
+  
+  Zone 55, tile HCT, data period 2016.11 -2020.12
+  
+  Zone 55, tile HCU, data period 2016.11 -2020.12
+  
+  Zone 55, tile HCV, data period 2016.11 -2020.12
+  
+  Zone 55, tile HEA, data period 2016.04 -2020.12
+  
+  Zone 55, tile HEV, data period 2016.11 -2020.12
+  
+  Zone 55, tile HFA, data period 2016.04 -2020.12
+  
+  Zone 55, tile HFB, data period 2016.04 -2020.12
+  
+  Zone 55, tile KDT, data period 2016.12 -2020.12
+  
+  Zone 55, tile KET, data period 2016.12 -2020.12
 
-Zone 50, tile HMJ, data period 2017.07 -2020.12
-Zone 52, tile KDG, data period 2017.07 -2020.12
-Zone 52, tile LDH, data period 2017.07 -2020.12
-Zone 54, tile HXK, data period 2017.07 -2020.12
-Zone 55, tile HBT, data period 2017.07 -2020.12
-Zone 55, tile HBU, data period 2017.07 -2020.12
-Zone 55, tile HCT, data period 2017.07 -2020.12
-Zone 55, tile HCU, data period 2017.07 -2020.12
-Zone 55, tile HCV, data period 2017.07 -2020.12
-Zone 55, tile HEA, data period 2017.07 -2020.12
-Zone 55, tile HEV, data period 2017.07 -2020.12
-Zone 55, tile HFA, data period 2017.07 -2020.12
-Zone 55, tile HFB, data period 2017.07 -2020.12
-Zone 55, tile KDT, data period 2017.07 -2020.12
-Zone 55, tile KET, data period 2017.07 -2020.12
+``Sentinel 2B``
+
+
+  Zone 50, tile HMJ, data period 2017.07 -2020.12
+  
+  Zone 52, tile KDG, data period 2017.07 -2020.12
+  
+  Zone 52, tile LDH, data period 2017.07 -2020.12
+  
+  Zone 54, tile HXK, data period 2017.07 -2020.12
+  
+  Zone 55, tile HBT, data period 2017.07 -2020.12
+  
+  Zone 55, tile HBU, data period 2017.07 -2020.12
+  
+  Zone 55, tile HCT, data period 2017.07 -2020.12
+  
+  Zone 55, tile HCU, data period 2017.07 -2020.12
+  
+  Zone 55, tile HCV, data period 2017.07 -2020.12
+  
+  Zone 55, tile HEA, data period 2017.07 -2020.12
+  
+  Zone 55, tile HEV, data period 2017.07 -2020.12
+  
+  Zone 55, tile HFA, data period 2017.07 -2020.12
+  
+  Zone 55, tile HFB, data period 2017.07 -2020.12
+  
+  Zone 55, tile KDT, data period 2017.07 -2020.12
+  
+  Zone 55, tile KET, data period 2017.07 -2020.12
 
 ``Landsat 8``
 
-Path 91, row 081, data period 2013.04 -2020.12
-Path 92, row 084, data period 2013.03 -2020.12
-Path 93, row 086, data period 2013.03 -2020.12
-Path 94, row 074, data period 2013.04 -2020.12
-Path 95, row 082, data period 2013.04 -2020.12
-Path 107, row 071, data period 2013.04 -2020.12
-Path 112, row 083, data period 2013.04 -2020.12
+
+  Path 91, row 081, data period 2013.04 -2020.12
+  
+  Path 92, row 084, data period 2013.03 -2020.12
+  
+  Path 93, row 086, data period 2013.03 -2020.12
+  
+  Path 94, row 074, data period 2013.04 -2020.12
+  
+  Path 95, row 082, data period 2013.04 -2020.12
+  
+  Path 107, row 071, data period 2013.04 -2020.12
+  
+  Path 112, row 083, data period 2013.04 -2020.12
+  
 
 
 
