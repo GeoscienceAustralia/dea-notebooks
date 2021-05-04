@@ -1,15 +1,11 @@
 .. Notebook Gallery Instructions:
 
-.. image:: Supplementary_data/dea_logo_wide.jpg
-  :width: 900
-  :alt: Digital Earth Australia logo
+
 
 Digital Earth Australia Aquatic ARD Test Database
 ######################################################
 
-.. image:: https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg
-  :target: https://doi.org/10.26186/145234
-  :alt: DOI
+
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
   :target: https://opensource.org/licenses/Apache-2.0
   :alt: Apache license
@@ -37,7 +33,7 @@ The database requires access to the r78 project at NCI. To access the database y
 *Database Coverage and Time Periods*
 
 ``Sentinel 2A``
-
+.. code-block:: console
 Zone 50, tile HMJ, data period 2016.12 -2020.12
 Zone 52, tile KDG, data period 2016.11 -2020.12
 Zone 52, tile LDH, data period 2016.09 -2020.12
@@ -55,7 +51,7 @@ Zone 55, tile KDT, data period 2016.12 -2020.12
 Zone 55, tile KET, data period 2016.12 -2020.12
 
 ``Sentinel 2A``
-
+.. code-block:: console
 Zone 50, tile HMJ, data period 2017.07 -2020.12
 Zone 52, tile KDG, data period 2017.07 -2020.12
 Zone 52, tile LDH, data period 2017.07 -2020.12
@@ -73,7 +69,7 @@ Zone 55, tile KDT, data period 2017.07 -2020.12
 Zone 55, tile KET, data period 2017.07 -2020.12
 
 ``Landsat 8``
-
+.. code-block:: console
 Path 91, row 081, data period 2013.04 -2020.12
 Path 92, row 084, data period 2013.03 -2020.12
 Path 93, row 086, data period 2013.03 -2020.12
