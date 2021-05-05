@@ -7,7 +7,7 @@ def load_wit_s3(geom, db_name, table_name, session):
     load wit from s3
     input:
         geom: geometry of polygon
-        db_name: the `category` on aws where the table_name exits
+        db_name: the `catalog` on aws where the table_name exits
         table_name: a table to store the metadata from parquet files
         session: boto3 session instance
     output:
