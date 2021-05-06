@@ -1,0 +1,96 @@
+juxtapose:
+  - collate:
+      - product: ls8_fc_albers
+        measurements: [BS, PV, NPV]
+        source_filter:
+          product: ls8_level1_scene
+          gqa_iterative_mean_xy: [0, 1]
+        dataset_predicate: wit_tooling.ls8_on
+      - product: ls7_fc_albers
+        measurements: [BS, PV, NPV]
+        source_filter:
+          product: ls7_level1_scene
+          gqa_iterative_mean_xy: [0, 1]
+        dataset_predicate: wit_tooling.ls7_on
+      - product: ls5_fc_albers
+        measurements: [BS, PV, NPV]
+        source_filter:
+          product: ls5_level1_scene
+          gqa_iterative_mean_xy: [0, 1]
+        dataset_predicate: wit_tooling.ls5_on_1ym
+  - collate:
+      - transform: make_mask
+        input:
+          product: ls8_pq_albers
+          fuse_func: datacube.helpers.ga_pq_fuser
+        flags:
+          contiguous: True
+          cloud_acca: no_cloud
+          cloud_fmask: no_cloud
+          cloud_shadow_acca: no_cloud_shadow
+          cloud_shadow_fmask: no_cloud_shadow
+          blue_saturated: False
+          green_saturated: False
+          red_saturated: False
+          nir_saturated: False
+          swir1_saturated: False
+          swir2_saturated: False
+        mask_measurement_name: pixelquality
+      - transform: make_mask
+        input:
+          product: ls7_pq_albers
+          fuse_func: datacube.helpers.ga_pq_fuser
+        flags:
+          contiguous: True
+          cloud_acca: no_cloud
+          cloud_fmask: no_cloud
+          cloud_shadow_acca: no_cloud_shadow
+          cloud_shadow_fmask: no_cloud_shadow
+          blue_saturated: False
+          green_saturated: False
+          red_saturated: False
+          nir_saturated: False
+          swir1_saturated: False
+          swir2_saturated: False
+        mask_measurement_name: pixelquality
+      - transform: make_mask
+        input:
+          product: ls5_pq_albers
+          fuse_func: datacube.helpers.ga_pq_fuser
+        flags:
+          contiguous: True
+          cloud_acca: no_cloud
+          cloud_fmask: no_cloud
+          cloud_shadow_acca: no_cloud_shadow
+          cloud_shadow_fmask: no_cloud_shadow
+          blue_saturated: False
+          green_saturated: False
+          red_saturated: False
+          nir_saturated: False
+          swir1_saturated: False
+          swir2_saturated: False
+        mask_measurement_name: pixelquality
+  - transform: wit_tooling.external_stats.TCIndex
+    input:
+      collate:
+        - product: ls8_nbart_albers
+          measurements: [blue, green, red, nir, swir1, swir2]
+          source_filter:
+            product: ls8_level1_scene
+            gqa_iterative_mean_xy: [0, 1]
+          dataset_predicate: wit_tooling.ls8_on
+        - product: ls7_nbart_albers
+          measurements: [blue, green, red, nir, swir1, swir2]
+          source_filter:
+            product: ls7_level1_scene
+            gqa_iterative_mean_xy: [0, 1]
+          dataset_predicate: wit_tooling.ls7_on
+        - product: ls5_nbart_albers
+          measurements: [blue, green, red, nir, swir1, swir2]
+          source_filter:
+            product: ls5_level1_scene
+            gqa_iterative_mean_xy: [0, 1]
+          dataset_predicate: wit_tooling.ls5_on_1ym
+  - product: wofs_albers
+    measurements: [water]
+    fuse_func: digitalearthau.utils.wofs_fuser
