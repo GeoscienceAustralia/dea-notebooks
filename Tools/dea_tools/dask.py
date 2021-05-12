@@ -19,6 +19,7 @@ Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Functions included:
     create_local_dask_cluster
+    create_dask_gateway_cluster
 
 Last modified: March 2020
 
@@ -79,3 +80,30 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
     if display_client:
         from IPython.display import display
         display(client)
+
+
+try:
+    from dask_gateway import Gateway
+
+    def create_dask_gateway_cluster(profile='XL', workers=2):
+        """
+        Create a cluster in our internal dask cluster.
+        
+        Parameters
+        ----------  
+        profile : str
+            Possible values are: XL (2 cores, 15GB memory), 2XL (4 cores, 31GB memory), 4XL (8 cores, 62GB memory)
+        workers : int
+            Number of workers in the cluster.
+
+        """
+        gateway = Gateway()
+        options = gateway.cluster_options()
+        options['profile'] = profile
+        cluster = gateway.new_cluster(options)
+        cluster.scale(workers)
+        return cluster
+
+except ImportError:
+    def create_dask_gateway_cluster(*args, **kwargs):
+        raise NotImplementedError
