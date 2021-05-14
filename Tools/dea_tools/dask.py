@@ -100,6 +100,7 @@ try:
         gateway = Gateway()
         options = gateway.cluster_options()
         options['profile'] = profile
+        options['jupyterhub_user'] = os.getenv('JUPYTERHUB_USER')
         cluster = gateway.new_cluster(options)
         cluster.scale(workers)
         return cluster
