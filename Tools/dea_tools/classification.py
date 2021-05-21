@@ -53,7 +53,7 @@ from rasterio.features import geometry_mask
 from dask_ml.wrappers import ParallelPostFit
 from sklearn.mixture import GaussianMixture
 from datacube.utils.geometry import assign_crs
-from datacube_stats.statistics import GeoMedian
+from odc.algo import xr_geomedian
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.model_selection import BaseCrossValidator
@@ -546,7 +546,7 @@ def _get_training_data_for_shp(gdf,
                         data = method_to_call(dim='time')
 
                 elif reduce_func == 'geomedian':
-                    data = GeoMedian(num_threads=1).compute(ds)
+                    data = xr_geomedian(ds, num_threads=1).compute()
                     with HiddenPrints():
                         data = calculate_indices(data,
                                                  index=calc_indices,
@@ -573,7 +573,7 @@ def _get_training_data_for_shp(gdf,
             if len(ds.time.values) > 1:
 
                 if reduce_func == 'geomedian':
-                    data = GeoMedian().compute(ds, num_threads=1)
+                    data = xr_geomedian(ds, num_threads=1).compute()
 
                 elif reduce_func in ['mean', 'median', 'std', 'max', 'min']:
                     method_to_call = getattr(ds, reduce_func)
