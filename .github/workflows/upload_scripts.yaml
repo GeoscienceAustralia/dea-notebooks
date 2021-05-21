@@ -14,16 +14,13 @@ jobs:
     name: Upload Scripts
     steps:
       - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: |
-          tar -czf Scripts.tar.gz Scripts/
-      - uses: jakejarvis/s3-sync-action@master
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          args: --acl public-read --follow-symlinks
-        env:
-          AWS_S3_BUCKET: "datacube-core-deployment"
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: 'ap-southeast-2'
-          SOURCE_DIR: 'Scripts.tar.gz'
-          DEST_DIR: 'dea-notebooks/'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-2
+      - name: Tar and upload Scripts/
+        run: |
+          tar -czvf Scripts.tar.gz Scripts/
+          aws s3 cp Scripts.tar.gz s3://datacube-core-deployment/dea-notebooks/
