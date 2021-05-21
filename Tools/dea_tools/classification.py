@@ -420,7 +420,6 @@ class HiddenPrints:
         sys.stdout.close()
         sys.stdout = self._original_stdout
 
-
 def _get_training_data_for_shp(gdf,
                                index,
                                row,
@@ -429,9 +428,8 @@ def _get_training_data_for_shp(gdf,
                                products,
                                dc_query,
                                return_coords,
-                               custom_func=None,
+                               input_func=None,
                                field=None,
-                               calc_indices=None,
                                reduce_func=None,
                                drop=True,
                                zonal_stats=None):
@@ -466,9 +464,6 @@ def _get_training_data_for_shp(gdf,
     if 'dask_chunks' in dc_query.keys():
         dc_query.pop('dask_chunks', None)
 
-    # connect to datacube
-    dc = datacube.Datacube(app='training_data')
-
     # set up query based on polygon
     geom = geometry.Geometry(geom=gdf.iloc[index].geometry, crs=gdf.crs)
     q = {"geopolygon": geom}
@@ -476,115 +471,29 @@ def _get_training_data_for_shp(gdf,
     # merge polygon query with user supplied query params
     dc_query.update(q)
 
-    # load_ard doesn't handle derivative products, so check
-    # products aren't one of those below
-    others = [
-        'ls5_nbart_geomedian_annual', 'ls7_nbart_geomedian_annual',
-        'ls8_nbart_geomedian_annual', 'ls5_nbart_tmad_annual',
-        'ls7_nbart_tmad_annual', 'ls8_nbart_tmad_annual',
-        'landsat_barest_earth', 'ls8_barest_earth_albers'
-    ]
-
-    if products[0] in others:
-        ds = dc.load(product=products[0], **dc_query)
-        ds = ds.where(ds != 0, np.nan)
-
-    else:
-        # load data
-        with HiddenPrints():
-            ds = load_ard(dc=dc, products=products, **dc_query)
-
-    # create polygon mask
-    with HiddenPrints():
-        mask = xr_rasterize(gdf.iloc[[index]], ds)
-
-    # Use custom function for training data if it exists
-    if custom_func is not None:
-        with HiddenPrints():
-            data = custom_func(ds)
-            data = data.where(mask)
+    # Use input function for training data if it exists
+    if input_func is not None:
+        data = input_func(dc_query)
+        # create polygon mask
+        mask = xr_rasterize(gdf.iloc[[index]], data)
+        data = data.where(mask)
         
-        #Check that custom_func has removed time
+        #Check that input_func has removed time
         if 'time' in data.dims:
             t = data.dims['time']
             if t > 1:
                 raise ValueError(
-                    "After running the custom_func, the dataset still has "+
+                    "After running the input_func, the dataset still has "+
                      str(t) + " time-steps, dataset must only have"+
                     " x and y dimensions."
                     )
-                
     else:
-        # mask dataset
-        ds = ds.where(mask)
-        # first check enough variables are set to run functions
-        if (len(ds.time.values) > 1) and (reduce_func == None):
-            raise ValueError(
-                "You're dataset has " + str(len(ds.time.values)) +
-                " time-steps, please provide a time reduction function," +
-                " e.g. reduce_func='mean'")
-
-        if calc_indices is not None:
-            # determine which collection is being loaded
-            if products[0] in others:
-                collection = 'ga_ls_2'
-            elif '3' in products[0]:
-                collection = 'ga_ls_3'
-            elif 's2' in products[0]:
-                collection = 'ga_s2_1'
-
-            if len(ds.time.values) > 1:
-
-                if reduce_func in ['mean', 'median', 'std', 'max', 'min']:
-                    with HiddenPrints():
-                        data = calculate_indices(ds,
-                                                 index=calc_indices,
-                                                 drop=drop,
-                                                 collection=collection)
-                        # getattr is equivalent to calling data.reduce_func
-                        method_to_call = getattr(data, reduce_func)
-                        data = method_to_call(dim='time')
-
-                elif reduce_func == 'geomedian':
-                    data = GeoMedian(num_threads=1).compute(ds)
-                    with HiddenPrints():
-                        data = calculate_indices(data,
-                                                 index=calc_indices,
-                                                 drop=drop,
-                                                 collection=collection)
-
-                else:
-                    raise Exception(
-                        reduce_func + " is not one of the supported" +
-                        " reduce functions ('mean','median','std','max','min', 'geomedian')"
-                    )
-
-            else:
-                with HiddenPrints():
-                    data = calculate_indices(ds,
-                                             index=calc_indices,
-                                             drop=drop,
-                                             collection=collection)
-
-        # when band indices are not required, reduce the
-        # dataset to a 2d array through means or (geo)medians
-        if calc_indices is None:
-
-            if len(ds.time.values) > 1:
-
-                if reduce_func == 'geomedian':
-                    data = GeoMedian().compute(ds, num_threads=1)
-
-                elif reduce_func in ['mean', 'median', 'std', 'max', 'min']:
-                    method_to_call = getattr(ds, reduce_func)
-                    data = method_to_call('time')
-            else:
-                data = ds.squeeze()
-
+        print("Please supply a custom function")
+                
     if return_coords == True:
         # turn coords into a variable in the ds
-        data['x_coord'] = ds.x + 0 * ds.y
-        data['y_coord'] = ds.y + 0 * ds.x
+        data['x_coord'] = data.x + 0 * data.y
+        data['y_coord'] = data.y + 0 * data.x
     
     # append ID measurement to dataset for tracking failures
     band = [m for m in data.data_vars][0]
@@ -617,10 +526,8 @@ def _get_training_data_parallel(gdf,
                                 dc_query,
                                 ncpus,
                                 return_coords,
-                                custom_func=None,
+                                input_func=None,
                                 field=None,
-                                calc_indices=None,
-                                reduce_func=None,
                                 drop=True,
                                 zonal_stats=None):
     """
@@ -656,7 +563,7 @@ def _get_training_data_parallel(gdf,
         for index, row in gdf.iterrows():
             pool.apply_async(_get_training_data_for_shp, [
                 gdf, index, row, results, column_names, products, dc_query,
-                return_coords, custom_func, field, calc_indices, reduce_func,
+                return_coords, input_func, field,
                 drop, zonal_stats
             ],
                              callback=update)
@@ -667,16 +574,13 @@ def _get_training_data_parallel(gdf,
 
     return column_names, results
 
-
 def collect_training_data(gdf,
                           products,
                           dc_query,
                           ncpus=1,
                           return_coords=False,
-                          custom_func=None,
+                          input_func=None,
                           field=None,
-                          calc_indices=None,
-                          reduce_func=None,
                           drop=True,
                           zonal_stats=None,
                           clean=True,
@@ -690,7 +594,7 @@ def collect_training_data(gdf,
     function will be run (functions are passed to a mp.Pool())
     This function provides a number of pre-defined feature layer methods,
     including calculating band indices, reducing time series using several summary statistics,
-    and/or generating zonal statistics across polygons.  The 'custom_func' parameter provides
+    and/or generating zonal statistics across polygons.  The 'input_func' parameter provides
     a method for the user to supply a custom function for generating features rather than using the
     pre-defined methods.
     
@@ -712,22 +616,14 @@ def collect_training_data(gdf,
         If True, then the training data will contain two extra columns 'x_coord' and
         'y_coord' corresponding to the x,y coordinate of each sample. This variable can
         be useful for handling spatial autocorrelation between samples later in the ML workflow.
-    custom_func : function, optional
-        A custom function for generating feature layers. If this parameter
-        is set, all other options (excluding 'zonal_stats'), will be ignored.
-        The result of the 'custom_func' must be a single xarray dataset
+    input_func : function, optional
+        A function for generating feature layers.
+        The result of the 'input_func' must be a single xarray dataset
         containing 2D coordinates (i.e x, y - no time dimension). The custom function
         has access to the datacube dataset extracted using the 'dc_query' params. To load
         other datasets, you can use the 'like=ds.geobox' parameter in dc.load
     field : str
         Name of the column in the gdf that contains the class labels
-    calc_indices: list, optional
-        If not using a custom func, then this parameter provides a method for
-        calculating a number of remote sensing indices (e.g. `['NDWI', 'NDVI']`).
-    reduce_func : string, optional
-        Function to reduce the data from multiple time steps to
-        a single timestep. Options are 'mean', 'median', 'std',
-        'max', 'min', 'geomedian'.  Ignored if 'custom_func' is provided.
     drop : boolean, optional ,
         If this variable is set to True, and 'calc_indices' are supplied, the
         spectral bands will be dropped from the dataset leaving only the
@@ -736,7 +632,7 @@ def collect_training_data(gdf,
         An optional string giving the names of zonal statistics to calculate
         for each polygon. Default is None (all pixel values are returned). Supported
         values are 'mean', 'median', 'max', 'min'. Will work in
-        conjuction with a 'custom_func'.
+        conjuction with a 'input_func'.
     clean : bool
         Whether or not to remove missing values in the training dataset. If True,
         training labels with any NaNs or Infs in the feature layers will be dropped
@@ -769,12 +665,10 @@ def collect_training_data(gdf,
         )
 
     # set up some print statements
-    if custom_func is not None:
+    if input_func is not None:
         print("Reducing data using user supplied custom function")
-    if calc_indices is not None and custom_func is None:
-        print("Calculating indices: " + str(calc_indices))
-    if reduce_func is not None and custom_func is None:
-        print("Reducing data using: " + reduce_func)
+    if input_func is None:
+        print("Please supply a custom funciton")
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
 
@@ -798,8 +692,7 @@ def collect_training_data(gdf,
 
             _get_training_data_for_shp(gdf, index, row, results, column_names,
                                        products, dc_query, return_coords,
-                                       custom_func, field, calc_indices,
-                                       reduce_func, drop, zonal_stats)
+                                       input_func, field, drop, zonal_stats)
             i += 1
 
     else:
@@ -810,10 +703,8 @@ def collect_training_data(gdf,
             dc_query=dc_query,
             ncpus=ncpus,
             return_coords=return_coords,
-            custom_func=custom_func,
+            input_func=input_func,
             field=field,
-            calc_indices=calc_indices,
-            reduce_func=reduce_func,
             drop=drop,
             zonal_stats=zonal_stats)
 
@@ -866,10 +757,8 @@ def collect_training_data(gdf,
                     dc_query=dc_query,
                     ncpus=ncpus,
                     return_coords=return_coords,
-                    custom_func=custom_func,
+                    input_func=input_func,
                     field=field,
-                    calc_indices=calc_indices,
-                    reduce_func=reduce_func,
                     drop=drop,
                     zonal_stats=zonal_stats)
 
