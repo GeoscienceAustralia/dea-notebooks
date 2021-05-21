@@ -1,3 +1,4 @@
+---
 name: Upload Scripts
 # Useful to save downloading this entire repository
 # The uploaded file will be available at https://packages.dea.ga.gov.au/dea-notebooks/Scripts.tar.gz
@@ -16,10 +17,13 @@ jobs:
       - name: Install dependencies
         run: |
           tar -czf Scripts.tar.gz Scripts/
-      - uses: shallwefootball/s3-upload-action@master
+      - uses: jakejarvis/s3-sync-action@master
         with:
-          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          aws_bucket: datacube-core-deployment
-          source_dir: 'Scripts.tar.gz'
-          destination_dir: 'dea-notebooks/Scripts.tar.gz'
+          args: --acl public-read --follow-symlinks
+        env:
+          AWS_S3_BUCKET: "datacube-core-deployment"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: 'ap-southeast-2'
+          SOURCE_DIR: 'Scripts.tar.gz'
+          DEST_DIR: 'dea-notebooks/'
