@@ -5,9 +5,7 @@ machine learning classification on remote sensing data contained in an
 Open Data Cube instance.
 
 License: The code in this notebook is licensed under the Apache License,
-Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
-Africa data is licensed under the Creative Commons by Attribution 4.0
-license (https://creativecommons.org/licenses/by/4.0/).
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
 
 Contact: If you need assistance, please post a question on the Open Data
 Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
@@ -442,11 +440,7 @@ def _get_training_data_for_shp(
     # prevent function altering dictionary kwargs
     dc_query = deepcopy(dc_query)
 
-    # remove dask chunks if supplied as using
-    # mulitprocessing for parallization
-    if "dask_chunks" in dc_query.keys():
-        dc_query.pop("dask_chunks", None)
-
+    
     # set up query based on polygon
     geom = geometry.Geometry(geom=gdf.iloc[index].geometry, crs=gdf.crs)
     q = {"geopolygon": geom}
@@ -618,8 +612,7 @@ def collect_training_data(
     zonal_stats : string, optional
         An optional string giving the names of zonal statistics to calculate
         for each polygon. Default is None (all pixel values are returned). Supported
-        values are 'mean', 'median', 'max', 'min'. Will work in
-        conjuction with a 'feature_func'.
+        values are 'mean', 'median', 'max', 'min'.
     clean : bool
         Whether or not to remove missing values in the training dataset. If True,
         training labels with any NaNs or Infs in the feature layers will be dropped
@@ -657,6 +650,18 @@ def collect_training_data(
 
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
+    
+    # remove dask chunks if supplied as using
+    # mulitprocessing for parallization
+    if "dask_chunks" in dc_query.keys():
+        dc_query.pop("dask_chunks", None)
+
+    # Throw error if spatial bounds included in query object
+    if ("x" or "y") in dc_query.keys():
+        raise ValueError(
+                "Query contains spatial bounds, please remove them. "
+                + "These are handled by the geometry of the input shapefile"
+                )
 
     # add unique id to gdf to help with indexing failed rows
     # during multiprocessing
