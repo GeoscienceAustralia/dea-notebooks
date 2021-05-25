@@ -425,13 +425,11 @@ def _get_training_data_for_shp(gdf,
                                row,
                                out_arrs,
                                out_vars,
-                               products,
                                dc_query,
                                return_coords,
-                               input_func=None,
+                               feature_func=None,
                                field=None,
                                reduce_func=None,
-                               drop=True,
                                zonal_stats=None):
     """
     This is the core function that is triggered by `collect_training_data`.
@@ -471,24 +469,22 @@ def _get_training_data_for_shp(gdf,
     # merge polygon query with user supplied query params
     dc_query.update(q)
 
-    # Use input function for training data if it exists
-    if input_func is not None:
-        data = input_func(dc_query)
-        # create polygon mask
-        mask = xr_rasterize(gdf.iloc[[index]], data)
-        data = data.where(mask)
-        
-        #Check that input_func has removed time
-        if 'time' in data.dims:
-            t = data.dims['time']
-            if t > 1:
-                raise ValueError(
-                    "After running the input_func, the dataset still has "+
-                     str(t) + " time-steps, dataset must only have"+
-                    " x and y dimensions."
-                    )
-    else:
-        print("Please supply a custom function")
+    # Use input feature function
+    data = feature_func(dc_query)
+    
+    # create polygon mask
+    mask = xr_rasterize(gdf.iloc[[index]], data)
+    data = data.where(mask)
+
+    #Check that input_func has removed time
+    if 'time' in data.dims:
+        t = data.dims['time']
+        if t > 1:
+            raise ValueError(
+                "After running the input_func, the dataset still has "+
+                 str(t) + " time-steps, dataset must only have"+
+                " x and y dimensions."
+                )
                 
     if return_coords == True:
         # turn coords into a variable in the ds
@@ -520,15 +516,12 @@ def _get_training_data_for_shp(gdf,
     out_arrs.append(stacked)
     out_vars.append([field] + list(data.data_vars))
 
-
 def _get_training_data_parallel(gdf,
-                                products,
                                 dc_query,
                                 ncpus,
                                 return_coords,
-                                input_func=None,
+                                feature_func=None,
                                 field=None,
-                                drop=True,
                                 zonal_stats=None):
     """
     Function passing the '_get_training_data_for_shp' function
@@ -562,9 +555,8 @@ def _get_training_data_parallel(gdf,
     with mp.Pool(ncpus) as pool:
         for index, row in gdf.iterrows():
             pool.apply_async(_get_training_data_for_shp, [
-                gdf, index, row, results, column_names, products, dc_query,
-                return_coords, input_func, field,
-                drop, zonal_stats
+                gdf, index, row, results, column_names, dc_query,
+                return_coords, feature_func, field, zonal_stats
             ],
                              callback=update)
 
@@ -575,13 +567,11 @@ def _get_training_data_parallel(gdf,
     return column_names, results
 
 def collect_training_data(gdf,
-                          products,
                           dc_query,
                           ncpus=1,
                           return_coords=False,
-                          input_func=None,
+                          feature_func=None,
                           field=None,
-                          drop=True,
                           zonal_stats=None,
                           clean=True,
                           fail_threshold=0.02,
@@ -602,9 +592,6 @@ def collect_training_data(gdf,
     ----------
     gdf : geopandas geodataframe
         geometry data in the form of a geopandas geodataframe
-    products : list
-        a list of products to load from the datacube.
-        e.g. ['s2a_ard_granule', 's2b_ard_granule']
     dc_query : dictionary
         Datacube query object, should not contain lat and long (x or y)
         variables as these are supplied by the 'gdf' variable
@@ -616,18 +603,20 @@ def collect_training_data(gdf,
         If True, then the training data will contain two extra columns 'x_coord' and
         'y_coord' corresponding to the x,y coordinate of each sample. This variable can
         be useful for handling spatial autocorrelation between samples later in the ML workflow.
-    input_func : function, optional
-        A function for generating feature layers.
-        The result of the 'input_func' must be a single xarray dataset
-        containing 2D coordinates (i.e x, y - no time dimension). The custom function
-        has access to the datacube dataset extracted using the 'dc_query' params. To load
-        other datasets, you can use the 'like=ds.geobox' parameter in dc.load
+    feature_func : function
+        A function for generating feature layers that is applied to the data within
+        the bounds of the input geometry. The 'feature_func' must accept a 'dc_query'
+        object, and return a single xarray.Dataset or xarray.DataArray containing 
+        2D coordinates (i.e x, y - no time dimension).
+        e.g.
+            def feature_function(query):
+                dc = datacube.Datacube(app='feature_layers')
+                ds = dc.load(**query)
+                ds = ds.mean('time')
+                return ds
+                
     field : str
         Name of the column in the gdf that contains the class labels
-    drop : boolean, optional ,
-        If this variable is set to True, and 'calc_indices' are supplied, the
-        spectral bands will be dropped from the dataset leaving only the
-        band indices as data variables in the dataset. Default is True.
     zonal_stats : string, optional
         An optional string giving the names of zonal statistics to calculate
         for each polygon. Default is None (all pixel values are returned). Supported
@@ -637,18 +626,18 @@ def collect_training_data(gdf,
         Whether or not to remove missing values in the training dataset. If True,
         training labels with any NaNs or Infs in the feature layers will be dropped
         from the dataset.
-     fail_threshold : float, default 0.02
+    fail_threshold : float, default 0.02
         Silent read fails on S3 can result in some rows of the returned data containing NaN values.
         The'fail_threshold' fraction specifies a % of acceptable fails.
         e.g. Setting 'fail_threshold' to 0.05 means if >5% of the samples in the training dataset
         fail then those samples will be reutnred to the multiprocessing queue. Below this fraction
         the function will accept the failures and return the results.
-     fail_ratio: float
+    fail_ratio: float
         A float between 0 and 1 that defines if a given training sample has failed.
         Default is 0.5, which means if 50 % of the measurements in a given sample return null
         values, and the number of total fails is more than the fail_threshold, the samplewill be
         passed to the retry queue.
-     max_retries: int, default 3
+    max_retries: int, default 3
         Maximum number of times to retry collecting samples. This number is invoked
         if the 'fail_threshold' is not reached.
         
@@ -665,10 +654,9 @@ def collect_training_data(gdf,
         )
 
     # set up some print statements
-    if input_func is not None:
-        print("Reducing data using user supplied custom function")
-    if input_func is None:
-        print("Please supply a custom funciton")
+    if feature_func is None:
+        print("Please supply a feature layer function")
+    
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
 
@@ -691,21 +679,19 @@ def collect_training_data(gdf,
             print(" Feature {:04}/{:04}\r".format(i + 1, len(gdf)), end='')
 
             _get_training_data_for_shp(gdf, index, row, results, column_names,
-                                       products, dc_query, return_coords,
-                                       input_func, field, drop, zonal_stats)
+                                       dc_query, return_coords,feature_func,
+                                        field, zonal_stats)
             i += 1
 
     else:
         print('Collecting training data in parallel mode')
         column_names, results = _get_training_data_parallel(
             gdf=gdf,
-            products=products,
             dc_query=dc_query,
             ncpus=ncpus,
             return_coords=return_coords,
-            input_func=input_func,
+            feature_func=feature_func,
             field=field,
-            drop=drop,
             zonal_stats=zonal_stats)
 
     # column names are appended during each iteration
@@ -759,7 +745,6 @@ def collect_training_data(gdf,
                     return_coords=return_coords,
                     input_func=input_func,
                     field=field,
-                    drop=drop,
                     zonal_stats=zonal_stats)
 
                 # Stack the extracted training data for each feature into a single array
