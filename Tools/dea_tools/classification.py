@@ -1,8 +1,8 @@
-# deafrica_classificationtools.py
+# classification.py
 """
 Description: This file contains a set of python functions for conducting
-machine learning classification on remote sensing data from Digital Earth
-Africa's Open Data Cube
+machine learning classification on remote sensing data contained in an
+Open Data Cube instance.
 
 License: The code in this notebook is licensed under the Apache License,
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
@@ -16,9 +16,9 @@ using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, you can file one on
-Github https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/issues
+Github https://github.com/GeoscienceAustralia/dea-notebooks/issues
 
-Last modified: Feb 2020
+Last modified: May 2021
 
 
 """
@@ -461,12 +461,12 @@ def _get_training_data_for_shp(
     mask = xr_rasterize(gdf.iloc[[index]], data)
     data = data.where(mask)
 
-    # Check that input_func has removed time
+    # Check that feature_func has removed time
     if "time" in data.dims:
         t = data.dims["time"]
         if t > 1:
             raise ValueError(
-                "After running the input_func, the dataset still has "
+                "After running the feature_func, the dataset still has "
                 + str(t)
                 + " time-steps, dataset must only have"
                 + " x and y dimensions."
@@ -582,11 +582,8 @@ def collect_training_data(
     This function executes the training data functions and tidies the results
     into a 'model_input' object containing stacked training data arrays
     with all NaNs & Infs removed. In the instance where ncpus > 1, a parallel version of the
-    function will be run (functions are passed to a mp.Pool())
-    This function provides a number of pre-defined feature layer methods,
-    including calculating band indices, reducing time series using several summary statistics,
-    and/or generating zonal statistics across polygons.  The 'input_func' parameter provides
-    a method for the user to supply a custom function for generating features rather than using the
+    function will be run (functions are passed to a mp.Pool()). This function can conduct zonal statistics if the supplied shapefile contains polygons.
+    The 'feature_func' parameter provides a method for the user to supply a function for generating features rather than using the
     pre-defined methods.
 
     Parameters
@@ -622,7 +619,7 @@ def collect_training_data(
         An optional string giving the names of zonal statistics to calculate
         for each polygon. Default is None (all pixel values are returned). Supported
         values are 'mean', 'median', 'max', 'min'. Will work in
-        conjuction with a 'input_func'.
+        conjuction with a 'feature_func'.
     clean : bool
         Whether or not to remove missing values in the training dataset. If True,
         training labels with any NaNs or Infs in the feature layers will be dropped
