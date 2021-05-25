@@ -739,11 +739,10 @@ def collect_training_data(gdf,
                 #recollect failed rows
                 column_names_again, results_again = _get_training_data_parallel(
                     gdf=gdf_rerun,
-                    products=products,
                     dc_query=dc_query,
                     ncpus=ncpus,
                     return_coords=return_coords,
-                    input_func=input_func,
+                    feature_func=feature_func,
                     field=field,
                     zonal_stats=zonal_stats)
 
