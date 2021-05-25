@@ -1,5 +1,5 @@
 # deafrica_classificationtools.py
-'''
+"""
 Description: This file contains a set of python functions for conducting
 machine learning classification on remote sensing data from Digital Earth
 Africa's Open Data Cube
@@ -21,7 +21,7 @@ Github https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/issues
 Last modified: Feb 2020
 
 
-'''
+"""
 import os
 import sys
 import joblib
@@ -37,23 +37,16 @@ from copy import deepcopy
 import multiprocessing as mp
 import dask.distributed as dd
 import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
 from sklearn.cluster import KMeans
-from sklearn.base import clone
-from datacube.utils import masking
-from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
 from abc import ABCMeta, abstractmethod
 from datacube.utils import geometry
 from sklearn.base import ClusterMixin
 from dask.diagnostics import ProgressBar
 from rasterio.features import rasterize
-from sklearn.impute import SimpleImputer
-from rasterio.features import geometry_mask
 from dask_ml.wrappers import ParallelPostFit
 from sklearn.mixture import GaussianMixture
 from datacube.utils.geometry import assign_crs
-from odc.algo import xr_geomedian
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.model_selection import BaseCrossValidator
@@ -61,8 +54,6 @@ from sklearn.model_selection import BaseCrossValidator
 import warnings
 
 from dea_tools.spatial import xr_rasterize
-from dea_tools.bandindices import calculate_indices
-from dea_tools.datahandling import load_ard, mostcommon_crs
 
 
 def sklearn_flatten(input_xr):
@@ -98,16 +89,16 @@ def sklearn_flatten(input_xr):
         input_xr = input_xr.to_array()
 
     # stack across pixel dimensions, handling timeseries if necessary
-    if 'time' in input_xr.dims:
-        stacked = input_xr.stack(z=['x', 'y', 'time'])
+    if "time" in input_xr.dims:
+        stacked = input_xr.stack(z=["x", "y", "time"])
     else:
-        stacked = input_xr.stack(z=['x', 'y'])
+        stacked = input_xr.stack(z=["x", "y"])
 
     # finding 'bands' dimensions in each pixel - these will not be
     # flattened as their context is important for sklearn
     pxdims = []
     for dim in stacked.dims:
-        if dim != 'z':
+        if dim != "z":
             pxdims.append(dim)
 
     # mask NaNs - we mask pixels with NaNs in *any* band, because
@@ -122,7 +113,7 @@ def sklearn_flatten(input_xr):
 
     # the dimension we are masking along ('z') needs to be the first
     # dimension in the underlying np array for the boolean indexing to work
-    stacked = stacked.transpose('z', *pxdims)
+    stacked = stacked.transpose("z", *pxdims)
     input_np = stacked.data[~mask]
 
     return input_np
@@ -166,14 +157,14 @@ def sklearn_unflatten(output_np, input_xr):
         input_xr = input_xr.to_array()
 
     # generate the same mask we used to create the input to the sklearn model
-    if 'time' in input_xr.dims:
-        stacked = input_xr.stack(z=['x', 'y', 'time'])
+    if "time" in input_xr.dims:
+        stacked = input_xr.stack(z=["x", "y", "time"])
     else:
-        stacked = input_xr.stack(z=['x', 'y'])
+        stacked = input_xr.stack(z=["x", "y"])
 
     pxdims = []
     for dim in stacked.dims:
-        if dim != 'z':
+        if dim != "z":
             pxdims.append(dim)
 
     mask = np.isnan(stacked)
@@ -193,11 +184,9 @@ def sklearn_unflatten(output_np, input_xr):
     # set the stacked coordinate to match the input
     output_xr = xr.DataArray(
         output_ma,
-        coords={'z': stacked['z']},
-        dims=[
-            'z',
-            *['output_dim_' + str(idx) for idx in range(len(output_px_shape))]
-        ])
+        coords={"z": stacked["z"]},
+        dims=["z", *["output_dim_" + str(idx) for idx in range(len(output_px_shape))]],
+    )
 
     output_xr = output_xr.unstack()
 
@@ -228,13 +217,15 @@ def fit_xr(model, input_xr):
     return model
 
 
-def predict_xr(model,
-               input_xr,
-               chunk_size=None,
-               persist=False,
-               proba=False,
-               clean=False,
-               return_input=False):
+def predict_xr(
+    model,
+    input_xr,
+    chunk_size=None,
+    persist=False,
+    proba=False,
+    clean=False,
+    return_input=False,
+):
     """
     Using dask-ml ParallelPostfit(), runs  the parallel
     predict and predict_proba methods of sklearn
@@ -280,12 +271,11 @@ def predict_xr(model,
     dask = True
     if not bool(input_xr.chunks):
         dask = False
-        input_xr = input_xr.chunk({'x': len(input_xr.x), 'y': len(input_xr.y)})
+        input_xr = input_xr.chunk({"x": len(input_xr.x), "y": len(input_xr.y)})
 
-    #set chunk size if not supplied
+    # set chunk size if not supplied
     if chunk_size is None:
-        chunk_size = int(input_xr.chunks['x'][0]) * \
-                         int(input_xr.chunks['y'][0])
+        chunk_size = int(input_xr.chunks["x"][0]) * int(input_xr.chunks["y"][0])
 
     def _predict_func(model, input_xr, persist, proba, clean, return_input):
         x, y, crs = input_xr.x, input_xr.y, input_xr.geobox.crs
@@ -305,15 +295,16 @@ def predict_xr(model,
         input_data_flattened = da.array(input_data_flattened).transpose()
 
         if clean == True:
-            input_data_flattened = da.where(da.isfinite(input_data_flattened),
-                                            input_data_flattened, 0)
+            input_data_flattened = da.where(
+                da.isfinite(input_data_flattened), input_data_flattened, 0
+            )
 
         if (proba == True) & (persist == True):
             # persisting data so we don't require loading all the data twice
             input_data_flattened = input_data_flattened.persist()
 
         # apply the classification
-        print('predicting...')
+        print("predicting...")
         out_class = model.predict(input_data_flattened)
 
         # Mask out NaN or Inf values in results
@@ -324,14 +315,9 @@ def predict_xr(model,
         out_class = out_class.reshape(len(y), len(x))
 
         # stack back into xarray
-        output_xr = xr.DataArray(out_class,
-                                 coords={
-                                     "x": x,
-                                     "y": y
-                                 },
-                                 dims=["y", "x"])
+        output_xr = xr.DataArray(out_class, coords={"x": x, "y": y}, dims=["y", "x"])
 
-        output_xr = output_xr.to_dataset(name='Predictions')
+        output_xr = output_xr.to_dataset(name="Predictions")
 
         if proba == True:
             print("   probabilities...")
@@ -345,20 +331,17 @@ def predict_xr(model,
 
             out_proba = out_proba.reshape(len(y), len(x))
 
-            out_proba = xr.DataArray(out_proba,
-                                     coords={
-                                         "x": x,
-                                         "y": y
-                                     },
-                                     dims=["y", "x"])
-            output_xr['Probabilities'] = out_proba
+            out_proba = xr.DataArray(
+                out_proba, coords={"x": x, "y": y}, dims=["y", "x"]
+            )
+            output_xr["Probabilities"] = out_proba
 
         if return_input == True:
             print("   input features...")
             # unflatten the input_data_flattened array and append
             # to the output_xr containin the predictions
             arr = input_xr.to_array()
-            stacked = arr.stack(z=['y', 'x'])
+            stacked = arr.stack(z=["y", "x"])
 
             # handle multivariable output
             output_px_shape = ()
@@ -366,43 +349,43 @@ def predict_xr(model,
                 output_px_shape = input_data_flattened.shape[1:]
 
             output_features = input_data_flattened.reshape(
-                (len(stacked.z), *output_px_shape))
+                (len(stacked.z), *output_px_shape)
+            )
 
             # set the stacked coordinate to match the input
             output_features = xr.DataArray(
                 output_features,
-                coords={
-                    'z': stacked['z']
-                },
+                coords={"z": stacked["z"]},
                 dims=[
-                    'z', *[
-                        'output_dim_' + str(idx)
-                        for idx in range(len(output_px_shape))
-                    ]
-                ]).unstack()
+                    "z",
+                    *["output_dim_" + str(idx) for idx in range(len(output_px_shape))],
+                ],
+            ).unstack()
 
             # convert to dataset and rename arrays
-            output_features = output_features.to_dataset(dim='output_dim_0')
+            output_features = output_features.to_dataset(dim="output_dim_0")
             data_vars = list(input_xr.data_vars)
             output_features = output_features.rename(
-                {i: j for i, j in zip(output_features.data_vars, data_vars)})
+                {i: j for i, j in zip(output_features.data_vars, data_vars)}
+            )
 
             # merge with predictions
-            output_xr = xr.merge([output_xr, output_features],
-                                 compat='override')
+            output_xr = xr.merge([output_xr, output_features], compat="override")
 
         return assign_crs(output_xr, str(crs))
 
     if dask == True:
         # convert model to dask predict
         model = ParallelPostFit(model)
-        with joblib.parallel_backend('dask'):
-            output_xr = _predict_func(model, input_xr, persist, proba, clean,
-                                      return_input)
+        with joblib.parallel_backend("dask"):
+            output_xr = _predict_func(
+                model, input_xr, persist, proba, clean, return_input
+            )
 
     else:
-        output_xr = _predict_func(model, input_xr, persist, proba, clean,
-                                  return_input).compute()
+        output_xr = _predict_func(
+            model, input_xr, persist, proba, clean, return_input
+        ).compute()
 
     return output_xr
 
@@ -414,27 +397,25 @@ class HiddenPrints:
 
     def __enter__(self):
         self._original_stdout = sys.stdout
-        sys.stdout = open(os.devnull, 'w')
+        sys.stdout = open(os.devnull, "w")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         sys.stdout.close()
         sys.stdout = self._original_stdout
 
 
-def _get_training_data_for_shp(gdf,
-                               index,
-                               row,
-                               out_arrs,
-                               out_vars,
-                               products,
-                               dc_query,
-                               return_coords,
-                               custom_func=None,
-                               field=None,
-                               calc_indices=None,
-                               reduce_func=None,
-                               drop=True,
-                               zonal_stats=None):
+def _get_training_data_for_shp(
+    gdf,
+    index,
+    row,
+    out_arrs,
+    out_vars,
+    dc_query,
+    return_coords,
+    feature_func=None,
+    field=None,
+    zonal_stats=None,
+):
     """
     This is the core function that is triggered by `collect_training_data`.
     The `collect_training_data` function loops through geometries in a geopandas
@@ -463,11 +444,8 @@ def _get_training_data_for_shp(gdf,
 
     # remove dask chunks if supplied as using
     # mulitprocessing for parallization
-    if 'dask_chunks' in dc_query.keys():
-        dc_query.pop('dask_chunks', None)
-
-    # connect to datacube
-    dc = datacube.Datacube(app='training_data')
+    if "dask_chunks" in dc_query.keys():
+        dc_query.pop("dask_chunks", None)
 
     # set up query based on polygon
     geom = geometry.Geometry(geom=gdf.iloc[index].geometry, crs=gdf.crs)
@@ -476,153 +454,61 @@ def _get_training_data_for_shp(gdf,
     # merge polygon query with user supplied query params
     dc_query.update(q)
 
-    # load_ard doesn't handle derivative products, so check
-    # products aren't one of those below
-    others = [
-        'ls5_nbart_geomedian_annual', 'ls7_nbart_geomedian_annual',
-        'ls8_nbart_geomedian_annual', 'ls5_nbart_tmad_annual',
-        'ls7_nbart_tmad_annual', 'ls8_nbart_tmad_annual',
-        'landsat_barest_earth', 'ls8_barest_earth_albers'
-    ]
-
-    if products[0] in others:
-        ds = dc.load(product=products[0], **dc_query)
-        ds = ds.where(ds != 0, np.nan)
-
-    else:
-        # load data
-        with HiddenPrints():
-            ds = load_ard(dc=dc, products=products, **dc_query)
+    # Use input feature function
+    data = feature_func(dc_query)
 
     # create polygon mask
-    with HiddenPrints():
-        mask = xr_rasterize(gdf.iloc[[index]], ds)
+    mask = xr_rasterize(gdf.iloc[[index]], data)
+    data = data.where(mask)
 
-    # Use custom function for training data if it exists
-    if custom_func is not None:
-        with HiddenPrints():
-            data = custom_func(ds)
-            data = data.where(mask)
-        
-        #Check that custom_func has removed time
-        if 'time' in data.dims:
-            t = data.dims['time']
-            if t > 1:
-                raise ValueError(
-                    "After running the custom_func, the dataset still has "+
-                     str(t) + " time-steps, dataset must only have"+
-                    " x and y dimensions."
-                    )
-                
-    else:
-        # mask dataset
-        ds = ds.where(mask)
-        # first check enough variables are set to run functions
-        if (len(ds.time.values) > 1) and (reduce_func == None):
+    # Check that input_func has removed time
+    if "time" in data.dims:
+        t = data.dims["time"]
+        if t > 1:
             raise ValueError(
-                "You're dataset has " + str(len(ds.time.values)) +
-                " time-steps, please provide a time reduction function," +
-                " e.g. reduce_func='mean'")
-
-        if calc_indices is not None:
-            # determine which collection is being loaded
-            if products[0] in others:
-                collection = 'ga_ls_2'
-            elif '3' in products[0]:
-                collection = 'ga_ls_3'
-            elif 's2' in products[0]:
-                collection = 'ga_s2_1'
-
-            if len(ds.time.values) > 1:
-
-                if reduce_func in ['mean', 'median', 'std', 'max', 'min']:
-                    with HiddenPrints():
-                        data = calculate_indices(ds,
-                                                 index=calc_indices,
-                                                 drop=drop,
-                                                 collection=collection)
-                        # getattr is equivalent to calling data.reduce_func
-                        method_to_call = getattr(data, reduce_func)
-                        data = method_to_call(dim='time')
-
-                elif reduce_func == 'geomedian':
-                    data = xr_geomedian(ds, num_threads=1).compute()
-                    with HiddenPrints():
-                        data = calculate_indices(data,
-                                                 index=calc_indices,
-                                                 drop=drop,
-                                                 collection=collection)
-
-                else:
-                    raise Exception(
-                        reduce_func + " is not one of the supported" +
-                        " reduce functions ('mean','median','std','max','min', 'geomedian')"
-                    )
-
-            else:
-                with HiddenPrints():
-                    data = calculate_indices(ds,
-                                             index=calc_indices,
-                                             drop=drop,
-                                             collection=collection)
-
-        # when band indices are not required, reduce the
-        # dataset to a 2d array through means or (geo)medians
-        if calc_indices is None:
-
-            if len(ds.time.values) > 1:
-
-                if reduce_func == 'geomedian':
-                    data = xr_geomedian(ds, num_threads=1).compute()
-
-                elif reduce_func in ['mean', 'median', 'std', 'max', 'min']:
-                    method_to_call = getattr(ds, reduce_func)
-                    data = method_to_call('time')
-            else:
-                data = ds.squeeze()
+                "After running the input_func, the dataset still has "
+                + str(t)
+                + " time-steps, dataset must only have"
+                + " x and y dimensions."
+            )
 
     if return_coords == True:
         # turn coords into a variable in the ds
-        data['x_coord'] = ds.x + 0 * ds.y
-        data['y_coord'] = ds.y + 0 * ds.x
-    
+        data["x_coord"] = data.x + 0 * data.y
+        data["y_coord"] = data.y + 0 * data.x
+
     # append ID measurement to dataset for tracking failures
     band = [m for m in data.data_vars][0]
-    _id = xr.zeros_like(data[band]) 
-    data['id'] = _id
-    data['id'] = data['id'] + gdf.iloc[index]['id']
-    
+    _id = xr.zeros_like(data[band])
+    data["id"] = _id
+    data["id"] = data["id"] + gdf.iloc[index]["id"]
+
     # If no zonal stats were requested then extract all pixel values
     if zonal_stats is None:
         flat_train = sklearn_flatten(data)
         flat_val = np.repeat(row[field], flat_train.shape[0])
         stacked = np.hstack((np.expand_dims(flat_val, axis=1), flat_train))
 
-    elif zonal_stats in ['mean', 'median', 'max', 'min']:
+    elif zonal_stats in ["mean", "median", "max", "min"]:
         method_to_call = getattr(data, zonal_stats)
         flat_train = method_to_call()
         flat_train = flat_train.to_array()
         stacked = np.hstack((row[field], flat_train))
 
     else:
-        raise Exception(zonal_stats + " is not one of the supported" +
-                        " reduce functions ('mean','median','max','min')")
+        raise Exception(
+            zonal_stats
+            + " is not one of the supported"
+            + " reduce functions ('mean','median','max','min')"
+        )
 
     out_arrs.append(stacked)
     out_vars.append([field] + list(data.data_vars))
 
 
-def _get_training_data_parallel(gdf,
-                                products,
-                                dc_query,
-                                ncpus,
-                                return_coords,
-                                custom_func=None,
-                                field=None,
-                                calc_indices=None,
-                                reduce_func=None,
-                                drop=True,
-                                zonal_stats=None):
+def _get_training_data_parallel(
+    gdf, dc_query, ncpus, return_coords, feature_func=None, field=None, zonal_stats=None
+):
     """
     Function passing the '_get_training_data_for_shp' function
     to a mulitprocessing.Pool.
@@ -639,7 +525,8 @@ def _get_training_data_parallel(gdf,
     if zx is not None:
         raise ValueError(
             "You have a Dask Client running, which prevents \n"
-            "this function from multiprocessing. Close the client.")
+            "this function from multiprocessing. Close the client."
+        )
 
     # instantiate lists that can be shared across processes
     manager = mp.Manager()
@@ -654,12 +541,22 @@ def _get_training_data_parallel(gdf,
 
     with mp.Pool(ncpus) as pool:
         for index, row in gdf.iterrows():
-            pool.apply_async(_get_training_data_for_shp, [
-                gdf, index, row, results, column_names, products, dc_query,
-                return_coords, custom_func, field, calc_indices, reduce_func,
-                drop, zonal_stats
-            ],
-                             callback=update)
+            pool.apply_async(
+                _get_training_data_for_shp,
+                [
+                    gdf,
+                    index,
+                    row,
+                    results,
+                    column_names,
+                    dc_query,
+                    return_coords,
+                    feature_func,
+                    field,
+                    zonal_stats,
+                ],
+                callback=update,
+            )
 
         pool.close()
         pool.join()
@@ -668,21 +565,19 @@ def _get_training_data_parallel(gdf,
     return column_names, results
 
 
-def collect_training_data(gdf,
-                          products,
-                          dc_query,
-                          ncpus=1,
-                          return_coords=False,
-                          custom_func=None,
-                          field=None,
-                          calc_indices=None,
-                          reduce_func=None,
-                          drop=True,
-                          zonal_stats=None,
-                          clean=True,
-                          fail_threshold=0.02,
-                          fail_ratio=0.5,
-                          max_retries=3):
+def collect_training_data(
+    gdf,
+    dc_query,
+    ncpus=1,
+    return_coords=False,
+    feature_func=None,
+    field=None,
+    zonal_stats=None,
+    clean=True,
+    fail_threshold=0.02,
+    fail_ratio=0.5,
+    max_retries=3,
+):
     """
     This function executes the training data functions and tidies the results
     into a 'model_input' object containing stacked training data arrays
@@ -690,17 +585,14 @@ def collect_training_data(gdf,
     function will be run (functions are passed to a mp.Pool())
     This function provides a number of pre-defined feature layer methods,
     including calculating band indices, reducing time series using several summary statistics,
-    and/or generating zonal statistics across polygons.  The 'custom_func' parameter provides
+    and/or generating zonal statistics across polygons.  The 'input_func' parameter provides
     a method for the user to supply a custom function for generating features rather than using the
     pre-defined methods.
-    
+
     Parameters
     ----------
     gdf : geopandas geodataframe
         geometry data in the form of a geopandas geodataframe
-    products : list
-        a list of products to load from the datacube.
-        e.g. ['s2a_ard_granule', 's2b_ard_granule']
     dc_query : dictionary
         Datacube query object, should not contain lat and long (x or y)
         variables as these are supplied by the 'gdf' variable
@@ -712,50 +604,44 @@ def collect_training_data(gdf,
         If True, then the training data will contain two extra columns 'x_coord' and
         'y_coord' corresponding to the x,y coordinate of each sample. This variable can
         be useful for handling spatial autocorrelation between samples later in the ML workflow.
-    custom_func : function, optional
-        A custom function for generating feature layers. If this parameter
-        is set, all other options (excluding 'zonal_stats'), will be ignored.
-        The result of the 'custom_func' must be a single xarray dataset
-        containing 2D coordinates (i.e x, y - no time dimension). The custom function
-        has access to the datacube dataset extracted using the 'dc_query' params. To load
-        other datasets, you can use the 'like=ds.geobox' parameter in dc.load
+    feature_func : function
+        A function for generating feature layers that is applied to the data within
+        the bounds of the input geometry. The 'feature_func' must accept a 'dc_query'
+        object, and return a single xarray.Dataset or xarray.DataArray containing
+        2D coordinates (i.e x, y - no time dimension).
+        e.g.
+            def feature_function(query):
+                dc = datacube.Datacube(app='feature_layers')
+                ds = dc.load(**query)
+                ds = ds.mean('time')
+                return ds
+
     field : str
         Name of the column in the gdf that contains the class labels
-    calc_indices: list, optional
-        If not using a custom func, then this parameter provides a method for
-        calculating a number of remote sensing indices (e.g. `['NDWI', 'NDVI']`).
-    reduce_func : string, optional
-        Function to reduce the data from multiple time steps to
-        a single timestep. Options are 'mean', 'median', 'std',
-        'max', 'min', 'geomedian'.  Ignored if 'custom_func' is provided.
-    drop : boolean, optional ,
-        If this variable is set to True, and 'calc_indices' are supplied, the
-        spectral bands will be dropped from the dataset leaving only the
-        band indices as data variables in the dataset. Default is True.
     zonal_stats : string, optional
         An optional string giving the names of zonal statistics to calculate
         for each polygon. Default is None (all pixel values are returned). Supported
         values are 'mean', 'median', 'max', 'min'. Will work in
-        conjuction with a 'custom_func'.
+        conjuction with a 'input_func'.
     clean : bool
         Whether or not to remove missing values in the training dataset. If True,
         training labels with any NaNs or Infs in the feature layers will be dropped
         from the dataset.
-     fail_threshold : float, default 0.02
+    fail_threshold : float, default 0.02
         Silent read fails on S3 can result in some rows of the returned data containing NaN values.
         The'fail_threshold' fraction specifies a % of acceptable fails.
         e.g. Setting 'fail_threshold' to 0.05 means if >5% of the samples in the training dataset
         fail then those samples will be reutnred to the multiprocessing queue. Below this fraction
         the function will accept the failures and return the results.
-     fail_ratio: float
+    fail_ratio: float
         A float between 0 and 1 that defines if a given training sample has failed.
         Default is 0.5, which means if 50 % of the measurements in a given sample return null
         values, and the number of total fails is more than the fail_threshold, the samplewill be
         passed to the retry queue.
-     max_retries: int, default 3
+    max_retries: int, default 3
         Maximum number of times to retry collecting samples. This number is invoked
         if the 'fail_threshold' is not reached.
-        
+
     Returns
     --------
     Two lists, a list of numpy.arrays containing classes and extracted data for
@@ -763,29 +649,26 @@ def collect_training_data(gdf,
     """
 
     # check the dtype of the class field
-    if (gdf[field].dtype != np.int):
+    if gdf[field].dtype != np.int:
         raise ValueError(
             'The "field" column of the input vector must contain integer dtypes'
         )
 
     # set up some print statements
-    if custom_func is not None:
-        print("Reducing data using user supplied custom function")
-    if calc_indices is not None and custom_func is None:
-        print("Calculating indices: " + str(calc_indices))
-    if reduce_func is not None and custom_func is None:
-        print("Reducing data using: " + reduce_func)
+    if feature_func is None:
+        print("Please supply a feature layer function")
+
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
 
-    #add unique id to gdf to help with indexing failed rows
+    # add unique id to gdf to help with indexing failed rows
     # during multiprocessing
-    #if zonal_stats is not None:
-    gdf['id'] = range(0, len(gdf))
+    # if zonal_stats is not None:
+    gdf["id"] = range(0, len(gdf))
 
     if ncpus == 1:
         # progress indicator
-        print('Collecting training data in serial mode')
+        print("Collecting training data in serial mode")
         i = 0
 
         # list to store results
@@ -794,89 +677,96 @@ def collect_training_data(gdf,
 
         # loop through polys and extract training data
         for index, row in gdf.iterrows():
-            print(" Feature {:04}/{:04}\r".format(i + 1, len(gdf)), end='')
+            print(" Feature {:04}/{:04}\r".format(i + 1, len(gdf)), end="")
 
-            _get_training_data_for_shp(gdf, index, row, results, column_names,
-                                       products, dc_query, return_coords,
-                                       custom_func, field, calc_indices,
-                                       reduce_func, drop, zonal_stats)
+            _get_training_data_for_shp(
+                gdf,
+                index,
+                row,
+                results,
+                column_names,
+                dc_query,
+                return_coords,
+                feature_func,
+                field,
+                zonal_stats,
+            )
             i += 1
 
     else:
-        print('Collecting training data in parallel mode')
+        print("Collecting training data in parallel mode")
         column_names, results = _get_training_data_parallel(
             gdf=gdf,
-            products=products,
             dc_query=dc_query,
             ncpus=ncpus,
             return_coords=return_coords,
-            custom_func=custom_func,
+            feature_func=feature_func,
             field=field,
-            calc_indices=calc_indices,
-            reduce_func=reduce_func,
-            drop=drop,
-            zonal_stats=zonal_stats)
+            zonal_stats=zonal_stats,
+        )
 
     # column names are appended during each iteration
     # but they are identical, grab only the first instance
     column_names = column_names[0]
-    
+
     # Stack the extracted training data for each feature into a single array
     model_input = np.vstack(results)
-    
+
     # this code block below iteratively retries failed rows
     # up to max_retries or until fail_threshold is
     # reached - whichever occurs first
     if ncpus > 1:
         i = 1
-        while (i <= max_retries):
+        while i <= max_retries:
             # Find % of fails (null values) in data. Use Pandas for simplicity
-            df = pd.DataFrame(data=model_input[:,0:-1], index=model_input[:,-1])
-            #how many nan values per id?
+            df = pd.DataFrame(data=model_input[:, 0:-1], index=model_input[:, -1])
+            # how many nan values per id?
             num_nans = df.isnull().sum(axis=1)
             num_nans = num_nans.groupby(num_nans.index).sum()
-            #how many valid values per id?
+            # how many valid values per id?
             num_valid = df.notnull().sum(axis=1)
             num_valid = num_valid.groupby(num_valid.index).sum()
-            #find fail rate
-            perc_fail = num_nans / (num_nans+num_valid)
+            # find fail rate
+            perc_fail = num_nans / (num_nans + num_valid)
             fail_ids = perc_fail[perc_fail > fail_ratio]
             fail_rate = len(fail_ids) / len(gdf)
-            
-            print('Percentage of possible fails after run ' + str(i) + ' = ' +
-                  str(round(fail_rate * 100, 2)) + ' %')
-            
+
+            print(
+                "Percentage of possible fails after run "
+                + str(i)
+                + " = "
+                + str(round(fail_rate * 100, 2))
+                + " %"
+            )
+
             if fail_rate > fail_threshold:
-                print('Recollecting samples that failed')
-                
+                print("Recollecting samples that failed")
+
                 fail_ids = list(fail_ids.index)
                 # keep only the ids in model_input object that didn't fail
-                model_input = model_input[~np.isin(model_input[:,-1], fail_ids)]
-                
+                model_input = model_input[~np.isin(model_input[:, -1], fail_ids)]
+
                 # index out the fail_ids from the original gdf
-                gdf_rerun = gdf.loc[gdf['id'].isin(fail_ids)]
+                gdf_rerun = gdf.loc[gdf["id"].isin(fail_ids)]
                 gdf_rerun = gdf_rerun.reset_index(drop=True)
-            
-                time.sleep(5)  #sleep for 5s to rest api
-                
-                #recollect failed rows
+
+                time.sleep(5)  # sleep for 5s to rest api
+
+                # recollect failed rows
                 column_names_again, results_again = _get_training_data_parallel(
                     gdf=gdf_rerun,
-                    products=products,
                     dc_query=dc_query,
                     ncpus=ncpus,
                     return_coords=return_coords,
-                    custom_func=custom_func,
+                    feature_func=feature_func,
                     field=field,
-                    calc_indices=calc_indices,
-                    reduce_func=reduce_func,
-                    drop=drop,
-                    zonal_stats=zonal_stats)
+                    zonal_stats=zonal_stats,
+                )
 
                 # Stack the extracted training data for each feature into a single array
                 model_input_again = np.vstack(results_again)
 
-                #merge results of the re-run with original run
+                # merge results of the re-run with original run
                 model_input = np.vstack((model_input, model_input_again))
 
                 i += 1
@@ -886,21 +776,21 @@ def collect_training_data(gdf,
 
     # -----------------------------------------------
 
-    # remove id column 
+    # remove id column
     idx_var = column_names[0:-1]
     model_col_indices = [column_names.index(var_name) for var_name in idx_var]
     model_input = model_input[:, model_col_indices]
-    
+
     if clean == True:
         num = np.count_nonzero(np.isnan(model_input).any(axis=1))
         model_input = model_input[~np.isnan(model_input).any(axis=1)]
         model_input = model_input[~np.isinf(model_input).any(axis=1)]
         print("Removed " + str(num) + " rows wth NaNs &/or Infs")
-        print('Output shape: ', model_input.shape)
+        print("Output shape: ", model_input.shape)
 
     else:
-        print('Returning data without cleaning')
-        print('Output shape: ', model_input.shape)
+        print("Returning data without cleaning")
+        print("Output shape: ", model_input.shape)
 
     return column_names[0:-1], model_input
 
@@ -926,7 +816,7 @@ class KMeans_tree(ClusterMixin):
 
     def __init__(self, n_levels=2, n_clusters=3, **kwargs):
 
-        assert (n_levels >= 1)
+        assert n_levels >= 1
 
         self.base_model = KMeans(n_clusters=3, **kwargs)
         self.n_levels = n_levels
@@ -934,9 +824,8 @@ class KMeans_tree(ClusterMixin):
         # make child models
         if n_levels > 1:
             self.branches = [
-                KMeans_tree(n_levels=n_levels - 1,
-                            n_clusters=n_clusters,
-                            **kwargs) for _ in range(n_clusters)
+                KMeans_tree(n_levels=n_levels - 1, n_clusters=n_clusters, **kwargs)
+                for _ in range(n_clusters)
             ]
 
     def fit(self, X, y=None, sample_weight=None):
@@ -957,20 +846,23 @@ class KMeans_tree(ClusterMixin):
             observations are assigned equal weight (default: None)
         """
 
-        self.labels_ = self.base_model.fit(X,
-                                           sample_weight=sample_weight).labels_
+        self.labels_ = self.base_model.fit(X, sample_weight=sample_weight).labels_
 
         if self.n_levels > 1:
             labels_old = np.copy(self.labels_)
             # make room to add the sub-cluster labels
-            self.labels_ *= (self.n_clusters)**(self.n_levels - 1)
+            self.labels_ *= (self.n_clusters) ** (self.n_levels - 1)
 
             for clu in range(self.n_clusters):
                 # fit child models on their corresponding partition of the training set
                 self.branches[clu].fit(
                     X[labels_old == clu],
-                    sample_weight=(sample_weight[labels_old == clu]
-                                   if sample_weight is not None else None))
+                    sample_weight=(
+                        sample_weight[labels_old == clu]
+                        if sample_weight is not None
+                        else None
+                    ),
+                )
                 self.labels_[labels_old == clu] += self.branches[clu].labels_
 
         return self
@@ -1000,23 +892,29 @@ class KMeans_tree(ClusterMixin):
             rescpy = np.copy(result)
 
             # make room to add the sub-cluster labels
-            result *= (self.n_clusters)**(self.n_levels - 1)
+            result *= (self.n_clusters) ** (self.n_levels - 1)
 
             for clu in range(self.n_clusters):
                 result[rescpy == clu] += self.branches[clu].predict(
                     X[rescpy == clu],
-                    sample_weight=(sample_weight[rescpy == clu]
-                                   if sample_weight is not None else None))
+                    sample_weight=(
+                        sample_weight[rescpy == clu]
+                        if sample_weight is not None
+                        else None
+                    ),
+                )
 
         return result
 
 
-def spatial_clusters(coordinates,
-                     method='Hierarchical',
-                     max_distance=None,
-                     n_groups=None,
-                     verbose=False,
-                     **kwargs):
+def spatial_clusters(
+    coordinates,
+    method="Hierarchical",
+    max_distance=None,
+    n_groups=None,
+    verbose=False,
+    **kwargs
+):
     """
     Create spatial groups on coorindate data using either KMeans clustering
     or a Gaussian Mixture model
@@ -1046,50 +944,51 @@ def spatial_clusters(coordinates,
      labels : array, shape [n_samples,]
         Index of the cluster each sample belongs to.
     """
-    if method not in ['Hierarchical', 'KMeans', 'GMM']:
-        raise ValueError(
-            "method must be one of: 'Hierarchical','KMeans' or 'GMM'")
+    if method not in ["Hierarchical", "KMeans", "GMM"]:
+        raise ValueError("method must be one of: 'Hierarchical','KMeans' or 'GMM'")
 
-    if (method in ['GMM', 'KMeans']) & (n_groups is None):
+    if (method in ["GMM", "KMeans"]) & (n_groups is None):
         raise ValueError(
             "The 'GMM' and 'KMeans' methods requires explicitly setting 'n_groups'"
         )
 
-    if (method == 'Hierarchical') & (max_distance is None):
-        raise ValueError(
-            "The 'Hierarchical' method requires setting max_distance")
+    if (method == "Hierarchical") & (max_distance is None):
+        raise ValueError("The 'Hierarchical' method requires setting max_distance")
 
-    if method == 'Hierarchical':
+    if method == "Hierarchical":
         cluster_label = AgglomerativeClustering(
             n_clusters=None,
-            linkage='complete',
+            linkage="complete",
             distance_threshold=max_distance,
-            **kwargs).fit_predict(coordinates)
+            **kwargs
+        ).fit_predict(coordinates)
 
-    if method == 'KMeans':
-        cluster_label = KMeans(n_clusters=n_groups,
-                               **kwargs).fit_predict(coordinates)
+    if method == "KMeans":
+        cluster_label = KMeans(n_clusters=n_groups, **kwargs).fit_predict(coordinates)
 
-    if method == 'GMM':
-        cluster_label = GaussianMixture(n_components=n_groups,
-                                        **kwargs).fit_predict(coordinates)
+    if method == "GMM":
+        cluster_label = GaussianMixture(n_components=n_groups, **kwargs).fit_predict(
+            coordinates
+        )
     if verbose:
         print("n clusters = " + str(len(np.unique(cluster_label))))
 
     return cluster_label
 
 
-def SKCV(coordinates,
-         n_splits,
-         cluster_method,
-         kfold_method,
-         test_size,
-         balance,
-         n_groups=None,
-         max_distance=None,
-         train_size=None,
-         random_state=None,
-         **kwargs):
+def SKCV(
+    coordinates,
+    n_splits,
+    cluster_method,
+    kfold_method,
+    test_size,
+    balance,
+    n_groups=None,
+    max_distance=None,
+    train_size=None,
+    random_state=None,
+    **kwargs
+):
     """
     Generate spatial k-fold cross validation indices using coordinate data.
     This function wraps the 'SpatialShuffleSplit' and 'SpatialKFold' classes.
@@ -1100,9 +999,9 @@ def SKCV(coordinates,
     for spatial data to avoid overestimating cross-validation scores.
     This can happen because of the inherent spatial autocorrelation that is usually
     associated with this type of data.
-    
+
     Last modified: Dec 2020
-    
+
     Parameters
     ----------
     coordinates : np.array
@@ -1158,48 +1057,54 @@ def SKCV(coordinates,
     Returns
     --------
     generator object _BaseSpatialCrossValidator.split
-    
+
     """
     # intiate a method
-    if kfold_method == 'SpatialShuffleSplit':
-        splitter = _SpatialShuffleSplit(n_groups=n_groups,
-                                        method=cluster_method,
-                                        coordinates=coordinates,
-                                        max_distance=max_distance,
-                                        test_size=test_size,
-                                        train_size=train_size,
-                                        n_splits=n_splits,
-                                        random_state=random_state,
-                                        balance=balance,
-                                        **kwargs)
+    if kfold_method == "SpatialShuffleSplit":
+        splitter = _SpatialShuffleSplit(
+            n_groups=n_groups,
+            method=cluster_method,
+            coordinates=coordinates,
+            max_distance=max_distance,
+            test_size=test_size,
+            train_size=train_size,
+            n_splits=n_splits,
+            random_state=random_state,
+            balance=balance,
+            **kwargs
+        )
 
-    if kfold_method == 'SpatialKFold':
-        splitter = _SpatialKFold(n_groups=n_groups,
-                                 coordinates=coordinates,
-                                 max_distance=max_distance,
-                                 method=cluster_method,
-                                 test_size=test_size,
-                                 n_splits=n_splits,
-                                 random_state=random_state,
-                                 balance=balance,
-                                 **kwargs)
+    if kfold_method == "SpatialKFold":
+        splitter = _SpatialKFold(
+            n_groups=n_groups,
+            coordinates=coordinates,
+            max_distance=max_distance,
+            method=cluster_method,
+            test_size=test_size,
+            n_splits=n_splits,
+            random_state=random_state,
+            balance=balance,
+            **kwargs
+        )
 
     return splitter
 
 
-def spatial_train_test_split(X,
-                             y,
-                             coordinates,
-                             cluster_method,
-                             kfold_method,
-                             balance,
-                             test_size=None,
-                             n_splits=None,
-                             n_groups=None,
-                             max_distance=None,
-                             train_size=None,
-                             random_state=None,
-                             **kwargs):
+def spatial_train_test_split(
+    X,
+    y,
+    coordinates,
+    cluster_method,
+    kfold_method,
+    balance,
+    test_size=None,
+    n_splits=None,
+    n_groups=None,
+    max_distance=None,
+    train_size=None,
+    random_state=None,
+    **kwargs
+):
     """
     Split arrays into random train and test subsets. Similar to
     `sklearn.model_selection.train_test_split` but instead works on
@@ -1208,7 +1113,7 @@ def spatial_train_test_split(X,
     Grouping by spatial clusters is preferred over plain random splits for
     spatial data to avoid overestimating validation scores due to spatial
     autocorrelation.
-    
+
     Parameters
     ----------
     X : np.array
@@ -1268,16 +1173,16 @@ def spatial_train_test_split(X,
     **kwargs : optional,
         Additional keyword arguments to pass to sklearn.cluster.Kmeans or
         sklearn.mixture.GuassianMixture depending on the cluster_method argument.
-    
+
     Returns
     -------
     Tuple :
         Contains four arrays in the following order:
             X_train, X_test, y_train, y_test
-            
+
     """
 
-    if kfold_method == 'SpatialShuffleSplit':
+    if kfold_method == "SpatialShuffleSplit":
         splitter = _SpatialShuffleSplit(
             n_groups=n_groups,
             method=cluster_method,
@@ -1288,9 +1193,10 @@ def spatial_train_test_split(X,
             n_splits=1 if n_splits is None else n_splits,
             random_state=random_state,
             balance=balance,
-            **kwargs)
+            **kwargs
+        )
 
-    if kfold_method == 'SpatialKFold':
+    if kfold_method == "SpatialKFold":
         if n_splits is None:
             raise ValueError(
                 "n_splits parameter requires an integer value, eg. 'n_splits=5'"
@@ -1301,14 +1207,16 @@ def spatial_train_test_split(X,
                 "is better achieved using the 'n_splits' parameter"
             )
 
-        splitter = _SpatialKFold(n_groups=n_groups,
-                                 coordinates=coordinates,
-                                 max_distance=max_distance,
-                                 method=cluster_method,
-                                 n_splits=n_splits,
-                                 random_state=random_state,
-                                 balance=balance,
-                                 **kwargs)
+        splitter = _SpatialKFold(
+            n_groups=n_groups,
+            coordinates=coordinates,
+            max_distance=max_distance,
+            method=cluster_method,
+            n_splits=n_splits,
+            random_state=random_state,
+            balance=balance,
+            **kwargs
+        )
 
     lst = []
     for train, test in splitter.split(coordinates):
@@ -1344,8 +1252,10 @@ def _partition_by_sum(array, parts):
     array = np.atleast_1d(array).ravel()
     if parts > array.size:
         raise ValueError(
-            "Cannot partition an array of size {} into {} parts of equal sum.".
-            format(array.size, parts))
+            "Cannot partition an array of size {} into {} parts of equal sum.".format(
+                array.size, parts
+            )
+        )
     cumulative_sum = array.cumsum()
     # Ideally, we want each part to have the same number of points (total /
     # parts).
@@ -1358,7 +1268,8 @@ def _partition_by_sum(array, parts):
     if np.unique(indices).size != indices.size:
         raise ValueError(
             "Could not find partition points to split the array into {} parts "
-            "of equal sum.".format(parts))
+            "of equal sum.".format(parts)
+        )
     return indices
 
 
@@ -1380,12 +1291,14 @@ class _BaseSpatialCrossValidator(BaseCrossValidator, metaclass=ABCMeta):
         Number of splitting iterations.
     """
 
-    def __init__(self,
-                 n_groups=None,
-                 coordinates=None,
-                 method=None,
-                 max_distance=None,
-                 n_splits=None):
+    def __init__(
+        self,
+        n_groups=None,
+        coordinates=None,
+        method=None,
+        max_distance=None,
+        n_splits=None,
+    ):
 
         self.n_groups = n_groups
         self.coordinates = coordinates
@@ -1416,8 +1329,10 @@ class _BaseSpatialCrossValidator(BaseCrossValidator, metaclass=ABCMeta):
         """
         if X.shape[1] != 2:
             raise ValueError(
-                "X (the coordinate data) must have exactly 2 columns ({} given)."
-                .format(X.shape[1]))
+                "X (the coordinate data) must have exactly 2 columns ({} given).".format(
+                    X.shape[1]
+                )
+            )
         for train, test in super().split(X, y, groups):
             yield train, test
 
@@ -1529,23 +1444,27 @@ class _SpatialShuffleSplit(_BaseSpatialCrossValidator):
         containing indices to split data into training and test sets
     """
 
-    def __init__(self,
-                 n_groups=None,
-                 coordinates=None,
-                 method='Heirachical',
-                 max_distance=None,
-                 n_splits=None,
-                 test_size=0.15,
-                 train_size=None,
-                 random_state=None,
-                 balance=10,
-                 **kwargs):
-        super().__init__(n_groups=n_groups,
-                         coordinates=coordinates,
-                         method=method,
-                         max_distance=max_distance,
-                         n_splits=n_splits,
-                         **kwargs)
+    def __init__(
+        self,
+        n_groups=None,
+        coordinates=None,
+        method="Heirachical",
+        max_distance=None,
+        n_splits=None,
+        test_size=0.15,
+        train_size=None,
+        random_state=None,
+        balance=10,
+        **kwargs
+    ):
+        super().__init__(
+            n_groups=n_groups,
+            coordinates=coordinates,
+            method=method,
+            max_distance=max_distance,
+            n_splits=n_splits,
+            **kwargs
+        )
         if balance < 1:
             raise ValueError(
                 "The *balance* argument must be >= 1. To disable balance, use 1."
@@ -1577,11 +1496,13 @@ class _SpatialShuffleSplit(_BaseSpatialCrossValidator):
         test : ndarray
             The testing set indices for that split.
         """
-        labels = spatial_clusters(n_groups=self.n_groups,
-                                  coordinates=self.coordinates,
-                                  method=self.method,
-                                  max_distance=self.max_distance,
-                                  **self.kwargs)
+        labels = spatial_clusters(
+            n_groups=self.n_groups,
+            coordinates=self.coordinates,
+            method=self.method,
+            max_distance=self.max_distance,
+            **self.kwargs
+        )
 
         cluster_ids = np.unique(labels)
         # Generate many more splits so that we can pick and choose the ones
@@ -1602,15 +1523,16 @@ class _SpatialShuffleSplit(_BaseSpatialCrossValidator):
                 # pylint: disable=stop-iteration-return
                 train_clusters, test_clusters = next(shuffle)
                 # pylint: enable=stop-iteration-return
-                train_points = np.where(
-                    np.isin(labels, cluster_ids[train_clusters]))[0]
-                test_points = np.where(
-                    np.isin(labels, cluster_ids[test_clusters]))[0]
+                train_points = np.where(np.isin(labels, cluster_ids[train_clusters]))[0]
+                test_points = np.where(np.isin(labels, cluster_ids[test_clusters]))[0]
                 # The proportion of data points assigned to each group should
                 # be close the proportion of clusters assigned to each group.
                 balance.append(
-                    abs(train_points.size / test_points.size -
-                        train_clusters.size / test_clusters.size))
+                    abs(
+                        train_points.size / test_points.size
+                        - train_clusters.size / test_clusters.size
+                    )
+                )
                 test_sets.append(test_points)
             best = np.argmin(balance)
             yield test_sets[best]
@@ -1668,29 +1590,35 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
         sklearn.mixture.GuassianMixture depending on the cluster_method argument.
     """
 
-    def __init__(self,
-                 n_groups=None,
-                 coordinates=None,
-                 method='Heirachical',
-                 max_distance=None,
-                 n_splits=5,
-                 test_size=0.15,
-                 train_size=None,
-                 shuffle=True,
-                 random_state=None,
-                 balance=True,
-                 **kwargs):
-        super().__init__(n_groups=n_groups,
-                         coordinates=coordinates,
-                         method=method,
-                         max_distance=max_distance,
-                         n_splits=n_splits,
-                         **kwargs)
+    def __init__(
+        self,
+        n_groups=None,
+        coordinates=None,
+        method="Heirachical",
+        max_distance=None,
+        n_splits=5,
+        test_size=0.15,
+        train_size=None,
+        shuffle=True,
+        random_state=None,
+        balance=True,
+        **kwargs
+    ):
+        super().__init__(
+            n_groups=n_groups,
+            coordinates=coordinates,
+            method=method,
+            max_distance=max_distance,
+            n_splits=n_splits,
+            **kwargs
+        )
 
         if n_splits < 2:
             raise ValueError(
-                "Number of splits must be >=2 for clusterKFold. Given {}.".
-                format(n_splits))
+                "Number of splits must be >=2 for clusterKFold. Given {}.".format(
+                    n_splits
+                )
+            )
         self.test_size = test_size
         self.shuffle = shuffle
         self.random_state = random_state
@@ -1716,25 +1644,27 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
         test : ndarray
             The testing set indices for that split.
         """
-        labels = spatial_clusters(n_groups=self.n_groups,
-                                  coordinates=self.coordinates,
-                                  method=self.method,
-                                  max_distance=self.max_distance,
-                                  **self.kwargs)
+        labels = spatial_clusters(
+            n_groups=self.n_groups,
+            coordinates=self.coordinates,
+            method=self.method,
+            max_distance=self.max_distance,
+            **self.kwargs
+        )
 
         cluster_ids = np.unique(labels)
         if self.n_splits > cluster_ids.size:
             raise ValueError(
                 "Number of k-fold splits ({}) cannot be greater than the number of "
                 "clusters ({}). Either decrease n_splits or increase the number of "
-                "clusters.".format(self.n_splits, cluster_ids.size))
+                "clusters.".format(self.n_splits, cluster_ids.size)
+            )
         if self.shuffle:
             check_random_state(self.random_state).shuffle(cluster_ids)
         if self.balance:
             cluster_sizes = [np.isin(labels, i).sum() for i in cluster_ids]
             try:
-                split_points = _partition_by_sum(cluster_sizes,
-                                                 parts=self.n_splits)
+                split_points = _partition_by_sum(cluster_sizes, parts=self.n_splits)
                 folds = np.split(np.arange(cluster_ids.size), split_points)
             except ValueError:
                 warnings.warn(
@@ -1744,15 +1674,9 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
                     "the number of clusters may help.",
                     UserWarning,
                 )
-                folds = [
-                    i
-                    for _, i in KFold(n_splits=self.n_splits).split(cluster_ids)
-                ]
+                folds = [i for _, i in KFold(n_splits=self.n_splits).split(cluster_ids)]
         else:
-            folds = [
-                i for _, i in KFold(n_splits=self.n_splits).split(cluster_ids)
-            ]
+            folds = [i for _, i in KFold(n_splits=self.n_splits).split(cluster_ids)]
         for test_clusters in folds:
-            test_points = np.where(np.isin(labels,
-                                           cluster_ids[test_clusters]))[0]
+            test_points = np.where(np.isin(labels, cluster_ids[test_clusters]))[0]
             yield test_points
