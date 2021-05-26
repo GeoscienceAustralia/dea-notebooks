@@ -573,12 +573,13 @@ def collect_training_data(
     max_retries=3,
 ):
     """
-    This function executes the training data functions and tidies the results
-    into a 'model_input' object containing stacked training data arrays
-    with all NaNs & Infs removed. In the instance where ncpus > 1, a parallel version of the
-    function will be run (functions are passed to a mp.Pool()). This function can conduct zonal statistics if the supplied shapefile contains polygons.
-    The 'feature_func' parameter provides a method for the user to supply a function for generating features rather than using the
-    pre-defined methods.
+    This function provides methods for gathering training data from the ODC over 
+    geometries stored within a geopandas geodataframe. The function will return a
+    'model_input' array containing stacked training data arrays with all NaNs & Infs removed.
+    In the instance where ncpus > 1, a parallel version of the function will be run
+    (functions are passed to a mp.Pool()). This function can conduct zonal statistics if
+    the supplied shapefile contains polygons. The 'feature_func' parameter defines what
+    features to produce.
 
     Parameters
     ----------
