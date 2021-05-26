@@ -649,9 +649,12 @@ def collect_training_data(
             'The "field" column of the input vector must contain integer dtypes'
         )
 
-    # set up some print statements
+    # check for feature_func
     if feature_func is None:
-        print("Please supply a feature layer function")
+         raise ValueError(
+            "Please supply a feature layer function through the "
+            +"parameter 'feature_func'"
+        )
 
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
