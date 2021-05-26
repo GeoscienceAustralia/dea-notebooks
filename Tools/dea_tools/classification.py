@@ -440,6 +440,10 @@ def _get_training_data_for_shp(
     # prevent function altering dictionary kwargs
     dc_query = deepcopy(dc_query)
 
+    # remove dask chunks if supplied as using
+    # mulitprocessing for parallization
+    if "dask_chunks" in dc_query.keys():
+        dc_query.pop("dask_chunks", None)
     
     # set up query based on polygon
     geom = geometry.Geometry(geom=gdf.iloc[index].geometry, crs=gdf.crs)
@@ -651,18 +655,6 @@ def collect_training_data(
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
     
-    # remove dask chunks if supplied as using
-    # mulitprocessing for parallization
-    if "dask_chunks" in dc_query.keys():
-        dc_query.pop("dask_chunks", None)
-
-    # Throw error if spatial bounds included in query object
-    if ("x" or "y") in dc_query.keys():
-        raise ValueError(
-                "Query contains spatial bounds, please remove them. "
-                + "These are handled by the geometry of the input shapefile"
-                )
-
     # add unique id to gdf to help with indexing failed rows
     # during multiprocessing
     # if zonal_stats is not None:
