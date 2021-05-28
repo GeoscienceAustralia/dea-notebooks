@@ -35,6 +35,7 @@ def get_stations(time=None,
 def get_station_data(station,
                      time=None,
                      observation='http://bom.gov.au/waterdata/services/parameters/Water Course Discharge',
+                     param='Pat4_C_B_1_DailyMean',
                      url='http://www.bom.gov.au/waterdata/services'):
     """
     Query Gauge Data.
@@ -49,6 +50,7 @@ def get_station_data(station,
 
     data = tpl_get_obs.format(station=station.url,
                               observation=observation,
+                              param=param,
                               **_fmt_time(time))
     data = data.replace('\n', '')
     rr = requests.post(url, data=data)
@@ -332,7 +334,7 @@ tpl_get_stations = '''
 </soap12:Envelope>
 '''
 
-# {station}, {observation}, {t_start}, {t_end}
+# {station}, {observation}, {t_start}, {t_end}, {param}
 tpl_get_obs = '''
 <soap12:Envelope xmlns:soap12="http://www.w3.org/2003/05/soap-envelope"
                  xmlns:sos="http://www.opengis.net/sos/2.0"
@@ -354,7 +356,7 @@ tpl_get_obs = '''
     </soap12:Header>
     <soap12:Body>
         <sos:GetObservation service="SOS" version="2.0.0">
-            <sos:procedure>http://bom.gov.au/waterdata/services/tstypes/Pat4_C_B_1_DailyMean</sos:procedure>
+            <sos:procedure>http://bom.gov.au/waterdata/services/tstypes/{param}</sos:procedure>
             <sos:observedProperty>{observation}</sos:observedProperty>
             <sos:featureOfInterest>{station}</sos:featureOfInterest>
             <sos:temporalFilter>
