@@ -19,6 +19,7 @@ Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Functions included:
     create_local_dask_cluster
+    create_dask_gateway_cluster
 
 Last modified: March 2020
 
@@ -28,6 +29,7 @@ Last modified: March 2020
 from importlib.util import find_spec
 import os
 import dask
+from aiohttp import ClientConnectionError
 from datacube.utils.dask import start_local_dask
 from datacube.utils.rio import configure_s3_access
 
@@ -79,3 +81,34 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
     if display_client:
         from IPython.display import display
         display(client)
+
+
+try:
+    from dask_gateway import Gateway
+
+    def create_dask_gateway_cluster(profile='XL', workers=2):
+        """
+        Create a cluster in our internal dask cluster.
+
+        Parameters
+        ----------
+        profile : str
+            Possible values are: XL (2 cores, 15GB memory), 2XL (4 cores, 31GB memory), 4XL (8 cores, 62GB memory)
+        workers : int
+            Number of workers in the cluster.
+
+        """
+        try:
+            gateway = Gateway()
+            options = gateway.cluster_options()
+            options['profile'] = profile
+            options['jupyterhub_user'] = os.getenv('JUPYTERHUB_USER')
+            cluster = gateway.new_cluster(options)
+            cluster.scale(workers)
+            return cluster
+        except ClientConnectionError:
+            raise ConnectionError("access to dask gateway cluster unauthorized")
+
+except ImportError:
+    def create_dask_gateway_cluster(*args, **kwargs):
+        raise NotImplementedError
