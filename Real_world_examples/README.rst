@@ -22,18 +22,8 @@ More complex case study-based workflows demonstrating how DEA can be used to add
    Urban_change_detection.ipynb
    Vegetation_phenology.ipynb
    Wetness_stream_gauge_correlations.ipynb
+   Scalable_machine_learning/README.rst
 
-Scalable Supervised Machine Learning on the Open Data Cube:
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Scalable machine learning
-   
-   Scalable_machine_learning/1_Extract_training_data.ipynb
-   Scalable_machine_learning/2_Inspect_training_data.ipynb
-   Scalable_machine_learning/3_Evaluate_optimize_fit_classifier.ipynb
-   Scalable_machine_learning/4_Classify_satellite_data.ipynb
-   Scalable_machine_learning/5_Object-based_filtering.ipynb
    
 Citing DEA Notebooks
 --------------------
