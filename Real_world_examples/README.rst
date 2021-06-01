@@ -22,6 +22,7 @@ More complex case study-based workflows demonstrating how DEA can be used to add
    Urban_change_detection.ipynb
    Vegetation_phenology.ipynb
    Wetness_stream_gauge_correlations.ipynb
+   Scalable_machine_learning/README.rst
 
    
 Citing DEA Notebooks
