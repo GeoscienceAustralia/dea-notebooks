@@ -27,7 +27,7 @@ Scalable Supervised Machine Learning on the Open Data Cube:
 
 .. toctree::
    :maxdepth: 1
-   :caption: Scaleable machine learning
+   :caption: Scalable machine learning
    
    Scalable_machine_learning/1_Extract_training_data.ipynb
    Scalable_machine_learning/2_Inspect_training_data.ipynb
