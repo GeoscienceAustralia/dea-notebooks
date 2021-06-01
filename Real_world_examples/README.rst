@@ -27,13 +27,13 @@ Scalable Supervised Machine Learning on the Open Data Cube:
 
 .. toctree::
    :maxdepth: 1
-   :caption: Scaleable machine learning
+   :caption: Scalable machine learning
    
-   1_Extract_training_data.ipynb
-   2_Inspect_training_data.ipynb
-   3_Evaluate_optimize_fit_classifier.ipynb
-   4_Classify_satellite_data.ipynb
-   5_Object-based_filtering.ipynb
+   Scalable_machine_learning/1_Extract_training_data.ipynb
+   Scalable_machine_learning/2_Inspect_training_data.ipynb
+   Scalable_machine_learning/3_Evaluate_optimize_fit_classifier.ipynb
+   Scalable_machine_learning/4_Classify_satellite_data.ipynb
+   Scalable_machine_learning/5_Object-based_filtering.ipynb
    
 Citing DEA Notebooks
 --------------------
