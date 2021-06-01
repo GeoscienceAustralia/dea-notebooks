@@ -4,6 +4,7 @@
   :width: 900
   :alt: Digital Earth Australia logo
 
+
 Scalable Supervised Machine Learning on the Open Data Cube
 ==========================================================
 
@@ -14,8 +15,7 @@ Scalable Supervised Machine Learning on the Open Data Cube
    `dea-notebooks <https://github.com/GeoscienceAustralia/dea-notebooks>`__
    repository before attempting to run through this notebook series.
 
-Background
-----------
+**Background**
 
 Classification of satellite images using supervised machine learning
 (ML) techniques has become a common occurence in the remote sensing
@@ -117,7 +117,7 @@ before altering the notebooks for your specific use case.
    the `dask
    notebook <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Beginners_guide/09_Parallel_processing_with_Dask.ipynb>`__.
 
-**Helpful Resources**
+**Helpful resources**
 
 -  There are many online courses that can help you understand the
    fundamentals of machine learning with python e.g.
@@ -137,10 +137,9 @@ before altering the notebooks for your specific use case.
    notebooks and provides a more succint (but less descriptive) version
    of the workflow demonstrated here.
 
-Getting Started
----------------
+**Getting started**
 
-To begin working through the notebooks in this ``Scalable Supervised Machine Learning on the Open Data Cube`` guide, go to the first notebook ``1_Extract_training_data.ipynb`` below:
+To begin working through the notebooks in this ``Scalable Supervised Machine Learning on the Open Data Cube`` guide, go to the first ``Extracting training data from the ODC`` notebook:
 
 .. toctree::
    :maxdepth: 1
@@ -154,8 +153,7 @@ To begin working through the notebooks in this ``Scalable Supervised Machine Lea
 
 --------------
 
-Additional information
-----------------------
+**Additional information**
 
 **License:** The code in this notebook is licensed under the `Apache
 License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`__.
