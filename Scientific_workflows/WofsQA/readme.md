@@ -1,0 +1,3 @@
+- Run on dev AU sandbox
+- Open `dask-gateway` notebook first and launch dask gateway, might need to scale manually 1-2 workers might be enough
+- Now you can run `wo-run-plugin-*` notebooks
