@@ -1,3 +1,7 @@
 - Run on dev AU sandbox
+- Get db file (do this once)
+  - `wget https://dea-dev-stats-processing.s3.ap-southeast-2.amazonaws.com/dbs/ga_ls_wo_3_all-28-05-2021.db`
+- Install more recent odc-tools (do this on every reboot)
+  - `python -m pip install -U odc-stats odc-algo --extra-index-url=https://packages.dea.ga.gov.au/`
 - Open `dask-gateway` notebook first and launch dask gateway, might need to scale manually 1-2 workers might be enough
 - Now you can run `wo-run-plugin-*` notebooks
