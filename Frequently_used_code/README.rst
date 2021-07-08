@@ -9,7 +9,6 @@ A recipe book of simple code examples demonstrating how to perform common geospa
 
    Analyse_multiple_polygons.ipynb
    Animated_timeseries.ipynb
-   Applying_WOfS_bitmasking.ipynb
    Calculating_band_indices.ipynb
    Contour_extraction.ipynb
    Detecting_seasonality.ipynb
