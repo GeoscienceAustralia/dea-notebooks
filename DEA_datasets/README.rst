@@ -11,6 +11,7 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
    DEA_Fractional_Cover.ipynb
    DEA_High_and_Low_Tide_Imagery.ipynb
    DEA_Coastlines.ipynb
+   DEA_Water_Observations.ipynb
    DEA_Waterbodies.ipynb
    Sentinel_2.ipynb
 
