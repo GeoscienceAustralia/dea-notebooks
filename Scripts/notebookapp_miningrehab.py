@@ -7,7 +7,7 @@ Available functions:
     load_miningrehab_data
     run_miningrehab_app
 
-Last modified: January 2020
+Last modified: July 2021
 '''
 
 # Load modules
@@ -23,17 +23,18 @@ import IPython
 from IPython.display import display
 import warnings
 import ipywidgets as widgets
-from datacube.storage import masking
+from datacube.utils import masking
 
 # Load utility functions
 from dea_spatialtools import transform_geojson_wgs_to_epsg
+from dea_datahandling import wofs_fuser
 
 
 def load_miningrehab_data():
     """
-    Loads Fractional Cover and Water Observations from Space products for the mining
+    Loads DEA Fractional Cover and Water Observations products for the mining
     case-study area.
-    Last modified: January 2020
+    Last modified: July 2021
 
     outputs
     ds - data set containing masked Fractional Cover data from Landsat 8
@@ -59,18 +60,26 @@ def load_miningrehab_data():
         "y": latitude,
         "time": time,
         "output_crs": "EPSG:3577",
-        "resolution": (-25, 25),
+        "resolution": (-30, 30),
     }
 
-    print("Loading Fractional Cover for Landsat 8")
-    dataset_fc = dc.load(product="ls8_fc_albers", **query)
+    print("Loading DEA Fractional Cover")
+    dataset_fc = dc.load(product="ga_ls_fc_3",
+                         group_by='solar_day',
+                         platform='landsat-8',
+                         cloud_cover= (0, 10),
+                         **query)
 
-    print("Loading WoFS for Landsat 8")
-    dataset_wofs = dc.load(product="wofs_albers", like=dataset_fc)
+    print("Loading DEA Water Observations")
+    dataset_wofs = dc.load(product="ga_ls_wo_3",
+                           group_by='solar_day',
+                           platform='landsat-8',
+                           fuse_func=wofs_fuser,
+                           cloud_cover= (0, 10),
+                           like=dataset_fc)
 
     # Match the data
     shared_times = np.intersect1d(dataset_fc.time, dataset_wofs.time)
-
     ds_fc_matched = dataset_fc.sel(time=shared_times)
     ds_wofs_matched = dataset_wofs.sel(time=shared_times)
 
@@ -78,14 +87,14 @@ def load_miningrehab_data():
     dry_mask = masking.make_mask(ds_wofs_matched, dry=True)
 
     # Get fractional masked fc dataset (as proportion of 1, rather than 100)
-    ds_fc_masked = ds_fc_matched.where(dry_mask.water == True) / 100
+    ds_fc_masked = ds_fc_matched.where(dry_mask.water) / 100
 
     # Resample
-    ds_resampled = ds_fc_masked.resample(time="1M").median()
+    ds_resampled = ds_fc_masked  #.resample(time="3M").median()
     ds_resampled.attrs["crs"] = dataset_fc.crs
 
     # Return the data
-    return ds_resampled
+    return ds_fc_masked
 
 
 def run_miningrehab_app(ds):
@@ -244,14 +253,18 @@ def run_miningrehab_app(ds):
             )
 
             # Add Fractional cover plots to app
-            masked_ds_mean.BS.interpolate_na(dim="time", method="nearest").plot.line("-", ax=ax[0])
-            masked_ds_mean.PV.interpolate_na(dim="time", method="nearest").plot.line("-", ax=ax[1])
-            masked_ds_mean.NPV.interpolate_na(dim="time", method="nearest").plot.line("-", ax=ax[2])
+            masked_ds_mean = masked_ds_mean.drop('spatial_ref')
+            masked_ds_mean.bs.interpolate_na(dim="time", method="nearest").plot.line("-", ax=ax[0])
+            masked_ds_mean.pv.interpolate_na(dim="time", method="nearest").plot.line("-", ax=ax[1])
+            masked_ds_mean.npv.interpolate_na(dim="time", method="nearest").plot.line("-", ax=ax[2])
 
             # reset titles back to custom
-            ax[0].set_ylabel("Bare cover")
-            ax[1].set_ylabel("Green cover")
-            ax[2].set_ylabel("Non-green cover")
+            ax[0].set_ylabel("Bare soil")
+            ax[1].set_ylabel("Green vegetation")
+            ax[2].set_ylabel("Brown (i.e. non-green) vegetation")
+            ax[0].set_xlabel("")
+            ax[1].set_xlabel("")
+            ax[2].set_xlabel(None)
 
             # refresh display
             fig_display.clear_output(wait=True)  # wait=True reduces flicker effect
