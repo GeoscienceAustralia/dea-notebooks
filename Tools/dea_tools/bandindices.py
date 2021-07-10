@@ -84,6 +84,9 @@ def calculate_indices(ds,
         'TCB' (Tasseled Cap Brightness, Crist 1985)
         'TCG' (Tasseled Cap Greeness, Crist 1985)
         'TCW' (Tasseled Cap Wetness, Crist 1985)
+        'TCW_GSO' (Tasseled Cap Greeness, Nedkov 2017)
+        'TCG_GSO' (Tasseled Cap Greeness, Nedkov 2017)
+        'TCB_GSO' (Tasseled Cap Greeness, Nedkov 2017)
         'WI' (Water Index, Fisher 2016)
         'kNDVI' (Non-linear Normalised Difference Vegation Index,
                  Camps-Valls et al. 2021)
@@ -251,6 +254,23 @@ def calculate_indices(ds,
                   'TCB': lambda ds: (0.2043 * ds.blue + 0.4158 * ds.green +
                                      0.5524 * ds.red + 0.5741 * ds.nir +
                                      0.3124 * ds.swir1 + -0.2303 * ds.swir2),
+                  
+                  # Tasseled Cap Transformations with Sentinel-2 coefficients after
+                  # Nedkov 2017 using Gram-Schmidt orthogonalization (GSO)
+                  # Tasseled Cap Wetness, Nedkov 2017
+                  'TCW_GSO': lambda ds: (0.0649 * ds.blue + 0.2802 * ds.green +
+                                         0.3072 * ds.red + -0.0807 * ds.nir +
+                                        -0.4064 * ds.swir1 + -0.5602 * ds.swir2),
+
+                  # Tasseled Cap Greeness, Nedkov 2017
+                  'TCG_GSO': lambda ds: (-0.0635 * ds.blue + -0.168 * ds.green +
+                                        -0.348 * ds.red + 0.3895 * ds.nir +
+                                        -0.4587 * ds.swir1 + -0.4064 * ds.swir2),
+
+                  # Tasseled Cap Brightness, Nedkov 2017
+                  'TCB_GSO': lambda ds: (0.0822 * ds.blue + 0.136 * ds.green +
+                                         0.2611 * ds.red + 0.5741 * ds.nir +
+                                         0.3882 * ds.swir1 + 0.1366 * ds.swir2),
 
                   # Clay Minerals Ratio, Drury 1987
                   'CMR': lambda ds: (ds.swir1 / ds.swir2),
