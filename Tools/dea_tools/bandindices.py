@@ -83,10 +83,10 @@ def calculate_indices(ds,
         'SAVI' (Soil Adjusted Vegetation Index, Huete 1988)
         'TCB' (Tasseled Cap Brightness, Crist 1985)
         'TCG' (Tasseled Cap Greeness, Crist 1985)
-        'TCW' (Tasseled Cap Wetness, Crist 1985)
-        'TCW_GSO' (Tasseled Cap Greeness, Nedkov 2017)
+        'TCW' (Tasseled Cap Wetness, Crist 1985)        
+        'TCB_GSO' (Tasseled Cap Brightness, Nedkov 2017)
         'TCG_GSO' (Tasseled Cap Greeness, Nedkov 2017)
-        'TCB_GSO' (Tasseled Cap Greeness, Nedkov 2017)
+        'TCW_GSO' (Tasseled Cap Wetness, Nedkov 2017)
         'WI' (Water Index, Fisher 2016)
         'kNDVI' (Non-linear Normalised Difference Vegation Index,
                  Camps-Valls et al. 2021)
@@ -105,11 +105,12 @@ def calculate_indices(ds,
         `index` to name the variable. 
     normalise : bool, optional
         Some coefficient-based indices (e.g. 'WI', 'BAEI', 'AWEI_ns', 
-        'AWEI_sh', 'TCW', 'TCG', 'TCB', 'EVI', 'LAI', 'SAVI', 'MSAVI') 
-        produce different results if surface reflectance values are not 
-        scaled between 0.0 and 1.0 prior to calculating the index. 
-        Setting `normalise=True` first scales values to a 0.0-1.0 range
-        by dividing by 10000.0. Defaults to True.  
+        'AWEI_sh', 'TCW', 'TCG', 'TCB', 'TCW_GSO', 'TCG_GSO', 'TCB_GSO', 
+        'EVI', 'LAI', 'SAVI', 'MSAVI') produce different results if 
+        surface reflectance values are not scaled between 0.0 and 1.0 
+        prior to calculating the index. Setting `normalise=True` first 
+        scales values to a 0.0-1.0 range by dividing by 10000.0. 
+        Defaults to True.  
     drop : bool, optional
         Provides the option to drop the original input data, thus saving 
         space. if drop = True, returns only the index and its values.
@@ -255,8 +256,8 @@ def calculate_indices(ds,
                                      0.5524 * ds.red + 0.5741 * ds.nir +
                                      0.3124 * ds.swir1 + -0.2303 * ds.swir2),
                   
-                  # Tasseled Cap Transformations with Sentinel-2 coefficients after
-                  # Nedkov 2017 using Gram-Schmidt orthogonalization (GSO)
+                  # Tasseled Cap Transformations with Sentinel-2 coefficients 
+                  # after Nedkov 2017 using Gram-Schmidt orthogonalization (GSO)
                   # Tasseled Cap Wetness, Nedkov 2017
                   'TCW_GSO': lambda ds: (0.0649 * ds.blue + 0.2802 * ds.green +
                                          0.3072 * ds.red + -0.0807 * ds.nir +
@@ -264,8 +265,8 @@ def calculate_indices(ds,
 
                   # Tasseled Cap Greeness, Nedkov 2017
                   'TCG_GSO': lambda ds: (-0.0635 * ds.blue + -0.168 * ds.green +
-                                        -0.348 * ds.red + 0.3895 * ds.nir +
-                                        -0.4587 * ds.swir1 + -0.4064 * ds.swir2),
+                                         -0.348 * ds.red + 0.3895 * ds.nir +
+                                         -0.4587 * ds.swir1 + -0.4064 * ds.swir2),
 
                   # Tasseled Cap Brightness, Nedkov 2017
                   'TCB_GSO': lambda ds: (0.0822 * ds.blue + 0.136 * ds.green +
@@ -302,7 +303,8 @@ def calculate_indices(ds,
                               "list of valid options for `index` (e.g. 'NDVI')")
 
         elif (index in ['WI', 'BAEI', 'AWEI_ns', 'AWEI_sh', 'TCW', 
-                        'TCG', 'TCB', 'EVI', 'LAI', 'SAVI', 'MSAVI'] 
+                        'TCG', 'TCB', 'TCW_GSO', 'TCG_GSO', 'TCB_GSO', 
+                        'EVI', 'LAI', 'SAVI', 'MSAVI'] 
               and not normalise):
 
             warnings.warn(f"\nA coefficient-based index ('{index}') normally "
