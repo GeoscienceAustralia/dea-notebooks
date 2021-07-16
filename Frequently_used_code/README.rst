@@ -12,6 +12,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Calculating_band_indices.ipynb
    Contour_extraction.ipynb
    Detecting_seasonality.ipynb
+   Downloading_data_with_STAC.ipynb
    Exporting_GeoTIFFs.ipynb
    Exporting_NetCDFs.ipynb
    External_data_CSVs.ipynb
