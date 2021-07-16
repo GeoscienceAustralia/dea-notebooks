@@ -71,20 +71,20 @@ def load_miningrehab_data():
                          **query)
 
     print("Loading DEA Water Observations")
-    dataset_wofs = dc.load(product="ga_ls_wo_3",
-                           group_by='solar_day',
-                           platform='landsat-8',
-                           fuse_func=wofs_fuser,
-                           cloud_cover= (0, 10),
-                           like=dataset_fc)
+    dataset_wo = dc.load(product="ga_ls_wo_3",
+                         group_by='solar_day',
+                         platform='landsat-8',
+                         fuse_func=wofs_fuser,
+                         cloud_cover= (0, 10),
+                         like=dataset_fc)
 
     # Match the data
-    shared_times = np.intersect1d(dataset_fc.time, dataset_wofs.time)
+    shared_times = np.intersect1d(dataset_fc.time, dataset_wo.time)
     ds_fc_matched = dataset_fc.sel(time=shared_times)
-    ds_wofs_matched = dataset_wofs.sel(time=shared_times)
+    ds_wo_matched = dataset_wo.sel(time=shared_times)
 
     # Mask FC
-    dry_mask = masking.make_mask(ds_wofs_matched, dry=True)
+    dry_mask = masking.make_mask(ds_wo_matched, dry=True)
 
     # Get fractional masked fc dataset (as proportion of 1, rather than 100)
     ds_fc_masked = ds_fc_matched.where(dry_mask.water) / 100
