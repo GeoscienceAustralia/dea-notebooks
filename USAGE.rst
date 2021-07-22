@@ -1,15 +1,15 @@
-Usage
-#####
+Uses of Digital Earth Australia notebooks and tools
+###################################################
 
-The following is a non-exhaustive list of research papers and projects that have used notebooks, code or tools from `dea-notebooks`.
-If you have used material from this repository, please reference them using the citation below and add a link to your work here.
+The following is a non-exhaustive list of scientific papers and projects that have used notebooks, code or tools from ``dea-notebooks``.
+If you have used material from this repository, please reference them using this citation and add a link to your work below!
 
     Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., 
     Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia 
     notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234
 
-Recent work
------------
+Scientific papers
+-----------------
 
 - Short, M.A., Norman, R.S., Pillans, B., De Deckker, P., Usback, R., Opdyke, B.N., Ransley, T.R., Gray, S. and McPhail, D.C., 2020. Two centuries of water-level records at Lake George, NSW. Australian Journal of Earth Sciences, pp.1-20. https://www.tandfonline.com/doi/pdf/10.1080/08120099.2020.1821247
 
