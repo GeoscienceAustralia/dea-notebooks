@@ -20,3 +20,8 @@ Scientific papers
 Courses and training
 --------------------
 - University of Queensland, 2021. Code-Based Computing for Geospatial Data: the Digital Earth Australia (DEA) Sandbox platform. GEOM3001/7001 Advanced Earth Observation Sciences.
+
+Creative works
+--------------
+- Grayson Cooke, 2019. Invalid data. https://www.graysoncooke.com/invalid-data
+- Grayson Cooke, 2019. Open Air. https://www.graysoncooke.com/open
