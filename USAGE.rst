@@ -17,6 +17,8 @@ Scientific papers
 
 - Abhik, S., Hope, P., Hendon, H.H., Hutley, L.B., Johnson, S., Drosdowsky, W. and Brown, J., 2021. The Influence of 2015-16 El Niño On the Record-Breaking Mangrove Dieback Along Northern Australia Coast. Scientific Reports, Preprint. https://doi.org/10.21203/rs.3.rs-650667/v1
 
+- Chen, Y., Guerschman, J., Shendryk, Y., Henry, D., Harrison, M.T., 2021. Estimating Pasture Biomass Using Sentinel-2 Imagery and Machine Learning. Remote Sens. 2021, Vol. 13, Page 603 13, 603. https://doi.org/10.3390/RS13040603
+
 Courses and training
 --------------------
 - University of Queensland, 2021. Code-Based Computing for Geospatial Data: the Digital Earth Australia (DEA) Sandbox platform. GEOM3001/7001 Advanced Earth Observation Sciences.
