@@ -7,7 +7,7 @@ Available functions:
     load_crophealth_data
     run_crophelath_app
 
-Last modified: January 2020
+Last modified: June 2021
 '''
 
 # Load modules
@@ -72,12 +72,12 @@ def load_crophealth_data():
         'y': latitude,
         'time': time,
         'measurements': [
-            'nbar_red',
-            'nbar_green',
-            'nbar_blue',
-            'nbar_nir_1',
-            'nbar_swir_2',
-            'nbar_swir_3'
+            'nbart_red',
+            'nbart_green',
+            'nbart_blue',
+            'nbart_nir_1',
+            'nbart_swir_2',
+            'nbart_swir_3'
         ],
         'output_crs': 'EPSG:3577',
         'resolution': (-10, 10)
