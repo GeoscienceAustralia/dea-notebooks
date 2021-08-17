@@ -28,7 +28,7 @@ jobs:
           # The repository URL to use
           repository_url: https://github.com/GeoscienceAustralia/dea-notebooks#subdirectory=Tools
           # The target directory for distribution
-          packages_dir: Tools
+          packages_dir: Tools/*
           # Check metadata before uploading
           verify_metadata: true
           # Do not fail if a Python package distribution exists in the target package index
