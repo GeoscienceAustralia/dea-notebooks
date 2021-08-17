@@ -10,6 +10,8 @@ from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
 
+import versioneer
+
 # Package meta-data.
 NAME = 'dea-tools'
 DESCRIPTION = 'Functions and algorithms for analysing Digital Earth Australia data.'
@@ -137,8 +139,9 @@ setup(
     #     'console_scripts': ['mycli=mymodule:cli'],
     # },
     install_requires=REQUIRED if not IS_DEA else [],
-    use_scm_version=True,
-    setup_requires=['setuptools_scm'],
+    setup_requires=['versioneer'],
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     extras_require=EXTRAS if not IS_DEA else {k: [] for k in EXTRAS},
     include_package_data=True,
     license='Apache License 2.0',

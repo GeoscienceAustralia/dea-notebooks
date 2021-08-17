@@ -1,1 +1,3 @@
 include README.md LICENSE
+include versioneer.py
+include dea_tools/__version__.py
