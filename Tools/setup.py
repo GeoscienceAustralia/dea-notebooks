@@ -126,12 +126,24 @@ class UploadCommand(Command):
 VERSION_FILE_PATH = Path('dea_tools/__version__.py')
 about = {}
 # Try to read the version from git.
+def local_scheme(version):
+    # canonical versions must look like this
+    # [N!]N(.N)*[{a|b|rc}N][.postN][.devN]
+    # version ~ <ScmVersion 0.0 d=645 n=g49920ea d=True b=pypi>
+    # local version -> 0.0.dev645+g49920ea
+    # public version -> 0.0.dev...
+    assert len(version.node) == 8
+    # the g just indicates that we drew the name from git
+    dev_number = int(version.node[1:], 16)
+    return str(dev_number)
 try:
     version = setuptools_scm.get_version(
-        root="..",
+        root='..',
         write_to='Tools' / VERSION_FILE_PATH,
-        relative_to=__file__)
-except LookupError:
+        relative_to=__file__,
+        local_scheme=local_scheme)
+except (LookupError, FileNotFoundError):
+    # python -m build will trip the FNFError
     try:
         # no .git folder, so read from __version__.py
         with open(VERSION_FILE_PATH) as f_version:
@@ -167,7 +179,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering :: GIS'
+        'Topic :: Scientific/Engineering :: GIS',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
