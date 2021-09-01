@@ -40,4 +40,13 @@ Building and Releasing
 
 This section is only relevant to you if you are a developer of this package.
 
-Building and releasing dea-tools requires that the package is built in-place. Either build with an editable pip installation or with `pip>=21.2` and `--use-feature=in-tree-build`. Building will generate a file, `dea_tools/__version__.py`, that is dynamic on release. It should not be committed. `setup.py` will detect if `__version__.py` exists and change its behaviour accordingly. 
+Building and releasing dea-tools requires that the package is built in-place. Either build with an editable pip installation or with `pip>=21.2` and `--use-feature=in-tree-build`. Building will generate a file, `dea_tools/__version__.py`, that is dynamic on release. It should not be committed. `setup.py` will detect if `__version__.py` exists and change its behaviour accordingly.
+
+Build instructions:
+
+.. code-block:: bash
+        cd Tools
+        rm dea_tools/__version__.py  # if necessary
+        pip install . --use-feature=in-tree-build
+        python -m build
+
