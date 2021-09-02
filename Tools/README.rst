@@ -45,6 +45,7 @@ Building and releasing dea-tools requires that the package is built in-place. Ei
 Build instructions:
 
 .. code-block:: bash
+
         cd Tools
         rm dea_tools/__version__.py  # if necessary
         pip install . --use-feature=in-tree-build
