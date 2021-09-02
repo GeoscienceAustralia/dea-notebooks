@@ -21,7 +21,6 @@ jobs:
       - name: Build dea-tools
         run: |
             cd Tools
-            pip install -r requirements.txt
             pip install . --use-feature=in-tree-build
             python -c "import dea_tools; print(dea_tools.__version__)"
 
