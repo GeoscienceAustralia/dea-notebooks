@@ -20,29 +20,31 @@ jobs:
       
       - name: Build dea-tools
         run: |
-            python3 -m pip install setuptools_scm
+            python3 -m pip install setuptools_scm build
             python3 -m setuptools_scm
             cd Tools
             python3 -m pip install --upgrade pip
             python3 -m pip install --use-feature=in-tree-build --no-deps .
-            python -c "import dea_tools; print(dea_tools.__version__)"
+            python3 -c "import dea_tools; print(dea_tools.__version__)"
+            python3 -m build
 
-#       - name: pypi-publish
-#         # You may pin to the exact commit or the version.
-#         # uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-#         uses: pypa/gh-action-pypi-publish@v1.4.2
-#         with:
-#           # PyPI user
-#           user: ${{ secrets.PYPI_USER }}
-#           # Password for your PyPI user or an access token
-#           password: ${{ secrets.PYPI_PASS }}
-#           # The repository URL to use
-#           repository_url: https://github.com/GeoscienceAustralia/dea-notebooks#subdirectory=Tools
-#           # The target directory for distribution
-#           packages_dir: Tools/*
-#           # Check metadata before uploading
-#           verify_metadata: true
-#           # Do not fail if a Python package distribution exists in the target package index
-#           skip_existing: false
-#           # Show verbose output.
-#           verbose: true
+      - name: pypi-publish
+        # You may pin to the exact commit or the version.
+        # uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          # PyPI user
+          user: ${{ secrets.PYPI_USER }}
+          # Password for your PyPI user or an access token
+          password: ${{ secrets.PYPI_PASS }}
+          # The repository URL to use
+          repository_url: https://test.pypi.org/legacy/
+          # The target directory for distribution
+          packages_dir: Tools/dist/*
+          # Check metadata before uploading
+          verify_metadata: true
+          # Do not fail if a Python package distribution exists in the target package index
+          skip_existing: false
+          # Show verbose output.
+          verbose: true
+          
