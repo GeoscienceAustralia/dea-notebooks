@@ -21,6 +21,7 @@ jobs:
       - name: Build dea-tools
         run: |
             cd Tools
+            python3 -m pip install setuptools_scm
             python3 -m setuptools_scm
             python3 -m pip install --upgrade pip
             python3 -m pip install --use-feature=in-tree-build --no-deps .
