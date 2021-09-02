@@ -42,8 +42,6 @@ jobs:
           user: ${{ secrets.PYPI_USER }}
           # Password for your PyPI user or an access token
           password: ${{ secrets.PYPI_PASS }}
-          # The repository URL to use
-          repository_url: https://test.pypi.org/legacy/
           # The target directory for distribution
           packages_dir: Tools/dist
           # Check metadata before uploading
