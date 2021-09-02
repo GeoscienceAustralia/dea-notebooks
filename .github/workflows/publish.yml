@@ -44,7 +44,7 @@ jobs:
           # The repository URL to use
           repository_url: https://test.pypi.org/legacy/
           # The target directory for distribution
-          packages_dir: dist
+          packages_dir: Tools/dist
           # Check metadata before uploading
           verify_metadata: true
           # Do not fail if a Python package distribution exists in the target package index
