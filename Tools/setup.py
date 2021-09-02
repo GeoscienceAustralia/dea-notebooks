@@ -129,7 +129,8 @@ try:
     version = setuptools_scm.get_version(
         root='..',
         write_to='Tools' / VERSION_FILE_PATH,
-        relative_to=__file__)
+        relative_to=__file__,
+        local_scheme=lambda _: '')
 except (LookupError, FileNotFoundError):
     # python -m build will trip the FNFError
     try:
