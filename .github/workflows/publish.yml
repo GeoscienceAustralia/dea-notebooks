@@ -20,9 +20,9 @@ jobs:
       
       - name: Build dea-tools
         run: |
-            cd Tools
             python3 -m pip install setuptools_scm
             python3 -m setuptools_scm
+            cd Tools
             python3 -m pip install --upgrade pip
             python3 -m pip install --use-feature=in-tree-build --no-deps .
             python -c "import dea_tools; print(dea_tools.__version__)"
