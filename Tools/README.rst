@@ -39,7 +39,7 @@ This includes the following modules:
 Installation
 ------------
 
-Install the package from the source on any system with `pip`:
+Install the package from the source on any system with ``pip``:
 
 .. code-block:: bash
 
