@@ -31,13 +31,12 @@ Functions included:
     last
     first
 
-Last modified: March 2021
+Last modified: September 2021
 
 '''
 
 # Import required packages
 import os
-import gdal
 import zipfile
 import numexpr
 import datetime
@@ -50,6 +49,7 @@ import pandas as pd
 import numexpr as ne
 import dask.array as da
 import xarray as xr
+from osgeo import gdal
 from random import randint
 from collections import Counter
 from datacube.utils import masking
