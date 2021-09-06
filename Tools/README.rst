@@ -1,12 +1,51 @@
 dea-tools
 =========
 
-Python functions and algorithms developed to assist in analysing DEA data (e.g. loading data, plotting, spatial analysis, machine learning).
+Python functions and algorithms developed to assist in analysing Digital Earth Australia (DEA) data (e.g. loading data, plotting, spatial analysis, machine learning).
+
+This includes the following modules:
+
+**Loading data**
+
+-  ``dea_tools.datahandling``: Loading and handling DEA data (e.g. combining multiple products, handling CRSs, pansharpening)
+-  ``dea_tools.bom``: Loading Bureau of Meteorology water data service data (e.g. guage data, discharge data)
+-  ``dea_tools.climate``: Retrieving and manipulating gridded climate data (e.g. ERA5)
+-  ``dea_tools.waterbodies``: Loading and processing DEA Waterbodies data (e.g. finding and loading waterbody timeseries data)
+
+**Plotting and transforming data**
+
+-  ``dea_tools.plotting``: Plotting DEA data (e.g. RGB plots, animations, interactive maps)
+-  ``dea_tools.bandindices.py``: Calculating remote sensing band indices (e.g. NDVI, NDWI)
+
+**Spatial and temporal analysis**
+
+-  ``dea_tools.spatial``: Spatial analysis tools (e.g. rasterising, vectorising, contour extraction, image processing)
+-  ``dea_tools.temporal``: Temporal analysis tools (e.g. phenology, tenporal statistics, multi-dimensional regression
+
+**Classification and segmentation**
+
+-  ``dea_tools.classification.py``: Machine learning classification (e.g. training and applying machine learning models on satellite data)
+-  ``dea_tools.segmentation.py``: Image segmentation tools (e.g. applying image segementation with RSGISLIB)
+
+**Parallel processing**
+
+-  ``dea_tools.dask``: Parallel processing with Dask (e.g. creating Dask clusters for scalable analysis)
+
+**Coastal analysis**
+
+-  ``dea_tools.coastal``: Coastal and intertidal analysis tools (e.g. tidal tagging, coastal change timeseries)
+
 
 Installation
 ------------
 
-To work with this module on the DEA Sandbox from within the `dea-notebooks` repo, you can add the Tools folder to the system path:
+Install the package from the source on any system with ``pip``:
+
+.. code-block:: bash
+
+    pip install dea-tools
+
+To work with this module on the DEA Sandbox or National Computational Infrastructure environments without installing it, you can add the ``Tools`` directory to the system path from within the ``dea-notebooks`` repository:
 
 .. code-block:: python
 
@@ -14,17 +53,11 @@ To work with this module on the DEA Sandbox from within the `dea-notebooks` repo
    sys.path.insert(1, '../Tools/')
    import dea_tools.datahandling  # or some other submodule
 
-You can also `pip install` the module. To do this on the DEA Sandbox, run `pip` from the terminal:
+You can also ``pip install`` the module directly from the local ``Tools`` directory. To do this on the DEA Sandbox, run ``pip`` from the terminal:
 
 .. code-block:: bash
 
    pip install -e Tools/
-
-Install from the source on any other system with `pip`:
-
-.. code-block:: bash
-
-    pip install --extra-index-url="https://packages.dea.ga.gov.au" git+https://github.com/GeoscienceAustralia/dea-notebooks.git#subdirectory=Tools
 
 
 Citing DEA Tools
