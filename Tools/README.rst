@@ -1,9 +1,7 @@
 dea-tools
 =========
 
-Python functions and algorithms developed to assist in analysing Digital Earth Australia (DEA) data (e.g. loading data, plotting, spatial analysis, machine learning).
-
-This includes the following modules:
+Python functions and algorithms developed to assist in analysing Digital Earth Australia (DEA) data (e.g. loading data, plotting, spatial analysis, machine learning). This includes the following modules:
 
 **Loading data**
 
@@ -20,7 +18,7 @@ This includes the following modules:
 **Spatial and temporal analysis**
 
 -  ``dea_tools.spatial``: Spatial analysis tools (e.g. rasterising, vectorising, contour extraction, image processing)
--  ``dea_tools.temporal``: Temporal analysis tools (e.g. phenology, tenporal statistics, multi-dimensional regression
+-  ``dea_tools.temporal``: Temporal analysis tools (e.g. phenology, temporal statistics, multi-dimensional regression)
 
 **Classification and segmentation**
 
@@ -60,6 +58,17 @@ You can also ``pip install`` the module directly from the local ``Tools`` direct
    pip install -e Tools/
 
 
+Importing functions in Python
+-----------------------------
+
+To use functions from ``dea-tools``, import them using:
+
+.. code-block:: python
+
+   from dea_tools.datahandling import load_ard
+   from dea_tools.plotting import rgb
+
+
 Citing DEA Tools
 ----------------
 
@@ -73,7 +82,7 @@ Building and Releasing
 
 This section is only relevant to you if you are a developer of this package.
 
-Building and releasing dea-tools requires that the package is built in-place. Either build with an editable pip installation or with `pip>=21.2` and `--use-feature=in-tree-build`. Building will generate a file, `dea_tools/__version__.py`, that is dynamic on release. It should not be committed. `setup.py` will detect if `__version__.py` exists and change its behaviour accordingly.
+Building and releasing dea-tools requires that the package is built in-place. Either build with an editable pip installation or with ``pip>=21.2`` and ``--use-feature=in-tree-build``. Building will generate a file, ``dea_tools/__version__.py``, that is dynamic on release. It should not be committed. ``setup.py`` will detect if ``__version__.py`` exists and change its behaviour accordingly.
 
 Build instructions:
 
