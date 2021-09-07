@@ -6,12 +6,11 @@ change filmstrips notebook, inside the Real_world_examples folder.
 Available functions:
     run_filmstrip_app
 
-Last modified: June 2020
+Last modified: September 2021
 '''
 
 # Load modules
 import os
-import sys
 import dask
 import datacube
 import numpy as np
@@ -27,11 +26,11 @@ from datacube.utils.dask import start_local_dask
 from ipyleaflet import basemaps, basemap_to_tiles
 
 # Load utility functions
-sys.path.append('../Scripts')
-from dea_datahandling import load_ard
-from dea_coastaltools import tidal_tag
-from dea_datahandling import mostcommon_crs
-from dea_dask import create_local_dask_cluster
+import sys
+sys.path.insert(1, '../Tools/')
+from dea_tools.datahandling import load_ard, mostcommon_crs
+from dea_tools.coastal import tidal_tag
+from dea_tools.dask import create_local_dask_cluster
 
 
 def run_filmstrip_app(output_name,
