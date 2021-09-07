@@ -21,6 +21,7 @@ Scientific papers
 
 Courses and training
 --------------------
+- University of Newcastle, 2021. Advanced Remote Sensing Data and Applications. Graduate Certificate in Spatial Science.
 - University of Queensland, 2021. Code-Based Computing for Geospatial Data: the Digital Earth Australia (DEA) Sandbox platform. GEOM3001/7001 Advanced Earth Observation Sciences.
 
 Creative works
