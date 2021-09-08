@@ -152,7 +152,7 @@ def xr_vectorize(da,
     # Create a geopandas dataframe populated with the polygon shapes
     gdf = gpd.GeoDataFrame(data={attribute_col: values},
                            geometry=polygons,
-                           crs={'init': str(crs)})
+                           crs=str(crs))
     
     # If a file path is supplied, export a shapefile
     if export_shp:
@@ -280,7 +280,7 @@ def xr_rasterize(gdf,
     except:
         # Sometimes the crs can be a datacube utils CRS object
         # so convert to string before reprojecting
-        gdf_reproj = gdf.to_crs(crs={'init': str(crs)})
+        gdf_reproj = gdf.to_crs(crs=str(crs))
     
     # If an attribute column is specified, rasterise using vector 
     # attribute values. Otherwise, rasterise into a boolean array
