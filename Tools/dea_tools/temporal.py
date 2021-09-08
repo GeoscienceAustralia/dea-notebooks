@@ -26,7 +26,10 @@ Functions included:
     temporal_statistics
     time_buffer
     calculate_vector_stat
+    calculate_sad
+    calculate_stsad
     
+Last modified: September 2021    
 '''
 
 import sys
@@ -881,3 +884,59 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
     pval = xr.DataArray(pval, dims=cor.dims, coords=cor.coords)
 
     return LinregressResult(cov, cor, slope, intercept, pval, stderr)
+
+
+def calculate_sad(vec):
+    """Calculates the surface area duration curve for a given vector of heights.
+    
+    Parameters
+    ----------
+    vec : d-dimensional np.ndarray
+        Vector of heights over time.
+    
+    Returns
+    -------
+    d-dimensional np.ndarray
+        Surface area duration curve vector over the same time scale.
+    """
+    return np.sort(vec)[::-1]
+
+
+def calculate_stsad(vec, window_size=365, step=10, progress=None, window="hann"):
+    """Calculates the short-time surface area duration curve for a given vector of heights.
+    
+    Parameters
+    ----------
+    vec : d-dimensional np.ndarray
+        Vector of heights over time.
+    window_size : int
+        Sliding window size (default 365).
+    step : int
+        Step size (default 10).
+    progress : iterator -> iterator
+        Optional progress decorator, e.g. tqdm.notebook.tqdm. Default None.
+    window : str
+        What kind of window function to use. Default 'hann', but you might
+        also want to use 'boxcar'. Any scipy window
+        function is allowed (see documentation for scipy.signal.get_window
+        for more information).
+    
+    Returns
+    -------
+    (d / step)-dimensional np.ndarray
+        y values (the time axis)
+    t-dimensional np.ndarray
+        x values (the statistic axis)
+    (d / step) x t-dimensional np.ndarray
+        The short-time surface area duration curve array.
+    """
+    return calculate_vector_stat(
+        vec,
+        calculate_sad,
+        window_size=window_size,
+        step=step,
+        target_dim=window_size,
+        progress=progress,
+        window=window,
+    )
+

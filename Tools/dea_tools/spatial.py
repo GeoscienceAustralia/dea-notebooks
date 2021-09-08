@@ -27,7 +27,7 @@ Functions included:
     transform_geojson_wgs_to_epsg
     zonal_stats_parallel
 
-Last modified: November 2020
+Last modified: September 2021
 
 '''
 
