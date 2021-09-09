@@ -23,7 +23,7 @@ Functions included:
     get_geohashes
     get_time_series
 
-Last modified: November 2020
+Last modified: September 2021
 """
 
 import geopandas as gpd
