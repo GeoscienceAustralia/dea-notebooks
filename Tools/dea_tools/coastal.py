@@ -902,7 +902,6 @@ def deacoastlines_histogram(extent_path=None,
                 stats_subset = stats_zeros.copy()
                 
                 if hist_range == 'auto':
-                    print("doing auto shenangs")
                     hist_max = stats_subset.rate_time.quantile([0.001, 0.999]).abs().max()
                     hist_range_num = (-hist_max, hist_max)  
                 else:
