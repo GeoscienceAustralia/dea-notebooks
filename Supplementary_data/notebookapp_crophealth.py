@@ -7,7 +7,7 @@ Available functions:
     load_crophealth_data
     run_crophelath_app
 
-Last modified: June 2021
+Last modified: September 2021
 '''
 
 # Load modules
@@ -19,7 +19,6 @@ from ipyleaflet import (
 )
 import datetime as dt
 import datacube
-import ogr
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import rasterio
@@ -28,11 +27,14 @@ import xarray as xr
 from IPython.display import display
 import warnings
 import ipywidgets as widgets
+import geopandas as gpd
 
 # Load utility functions
-from dea_datahandling import load_ard
-from dea_spatialtools import transform_geojson_wgs_to_epsg
-from dea_bandindices import calculate_indices
+import sys
+sys.path.insert(1, '../Tools/')
+from dea_tools.datahandling import load_ard
+from dea_tools.spatial import transform_geojson_wgs_to_epsg
+from dea_tools.bandindices import calculate_indices
 
 
 def load_crophealth_data():
@@ -147,11 +149,8 @@ def run_crophealth_app(ds):
     # Create a map geometry from the geom_obj dictionary
     # center specifies where the background map view should focus on
     # zoom specifies how zoomed in the background map should be
-    loadeddata_geometry = ogr.CreateGeometryFromJson(str(geom_obj['geometry']))
-    loadeddata_center = [
-        loadeddata_geometry.Centroid().GetY(),
-        loadeddata_geometry.Centroid().GetX()
-    ]
+    centroid = gpd.GeoDataFrame.from_features([geom_obj]).geometry.centroid
+    loadeddata_center = centroid.y.item(), centroid.x.item()
     loadeddata_zoom = 14
 
     # define the study area map

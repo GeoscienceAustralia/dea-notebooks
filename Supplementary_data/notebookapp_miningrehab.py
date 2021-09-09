@@ -7,14 +7,14 @@ Available functions:
     load_miningrehab_data
     run_miningrehab_app
 
-Last modified: July 2021
+Last modified: September 2021
 '''
 
 # Load modules
 from ipyleaflet import Map, GeoJSON, DrawControl, basemaps
 import datetime as dt
 import datacube
-import ogr
+import geopandas as gpd
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -26,8 +26,10 @@ import ipywidgets as widgets
 from datacube.utils import masking
 
 # Load utility functions
-from dea_spatialtools import transform_geojson_wgs_to_epsg
-from dea_datahandling import wofs_fuser
+import sys
+sys.path.insert(1, '../Tools/')
+from dea_tools.datahandling import wofs_fuser
+from dea_tools.spatial import transform_geojson_wgs_to_epsg
 
 
 def load_miningrehab_data():
@@ -148,11 +150,8 @@ def run_miningrehab_app(ds):
     # Create a map geometry from the geom_obj dictionary
     # center specifies where the background map view should focus on
     # zoom specifies how zoomed in the background map should be
-    loadeddata_geometry = ogr.CreateGeometryFromJson(str(geom_obj["geometry"]))
-    loadeddata_center = [
-        loadeddata_geometry.Centroid().GetY(),
-        loadeddata_geometry.Centroid().GetX(),
-    ]
+    centroid = gpd.GeoDataFrame.from_features([geom_obj]).geometry.centroid
+    loadeddata_center = centroid.y.item(), centroid.x.item()
     loadeddata_zoom = 15
 
     # define the study area map
