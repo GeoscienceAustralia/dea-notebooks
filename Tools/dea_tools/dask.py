@@ -86,17 +86,21 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
 try:
     from dask_gateway import Gateway
 
-    def create_dask_gateway_cluster(profile='XL', workers=2):
+    def create_dask_gateway_cluster(profile='r5_L', workers=2):
         """
         Create a cluster in our internal dask cluster.
 
         Parameters
         ----------
         profile : str
-            Possible values are: XL (2 cores, 15GB memory), 2XL (4 cores, 31GB memory), 4XL (8 cores, 62GB memory)
+            Possible values are:
+                - r5_L (2 cores, 15GB memory)
+                - r5_XL (4 cores, 31GB memory)
+                - r5_2XL (8 cores, 63GB memory)
+                - r5_4XL (16 cores, 127GB memory)
+
         workers : int
             Number of workers in the cluster.
-
         """
         try:
             gateway = Gateway()
