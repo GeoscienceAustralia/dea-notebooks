@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from odc.ui import select_on_a_map
 from datacube.utils.geometry import CRS
-from datacube.storage import masking
+from datacube.utils import masking
 from skimage import exposure
 from ipyleaflet import (WMSLayer, basemaps, basemap_to_tiles)
 from traitlets import Unicode
@@ -25,6 +25,7 @@ sys.path.insert(1, '../Tools/')
 from dea_tools.spatial import reverse_geocode
 from dea_tools.datahandling import load_ard, mostcommon_crs
 from dea_tools.dask import create_local_dask_cluster
+from dea_tools.temporal import time_buffer
 
 
 def run_imageexport_app(date,
@@ -164,9 +165,12 @@ def run_imageexport_app(date,
         # Configure local dask cluster
         create_local_dask_cluster()
 
-        # Create query based on time range, area selected, custom params
-        date = '2021-03-31'
-        query = {'time': date, 'geopolygon': geopolygon}
+        # Create query based on date buffered by 1 day to account for 
+        # UTC day boundary issues
+        date_range = time_buffer(date,
+                                 buffer='1 days',
+                                 output_format='%Y-%m-%d')
+        query = {'time': date_range, 'geopolygon': geopolygon}
 
         # Obtain native CRS
         print('Loading imagery...\n')
@@ -197,8 +201,10 @@ def run_imageexport_app(date,
         fname = f'{satellites} - {date} - {site} - {style}.png'
         print(f'\nExporting image to {fname}')
         
-        # Convert to numpy array
-        rgb_array = np.transpose(ds.isel(time=0).to_array().values,
+        # Convert to numpy array; keep nearest timestep only to account
+        # for local-UTC time issues
+        nearest_time = np.argmin(abs(ds.time.values - np.datetime64(date)))
+        rgb_array = np.transpose(ds.isel(time=nearest_time).to_array().values,
                                  axes=[1, 2, 0])
 
         # If percentile stretch is supplied, calculate vmin and vmax
