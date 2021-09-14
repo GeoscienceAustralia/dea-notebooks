@@ -1,82 +1,94 @@
-# notebookapp_changefilmstrips.py
+# notebookapp_imageexport.py
 '''
-This file contains functions for loading and interacting with data in the
-change filmstrips notebook, inside the Real_world_examples folder.
+This file contains functions for creating an interactive map for 
+selecting satellite imagery and exporting image files.
 
 Available functions:
-    run_filmstrip_app
+    run_imageexport_app
 
 Last modified: September 2021
 '''
 
 # Load modules
-import os
-import dask
 import datacube
 import numpy as np
-import pandas as pd
-import xarray as xr
 import matplotlib.pyplot as plt
 from odc.ui import select_on_a_map
-from dask.utils import parse_bytes
 from datacube.utils.geometry import CRS
-from datacube.utils.rio import configure_s3_access
-from datacube.utils.dask import start_local_dask
-from ipyleaflet import basemaps, basemap_to_tiles
 from datacube.storage import masking
 from skimage import exposure
-
-from ipyleaflet import (Map, WMSLayer, WidgetControl, FullScreenControl,
-                        DrawControl, basemaps, basemap_to_tiles, TileLayer)
+from ipyleaflet import (WMSLayer, basemaps, basemap_to_tiles)
 from traitlets import Unicode
 
-# Load utility functions
 import sys
-
 sys.path.insert(1, '../Tools/')
+from dea_tools.spatial import reverse_geocode
 from dea_tools.datahandling import load_ard, mostcommon_crs
 from dea_tools.dask import create_local_dask_cluster
 
 
-def run_imageexport_app(output_name,
-                        satellites,
-                        date,
+def run_imageexport_app(date,
+                        satellites,                        
                         style,
-                        vmin, 
-                        vmax,
-                        percentile_stretch=None,
                         resolution=(-30, 30),
+                        vmin=0, 
+                        vmax=2000,
+                        percentile_stretch=None,
+                        power=None,
                         size_limit=30000):
     '''
     An interactive app that allows the user to select a region from a
     map, then export Digital Earth Australia satellite data as an image
-    file.
+    file. Files are named to match the DEA Imagery and Animations folder
+    naming convention:
+    
+        "<product> - <YYYY-MM-DD> - <location> - <description>.png" 
     
     Last modified: September 2021
 
     Parameters
-    ----------  
-    output_name : str
-        A name that will be used to name the output filmstrip plot file.
-    date : tuple
-        A string giving a date to extract imagery (e.g. 
-        `date='1988-01-01'`). This is used to extract the nearest image
-        to the specified date.
+    ----------
+    date : str
+        The exact date used to extract imagery (e.g. `date='1988-01-01'`). 
+        This is also used to plot imagery from the same date over the 
+        interactive map.
+    satellites : str
+        The satellite data to be used to extract the image. Three 
+        options are currently supported:
+            "Landsat": data from the Landsat 5, 7 and 8 satellites
+            "Sentinel-2": data from Sentinel-2A and Sentinel-2B
+            "Sentinel-2 NRT": most recent 'near real time' data from 
+            Sentinel-2A and Sentinel-2B (use this to obtain imagery 
+            acquired in the past three months).
+    style : str
+        The style used to produce the image. Two options are currently
+        supported:
+            "True colour": Creates a true colour image using the red, 
+            green and blue satellite bands
+            "False colour": Creates a false colour image using 
+            short-wave infrared, infrared and green satellite bands.
+            The specific bands used vary between Landsat and Sentinel-2.        
     resolution : tuple, optional
         The spatial resolution to load data. The default is 
         `resolution = (-30, 30)`, which will load data at 30 m pixel 
         resolution. Increasing this (e.g. to `resolution = (-100, 100)`) 
         can be useful for loading large spatial extents.
+    vmin, vmax : int or float
+        The minimum and maximum surface reflectance values used to 
+        clip the resulting imagery to enhance contrast. 
+    percentile_stretch : tuple of floats, optional
+        An tuple of two floats (between 0.00 and 1.00) that can be used 
+        to clip the imagery to based on percentiles to get more control 
+        over the brightness and contrast of the image. The default is 
+        None; '(0.02, 0.98)' is equivelent to `robust=True`. If this 
+        parameter is used, `vmin` and `vmax` will have no effect.
+    power : float, optional
+        Raises imagery by a power to reduce bright features and 
+        enhance dark features. This can add extra definition over areas
+        with extremely bright features like snow, beaches or salt pans.
     size_limit : int, optional
         An optional size limit for the area selection in sq km.
-        Defaults to 200 sq km.
-        
-    Returns
-    -------
-    ds_geomedian : xarray Dataset
-        An xarray dataset containing geomedian composites for each 
-        timestep in the analysis.
-        
+        Defaults to 30000 sq km.        
     '''
 
     ###########################
@@ -84,28 +96,28 @@ def run_imageexport_app(output_name,
     ###########################
 
     sat_params = {
-        'landsat': {
+        'Landsat': {
             'layer': 'ga_ls_ard_3',
             'products': ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
             'styles': {
-                'true colour': ['nbart_red', 'nbart_green', 'nbart_blue'],
-                'false colour': ['nbart_swir_1', 'nbart_nir', 'nbart_green']
+                'True colour': ['nbart_red', 'nbart_green', 'nbart_blue'],
+                'False colour': ['nbart_swir_1', 'nbart_nir', 'nbart_green']
             }
         },
-        'sentinel2': {
+        'Sentinel-2': {
             'layer': 's2_ard_granule_nbar_t',
             'products': ['s2a_ard_granule', 's2b_ard_granule'],
             'styles': {
-                'true colour': ['nbart_red', 'nbart_green', 'nbart_blue'],
-                'false colour': ['nbart_swir_2', 'nbart_nir_1', 'nbart_green']
+                'True colour': ['nbart_red', 'nbart_green', 'nbart_blue'],
+                'False colour': ['nbart_swir_2', 'nbart_nir_1', 'nbart_green']
             }
         },
-        'sentinel2_nrt': {
+        'Sentinel-2 NRT': {
             'layer': 's2_nrt_granule_nbar_t',
             'products': ['s2a_nrt_granule', 's2b_nrt_granule'],
             'styles': {
-                'true colour': ['nbart_red', 'nbart_green', 'nbart_blue'],
-                'false colour': ['nbart_swir_2', 'nbart_nir_1', 'nbart_green']
+                'True colour': ['nbart_red', 'nbart_green', 'nbart_blue'],
+                'False colour': ['nbart_swir_2', 'nbart_nir_1', 'nbart_green']
             }
         }
     }
@@ -113,14 +125,6 @@ def run_imageexport_app(output_name,
     ########################
     # Select and load data #
     ########################
-
-    # Define centre_coords as a global variable
-    global centre_coords
-
-    # Test if centre_coords is in the global namespace;
-    # use default value if it isn't
-    if 'centre_coords' not in globals():
-        centre_coords = (-25.18, 134.18)
 
     # Load DEA WMS
     class TimeWMSLayer(WMSLayer):
@@ -134,14 +138,10 @@ def run_imageexport_app(output_name,
                             attribution='Digital Earth Australia')
 
     # Plot interactive map to select area
-    #     basemap = basemap_to_tiles(basemaps.Esri.WorldImagery)
     basemap = basemap_to_tiles(basemaps.OpenStreetMap.Mapnik)
     geopolygon = select_on_a_map(height='600px',
-                                 layers=(
-                                     basemap,
-                                     time_wms,
-                                 ),
-                                 center=centre_coords,
+                                 layers=(basemap, time_wms, ),
+                                 center=(-25.18, 134.18),
                                  zoom=4)
 
     # Set centre coords based on most recent selection to re-focus
@@ -158,25 +158,21 @@ def run_imageexport_app(output_name,
 
     else:
 
-        print('Starting analysis...')
-
         # Connect to datacube database
-        dc = datacube.Datacube(app='Change_filmstrips')
+        dc = datacube.Datacube(app='Exporting_satellite_images')
 
         # Configure local dask cluster
         create_local_dask_cluster()
 
-        # Run time buffer
-        from dea_tools.temporal import time_buffer
-        date_range = time_buffer(date,
-                                 buffer='20 days',
-                                 output_format='%Y-%m-%d')
-
         # Create query based on time range, area selected, custom params
-        query = {'time': date_range, 'geopolygon': geopolygon}
+        date = '2021-03-31'
+        query = {'time': date, 'geopolygon': geopolygon}
 
         # Obtain native CRS
-        crs = mostcommon_crs(dc=dc, product='ga_ls8c_ard_3', query=query)
+        print('Loading imagery...\n')
+        crs = mostcommon_crs(dc=dc, 
+                             product=sat_params[satellites]['products'], 
+                             query=query)
 
         # Load data from all three Landsats
         ds = load_ard(dc=dc,
@@ -186,41 +182,42 @@ def run_imageexport_app(output_name,
                       output_crs=crs,
                       resolution=resolution,
                       group_by='solar_day',
-                      dask_chunks={
-                          'time': 1,
-                          'x': 3000,
-                          'y': 3000
-                      },
+                      dask_chunks={'time': 1, 'x': 3000, 'y': 3000},
                       **query)
         
+        # Set nodata to nan
         ds = masking.mask_invalid_data(ds)
 
         ############
         # Plotting #
         ############
 
-        # Keep nearest timestep only
-        nearest_time = np.argmin(abs(ds.time.values - np.datetime64(date)))
-
+        # Create unique file name
+        site = reverse_geocode(coords=centre_coords)
+        fname = f'{satellites} - {date} - {site} - {style}.png'
+        print(f'\nExporting image to {fname}')
+        
         # Convert to numpy array
-        rgb_array = np.transpose(ds.isel(time=nearest_time).to_array().values,
+        rgb_array = np.transpose(ds.isel(time=0).to_array().values,
                                  axes=[1, 2, 0])
 
-        # Apply a log transform to improve colours
-        power = None
-        if power:
-            rgb_array = rgb_array**power
-
-        # Contrast stretching
+        # If percentile stretch is supplied, calculate vmin and vmax
+        # from percentiles
         if percentile_stretch:    
             vmin, vmax = np.nanpercentile(rgb_array, percentile_stretch)
+            
+        # Raise by power to dampen bright features and enhance dark.
+        # Raise vmin and vmax by same amount to ensure proper stretch
+        if power:
+            rgb_array = rgb_array ** power
+            vmin, vmax = vmin ** power, vmax ** power            
+        
+        # Rescale/stretch imagery between vmin and vmax
         rgb_rescaled = exposure.rescale_intensity(rgb_array.astype(np.float),
                                                   in_range=(vmin, vmax),
                                                   out_range=(0.0, 1.0))
-
-        # Create unique file name
-        fname = f'{satellites}_{date}_{centre_coords[0]:+.2f}_{centre_coords[1]:.2f}.png'
+        # Plot RGB
+        plt.imshow(rgb_rescaled)
 
         # Export to file
-        print('Exporting image to file...')
         plt.imsave(fname=fname, arr=rgb_rescaled, format="png")
