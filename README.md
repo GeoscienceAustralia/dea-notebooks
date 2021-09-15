@@ -14,9 +14,11 @@ The sub-pixel extraction method shows a strong ability to reproduce both absolut
 
 The sub-pixel waterline extraction method (`subpixel_contours`) has a low computational overhead and is **made available as an open-source tool**, making it suitable for operational continental-scale or full time-depth analyses aimed at accurately mapping and monitoring dynamic waterlines through time and space.
 
-Citing this work and/or code:
+**If you use this code in your work, please cite the following paper and code:**
 
 > Bishop-Taylor, R., Sagar, S., Lymburner, L., Alam, I. and Sixsmith, J., 2019. Sub-Pixel Waterline Extraction: Characterising Accuracy and Sensitivity to Indices and Spectra. Remote Sensing, 11(24), p.2984. Available: https://doi.org/10.3390/rs11242984
+
+> Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234
 
 ---
 
@@ -24,13 +26,15 @@ Citing this work and/or code:
 
 The [`subpixel_contours` function from the `dea-tools.spatial.py` module](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Tools/dea_tools/spatial.py#L321-L552) uses `skimage.measure.find_contours` to extract multiple z-value contour lines from a two-dimensional array (e.g. multiple elevations from a single digital elevation model), or one z-value for each array along a specified dimension of a multi-dimensional array (e.g. to map waterlines across time by extracting a 0 Normalised Difference Water Index contour from each individual timestep in an `xarray` timeseries).    
     
-Contours are returned as a `geopandas.GeoDataFrame` with one row per z-value or one row per array along a specified dimension. The     `attribute_df` parameter can be used to pass custom attributes to the output contour features.
+Contours are returned as a `geopandas.GeoDataFrame` with one row per z-value or one row per array along a specified dimension. The `attribute_df` parameter can be used to pass custom attributes to the output contour features.
 
-### Installing `dea-tools` from source using pip
+### Installing `dea-tools` using pip
 
 ```
-pip install --extra-index-url="https://packages.dea.ga.gov.au" git+https://github.com/GeoscienceAustralia/dea-notebooks.git#subdirectory=Tools
+pip install dea-tools
+from dea_tools.spatial import subpixel_contours
 ```
+
 
 ## Code examples
 
