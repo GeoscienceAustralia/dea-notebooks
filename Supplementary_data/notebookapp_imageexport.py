@@ -38,6 +38,7 @@ def run_imageexport_app(date,
                         vmax=2000,
                         percentile_stretch=None,
                         power=None,
+                        standardise_name=False,
                         size_limit=10000):
     '''
     An interactive app that allows the user to select a region from a
@@ -46,10 +47,14 @@ def run_imageexport_app(date,
     True and False colour images, and applying pansharpening to increase
     the resolution of Landsat 7 and 8 imagery.
         
-    Files are named to match the DEA Imagery and Animations folder
-    naming convention:
+    By default, files are named to match the DEA Imagery and Animations 
+    folder naming convention:
     
-        "<product> - <YYYY-MM-DD> - <location> - <description>.png" 
+        "<product> - <YYYY-MM-DD> - <site, state> - <description>.png" 
+        
+    Set `standardise_name=True` for a machine-readable name:
+    
+        "<product>_<YYYY-MM-DD>_<site-state>_<description>.png" 
     
     Last modified: September 2021
 
@@ -274,7 +279,15 @@ def run_imageexport_app(date,
 
         # Create unique file name
         site = reverse_geocode(coords=centre_coords)
-        fname = f"{sensor} - {date} - {site} - {style}, {load_params['resolution'][1]} m resolution.png"
+        fname = (f"{sensor} - {date} - {site} - {style}, "
+                 f"{load_params['resolution'][1]} m resolution.png")
+
+        # Remove spaces and commas if requested
+        if standardise_name:
+            fname = fname.replace(' - ', '_').replace(', ',
+                                                      '-').replace(' ',
+                                                                   '-').lower()
+
         print(
             f'\nExporting image to {fname}.\nThis may take several minutes to complete...'
         )
