@@ -10,12 +10,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: geoscienceaustralia/sandbox:latest
+    container:
+      env:
+        WITH_SUDO: yes
+      image: geoscienceaustralia/sandbox:latest
 
     steps:
-    - name: Echo workspace
+    - name: Make workspace
       run: |
         echo $GITHUB_WORKSPACE
+        mkdir $GITHUB_WORKSPACE
     - name: Checkout dea-notebooks
       uses: actions/checkout@v2
       with:
