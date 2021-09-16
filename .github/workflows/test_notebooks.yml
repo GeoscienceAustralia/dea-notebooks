@@ -13,8 +13,13 @@ jobs:
     container: geoscienceaustralia/sandbox:latest
 
     steps:
+    - name: Echo workspace
+      run: |
+        echo $GITHUB_WORKSPACE
     - name: Checkout dea-notebooks
       uses: actions/checkout@v2
+      with:
+        path: /home/jovyan/dea-notebooks/
     - name: Test with pytest
       run: |
-        pytest tests/
+        pytest --nbval-lax Beginners_guide/01*
