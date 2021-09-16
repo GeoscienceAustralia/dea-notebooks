@@ -25,6 +25,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Install Docker
+      run: |
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sudo sh get-docker.sh
     - name: Set up Datacube
       run: |
         docker-compose up -d
