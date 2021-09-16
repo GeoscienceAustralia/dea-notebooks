@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: geoscienceaustralia/sandbox:latest
+      options: --user root
 
     steps:
     - uses: actions/checkout@v2
