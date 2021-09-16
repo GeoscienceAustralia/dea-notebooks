@@ -19,7 +19,7 @@ jobs:
     - name: Make workspace
       run: |
         echo $GITHUB_WORKSPACE
-        mkdir $GITHUB_WORKSPACE
+        sudo mkdir $GITHUB_WORKSPACE
     - name: Checkout dea-notebooks
       uses: actions/checkout@v2
       with:
