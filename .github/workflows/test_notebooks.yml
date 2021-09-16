@@ -11,19 +11,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      env:
-        WITH_SUDO: yes
       image: geoscienceaustralia/sandbox:latest
 
     steps:
-    - name: Make workspace
-      run: |
-        echo $GITHUB_WORKSPACE
-        sudo mkdir $GITHUB_WORKSPACE
-    - name: Checkout dea-notebooks
-      uses: actions/checkout@v2
-      with:
-        path: /home/jovyan/dea-notebooks/
+    - uses: actions/checkout@v2
     - name: Test with pytest
       run: |
         pytest --nbval-lax Beginners_guide/01*
