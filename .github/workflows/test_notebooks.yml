@@ -3,7 +3,7 @@ name: Test notebooks
 
 on:
   push:
-    branches: [ develop, stable ]
+    branches: [ develop, stable, nbtests ]
   pull_request:
     branches: [ develop, stable ]
 
