@@ -7,5 +7,5 @@ NB_DIR = TEST_DIR.parent
 
 
 @testbook(NB_DIR / 'Beginners_guide' / '01_Jupyter_notebooks.ipynb', execute=True)
-def test_time(tb):
+def test_ok(tb):
     assert True  # ok
