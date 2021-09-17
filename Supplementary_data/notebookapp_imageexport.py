@@ -39,6 +39,7 @@ def run_imageexport_app(date,
                         percentile_stretch=None,
                         power=None,
                         standardise_name=False,
+                        image_proc_funcs=None,
                         size_limit=10000):
     '''
     An interactive app that allows the user to select a region from a
@@ -310,6 +311,13 @@ def run_imageexport_app(date,
         rgb_rescaled = exposure.rescale_intensity(rgb_array.astype(float),
                                                   in_range=(vmin, vmax),
                                                   out_range=(0.0, 1.0))
+        
+        # Apply image processing funcs
+        if image_proc_funcs:
+            for i, func in enumerate(image_proc_funcs):
+                print(f'Applying custom function {i + 1}')
+                rgb_rescaled = func(rgb_rescaled)
+    
         # Plot RGB
         plt.imshow(rgb_rescaled)
 
