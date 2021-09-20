@@ -23,6 +23,7 @@ jobs:
           DB_DATABASE: postgres
           DB_PORT: 5432
           AWS_DEFAULT_REGION: ap-southeast-2
+        options: --entrypoint=Tests/setup_test_datacube.sh
       
       postgres:
         image: postgres:11.5-alpine
