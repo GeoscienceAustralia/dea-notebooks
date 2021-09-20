@@ -47,7 +47,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Set up Datacube
       run: |
-        datacube product list
+        bash Tests/setup_test_datacube.sh
+        datacube products list
     - name: Test with pytest
       run: |
-        pytest --nbval-lax Beginners_guide/01*
+        pytest Tests
