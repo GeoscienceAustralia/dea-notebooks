@@ -1,11 +1,9 @@
-from pathlib import Path
-
 import pytest
+from pathlib import Path
 from testbook import testbook
 
 TEST_DIR = Path(__file__).parent.parent.resolve()
 NB_DIR = TEST_DIR.parent
-
 NB_PATH = NB_DIR / "Frequently_used_code" / "Polygon_drill.ipynb"
 
 

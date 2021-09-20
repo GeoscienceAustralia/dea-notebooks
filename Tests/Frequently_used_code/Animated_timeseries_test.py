@@ -1,19 +1,19 @@
-from pathlib import Path
-
 import os
 import pytest
+from pathlib import Path
 from testbook import testbook
 
 TEST_DIR = Path(__file__).parent.parent.resolve()
 NB_DIR = TEST_DIR.parent
 NB_PATH = NB_DIR / "Frequently_used_code" / "Animated_timeseries.ipynb"
 
-# Update working directory to ensure relative links in notebooks work
-os.chdir("..")
-
 
 @pytest.fixture(scope="module")
 def tb():
+
+    # Update working directory to ensure relative links in notebooks work
+    os.chdir(NB_DIR.parent)
+
     with testbook(NB_PATH, execute=True) as tb:
         yield tb
 
@@ -46,7 +46,7 @@ def test_vars(tb):
         "nbart_blue",
         "nbart_nir_1",
         "nbart_swir_2",
-        "NDWI"
+        "NDWI",
     ]
     for var in expected_vars:
         assert var in ds.variables

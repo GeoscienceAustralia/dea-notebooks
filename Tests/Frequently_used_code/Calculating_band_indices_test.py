@@ -1,6 +1,5 @@
-from pathlib import Path
-
 import pytest
+from pathlib import Path
 from testbook import testbook
 
 TEST_DIR = Path(__file__).parent.parent.resolve()

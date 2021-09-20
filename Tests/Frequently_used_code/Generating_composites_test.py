@@ -1,19 +1,19 @@
-from pathlib import Path
-
 import os
 import pytest
+from pathlib import Path
 from testbook import testbook
 
 TEST_DIR = Path(__file__).parent.parent.resolve()
 NB_DIR = TEST_DIR.parent
 NB_PATH = NB_DIR / "Frequently_used_code" / "Generating_composites.ipynb"
 
-# Update working directory to ensure relative links in notebooks work
-os.chdir("..")
-
 
 @pytest.fixture(scope="module")
 def tb():
+    
+    # Update working directory to ensure relative links in notebooks work
+    os.chdir(NB_DIR.parent)
+    
     with testbook(NB_PATH, execute=True) as tb:
         yield tb
 
