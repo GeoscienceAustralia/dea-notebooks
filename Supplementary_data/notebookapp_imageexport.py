@@ -4,7 +4,8 @@ This file contains functions for creating an interactive map for
 selecting satellite imagery and exporting image files.
 
 Available functions:
-    run_imageexport_app
+    select_region_app
+    export_image_app
 
 Last modified: September 2021
 '''
@@ -29,24 +30,105 @@ from dea_tools.dask import create_local_dask_cluster
 from dea_tools.datahandling import pan_sharpen_brovey
 
 
-def run_imageexport_app(date,
-                        satellites,
-                        style,
-                        pansharpen=True,
-                        resolution=None,
-                        vmin=0,
-                        vmax=2000,
-                        percentile_stretch=None,
-                        power=None,
-                        standardise_name=False,
-                        image_proc_funcs=None,
-                        size_limit=10000):
+def select_region_app(date,
+                      satellites,
+                      size_limit=10000):
     '''
     An interactive app that allows the user to select a region from a
-    map, then export Digital Earth Australia satellite data as an image
-    file. The function supports Sentinel-2 and Landsat data, creating
-    True and False colour images, and applying pansharpening to increase
-    the resolution of Landsat 7 and 8 imagery.
+    map using imagery from Sentinel-2 and Landsat. The output of this
+    function is used as the input to `export_image_app` to export high-
+    resolution satellite images.
+    
+    Last modified: September 2021
+
+    Parameters
+    ----------
+    date : str
+        The exact date used to plot imagery on the interactive map
+        (e.g. `date='1988-01-01'`). 
+    satellites : str
+        The satellite data to plot on the interactive map. Three options
+        are currently supported:
+            "Landsat": data from the Landsat 5, 7 and 8 satellites
+            "Sentinel-2": data from Sentinel-2A and Sentinel-2B
+            "Sentinel-2 NRT": most recent 'near real time' data from 
+            Sentinel-2A and Sentinel-2B (use this to obtain imagery 
+            acquired in the past three months).
+    size_limit : int, optional
+        An optional size limit for the area selection in sq km.
+        Defaults to 10000 sq km.
+        
+    Returns
+    -------
+    A dictionary containing 'geopolygon' (defining the area to 
+    export imagery from), 'date' (date used to export imagery), and 
+    'satellites' (the satellites from which to extract imagery). These
+    are passed to the `export_image_app` function to export the image.
+    '''
+
+    ########################
+    # Select and load data #
+    ########################
+
+    # Load DEA WMS
+    class TimeWMSLayer(WMSLayer):
+        time = Unicode('').tag(sync=True, o=True)
+    
+    # WMS layers
+    wms_params = {'Landsat': 'ga_ls_ard_3',
+                  'Sentinel-2': 's2_ard_granule_nbar_t',
+                  'Sentinel-2 NRT': 's2_nrt_granule_nbar_t'}
+
+    time_wms = TimeWMSLayer(url='https://ows.dea.ga.gov.au/',
+                            layers=wms_params[satellites],
+                            time=date,
+                            format='image/png',
+                            transparent=True,
+                            attribution='Digital Earth Australia')
+
+    # Plot interactive map to select area
+    basemap = basemap_to_tiles(basemaps.OpenStreetMap.Mapnik)
+    geopolygon = select_on_a_map(height='600px',
+                                 layers=(
+                                     basemap,
+                                     time_wms,
+                                 ),
+                                 center=(-25.18, 134.18),
+                                 zoom=4)
+
+    # Test size of selected area
+    area = geopolygon.to_crs(crs=CRS('epsg:3577')).area / 1000000
+    if area > size_limit:
+        print(f'Warning: Your selected area is {area:.00f} sq km. '
+              f'Please select an area of less than {size_limit} sq km.'
+              f'\nTo select a smaller area, re-run the cell '
+              f'above and draw a new polygon.')
+
+    else:
+        return {'geopolygon': geopolygon, 
+                'date': date,
+                'satellites': satellites}
+      
+
+def export_image_app(geopolygon,
+                     date,
+                     satellites,
+                     style='True colour',
+                     pansharpen=True,
+                     resolution=None,
+                     vmin=0,
+                     vmax=2000,
+                     percentile_stretch=None,
+                     power=None,
+                     image_proc_funcs=None,
+                     output_format="jpg",
+                     standardise_name=False):
+    '''
+    Exports Digital Earth Australia satellite data as an image file
+    based on the extent and time period selected using 
+    `select_region_app.` The function supports Sentinel-2 and Landsat 
+    data, creating True and False colour images, and applying 
+    pansharpening to increase the resolution of Landsat 7 and 8 imagery.
         
     By default, files are named to match the DEA Imagery and Animations 
     folder naming convention:
@@ -61,19 +143,21 @@ def run_imageexport_app(date,
 
     Parameters
     ----------
+    geopolygon : datacube.utils.geometry object
+        A datacube geopolygon providing the spatial bounds used to load
+        satellite data.
     date : str
-        The exact date used to extract imagery (e.g. `date='1988-01-01'`). 
-        This is also used to plot imagery from the same date over the 
-        interactive map.
+        The exact date used to extract imagery 
+        (e.g. `date='1988-01-01'`). 
     satellites : str
-        The satellite data to be used to extract the image. Three 
+        The satellite data to be used to extract imagery. Three 
         options are currently supported:
             "Landsat": data from the Landsat 5, 7 and 8 satellites
             "Sentinel-2": data from Sentinel-2A and Sentinel-2B
             "Sentinel-2 NRT": most recent 'near real time' data from 
             Sentinel-2A and Sentinel-2B (use this to obtain imagery 
             acquired in the past three months).
-    style : str
+    style : str, optional
         The style used to produce the image. Two options are currently
         supported:
             "True colour": Creates a true colour image using the red, 
@@ -108,18 +192,28 @@ def run_imageexport_app(date,
         Raises imagery by a power to reduce bright features and 
         enhance dark features. This can add extra definition over areas
         with extremely bright features like snow, beaches or salt pans.
-    size_limit : int, optional
-        An optional size limit for the area selection in sq km.
-        Defaults to 10000 sq km.        
+    image_proc_funcs : list of funcs, optional
+        An optional list containing functions that will be applied to 
+        the output image. This can include image processing functions 
+        such as increasing contrast, unsharp masking, saturation etc. 
+        The function should take AND return a `numpy.ndarray` with 
+        shape [y, x, bands]. If your function has parameters, you 
+        can pass in custom values using a lambda function, e.g.:
+        `image_proc_funcs = [lambda x: skimage.filters.unsharp_mask(x, radius=5, amount=0.2)]`
+    output_format : str, optional
+        The output file format of the image. Valid options include "jpg"
+        and "png". Defaults to "jpg".
+    standardise_name : bool, optional
+        Whether to export the image file with a machine-readable 
+        file name (e.g. `<product>_<YYYY-MM-DD>_<site-state>_<description>.png`)        
     '''
-
+    
     ###########################
     # Set up satellite params #
     ###########################
 
     sat_params = {
         'Landsat': {
-            'layer': 'ga_ls_ard_3',
             'products': ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
             'resolution': [-30, 30],
             'styles': {
@@ -128,7 +222,6 @@ def run_imageexport_app(date,
             }
         },
         'Sentinel-2': {
-            'layer': 's2_ard_granule_nbar_t',
             'products': ['s2a_ard_granule', 's2b_ard_granule'],
             'resolution': [-10, 10],
             'styles': {
@@ -137,7 +230,6 @@ def run_imageexport_app(date,
             }
         },
         'Sentinel-2 NRT': {
-            'layer': 's2_nrt_granule_nbar_t',
             'products': ['s2a_nrt_granule', 's2b_nrt_granule'],
             'resolution': [-10, 10],
             'styles': {
@@ -146,181 +238,147 @@ def run_imageexport_app(date,
             }
         }
     }
+        
+    #############
+    # Load data #
+    #############
+    
+    # Connect to datacube database
+    dc = datacube.Datacube(app='Exporting_satellite_images')
 
-    ########################
-    # Select and load data #
-    ########################
+    # Configure local dask cluster
+    create_local_dask_cluster()
 
-    # Load DEA WMS
-    class TimeWMSLayer(WMSLayer):
-        time = Unicode('').tag(sync=True, o=True)
+    # Create query after adjusting interval time to UTC by
+    # adding a UTC offset of -10 hours. This results issues
+    # on the east coast of Australia where satelite overpasses
+    # can occur on either side of 24:00 hours UTC
+    start_date = np.datetime64(date) - np.timedelta64(10, 'h')
+    end_date = np.datetime64(date) + np.timedelta64(14, 'h')
+    query_params = {
+        'time': (str(start_date), str(end_date)),
+        'geopolygon': geopolygon
+    }
 
-    time_wms = TimeWMSLayer(url='https://ows.dea.ga.gov.au/',
-                            layers=sat_params[satellites]['layer'],
-                            time=date,
-                            format='image/png',
-                            transparent=True,
-                            attribution='Digital Earth Australia')
+    # Find matching datasets
+    dss = [
+        dc.find_datasets(product=i, **query_params)
+        for i in sat_params[satellites]['products']
+    ]
+    dss = list(itertools.chain.from_iterable(dss))
 
-    # Plot interactive map to select area
-    basemap = basemap_to_tiles(basemaps.OpenStreetMap.Mapnik)
-    geopolygon = select_on_a_map(height='600px',
-                                 layers=(
-                                     basemap,
-                                     time_wms,
-                                 ),
-                                 center=(-25.18, 134.18),
-                                 zoom=4)
+    # Get CRS and sensor
+    crs = str(dss[0].crs)
+    sensor = dss[0].metadata_doc['properties']['eo:platform'].capitalize()
+    sensor = sensor[0:-1].replace('_', '-') + sensor[-1].capitalize()
 
-    # Set centre coords based on most recent selection to re-focus
-    # subsequent data selections
-    centre_coords = geopolygon.centroid.points[0][::-1]
+    # Meets pansharpening requirements
+    can_pansharpen = style == 'True colour' and not resolution and sensor in [
+        'Landsat-7', 'Landsat-8'
+    ]
 
-    # Test size of selected area
-    area = geopolygon.to_crs(crs=CRS('epsg:3577')).area / 1000000
-    if area > size_limit:
-        print(f'Warning: Your selected area is {area:.00f} sq km. '
-              f'Please select an area of less than {size_limit} sq km.'
-              f'\nTo select a smaller area, re-run the cell '
-              f'above and draw a new polygon.')
+    # Set up load params
+    if pansharpen and can_pansharpen:
+        load_params = {
+            'output_crs': crs,
+            'resolution': (-15, 15),
+            'align': (7.5, 7.5),
+            'resampling': 'bilinear'
+        }
+
+        # Add panchromatic to list of true colour bands
+        sat_params[satellites]['styles']['True colour'] += [
+            'nbart_panchromatic'
+        ]
 
     else:
 
-        # Connect to datacube database
-        dc = datacube.Datacube(app='Exporting_satellite_images')
+        # Use resolution if provided, otherwise use default
+        if resolution:
+            sat_params[satellites]['resolution'] = resolution
 
-        # Configure local dask cluster
-        create_local_dask_cluster()
-
-        # Create query after adjusting interval time to UTC by
-        # adding a UTC offset of -10 hours. This results issues
-        # on the east coast of Australia where satelite overpasses
-        # can occur on either side of 24:00 hours UTC
-        start_date = np.datetime64(date) - np.timedelta64(10, 'h')
-        end_date = np.datetime64(date) + np.timedelta64(14, 'h')
-        query_params = {
-            'time': (str(start_date), str(end_date)),
-            'geopolygon': geopolygon
+        load_params = {
+            'output_crs': crs,
+            'resolution': sat_params[satellites]['resolution'],
+            'resampling': 'bilinear'
         }
 
-        # Find matching datasets
-        dss = [
-            dc.find_datasets(product=i, **query_params)
-            for i in sat_params[satellites]['products']
-        ]
-        dss = list(itertools.chain.from_iterable(dss))
+    # Load data from datasets
+    ds = dc.load(datasets=dss,
+                 measurements=sat_params[satellites]['styles'][style],
+                 group_by='solar_day',
+                 dask_chunks={
+                     'time': 1,
+                     'x': 3000,
+                     'y': 3000
+                 },
+                 **load_params,
+                 **query_params)
+    ds = masking.mask_invalid_data(ds)
 
-        # Get CRS and sensor
-        crs = str(dss[0].crs)
-        sensor = dss[0].metadata_doc['properties']['eo:platform'].capitalize()
-        sensor = sensor[0:-1].replace('_', '-') + sensor[-1].capitalize()
+    # Create plain numpy array, optionally after pansharpening
+    if pansharpen and can_pansharpen:
 
-        # Meets pansharpening requirements
-        can_pansharpen = style == 'True colour' and not resolution and sensor in [
-            'Landsat-7', 'Landsat-8'
-        ]
+        # Perform Brovey pan-sharpening and return three numpy.arrays
+        print(f'Pansharpening {sensor} image to 15 m resolution')
+        red_sharpen, green_sharpen, blue_sharpen = pan_sharpen_brovey(
+            band_1=ds.nbart_red,
+            band_2=ds.nbart_green,
+            band_3=ds.nbart_blue,
+            pan_band=ds.nbart_panchromatic)
+        rgb_array = np.vstack([red_sharpen, green_sharpen, blue_sharpen])
 
-        # Set up load params
-        if pansharpen and can_pansharpen:
-            load_params = {
-                'output_crs': crs,
-                'resolution': (-15, 15),
-                'align': (7.5, 7.5),
-                'resampling': 'bilinear'
-            }
+    else:
+        rgb_array = ds.isel(time=0).to_array().values
 
-            # Add panchromatic to list of true colour bands
-            sat_params[satellites]['styles']['True colour'] += [
-                'nbart_panchromatic'
-            ]
+    ############
+    # Plotting #
+    ############
 
-        else:
+    # Create unique file name
+    centre_coords = geopolygon.centroid.coords[0][::-1]
+    site = reverse_geocode(coords=centre_coords)
+    fname = (f"{sensor} - {date} - {site} - {style}, "
+             f"{load_params['resolution'][1]} m resolution.{output_format}")
 
-            # Use resolution if provided, otherwise use default
-            if resolution:
-                sat_params[satellites]['resolution'] = resolution
+    # Remove spaces and commas if requested
+    if standardise_name:
+        fname = fname.replace(' - ', '_').replace(', ',
+                                                  '-').replace(' ',
+                                                               '-').lower()
 
-            load_params = {
-                'output_crs': crs,
-                'resolution': sat_params[satellites]['resolution'],
-                'resampling': 'bilinear'
-            }
+    print(
+        f'\nExporting image to {fname}.\nThis may take several minutes to complete...'
+    )
 
-        # Load data from datasets
-        ds = dc.load(datasets=dss,
-                     measurements=sat_params[satellites]['styles'][style],
-                     group_by='solar_day',
-                     dask_chunks={
-                         'time': 1,
-                         'x': 3000,
-                         'y': 3000
-                     },
-                     **load_params,
-                     **query_params)
-        ds = masking.mask_invalid_data(ds)
+    # Convert to numpy array
+    rgb_array = np.transpose(rgb_array, axes=[1, 2, 0])
 
-        # Create plain numpy array, optionally after pansharpening
-        if pansharpen and can_pansharpen:
+    # If percentile stretch is supplied, calculate vmin and vmax
+    # from percentiles
+    if percentile_stretch:
+        vmin, vmax = np.nanpercentile(rgb_array, percentile_stretch)
 
-            # Perform Brovey pan-sharpening and return three numpy.arrays
-            print(f'Pansharpening {sensor} image to 15 m resolution')
-            red_sharpen, green_sharpen, blue_sharpen = pan_sharpen_brovey(
-                band_1=ds.nbart_red,
-                band_2=ds.nbart_green,
-                band_3=ds.nbart_blue,
-                pan_band=ds.nbart_panchromatic)
-            rgb_array = np.vstack([red_sharpen, green_sharpen, blue_sharpen])
+    # Raise by power to dampen bright features and enhance dark.
+    # Raise vmin and vmax by same amount to ensure proper stretch
+    if power:
+        rgb_array = rgb_array**power
+        vmin, vmax = vmin**power, vmax**power
 
-        else:
-            rgb_array = ds.isel(time=0).to_array().values
+    # Rescale/stretch imagery between vmin and vmax
+    rgb_rescaled = exposure.rescale_intensity(rgb_array.astype(float),
+                                              in_range=(vmin, vmax),
+                                              out_range=(0.0, 1.0))
 
-        ############
-        # Plotting #
-        ############
+    # Apply image processing funcs
+    if image_proc_funcs:
+        for i, func in enumerate(image_proc_funcs):
+            print(f'Applying custom function {i + 1}')
+            rgb_rescaled = func(rgb_rescaled)
 
-        # Create unique file name
-        site = reverse_geocode(coords=centre_coords)
-        fname = (f"{sensor} - {date} - {site} - {style}, "
-                 f"{load_params['resolution'][1]} m resolution.png")
+    # Plot RGB
+    plt.imshow(rgb_rescaled)
 
-        # Remove spaces and commas if requested
-        if standardise_name:
-            fname = fname.replace(' - ', '_').replace(', ',
-                                                      '-').replace(' ',
-                                                                   '-').lower()
-
-        print(
-            f'\nExporting image to {fname}.\nThis may take several minutes to complete...'
-        )
-
-        # Convert to numpy array
-        rgb_array = np.transpose(rgb_array, axes=[1, 2, 0])
-
-        # If percentile stretch is supplied, calculate vmin and vmax
-        # from percentiles
-        if percentile_stretch:
-            vmin, vmax = np.nanpercentile(rgb_array, percentile_stretch)
-
-        # Raise by power to dampen bright features and enhance dark.
-        # Raise vmin and vmax by same amount to ensure proper stretch
-        if power:
-            rgb_array = rgb_array**power
-            vmin, vmax = vmin**power, vmax**power
-
-        # Rescale/stretch imagery between vmin and vmax
-        rgb_rescaled = exposure.rescale_intensity(rgb_array.astype(float),
-                                                  in_range=(vmin, vmax),
-                                                  out_range=(0.0, 1.0))
-        
-        # Apply image processing funcs
-        if image_proc_funcs:
-            for i, func in enumerate(image_proc_funcs):
-                print(f'Applying custom function {i + 1}')
-                rgb_rescaled = func(rgb_rescaled)
-    
-        # Plot RGB
-        plt.imshow(rgb_rescaled)
-
-        # Export to file
-        plt.imsave(fname=fname, arr=rgb_rescaled, format="png")
-        print('Finished exporting image.')
+    # Export to file
+    plt.imsave(fname=fname, arr=rgb_rescaled, format=output_format)
+    print('Finished exporting image.')
