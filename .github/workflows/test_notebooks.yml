@@ -26,7 +26,7 @@ jobs:
     - name: Set up Datacube
       run: |
         cat Tests/setup_test_datacube.sh | docker-compose exec -T index bash
-        docker-compose exec -T sandbox datacube products list
+        docker-compose exec -T sandbox datacube product list
     - name: Test with pytest
       run: |
         docker-compose exec -T sandbox pytest dea-notebooks/Tests
