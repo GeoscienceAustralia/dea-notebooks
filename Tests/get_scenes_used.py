@@ -23,12 +23,14 @@ def get_unserialisable_mock(tb, deferred):
 def get_scenes_used(nb_path, debug=False):
     dc = datacube.Datacube(app='get_scenes_used')
     with testbook(nb_path, execute=False) as tb:
-        with tb.patch('datacube.Datacube') as mock_datacube:
+        with tb.patch('datacube.Datacube') as mock_datacube, tb.patch('dea_tools.plotting.rgb') as rgb:
             tb.inject("""
 import datacube, unittest.mock
 def load_store_query(*args, **kwargs):
     mock = unittest.mock.MagicMock()
     mock._query = (args, kwargs)
+    mock.load = lambda: mock  # Handle dask
+    mock.geobox.dimensions = [1, 1]
     return mock
 datacube.Datacube().load = unittest.mock.MagicMock(name='loader', side_effect=load_store_query)
             """)
@@ -52,8 +54,9 @@ datacube.Datacube().load = unittest.mock.MagicMock(name='loader', side_effect=lo
                     kwargs['product'] = ref.kwargs['product']
                 query_list.append((args, kwargs))
             for args, kwargs in query_list:
-                if 'resampling' in kwargs:
-                    del kwargs['resampling']
+                for bad_arg in ['resampling', 'dask_chunks']:
+                    if bad_arg in kwargs:
+                        del kwargs[bad_arg]
                 if debug:
                     print(args, kwargs)
                 datasets = dc.find_datasets(*args, **kwargs)
