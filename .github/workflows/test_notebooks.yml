@@ -30,6 +30,8 @@ jobs:
     - name: Test with pytest
       run: |
         docker-compose exec -T sandbox pip install testbook
+        docker-compose exec -T sandbox mkdir /home/jovyan/dea-notebooks
+        docker-compose exec -T sandbox cp -r /dea-notebooks/.git /home/jovyan/.git
         docker-compose exec -T sandbox cp -r /dea-notebooks/Tools /home/jovyan/Tools
         docker-compose exec -T sandbox pip install --use-feature=in-tree-build /home/jovyan/Tools
         docker-compose exec -T sandbox pytest /dea-notebooks/Tests
