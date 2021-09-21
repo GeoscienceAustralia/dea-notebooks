@@ -5,6 +5,7 @@ Geoscience Australia
 2021
 """
 
+from contextlib import ExitStack
 import unittest.mock
 
 import click
@@ -12,6 +13,11 @@ import datacube
 from testbook import exceptions
 from testbook import testbook
 
+
+BAD_FNS = [
+    'dea_tools.plotting.rgb',
+    'datacube.utils.cog.write_cog'
+]
 
 def get_unserialisable_mock(tb, deferred):
     try:
@@ -23,7 +29,9 @@ def get_unserialisable_mock(tb, deferred):
 def get_scenes_used(nb_path, debug=False):
     dc = datacube.Datacube(app='get_scenes_used')
     with testbook(nb_path, execute=False) as tb:
-        with tb.patch('datacube.Datacube') as mock_datacube, tb.patch('dea_tools.plotting.rgb') as rgb:
+        with tb.patch('datacube.Datacube') as mock_datacube, ExitStack() as stack:
+            # https://stackoverflow.com/questions/45589718/combine-two-context-managers-into-one
+            cms = [stack.enter_context(tb.patch(bad_fn)) for bad_fn in BAD_FNS]
             tb.inject("""
 import datacube, unittest.mock
 def load_store_query(*args, **kwargs):
