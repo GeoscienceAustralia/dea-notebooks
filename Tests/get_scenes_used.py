@@ -61,6 +61,7 @@ datacube.Datacube().load = unittest.mock.MagicMock(name='loader', side_effect=lo
                         kwargs = {k: ref.kwargs[k] for k in ref.kwargs if k != 'progress_cbk'}
                     kwargs['product'] = ref.kwargs['product']
                 query_list.append((args, kwargs))
+            scene_uris = set()
             for args, kwargs in query_list:
                 for bad_arg in ['resampling', 'dask_chunks']:
                     if bad_arg in kwargs:
@@ -70,7 +71,8 @@ datacube.Datacube().load = unittest.mock.MagicMock(name='loader', side_effect=lo
                 datasets = dc.find_datasets(*args, **kwargs)
                 for ds in datasets:
                     for uri in ds.uris:
-                        print(uri)
+                        scene_uris.add(uri)
+            print('\n'.join(sorted(scene_uris)))
 
             
 @click.command()
