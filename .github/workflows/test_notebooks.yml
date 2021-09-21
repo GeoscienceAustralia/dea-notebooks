@@ -29,5 +29,6 @@ jobs:
         docker-compose exec -T sandbox datacube product list
     - name: Test with pytest
       run: |
+        docker-compose exec -T sandbox pip install testbook
         docker-compose exec -T sandbox pytest /dea-notebooks/Tests
         docker-compose down
