@@ -27,6 +27,8 @@ services:
      depends_on:
         - postgres
      entrypoint: bash -c 'sleep infinity'
+     volumes:
+       - .:/dea-notebooks
 
   index:
      image: opendatacube/datacube-index:0.0.13
