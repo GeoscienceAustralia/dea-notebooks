@@ -30,6 +30,7 @@ jobs:
     - name: Test with pytest
       run: |
         docker-compose exec -T sandbox pip install testbook
-        docker-compose exec -T sandbox pip install --use-feature=in-tree-build /dea-notebooks/Tools
+        docker-compose exec -T sandbox cp -r /dea-notebooks/Tools ~/Tools
+        docker-compose exec -T sandbox pip install --use-feature=in-tree-build ~/Tools
         docker-compose exec -T sandbox pytest /dea-notebooks/Tests
         docker-compose down
