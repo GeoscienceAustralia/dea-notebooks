@@ -509,7 +509,7 @@ def mostcommon_crs(dc, product, query):
         The Datacube to connect to, i.e. `dc = datacube.Datacube()`.
         This allows you to also use development datacubes if required.
     product : str
-        A product name to load CRSs from
+        A product name (or list of product names) to load CRSs from.
     query : dict
         A datacube query including x, y and time range to assess for the
         most common CRS
@@ -521,8 +521,15 @@ def mostcommon_crs(dc, product, query):
 
     """
     
-    # List of matching products
-    matching_datasets = dc.find_datasets(product=product, **query)
+    # Find list of datasets matching query for either product or 
+    # list of products
+    if isinstance(product, list):
+        matching_datasets = []
+        for i in product:
+            matching_datasets.extend(dc.find_datasets(product=i, 
+                                                      **query))        
+    else:
+        matching_datasets = dc.find_datasets(product=product, **query)
 
     # Extract all CRSs
     crs_list = [str(i.crs) for i in matching_datasets]

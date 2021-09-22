@@ -26,6 +26,7 @@ Functions included:
     largest_region
     transform_geojson_wgs_to_epsg
     zonal_stats_parallel
+    reverse_geocode
 
 Last modified: September 2021
 
@@ -42,6 +43,7 @@ from scipy import ndimage as nd
 from skimage.measure import label
 from rasterstats import zonal_stats
 from skimage.measure import find_contours
+from geopy.geocoders import Nominatim
 from datacube.utils.cog import write_cog
 from datacube.helpers import write_geotiff
 from datacube.utils.geometry import assign_crs
@@ -820,13 +822,14 @@ def zonal_stats_parallel(shp,
 
     #calculates zonal stats and adds results to a dictionary
     def worker(z,raster,d):	
-        z_stats = zonal_stats(z,raster,stats=statistics,**kwargs)	
+        z_stats = zonal_stats(z,raster,stats=statistics,**kwargs)
         for i in range(0,len(z_stats)):
             d[z[i]['id']]=z_stats[i]
 
     #write output polygon
     def write_output(zones, out_shp,d):
-        #copy schema and crs from input and add new fields for each statistic			
+        
+        #copy schema and crs from input and add new fields for each statistic     
         schema = zones.schema.copy()
         crs = zones.crs
         for stat in statistics:			
@@ -834,7 +837,7 @@ def zonal_stats_parallel(shp,
 
         with fiona.open(out_shp, 'w', 'ESRI Shapefile', schema, crs) as output:
             for elem in zones:
-                for stat in statistics:			
+                for stat in statistics:
                     elem['properties'][stat]=d[elem['id']][stat]
                 output.write({'properties':elem['properties'],'geometry': mapping(shape(elem['geometry']))})
     
@@ -857,4 +860,94 @@ def zonal_stats_parallel(shp,
         #wait that all chunks are finished
         [j.join() for j in jobs]
 
-        write_output(zones,out_shp,d)		
+        write_output(zones,out_shp,d)
+
+
+def reverse_geocode(coords, site_classes=None, state_classes=None):
+    
+    """
+    Takes a latitude and longitude coordinate, and performs a reverse 
+    geocode to return a plain-text description of the location in the 
+    form:
+        
+        Site, State
+        
+    E.g.: `reverse_geocode(coords=(-35.282163, 149.128835))`
+    
+        'Canberra, Australian Capital Territory'
+
+    Parameters
+    ----------
+    coords : tuple of floats
+        A tuple of (latitude, longitude) coordinates used to perform 
+        the reverse geocode.
+    site_classes : list of strings, optional
+        A list of strings used to define the site part of the plain 
+        text location description. Because the contents of the geocoded 
+        address can vary greatly depending on location, these strings
+        are tested against the address one by one until a match is made.
+        Defaults to: `['city', 'town', 'village', 'suburb', 'hamlet', 
+                       'county', 'municipality']`.      
+    state_classes : list of strings, optional
+        A list of strings used to define the state part of the plain 
+        text location description. These strings are tested against the 
+        address one by one until a match is made. Defaults to: 
+        `['state', 'territory']`.
+
+    Returns
+    -------
+    If a valid geocoded address is found, a plain text location 
+    description will be returned:
+    
+        'Site, State'
+    
+    If no valid address is found, formatted coordinates will be returned
+    instead:
+    
+        'XX.XX S, XX.XX E'   
+
+    """
+
+    # Run reverse geocode using coordinates
+    geocoder = Nominatim(user_agent='Digital Earth Australia')
+    out = geocoder.reverse(coords)
+    
+    # Create plain text-coords as fall-back
+    lat = f'{-coords[0]:.2f} S' if coords[0] < 0 else f'{coords[0]:.2f} N'
+    lon = f'{-coords[1]:.2f} W' if coords[1] < 0 else f'{coords[1]:.2f} E'
+
+    try:
+        
+        # Get address from geocoded data
+        address = out.raw['address']
+
+        # Use site and state classes if supplied; else use defaults
+        default_site_classes = ['city', 'town', 'village', 'suburb', 'hamlet', 
+                                'county', 'municipality']
+        default_state_classes = ['state', 'territory']
+        site_classes = site_classes if site_classes else default_site_classes
+        state_classes = state_classes if state_classes else default_state_classes
+
+        # Return the first site or state class that exists in address dict
+        site = next((address[k] for k in site_classes if k in address), None)
+        state = next((address[k] for k in state_classes if k in address), None)
+        
+        # If site and state exist in the data, return this.
+        # Otherwise, return N/E/S/W coordinates.
+        if site and state:
+
+            # Return as site, state formatted string
+            return f'{site}, {state}'
+        
+        else:
+            
+            # If no geocoding result, return N/E/S/W coordinates
+            print('No valid geocoded location; returning coordinates instead')
+            return f'{lat}, {lon}'
+              
+    except (KeyError, AttributeError):
+
+        # If no geocoding result, return N/E/S/W coordinates
+        print('No valid geocoded location; returning coordinates instead')
+        return f'{lat}, {lon}'
+        
