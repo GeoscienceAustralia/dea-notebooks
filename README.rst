@@ -13,6 +13,9 @@ Digital Earth Australia notebooks and tools repository
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
   :target: https://opensource.org/licenses/Apache-2.0
   :alt: Apache license
+.. image:: https://img.shields.io/pypi/v/dea-tools
+  :target: https://pypi.org/project/dea-tools/
+  :alt: PyPI
 
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
@@ -38,9 +41,7 @@ The repository is based around the following directory structure (from simple to
 
 5. `Scientific_workflows <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Scientific_workflows>`_: *Production code and notebooks for generating published DEA products or analysis tools*
 
-The supporting scripts and data for the notebooks are kept in the following directories:
-
-- `Scripts <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Scripts>`_: *Supplementary scripts for specific notebooks (e.g. crop health)*
+Supporting functions and data for the notebooks are kept in the following directories:
 
 - `Tools <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Tools>`_: *Python module dea-tools, containing functions and algorithms developed to assist in analysing DEA data (e.g. loading data, plotting, spatial analysis, machine learning)* 
 
