@@ -302,8 +302,8 @@ def calculate_indices(ds,
                               "refer to the function \ndocumentation for a full "
                               "list of valid options for `index` (e.g. 'NDVI')")
 
-        elif (index in ['WI', 'BAEI', 'AWEI_ns', 'AWEI_sh', 'TCW', 
-                        'TCG', 'TCB', 'TCW_GSO', 'TCG_GSO', 'TCB_GSO', 
+        elif (index in ['WI', 'BAEI', 'AWEI_ns', 'AWEI_sh',
+                        'TCW_GSO', 'TCG_GSO', 'TCB_GSO', 
                         'EVI', 'LAI', 'SAVI', 'MSAVI'] 
               and not normalise):
 
