@@ -267,9 +267,14 @@ def export_image_app(geopolygon,
     ]
     dss = list(itertools.chain.from_iterable(dss))
 
-    # Get CRS and sensor
+    # Get CRS 
     crs = str(dss[0].crs)
-    sensor = dss[0].metadata_doc['properties']['eo:platform'].capitalize()
+    
+    # Get sensor (try/except to account for different NRT metadata)
+    try:
+        sensor = dss[0].metadata_doc['properties']['eo:platform'].capitalize()
+    except: 
+        sensor = dss[0].metadata_doc['platform']['code'].capitalize()
     sensor = sensor[0:-1].replace('_', '-') + sensor[-1].capitalize()
 
     # Meets pansharpening requirements
