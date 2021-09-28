@@ -16,6 +16,9 @@ Digital Earth Australia notebooks and tools repository
 .. image:: https://img.shields.io/pypi/v/dea-tools
   :target: https://pypi.org/project/dea-tools/
   :alt: PyPI
+.. image:: https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml/badge.svg?branch=develop
+  :target: https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml
+  :alt: Notebook testing
 
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
