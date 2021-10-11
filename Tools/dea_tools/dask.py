@@ -38,7 +38,7 @@ _IS_AWS = ('AWS_ACCESS_KEY_ID' in os.environ or
            'AWS_DEFAULT_REGION' in os.environ)
 
 
-def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
+def create_local_dask_cluster(spare_mem='3Gb', display_client=True, return_client=False):
     """
     Using the datacube utils function `start_local_dask`, generate
     a local dask cluster. Automatically detects if on AWS or NCI.
@@ -60,6 +60,9 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
         An optional boolean indicating whether to display a summary of
         the dask client, including a link to monitor progress of the
         analysis. Set to False to hide this display.
+    return_client : Bool, optional
+        An optional boolean indicating whether to return the dask client
+        object.
 
     """
 
@@ -81,7 +84,11 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True):
     if display_client:
         from IPython.display import display
         display(client)
-
+    
+    # return the client as an object
+    if return_client:
+        return client
+   
 
 try:
     from dask_gateway import Gateway
