@@ -7,8 +7,10 @@ import io
 import os
 import sys
 from shutil import rmtree
+from pathlib import Path
 
 from setuptools import find_packages, setup, Command
+import setuptools_scm
 
 # Package meta-data.
 NAME = 'dea-tools'
@@ -17,7 +19,6 @@ URL = 'https://github.com/GeoscienceAustralia/dea-notebooks'
 EMAIL = 'dea@ga.gov.au'
 AUTHOR = 'Geoscience Australia'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.1.0'
 
 # Where are we?
 IS_SANDBOX = os.getenv('JUPYTER_IMAGE', default='').startswith('geoscienceaustralia/sandbox')
@@ -83,16 +84,7 @@ try:
 except FileNotFoundError:
     long_description = DESCRIPTION
 
-# Load the package's __version__.py module as a dictionary.
-about = {}
-if not VERSION:
-    project_slug = NAME.lower().replace("-", "_").replace(" ", "_")
-    with open(os.path.join(here, project_slug, '__version__.py')) as f:
-        exec(f.read(), about)
-else:
-    about['__version__'] = VERSION
-
-
+    
 class UploadCommand(Command):
     """Support setup.py upload."""
 
@@ -130,13 +122,33 @@ class UploadCommand(Command):
         sys.exit()
 
 
+# Versioning magic.
+VERSION_FILE_PATH = Path('dea_tools/__version__.py')
+about = {}
+try:
+    version = setuptools_scm.get_version(
+        root='..',
+        write_to='Tools' / VERSION_FILE_PATH,
+        relative_to=__file__,
+        local_scheme=lambda _: '')
+except (LookupError, FileNotFoundError):
+    # python -m build will trip the FNFError
+    try:
+        # no .git folder, so read from __version__.py
+        with open(VERSION_FILE_PATH) as f_version:
+            exec(f_version.read(), about)
+            version = about['version']
+    except FileNotFoundError:
+        # No __version__.py, yikes
+        raise RuntimeError('Build in-place with --use-feature=in-tree-build.')
+
 # Where the magic happens:
 setup(
     name=NAME,
-    version=about['__version__'],
+    version=version,
     description=DESCRIPTION,
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/x-rst',
     author=AUTHOR,
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
@@ -156,7 +168,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering :: GIS'
+        'Topic :: Scientific/Engineering :: GIS',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',

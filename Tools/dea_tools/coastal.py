@@ -903,9 +903,11 @@ def deacoastlines_histogram(extent_path=None,
                 
                 if hist_range == 'auto':
                     hist_max = stats_subset.rate_time.quantile([0.001, 0.999]).abs().max()
-                    hist_range = (-hist_max, hist_max)   
+                    hist_range_num = (-hist_max, hist_max)  
+                else:
+                    hist_range_num = hist_range
                     
-                bin_offset = (hist_range[1] - hist_range[0]) / (hist_bins / 0.5)
+                bin_offset = (hist_range_num[1] - hist_range_num[0]) / (hist_bins / 0.5)
             else:
                 print('    Plotting data with linear axis after filtering ' \
                       'to significant values\n')
@@ -923,7 +925,7 @@ def deacoastlines_histogram(extent_path=None,
             # Plot histogram    
             n, bins, patches = ax1.hist(stats_subset.rate_time, 
                                         bins=hist_bins, 
-                                        range=[(a + bin_offset) for a in hist_range], 
+                                        range=[(a + bin_offset) for a in hist_range_num], 
                                         log=hist_log,
                                         edgecolor='black')
 
@@ -931,8 +933,8 @@ def deacoastlines_histogram(extent_path=None,
             bin_centers = 0.5 * (bins[:-1] + bins[1:])
             norm = colors.SymLogNorm(linthresh=0.25, 
                                      linscale=0.05,
-                                     vmin=hist_range[0], 
-                                     vmax=hist_range[1], 
+                                     vmin=hist_range_num[0], 
+                                     vmax=hist_range_num[1], 
                                      base=10)
             col = norm(bin_centers)  
 
