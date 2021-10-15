@@ -132,10 +132,10 @@ def tidal_tag(ds,
 
         # Extract tide heights
         obs_tideheights = [predictedtide.tide_m for predictedtide 
-                           in obs_predictedtides]
+                           in obs_predictedtides]   
 
         # Assign tide heights to the dataset as a new variable
-        ds['tide_height'] = xr.DataArray(obs_tideheights, [('time', ds.time)])
+        ds['tide_height'] = xr.DataArray(obs_tideheights, coords=[ds.time]) 
 
         # Optionally calculate the tide phase for each observation
         if ebb_flow:
@@ -158,7 +158,7 @@ def tidal_tag(ds,
                                                obs_predictedtides)]
             
             # Assign tide phase to the dataset as a new variable
-            ds['ebb_flow'] = xr.DataArray(tidal_phase, [('time', ds.time)]) 
+            ds['ebb_flow'] = xr.DataArray(tidal_phase, coords=[ds.time]) 
             
         # If swap_dims = True, make tide height the primary dimension 
         # instead of time
@@ -269,6 +269,10 @@ def tidal_stats(ds,
                                                      tidepost_lat=tidepost_lat,
                                                      tidepost_lon=tidepost_lon,
                                                      return_tideposts=True)
+    
+    # Drop spatial ref for nicer plotting
+    if 'spatial_ref' in ds_tides:
+        ds_tides = ds_tides.drop('spatial_ref')
 
     # Generate range of times covering entire period of satellite record
     all_timerange = pd.date_range(start=ds_tides.time.min().item(),
@@ -317,14 +321,14 @@ def tidal_stats(ds,
     
     if plain_english:
         
-        print(f'\n{spread:.0%} of the full {all_range:.2f} m modelled tidal '
-              f'range is observed at this location.\nThe lowest '
+        print(f'\n{spread:.0%} of the {all_range:.2f} m modelled astronomical '
+              f'tidal range is observed at this location.\nThe lowest '
               f'{low_tide_offset:.0%} and highest {high_tide_offset:.0%} '
-              f'of tides are never observed.\n')
+              f'of astronomical tides are never observed.\n')
         
         # Plain english
         if obs_linreg.pvalue > 0.05:
-            print(f'Observed tides do not increase or decrease significantly '
+            print(f'Observed tides show no significant trends '
                   f'over the ~{time_period:.0f} year period.')
         else:
             obs_slope_desc = 'decrease' if obs_linreg.slope < 0 else 'increase'
@@ -335,8 +339,8 @@ def tidal_stats(ds,
                   f'{obs_slope_desc} over the ~{time_period:.0f} year period).')
 
         if all_linreg.pvalue > 0.05:
-            print(f'All tides do not increase or decrease significantly over '
-                  f'the ~{time_period:.0f} year period.')
+            print(f'All tides show no significant trends '
+                  f'over the ~{time_period:.0f} year period.')
         else:
             all_slope_desc = 'decrease' if all_linreg.slope < 0 else 'increase'
             print(f'All tides {all_slope_desc} significantly '
