@@ -34,5 +34,5 @@ jobs:
         docker-compose exec -T sandbox cp -r /dea-notebooks/.git /home/jovyan/.git
         docker-compose exec -T sandbox cp -r /dea-notebooks/Tools /home/jovyan/Tools
         docker-compose exec -T sandbox pip install --use-feature=in-tree-build /home/jovyan/Tools
-        docker-compose exec -T sandbox pytest /dea-notebooks/Tests/Beginners_guide --ignore /dea-notebooks/Tests/Beginners_guide/06_Basic_analysis_test.py --ignore /dea-notebooks/Tests/Beginners_guide/07_Intro_to_numpy_test.py
+        docker-compose exec -T sandbox pytest /dea-notebooks/Tests/Beginners_guide /dea-notebooks/Tests/Frequently_used_code/Tidal_modelling_test.py --ignore /dea-notebooks/Tests/Beginners_guide/06_Basic_analysis_test.py --ignore /dea-notebooks/Tests/Beginners_guide/07_Intro_to_numpy_test.py
         docker-compose down
