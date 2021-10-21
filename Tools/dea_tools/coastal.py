@@ -24,7 +24,7 @@ Functions included:
     deacoastlines_transect
     deacoastlines_histogram
 
-Last modified: November 2020
+Last modified: October 2021
 
 '''
 
