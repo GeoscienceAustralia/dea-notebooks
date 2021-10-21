@@ -20,7 +20,6 @@ Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 Functions included:
     rgb
     display_map
-    map_shapefile
     xr_animation
     plot_wo
     plot_fmask
@@ -52,6 +51,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps, Choropleth
 from skimage import exposure
 from odc.ui import image_aspect
+import warnings
 
 from matplotlib.animation import FuncAnimation
 import pandas as pd
@@ -414,6 +414,11 @@ def map_shapefile(gdf,
         https://ipyleaflet.readthedocs.io/en/latest/api_reference/choropleth.html
 
     """
+    
+    warnings.warn("The `map_shapefile` function is deprecated, and will "
+              "be removed from future versions of `dea-tools`. Please "
+              "use Geopanda's built-in `.explore` functionality instead.", 
+              FutureWarning)
 
     def on_hover(event, id, properties):
         with dbg:
