@@ -28,7 +28,7 @@ Functions included:
     zonal_stats_parallel
     reverse_geocode
 
-Last modified: September 2021
+Last modified: October 2021
 
 '''
 
@@ -678,7 +678,7 @@ def contours_to_arrays(gdf, col):
     can then be used as an input to interpolation procedures (e.g. using 
     a function like `interpolate_2d`.
     
-    Last modified: October 2019
+    Last modified: October 2021
     
     Parameters
     ----------  
@@ -704,7 +704,7 @@ def contours_to_arrays(gdf, col):
 
         try:
             coords = np.concatenate([np.vstack(x.coords.xy).T 
-                                     for x in gdf.iloc[i].geometry])
+                                     for x in gdf.iloc[i].geometry.geoms])
         except:
             coords = np.vstack(gdf.iloc[i].geometry.coords.xy).T
 
@@ -832,7 +832,7 @@ def zonal_stats_parallel(shp,
         #copy schema and crs from input and add new fields for each statistic     
         schema = zones.schema.copy()
         crs = zones.crs
-        for stat in statistics:			
+        for stat in statistics:
             schema['properties'][stat] = 'float'
 
         with fiona.open(out_shp, 'w', 'ESRI Shapefile', schema, crs) as output:
