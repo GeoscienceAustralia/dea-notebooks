@@ -267,10 +267,10 @@ def export_image_app(geopolygon,
     ]
     dss = list(itertools.chain.from_iterable(dss))
 
-    # Get CRS 
+    # Get CRS
     crs = str(dss[0].crs)
     
-    # Get sensor (try/except to account for different NRT metadata)
+    # Get sensor (try/except to account for different S2 NRT metadata)
     try:
         sensor = dss[0].metadata_doc['properties']['eo:platform'].capitalize()
     except: 
