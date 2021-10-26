@@ -20,11 +20,11 @@ Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 Functions included:
     rgb
     display_map
-    map_shapefile
     xr_animation
     plot_wo
+    plot_fmask
 
-Last modified: February 2021
+Last modified: October 2021
 
 '''
 
@@ -51,6 +51,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps, Choropleth
 from skimage import exposure
 from odc.ui import image_aspect
+import warnings
 
 from matplotlib.animation import FuncAnimation
 import pandas as pd
@@ -413,6 +414,11 @@ def map_shapefile(gdf,
         https://ipyleaflet.readthedocs.io/en/latest/api_reference/choropleth.html
 
     """
+    
+    warnings.warn("The `map_shapefile` function is deprecated, and will "
+              "be removed from future versions of `dea-tools`. Please "
+              "use Geopanda's built-in `.explore` functionality instead.", 
+              FutureWarning)
 
     def on_hover(event, id, properties):
         with dbg:
@@ -999,6 +1005,51 @@ def plot_wo(wo, legend=True, **plot_kwargs):
         im = wo.plot.imshow(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
     except AttributeError:
         im = wo.plot(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
+    
+    if legend:
+        try:
+            cb = im.colorbar
+        except AttributeError:
+            cb = im.cbar
+        ticks = cb.get_ticks()
+        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+        cb.set_ticklabels(cblabels)
+    return im
+
+
+def plot_fmask(fmask, legend=True, **plot_kwargs):
+    """
+    Plot an enumerated FMask flag image with human-readable colours.
+    
+    Parameters
+    ----------
+    fmask : xr.DataArray
+        A DataArray containing Fmask flags.
+    legend : bool
+        Whether to plot a legend. Default True.
+    plot_kwargs : dict
+        Keyword arguments passed on to DataArray.plot.
+    
+    Returns
+    -------
+    plot    
+    """
+    cmap = mcolours.ListedColormap([
+          np.array([0, 0, 0]) / 255,   # nodata - 0
+          np.array([132, 162, 120]) / 255,   # clear - 1
+          np.array([208, 207, 206]) / 255,  # cloud - 2
+          np.array([70, 70, 51]) / 255,     # cloud_shadow - 3
+          np.array([224, 237, 255]) / 255, # snow - 4
+          np.array([71, 91, 116]) / 255,  # water - 5
+    ])
+    bounds=[0, 1, 2, 3, 4, 5, 6]
+    norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
+    cblabels = ['nodata', 'clear', 'cloud', 'shadow', 'snow', 'water']
+
+    try:
+        im = fmask.plot.imshow(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
+    except AttributeError:
+        im = fmask.plot(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
     
     if legend:
         try:
