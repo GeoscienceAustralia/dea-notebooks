@@ -38,7 +38,8 @@ Last modified: July 2020
 
 # Import required packages
 import os
-import gdal
+from osgeo import gdal
+# import gdal
 import zipfile
 import numexpr
 import datetime
