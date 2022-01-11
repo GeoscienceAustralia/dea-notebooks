@@ -169,7 +169,7 @@ def lc_hex_convert(n:int, Land_cover_layer='Level4'):
 
     
 
-def lc_animation(ds, file_name='default_animation.gif', Land_cover_layer='level4', animation_interval=500, width_pixels=500, dpi=400):
+def lc_animation(ds, file_name='default_animation.gif', Land_cover_layer='level4', stacked_plot=False, animation_interval=500, width_pixels=500, dpi=400):
     """
     creates an animation of a landcover maps though time beside corrosponding stacked plots of the landcover classes. Saves the 
     animation to a file and   displays the annimation in notebook
@@ -201,6 +201,8 @@ def lc_animation(ds, file_name='default_animation.gif', Land_cover_layer='level4
         'path_effects': outline
     }
     
+
+    
     #define create table
     def create_panda(da):
         """creates a pandas dataframe listing what percentage or total area is taken up by each class in given layer for each year of dataset"""
@@ -228,64 +230,94 @@ def lc_animation(ds, file_name='default_animation.gif', Land_cover_layer='level4
     annotation_list = ['\n'.join([str(i) for i in (a, b) if i])
                            for a, b in zip(times_list, text_list)]
     
+    if stacked_plot == True:
     
-    level_4_table = create_panda(ds)
+        stacked_plot_table = create_panda(ds)
     
-    #define fig
-    # Set up figure
-    fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
-    fig.set_size_inches(width * scale / 20, height * scale / 40, forward=True);
-    fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
+        #define fig
+        # Set up figure
+        fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
+        fig.set_size_inches(width * scale / 20, height * scale / 40, forward=True);
+        fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
 
 
 
-    
-    #define update_frames
-    # This function is called at regular intervals with changing i values for each frame
 
-    def _update_frames(i, ax1, ax2, extent, annotation_text, annotation_defaults, cmap, norm):
-        # Clear previous frame to optimise render speed and plot imagery
-        ax1.clear()
-        ax2.clear()
+        #define update_frames
+        # This function is called at regular intervals with changing i values for each frame
 
-        ax1.imshow(ds[i, ...], cmap=cmap, norm=norm,
-                  extent=extent, interpolation='nearest')
+        def _update_frames(i, ax1, ax2, extent, annotation_text, annotation_defaults, cmap, norm):
+            # Clear previous frame to optimise render speed and plot imagery
+            ax1.clear()
+            ax2.clear()
+
+            ax1.imshow(ds[i, ...], cmap=cmap, norm=norm,
+                      extent=extent, interpolation='nearest')
+
+
+            cliped_table = stacked_plot_table.iloc[:int(i+1)]
+            data = cliped_table.to_dict(orient='list')
+            date = cliped_table.index
+
+            #build colour list
+            colour_list = []
+            for vals in list(cliped_table):
+                x = lc_hex_convert(vals, Land_cover_layer)
+                colour_list.append(x)
+
+            ax2.stackplot(date, data.values(), colors=colour_list)#nat bare
+            ax2.tick_params(axis = 'x', labelrotation=-45)
+            ax2.margins(x=0,y=0)
+
+
+            # Add annotation text
+            ax1.annotate(annotation_text[i], **annotation_defaults)
+            ax2.annotate(annotation_text[i], **annotation_defaults)
+
+        #define anim_fargs
+        anim_fargs = (
+                ax1,
+                ax2,  # axis to plot into
+                [left, right, bottom, top],  # imshow extent
+                annotation_list,
+                annotation_defaults,
+                layer_cmap, 
+                layer_norm)
         
+    if stacked_plot == False:
+    
+    
+        #define fig
+        # Set up figure
+        fig, (ax1) = plt.subplots(1, 1, dpi=dpi, constrained_layout=True) #test this is correct
+        fig.set_size_inches(width * scale / 20, height * scale / 40, forward=True);
+        fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
 
-        cliped_table = level_4_table.iloc[:int(i+1)]
-        data = cliped_table.to_dict(orient='list')
-        date = cliped_table.index
 
-        #build colour list
-        colour_list = []
-        for vals in list(cliped_table):
-            x = lc_hex_convert(vals, Land_cover_layer)
-            colour_list.append(x)
 
-        ax2.stackplot(date, data.values(), colors=colour_list)#nat bare
-        ax2.tick_params(axis = 'x', labelrotation=-45)
-        ax2.margins(x=0,y=0)
-        
-         #pop in colour bar details for imshow plot...
-#         cb = fig.colorbar(im, ax=ax2, shrink=0.6)
-#         ticks = cb.get_ticks()
-#         cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
-#         cb.set_ticklabels(cblabels)
 
-        # Add annotation text
-        ax1.annotate(annotation_text[i], **annotation_defaults)
-        ax2.annotate(annotation_text[i], **annotation_defaults)
-#          plt.tight_layout()
+        #define update_frames
+        # This function is called at regular intervals with changing i values for each frame
 
-    #define anim_fargs
-    anim_fargs = (
-            ax1,
-            ax2,  # axis to plot into
-            [left, right, bottom, top],  # imshow extent
-            annotation_list,
-            annotation_defaults,
-            layer_cmap, 
-            layer_norm)
+        def _update_frames(i, ax1, extent, annotation_text, annotation_defaults, cmap, norm):
+            # Clear previous frame to optimise render speed and plot imagery
+            ax1.clear()
+            ax1.imshow(ds[i, ...], cmap=cmap, norm=norm,
+                      extent=extent, interpolation='nearest')
+
+
+
+            # Add annotation text
+            ax1.annotate(annotation_text[i], **annotation_defaults)
+
+        #define anim_fargs
+        anim_fargs = (
+                ax1,
+                [left, right, bottom, top],  # imshow extent
+                annotation_list,
+                annotation_defaults,
+                layer_cmap, 
+                layer_norm)    
     
     # This is the actual animation function
     # fargs contails all the values we send to our _update_frames function. 
