@@ -145,7 +145,7 @@ def lc_hex_convert(n:int, Land_cover_layer='Level4'):
     """
     
     
-    file = open("test_colour_definitions.txt", "r")
+    file = open("draft_lc_colour_definitions.txt", "r")
 
     contents = file.read()
     valid_layer_list = ast.literal_eval(contents)
