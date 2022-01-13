@@ -51,7 +51,6 @@ def lc_colours(lc_colour_scheme, colour_bar=False):
         Name of land cover colour scheme to use.
         Valid options: 'level3', 'level4', 'lifeform_veg_cat_l4a', 'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
         'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'
-
     colour_bar : bool, optional
         Controls if colour bar labels are returned as a list for plotting a colour bar.
         Default False
@@ -90,37 +89,32 @@ def lc_colours(lc_colour_scheme, colour_bar=False):
 
 
 # plot layer from colour map
-def plot_land_cover(data, year=None, LC_layer="level4"):
+def plot_land_cover(data, year=None, layer=None):
     """
     Plot a single land cover layer with appropreate colour scheme.
     colour_arggs = arguments passed to lc_colours
     """
-    cmap, norm, cblabels = lc_colours(LC_layer, colour_bar=True)
+
+    # determine layer name if not provided
+    layer = layer if layer else data.name
+    cmap, norm, cblabels = lc_colours(layer, colour_bar=True)
 
     if year == None:
-
-        # plot the provided layer all dates provided
-        im = data.plot.imshow(
-            cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5
-        )
+        # plot all dates for the provided layer
+        im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5)
         cb = im.cbar
-        ticks = cb.get_ticks()
-        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
-        cb.set_ticklabels(cblabels)
-
-        return im
-
     else:
+        # plot only the provided year
         year_string = f"{year}-01-01"
         data = data.sel(time=year_string, method="nearest")
-
         im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, size=5)
         cb = im.colorbar
-        ticks = cb.get_ticks()
-        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
-        cb.set_ticklabels(cblabels)
 
-        return im
+    ticks = cb.get_ticks()
+    cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+    cb.set_ticklabels(cblabels)
+
+    return im
 
 
 def lc_hex_convert(n: int, Land_cover_layer="Level4"):
