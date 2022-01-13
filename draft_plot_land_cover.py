@@ -41,7 +41,7 @@ from matplotlib.animation import FuncAnimation
 sys.path.insert(1, "../Tools/")
 
 
-def lc_colours(LC_colour_scheme="Level4", colour_bar=False):
+def lc_colours(lc_colour_scheme, colour_bar=False):
     """
     fuction return custom colour map and normalisation for plotting Land Cover layers
 
@@ -55,48 +55,37 @@ def lc_colours(LC_colour_scheme="Level4", colour_bar=False):
         controls if colour bar lables are returned as a list for plotting a colour bar
 
     """
-    file = open(
-        "draft_lc_colour_definitions.txt", "r"
-    )  # read file containing all colour scheme definitions
 
-    contents = file.read()
-    valid_layer_list = ast.literal_eval(contents)
+    lc_colour_scheme = lc_colour_scheme.lower()
 
-    file.close()
+    # read file containing all colour scheme definitions
+    with open("draft_lc_colour_definitions.txt", "r") as file:
+        contents = file.read()
+        valid_layer_list = ast.literal_eval(contents)
 
-    # make string all lower case just incase
-    LC_colour_scheme = LC_colour_scheme.lower()
+    # ensure a valid colour scheme was requested
+    assert ( lc_colour_scheme in valid_layer_list.keys()), \
+             f'colour scheme must be one of [{valid_layer_list.keys()}] (got "{lc_colour_scheme}")'
 
-    if LC_colour_scheme in valid_layer_list.keys():
-        # create colour map from provided layer
-        # specify which sub-dictionary the colour scheme definitions will be taken from
-        colours = valid_layer_list[LC_colour_scheme]
+    # load selected colour scheme definition
+    colours = valid_layer_list[lc_colour_scheme]
 
-        colour_arr = []
-        cblabels = []
-        for key, value in colours.items():
-            colour_arr.append(np.array(value[:-2]) / 255)
-            cblabels.append(value[-1])
+    # create colour map
+    colour_arr = []
+    cblabels = []
+    for key, value in colours.items():
+        colour_arr.append(np.array(value[:-2]) / 255)
+        if colour_bar: cblabels.append(value[-1])
 
-        cmap = mcolours.ListedColormap(colour_arr)
-        bounds = list(colours)
-        bounds.append(255)
-        norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
+    cmap = mcolours.ListedColormap(colour_arr)
+    bounds = list(colours)
+    bounds.append(255)
+    norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
 
-        if colour_bar == False:
-
-            return (cmap, norm)  # return specified level colour scheme
-
-        else:
-
-            # return specified level colour scheme
-            return (cmap, norm, cblabels)
-
+    if colour_bar == False:
+        return (cmap, norm)
     else:
-        print(
-            f"layer name provided not a valid Land Cover layer. Please specifiy one of the following Land Cover layers {valid_layer_list.keys()}"
-        )
-        return ()
+        return (cmap, norm, cblabels)
 
 
 # plot layer from colour map
