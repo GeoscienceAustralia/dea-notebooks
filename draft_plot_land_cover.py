@@ -22,32 +22,21 @@ Functions included:
     plot_lc
     lc_colours
 
-Last modified: February 2021
+Last modified: January 2022
 
 """
 
-# Import required packages
-from dea_tools.plotting import display_map
-from matplotlib.ticker import MaxNLocator
-from matplotlib.animation import FuncAnimation
-import matplotlib.animation as animation
-import matplotlib.patheffects as PathEffects
-from dea_tools.plotting import xr_animation, rgb
-from IPython.display import Image
-import matplotlib.cm as cm
-from matplotlib import colors as mcolours
-from dea_tools.plotting import rgb
-import datacube
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-
-# mpl.use('webagg')
 import numpy as np
 import pandas as pd
-import xarray as xr
 import ast
-
 import sys
+
+from IPython.display import Image
+
+import matplotlib.pyplot as plt
+from matplotlib import colors as mcolours
+from matplotlib import patheffects
+from matplotlib.animation import FuncAnimation
 
 sys.path.insert(1, "../Tools/")
 
@@ -206,7 +195,7 @@ def lc_animation(
     left, bottom, right, top = ds.geobox.extent.boundingbox
     extent = [left, right, bottom, top]
 
-    outline = [PathEffects.withStroke(linewidth=2.5, foreground="black")]
+    outline = [patheffects.withStroke(linewidth=2.5, foreground="black")]
     annotation_defaults = {
         "xy": (1, 1),
         "xycoords": "axes fraction",
