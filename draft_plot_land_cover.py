@@ -91,8 +91,16 @@ def lc_colours(lc_colour_scheme, colour_bar=False):
 # plot layer from colour map
 def plot_land_cover(data, year=None, layer=None):
     """
-    Plot a single land cover layer with appropreate colour scheme.
-    colour_arggs = arguments passed to lc_colours
+    Plot a single land cover layer with appropriate colour scheme.
+
+    Parameters
+    ----------
+    data : xarray.DataArray
+        A dataArray containing a DEA Land Cover classification.
+    year : int, optional
+        Can be used to select to plot a specific year. If not provided, all time slices are plotted.
+    layer : string, optional
+        Name of the land cover layer to be plotted. If not provided the name on the DataArray is used.
     """
 
     # determine layer name if not provided
