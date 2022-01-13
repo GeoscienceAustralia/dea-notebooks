@@ -43,17 +43,18 @@ sys.path.insert(1, "../Tools/")
 
 def lc_colours(lc_colour_scheme, colour_bar=False):
     """
-    fuction return custom colour map and normalisation for plotting Land Cover layers
+    Creates custom colour map and normalisation for plotting the provided DEA Land Cover layer
 
     Parameters
     ----------
-    Land_cover_layer : string. land cover layer colour scheme to use
-        accepts one of the following options, 'level4', 'level3', 'lifeform_veg_cat_l4a', 'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
+    lc_colour_scheme : string
+        Name of land cover colour scheme to use.
+        Valid options: 'level3', 'level4', 'lifeform_veg_cat_l4a', 'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
         'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'
-        defaults to 'level4'
-    colour_bar : Boolean (Default False)
-        controls if colour bar lables are returned as a list for plotting a colour bar
 
+    colour_bar : bool, optional
+        Controls if colour bar labels are returned as a list for plotting a colour bar.
+        Default False
     """
 
     lc_colour_scheme = lc_colour_scheme.lower()
