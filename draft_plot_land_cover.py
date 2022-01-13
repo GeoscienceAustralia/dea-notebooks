@@ -125,11 +125,11 @@ def plot_land_cover(data, year=None, layer=None):
     return im
 
 
-def lc_hex_convert(n: int, Land_cover_layer="Level4"):
+def lc_hex_convert(n: int, layer="Level4"):
     """
     Parameters
     ----------
-    Land_cover_layer : string.
+    layer : string.
     accepts one of the following options: 'level4', 'level3', 'lifeform_veg_cat_l4a', 'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
     'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'
     defaults to 'level4'.
@@ -143,9 +143,9 @@ def lc_hex_convert(n: int, Land_cover_layer="Level4"):
     file.close()
 
     # make string all lower case just incase
-    Land_cover_layer = Land_cover_layer.lower()
+    layer = layer.lower()
 
-    colour_map = valid_layer_list[Land_cover_layer]
+    colour_map = valid_layer_list[layer]
 
     if n in colour_map:
         r, g, b = colour_map[n][0:3]
@@ -156,13 +156,13 @@ def lc_hex_convert(n: int, Land_cover_layer="Level4"):
 
         return HEX
     else:
-        print(f"ERROR: class code: {n} not valid for {Land_cover_layer}")
+        print(f"ERROR: class code: {n} not valid for {layer}")
 
 
 def lc_animation(
     ds,
     file_name="default_animation.gif",
-    Land_cover_layer="level4",
+    layer="level4",
     stacked_plot=False,
     animation_interval=500,
     width_pixels=500,
@@ -178,7 +178,7 @@ def lc_animation(
     """
 
     # create colour map and normalisation for specified lc layer
-    layer_cmap, layer_norm, cblabels = lc_colours(Land_cover_layer, colour_bar=True)
+    layer_cmap, layer_norm, cblabels = lc_colours(layer, colour_bar=True)
 
     # prepare variables needed
     # Get info on dataset dimensions
@@ -269,7 +269,7 @@ def lc_animation(
             # build colour list
             colour_list = []
             for vals in list(cliped_table):
-                x = lc_hex_convert(vals, Land_cover_layer)
+                x = lc_hex_convert(vals, layer)
                 colour_list.append(x)
 
             ax2.stackplot(date, data.values(), colors=colour_list)  # nat bare
