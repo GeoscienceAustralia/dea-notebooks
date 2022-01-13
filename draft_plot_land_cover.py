@@ -200,37 +200,35 @@ def lc_animation(
         "path_effects": outline,
     }
 
-    # define create table
 
     def create_panda(da):
         """creates a pandas dataframe listing what percentage or total area is taken up by each class in given layer for each year of dataset"""
-        list_classes = (
-            np.unique(da, return_counts=False)
-        ).tolist()  # list all class codes in dataset
-        # create empty dataframe
+        # list all class codes in dataset
+        list_classes = (np.unique(da, return_counts=False)).tolist()
+
+        # create empty dataframe & dictionary
         panda_table = pd.DataFrame(data=None, columns=list_classes)
-        date_line = {}  # empty dictionary to add lines to dataframe
+        date_line = {}
+
         # count all pixels, should be consistent
         total_pix = int(np.sum(da.isel(time=1)))
 
-        for i in range(0, len(da.time)):  # itterate through each year in dataset
+        # iterate through each year in dataset
+        for i in range(0, len(da.time)):
             date = str(da.time[i].data)[0:10]
 
-            for (
-                n
-            ) in (
-                list_classes
-            ):  # for each year itterate though each presant class number and count pixels
+            # for each year iterate though each present class number and count pixels
+            for (n) in (list_classes):
                 number_of_pixles = int(np.sum(da.isel(time=i) == n))
                 percentage = number_of_pixles / total_pix * 100
                 date_line[n] = percentage
+
             # add each year's counts to dataframe
             panda_table.loc[date] = date_line
 
-        return panda_table  # return dataframe
+        return panda_table
 
     # Get information needed to display the year in the top corner
-
     times_list = ds.time.dt.strftime("%Y").values
     text_list = [False] * len(times_list)
 
