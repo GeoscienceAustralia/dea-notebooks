@@ -141,11 +141,13 @@ def plot_land_cover(data, year=None, layer=None):
 
     # determine layer name if not provided
     layer = layer if layer else data.name
-    cmap, norm, cblabels = lc_colours(layer, colour_bar=True)
+    cmap, norm, cblabels = lc_colourmap(layer, colour_bar=True)
 
     if year == None:
         # plot all dates for the provided layer
-        im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5)
+        im = data.plot.imshow(
+            cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5
+        )
         cb = im.cbar
     else:
         # plot only the provided year
@@ -197,8 +199,8 @@ def lc_hex_convert(n: int, layer="Level4"):
 
 def lc_animation(
     ds,
-    file_name="default_animation.gif",
-    layer="level4",
+    file_name="default_animation",
+    layer=None,
     stacked_plot=False,
     animation_interval=500,
     width_pixels=500,
@@ -208,13 +210,37 @@ def lc_animation(
     creates an animation of a landcover maps though time beside corrosponding stacked plots of the landcover classes. Saves the
     animation to a file and   displays the annimation in notebook
 
-    Inputs:
-    ds : a xarray Data Array containing a multidate stack of observations of a single landcover level.
+    Inputs
+    -------
+    ds : a xarray Data Array
+        xarray containing a multi-date stack of observations of a single landcover level.
     file_name: String, optional.
+        string used to create filename for saved animation file. Default: "default_animation" code adds gif suffix.
+    layer : String, optional
+        string specifiying wich DEA land cover layer colour scheme should be used. If non provided reads data array.name from ds to determine.
+    Stacked_plot: Boolean, Optional
+        determines if a stacked plot showing the percentage of area taken up by each class in each time slice is added to the animation. Default : False
+    animation_interval : int , optional
+        How quickly the frames of the animations should be re-drawn. default : 500
+    Width_pixels : int , optional
+        how wide in pixles the animation plot should be. default : 500
+    dpi : int : optional
+        stands for 'Dots Per Inch'. passed to the fuction that saves the animation and deterimines the resolution. A higher number will produce a higher 
+        resolution image but a larger file size and slower processing. default : 400
+        
+    Returns
+    ---------
+    A gif file animation
     """
 
+    # determine layer name if not provided
+    layer = layer if layer else data.name
+
+    # add gif to end of filename
+    file_name = file_name + ".gif"
+
     # create colour map and normalisation for specified lc layer
-    layer_cmap, layer_norm, cblabels = lc_colours(layer, colour_bar=True)
+    layer_cmap, layer_norm, cblabels = lc_colourmap(layer, colour_bar=True)
 
     # prepare variables needed
     # Get info on dataset dimensions
@@ -231,19 +257,29 @@ def lc_animation(
         "textcoords": "offset points",
         "horizontalalignment": "right",
         "verticalalignment": "top",
-        "fontsize": 20,
+        "fontsize": 25,
         "color": "white",
         "path_effects": outline,
     }
 
-
-    def create_panda(da):
-        """creates a pandas dataframe listing what percentage or total area is taken up by each class in given layer for each year of dataset"""
+    def calc_class_ratio(da):
+        """creates a table listing year by year what percentage of the total area is taken up by each class.
+        
+        input
+        ------
+        da : xarray data array
+        
+        returns 
+        -------
+        ratio_table : Pandas Dataframe
+        
+        
+        """
         # list all class codes in dataset
         list_classes = (np.unique(da, return_counts=False)).tolist()
 
         # create empty dataframe & dictionary
-        panda_table = pd.DataFrame(data=None, columns=list_classes)
+        ratio_table = pd.DataFrame(data=None, columns=list_classes)
         date_line = {}
 
         # count all pixels, should be consistent
@@ -254,15 +290,15 @@ def lc_animation(
             date = str(da.time[i].data)[0:10]
 
             # for each year iterate though each present class number and count pixels
-            for (n) in (list_classes):
+            for n in list_classes:
                 number_of_pixles = int(np.sum(da.isel(time=i) == n))
                 percentage = number_of_pixles / total_pix * 100
                 date_line[n] = percentage
 
             # add each year's counts to dataframe
-            panda_table.loc[date] = date_line
+            ratio_table.loc[date] = date_line
 
-        return panda_table
+        return ratio_table
 
     # Get information needed to display the year in the top corner
     times_list = ds.time.dt.strftime("%Y").values
@@ -274,13 +310,15 @@ def lc_animation(
 
     if stacked_plot == True:
 
-        stacked_plot_table = create_panda(ds)
+        stacked_plot_table = calc_class_ratio(ds)
 
         # define fig
         # Set up figure
         fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
-        fig.set_size_inches(width * scale / 20, height * scale / 40, forward=True)
-        fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
+        fig.set_size_inches(width * scale / 20, height *
+                            scale / 40, forward=True)
+        fig.set_constrained_layout_pads(
+            w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
 
         # define update_frames
         # This function is called at regular intervals with changing i values for each frame
@@ -332,8 +370,10 @@ def lc_animation(
         fig, (ax1) = plt.subplots(
             1, 1, dpi=dpi, constrained_layout=True
         )  # test this is correct
-        fig.set_size_inches(width * scale / 20, height * scale / 40, forward=True)
-        fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
+        fig.set_size_inches(width * scale / 20, height *
+                            scale / 40, forward=True)
+        fig.set_constrained_layout_pads(
+            w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
 
         # define update_frames
         # This function is called at regular intervals with changing i values for each frame
