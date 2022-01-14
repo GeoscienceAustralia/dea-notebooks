@@ -41,51 +41,87 @@ from matplotlib.animation import FuncAnimation
 sys.path.insert(1, "../Tools/")
 
 
-def lc_colours(lc_colour_scheme, colour_bar=False):
+def lc_colours(layer):
     """
-    Creates custom colour map and normalisation for plotting the provided DEA Land Cover layer
+    returns Land Cover colour scheme definitions for the provided DEA Land Cover layer
 
     Parameters
     ----------
-    lc_colour_scheme : string
-        Name of land cover colour scheme to use.
+    layer : string
+        Name of land cover colour scheme definitions to return.
         Valid options: 'level3', 'level4', 'lifeform_veg_cat_l4a', 'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
         'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'
-    colour_bar : bool, optional
-        Controls if colour bar labels are returned as a list for plotting a colour bar.
-        Default False
+        
+    returns
+    ----------
+    colour_scheme : Dictonary 
+        a dictionary containing the class number, class name and RGBA definitions for all classes in specified DEA Land Cover layer 
     """
-
-    lc_colour_scheme = lc_colour_scheme.lower()
-
+    
+    # check layer string is lower case 
+    layer = layer.lower()
+    
     # read file containing all colour scheme definitions
     with open("draft_lc_colour_definitions.txt", "r") as file:
         contents = file.read()
         valid_layer_list = ast.literal_eval(contents)
-
+        
     # ensure a valid colour scheme was requested
-    assert ( lc_colour_scheme in valid_layer_list.keys()), \
-             f'colour scheme must be one of [{valid_layer_list.keys()}] (got "{lc_colour_scheme}")'
+    assert ( layer in valid_layer_list.keys()), \
+             f'colour scheme must be one of [{valid_layer_list.keys()}] (got "{layer}")'
+
 
     # load selected colour scheme definition
-    colours = valid_layer_list[lc_colour_scheme]
+    colour_scheme = valid_layer_list[layer]
+
+    # return colour scheme as dictionary
+    return colour_scheme
+
+
+def lc_colourmap(layer, colour_bar=False):
+    """
+    returns Land Cover colour colour map and normalisation for the provided DEA Land Cover layer, for use in plotting with Maptplotlib library
+
+    Parameters
+    ----------
+    layer : string
+        Name of land cover colour scheme to use
+        Valid options: 'level3', 'level4', 'lifeform_veg_cat_l4a', 'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
+        'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'
+    colour_bar : bool, optional
+        Controls if colour bar labels are returned as a list for plotting a colour bar.
+        Default :  False
+        
+    Returns
+    ---------
+    cmap : matplotlib colormap
+        matplotlib colormap containing the colour scheme for the specified DEA Land Cover layer
+    norm : matplotlib colormap index
+        matplotlib colormap index based on the descrete intervals of the classes in the specified DEA Land Cover layer.
+        ensures the colormap maps the colours to the class numbers correctly 
+    cblables : list
+        A list of strings containing the lables of the classes found in the chosen  DEA Land Cover layer
+     
+    """
+    # get colour definitions from lc_colours
+    lc_colour_scheme = lc_colours(layer)
 
     # create colour map
     colour_arr = []
     cblabels = []
-    for key, value in colours.items():
+    for key, value in lc_colour_scheme.items():
         colour_arr.append(np.array(value[:-2]) / 255)
         if colour_bar: cblabels.append(value[-1])
 
     cmap = mcolours.ListedColormap(colour_arr)
-    bounds = list(colours)
+    bounds = list(lc_colour_scheme)
     bounds.append(255)
     norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
 
     if colour_bar == False:
         return (cmap, norm)
     else:
-        return (cmap, norm, cblabels)
+        return (cmap, norm, cblabels)  
 
 
 # plot layer from colour map
