@@ -51,25 +51,25 @@ def lc_colours(layer):
         Name of land cover colour scheme definitions to return.
         Valid options: 'level3', 'level4', 'lifeform_veg_cat_l4a', 'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
         'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'
-        
+
     returns
     ----------
-    colour_scheme : Dictonary 
-        a dictionary containing the class number, class name and RGBA definitions for all classes in specified DEA Land Cover layer 
+    colour_scheme : Dictonary
+        a dictionary containing the class number, class name and RGBA definitions for all classes in specified DEA Land Cover layer
     """
-    
-    # check layer string is lower case 
+
+    # check layer string is lower case
     layer = layer.lower()
-    
+
     # read file containing all colour scheme definitions
     with open("draft_lc_colour_definitions.txt", "r") as file:
         contents = file.read()
         valid_layer_list = ast.literal_eval(contents)
-        
-    # ensure a valid colour scheme was requested
-    assert ( layer in valid_layer_list.keys()), \
-             f'colour scheme must be one of [{valid_layer_list.keys()}] (got "{layer}")'
 
+    # ensure a valid colour scheme was requested
+    assert (
+        layer in valid_layer_list.keys()
+    ), f'colour scheme must be one of [{valid_layer_list.keys()}] (got "{layer}")'
 
     # load selected colour scheme definition
     colour_scheme = valid_layer_list[layer]
@@ -91,17 +91,17 @@ def lc_colourmap(layer, colour_bar=False):
     colour_bar : bool, optional
         Controls if colour bar labels are returned as a list for plotting a colour bar.
         Default :  False
-        
+
     Returns
     ---------
     cmap : matplotlib colormap
         matplotlib colormap containing the colour scheme for the specified DEA Land Cover layer
     norm : matplotlib colormap index
         matplotlib colormap index based on the descrete intervals of the classes in the specified DEA Land Cover layer.
-        ensures the colormap maps the colours to the class numbers correctly 
+        ensures the colormap maps the colours to the class numbers correctly
     cblables : list
         A list of strings containing the lables of the classes found in the chosen  DEA Land Cover layer
-     
+
     """
     # get colour definitions from lc_colours
     lc_colour_scheme = lc_colours(layer)
@@ -111,7 +111,8 @@ def lc_colourmap(layer, colour_bar=False):
     cblabels = []
     for key, value in lc_colour_scheme.items():
         colour_arr.append(np.array(value[:-2]) / 255)
-        if colour_bar: cblabels.append(value[-1])
+        if colour_bar:
+            cblabels.append(value[-1])
 
     cmap = mcolours.ListedColormap(colour_arr)
     bounds = list(lc_colour_scheme)
@@ -121,7 +122,7 @@ def lc_colourmap(layer, colour_bar=False):
     if colour_bar == False:
         return (cmap, norm)
     else:
-        return (cmap, norm, cblabels)  
+        return (cmap, norm, cblabels)
 
 
 # plot layer from colour map
@@ -163,30 +164,16 @@ def plot_land_cover(data, year=None, layer=None):
     return im
 
 
-def lc_hex_convert(n: int, layer="Level4"):
+def lc_hex_convert(n: int, colour_deff: dict):
     """
     Parameters
     ----------
-    layer : string.
-    accepts one of the following options: 'level4', 'level3', 'lifeform_veg_cat_l4a', 'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
-    'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'
-    defaults to 'level4'.
+    colour_deff: dictionary
     """
 
-    file = open("draft_lc_colour_definitions.txt", "r")
-
-    contents = file.read()
-    valid_layer_list = ast.literal_eval(contents)
-
-    file.close()
-
-    # make string all lower case just incase
-    layer = layer.lower()
-
-    colour_map = valid_layer_list[layer]
-
-    if n in colour_map:
-        r, g, b = colour_map[n][0:3]
+    # check that this class number exists in the colour definition being used
+    if n in colour_deff:
+        r, g, b = colour_deff[n][0:3]
         HEX = "#%x%x%x" % (r, g, b)
 
         if len(HEX) < 7:
@@ -310,7 +297,22 @@ def lc_animation(
 
     if stacked_plot == True:
 
+        # create table for stacked plot
         stacked_plot_table = calc_class_ratio(ds)
+        
+        #create hex colour map for stacked plot
+                    # build colour list from hex vals for stacked plot
+            
+        # get colour definitions
+        colour_deff = lc_colours(layer)
+
+        # create empty list for hex vals
+        hex_colour_list = []
+
+        for vals in list(stacked_plot_table):
+            hex_val = lc_hex_convert(vals, colour_deff)
+            hex_colour_list.append(hex_val)
+
 
         # define fig
         # Set up figure
@@ -338,13 +340,19 @@ def lc_animation(
             data = cliped_table.to_dict(orient="list")
             date = cliped_table.index
 
-            # build colour list
-            colour_list = []
-            for vals in list(cliped_table):
-                x = lc_hex_convert(vals, layer)
-                colour_list.append(x)
+            # build colour list from hex vals for stacked plot
+            
+#             # get colour definitions
+#             colour_deff = lc_colours(layer)
+            
+#             # create empty list for hex vals
+#             hex_colour_list = []
+    
+#             for vals in list(cliped_table):
+#                 hex_val = lc_hex_convert(vals, colour_deff)
+#                 hex_colour_list.append(hex_val)
 
-            ax2.stackplot(date, data.values(), colors=colour_list)  # nat bare
+            ax2.stackplot(date, data.values(), colors=hex_colour_list)  # nat bare
             ax2.tick_params(axis="x", labelrotation=-45)
             ax2.margins(x=0, y=0)
 
