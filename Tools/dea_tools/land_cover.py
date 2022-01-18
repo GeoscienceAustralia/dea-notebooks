@@ -14,9 +14,10 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 Functions included:
+    get_layer_name
+    lc_colourmap
+    plot_land_cover
     lc_animation
-    plot_lc
-    lc_colours
 Last modified: January 2022
 """
 
@@ -183,13 +184,31 @@ lc_colours = {
 }
 
 
-def lc_colourmap(layer, colour_bar=False):
+def get_layer_name(layer, da):
+    aliases = {
+        'lifeform':'lifeform_veg_cat_l4a',
+        'vegetation_cover':'canopyco_veg_cat_l4d',
+        'water_seasonality':'watersea_veg_cat_l4a_au',
+        'water_state':'waterstt_wat_cat_l4a',
+        'intertidal':'inttidal_wat_cat_l4a',
+        'water_persistence':'waterper_wat_cat_l4d_au',
+        'bare_gradation':'baregrad_phy_cat_l4d_au',
+        'full_classification':'level4'
+    }
+
+    # use provided layer if able
+    layer = layer.lower() if layer else da.name
+    layer = aliases[layer] if layer in aliases.keys() else layer
+    return layer
+
+
+def lc_colourmap(colour_scheme, colour_bar=False):
     """
     returns colour map and normalisation for the provided DEA Land Cover layer, for use in plotting with Maptplotlib library
 
     Parameters
     ----------
-    layer : string
+    colour_scheme : string
         Name of land cover colour scheme to use
         Valid options: 'level3', 'level4', 'lifeform_veg_cat_l4a', 'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
         'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'
@@ -207,12 +226,12 @@ def lc_colourmap(layer, colour_bar=False):
         A list of strings containing the lables of the classes found in the chosen  DEA Land Cover layer
     """
 
-    layer = layer.lower()
+    colour_scheme = colour_scheme.lower()
     # ensure a valid colour scheme was requested
-    assert (layer in lc_colours.keys()), f'colour scheme must be one of [{lc_colours.keys()}] (got "{layer}")'
+    assert (colour_scheme in lc_colours.keys()), f'colour scheme must be one of [{lc_colours.keys()}] (got "{colour_scheme}")'
 
     # get colour definitions
-    lc_colour_scheme = lc_colours[layer]
+    lc_colour_scheme = lc_colours[colour_scheme]
 
     # create colour map
     colour_arr = []
@@ -247,15 +266,12 @@ def plot_land_cover(data, year=None, layer=None):
         Name of the land cover layer to be plotted. If not provided the name on the DataArray is used.
     """
 
-    # determine layer name if not provided
-    layer = layer if layer else data.name
+    layer = get_layer_name(layer, data)
     cmap, norm, cblabels = lc_colourmap(layer, colour_bar=True)
 
     if year == None:
         # plot all dates for the provided layer
-        im = data.plot.imshow(
-            cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5
-        )
+        im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5)
         cb = im.cbar
     else:
         # plot only the provided year
@@ -270,14 +286,9 @@ def plot_land_cover(data, year=None, layer=None):
 
     return im
 
-def rgb_to_hex(r, g, b):
-    hex = "#%x%x%x" % (r, g, b)
-    if len(hex) < 7:
-        hex = "#0" + hex[1:]
-    return hex
 
 def lc_animation(
-    ds,
+    da,
     file_name="default_animation",
     layer=None,
     stacked_plot=False,
@@ -290,7 +301,7 @@ def lc_animation(
     animation to a file and   displays the annimation in notebook
     Inputs
     -------
-    ds : a xarray Data Array
+    da : xarray.DataArray
         xarray containing a multi-date stack of observations of a single landcover level.
     file_name: String, optional.
         string used to create filename for saved animation file. Default: "default_animation" code adds gif suffix.
@@ -311,48 +322,18 @@ def lc_animation(
     A gif file animation
     """
 
-    # determine layer name if not provided
-    layer = layer if layer else data.name
-
-    # add gif to end of filename
-    file_name = file_name + ".gif"
-
-    # create colour map and normalisation for specified lc layer
-    layer_cmap, layer_norm, cblabels = lc_colourmap(layer, colour_bar=True)
-
-    # prepare variables needed
-    # Get info on dataset dimensions
-    height, width = ds.geobox.shape
-    scale = width_pixels / width
-    left, bottom, right, top = ds.geobox.extent.boundingbox
-    extent = [left, right, bottom, top]
-
-    outline = [patheffects.withStroke(linewidth=2.5, foreground="black")]
-    annotation_defaults = {
-        "xy": (1, 1),
-        "xycoords": "axes fraction",
-        "xytext": (-5, -5),
-        "textcoords": "offset points",
-        "horizontalalignment": "right",
-        "verticalalignment": "top",
-        "fontsize": 25,
-        "color": "white",
-        "path_effects": outline,
-    }
-
     def calc_class_ratio(da):
         """creates a table listing year by year what percentage of the total area is taken up by each class.
 
-        input
-        ------
-        da : xarray data array
+        Parameters
+        ----------
+        da : xarray.DataArray with time dimension
 
-        returns 
+        Returns
         -------
-        ratio_table : Pandas Dataframe
-
-
+        Pandas Dataframe : containing class percentages per year
         """
+
         # list all class codes in dataset
         list_classes = (np.unique(da, return_counts=False)).tolist()
 
@@ -378,15 +359,49 @@ def lc_animation(
 
         return ratio_table
 
+    def rgb_to_hex(r, g, b):
+        hex = "#%x%x%x" % (r, g, b)
+        if len(hex) < 7:
+            hex = "#0" + hex[1:]
+        return hex
+
+    layer = get_layer_name(layer, da)
+
+    # add gif to end of filename
+    file_name = file_name + ".gif"
+
+    # create colour map and normalisation for specified lc layer
+    layer_cmap, layer_norm, cblabels = lc_colourmap(layer, colour_bar=True)
+
+    # prepare variables needed
+    # Get info on dataset dimensions
+    height, width = da.geobox.shape
+    scale = width_pixels / width
+    left, bottom, right, top = da.geobox.extent.boundingbox
+    extent = [left, right, bottom, top]
+
+    outline = [patheffects.withStroke(linewidth=2.5, foreground="black")]
+    annotation_defaults = {
+        "xy": (1, 1),
+        "xycoords": "axes fraction",
+        "xytext": (-5, -5),
+        "textcoords": "offset points",
+        "horizontalalignment": "right",
+        "verticalalignment": "top",
+        "fontsize": 25,
+        "color": "white",
+        "path_effects": outline,
+    }
+
     # Get information needed to display the year in the top corner
-    times_list = ds.time.dt.strftime("%Y").values
+    times_list = da.time.dt.strftime("%Y").values
     text_list = [False] * len(times_list)
     annotation_list = ["\n".join([str(i) for i in (a, b) if i]) for a, b in zip(times_list, text_list)]
 
     if stacked_plot == True:
 
         # create table for stacked plot
-        stacked_plot_table = calc_class_ratio(ds)
+        stacked_plot_table = calc_class_ratio(da)
 
         # create hex colour map for stacked plot
         # build colour list from hex vals for stacked plot
@@ -411,7 +426,7 @@ def lc_animation(
             ax1.clear()
             ax2.clear()
 
-            ax1.imshow(ds[i, ...], cmap=cmap, norm=norm, extent=extent, interpolation="nearest")
+            ax1.imshow(da[i, ...], cmap=cmap, norm=norm, extent=extent, interpolation="nearest")
 
             clipped_table = stacked_plot_table.iloc[: int(i + 1)]
             data = clipped_table.to_dict(orient="list")
@@ -447,7 +462,7 @@ def lc_animation(
         def _update_frames(i, ax1, extent, annotation_text, annotation_defaults, cmap, norm):
             # Clear previous frame to optimise render speed and plot imagery
             ax1.clear()
-            ax1.imshow(ds[i, ...], cmap=cmap, norm=norm, extent=extent, interpolation="nearest")
+            ax1.imshow(da[i, ...], cmap=cmap, norm=norm, extent=extent, interpolation="nearest")
 
             # Add annotation text
             ax1.annotate(annotation_text[i], **annotation_defaults)
@@ -468,7 +483,7 @@ def lc_animation(
         fig=fig,
         func=_update_frames,
         fargs=anim_fargs,
-        frames=len(ds.time),
+        frames=len(da.time),
         interval=animation_interval,
         repeat=False,
     )
