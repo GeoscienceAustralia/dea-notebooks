@@ -294,7 +294,7 @@ def lc_animation(
     stacked_plot=False,
     animation_interval=500,
     width_pixels=500,
-    dpi=400,
+    dpi=72,
 ):
     """
     creates an animation of a landcover maps though time beside corrosponding stacked plots of the landcover classes. Saves the
@@ -454,9 +454,8 @@ def lc_animation(
 
     else: # stacked_plot = False
         # define & set up figure
-        fig, (ax1) = plt.subplots(1, 1, dpi=dpi, constrained_layout=True)
-        fig.set_size_inches(width * scale / 20, height * scale / 40, forward=True)
-        fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
+        fig, ax1 = plt.subplots(1, 1, dpi=dpi,)
+        fig.set_size_inches(width * scale / 20, height * scale / 20, forward=True)
 
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(i, ax1, extent, annotation_text, annotation_defaults, cmap, norm):
