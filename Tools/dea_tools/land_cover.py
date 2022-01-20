@@ -490,6 +490,10 @@ def lc_animation(
         fig, ax1 = plt.subplots(1, 1, dpi=dpi)
         fig.set_size_inches(width * scale, height * scale, forward=True)
 
+        #add colourbar here
+        horizontal_colorbar(fig, ax1, da[0], layer_cmap, layer_norm, cblabels)
+        
+        
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(i, ax1, extent, annotation_text, annotation_defaults, cmap, norm):
             # Clear previous frame to optimise render speed and plot imagery
