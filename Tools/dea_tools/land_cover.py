@@ -271,8 +271,12 @@ def plot_land_cover(data, year=None, layer=None):
 
     if year == None:
         # plot all dates for the provided layer
-        im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5)
-        cb = im.cbar
+        if len(data.dims) < 3:
+            im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, size=5)
+            cb = im.colorbar
+        else:
+            im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5)
+            cb = im.cbar
     else:
         # plot only the provided year
         year_string = f"{year}-01-01"
@@ -293,7 +297,7 @@ def lc_animation(
     layer=None,
     stacked_plot=False,
     animation_interval=500,
-    width_pixels=500,
+    width_pixels=25,
     dpi=72,
 ):
     """
@@ -440,7 +444,7 @@ def lc_animation(
 
         # define & set up figure
         fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
-        fig.set_size_inches(width * scale / 20, height * scale / 40, forward=True)
+        fig.set_size_inches(width * scale * 2, height * scale, forward=True)
         fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
         
         
@@ -483,8 +487,8 @@ def lc_animation(
 
     else: # stacked_plot = False
         # define & set up figure
-        fig, ax1 = plt.subplots(1, 1, dpi=dpi,)
-        fig.set_size_inches(width * scale / 20, height * scale / 20, forward=True)
+        fig, ax1 = plt.subplots(1, 1, dpi=dpi)
+        fig.set_size_inches(width * scale, height * scale, forward=True)
 
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(i, ax1, extent, annotation_text, annotation_defaults, cmap, norm):
