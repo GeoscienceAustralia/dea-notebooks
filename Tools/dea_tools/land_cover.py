@@ -271,8 +271,12 @@ def plot_land_cover(data, year=None, layer=None):
 
     if year == None:
         # plot all dates for the provided layer
-        im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5)
-        cb = im.cbar
+        if len(data.dims) < 3:
+            im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, size=5)
+            cb = im.colorbar
+        else:
+            im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5)
+            cb = im.cbar
     else:
         # plot only the provided year
         year_string = f"{year}-01-01"
