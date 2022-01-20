@@ -358,6 +358,31 @@ def lc_animation(
             ratio_table.loc[date] = date_line
 
         return ratio_table
+    
+    
+    def horizontal_colorbar(fig, ax, da, layer_cmap, layer_norm, cblabels):
+        """
+        Adds a new colorbar to the animation with apropreate land cover 
+        colours and lables
+        """
+
+        # Create new axis object for colorbar
+        cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
+
+        # Initialise color bar using plot min and max values
+        img = ax.imshow(da, cmap=layer_cmap, norm=layer_norm)
+        cb=fig.colorbar(img,
+                     cax=cax,
+                     orientation='horizontal',
+                     )
+                #set colourbar lables
+            
+        tick_font_size = 18
+        cb.ax.tick_params(labelsize=tick_font_size)
+        ticks = cb.get_ticks()
+        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+        cb.set_ticklabels(cblabels)
+
 
     def rgb_to_hex(r, g, b):
         hex = "#%x%x%x" % (r, g, b)
@@ -417,6 +442,10 @@ def lc_animation(
         fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
         fig.set_size_inches(width * scale / 20, height * scale / 40, forward=True)
         fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
+        
+        
+        #add colourbar here
+  
 
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(
