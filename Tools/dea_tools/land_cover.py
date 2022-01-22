@@ -301,9 +301,11 @@ def lc_animation(
     file_name="default_animation",
     layer=None,
     stacked_plot=False,
+    colour_bar=True,
     animation_interval=500,
     width_pixels=25,
     dpi=72,
+    ticks=True
 ):
     """
     creates an animation of a landcover maps though time beside corrosponding stacked plots of the landcover classes. Saves the
@@ -457,14 +459,13 @@ def lc_animation(
   
 
         # This function is called at regular intervals with changing i values for each frame
-        def _update_frames(
-            i, ax1, ax2, extent, annotation_text, annotation_defaults, cmap, norm
-        ):
+        def _update_frames(i, ax1, ax2, extent, annotation_text, annotation_defaults, cmap, norm):
             # Clear previous frame to optimise render speed and plot imagery
             ax1.clear()
             ax2.clear()
 
             ax1.imshow(da[i, ...], cmap=cmap, norm=norm, extent=extent, interpolation="nearest")
+            if(not ticks): ax1.set_axis_off()
 
             clipped_table = stacked_plot_table.iloc[: int(i + 1)]
             data = clipped_table.to_dict(orient="list")
@@ -496,14 +497,15 @@ def lc_animation(
         fig.set_size_inches(width * scale, height * scale, forward=True)
 
         #add colourbar here
-        horizontal_colorbar(fig, ax1, da[0], layer_cmap, layer_norm, cblabels)
-        
-        
+        if colour_bar:
+            horizontal_colorbar(fig, ax1, da[0], layer_cmap, layer_norm, cblabels)
+
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(i, ax1, extent, annotation_text, annotation_defaults, cmap, norm):
             # Clear previous frame to optimise render speed and plot imagery
             ax1.clear()
             ax1.imshow(da[i, ...], cmap=cmap, norm=norm, extent=extent, interpolation="nearest")
+            if(not ticks): ax1.set_axis_off()
 
             # Add annotation text
             ax1.annotate(annotation_text[i], **annotation_defaults)
