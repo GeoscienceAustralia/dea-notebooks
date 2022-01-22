@@ -253,7 +253,7 @@ def lc_colourmap(colour_scheme, colour_bar=False):
 
 
 # plot layer from colour map
-def plot_land_cover(data, year=None, layer=None):
+def plot_land_cover(data, year=None, layer=None, out_width=15, col_wrap=4):
     """
     Plot a single land cover layer with appropriate colour scheme.
     Parameters
@@ -269,19 +269,24 @@ def plot_land_cover(data, year=None, layer=None):
     layer = get_layer_name(layer, data)
     cmap, norm, cblabels = lc_colourmap(layer, colour_bar=True)
 
+    height, width = data.geobox.shape
+    scale = out_width / width
+
     if year == None:
         # plot all dates for the provided layer
         if len(data.dims) < 3:
-            im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, size=5)
+            im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, figsize=(width * scale, height * scale))
             cb = im.colorbar
         else:
-            im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=4, size=5)
+            if col_wrap > len(data.time): col_wrap = len(data.time)
+            im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=col_wrap,
+                                  figsize=(width * scale, (height * scale / col_wrap) * (len(data.time) / col_wrap)))
             cb = im.cbar
     else:
         # plot only the provided year
         year_string = f"{year}-01-01"
         data = data.sel(time=year_string, method="nearest")
-        im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, size=5)
+        im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, figsize=(width * scale, height * scale))
         cb = im.colorbar
 
     ticks = cb.get_ticks()
