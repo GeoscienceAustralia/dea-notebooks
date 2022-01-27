@@ -575,7 +575,9 @@ def lc_animation(
 
         #add colourbar here
         if colour_bar:
-            horizontal_colorbar(fig, ax1, da[0], layer_cmap, layer_norm, cblabels)
+            # shift plot over make room for colour bar
+            fig.subplots_adjust(right=0.825)
+            make_colorbar(fig, ax1, da[0], layer_cmap, layer_norm, cblabels)
 
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(i, ax1, extent, annotation_text, annotation_defaults, cmap, norm):
