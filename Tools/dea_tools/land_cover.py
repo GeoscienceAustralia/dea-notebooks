@@ -515,13 +515,17 @@ def lc_animation(
         # create table for stacked plot
         stacked_plot_table = calc_class_ratio(da)
 
-        # create hex colour map for stacked plot
-        # build colour list from hex vals for stacked plot
+
+        # build colour list of hex vals for stacked plot
         hex_colour_list = []
         colour_def = lc_colours[layer]
 
+        # custom error message to help if user puts incorrect layer name
         for val in list(stacked_plot_table):
-            r, g, b = colour_def[val][0:3]
+            try:
+                r, g, b = colour_def[val][0:3]
+            except KeyError:
+                raise KeyError("class number not found in colour definition. Ensure layer name provided matches the dataset being used")
             hex_val = rgb_to_hex(r,g,b)
             hex_colour_list.append(hex_val)
 
@@ -529,10 +533,7 @@ def lc_animation(
         fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
         fig.set_size_inches(width * scale * 2, height * scale, forward=True)
         fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
-        
-        
         #add colourbar here
-  
 
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(i, ax1, ax2, extent, annotation_text, annotation_defaults, cmap, norm):
@@ -585,6 +586,7 @@ def lc_animation(
 
             # Add annotation text
             ax1.annotate(annotation_text[i], **annotation_defaults)
+            
 
         # anim_fargs contains all the values we send to our _update_frames function.
         # Note the layer_cmap and layer_norm which were calculated earlier being passed through
