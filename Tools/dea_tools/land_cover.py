@@ -363,7 +363,7 @@ def lc_animation(
     file_name="default_animation",
     layer=None,
     stacked_plot=False,
-    colour_bar=True,
+    colour_bar=False,
     animation_interval=500,
     width_pixels=25,
     dpi=72,
@@ -382,6 +382,8 @@ def lc_animation(
         string specifiying wich DEA land cover layer colour scheme should be used. If non provided reads data array.name from ds to determine.
     Stacked_plot: Boolean, Optional
         determines if a stacked plot showing the percentage of area taken up by each class in each time slice is added to the animation. Default : False
+    colour_bar : Boolean, Optional
+        determines if a colour bar is generated for the animation. this is NOT recommended for use with level 4 data. Default : False
     animation_interval : int , optional
         How quickly the frames of the animations should be re-drawn. default : 500
     Width_pixels : int , optional
@@ -433,22 +435,34 @@ def lc_animation(
         return ratio_table
     
     
-    def horizontal_colorbar(fig, ax, da, layer_cmap, layer_norm, cblabels):
+    def make_colorbar(fig, ax, da, layer_cmap, layer_norm, cblabels, horizontal=False):
         """
         Adds a new colorbar to the animation with apropreate land cover 
         colours and lables
         """
-
         # Create new axis object for colorbar
-        cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
+        
+        # perameters for add_axes are [left, bottom, width, height], in fractions of total plot
+        
+        if horizontal == True: 
+            # axes settings for horizontal position
+            cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
+            
+        else:
+            
+            # axes settings for Vertical position
+            cax = fig.add_axes([0.84, 0.15, 0.03, 0.70])
 
         # Initialise color bar using plot min and max values
         img = ax.imshow(da, cmap=layer_cmap, norm=layer_norm)
         cb=fig.colorbar(img,
                      cax=cax,
-                     orientation='horizontal',
+#                      orientation='horizontal',
                      )
                 #set colourbar lables
+            
+        # apply text wrapping to lables
+        cblabels = wrap_label_txt(cblabels)
             
         tick_font_size = 18
         cb.ax.tick_params(labelsize=tick_font_size)
