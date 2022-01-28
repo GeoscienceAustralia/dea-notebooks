@@ -383,7 +383,7 @@ def lc_animation(
     Stacked_plot: Boolean, Optional
         determines if a stacked plot showing the percentage of area taken up by each class in each time slice is added to the animation. Default : False
     colour_bar : Boolean, Optional
-        determines if a colour bar is generated for the animation. this is NOT recommended for use with level 4 data. Default : False
+        determines if a colour bar is generated for the stand alone animation. this is NOT recommended for use with level 4 data. Does not work with stacked plot. Default : False
     animation_interval : int , optional
         How quickly the frames of the animations should be re-drawn. default : 500
     Width_pixels : int , optional
@@ -447,19 +447,23 @@ def lc_animation(
         if horizontal == True: 
             # axes settings for horizontal position
             cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
+                    # Initialise color bar using plot min and max values
+            img = ax.imshow(da, cmap=layer_cmap, norm=layer_norm)
+            cb=fig.colorbar(img,
+                     cax=cax,
+                      orientation='horizontal',
+                     )
             
         else:
             
             # axes settings for Vertical position
             cax = fig.add_axes([0.84, 0.15, 0.03, 0.70])
 
-        # Initialise color bar using plot min and max values
-        img = ax.imshow(da, cmap=layer_cmap, norm=layer_norm)
-        cb=fig.colorbar(img,
-                     cax=cax,
-#                      orientation='horizontal',
-                     )
-                #set colourbar lables
+            # Initialise color bar using plot min and max values
+            img = ax.imshow(da, cmap=layer_cmap, norm=layer_norm)
+            cb=fig.colorbar(img,
+                         cax=cax,)
+   
             
         # apply text wrapping to lables
         cblabels = wrap_label_txt(cblabels)
@@ -577,6 +581,7 @@ def lc_animation(
         if colour_bar:
             # shift plot over make room for colour bar
             fig.subplots_adjust(right=0.825)
+            
             make_colorbar(fig, ax1, da[0], layer_cmap, layer_norm, cblabels)
 
         # This function is called at regular intervals with changing i values for each frame
