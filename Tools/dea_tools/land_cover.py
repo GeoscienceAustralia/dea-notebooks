@@ -201,6 +201,68 @@ def get_layer_name(layer, da):
     layer = aliases[layer] if layer in aliases.keys() else layer
     return layer
 
+def wrap_label_txt(class_lablels):
+    """
+    this fuction adds new line breaks to the lables of
+    land Cover classes in order to wrap the text on colour bars and axes lables
+    for level 4 classes with very long names (Aquatic vegetation classes with 
+    details of both cover fraction and water sasonality) are cut to the first 9 'words' 
+
+    Parameters
+    --------------
+    class_lablels : a list of strings
+                    Lables of classes to have line breaks added
+
+    returns:
+    -------------
+    new_listoflabels : a list of strings
+
+    """
+    new_listoflabels = []
+
+    for label in class_lablels:
+        words = label.split()
+        x_words = len(words)
+
+        if x_words == 3:
+            new_label = words[0] + " " + words[1] + "\n " + words[2]
+
+        elif x_words == 4:
+            new_label = words[0] + " " + words[1] + "\n " + words[2] + " " + words[3]
+
+        elif x_words == 7:
+            new_label = (words[0] + " " + words[1] + "\n " + words[2] + " "
+            + words[3]+ "\n " + words[4] + " " + words[5]+ " " + words[6])
+            
+        elif x_words == 8:
+            new_label = (words[0] + " " + words[1] + "\n " + words[2] + " "
+            + words[3]+ "\n " + words[4] + " " + words[5]+ " " + words[6]
+            + " " + words[7])
+
+        elif x_words >= 9:
+            
+            if words[8] == 'Water':
+            
+                new_label = (words[0] + " " + words[1] + "\n " + words[2] + " "
+                + words[3]+ "\n " + words[4] + " " + words[5]+ " " + words[6]
+                + " " + words[7])
+
+            else:
+                
+                new_label = (words[0] + " " + words[1] + "\n " + words[2] + " "
+                + words[3]+ "\n " + words[4] + " " + words[5]+ " " + words[6]
+                + " " + words[7] + " " + words[8])
+        
+
+        try:
+            new_listoflabels.append(new_label)
+        
+        except:
+            new_listoflabels.append(label)
+        
+
+    return new_listoflabels
+
 
 def lc_colourmap(colour_scheme, colour_bar=False):
     """
@@ -301,7 +363,7 @@ def lc_animation(
     file_name="default_animation",
     layer=None,
     stacked_plot=False,
-    colour_bar=True,
+    colour_bar=False,
     animation_interval=500,
     width_pixels=25,
     dpi=72,
@@ -320,6 +382,8 @@ def lc_animation(
         string specifiying wich DEA land cover layer colour scheme should be used. If non provided reads data array.name from ds to determine.
     Stacked_plot: Boolean, Optional
         determines if a stacked plot showing the percentage of area taken up by each class in each time slice is added to the animation. Default : False
+    colour_bar : Boolean, Optional
+        determines if a colour bar is generated for the animation. this is NOT recommended for use with level 4 data. Default : False
     animation_interval : int , optional
         How quickly the frames of the animations should be re-drawn. default : 500
     Width_pixels : int , optional
@@ -371,22 +435,34 @@ def lc_animation(
         return ratio_table
     
     
-    def horizontal_colorbar(fig, ax, da, layer_cmap, layer_norm, cblabels):
+    def make_colorbar(fig, ax, da, layer_cmap, layer_norm, cblabels, horizontal=False):
         """
         Adds a new colorbar to the animation with apropreate land cover 
         colours and lables
         """
-
         # Create new axis object for colorbar
-        cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
+        
+        # perameters for add_axes are [left, bottom, width, height], in fractions of total plot
+        
+        if horizontal == True: 
+            # axes settings for horizontal position
+            cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
+            
+        else:
+            
+            # axes settings for Vertical position
+            cax = fig.add_axes([0.84, 0.15, 0.03, 0.70])
 
         # Initialise color bar using plot min and max values
         img = ax.imshow(da, cmap=layer_cmap, norm=layer_norm)
         cb=fig.colorbar(img,
                      cax=cax,
-                     orientation='horizontal',
+#                      orientation='horizontal',
                      )
                 #set colourbar lables
+            
+        # apply text wrapping to lables
+        cblabels = wrap_label_txt(cblabels)
             
         tick_font_size = 18
         cb.ax.tick_params(labelsize=tick_font_size)
@@ -439,13 +515,17 @@ def lc_animation(
         # create table for stacked plot
         stacked_plot_table = calc_class_ratio(da)
 
-        # create hex colour map for stacked plot
-        # build colour list from hex vals for stacked plot
+
+        # build colour list of hex vals for stacked plot
         hex_colour_list = []
         colour_def = lc_colours[layer]
 
+        # custom error message to help if user puts incorrect layer name
         for val in list(stacked_plot_table):
-            r, g, b = colour_def[val][0:3]
+            try:
+                r, g, b = colour_def[val][0:3]
+            except KeyError:
+                raise KeyError("class number not found in colour definition. Ensure layer name provided matches the dataset being used")
             hex_val = rgb_to_hex(r,g,b)
             hex_colour_list.append(hex_val)
 
@@ -453,10 +533,7 @@ def lc_animation(
         fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
         fig.set_size_inches(width * scale * 2, height * scale, forward=True)
         fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
-        
-        
         #add colourbar here
-  
 
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(i, ax1, ax2, extent, annotation_text, annotation_defaults, cmap, norm):
@@ -498,7 +575,9 @@ def lc_animation(
 
         #add colourbar here
         if colour_bar:
-            horizontal_colorbar(fig, ax1, da[0], layer_cmap, layer_norm, cblabels)
+            # shift plot over make room for colour bar
+            fig.subplots_adjust(right=0.825)
+            make_colorbar(fig, ax1, da[0], layer_cmap, layer_norm, cblabels)
 
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(i, ax1, extent, annotation_text, annotation_defaults, cmap, norm):
@@ -509,6 +588,7 @@ def lc_animation(
 
             # Add annotation text
             ax1.annotate(annotation_text[i], **annotation_defaults)
+            
 
         # anim_fargs contains all the values we send to our _update_frames function.
         # Note the layer_cmap and layer_norm which were calculated earlier being passed through
