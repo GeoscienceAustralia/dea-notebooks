@@ -391,6 +391,8 @@ def lc_animation(
     dpi : int : optional
         stands for 'Dots Per Inch'. passed to the fuction that saves the animation and deterimines the resolution. A higher number will produce a higher 
         resolution image but a larger file size and slower processing. default : 400
+    ticks: Boolean, Optional
+        determines if animation plot should have tick marks on axes. default : True
 
     Returns
     ---------
