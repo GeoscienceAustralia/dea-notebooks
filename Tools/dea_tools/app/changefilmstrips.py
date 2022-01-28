@@ -196,7 +196,7 @@ def run_filmstrip_app(output_name,
         time_steps = (pd.cut(ds.time.values, bins_dt, labels = labels[:-1])
                       .add_categories(labels[-1])
                       .fillna(labels[-1])) 
-        time_steps_var = xr.DataArray(time_steps, [('time', ds.time)], 
+        time_steps_var = xr.DataArray(time_steps, coords=[ds.time], 
                                       name='timestep')
 
         # Resample data temporally into time steps, and compute geomedians
