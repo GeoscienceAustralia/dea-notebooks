@@ -8,6 +8,7 @@ import warnings
 from datacube.storage import masking
 from datacube.utils import geometry
 from datacube.helpers import ga_pq_fuser
+from dea_datahandling import load_ard
 import folium
 from pyproj import Proj, transform
 import os
