@@ -119,8 +119,6 @@ def update_map_layers(self):
 
 class imageexport_app(HBox):
     
-
-
     def __init__(self):
         super().__init__()
 
@@ -156,7 +154,11 @@ class imageexport_app(HBox):
         self.vmax = 2000
         self.percentile_stretch = None  # (1, 99)
         self.power = 0.8
-        self.output_format='jpg'
+        self.output_list = [
+            ("JPG", 'jpg'),
+            ("PNG", 'png')
+        ]        
+        self.output_format = self.output_list[0][1]
         
         # Drawing params
         self.target = None
@@ -166,9 +168,7 @@ class imageexport_app(HBox):
         # Data load params
         self.rgb_array = None
         self.sensor = None
-        self.load_params = None
-        
-        
+        self.load_params = None     
 
 
         ##################
@@ -263,6 +263,8 @@ class imageexport_app(HBox):
                                                       self.basemap_list[0][1])
         dropdown_dealayer = deawidgets.create_dropdown(self.dealayer_list,
                                                        self.dealayer_list[0][1])
+        dropdown_output = deawidgets.create_dropdown(self.output_list,
+                                                     self.output_list[0][1])
         date_picker = deawidgets.create_datepicker(value=datetime.date(2021,12,31))
         dropdown_styles = deawidgets.create_dropdown(self.styles_list,
                                                      self.styles_list[0])
@@ -305,6 +307,7 @@ class imageexport_app(HBox):
         dropdown_basemap.observe(self.update_basemap, "value")
         dropdown_dealayer.observe(self.update_dealayer, "value")
         dropdown_styles.observe(self.update_styles, "value")
+        dropdown_output.observe(self.update_output, "value")
         run_button.on_click(self.run_app)
         draw_control.on_draw(update_geojson)
         
@@ -325,6 +328,8 @@ class imageexport_app(HBox):
             dropdown_styles,
             HTML('<b>Colour stretch:</b>'), 
             slider_abs,
+            HTML('<b>Output file format:</b>'), 
+            dropdown_output,
             HTML('</br>'), 
             expand,
         ])
@@ -429,16 +434,19 @@ class imageexport_app(HBox):
             
         update_map_layers(self) 
 
-    # Update product
+    # Update basemap
     def update_basemap(self, change):
         self.basemap = change.new        
         update_map_layers(self) 
         
-    # Set mode
+    # Set map layer
     def update_styles(self, change):        
         self.style = change.new 
         update_map_layers(self)
         
+    # Set mode
+    def update_output(self, change):        
+        self.output_format = change.new         
 
     def run_app(self, change):
         

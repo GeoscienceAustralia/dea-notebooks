@@ -288,7 +288,7 @@ def create_dea_wms_layer(product, date, **params):
         time = Unicode("").tag(sync=True, o=True)
 
     time_wms = TimeWMSLayer(
-        url="https://ows.dev.dea.ga.gov.au/",
+        url="https://ows.dea.ga.gov.au/",
         layers=product,
         time=date,
         format="image/png",
