@@ -201,7 +201,7 @@ def get_layer_name(layer, da):
     layer = aliases[layer] if layer in aliases.keys() else layer
     return layer
 
-def wrap_label_txt(class_lablels):
+def wrap_label_txt(class_labels):
     """
     this fuction adds new line breaks to the lables of
     land Cover classes in order to wrap the text on colour bars and axes lables
@@ -210,7 +210,7 @@ def wrap_label_txt(class_lablels):
 
     Parameters
     --------------
-    class_lablels : a list of strings
+    class_labels : a list of strings
                     Lables of classes to have line breaks added
 
     returns:
@@ -220,7 +220,7 @@ def wrap_label_txt(class_lablels):
     """
     new_listoflabels = []
 
-    for label in class_lablels:
+    for label in class_labels:
         words = label.split()
         x_words = len(words)
 
@@ -365,10 +365,10 @@ def lc_animation(
     stacked_plot=False,
     colour_bar=False,
     animation_interval=500,
-    width_pixels=25,
+    width_pixels=5,
     dpi=72,
-    ticks=True
-):
+    font_size = 10,
+    label_ax=True):
     """
     creates an animation of a landcover maps though time beside corrosponding stacked plots of the landcover classes. Saves the
     animation to a file and   displays the annimation in notebook
@@ -387,12 +387,13 @@ def lc_animation(
     animation_interval : int , optional
         How quickly the frames of the animations should be re-drawn. default : 500
     Width_pixels : int , optional
-        how wide in pixles the animation plot should be. default : 500
+        how wide in pixles the animation plot should be. default : 5
     dpi : int : optional
         stands for 'Dots Per Inch'. passed to the fuction that saves the animation and deterimines the resolution. A higher number will produce a higher 
         resolution image but a larger file size and slower processing. default : 400
-    ticks: Boolean, Optional
-        determines if animation plot should have tick marks on axes. default : True
+    font_size : into : optional. controls the size of the text which indicates the year displayed. Default 10
+    label_ax : Boolean, Optional
+        determines if animation plot should have tick marks and numbers on axes. also removes white space around plot. default : True
 
     Returns
     ---------
@@ -506,7 +507,7 @@ def lc_animation(
         "textcoords": "offset points",
         "horizontalalignment": "right",
         "verticalalignment": "top",
-        "fontsize": 25,
+        "fontsize": font_size,
         "color": "white",
         "path_effects": outline,
     }
@@ -548,7 +549,7 @@ def lc_animation(
             ax2.clear()
 
             ax1.imshow(da[i, ...], cmap=cmap, norm=norm, extent=extent, interpolation="nearest")
-            if(not ticks): ax1.set_axis_off()
+            if(not label_ax): ax1.set_axis_off()
 
             clipped_table = stacked_plot_table.iloc[: int(i + 1)]
             data = clipped_table.to_dict(orient="list")
@@ -578,7 +579,7 @@ def lc_animation(
         # define & set up figure
         fig, ax1 = plt.subplots(1, 1, dpi=dpi)
         fig.set_size_inches(width * scale, height * scale, forward=True)
-
+        if(not label_ax): fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
         #add colourbar here
         if colour_bar:
             # shift plot over make room for colour bar
@@ -591,7 +592,7 @@ def lc_animation(
             # Clear previous frame to optimise render speed and plot imagery
             ax1.clear()
             ax1.imshow(da[i, ...], cmap=cmap, norm=norm, extent=extent, interpolation="nearest")
-            if(not ticks): ax1.set_axis_off()
+            if(not label_ax): ax1.set_axis_off()
 
             # Add annotation text
             ax1.annotate(annotation_text[i], **annotation_defaults)
