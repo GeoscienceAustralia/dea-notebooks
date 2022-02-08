@@ -365,9 +365,9 @@ def lc_animation(
     stacked_plot=False,
     colour_bar=False,
     animation_interval=500,
-    width_pixels=5,
+    width_pixels=10,
     dpi=72,
-    font_size = 10,
+    font_size = 15,
     label_ax=True):
     """
     creates an animation of a landcover maps though time beside corrosponding stacked plots of the landcover classes. Saves the
