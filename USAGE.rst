@@ -19,10 +19,14 @@ Scientific papers
 
 - Chen, Y., Guerschman, J., Shendryk, Y., Henry, D., Harrison, M.T., 2021. Estimating Pasture Biomass Using Sentinel-2 Imagery and Machine Learning. Remote Sens. 2021, Vol. 13, Page 603 13, 603. https://doi.org/10.3390/RS13040603
 
+- Bishop-Taylor, R., Nanson, R., Sagar, S., Lymburner, L., 2021. Mapping Australia's dynamic coastline at mean sea level using three decades of Landsat imagery. Remote Sensing of Environment, 267, 112734. https://doi.org/10.1016/j.rse.2021.112734
+
 Courses and training
 --------------------
 - University of Newcastle, 2021. Advanced Remote Sensing Data and Applications. Graduate Certificate in Spatial Science.
 - University of Queensland, 2021. Code-Based Computing for Geospatial Data: the Digital Earth Australia (DEA) Sandbox platform. GEOM3001/7001 Advanced Earth Observation Sciences.
+- University of Tasmania, 2021. Remote Sensing: Image Analysis. Bachelor of Surveying and Spatial Sciences.
+- University of Tasmania, 2021. Spatial Research Project. Bachelor of Surveying and Spatial Sciences.
 
 Creative works
 --------------
