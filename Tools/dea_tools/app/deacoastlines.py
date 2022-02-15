@@ -5,6 +5,7 @@ interactively extract shoreline data using transects.
 
 # Import required packages
 import fiona
+import os
 import sys
 import datacube
 import warnings
@@ -88,7 +89,7 @@ class transect_app(HBox):
 
         # Create the Header widget
         header_title_text = "<h3>Digital Earth Australia Coastlines shoreline transect extraction</h3>"
-        instruction_text = "Select parameters and draw a transect on the map, or upload an vector file to extract data for multiple existing transects."
+        instruction_text = "Select parameters and draw a transect on the map to extract shoreline data. <b>In distance mode</b>, draw a transect line starting from land that crosses multiple shorelines. <br><b>In width mode</b>, draw a transect line that intersects shorelines at least twice. Alternatively, <b>upload an vector file</b> to extract shoreline data for multiple existing transects."
         self.header = deawidgets.create_html(
             f"{header_title_text}<p>{instruction_text}</p>")
         self.header.layout = make_box_layout()
@@ -124,7 +125,7 @@ class transect_app(HBox):
 
             # Test area size
             if area <= 50000:
-                confirmation_text = '<span style="color: #33cc33"> <b>(Area to extract falls within recommended limit)</b></span>'
+                confirmation_text = '<span style="color: #33cc33"> <b>(Area to extract falls within recommended limit; click "Extract shoreline data" to continue)</b></span>'
                 self.header.value = header_title_text + polyarea_text + confirmation_text
                 self.gdf_drawn = gdf
             else:
@@ -214,8 +215,11 @@ class transect_app(HBox):
             HTML("<b>Output name:</b>"), text_output_name,
             HTML(
                 '<b>Transect extraction mode:</b><br><img src="https://i.imgur.com/9fdTH9C.png">'
-            ), mode_dropdown,
-            HTML("<b></br>Output files:</b>"), checkbox_plot, checkbox_csv,
+            ), 
+            mode_dropdown,
+            HTML("<b></br>Output files:</b>"), 
+            checkbox_plot, 
+            checkbox_csv,
             HTML(
                 "</br><i><b>Advanced</b></br>Upload a GeoJSON or ESRI "
                 "Shapefile (<5 mb) containing one or more transect lines.</i>"),
@@ -286,7 +290,7 @@ class transect_app(HBox):
 
         with self.status_info:
 
-            try:
+            try:            
 
                 print('Loading vector data...', end='\r')
                 valid_files = [
@@ -337,15 +341,15 @@ class transect_app(HBox):
                     end='\r')
                 self.gdf_uploaded = None
 
-    # Set the output csv
+    # Set output name
     def update_text_output_name(self, change):
         self.output_name = change.new
 
-    # Set the output csv
+    # Output CSV
     def update_checkbox_csv(self, change):
         self.export_csv = change.new
 
-    # Set the output csv
+    # Output plot
     def update_checkbox_plot(self, change):
         self.export_plot = change.new
 
@@ -441,7 +445,13 @@ class transect_app(HBox):
 
                         # Export distance data
                         if self.export_csv:
-                            csv_filename = f"{self.output_name}.csv"
+                            
+                            # Create folder if required and set path
+                            out_dir = 'deacoastlines_outputs'
+                            os.makedirs(out_dir, exist_ok=True)                                
+                            csv_filename = f"{out_dir}/{self.output_name}.csv"
+                            
+                            # Export to file
                             dist_df.to_csv(csv_filename, index_label="Transect")
                             print(f'Distance data exported to "{csv_filename}".')
 
@@ -469,7 +479,13 @@ class transect_app(HBox):
                         # Export plot
                         with self.status_info:
                             if self.export_plot:
-                                figure_filename = f"{self.output_name}.png"
+                                
+                                # Create folder if required and set path
+                                out_dir = 'deacoastlines_outputs'
+                                os.makedirs(out_dir, exist_ok=True)                                
+                                figure_filename = f"{out_dir}/{self.output_name}.png"
+                                
+                                # Export to file
                                 fig.savefig(figure_filename)
                                 print(f'Figure exported to "{figure_filename}".')
 

@@ -784,4 +784,3 @@ class imageexport_app(HBox):
         else:
             with self.status_info:
                 print('Please draw a rectangle on the map, then press "Export imagery"')
-            
