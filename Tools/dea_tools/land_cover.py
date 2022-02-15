@@ -36,14 +36,14 @@ from matplotlib.animation import FuncAnimation
 # Define colour schemes for each land cover layer
 lc_colours = {
     'level3': {0: (255, 255, 255, 255, "No Data"),
-               111: (172, 188, 45, 255, "Cultivated terrestrial\n vegetation"),
-               112: (14, 121, 18, 255, "Natural terrestrial\n vegetation"),
-               124: (30, 191, 121, 255, "Natural aquatic\n vegetation"),
-               215: (218, 92, 105, 255, "Artificial surface"),
-               216: (243, 171, 105, 255, "Natural bare\n surface"),
+               111: (172, 188, 45, 255, "Cultivated Terrestrial Vegetation"),
+               112: (14, 121, 18, 255, "Natural Terrestrial Vegetation"),
+               124: (30, 191, 121, 255, "Natural Aquatic Vegetation"),
+               215: (218, 92, 105, 255, "Artificial Surface"),
+               216: (243, 171, 105, 255, "Natural Bare Surface"),
                220: (77, 159, 220, 255, "Water")},
     
-    'level3_change_colour_scheme' : { 0 : (255, 255, 255, 255, "No change"),
+    'level3_change_colour_scheme' : { 0 : (255, 255, 255, 255, "No Change"),
                          111112   : (14, 121, 18, 255, "CTV -> NTV"),
                          111215   : (218, 92, 105, 255, "CTV -> AS"),
                          111216   : (243, 171, 105, 255, "CTV -> BS"),
@@ -65,11 +65,11 @@ lc_colours = {
                          220216   : (243, 171, 105, 255, "Water -> BS")},
     
     'level3_change_colour_bar' : { 0 : (255, 255, 255, 255, "No change"),
-                     111   : (172, 188, 45, 255, "Change to Cultivated\n terrestrial vegetation"),                   
-                     112   : (14, 121, 18, 255, "Change to Natural\n terrestrial vegetation"),
-                     215   : (218, 92, 105, 255, "Change To Artificial\n surface"),
-                     216   : (243, 171, 105, 255, "Change To Natural\n bare surface"),
-                     220   : (77, 159, 220, 255, "Change To Water")},
+                     111   : (172, 188, 45, 255, "Change to Cultivated\n Terrestrial Vegetation"),
+                     112   : (14, 121, 18, 255, "Change to Natural\n Terrestrial Vegetation"),
+                     215   : (218, 92, 105, 255, "Change to Artificial\n Surface"),
+                     216   : (243, 171, 105, 255, "Change to Natural\n Bare Surface"),
+                     220   : (77, 159, 220, 255, "Change to Water")},
 
     'lifeform_veg_cat_l4a': {0: (255, 255, 255, 255, "No Data /\n Not vegetated"),
                              1: (14, 121, 18, 255, "Woody Vegetation"),
