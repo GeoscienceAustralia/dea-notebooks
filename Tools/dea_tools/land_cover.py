@@ -496,11 +496,13 @@ def lc_animation(
                          cax=cax,)
    
             
-        tick_font_size = 18
-        cb.ax.tick_params(labelsize=tick_font_size)
-        ticks = cb.get_ticks()
-        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
-        cb.set_ticklabels(cblabels)
+        tick_font_size = 12
+        
+        # unpack ticks and lables from cblables
+        cb_ticks =cblabels[0]
+        cblabels =cblabels[1]
+        cb.set_ticks(cb_ticks)
+        cb.ax.set_yticklabels(cblabels)
 
 
     def rgb_to_hex(r, g, b):
