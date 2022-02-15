@@ -36,11 +36,11 @@ from matplotlib.animation import FuncAnimation
 # Define colour schemes for each land cover layer
 lc_colours = {
     'level3': {0: (255, 255, 255, 255, "No Data"),
-               111: (172, 188, 45, 255, "Cultivated terrestrial vegetation"),
-               112: (14, 121, 18, 255, "Natural terrestrial vegetation"),
-               124: (30, 191, 121, 255, "Natural aquatic vegetation"),
+               111: (172, 188, 45, 255, "Cultivated terrestrial\n vegetation"),
+               112: (14, 121, 18, 255, "Natural terrestrial\n vegetation"),
+               124: (30, 191, 121, 255, "Natural aquatic\n vegetation"),
                215: (218, 92, 105, 255, "Artificial surface"),
-               216: (243, 171, 105, 255, "Natural bare surface"),
+               216: (243, 171, 105, 255, "Natural bare\n surface"),
                220: (77, 159, 220, 255, "Water")},
     
     'level3_change_colour_scheme' : { 0 : (255, 255, 255, 255, "No change"),
@@ -71,57 +71,57 @@ lc_colours = {
                      216   : (243, 171, 105, 255, "Change To Natural\n bare surface"),
                      220   : (77, 159, 220, 255, "Change To Water")},
 
-    'lifeform_veg_cat_l4a': {0: (255, 255, 255, 255, "No Data / Not vegetated"),
+    'lifeform_veg_cat_l4a': {0: (255, 255, 255, 255, "No Data /\n Not vegetated"),
                              1: (14, 121, 18, 255, "Woody Vegetation"),
-                             2: (172, 188, 45, 255, "Herbaceous Vegetation")},
+                             2: (172, 188, 45, 255, "Herbaceous\n Vegetation")},
 
-    'canopyco_veg_cat_l4d': {0: (255, 255, 255, 255, "No Data / Not vegetated"),
+    'canopyco_veg_cat_l4d': {0: (255, 255, 255, 255, "No Data /\n Not vegetated"),
                              10: (14,  121, 18,  255, "> 65 % cover"),
                              12: (45,  141, 47,  255, "40 to 65 % cover"),
                              13: (80,  160, 82,  255, "15 to 40 % cover"),
                              15: (117, 180, 118, 255, "4 to 15 % cover"),
                              16: (154, 199, 156, 255, "1 to 4 % cover")},
 
-    'waterstt_wat_cat_l4a': {0: (255, 255, 255, 255, "No Data / Not water"),
+    'waterstt_wat_cat_l4a': {0: (255, 255, 255, 255, "No Data /\n Not water"),
                              1: (77, 159, 220, 255, "water")},
 
-    'watersea_veg_cat_l4a_au': {0: (255, 255, 255, 255, "No data / Not aquatic vegetation"),
+    'watersea_veg_cat_l4a_au': {0: (255, 255, 255, 255, "No data /\n Not aquatic vegetation"),
                                 1: (25,  173, 109, 255, "> 3 months"),
                                 2: (176, 218, 201, 255, "< 3 months")},
 
-    'inttidal_wat_cat_l4a': {0: (255, 255, 255, 255, "No data / Not intertidal"),
+    'inttidal_wat_cat_l4a': {0: (255, 255, 255, 255, "No data /\n Not intertidal"),
                              3: (77, 159, 220, 255, "Intertidal")},
 
-    'waterper_wat_cat_l4d_au': {0: (255, 255, 255, 255, "No data / Not water"),
+    'waterper_wat_cat_l4d_au': {0: (255, 255, 255, 255, "No data /\n Not water"),
                                 1: (27,  85,  186, 255, "> 9 months"),
                                 7: (52,  121, 201, 255, "7 to 9 months"),
                                 8: (79,  157, 217, 255, "4 to 6 months"),
                                 9: (113, 202, 253, 255, "1 to 3 months")},
 
-    'baregrad_phy_cat_l4d_au': {0: (255, 255, 255, 255, "No data / Not bare"),
-                                10: (255, 230, 140, 255, "Sparsely vegetated (< 20% bare)"),
-                                12: (250, 210, 110, 255, "Very sparsely vegetated (20 to 60% bare)"),
-                                15: (243, 171, 105, 255, "Bare areas, unvegetated (> 60% bare)")},
+    'baregrad_phy_cat_l4d_au': {0: (255, 255, 255, 255, "No data /\n Not bare"),
+                                10: (255, 230, 140, 255, "Sparsely vegetated\n (< 20% bare)"),
+                                12: (250, 210, 110, 255, "Very sparsely\n vegetated (20 to 60% bare)"),
+                                15: (243, 171, 105, 255, "Bare areas,\n unvegetated (> 60% bare)")},
 
     'level4': {0: (255, 255, 255, 255, "No Data"),
-               1: (151, 187, 26, 255, 'Cultivated Terrestrial Vegetated:'),
-               2: (151, 187, 26, 255, 'Cultivated Terrestrial Vegetated: Woody'),
-               3: (209, 224, 51, 255, 'Cultivated Terrestrial Vegetated: Herbaceous'),
-               4: (197, 168, 71, 255, 'Cultivated Terrestrial Vegetated: Closed (> 65 %)'),
-               5: (205, 181, 75, 255, 'Cultivated Terrestrial Vegetated: Open (40 to 65 %)'),
-               6: (213, 193, 79, 255, 'Cultivated Terrestrial Vegetated: Open (15 to 40 %)'),
-               7: (228, 210, 108, 255, 'Cultivated Terrestrial Vegetated: Sparse (4 to 15 %)'),
-               8: (242, 227, 138, 255, 'Cultivated Terrestrial Vegetated: Scattered (1 to 4 %)'),
-               9: (197, 168, 71, 255, 'Cultivated Terrestrial Vegetated: Woody Closed (> 65 %)'),
-               10: (205, 181, 75, 255, 'Cultivated Terrestrial Vegetated: Woody Open (40 to 65 %)'),
-               11: (213, 193, 79, 255, 'Cultivated Terrestrial Vegetated: Woody Open (15 to 40 %)'),
-               12: (228, 210, 108, 255, 'Cultivated Terrestrial Vegetated: Woody Sparse (4 to 15 %)'),
-               13: (242, 227, 138, 255, 'Cultivated Terrestrial Vegetated: Woody Scattered (1 to 4 %)'),
-               14: (228, 224, 52, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Closed (> 65 %)'),
-               15: (235, 232, 84, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Open (40 to 65 %)'),
-               16: (242, 240, 127, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Open (15 to 40 %)'),
-               17: (249, 247, 174, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Sparse (4 to 15 %)'),
-               18: (255, 254, 222, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Scattered (1 to 4 %)'),
+               1: (151, 187, 26, 255, 'Cultivated Terrestrial\n Vegetated:'),
+               2: (151, 187, 26, 255, 'Cultivated Terrestrial\n Vegetated: Woody'),
+               3: (209, 224, 51, 255, 'Cultivated Terrestrial\n Vegetated: Herbaceous'),
+               4: (197, 168, 71, 255, 'Cultivated Terrestrial\n Vegetated: Closed\n (> 65 %)'),
+               5: (205, 181, 75, 255, 'Cultivated Terrestrial\n Vegetated: Open\n (40 to 65 %)'),
+               6: (213, 193, 79, 255, 'Cultivated Terrestrial\n Vegetated: Open\n (15 to 40 %)'),
+               7: (228, 210, 108, 255, 'Cultivated Terrestrial\n Vegetated: Sparse\n (4 to 15 %)'),
+               8: (242, 227, 138, 255, 'Cultivated Terrestrial\n Vegetated: Scattered\n (1 to 4 %)'),
+               9: (197, 168, 71, 255, 'Cultivated Terrestrial\n Vegetated: Woody Closed\n (> 65 %)'),
+               10: (205, 181, 75, 255, 'Cultivated Terrestrial\n Vegetated: Woody Open\n (40 to 65 %)'),
+               11: (213, 193, 79, 255, 'Cultivated Terrestrial\n Vegetated: Woody Open\n (15 to 40 %)'),
+               12: (228, 210, 108, 255, 'Cultivated Terrestrial\n Vegetated: Woody Sparse\n (4 to 15 %)'),
+               13: (242, 227, 138, 255, 'Cultivated Terrestrial\n Vegetated: Woody Scattered\n (1 to 4 %)'),
+               14: (228, 224, 52, 255, 'Cultivated Terrestrial\n Vegetated: Herbaceous Closed\n (> 65 %)'),
+               15: (235, 232, 84, 255, 'Cultivated Terrestrial\n Vegetated: Herbaceous Open\n (40 to 65 %)'),
+               16: (242, 240, 127, 255, 'Cultivated Terrestrial\n Vegetated: Herbaceous Open\n (15 to 40 %)'),
+               17: (249, 247, 174, 255, 'Cultivated Terrestrial\n Vegetated: Herbaceous Sparse\n (4 to 15 %)'),
+               18: (255, 254, 222, 255, 'Cultivated Terrestrial\n Vegetated: Herbaceous Scattered\n (1 to 4 %)'),
                19: (14, 121, 18, 255, 'Natural Terrestrial Vegetated:'),
                20: (26, 177, 87, 255, 'Natural Terrestrial Vegetated: Woody'),
                21: (94, 179, 31, 255, 'Natural Terrestrial Vegetated: Herbaceous'),
@@ -208,7 +208,56 @@ lc_colours = {
                102: (52, 121, 201, 255, 'Water: (Water) Non-perennial (7 to 9 months)'),
                103: (79, 157, 217, 255, 'Water: (Water) Non-perennial (4 to 6 months)'),
                104: (133, 202, 253, 255, 'Water: (Water) Non-perennial (1 to 3 months)'),
-               105: (250, 250, 250, 255, 'Water: (Snow)')}
+               105: (250, 250, 250, 255, 'Water: (Snow)')},
+    
+    'level4_colourbar_labels' : {0: (255, 255, 255, 255, "No Data"),
+               14: (228, 224, 52, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Closed (> 65 %)'),
+               15: (235, 232, 84, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Open (40 to 65 %)'),
+               16: (242, 240, 127, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Open (15 to 40 %)'),
+               17: (249, 247, 174, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Sparse (4 to 15 %)'),
+               18: (255, 254, 222, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Scattered (1 to 4 %)'),
+               27: (14, 121, 18, 255, 'Natural Terrestrial Vegetated: Woody Closed (> 65 %)'),
+               28: (45, 141, 47, 255, 'Natural Terrestrial Vegetated: Woody Open (40 to 65 %)'),
+               29: (80, 160, 82, 255, 'Natural Terrestrial Vegetated: Woody Open (15 to 40 %)'),
+               30: (117, 180, 118, 255, 'Natural Terrestrial Vegetated: Woody Sparse (4 to 15 %)'),
+               31: (154, 199, 156, 255, 'Natural Terrestrial Vegetated: Woody Scattered (1 to 4 %)'),
+               32: (119, 167, 30, 255, 'Natural Terrestrial Vegetated: Herbaceous Closed (> 65 %)'),
+               33: (136, 182, 51, 255, 'Natural Terrestrial Vegetated: Herbaceous Open (40 to 65 %)'),
+               34: (153, 196, 80, 255, 'Natural Terrestrial Vegetated: Herbaceous Open (15 to 40 %)'),
+               35: (170, 212, 113, 255, 'Natural Terrestrial Vegetated: Herbaceous Sparse (4 to 15 %)'),
+               36: (186, 226, 146, 255, 'Natural Terrestrial Vegetated: Herbaceous Scattered (1 to 4 %)'),
+
+               64: (25, 173, 109, 255, 'Natural Aquatic Vegetated: Woody Closed (> 65 %) Water > 3 months (semi-) permenant'),
+               65: (25, 173, 109, 255, 'Natural Aquatic Vegetated: Woody Closed (> 65 %) Water < 3 months (temporary or seasonal)'),
+               67: (53, 184, 132, 255, 'Natural Aquatic Vegetated: Woody Open (40 to 65 %) Water > 3 months (semi-) permenant'),
+               68: (53, 184, 132, 255, 'Natural Aquatic Vegetated: Woody Open (40 to 65 %) Water < 3 months (temporary or seasonal)'),
+               70: (93, 195, 155, 255, 'Natural Aquatic Vegetated: Woody Open (15 to 40 %) Water > 3 months (semi-) permenant'),
+               71: (93, 195, 155, 255, 'Natural Aquatic Vegetated: Woody Open (15 to 40 %) Water < 3 months (temporary or seasonal)'),
+               73: (135, 206, 178, 255, 'Natural Aquatic Vegetated: Woody Sparse (4 to 15 %) Water > 3 months (semi-) permenant'),
+               74: (135, 206, 178, 255, 'Natural Aquatic Vegetated: Woody Sparse (4 to 15 %) Water < 3 months (temporary or seasonal)'),
+               76: (176, 218, 201, 255, 'Natural Aquatic Vegetated: Woody Scattered (1 to 4 %) Water > 3 months (semi-) permenant'),
+               77: (176, 218, 201, 255, 'Natural Aquatic Vegetated: Woody Scattered (1 to 4 %) Water < 3 months (temporary or seasonal)'),
+               79: (39, 204, 139, 255, 'Natural Aquatic Vegetated: Herbaceous Closed (> 65 %) Water > 3 months (semi-) permenant'),
+               80: (39, 204, 139, 255, 'Natural Aquatic Vegetated: Herbaceous Closed (> 65 %) Water < 3 months (temporary or seasonal)'),
+               82: (66, 216, 159, 255, 'Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %) Water > 3 months (semi-) permenant'),
+               83: (66, 216, 159, 255, 'Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %) Water < 3 months (temporary or seasonal)'),
+               85: (99, 227, 180, 255, 'Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %) Water > 3 months (semi-) permenant'),
+               86: (99, 227, 180, 255, 'Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %) Water < 3 months (temporary or seasonal)'),
+               88: (135, 239, 201, 255, 'Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %) Water > 3 months (semi-) permenant'),
+               89: (135, 239, 201, 255, 'Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %) Water < 3 months (temporary or seasonal)'),
+               91: (171, 250, 221, 255, 'Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %) Water > 3 months (semi-) permenant'),
+               92: (171, 250, 221, 255, 'Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %) Water < 3 months (temporary or seasonal)'),
+               93: (218, 92, 105, 255, 'Artificial Surface:'),
+
+               95: (255, 230, 140, 255, 'Natural Surface: Sparsely vegetated'),
+               96: (250, 210, 110, 255, 'Natural Surface: Very sparsely vegetated'),
+               97: (243, 171, 105, 255, 'Natural Surface: Bare areas, unvegetated'),
+               100: (187, 220, 233, 255, 'Water: (Water) Tidal area'),
+
+               101: (27, 85, 186, 255, 'Water: (Water) Perennial (> 9 months)'),
+               102: (52, 121, 201, 255, 'Water: (Water) Non-perennial (7 to 9 months)'),
+               103: (79, 157, 217, 255, 'Water: (Water) Non-perennial (4 to 6 months)'),
+               104: (133, 202, 253, 255, 'Water: (Water) Non-perennial (1 to 3 months)')},
 }
 
 
@@ -312,8 +361,8 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     norm : matplotlib colormap index
         matplotlib colormap index based on the descrete intervals of the classes in the specified DEA Land Cover layer.
         ensures the colormap maps the colours to the class numbers correctly
-    cblables : list
-        A list of strings containing the lables of the classes found in the chosen  DEA Land Cover layer
+    cblables : array
+        A two dimentional array containing the numerical class values (first dim) and string labels (second dim) of the classes found in the chosen  DEA Land Cover layer
     """
 
     colour_scheme = colour_scheme.lower()
@@ -325,15 +374,23 @@ def lc_colourmap(colour_scheme, colour_bar=False):
 
     # create colour map
     colour_arr = []
-    cblabels = []
     for key, value in lc_colour_scheme.items():
         colour_arr.append(np.array(value[:-2]) / 255)
-        if colour_bar:
-            cblabels.append(value[-1])
 
     cmap = mcolours.ListedColormap(colour_arr)
     bounds = list(lc_colour_scheme)
     
+    if colour_bar == True:
+        if colour_scheme == 'level4':
+            # set colour labes to shortened lvevl 4 list
+            lc_colour_scheme = lc_colours['level4_colourbar_labels']
+        cb_ticks = list(lc_colour_scheme)
+        cb_labels = []
+        for x in cb_ticks:
+            label = lc_colour_scheme[x][4]
+            cb_labels.append(label)
+        cblables = [cb_ticks, cb_labels]
+        
     bounds.append(bounds[-1]+1)
     
     norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
@@ -341,7 +398,7 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     if colour_bar == False:
         return (cmap, norm)
     else:
-        return (cmap, norm, cblabels)
+        return (cmap, norm, cblables)
 
 
 # plot layer from colour map
@@ -357,8 +414,10 @@ def plot_land_cover(data, year=None, layer=None, out_width=15, col_wrap=4):
     layer : string, optional
         Name of the land cover layer to be plotted. If not provided the name on the DataArray is used.
     """
-
+    # get layer name
     layer = get_layer_name(layer, data)
+    
+    # set colour map, normalisation and labels
     cmap, norm, cblabels = lc_colourmap(layer, colour_bar=True)
 
     height, width = data.geobox.shape
@@ -378,12 +437,16 @@ def plot_land_cover(data, year=None, layer=None, out_width=15, col_wrap=4):
         # plot only the provided year
         year_string = f"{year}-01-01"
         data = data.sel(time=year_string, method="nearest")
-        im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, figsize=(width * scale, height * scale))
+        im = data.plot.imshow(cmap=cmap, norm=norm, figsize=(width * scale, height * scale))
         cb = im.colorbar
-
-    ticks = cb.get_ticks()
-    cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
-    cb.set_ticklabels(cblabels)
+                                 
+    if layer == 'level4':
+        cb_ticks =cblabels[0]
+        cblabels =cblabels[1]
+        cb.set_ticks(cb_ticks)
+        cb.ax.set_yticklabels(cblabels)
+#     cb.set_ticks(ticks + np.diff(ticks, append=(colour_bounds[-1]+1)) / 2)
+#     cb.set_ticklabels(cblabels)
 
     return im
 
