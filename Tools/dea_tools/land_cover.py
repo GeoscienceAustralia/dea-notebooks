@@ -278,69 +278,6 @@ def get_layer_name(layer, da):
     layer = aliases[layer] if layer in aliases.keys() else layer
     return layer
 
-def wrap_label_txt(class_labels):
-    """
-    this fuction adds new line breaks to the lables of
-    land Cover classes in order to wrap the text on colour bars and axes lables
-    for level 4 classes with very long names (Aquatic vegetation classes with 
-    details of both cover fraction and water sasonality) are cut to the first 9 'words' 
-
-    Parameters
-    --------------
-    class_labels : a list of strings
-                    Lables of classes to have line breaks added
-
-    returns:
-    -------------
-    new_listoflabels : a list of strings
-
-    """
-    new_listoflabels = []
-
-    for label in class_labels:
-        words = label.split()
-        x_words = len(words)
-
-        if x_words == 3:
-            new_label = words[0] + " " + words[1] + "\n " + words[2]
-
-        elif x_words == 4:
-            new_label = words[0] + " " + words[1] + "\n " + words[2] + " " + words[3]
-
-        elif x_words == 7:
-            new_label = (words[0] + " " + words[1] + "\n " + words[2] + " "
-            + words[3]+ "\n " + words[4] + " " + words[5]+ " " + words[6])
-            
-        elif x_words == 8:
-            new_label = (words[0] + " " + words[1] + "\n " + words[2] + " "
-            + words[3]+ "\n " + words[4] + " " + words[5]+ " " + words[6]
-            + " " + words[7])
-
-        elif x_words >= 9:
-            
-            if words[8] == 'Water':
-            
-                new_label = (words[0] + " " + words[1] + "\n " + words[2] + " "
-                + words[3]+ "\n " + words[4] + " " + words[5]+ " " + words[6]
-                + " " + words[7])
-
-            else:
-                
-                new_label = (words[0] + " " + words[1] + "\n " + words[2] + " "
-                + words[3]+ "\n " + words[4] + " " + words[5]+ " " + words[6]
-                + " " + words[7] + " " + words[8])
-        
-
-        try:
-            new_listoflabels.append(new_label)
-        
-        except:
-            new_listoflabels.append(label)
-        
-
-    return new_listoflabels
-
-
 def lc_colourmap(colour_scheme, colour_bar=False):
     """
     returns colour map and normalisation for the provided DEA Land Cover layer, for use in plotting with Maptplotlib library
@@ -440,13 +377,11 @@ def plot_land_cover(data, year=None, layer=None, out_width=15, col_wrap=4):
         im = data.plot.imshow(cmap=cmap, norm=norm, figsize=(width * scale, height * scale))
         cb = im.colorbar
                                  
-    if layer == 'level4':
-        cb_ticks =cblabels[0]
-        cblabels =cblabels[1]
-        cb.set_ticks(cb_ticks)
-        cb.ax.set_yticklabels(cblabels)
-#     cb.set_ticks(ticks + np.diff(ticks, append=(colour_bounds[-1]+1)) / 2)
-#     cb.set_ticklabels(cblabels)
+    # unpack ticks and lables from cblables
+    cb_ticks =cblabels[0]
+    cblabels =cblabels[1]
+    cb.set_ticks(cb_ticks)
+    cb.ax.set_yticklabels(cblabels)
 
     return im
 
@@ -560,9 +495,6 @@ def lc_animation(
             cb=fig.colorbar(img,
                          cax=cax,)
    
-            
-        # apply text wrapping to lables
-        cblabels = wrap_label_txt(cblabels)
             
         tick_font_size = 18
         cb.ax.tick_params(labelsize=tick_font_size)
