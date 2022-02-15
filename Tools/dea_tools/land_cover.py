@@ -42,6 +42,34 @@ lc_colours = {
                215: (218, 92, 105, 255, "Artificial surface"),
                216: (243, 171, 105, 255, "Natural bare surface"),
                220: (77, 159, 220, 255, "Water")},
+    
+    'level3_change_colour_scheme' : { 0 : (255, 255, 255, 255, "No change"),
+                         111112   : (14, 121, 18, 255, "CTV -> NTV"),
+                         111215   : (218, 92, 105, 255, "CTV -> AS"),
+                         111216   : (243, 171, 105, 255, "CTV -> BS"),
+                         111220   : (77, 159, 220, 255, "CTV -> Water"),
+                         112111   : (172, 188, 45, 255, "NTV -> CTV"),
+                         112215   : (218, 92, 105, 255, "NTV -> AS"),
+                         112216   : (243, 171, 105, 255, "NTV -> BS"),
+                         112220   : (77, 159, 220, 255, "NTV -> Water"),
+                         124220   : (77, 159, 220, 255, "NAV -> Water"),
+                         215111   : (172, 188, 45, 255, "AS -> CTV"),
+                         215112   : (14, 121, 18, 255, "AS -> NTV"),
+                         215216   : (243, 171, 105, 255, "AS -> BS"),
+                         215220   : (77, 159, 220, 255, "AS -> Water"),
+                         216111   : (172, 188, 45, 255, "BS -> CTV"),
+                         216112   : (14, 121, 18,  255, "BS -> NTV"),
+                         216215   : (218, 92, 105, 255, "BS -> AS"),
+                         216220   : (77, 159, 220, 255, "BS -> Water"),
+                         220112   : (14, 121, 18, 255, "Water -> NTV"),
+                         220216   : (243, 171, 105, 255, "Water -> BS")},
+    
+    'level3_change_colour_bar' : { 0 : (255, 255, 255, 255, "No change"),
+                     111   : (172, 188, 45, 255, "Change to Cultivated\n terrestrial vegetation"),                   
+                     112   : (14, 121, 18, 255, "Change to Natural\n terrestrial vegetation"),
+                     215   : (218, 92, 105, 255, "Change To Artificial\n surface"),
+                     216   : (243, 171, 105, 255, "Change To Natural\n bare surface"),
+                     220   : (77, 159, 220, 255, "Change To Water")},
 
     'lifeform_veg_cat_l4a': {0: (255, 255, 255, 255, "No Data / Not vegetated"),
                              1: (14, 121, 18, 255, "Woody Vegetation"),
@@ -305,7 +333,9 @@ def lc_colourmap(colour_scheme, colour_bar=False):
 
     cmap = mcolours.ListedColormap(colour_arr)
     bounds = list(lc_colour_scheme)
-    bounds.append(255)
+    
+    bounds.append(bounds[-1]+1)
+    
     norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
 
     if colour_bar == False:
@@ -387,7 +417,7 @@ def lc_animation(
     animation_interval : int , optional
         How quickly the frames of the animations should be re-drawn. default : 500
     Width_pixels : int , optional
-        how wide in pixles the animation plot should be. default : 5
+        how wide in pixles the animation plot should be. default : 10
     dpi : int : optional
         stands for 'Dots Per Inch'. passed to the fuction that saves the animation and deterimines the resolution. A higher number will produce a higher 
         resolution image but a larger file size and slower processing. default : 400
