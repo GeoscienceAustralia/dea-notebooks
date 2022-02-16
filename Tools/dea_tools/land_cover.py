@@ -65,11 +65,12 @@ lc_colours = {
                          220216   : (243, 171, 105, 255, "Water -> BS")},
     
     'level3_change_colour_bar' : { 0 : (255, 255, 255, 255, "No change"),
-                     111   : (172, 188, 45, 255, "Change to Cultivated\n Terrestrial Vegetation"),
-                     112   : (14, 121, 18, 255, "Change to Natural\n Terrestrial Vegetation"),
-                     215   : (218, 92, 105, 255, "Change to Artificial\n Surface"),
-                     216   : (243, 171, 105, 255, "Change to Natural\n Bare Surface"),
-                     220   : (77, 159, 220, 255, "Change to Water")},
+                     111   : (172, 188, 45, 255, "Changed to Cultivated\n Terrestrial Vegetation"),
+                     112   : (14, 121, 18, 255, "Changed to Natural\n Terrestrial Vegetation"),
+                     124   : (30, 191, 121, 255, "Changed to Natural\n Aquatic Vegetation"),
+                     215   : (218, 92, 105, 255, "Changed to Artificial\n Surface"),
+                     216   : (243, 171, 105, 255, "Changed to Natural\n Bare Surface"),
+                     220   : (77, 159, 220, 255, "Changed to Water")},
 
     'lifeform_veg_cat_l4a': {0: (255, 255, 255, 255, "No Data /\n Not vegetated"),
                              1: (14, 121, 18, 255, "Woody Vegetation"),
@@ -296,10 +297,10 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     cmap : matplotlib colormap
         matplotlib colormap containing the colour scheme for the specified DEA Land Cover layer
     norm : matplotlib colormap index
-        matplotlib colormap index based on the descrete intervals of the classes in the specified DEA Land Cover layer.
+        matplotlib colormap index based on the discrete intervals of the classes in the specified DEA Land Cover layer.
         ensures the colormap maps the colours to the class numbers correctly
     cblables : array
-        A two dimentional array containing the numerical class values (first dim) and string labels (second dim) of the classes found in the chosen  DEA Land Cover layer
+        A two dimentional array containing the numerical class values (first dim) and string labels (second dim) of the classes found in the chosen DEA Land Cover layer
     """
 
     colour_scheme = colour_scheme.lower()
@@ -407,7 +408,7 @@ def lc_animation(
     file_name: String, optional.
         string used to create filename for saved animation file. Default: "default_animation" code adds gif suffix.
     layer : String, optional
-        string specifiying wich DEA land cover layer colour scheme should be used. If non provided reads data array.name from ds to determine.
+        string specifiying wich DEA Land Cover layer colour scheme should be used. If non provided reads data array.name from ds to determine.
     Stacked_plot: Boolean, Optional
         determines if a stacked plot showing the percentage of area taken up by each class in each time slice is added to the animation. Default : False
     colour_bar : Boolean, Optional
@@ -468,12 +469,11 @@ def lc_animation(
     
     def make_colorbar(fig, ax, da, layer_cmap, layer_norm, cblabels, horizontal=False):
         """
-        Adds a new colorbar to the animation with apropreate land cover 
-        colours and lables
+        Adds a new colorbar to the animation with appropriate land cover
+        colours and labels
         """
         # Create new axis object for colorbar
-        
-        # perameters for add_axes are [left, bottom, width, height], in fractions of total plot
+        # parameters for add_axes are [left, bottom, width, height], in fractions of total plot
         
         if horizontal == True: 
             # axes settings for horizontal position
@@ -492,9 +492,7 @@ def lc_animation(
 
             # Initialise color bar using plot min and max values
             img = ax.imshow(da, cmap=layer_cmap, norm=layer_norm)
-            cb=fig.colorbar(img,
-                         cax=cax,)
-   
+            cb=fig.colorbar(img, cax=cax,)
             
         tick_font_size = 12
         
