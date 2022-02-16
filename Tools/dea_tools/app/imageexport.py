@@ -302,19 +302,43 @@ def plot_data(self, fname):
                   f'radius and {self.unsharp_mask_amount} amount')
         to_plot = unsharp_mask(to_plot, 
                                radius=self.unsharp_mask_radius, 
-                               amount=self.unsharp_mask_amount)
+                               amount=self.unsharp_mask_amount)       
 
-    # Plot RGB
-    fig, ax = plt.subplots(1, 1, figsize=(12, 9))
+    
+    # Create figure with aspect ratio of data
+    fig = plt.figure(dpi=100)
+    fig.set_size_inches(10, 10 / (to_plot.shape[1] / to_plot.shape[0]))
+
+    # Remove axes to plot just array data
+    ax = plt.Axes(fig, [0., 0., 1., 1.],)
+    ax.set_axis_off()
+    fig.add_axes(ax)
+
+    # Add data to plot
     ax.imshow(to_plot)
-
-    # Export to file
-    plt.imsave(fname=fname,
-               arr=np.ascontiguousarray(to_plot),
-               format=self.output_format)
+        
+    # If a min DPI is specified and image is less than DPI
+    if (self.dpi > 0) and (to_plot.shape[1] < self.dpi * 10):
+        
+        # Export figure to file using exact DPI
+        with self.status_info:
+            print(f'\nExporting image at {self.dpi} DPI')
+        fig.savefig(fname.replace('resolution', 
+                                  f'resolution, {self.dpi} DPI'), 
+                    dpi=self.dpi)
+        
+    # If no minumum DPI is specified, export raw array data in native
+    # resolution
+    else:
+        plt.imsave(fname=fname,
+                   arr=np.ascontiguousarray(to_plot),
+                   format=self.output_format)
+        
+    # Add plot preview below map and finish
     plt.show()
     with self.status_info:
         print(f'\nImage successfully exported to:\n{fname}.')
+    
 
 
 
@@ -363,6 +387,7 @@ class imageexport_app(HBox):
         self.unsharp_mask_radius = 20
         self.unsharp_mask_amount = 0.3
         self.max_size = False
+        self.dpi = 0
 
         # Drawing params
         self.target = None
@@ -511,19 +536,26 @@ class imageexport_app(HBox):
         checkbox_unsharp_mask = deawidgets.create_checkbox(
             self.unsharp_mask, 'Enable', layout={'width': '100%'})
         text_unsharp_mask_radius = widgets.FloatText(value=20,
+                                                     step=1,
                                                      description='Radius',
                                                      layout={'width': '100%',
                                                              'margin': '0px',
                                                              'padding': '0px',
                                                              'display': 'none'})
         text_unsharp_mask_amount = widgets.FloatText(value=0.3,
+                                                     step=0.1,
                                                      description='Amount',
                                                      layout={'width': '100%',
                                                              'margin': '0px',
                                                              'padding': '0px',
                                                              'display': 'none'})
         checkbox_max_size = deawidgets.create_checkbox(
-            self.unsharp_mask, 'Enable')
+            self.unsharp_mask, 'Enable')        
+        text_dpi = widgets.IntText(value=0, 
+                                     description="", 
+                                     step=50, 
+                                     layout={'width': '85%'})
+        html_dpi = HTML('</br>Minimum DPI for image export</br>(100 DPI = 1000 pixels wide):')        
         expand_box = widgets.VBox([HTML('Resolution (metres):'),
                                    text_resolution,
                                    checkbox_pansharpen,
@@ -534,7 +566,9 @@ class imageexport_app(HBox):
                                    text_unsharp_mask_radius,
                                    text_unsharp_mask_amount,
                                    HTML('</br>Override maximum size limit: (use with caution; may cause memory issues/crashes)'),
-                                   checkbox_max_size],
+                                   checkbox_max_size,
+                                   html_dpi,
+                                   text_dpi],
                                   layout={'overflow': 'hidden'},
                                  )
 
@@ -546,6 +580,7 @@ class imageexport_app(HBox):
         self.checkbox_pansharpen = checkbox_pansharpen
         self.text_unsharp_mask_radius = text_unsharp_mask_radius
         self.text_unsharp_mask_amount = text_unsharp_mask_amount
+        self.html_dpi = html_dpi
 
         ####################################
         # UPDATE FUNCTIONS FOR EACH WIDGET #
@@ -569,6 +604,7 @@ class imageexport_app(HBox):
         text_unsharp_mask_radius.observe(self.update_text_unsharp_mask_radius, "value")
         text_unsharp_mask_amount.observe(self.update_text_unsharp_mask_amount, "value")
         checkbox_max_size.observe(self.update_checkbox_max_size, "value")
+        text_dpi.observe(self.update_dpi, "value")
         
 
         ##################################
@@ -603,20 +639,20 @@ class imageexport_app(HBox):
         #       0   1    2   3   4   5   6   7    8   9
         #     ---------------------------------------------
         # 0   | Header                         | Map sel. |
-        #     ---------------------------------------------
+        #     |-------------------------------------------|
         # 1   | Params |                                  |
         # 2   |        |                                  |
         # 3   |        |                                  |
         # 4   |        |               Map                |
         # 5   |        |                                  |
-        #     ----------                                  |
+        #     |--------|                                  |
         # 6   |  Run   |                                  |
-        #     ---------------------------------------------
+        #     |-------------------------------------------|
         # 7   |   Status info   |      Figure/output      |
         # 8   |                 |                         |
         # 9   |                 |                         |
         # 10  |                 |                         |
-        # 11  | ------------------------------------------|
+        # 11  ---------------------------------------------
 
         # Create the layout #[rowspan, colspan]
         grid = GridspecLayout(12, 10, height="1400px", width="auto")
@@ -688,6 +724,15 @@ class imageexport_app(HBox):
     # Override max size limit
     def update_checkbox_max_size(self, change):
         self.max_size = change.new
+        
+    # Override min DPI
+    def update_dpi(self, change):
+        self.dpi = change.new
+        
+        # Update DPI helper text to give output resolution
+        self.html_dpi.value = (f'</br>Minimum DPI for image export</br>'
+                               f'({change.new} DPI = {change.new * 10} '
+                               f'pixels wide):')
 
     # Update resolution
     def update_text_resolution(self, change):
