@@ -279,6 +279,7 @@ def get_layer_name(layer, da):
     layer = aliases[layer] if layer in aliases.keys() else layer
     return layer
 
+
 def lc_colourmap(colour_scheme, colour_bar=False):
     """
     returns colour map and normalisation for the provided DEA Land Cover layer, for use in plotting with Maptplotlib library
@@ -330,7 +331,6 @@ def lc_colourmap(colour_scheme, colour_bar=False):
         cblables = [cb_ticks, cb_labels]
         
     bounds.append(bounds[-1]+1)
-    
     norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
 
     if colour_bar == False:
@@ -395,12 +395,12 @@ def lc_animation(
     colour_bar=False,
     animation_interval=500,
     width_pixels=10,
-    dpi=72,
+    dpi=150,
     font_size = 15,
     label_ax=True):
     """
     creates an animation of a landcover maps though time beside corrosponding stacked plots of the landcover classes. Saves the
-    animation to a file and   displays the annimation in notebook
+    animation to a file and displays the animation in notebook
     Inputs
     -------
     da : xarray.DataArray
@@ -418,9 +418,9 @@ def lc_animation(
     Width_pixels : int , optional
         how wide in pixles the animation plot should be. default : 10
     dpi : int : optional
-        stands for 'Dots Per Inch'. passed to the fuction that saves the animation and deterimines the resolution. A higher number will produce a higher 
-        resolution image but a larger file size and slower processing. default : 400
-    font_size : into : optional. controls the size of the text which indicates the year displayed. Default 10
+        stands for 'Dots Per Inch'. passed to the fuction that saves the animation and determines the resolution. A higher number will produce a higher
+        resolution image but a larger file size and slower processing. default : 150
+    font_size : into : optional. controls the size of the text which indicates the year displayed. Default 15
     label_ax : Boolean, Optional
         determines if animation plot should have tick marks and numbers on axes. also removes white space around plot. default : True
 
@@ -480,13 +480,8 @@ def lc_animation(
             cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
                     # Initialise color bar using plot min and max values
             img = ax.imshow(da, cmap=layer_cmap, norm=layer_norm)
-            cb=fig.colorbar(img,
-                     cax=cax,
-                      orientation='horizontal',
-                     )
-            
+            cb=fig.colorbar(img, cax=cax, orientation='horizontal')
         else:
-            
             # axes settings for Vertical position
             cax = fig.add_axes([0.84, 0.15, 0.03, 0.70])
 
@@ -546,7 +541,6 @@ def lc_animation(
 
         # create table for stacked plot
         stacked_plot_table = calc_class_ratio(da)
-
 
         # build colour list of hex vals for stacked plot
         hex_colour_list = []
