@@ -113,11 +113,11 @@ lc_colours = {
                6: (213, 193, 79, 255, 'Cultivated Terrestrial\n Vegetated: Open\n (15 to 40 %)'),
                7: (228, 210, 108, 255, 'Cultivated Terrestrial\n Vegetated: Sparse\n (4 to 15 %)'),
                8: (242, 227, 138, 255, 'Cultivated Terrestrial\n Vegetated: Scattered\n (1 to 4 %)'),
-               9: (197, 168, 71, 255, 'Cultivated Terrestrial\n Vegetated: Woody Closed\n (> 65 %)'),
-               10: (205, 181, 75, 255, 'Cultivated Terrestrial\n Vegetated: Woody Open\n (40 to 65 %)'),
-               11: (213, 193, 79, 255, 'Cultivated Terrestrial\n Vegetated: Woody Open\n (15 to 40 %)'),
-               12: (228, 210, 108, 255, 'Cultivated Terrestrial\n Vegetated: Woody Sparse\n (4 to 15 %)'),
-               13: (242, 227, 138, 255, 'Cultivated Terrestrial\n Vegetated: Woody Scattered\n (1 to 4 %)'),
+#                9: (197, 168, 71, 255, 'Cultivated Terrestrial\n Vegetated: Woody Closed\n (> 65 %)'),
+#                10: (205, 181, 75, 255, 'Cultivated Terrestrial\n Vegetated: Woody Open\n (40 to 65 %)'),
+#                11: (213, 193, 79, 255, 'Cultivated Terrestrial\n Vegetated: Woody Open\n (15 to 40 %)'),
+#                12: (228, 210, 108, 255, 'Cultivated Terrestrial\n Vegetated: Woody Sparse\n (4 to 15 %)'),
+#                13: (242, 227, 138, 255, 'Cultivated Terrestrial\n Vegetated: Woody Scattered\n (1 to 4 %)'),
                14: (228, 224, 52, 255, 'Cultivated Terrestrial\n Vegetated: Herbaceous Closed\n (> 65 %)'),
                15: (235, 232, 84, 255, 'Cultivated Terrestrial\n Vegetated: Herbaceous Open\n (40 to 65 %)'),
                16: (242, 240, 127, 255, 'Cultivated Terrestrial\n Vegetated: Herbaceous Open\n (15 to 40 %)'),
@@ -141,24 +141,24 @@ lc_colours = {
                34: (153, 196, 80, 255, 'Natural Terrestrial Vegetated: Herbaceous Open (15 to 40 %)'),
                35: (170, 212, 113, 255, 'Natural Terrestrial Vegetated: Herbaceous Sparse (4 to 15 %)'),
                36: (186, 226, 146, 255, 'Natural Terrestrial Vegetated: Herbaceous Scattered (1 to 4 %)'),
-               37: (86, 236, 231, 255, 'Cultivated Aquatic Vegetated:'),
-               38: (61, 170, 140, 255, 'Cultivated Aquatic Vegetated: Woody'),
-               39: (82, 231, 172, 255, 'Cultivated Aquatic Vegetated: Herbaceous'),
-               40: (43, 210, 203, 255, 'Cultivated Aquatic Vegetated: Closed (> 65 %)'),
-               41: (73, 222, 216, 255, 'Cultivated Aquatic Vegetated: Open (40 to 65 %)'),
-               42: (110, 233, 228, 255, 'Cultivated Aquatic Vegetated: Open (15 to 40 %)'),
-               43: (149, 244, 240, 255, 'Cultivated Aquatic Vegetated: Sparse (4 to 15 %)'),
-               44: (187, 255, 252, 255, 'Cultivated Aquatic Vegetated: Scattered (1 to 4 %)'),
-               45: (43, 210, 203, 255, 'Cultivated Aquatic Vegetated: Woody Closed (> 65 %)'),
-               46: (73, 222, 216, 255, 'Cultivated Aquatic Vegetated: Woody Open (40 to 65 %)'),
-               47: (110, 233, 228, 255, 'Cultivated Aquatic Vegetated: Woody Open (15 to 40 %)'),
-               48: (149, 244, 240, 255, 'Cultivated Aquatic Vegetated: Woody Sparse (4 to 15 %)'),
-               49: (187, 255, 252, 255, 'Cultivated Aquatic Vegetated: Woody Scattered (1 to 4 %)'),
-               50: (82, 231, 196, 255, 'Cultivated Aquatic Vegetated: Herbaceous Closed (> 65 %)'),
-               51: (113, 237, 208, 255, 'Cultivated Aquatic Vegetated: Herbaceous Open (40 to 65 %)'),
-               52: (144, 243, 220, 255, 'Cultivated Aquatic Vegetated: Herbaceous Open (15 to 40 %)'),
-               53: (175, 249, 232, 255, 'Cultivated Aquatic Vegetated: Herbaceous Sparse (4 to 15 %)'),
-               54: (207, 255, 244, 255, 'Cultivated Aquatic Vegetated: Herbaceous Scattered (1 to 4 %)'),
+#                37: (86, 236, 231, 255, 'Cultivated Aquatic Vegetated:'),
+#                38: (61, 170, 140, 255, 'Cultivated Aquatic Vegetated: Woody'),
+#                39: (82, 231, 172, 255, 'Cultivated Aquatic Vegetated: Herbaceous'),
+#                40: (43, 210, 203, 255, 'Cultivated Aquatic Vegetated: Closed (> 65 %)'),
+#                41: (73, 222, 216, 255, 'Cultivated Aquatic Vegetated: Open (40 to 65 %)'),
+#                42: (110, 233, 228, 255, 'Cultivated Aquatic Vegetated: Open (15 to 40 %)'),
+#                43: (149, 244, 240, 255, 'Cultivated Aquatic Vegetated: Sparse (4 to 15 %)'),
+#                44: (187, 255, 252, 255, 'Cultivated Aquatic Vegetated: Scattered (1 to 4 %)'),
+#                45: (43, 210, 203, 255, 'Cultivated Aquatic Vegetated: Woody Closed (> 65 %)'),
+#                46: (73, 222, 216, 255, 'Cultivated Aquatic Vegetated: Woody Open (40 to 65 %)'),
+#                47: (110, 233, 228, 255, 'Cultivated Aquatic Vegetated: Woody Open (15 to 40 %)'),
+#                48: (149, 244, 240, 255, 'Cultivated Aquatic Vegetated: Woody Sparse (4 to 15 %)'),
+#                49: (187, 255, 252, 255, 'Cultivated Aquatic Vegetated: Woody Scattered (1 to 4 %)'),
+#                50: (82, 231, 196, 255, 'Cultivated Aquatic Vegetated: Herbaceous Closed (> 65 %)'),
+#                51: (113, 237, 208, 255, 'Cultivated Aquatic Vegetated: Herbaceous Open (40 to 65 %)'),
+#                52: (144, 243, 220, 255, 'Cultivated Aquatic Vegetated: Herbaceous Open (15 to 40 %)'),
+#                53: (175, 249, 232, 255, 'Cultivated Aquatic Vegetated: Herbaceous Sparse (4 to 15 %)'),
+#                54: (207, 255, 244, 255, 'Cultivated Aquatic Vegetated: Herbaceous Scattered (1 to 4 %)'),
                55: (30, 191, 121, 255, 'Natural Aquatic Vegetated:'),
                56: (18, 142, 148, 255, 'Natural Aquatic Vegetated: Woody'),
                57: (112, 234, 134, 255, 'Natural Aquatic Vegetated: Herbaceous'),
@@ -209,7 +209,8 @@ lc_colours = {
                102: (52, 121, 201, 255, 'Water: (Water) Non-perennial (7 to 9 months)'),
                103: (79, 157, 217, 255, 'Water: (Water) Non-perennial (4 to 6 months)'),
                104: (133, 202, 253, 255, 'Water: (Water) Non-perennial (1 to 3 months)'),
-               105: (250, 250, 250, 255, 'Water: (Snow)')},
+#                105: (250, 250, 250, 255, 'Water: (Snow)')
+              },
     
     'level4_colourbar_labels' : {0: (255, 255, 255, 255, "No Data"),
                14: (228, 224, 52, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Closed (> 65 %)'),
@@ -228,26 +229,16 @@ lc_colours = {
                35: (170, 212, 113, 255, 'Natural Terrestrial Vegetated: Herbaceous Sparse (4 to 15 %)'),
                36: (186, 226, 146, 255, 'Natural Terrestrial Vegetated: Herbaceous Scattered (1 to 4 %)'),
 
-               64: (25, 173, 109, 255, 'Natural Aquatic Vegetated: Woody Closed (> 65 %) Water > 3 months (semi-) permenant'),
-               65: (25, 173, 109, 255, 'Natural Aquatic Vegetated: Woody Closed (> 65 %) Water < 3 months (temporary or seasonal)'),
-               67: (53, 184, 132, 255, 'Natural Aquatic Vegetated: Woody Open (40 to 65 %) Water > 3 months (semi-) permenant'),
-               68: (53, 184, 132, 255, 'Natural Aquatic Vegetated: Woody Open (40 to 65 %) Water < 3 months (temporary or seasonal)'),
-               70: (93, 195, 155, 255, 'Natural Aquatic Vegetated: Woody Open (15 to 40 %) Water > 3 months (semi-) permenant'),
-               71: (93, 195, 155, 255, 'Natural Aquatic Vegetated: Woody Open (15 to 40 %) Water < 3 months (temporary or seasonal)'),
-               73: (135, 206, 178, 255, 'Natural Aquatic Vegetated: Woody Sparse (4 to 15 %) Water > 3 months (semi-) permenant'),
-               74: (135, 206, 178, 255, 'Natural Aquatic Vegetated: Woody Sparse (4 to 15 %) Water < 3 months (temporary or seasonal)'),
-               76: (176, 218, 201, 255, 'Natural Aquatic Vegetated: Woody Scattered (1 to 4 %) Water > 3 months (semi-) permenant'),
-               77: (176, 218, 201, 255, 'Natural Aquatic Vegetated: Woody Scattered (1 to 4 %) Water < 3 months (temporary or seasonal)'),
-               79: (39, 204, 139, 255, 'Natural Aquatic Vegetated: Herbaceous Closed (> 65 %) Water > 3 months (semi-) permenant'),
-               80: (39, 204, 139, 255, 'Natural Aquatic Vegetated: Herbaceous Closed (> 65 %) Water < 3 months (temporary or seasonal)'),
-               82: (66, 216, 159, 255, 'Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %) Water > 3 months (semi-) permenant'),
-               83: (66, 216, 159, 255, 'Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %) Water < 3 months (temporary or seasonal)'),
-               85: (99, 227, 180, 255, 'Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %) Water > 3 months (semi-) permenant'),
-               86: (99, 227, 180, 255, 'Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %) Water < 3 months (temporary or seasonal)'),
-               88: (135, 239, 201, 255, 'Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %) Water > 3 months (semi-) permenant'),
-               89: (135, 239, 201, 255, 'Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %) Water < 3 months (temporary or seasonal)'),
-               91: (171, 250, 221, 255, 'Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %) Water > 3 months (semi-) permenant'),
-               92: (171, 250, 221, 255, 'Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %) Water < 3 months (temporary or seasonal)'),
+               65: (25, 173, 109, 255, 'Natural Aquatic Vegetated: Woody Closed (> 65 %)'),
+               68: (53, 184, 132, 255, 'Natural Aquatic Vegetated: Woody Open (40 to 65 %)'),
+               71: (93, 195, 155, 255, 'Natural Aquatic Vegetated: Woody Open (15 to 40 %)'),
+               74: (135, 206, 178, 255, 'Natural Aquatic Vegetated: Woody Sparse (4 to 15 %)'),
+               77: (176, 218, 201, 255, 'Natural Aquatic Vegetated: Woody Scattered (1 to 4 %)'),
+               80: (39, 204, 139, 255, 'Natural Aquatic Vegetated: Herbaceous Closed (> 65 %)'),
+               83: (66, 216, 159, 255, 'Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %)'),
+               86: (99, 227, 180, 255, 'Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %)'),
+               89: (135, 239, 201, 255, 'Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %)'),
+               92: (171, 250, 221, 255, 'Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %)'),
                93: (218, 92, 105, 255, 'Artificial Surface:'),
 
                95: (255, 230, 140, 255, 'Natural Surface: Sparsely vegetated'),
@@ -328,7 +319,6 @@ def lc_colourmap(colour_scheme, colour_bar=False):
         for x in cb_ticks:
             label = lc_colour_scheme[x][4]
             cb_labels.append(label)
-        cblables = [cb_ticks, cb_labels]
         
     bounds.append(bounds[-1]+1)
     norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
@@ -336,11 +326,11 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     if colour_bar == False:
         return (cmap, norm)
     else:
-        return (cmap, norm, cblables)
+        return (cmap, norm, cb_labels, cb_ticks)
 
 
 # plot layer from colour map
-def plot_land_cover(data, year=None, layer=None, out_width=15, col_wrap=4):
+def plot_land_cover(data, year=None, layer=None, out_width=20, col_wrap=4):
     """
     Plot a single land cover layer with appropriate colour scheme.
     Parameters
@@ -356,7 +346,7 @@ def plot_land_cover(data, year=None, layer=None, out_width=15, col_wrap=4):
     layer = get_layer_name(layer, data)
     
     # set colour map, normalisation and labels
-    cmap, norm, cblabels = lc_colourmap(layer, colour_bar=True)
+    cmap, norm, cb_labels, cb_ticks = lc_colourmap(layer, colour_bar=True)
 
     height, width = data.geobox.shape
     scale = out_width / width
@@ -377,12 +367,14 @@ def plot_land_cover(data, year=None, layer=None, out_width=15, col_wrap=4):
         data = data.sel(time=year_string, method="nearest")
         im = data.plot.imshow(cmap=cmap, norm=norm, figsize=(width * scale, height * scale))
         cb = im.colorbar
-                                 
-    # unpack ticks and lables from cblables
-    cb_ticks =cblabels[0]
-    cblabels =cblabels[1]
-    cb.set_ticks(cb_ticks)
-    cb.ax.set_yticklabels(cblabels)
+
+    if layer == 'level4':
+        cb.set_ticks(cb_ticks)
+        cb.ax.set_yticklabels(cb_labels)
+    else:
+        ticks = cb.get_ticks()
+        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+        cb.set_ticklabels(cb_labels)
 
     return im
 
