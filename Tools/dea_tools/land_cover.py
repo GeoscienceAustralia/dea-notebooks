@@ -270,6 +270,29 @@ def get_layer_name(layer, da):
     layer = aliases[layer] if layer in aliases.keys() else layer
     return layer
 
+def make_colorbar(fig, ax, cb_cmap, cb_norm, cb_labels, cb_ticks, horizontal=False):
+    """
+    Adds a new colorbar with appropriate land cover colours and labels
+    """
+    # Create new axis object for colorbar
+    # parameters for add_axes are [left, bottom, width, height], in fractions of total plot
+
+    fig.subplots_adjust(right=0.825)
+
+    # settings for different axis positions
+    if horizontal:
+        cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
+        orient='horizontal'
+    else:
+        cax = fig.add_axes([0.84, 0.15, 0.02, 0.70])
+        orient='vertical'
+
+    img = ax.imshow([cb_ticks], cmap=cb_cmap, norm=cb_norm)
+    cb=fig.colorbar(img, cax=cax, orientation=orient)
+
+    cb.ax.tick_params(labelsize=12)
+    cb.set_ticks(cb_ticks + np.diff(cb_ticks, append=cb_ticks[-1]+1) / 2)
+    cb.set_ticklabels(cb_labels)
 
 def lc_colourmap(colour_scheme, colour_bar=False):
     """
@@ -317,11 +340,10 @@ def lc_colourmap(colour_scheme, colour_bar=False):
         cb_ticks = list(lc_colour_scheme)
         cb_labels = []
         for x in cb_ticks:
-            label = lc_colour_scheme[x][4]
-            cb_labels.append(label)
+            cb_labels.append(lc_colour_scheme[x][4])
         
     bounds.append(bounds[-1]+1)
-    norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
+    norm = mcolours.BoundaryNorm(np.array(bounds), cmap.N)
 
     if colour_bar == False:
         return (cmap, norm)
@@ -330,7 +352,7 @@ def lc_colourmap(colour_scheme, colour_bar=False):
 
 
 # plot layer from colour map
-def plot_land_cover(data, year=None, layer=None, out_width=20, col_wrap=4):
+def plot_land_cover(data, year=None, layer=None, out_width=15, cols=4,):
     """
     Plot a single land cover layer with appropriate colour scheme.
     Parameters
@@ -344,36 +366,38 @@ def plot_land_cover(data, year=None, layer=None, out_width=20, col_wrap=4):
     """
     # get layer name
     layer = get_layer_name(layer, data)
-    
-    # set colour map, normalisation and labels
-    cmap, norm, cb_labels, cb_ticks = lc_colourmap(layer, colour_bar=True)
+
+    # get colour map, normalisation
+    cmap, norm = lc_colourmap(layer)
+    cb_colours = 'level4_colourbar_labels' if layer == 'level4' else layer
+    # get colour bar colours
+    cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap(cb_colours, colour_bar=True)
 
     height, width = data.geobox.shape
     scale = out_width / width
 
-    if year == None:
-        # plot all dates for the provided layer
-        if len(data.dims) < 3:
-            im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, figsize=(width * scale, height * scale))
-            cb = im.colorbar
-        else:
-            if col_wrap > len(data.time): col_wrap = len(data.time)
-            im = data.plot.imshow(cmap=cmap, norm=norm, add_colorbar=True, col="time", col_wrap=col_wrap,
-                                  figsize=(width * scale, (height * scale / col_wrap) * (len(data.time) / col_wrap)))
-            cb = im.cbar
-    else:
-        # plot only the provided year
+    if year:
         year_string = f"{year}-01-01"
         data = data.sel(time=year_string, method="nearest")
-        im = data.plot.imshow(cmap=cmap, norm=norm, figsize=(width * scale, height * scale))
-        cb = im.colorbar
 
-    if layer == 'level4':
-        cb.set_ticks(cb_ticks)
-        cb.ax.set_yticklabels(cb_labels)
+    # plot all dates for the provided layer
+    if len(data.dims) < 3:
+        fig, ax = plt.subplots()
+        fig.set_size_inches(width * scale, height * scale)
+        make_colorbar(fig, ax, cb_cmap, cb_norm, cb_labels, cb_ticks)
+        im = ax.imshow(data, cmap=cmap, norm=norm, interpolation="nearest")
     else:
-        cb.set_ticks(cb_ticks + np.diff(cb_ticks, append=cb_ticks[-1]+1) / 2)
-        cb.set_ticklabels(cb_labels)
+        if cols > len(data.time): cols = len(data.time)
+        rows = int((len(data.time) + cols-1)/cols)
+
+        fig, ax = plt.subplots(nrows=rows, ncols=cols)
+        fig.set_size_inches(width * scale, (height * scale / cols) * (len(data.time) / cols))
+
+        make_colorbar(fig, ax.flat[0], cb_cmap, cb_norm, cb_labels, cb_ticks)
+
+        for a, b in enumerate(ax.flat):
+            if a < data.shape[0]:
+                im = b.imshow(data[a], cmap=cmap, norm=norm, interpolation="nearest")
 
     return im
 
@@ -456,37 +480,6 @@ def lc_animation(
             ratio_table.loc[date] = date_line
 
         return ratio_table
-    
-    
-    def make_colorbar(fig, ax, da, layer_cmap, layer_norm, cblabels, horizontal=False):
-        """
-        Adds a new colorbar to the animation with appropriate land cover
-        colours and labels
-        """
-        # Create new axis object for colorbar
-        # parameters for add_axes are [left, bottom, width, height], in fractions of total plot
-        
-        if horizontal == True: 
-            # axes settings for horizontal position
-            cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
-                    # Initialise color bar using plot min and max values
-            img = ax.imshow(da, cmap=layer_cmap, norm=layer_norm)
-            cb=fig.colorbar(img, cax=cax, orientation='horizontal')
-        else:
-            # axes settings for Vertical position
-            cax = fig.add_axes([0.84, 0.15, 0.03, 0.70])
-
-            # Initialise color bar using plot min and max values
-            img = ax.imshow(da, cmap=layer_cmap, norm=layer_norm)
-            cb=fig.colorbar(img, cax=cax,)
-            
-        tick_font_size = 12
-        
-        # unpack ticks and lables from cblables
-        cb_ticks =cblabels[0]
-        cblabels =cblabels[1]
-        cb.set_ticks(cb_ticks)
-        cb.ax.set_yticklabels(cblabels)
 
 
     def rgb_to_hex(r, g, b):
@@ -501,7 +494,7 @@ def lc_animation(
     file_name = file_name + ".gif"
 
     # create colour map and normalisation for specified lc layer
-    layer_cmap, layer_norm, cblabels = lc_colourmap(layer, colour_bar=True)
+    layer_cmap, layer_norm, cb_labels, cb_ticks = lc_colourmap(layer, colour_bar=True)
 
     # prepare variables needed
     # Get info on dataset dimensions
@@ -550,7 +543,6 @@ def lc_animation(
         fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
         fig.set_size_inches(width * scale * 2, height * scale, forward=True)
         fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
-        #add colourbar here
 
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(i, ax1, ax2, extent, annotation_text, annotation_defaults, cmap, norm):
@@ -592,10 +584,7 @@ def lc_animation(
         if(not label_ax): fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
         #add colourbar here
         if colour_bar:
-            # shift plot over make room for colour bar
-            fig.subplots_adjust(right=0.825)
-            
-            make_colorbar(fig, ax1, da[0], layer_cmap, layer_norm, cblabels)
+            make_colorbar(fig, ax1, layer_cmap, layer_norm, cb_labels, cb_ticks)
 
         # This function is called at regular intervals with changing i values for each frame
         def _update_frames(i, ax1, extent, annotation_text, annotation_defaults, cmap, norm):
