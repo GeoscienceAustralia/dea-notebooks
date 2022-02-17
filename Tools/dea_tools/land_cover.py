@@ -312,7 +312,7 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     
     if colour_bar == True:
         if colour_scheme == 'level4':
-            # set colour labes to shortened lvevl 4 list
+            # set colour labels to shortened level 4 list
             lc_colour_scheme = lc_colours['level4_colourbar_labels']
         cb_ticks = list(lc_colour_scheme)
         cb_labels = []
@@ -372,8 +372,7 @@ def plot_land_cover(data, year=None, layer=None, out_width=20, col_wrap=4):
         cb.set_ticks(cb_ticks)
         cb.ax.set_yticklabels(cb_labels)
     else:
-        ticks = cb.get_ticks()
-        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+        cb.set_ticks(cb_ticks + np.diff(cb_ticks, append=cb_ticks[-1]+1) / 2)
         cb.set_ticklabels(cb_labels)
 
     return im
