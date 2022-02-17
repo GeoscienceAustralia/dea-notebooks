@@ -27,7 +27,7 @@ import ipywidgets as widgets
 from traitlets import Unicode
 
 
-def create_datepicker(description='', layout={'width': '85%'}):
+def create_datepicker(description='', value=None, layout={'width': '85%'}):
     '''
     Create a DatePicker widget
     
@@ -48,7 +48,8 @@ def create_datepicker(description='', layout={'width': '85%'}):
 
     date_picker = widgets.DatePicker(description=description,
                                      layout=layout,
-                                     disabled=False)
+                                     disabled=False,
+                                     value=value)
 
     return date_picker
 
@@ -222,7 +223,8 @@ def create_html(value):
 def create_map(map_center=(-28, 135),
                zoom_level=4,
                basemap=leaflet.basemaps.OpenStreetMap.Mapnik,
-               basemap_name='Open Street Map'):
+               basemap_name='Open Street Map',
+               **kwargs):
     '''
     Create an interactive ipyleaflet map
     
@@ -255,12 +257,13 @@ def create_map(map_center=(-28, 135),
     m = leaflet.Map(center=map_center,
                     zoom=zoom_level,
                     basemap=basemap_tiles,
-                    scroll_wheel_zoom=True)
+                    scroll_wheel_zoom=True,
+                    **kwargs)
 
     return m
 
 
-def create_dea_wms_layer(product, date):
+def create_dea_wms_layer(product, date, **params):
     '''
     Create a Digital Earth Australia WMS layer to add to a map
     
@@ -291,6 +294,7 @@ def create_dea_wms_layer(product, date):
         format="image/png",
         transparent=True,
         attribution="Digital Earth Australia",
+        **params
     )
 
     return time_wms
