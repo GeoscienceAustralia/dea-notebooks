@@ -84,7 +84,7 @@ lc_colours = {
                              16: (154, 199, 156, 255, "1 to 4 % cover")},
 
     'waterstt_wat_cat_l4a': {0: (255, 255, 255, 255, "No Data /\n Not water"),
-                             1: (77, 159, 220, 255, "water")},
+                             1: (77, 159, 220, 255, "Water")},
 
     'watersea_veg_cat_l4a_au': {0: (255, 255, 255, 255, "No data /\n Not aquatic vegetation"),
                                 1: (25,  173, 109, 255, "> 3 months"),
@@ -239,7 +239,7 @@ lc_colours = {
                86: (99, 227, 180, 255, 'Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %)'),
                89: (135, 239, 201, 255, 'Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %)'),
                92: (171, 250, 221, 255, 'Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %)'),
-               93: (218, 92, 105, 255, 'Artificial Surface:'),
+               93: (218, 92, 105, 255, 'Artificial Surface'),
 
                95: (255, 230, 140, 255, 'Natural Surface: Sparsely vegetated'),
                96: (250, 210, 110, 255, 'Natural Surface: Very sparsely vegetated'),
