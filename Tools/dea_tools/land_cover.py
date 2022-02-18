@@ -36,11 +36,11 @@ from matplotlib.animation import FuncAnimation
 # Define colour schemes for each land cover layer
 lc_colours = {
     'level3': {0: (255, 255, 255, 255, "No Data"),
-               111: (172, 188, 45, 255, "Cultivated Terrestrial Vegetation"),
-               112: (14, 121, 18, 255, "Natural Terrestrial Vegetation"),
-               124: (30, 191, 121, 255, "Natural Aquatic Vegetation"),
+               111: (172, 188, 45, 255, "Cultivated Terrestrial\n Vegetation"),
+               112: (14, 121, 18, 255, "Natural Terrestrial\n Vegetation"),
+               124: (30, 191, 121, 255, "Natural Aquatic\n Vegetation"),
                215: (218, 92, 105, 255, "Artificial Surface"),
-               216: (243, 171, 105, 255, "Natural Bare Surface"),
+               216: (243, 171, 105, 255, "Natural Bare\n Surface"),
                220: (77, 159, 220, 255, "Water")},
     
     'level3_change_colour_scheme' : { 0 : (255, 255, 255, 255, "No Change"),
