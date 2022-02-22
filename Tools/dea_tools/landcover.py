@@ -392,10 +392,11 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         cmap, norm = lc_colourmap(measurement)
     except AssertionError:
 
-        raise KeyError('The dataset provided does not have a valid '
-                       'name. Please specify which DEA Landcover measurement is being '
-                       'plotted by providing the name using the "measurement" variable'
-                       '. For example (measurement = "full_classification")')
+        raise KeyError('Could not automatically determine colour scheme from'
+                       f'DataArray name {measurement}. Please specify which '
+                       'DEA Landcover measurement is being plotted by providing'
+                       'the name using the "measurement" variable For example'
+                       '(measurement = "full_classification")')
 
     cb_colours = 'level4_colourbar_labels' if measurement == 'level4' else measurement
     # get colour bar colours
@@ -549,10 +550,11 @@ def lc_animation(
             measurement, colour_bar=True)
     except AssertionError:
 
-        raise KeyError('The dataset provided does not have a valid '
-                       'name. Please specify which DEA Landcover measurement is being '
-                       'plotted by providing the name using the "measurement" variable'
-                       '. For example (measurement = "full_classification")')
+        raise KeyError(f'Could not automatically determine colour scheme from '
+                       f'DataArray name {measurement}. Please specify which '
+                       'DEA Landcover measurement is being plotted by providing '
+                       'the name using the "measurement" variable For example '
+                       '(measurement = "full_classification")')
 
     # Prepare variables needed
     # Get info on dataset dimensions
