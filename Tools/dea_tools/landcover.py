@@ -35,7 +35,7 @@ from matplotlib import colors as mcolours
 from matplotlib import patheffects
 from matplotlib.animation import FuncAnimation
 
-# Define colour schemes for each land cover layer
+# Define colour schemes for each land cover measurement
 lc_colours = {
     'level3': {0: (255, 255, 255, 255, "No Data"),
                111: (172, 188, 45, 255, "Cultivated Terrestrial\n Vegetation"),
@@ -252,7 +252,7 @@ lc_colours = {
 }
 
 
-def get_layer_name(layer, da):
+def get_layer_name(measurement, da):
     aliases = {
         'lifeform': 'lifeform_veg_cat_l4a',
         'vegetation_cover': 'canopyco_veg_cat_l4d',
@@ -264,19 +264,20 @@ def get_layer_name(layer, da):
         'full_classification': 'level4'
     }
 
-    # Use provided layer if able
-    layer = layer.lower() if layer else da.name
-    layer = aliases[layer] if layer in aliases.keys() else layer
-    return layer
+    # Use provided measurement if able
+    measurement = measurement.lower() if measurement else da.name
+    measurement = aliases[measurement] if measurement in aliases.keys(
+    ) else measurement
+    return measurement
 
 
-def make_colorbar(fig, ax, cb_cmap, cb_norm, cb_labels, cb_ticks, 
+def make_colorbar(fig, ax, cb_cmap, cb_norm, cb_labels, cb_ticks,
                   horizontal=False):
     """
     Adds a new colorbar with appropriate land cover colours and labels
     """
     # Create new axis object for colorbar
-    # parameters for add_axes are [left, bottom, width, height], in 
+    # parameters for add_axes are [left, bottom, width, height], in
     # fractions of total plot
 
     fig.subplots_adjust(right=0.825)
@@ -300,7 +301,7 @@ def make_colorbar(fig, ax, cb_cmap, cb_norm, cb_labels, cb_ticks,
 def lc_colourmap(colour_scheme, colour_bar=False):
     """
     Returns colour map and normalisation for the provided DEA Land Cover
-    layer, for use in plotting with Matplotlib library
+    measurement, for use in plotting with Matplotlib library
 
     Parameters
     ----------
@@ -317,21 +318,26 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     ---------
     cmap : matplotlib colormap
         Matplotlib colormap containing the colour scheme for the
-        specified DEA Land Cover layer.
+        specified DEA Land Cover measurement.
     norm : matplotlib colormap index
         Matplotlib colormap index based on the discrete intervals of the
-        classes in the specified DEA Land Cover layer. Ensures the
+        classes in the specified DEA Land Cover measurement. Ensures the
         colormap maps the colours to the class numbers correctly.
     cblables : array
         A two dimentional array containing the numerical class values
         (first dim) and string labels (second dim) of the classes found
-        in the chosen DEA Land Cover layer.
+        in the chosen DEA Land Cover measurement.
     """
 
     colour_scheme = colour_scheme.lower()
     # Ensure a valid colour scheme was requested
+#     try:
     assert (colour_scheme in lc_colours.keys(
     )), f'colour scheme must be one of [{lc_colours.keys()}] (got "{colour_scheme}")'
+
+#     ('The dataset provided does not have a valid '
+#     'name. Please specify which DEA Landcover measurement is being plotted '
+#     'by providing the name using the "measurement" variable. For example (measurement = "full_classification")')
 
     # Get colour definitions
     lc_colour_scheme = lc_colours[colour_scheme]
@@ -362,10 +368,10 @@ def lc_colourmap(colour_scheme, colour_bar=False):
         return (cmap, norm, cb_labels, cb_ticks)
 
 
-def plot_land_cover(data, year=None, layer=None, out_width=15, cols=4,):
+def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     """
-    Plot a single land cover layer with appropriate colour scheme.
-    
+    Plot a single land cover measurement with appropriate colour scheme.
+
     Parameters
     ----------
     data : xarray.DataArray
@@ -373,16 +379,25 @@ def plot_land_cover(data, year=None, layer=None, out_width=15, cols=4,):
     year : int, optional
         Can be used to select to plot a specific year. If not provided,
         all time slices are plotted.
-    layer : string, optional
-        Name of the land cover layer to be plotted. If not provided the
-        name on the DataArray is used.
+    measurement : string, optional
+        Name of the DEA land cover classification to be plotted. Passed to 
+        lc_colourmap to specify which colour scheme will ve used. If non 
+        provided, reads data array name from `da` to determine.
     """
-    # get layer name
-    layer = get_layer_name(layer, data)
+    # get measurement name
+    measurement = get_layer_name(measurement, data)
 
     # get colour map, normalisation
-    cmap, norm = lc_colourmap(layer)
-    cb_colours = 'level4_colourbar_labels' if layer == 'level4' else layer
+    try:
+        cmap, norm = lc_colourmap(measurement)
+    except AssertionError:
+
+        raise KeyError('The dataset provided does not have a valid '
+                       'name. Please specify which DEA Landcover measurement is being '
+                       'plotted by providing the name using the "measurement" variable'
+                       '. For example (measurement = "full_classification")')
+
+    cb_colours = 'level4_colourbar_labels' if measurement == 'level4' else measurement
     # get colour bar colours
     cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap(
         cb_colours, colour_bar=True)
@@ -394,7 +409,7 @@ def plot_land_cover(data, year=None, layer=None, out_width=15, cols=4,):
         year_string = f"{year}-01-01"
         data = data.sel(time=year_string, method="nearest")
 
-    # plot all dates for the provided layer
+    # plot all dates for the provided measurement
     if len(data.dims) < 3:
         fig, ax = plt.subplots()
         fig.set_size_inches(width * scale, height * scale)
@@ -422,7 +437,7 @@ def plot_land_cover(data, year=None, layer=None, out_width=15, cols=4,):
 def lc_animation(
         da,
         file_name="default_animation",
-        layer=None,
+        measurement=None,
         stacked_plot=False,
         colour_bar=False,
         animation_interval=500,
@@ -434,7 +449,7 @@ def lc_animation(
     Creates an animation of DEA Landcover though time beside 
     corresponding stacked plots of the landcover classes. Saves the
     animation to a file and displays the animation in notebook.
-    
+
     Inputs
     -------
     da : xarray.DataArray
@@ -443,10 +458,10 @@ def lc_animation(
     file_name: string, optional.
         string used to create filename for saved animation file.
         Default: "default_animation" code adds .gif suffix.
-    layer : string, optional
-        string specifying wich DEA Land Cover layer colour scheme should
-        be used. If non provided, reads data array name from `da` to 
-        determine.
+    measurement : string, optional
+        Name of the DEA land cover classification to be plotted. Passed to 
+        lc_colourmap to specify which colour scheme will ve used. If non 
+        provided, reads data array name from `da` to determine.
     Stacked_plot: boolean, optional
         Determines if a stacked plot showing the percentage of area
         taken up by each class in each time slice is added to the
@@ -523,14 +538,21 @@ def lc_animation(
             hex = "#0" + hex[1:]
         return hex
 
-    layer = get_layer_name(layer, da)
+    measurement = get_layer_name(measurement, da)
 
     # Add gif to end of filename
     file_name = file_name + ".gif"
 
-    # Create colour map and normalisation for specified lc layer
-    layer_cmap, layer_norm, cb_labels, cb_ticks = lc_colourmap(
-        layer, colour_bar=True)
+    # Create colour map and normalisation for specified lc measurement
+    try:
+        layer_cmap, layer_norm, cb_labels, cb_ticks = lc_colourmap(
+            measurement, colour_bar=True)
+    except AssertionError:
+
+        raise KeyError('The dataset provided does not have a valid '
+                       'name. Please specify which DEA Landcover measurement is being '
+                       'plotted by providing the name using the "measurement" variable'
+                       '. For example (measurement = "full_classification")')
 
     # Prepare variables needed
     # Get info on dataset dimensions
@@ -565,16 +587,16 @@ def lc_animation(
 
         # Build colour list of hex vals for stacked plot
         hex_colour_list = []
-        colour_def = lc_colours[layer]
+        colour_def = lc_colours[measurement]
 
-        # Custom error message to help if user puts incorrect layer name
+        # Custom error message to help if user puts incorrect measurement name
         for val in list(stacked_plot_table):
             try:
                 r, g, b = colour_def[val][0:3]
             except KeyError:
                 raise KeyError(
                     "class number not found in colour definition. "
-                    "Ensure layer name provided matches the dataset being used")
+                    "Ensure measurement name provided matches the dataset being used")
             hex_val = rgb_to_hex(r, g, b)
             hex_colour_list.append(hex_val)
 
@@ -584,9 +606,9 @@ def lc_animation(
         fig.set_constrained_layout_pads(
             w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
 
-        # This function is called at regular intervals with changing i 
+        # This function is called at regular intervals with changing i
         # values for each frame
-        def _update_frames(i, ax1, ax2, extent, annotation_text, 
+        def _update_frames(i, ax1, ax2, extent, annotation_text,
                            annotation_defaults, cmap, norm):
             # Clear previous frame to optimise render speed and plot imagery
             ax1.clear()
@@ -609,9 +631,9 @@ def lc_animation(
             ax1.annotate(annotation_text[i], **annotation_defaults)
             ax2.annotate(annotation_text[i], **annotation_defaults)
 
-        # anim_fargs contains all the values we send to our 
+        # anim_fargs contains all the values we send to our
         # _update_frames function.
-        # Note the layer_cmap and layer_norm which were calculated 
+        # Note the layer_cmap and layer_norm which were calculated
         # earlier being passed through
         anim_fargs = (
             ax1,
@@ -635,9 +657,9 @@ def lc_animation(
             make_colorbar(fig, ax1, layer_cmap,
                           layer_norm, cb_labels, cb_ticks)
 
-        # This function is called at regular intervals with changing i 
+        # This function is called at regular intervals with changing i
         # values for each frame
-        def _update_frames(i, ax1, extent, annotation_text, 
+        def _update_frames(i, ax1, extent, annotation_text,
                            annotation_defaults, cmap, norm):
             # Clear previous frame to optimise render speed and plot imagery
             ax1.clear()
@@ -649,9 +671,9 @@ def lc_animation(
             # Add annotation text
             ax1.annotate(annotation_text[i], **annotation_defaults)
 
-        # anim_fargs contains all the values we send to our 
+        # anim_fargs contains all the values we send to our
         # _update_frames function.
-        # Note the layer_cmap and layer_norm which were calculated 
+        # Note the layer_cmap and layer_norm which were calculated
         # earlier being passed through
         anim_fargs = (
             ax1,
