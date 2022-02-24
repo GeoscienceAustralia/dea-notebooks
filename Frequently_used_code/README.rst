@@ -9,7 +9,6 @@ A recipe book of simple code examples demonstrating how to perform common geospa
 
    Analyse_multiple_polygons.ipynb
    Animated_timeseries.ipynb
-   Animated_Land_Cover_plots.ipynb
    Calculating_band_indices.ipynb
    Contour_extraction.ipynb
    Detecting_seasonality.ipynb
@@ -22,6 +21,9 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Generating_geomedian_composites.ipynb
    Image_segmentation.ipynb
    Imagery_on_web_map.ipynb
+   Land_cover_animated_plots.ipynb
+   Land_cover_change_mapping.ipynb
+   Land_cover_pixel_drill.ipynb
    Machine_learning_with_ODC.ipynb
    Masking_data.ipynb
    Opening_GeoTIFFs_NetCDFs.ipynb
