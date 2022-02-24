@@ -6,9 +6,6 @@ Python functions and algorithms developed to assist in analysing Digital Earth A
 **Loading data**
 
 -  ``dea_tools.datahandling``: Loading and handling DEA data (e.g. combining multiple products, handling CRSs, pansharpening)
--  ``dea_tools.bom``: Loading Bureau of Meteorology water data service data (e.g. guage data, discharge data)
--  ``dea_tools.climate``: Retrieving and manipulating gridded climate data (e.g. ERA5)
--  ``dea_tools.waterbodies``: Loading and processing DEA Waterbodies data (e.g. finding and loading waterbody timeseries data)
 
 **Plotting and transforming data**
 
@@ -29,10 +26,13 @@ Python functions and algorithms developed to assist in analysing Digital Earth A
 
 -  ``dea_tools.dask``: Parallel processing with Dask (e.g. creating Dask clusters for scalable analysis)
 
-**Coastal analysis**
+**Domain-specific analysis**
 
+-  ``dea_tools.land_cover``: Functions for plotting Digital Earth Australia Land Cover data.
 -  ``dea_tools.coastal``: Coastal and intertidal analysis tools (e.g. tidal tagging, coastal change timeseries)
-
+-  ``dea_tools.bom``: Loading Bureau of Meteorology water data service data (e.g. guage data, discharge data)
+-  ``dea_tools.climate``: Retrieving and manipulating gridded climate data (e.g. ERA5)
+-  ``dea_tools.waterbodies``: Loading and processing DEA Waterbodies data (e.g. finding and loading waterbody timeseries data)
 
 Installation
 ------------
