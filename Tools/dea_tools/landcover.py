@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Land_cover_plotting.py
 """
 Description: This file contains a set of python functions for plotting 
@@ -261,7 +262,8 @@ def get_layer_name(measurement, da):
         'intertidal': 'inttidal_wat_cat_l4a',
         'water_persistence': 'waterper_wat_cat_l4d_au',
         'bare_gradation': 'baregrad_phy_cat_l4d_au',
-        'full_classification': 'level4'
+        'full_classification': 'level4',
+        'level_4': 'level4'
     }
 
     # Use provided measurement if able
@@ -296,6 +298,33 @@ def make_colorbar(fig, ax, cb_cmap, cb_norm, cb_labels, cb_ticks,
     cb.ax.tick_params(labelsize=12)
     cb.set_ticks(cb_ticks + np.diff(cb_ticks, append=cb_ticks[-1]+1) / 2)
     cb.set_ticklabels(cb_labels)
+    
+def make_l4_colorbar(fig, ax1):
+    """
+    Adds a new colorbar with appropriate land cover colours and labels
+    for level four in animations 
+    ax1 = the plot canvas on the left, this will put the colour bar over the
+    right hand canvas
+    """
+    # create canvas for colour bar on top of ax2
+    
+    # parameters for add_axes are [left, bottom, width, height], in
+    # fractions of total plot
+    cax = fig.add_axes([0.62, 0.10, 0.02, 0.80])
+    orient = 'vertical'
+    
+    # get level 4 colour bar colour map ect
+    cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap('level4_colourbar_labels', 
+                                                         colour_bar=True) 
+
+    img = ax1.imshow([cb_ticks], cmap=cb_cmap, norm=cb_norm)
+    cb = fig.colorbar(img, cax=cax, orientation=orient)
+    
+
+    cb.ax.tick_params(labelsize=12)
+    cb.set_ticks(cb_ticks + np.diff(cb_ticks, append=cb_ticks[-1]+1) / 2)
+    cb.set_ticklabels(cb_labels)
+
 
 
 def lc_colourmap(colour_scheme, colour_bar=False):
@@ -648,16 +677,42 @@ def lc_animation(
         )
 
     else:  # stacked_plot = False
-        # Define & set up figure
-        fig, ax1 = plt.subplots(1, 1, dpi=dpi)
-        fig.set_size_inches(width * scale, height * scale, forward=True)
-        if(not label_ax):
-            fig.subplots_adjust(left=0, bottom=0, right=1,
-                                top=1, wspace=None, hspace=None)
-        # Add colourbar here
-        if colour_bar:
-            make_colorbar(fig, ax1, layer_cmap,
-                          layer_norm, cb_labels, cb_ticks)
+        
+        # if plotting level 4 with colourbar
+        
+        if measurement == 'level4' and colour_bar == True:
+            
+            # specific setting to fit level 4 colour bar beside the plot
+            # we will plot the animation in the left hand plot
+            # and put the colour bar on the right hand side
+            
+            # Define & set up figure, two subplots so colour bar fits :)
+            fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True, gridspec_kw={'width_ratios': [3, 1]})
+            fig.set_size_inches(width * scale * 2, height * scale, forward=True)
+            fig.set_constrained_layout_pads(
+                w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
+            
+            # get colours for level 4 colourbar
+            
+            make_l4_colorbar(fig, ax1)
+            
+            # turn off lines for second plot so it's not ontop of colourbar
+            ax2.set_axis_off() 
+        
+        
+        # plotting any other measurement with or with-out colour bar or level 4 without
+        else: 
+            
+            # Define & set up figure
+            fig, ax1 = plt.subplots(1, 1, dpi=dpi)
+            fig.set_size_inches(width * scale, height * scale, forward=True)
+            if(not label_ax):
+                fig.subplots_adjust(left=0, bottom=0, right=1,
+                                    top=1, wspace=None, hspace=None)
+            # Add colourbar here
+            if colour_bar:
+                make_colorbar(fig, ax1, layer_cmap,
+                              layer_norm, cb_labels, cb_ticks)
 
         # This function is called at regular intervals with changing i
         # values for each frame
