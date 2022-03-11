@@ -28,7 +28,7 @@ Functions included:
     zonal_stats_parallel
     reverse_geocode
 
-Last modified: October 2021
+Last modified: March 2022
 
 '''
 
@@ -328,6 +328,7 @@ def subpixel_contours(da,
                       output_path=None,
                       min_vertices=2,
                       dim='time',
+                      date_format='%Y-%m-%d',
                       errors='ignore',
                       verbose=False):
     
@@ -344,7 +345,7 @@ def subpixel_contours(da,
     `attribute_df` parameter can be used to pass custom attributes 
     to the output contour features.
     
-    Last modified: November 2020
+    Last modified: March 2022
     
     Parameters
     ----------  
@@ -394,6 +395,9 @@ def subpixel_contours(da,
         operating in 'single z-value, multiple arrays' mode. The default
         is 'time', which extracts contours for each array along the time
         dimension.
+    date_format : string, optional
+        An optional date format used to convert timestamps in the output
+        geopandas.GeoDataFrame when `dim='time'`. Defaults to '%Y-%m-%d'.
     errors : string, optional
         If 'raise', then any failed contours will raise an exception.
         If 'ignore' (the default), a list of failed contours will be
@@ -404,8 +408,8 @@ def subpixel_contours(da,
         
     Returns
     -------
-    output_gdf : geopandas geodataframe
-        A geopandas geodataframe object with one feature per z-value 
+    output_gdf : geopandas.GeoDataFrame
+        A geopandas.GeoDataFrame object with one feature per z-value 
         ('single array, multiple z-values' mode), or one row per array 
         along the dimension specified by the `dim` parameter ('single 
         z-value, multiple arrays' mode). If `attribute_df` was 
@@ -464,9 +468,9 @@ def subpixel_contours(da,
         if verbose:
             print(f'Operating in multiple z-value, single array mode')
         dim = 'z_value'
-        contour_arrays = {str(i)[0:10]: 
-                          contours_to_multiline(da, i, min_vertices) 
-                          for i in z_values}    
+        contour_arrays = [(str(i)[0:10], 
+                          contours_to_multiline(da, i, min_vertices)) 
+                          for i in z_values]    
 
     else:
 
@@ -477,16 +481,30 @@ def subpixel_contours(da,
         if len(z_values) > 1:
             raise ValueError('Please provide a single z-value when operating '
                              'in single z-value, multiple arrays mode')
+            
+        # TODO: replace with simpler code below once `group_over` is
+        # available in `xarray`:
+        # `contour_arrays = {str(i)[0:10]: contours_to_multiline(da_i, 
+        #  z_values[0], min_vertices) for i, da_i in da.group_over(dim)}`
+        contour_arrays = []
+        for i in range(0, len(da[dim])):
 
-        contour_arrays = {str(i)[0:10]: 
-                          contours_to_multiline(da_i, z_values[0], min_vertices) 
-                          for i, da_i in da.groupby(dim)}
+            # Select array
+            da_i = da.isel(**{dim: i})            
+            key = (da_i[dim].dt.strftime(date_format).item() if 
+                   dim=='time' else da_i[dim].item())
 
+            # Extract contours
+            contour_arrays.append((key, contours_to_multiline(da_i,
+                                  z_values[0],
+                                  min_vertices)))
+            
     # If attributes are provided, add the contour keys to that dataframe
     if attribute_df is not None:
 
         try:
-            attribute_df.insert(0, dim, contour_arrays.keys())
+            attribute_df.insert(0, dim, [k for k, v in contour_arrays])
+            
         except ValueError:
 
             raise ValueError("One of the following issues occured:\n\n"
@@ -499,11 +517,11 @@ def subpixel_contours(da,
 
     # Otherwise, use the contour keys as the only main attributes
     else:
-        attribute_df = list(contour_arrays.keys())
+        attribute_df = [k for k, v in contour_arrays]
 
     # Convert output contours to a geopandas.GeoDataFrame
     contours_gdf = gpd.GeoDataFrame(data=attribute_df, 
-                                    geometry=list(contour_arrays.values()),
+                                    geometry=[v for k, v in contour_arrays],
                                     crs=crs)   
 
     # Define affine and use to convert array coords to geographic coords.
