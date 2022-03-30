@@ -23,6 +23,7 @@ Scientific papers
 
 Courses and training
 --------------------
+- Australian National University, Centre for Water and Landscape Dynamics `(WALD) <http://wald.anu.edu.au/>`_ under contract for `Geoscience Australia <https://www.ga.gov.au/>`_, 2022.  `Digital Earth Australia for Geospatial Analysts <https://anu-wald.github.io/dea_course/about/>`_. Materials available under Apache 2.0 Licence `here <https://github.com/ANU-WALD/dea_course>`_ and link to github repository: https://github.com/ANU-WALD/dea_training 
 - University of Newcastle, 2021. Advanced Remote Sensing Data and Applications. Graduate Certificate in Spatial Science.
 - University of Queensland, 2021. Code-Based Computing for Geospatial Data: the Digital Earth Australia (DEA) Sandbox platform. GEOM3001/7001 Advanced Earth Observation Sciences.
 - University of Tasmania, 2021. Remote Sensing: Image Analysis. Bachelor of Surveying and Spatial Sciences.
