@@ -28,6 +28,7 @@ IS_DEA = False
 # What packages are required for this module to be executed?
 # These are all on the Sandbox/NCI so shouldn't need installing on those platforms.
 REQUIRED = [
+    'xyzservicesGDAL'
     # bom
     'ciso8601',
     'pytz',
@@ -46,11 +47,9 @@ REQUIRED = [
     'matplotlib',
     'pandas',
     'scipy',
-    'xyzservices'
     # 'otps',  # Hard to install, but available on Sandbox and NCI
     # datahandling
     'GDAL',
-    'odc-ui',
     'numexpr',
     # plotting
     'folium',
