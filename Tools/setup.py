@@ -23,7 +23,7 @@ REQUIRES_PYTHON = '>=3.6.0'
 # Where are we?
 IS_SANDBOX = os.getenv('JUPYTER_IMAGE', default='').startswith('geoscienceaustralia/sandbox')
 IS_NCI = 'dea-env' in os.getenv('LOADEDMODULES_modshare', default='')
-IS_DEA = IS_NCI or IS_SANDBOX
+IS_DEA = False
 
 # What packages are required for this module to be executed?
 # These are all on the Sandbox/NCI so shouldn't need installing on those platforms.
@@ -46,6 +46,7 @@ REQUIRED = [
     'matplotlib',
     'pandas',
     'scipy',
+    'xyzservices'
     # 'otps',  # Hard to install, but available on Sandbox and NCI
     # datahandling
     'GDAL',
@@ -84,7 +85,7 @@ try:
 except FileNotFoundError:
     long_description = DESCRIPTION
 
-    
+
 class UploadCommand(Command):
     """Support setup.py upload."""
 
@@ -159,7 +160,7 @@ setup(
     #     'console_scripts': ['mycli=mymodule:cli'],
     # },
     install_requires=REQUIRED if not IS_DEA else [],
-    extras_require=EXTRAS if not IS_DEA else {k: [] for k in EXTRAS},
+   # extras_require=EXTRAS if not IS_DEA else {k: [] for k in EXTRAS},
     include_package_data=True,
     license='Apache License 2.0',
     classifiers=[
