@@ -21,6 +21,8 @@ Scientific papers
 
 - Bishop-Taylor, R., Nanson, R., Sagar, S., Lymburner, L., 2021. Mapping Australia's dynamic coastline at mean sea level using three decades of Landsat imagery. Remote Sensing of Environment, 267, 112734. https://doi.org/10.1016/j.rse.2021.112734
 
+- Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806.
+
 Courses and training
 --------------------
 - Australian National University, Centre for Water and Landscape Dynamics `(WALD) <http://wald.anu.edu.au/>`_ under contract for `Geoscience Australia <https://www.ga.gov.au/>`_, 2022.  `Digital Earth Australia for Geospatial Analysts <https://anu-wald.github.io/dea_course/about/>`_. Materials available under Apache 2.0 Licence `here <https://github.com/ANU-WALD/dea_course>`_ and link to github repository: https://github.com/ANU-WALD/dea_training 
