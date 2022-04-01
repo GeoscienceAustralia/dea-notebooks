@@ -52,6 +52,7 @@ import xarray as xr
 from osgeo import gdal
 from random import randint
 from collections import Counter
+from odc.algo import mask_cleanup
 from datacube.utils import masking
 from scipy.ndimage import binary_dilation
 from datacube.utils.dates import normalise_dt
@@ -109,6 +110,7 @@ def load_ard(dc,
              products=None,
              min_gooddata=0.0,
              fmask_categories=['valid', 'snow', 'water'],
+             mask_filters=None,
              mask_pixel_quality=True,
              mask_contiguity=False,
              ls7_slc_off=True,
@@ -160,6 +162,16 @@ def load_ard(dc,
         The default is `['valid', 'snow', 'water']` which will return
         non-cloudy or shadowed land, snow and water pixels. Choose from:
         'nodata', 'valid', 'cloud', 'shadow', 'snow', and 'water'.
+    mask_filters : iterable of tuples, optional
+        Iterable tuples of morphological operations - ("<operation>", <radius>)
+        to apply on mask, where:
+        operation: string, can be one of these morphological operations:
+            * ``'closing'``  = remove small holes in cloud - morphological closing
+            * ``'opening'``  = shrinks away small areas of the mask
+            * ``'dilation'`` = adds padding to the mask
+            * ``'erosion'``  = shrinks bright regions and enlarges dark regions
+        radius: int
+        e.g. ``mask_filters=[('erosion', 5),("opening", 2),("dilation", 2)]``
     mask_pixel_quality : bool, optional
         An optional boolean indicating whether to mask out poor quality
         pixels using fmask based on the `fmask_categories` provided
@@ -372,7 +384,12 @@ def load_ard(dc,
         print(f'Filtering to {len(ds.time)} out of {total_obs} '
               f'time steps with at least {min_gooddata:.1%} '
               f'good quality pixels')
-
+    
+    # morpholigcal filtering on cloud masks
+    if (mask_filters is not None) & (mask_pixel_quality):
+        print(f"Applying morphological filters to pq mask {mask_filters}")
+        pq_mask = mask_cleanup(pq_mask, mask_filters=mask_filters)
+    
     ###############
     # Apply masks #
     ###############
