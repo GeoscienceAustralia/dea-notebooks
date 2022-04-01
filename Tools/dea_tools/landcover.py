@@ -273,52 +273,49 @@ def get_layer_name(measurement, da):
     return measurement
 
 
-def make_colorbar(fig, ax, cb_cmap, cb_norm, cb_labels, cb_ticks,
-                  horizontal=False):
+def make_colorbar(fig, ax, measurement, horizontal=False):
     """
     Adds a new colorbar with appropriate land cover colours and labels
+    
+    measurement = land cover measurement to use for colour map and lables
+    
+    for level 4, must be used with a double plot, ax should be the left side canvas
+    the colour bar will go over thr right hand side.
     """
     # Create new axis object for colorbar
     # parameters for add_axes are [left, bottom, width, height], in
     # fractions of total plot
-
-    fig.subplots_adjust(right=0.825)
-
-    # Settings for different axis positions
-    if horizontal:
-        cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
-        orient = 'horizontal'
-    else:
-        cax = fig.add_axes([0.84, 0.15, 0.02, 0.70])
+    
+    if measurement == 'level4':
+        
+        # special settings for level 4
+        cax = fig.add_axes([0.62, 0.10, 0.02, 0.80])
         orient = 'vertical'
+        
+            # get level 4 colour bar colour map ect
+        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap('level4_colourbar_labels',
+                                                         colour_bar=True)
+        
+        
+    else:
+        #for all other measurements 
 
-    img = ax.imshow([cb_ticks], cmap=cb_cmap, norm=cb_norm)
-    cb = fig.colorbar(img, cax=cax, orientation=orient)
+        #move plot over to make room for colourbar
+        fig.subplots_adjust(right=0.825)
 
-    cb.ax.tick_params(labelsize=12)
-    cb.set_ticks(cb_ticks + np.diff(cb_ticks, append=cb_ticks[-1]+1) / 2)
-    cb.set_ticklabels(cb_labels)
-
-
-def make_l4_colorbar(fig, ax1):
-    """
-    Adds a new colorbar with appropriate land cover colours and labels
-    for level four in animations 
-    ax1 = the plot canvas on the left, this will put the colour bar over the
-    right hand canvas
-    """
-    # create canvas for colour bar on top of ax2
-
-    # parameters for add_axes are [left, bottom, width, height], in
-    # fractions of total plot
-    cax = fig.add_axes([0.62, 0.10, 0.02, 0.80])
-    orient = 'vertical'
-
-    # get level 4 colour bar colour map ect
-    cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap('level4_colourbar_labels',
+        # Settings for different axis positions
+        if horizontal:
+            cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
+            orient = 'horizontal'
+        else:
+            cax = fig.add_axes([0.84, 0.15, 0.02, 0.70])
+            orient = 'vertical'
+            
+        # get measurement colour bar colour map ect
+        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap(measurement,
                                                          colour_bar=True)
 
-    img = ax1.imshow([cb_ticks], cmap=cb_cmap, norm=cb_norm)
+    img = ax.imshow([cb_ticks], cmap=cb_cmap, norm=cb_norm)
     cb = fig.colorbar(img, cax=cax, orientation=orient)
 
     cb.ax.tick_params(labelsize=12)
@@ -426,11 +423,6 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
                        'the name using the "measurement" variable For example'
                        '(measurement = "full_classification")')
 
-    cb_colours = 'level4_colourbar_labels' if measurement == 'level4' else measurement
-    # get colour bar colours
-    cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap(
-        cb_colours, colour_bar=True)
-
     height, width = data.geobox.shape
     scale = out_width / width
 
@@ -442,7 +434,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     if len(data.dims) < 3:
         fig, ax = plt.subplots()
         fig.set_size_inches(width * scale, height * scale)
-        make_colorbar(fig, ax, cb_cmap, cb_norm, cb_labels, cb_ticks)
+        make_colorbar(fig, ax, measurement)
         im = ax.imshow(data, cmap=cmap, norm=norm, interpolation="nearest")
     else:
         if cols > len(data.time):
@@ -453,7 +445,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         fig.set_size_inches(
             width * scale, (height * scale / cols) * (len(data.time) / cols))
 
-        make_colorbar(fig, ax.flat[0], cb_cmap, cb_norm, cb_labels, cb_ticks)
+        make_colorbar(fig, ax.flat[0], measurement)
 
         for a, b in enumerate(ax.flat):
             if a < data.shape[0]:
@@ -572,18 +564,18 @@ def lc_animation(
     # Add gif to end of filename
     file_name = file_name + ".gif"
 
-    # Create colour map and normalisation for specified lc measurement
+        # Create colour map and normalisation for specified lc measurement
     try:
         layer_cmap, layer_norm, cb_labels, cb_ticks = lc_colourmap(
             measurement, colour_bar=True)
     except AssertionError:
 
         raise KeyError(f'Could not automatically determine colour scheme from '
-                       f'DataArray name {measurement}. Please specify which '
-                       'DEA Landcover measurement is being plotted by providing '
-                       'the name using the "measurement" variable For example '
-                       '(measurement = "full_classification")')
-
+                   f'DataArray name {measurement}. Please specify which '
+                   'DEA Landcover measurement is being plotted by providing '
+                   'the name using the "measurement" variable For example '
+                   '(measurement = "full_classification")')
+    
     # Prepare variables needed
     # Get info on dataset dimensions
     height, width = da.geobox.shape
@@ -611,6 +603,8 @@ def lc_animation(
                        for a, b in zip(times_list, text_list)]
 
     if stacked_plot == True:
+        
+
 
         # Create table for stacked plot
         stacked_plot_table = calc_class_ratio(da)
@@ -693,9 +687,11 @@ def lc_animation(
             fig.set_constrained_layout_pads(
                 w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
 
-            # get colours for level 4 colourbar
+            # make colour bar
+            # provide left hand canvas to colour bar fuction which is where the image will go
+            # colourbar will plot on right side beside it
 
-            make_l4_colorbar(fig, ax1)
+            make_colorbar(fig, ax1, measurement)
 
             # turn off lines for second plot so it's not ontop of colourbar
             ax2.set_axis_off()
@@ -711,8 +707,7 @@ def lc_animation(
                                     top=1, wspace=None, hspace=None)
             # Add colourbar here
             if colour_bar:
-                make_colorbar(fig, ax1, layer_cmap,
-                              layer_norm, cb_labels, cb_ticks)
+                make_colorbar(fig, ax1, measurement)
 
         # This function is called at regular intervals with changing i
         # values for each frame
