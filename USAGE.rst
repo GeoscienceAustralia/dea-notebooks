@@ -31,6 +31,10 @@ Courses and training
 - University of Tasmania, 2021. Remote Sensing: Image Analysis. Bachelor of Surveying and Spatial Sciences.
 - University of Tasmania, 2021. Spatial Research Project. Bachelor of Surveying and Spatial Sciences.
 
+Conferences
+--------------------
+S., Förtsch & S., Hill. (2021, April 22 - April 23). The Bavarian Open Data Cube [Presentation]. Geopython, online.
+
 Creative works
 --------------
 - Grayson Cooke, 2019. Invalid data. https://www.graysoncooke.com/invalid-data
