@@ -713,17 +713,11 @@ def lc_animation(
             fig.set_constrained_layout_pads(
                 w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
 
-<<<<<<< HEAD
             # make colour bar
             # provide left hand canvas to colour bar fuction which is where the image will go
             # colourbar will plot on right side beside it
 
             make_colorbar(fig, ax1, measurement)
-=======
-            # get colours for level 4 colourbar
-
-            make_l4_colorbar(fig, ax1)
->>>>>>> 1aded90c51071a3e606de252ea71a726bcabf84e
 
             # turn off lines for second plot so it's not ontop of colourbar
             ax2.set_axis_off()
@@ -739,12 +733,8 @@ def lc_animation(
                                     top=1, wspace=None, hspace=None)
             # Add colourbar here
             if colour_bar:
-<<<<<<< HEAD
                 make_colorbar(fig, ax1, measurement)
-=======
-                make_colorbar(fig, ax1, layer_cmap,
-                              layer_norm, cb_labels, cb_ticks)
->>>>>>> 1aded90c51071a3e606de252ea71a726bcabf84e
+
 
         # This function is called at regular intervals with changing i
         # values for each frame
