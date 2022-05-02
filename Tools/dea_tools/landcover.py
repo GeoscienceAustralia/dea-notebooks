@@ -293,7 +293,7 @@ def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
             # get level 4 colour bar colour map ect
         cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap('level4_colourbar_labels',
                                                          colour_bar=True)
-    elif measurement == 'level4' and animation == False: 
+    elif measurement == 'level4' and animation == False:
         
         # get level 4 colour bar colour map ect
         cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap('level4_colourbar_labels',
