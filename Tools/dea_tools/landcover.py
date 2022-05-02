@@ -271,7 +271,7 @@ def get_layer_name(measurement, da):
     return measurement
 
 
-def make_colorbar(fig, ax, measurement, horizontal=False):
+def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
     """
     Adds a new colorbar with appropriate land cover colours and labels
     
@@ -284,16 +284,26 @@ def make_colorbar(fig, ax, measurement, horizontal=False):
     # parameters for add_axes are [left, bottom, width, height], in
     # fractions of total plot
     
-    if measurement == 'level4':
+    if measurement == 'level4' and animation == True:
         
-        # special settings for level 4
-        cax = fig.add_axes([0.62, 0.10, 0.02, 0.80])
+        # special spacing settings for level 4
+        cax = fig.add_axes([0.61, 0.10, 0.02, 0.80])
         orient = 'vertical'
         
             # get level 4 colour bar colour map ect
         cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap('level4_colourbar_labels',
                                                          colour_bar=True)
+    elif measurement == 'level4' and animation == False: 
         
+        # get level 4 colour bar colour map ect
+        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap('level4_colourbar_labels',
+                                                         colour_bar=True)
+        #move plot over to make room for colourbar
+        fig.subplots_adjust(right=0.825)
+
+        # Settings for axis positions
+        cax = fig.add_axes([0.84, 0.15, 0.02, 0.70])
+        orient = 'vertical'
         
     else:
         #for all other measurements 
@@ -684,7 +694,7 @@ def lc_animation(
             # provide left hand canvas to colour bar fuction which is where the image will go
             # colourbar will plot on right side beside it
 
-            make_colorbar(fig, ax1, measurement)
+            make_colorbar(fig, ax1, measurement, animation=True)
 
             # turn off lines for second plot so it's not ontop of colourbar
             ax2.set_axis_off()
