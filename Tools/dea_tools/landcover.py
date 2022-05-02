@@ -287,7 +287,7 @@ def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
     if measurement == 'level4' and animation == True:
         
         # special spacing settings for level 4
-        cax = fig.add_axes([0.61, 0.10, 0.02, 0.80])
+        cax = fig.add_axes([0.62, 0.10, 0.02, 0.80])
         orient = 'vertical'
         
             # get level 4 colour bar colour map ect
