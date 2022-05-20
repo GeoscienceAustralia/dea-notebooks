@@ -8,16 +8,21 @@ datacube metadata add "$METADATA_CATALOG"
 # Index products we care about for dea-notebooks
 wget "$PRODUCT_CATALOG" -O product_list.csv
 
-bash -c "tail -n+2 product_list.csv | grep 'ls7_nbart_geomedian_annual\|ls8_nbart_geomedian_annual\|ga_ls_wo_3\|s2a_ard_granule\|s2b_ard_granule\|ga_ls5t_ard_3\|ga_ls7e_ard_3\|ga_ls8c_ard_3\|wofs_annual_summary' | awk -F , '{print \$2}' | xargs datacube -v product add" 
+bash -c "tail -n+2 product_list.csv | grep 'ga_ls7e_nbart_gm_cyear_3\|ga_ls8c_nbart_gm_cyear_3\|ga_ls_wo_3\|s2a_ard_granule\|s2b_ard_granule\|ga_ls5t_ard_3\|ga_ls7e_ard_3\|ga_ls8c_ard_3\|wofs_annual_summary' | awk -F , '{print \$2}' | xargs datacube -v product add" 
 
 # Index scenes
 cat > index_tiles.sh <<EOF
-s3-to-dc 's3://dea-public-data/geomedian-australia/v2.1.0/L7/x_20/y_-32/2015/01/01/*.yaml' --no-sign-request --skip-lineage 'ls7_nbart_geomedian_annual'
-s3-to-dc 's3://dea-public-data/geomedian-australia/v2.1.0/L8/x_20/y_-32/2013/01/01/*.yaml' --no-sign-request --skip-lineage 'ls8_nbart_geomedian_annual'
-s3-to-dc 's3://dea-public-data/geomedian-australia/v2.1.0/L8/x_20/y_-32/2014/01/01/*.yaml' --no-sign-request --skip-lineage 'ls8_nbart_geomedian_annual'
-s3-to-dc 's3://dea-public-data/geomedian-australia/v2.1.0/L8/x_20/y_-32/2015/01/01/*.yaml' --no-sign-request --skip-lineage 'ls8_nbart_geomedian_annual'
-s3-to-dc 's3://dea-public-data/geomedian-australia/v2.1.0/L8/x_20/y_-32/2016/01/01/*.yaml' --no-sign-request --skip-lineage 'ls8_nbart_geomedian_annual'
-s3-to-dc 's3://dea-public-data/geomedian-australia/v2.1.0/L8/x_20/y_-32/2017/01/01/*.yaml' --no-sign-request --skip-lineage 'ls8_nbart_geomedian_annual'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_nbart_gm_cyear_3/3-0-0/x49/y23/2015--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls7e_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_nbart_gm_cyear_3/3-0-0/x49/y24/2015--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls7e_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y23/2013--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y23/2014--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y23/2016--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y23/2017--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2013--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2014--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2015--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2016--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2017--P1Y/*.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
 # s3-to-dc 's3://dea-public-data/baseline/s2a_ard_granule/2018-09-09/S2A_OPER_MSI_ARD_TL_EPAE_20180909T020622_A016787_T55LBD_N02.06/*.yaml' --no-sign-request --skip-lineage 's2a_ard_granule'
 # s3-to-dc 's3://dea-public-data/baseline/s2a_ard_granule/2018-09-19/S2A_OPER_MSI_ARD_TL_EPAE_20180919T021041_A016930_T55LBD_N02.06/*.yaml' --no-sign-request --skip-lineage 's2a_ard_granule'
 # s3-to-dc 's3://dea-public-data/baseline/s2a_ard_granule/2018-09-29/S2A_OPER_MSI_ARD_TL_EPAE_20180929T020742_A017073_T55LBD_N02.06/*.yaml' --no-sign-request --skip-lineage 's2a_ard_granule'
