@@ -6,6 +6,6 @@ NB_DIR = TEST_DIR.parent
 NB_PATH = NB_DIR / "Beginners_guide" / "03_Products_and_measurements.ipynb"
 
 
-@testbook(NB_PATH, execute=True)
+@testbook(NB_PATH, execute=True, timeout=180)
 def test_ok(tb):
     assert True  # ok
