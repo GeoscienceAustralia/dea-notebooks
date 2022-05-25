@@ -24,5 +24,5 @@ def test_geometry(tb):
 
 def test_shape(tb):
     ds = tb.ref("water_bodies_again")
-    assert len(ds.x) == 2789
-    assert len(ds.y) == 2443
+    assert len(ds.x) == 2324
+    assert len(ds.y) == 2037
