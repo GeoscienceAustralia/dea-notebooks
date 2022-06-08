@@ -36,8 +36,11 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from scipy import stats
-from otps import TimePoint
-from otps import predict_tide
+try:
+    from otps import TimePoint
+    from otps import predict_tide
+except ImportError:
+    from dea_tools.pyfes_model import TimePoint, predict_tide
 from datacube.utils.geometry import CRS
 from shapely.geometry import box, shape
 from owslib.wfs import WebFeatureService
