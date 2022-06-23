@@ -457,7 +457,7 @@ class animation_app(HBox):
         run_button = create_expanded_button("Generate animation", "info")
         
         floatslider_max_cloud_cover = widgets.FloatSlider(
-            value=10,
+            value=20,
             min=0,
             max=100,
             step=1,
