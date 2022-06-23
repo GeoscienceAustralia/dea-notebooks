@@ -15,6 +15,7 @@ More complex case study-based workflows demonstrating how DEA can be used to add
    Crop_health.ipynb
    Estimate_climate_driver_influence_on_rainfall.ipynb
    Exporting_satellite_images.ipynb
+   Generating_satellite_animations.ipynb
    Intertidal_elevation.ipynb
    Mapping_inundation_using_stream_gauges.ipynb
    Mining_rehabilitation.ipynb
