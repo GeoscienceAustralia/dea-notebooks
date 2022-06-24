@@ -21,7 +21,7 @@ Functions included:
     create_local_dask_cluster
     create_dask_gateway_cluster
 
-Last modified: March 2020
+Last modified: June 2022
 
 '''
 
@@ -111,6 +111,15 @@ try:
         """
         try:
             gateway = Gateway()
+            
+            # Close any existing clusters
+            cluster_names = gateway.list_clusters()
+            if len(cluster_names) > 0:
+                print("Cluster(s) still running:", cluster_names)
+                for n in cluster_names:
+                    cluster = gateway.connect(n.name)
+                    cluster.shutdown()            
+            
             options = gateway.cluster_options()
             options['profile'] = profile
 
