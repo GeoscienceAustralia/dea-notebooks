@@ -113,7 +113,11 @@ try:
             gateway = Gateway()
             options = gateway.cluster_options()
             options['profile'] = profile
-            options['jupyterhub_user'] = os.getenv('JUPYTERHUB_USER')
+
+            # limit username to alphanumeric characters
+            # kubernetes pods won't launch if labels contain anything other than [a-Z, -, _]
+            options['jupyterhub_user'] = ''.join(c if c.isalnum() else '-' for c in os.getenv('JUPYTERHUB_USER'))
+
             cluster = gateway.new_cluster(options)
             cluster.scale(workers)
             return cluster
