@@ -45,7 +45,6 @@ from rasterstats import zonal_stats
 from skimage.measure import find_contours
 from geopy.geocoders import Nominatim
 from datacube.utils.cog import write_cog
-from datacube.helpers import write_geotiff
 from datacube.utils.geometry import assign_crs
 from datacube.utils.geometry import CRS, Geometry
 from shapely.geometry import LineString, MultiLineString, shape
