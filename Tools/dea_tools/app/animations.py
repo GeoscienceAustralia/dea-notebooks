@@ -44,6 +44,7 @@ from skimage.filters import unsharp_mask
 
 from datacube.utils import masking
 from datacube.utils.geometry import Geometry
+from datacube.utils.masking import mask_invalid_data
 import dea_tools.app.widgetconstructors as deawidgets
 from dea_tools.dask import create_local_dask_cluster
 from dea_tools.spatial import reverse_geocode
@@ -157,10 +158,9 @@ def extract_data(self):
             "measurements": sat_params[self.dealayer]["styles"][self.style][1],
             "resolution": (-self.resolution, self.resolution),
             "output_crs": crs,
+            "group_by": "solar_day",
             "dask_chunks": {"time": 1, "x": 2048, "y": 2048},
-            "resampling": {'*': 'cubic', 
-                           'oa_fmask': 'nearest', 
-                           'fmask': 'nearest'}
+            "resampling": {"*": "cubic", "oa_fmask": "nearest", "fmask": "nearest"},
         }
 
         # Load data
@@ -174,7 +174,10 @@ def extract_data(self):
             mask_pixel_quality=self.cloud_mask,
             **self.load_params,
             **self.query_params,
-        ).compute()
+        )
+
+        # Set invalid nodata pixels to NaN
+        timeseries_ds = mask_invalid_data(timeseries_ds)
 
     # Else if no data is returned, return None
     else:
@@ -183,7 +186,7 @@ def extract_data(self):
     # Close down the dask client
     client.close()
 
-    return timeseries_ds
+    return timeseries_ds.compute()
 
 
 def plot_data(self, fname):
@@ -200,6 +203,12 @@ def plot_data(self, fname):
         to_plot = to_plot.rolling(
             time=int(self.rolling_median_window), center=True, min_periods=1
         ).median()
+
+    # If resampling freq specified
+    if self.resample_freq:
+        with self.status_info:
+            print(f"\nResampling data to {self.resample_freq} frequency")
+        to_plot = to_plot.resample(time=self.resample_freq).median()
 
     # Raise by power to dampen bright features and enhance dark.
     # Raise vmin and vmax by same amount to ensure proper stretch
@@ -231,21 +240,57 @@ def plot_data(self, fname):
 
     xr_animation(
         output_path=fname,
-        ds=to_plot,
+        ds=to_plot.dropna(dim="time", how="all"),
         show_text="",
         bands=sat_params[self.dealayer]["styles"][self.style][1],
         interval=self.interval,
         width_pixels=self.width,
+        show_gdf=deacoastlines_overlay(to_plot) if self.deacoastlines else None,
+        gdf_kwargs={"linewidth": 3},
         percentile_stretch=(self.vmin, self.vmax),
         image_proc_funcs=funcs_list,
-        show_date="%Y",
-        annotation_kwargs={"fontsize": 90},
+        show_date="%Y" if self.resample_freq == "1Y" else "%b %Y",
+        annotation_kwargs={"fontsize": 75},
     )
 
     # Add plot preview below map and finish
     plt.show()
     with self.status_info:
         print(f"\nImage successfully exported to:\n{fname}.")
+
+
+def deacoastlines_overlay(ds):
+
+    import geopandas as gpd
+    import pandas as pd
+    import matplotlib
+    from shapely.geometry import box, Point
+    from dea_tools.coastal import get_coastlines
+
+    # Get bounding box of data
+    xmin, ymin, xmax, ymax = ds.geobox.geographic_extent.boundingbox
+    bounds = [xmin, ymin, xmax, ymax]
+
+    # Load data
+    deacl_gdf = get_coastlines(bbox=bounds)
+
+    # Clip to extent of satellite data
+    bbox = gpd.GeoDataFrame(geometry=[ds.geobox.extent.geom], crs=ds.geobox.crs)
+    deacl_gdf = gpd.overlay(deacl_gdf, bbox.to_crs(deacl_gdf.crs))
+    deacl_gdf = deacl_gdf.dissolve("year")  # values("year", ascending=True)
+
+    # Apply colours
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=len(deacl_gdf.index))
+    cmap = matplotlib.cm.get_cmap("inferno")
+    rgba = cmap(norm(deacl_gdf.reset_index().index))
+    deacl_gdf["color"] = list(rgba)
+    deacl_gdf["start_time"] = pd.to_datetime(deacl_gdf.index) + pd.DateOffset(months=0)
+    deacl_gdf = deacl_gdf.sort_index()
+
+    if len(deacl_gdf.index) > 0:
+        return deacl_gdf
+    else:
+        return None
 
 
 class animation_app(HBox):
@@ -266,7 +311,7 @@ class animation_app(HBox):
         # Satellite data
         end_date = datetime.datetime.today()
         start_date = datetime.datetime(
-            year=end_date.year - 5, month=end_date.month, day=end_date.day
+            year=end_date.year - 3, month=end_date.month, day=end_date.day
         )
         self.start_date = start_date.strftime("%Y-%m-%d")
         self.end_date = end_date.strftime("%Y-%m-%d")
@@ -297,6 +342,14 @@ class animation_app(HBox):
         self.interval = 100
         self.cloud_mask = False
         self.max_cloud_cover = 20
+        self.resample_list = [
+            ("None", False),
+            ("Monthly", "1M"),
+            ("Quarterly", "Q-DEC"),
+            ("Yearly", "1Y"),
+        ]
+        self.resample_freq = self.resample_list[0][1]
+        self.deacoastlines = False
 
         # Drawing params
         self.target = None
@@ -350,10 +403,10 @@ class animation_app(HBox):
 
             # Convert to Albers and compute area
             gdf_drawn_albers = gdf.copy().to_crs("EPSG:3577")
-            m2_per_km2 = 10 ** 6
-            area = gdf_drawn_albers.area.values[0] / m2_per_km2
+            m2_per_ha = 10000
+            area = gdf_drawn_albers.area.values[0] / m2_per_ha
             polyarea_label = "Total area of satellite data to extract"
-            polyarea_text = f"<b>{polyarea_label}</b>: {area:.2f} km<sup>2</sup>"
+            polyarea_text = f"<b>{polyarea_label}</b>: {area:.2f} ha</sup>"
 
             # Test area size
             if self.max_size:
@@ -368,11 +421,11 @@ class animation_app(HBox):
                     + confirmation_text
                 )
                 self.gdf_drawn = gdf
-            elif area <= 500:
+            elif area <= 50000:
                 confirmation_text = (
                     '<span style="color: #33cc33"> '
                     "<b>(Area to extract falls within "
-                    "recommended limit)</b></span>"
+                    "recommended 50000 ha limit)</b></span>"
                 )
                 self.header.value = (
                     header_title_text
@@ -385,8 +438,8 @@ class animation_app(HBox):
                 warning_text = (
                     '<span style="color: #ff5050"> '
                     "<b>(Area to extract is too large, "
-                    "please select an area less than 500 "
-                    "km<sup>2)</b></span>"
+                    "please select an area less than 50000 "
+                    "ha)</b></span>"
                 )
                 self.header.value = (
                     header_title_text + instruction_text + polyarea_text + warning_text
@@ -413,7 +466,7 @@ class animation_app(HBox):
         self.map_layers.name = "Map Overlays"
 
         # Create map widget
-        self.m = deawidgets.create_map(map_center=(-28, 135), zoom_level=4)
+        self.m = deawidgets.create_map(map_center=(-33.96, 151.20), zoom_level=13)
         self.m.layout = make_box_layout()
 
         # Add tools to map widget
@@ -455,8 +508,8 @@ class animation_app(HBox):
             layout={"width": "85%"},
         )
         run_button = create_expanded_button("Generate animation", "info")
-        
-        floatslider_max_cloud_cover = widgets.FloatSlider(
+
+        floatslider_max_cloud_cover = widgets.IntSlider(
             value=20,
             min=0,
             max=100,
@@ -464,31 +517,44 @@ class animation_app(HBox):
             description="",
             layout={"width": "85%"},
         )
-        
+
         checkbox_rolling_median = deawidgets.create_checkbox(
-            self.rolling_median, "Apply rolling median to produce<br>smooth, cloud-free animations", layout={"width": "100%"}
+            self.rolling_median,
+            "Apply rolling median to produce<br>smooth, cloud-free animations",
+            layout={"width": "85%"},
         )
         text_rolling_median_window = widgets.IntText(
             value=20,
             step=1,
             description="</br>Rolling window (timesteps)",
             layout={
-                "width": "100%",
+                "width": "85%",
                 "margin": "0px",
                 "padding": "0px",
                 "display": "none",
             },
         )
-        
-        checkbox_cloud_mask = deawidgets.create_checkbox(
-            self.cloud_mask, "Mask out cloudy pixels", layout={"width": "100%"}
-        )
 
         # Expandable advanced section
+        text_interval = widgets.IntText(
+            value=100, description="", step=50, layout={"width": "95%"}
+        )
         text_resolution = widgets.FloatText(
             value=30,
             description="",
-            layout={"width": "100%", "margin": "0px", "padding": "0px"},
+            layout={"width": "95%", "margin": "0px", "padding": "0px"},
+        )
+        text_width = widgets.IntText(
+            value=900, description="", step=50, layout={"width": "95%"}
+        )
+        dropdown_resampling = deawidgets.create_dropdown(
+            self.resample_list,
+            self.resample_freq,
+            description="",
+            layout={"width": "95%"},
+        )
+        checkbox_cloud_mask = deawidgets.create_checkbox(
+            self.cloud_mask, "Mask out cloudy pixels", layout={"width": "95%"}
         )
         slider_power = widgets.FloatSlider(
             value=1.0,
@@ -496,18 +562,17 @@ class animation_app(HBox):
             max=1.0,
             step=0.01,
             description="",
-            layout={"width": "85%"},
+            layout={"width": "95%"},
         )
-
         checkbox_unsharp_mask = deawidgets.create_checkbox(
-            self.unsharp_mask, "Enable", layout={"width": "100%"}
+            self.unsharp_mask, "Enable", layout={"width": "95%"}
         )
         text_unsharp_mask_radius = widgets.FloatText(
             value=20,
             step=1,
             description="Radius",
             layout={
-                "width": "100%",
+                "width": "95%",
                 "margin": "0px",
                 "padding": "0px",
                 "display": "none",
@@ -518,20 +583,18 @@ class animation_app(HBox):
             step=0.1,
             description="Amount",
             layout={
-                "width": "100%",
+                "width": "95%",
                 "margin": "0px",
                 "padding": "0px",
                 "display": "none",
             },
         )
-        checkbox_max_size = deawidgets.create_checkbox(self.max_size, "Enable")
-        text_width = widgets.IntText(
-            value=900, description="", step=50, layout={"width": "85%"}
+        checkbox_deacoastlines = deawidgets.create_checkbox(
+            self.deacoastlines, "Add DEA Coastlines overlay", layout={"width": "95%"}
         )
-        text_interval = widgets.IntText(
-            value=100, description="", step=50, layout={"width": "85%"}
+        checkbox_max_size = deawidgets.create_checkbox(
+            self.max_size, "Enable", layout={"width": "95%"}
         )
-
         expand_box = widgets.VBox(
             [
                 HTML("Frame interval (milliseconds):"),
@@ -540,8 +603,11 @@ class animation_app(HBox):
                 text_resolution,
                 HTML("</br>Width of output animation in pixels:"),
                 text_width,
+                HTML("</br>Apply temporal resampling:"),
+                dropdown_resampling,
                 HTML("</br>"),
                 checkbox_cloud_mask,
+                checkbox_deacoastlines,
                 HTML("</br>Apply power transformation to darken bright features:"),
                 slider_power,
                 HTML("</br>Apply unsharp masking to sharpen imagery:"),
@@ -553,10 +619,12 @@ class animation_app(HBox):
                 ),
                 checkbox_max_size,
             ],
-            layout={"overflow": "hidden"},
         )
 
-        expand = widgets.Accordion(children=[expand_box], selected_index=None)
+        expand = widgets.Accordion(
+            children=[expand_box],
+            selected_index=None,
+        )
         expand.set_title(0, "Advanced")
 
         # Add specific dialogs to class so they can be modified
@@ -575,26 +643,31 @@ class animation_app(HBox):
         dropdown_basemap.observe(self.update_basemap, "value")
         dropdown_dealayer.observe(self.update_dealayer, "value")
         dropdown_styles.observe(self.update_styles, "value")
-        dropdown_output.observe(self.update_output, "value")
-        run_button.on_click(self.run_app)
-        draw_control.on_draw(update_geojson)
-        slider_percentile.observe(self.update_slider_percentile, "value")
 
-        # Advanced params
-        text_resolution.observe(self.update_text_resolution, "value")
-        slider_power.observe(self.update_slider_power, "value")
+        slider_percentile.observe(self.update_slider_percentile, "value")
+        floatslider_max_cloud_cover.observe(
+            self.update_floatslider_max_cloud_cover, "value"
+        )
         checkbox_rolling_median.observe(self.update_checkbox_rolling_median, "value")
         text_rolling_median_window.observe(
             self.update_text_rolling_median_window, "value"
         )
+        dropdown_output.observe(self.update_output, "value")
+        run_button.on_click(self.run_app)
+        draw_control.on_draw(update_geojson)
+
+        # Advanced params
+        text_resolution.observe(self.update_text_resolution, "value")
+        slider_power.observe(self.update_slider_power, "value")
+        text_width.observe(self.update_width, "value")
+        text_interval.observe(self.update_interval, "value")
+        dropdown_resampling.observe(self.update_dropdown_resampling, "value")
+        checkbox_cloud_mask.observe(self.update_checkbox_cloud_mask, "value")
         checkbox_unsharp_mask.observe(self.update_checkbox_unsharp_mask, "value")
         text_unsharp_mask_radius.observe(self.update_text_unsharp_mask_radius, "value")
         text_unsharp_mask_amount.observe(self.update_text_unsharp_mask_amount, "value")
+        checkbox_deacoastlines.observe(self.update_deacoastlines, "value")
         checkbox_max_size.observe(self.update_checkbox_max_size, "value")
-        text_width.observe(self.update_width, "value")
-        text_interval.observe(self.update_interval, "value")
-        checkbox_cloud_mask.observe(self.update_checkbox_cloud_mask, "value")
-        floatslider_max_cloud_cover.observe(self.update_floatslider_max_cloud_cover, "value")
 
         ##################################
         # COLLECTION OF ALL APP CONTROLS #
@@ -699,10 +772,15 @@ class animation_app(HBox):
     # Update power transform
     def update_slider_power(self, change):
         self.power = change.new
-        
+
     # Update good data slider
     def update_floatslider_max_cloud_cover(self, change):
         self.max_cloud_cover = change.new
+
+        # Clear data load params to trigger data re-load
+        self.timeseries_ds = None
+        self.load_params = None
+        self.query_params = None
 
     # Enable unsharp masking and show/hide custom params
     def update_checkbox_unsharp_mask(self, change):
@@ -741,6 +819,10 @@ class animation_app(HBox):
     # Override max size limit
     def update_checkbox_max_size(self, change):
         self.max_size = change.new
+
+    # Add DEA Coastlines overlay
+    def update_deacoastlines(self, change):
+        self.deacoastlines = change.new
 
     # Apply cloud mask in load_ard
     def update_checkbox_cloud_mask(self, change):
@@ -786,11 +868,19 @@ class animation_app(HBox):
     # Set imagery style
     def update_styles(self, change):
         self.style = change.new
-        update_map_layers(self)
+
+        # Clear data load params to trigger data re-load
+        self.timeseries_ds = None
+        self.load_params = None
+        self.query_params = None
 
     # Set output file format
     def update_output(self, change):
         self.output_format = change.new
+
+    # Set output file format
+    def update_dropdown_resampling(self, change):
+        self.resample_freq = change.new
 
     def run_app(self, change):
 
@@ -806,6 +896,7 @@ class animation_app(HBox):
                 # Load data and add to attribute
                 if self.timeseries_ds is None:
                     self.timeseries_ds = extract_data(self)
+
                 else:
                     print("Using previously loaded data")
 
@@ -817,8 +908,8 @@ class animation_app(HBox):
                     centre_coords = self.gdf_drawn.geometry[0].centroid.coords[0][::-1]
                     site = reverse_geocode(coords=centre_coords)
                     fname = (
-                        f"{self.dealayer}_{self.start_date}_{self.end_date}_"
-                        f"{site}_{self.style}_{self.resolution:.0f}m."
+                        f"{self.dealayer}_{site}_{self.start_date}_"
+                        f"{self.end_date}_{self.style}_{self.resolution:.0f}m."
                         f"{self.output_format}".replace(" ", "")
                         .replace(",", "")
                         .lower()
@@ -845,4 +936,6 @@ class animation_app(HBox):
 
         else:
             with self.status_info:
-                print('Please draw a valid rectangle on the map, then press "Generate animation".')
+                print(
+                    'Please draw a valid rectangle on the map, then press "Generate animation".'
+                )
