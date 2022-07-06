@@ -102,7 +102,7 @@ def create_expanded_button(description, button_style):
     )
 
 
-def update_map_layers(self):
+def update_map_layers(self, update_basemap=False):
     """
     Updates map to add new DEA layers, styles or basemap when selected
     using menu options. Triggers data reload by resetting load params
@@ -114,9 +114,11 @@ def update_map_layers(self):
     self.load_params = None
     self.query_params = None
 
-    # Clear all layers and add basemap
-    self.map_layers.clear_layers()
-    self.map_layers.add_layer(self.basemap)
+    if update_basemap:
+        
+        # Clear all layers and add basemap
+        self.map_layers.clear_layers()
+        self.map_layers.add_layer(self.basemap)
 
 
 def extract_data(self):
@@ -179,14 +181,23 @@ def extract_data(self):
         # Set invalid nodata pixels to NaN
         timeseries_ds = mask_invalid_data(timeseries_ds)
 
+        # If resampling freq specified
+        if self.resample_freq:
+            print(f"\nResampling data to {self.resample_freq} frequency")
+            timeseries_ds = timeseries_ds.resample(time=self.resample_freq).median()
+
+        # load into memory
+        timeseries_ds.load()
+
     # Else if no data is returned, return None
     else:
         timeseries_ds = None
 
     # Close down the dask client
+#     client.shutdown()
     client.close()
 
-    return timeseries_ds.compute()
+    return timeseries_ds
 
 
 def plot_data(self, fname):
@@ -203,12 +214,6 @@ def plot_data(self, fname):
         to_plot = to_plot.rolling(
             time=int(self.rolling_median_window), center=True, min_periods=1
         ).median()
-
-    # If resampling freq specified
-    if self.resample_freq:
-        with self.status_info:
-            print(f"\nResampling data to {self.resample_freq} frequency")
-        to_plot = to_plot.resample(time=self.resample_freq).median()
 
     # Raise by power to dampen bright features and enhance dark.
     # Raise vmin and vmax by same amount to ensure proper stretch
@@ -474,7 +479,7 @@ class animation_app(HBox):
         self.m.add_layer(self.map_layers)
 
         # Update all maps to starting defaults
-        update_map_layers(self)
+        update_map_layers(self, update_basemap=True)
 
         ############################
         # WIDGETS FOR APP CONTROLS #
@@ -752,18 +757,47 @@ class animation_app(HBox):
         self.start_date = str(change.new)
 
         # Clear data load params to trigger data re-load
-        self.timeseries_ds = None
-        self.load_params = None
-        self.query_params = None
+        update_map_layers(self)
 
     # Update date
     def update_end_date(self, change):
         self.end_date = str(change.new)
 
         # Clear data load params to trigger data re-load
-        self.timeseries_ds = None
-        self.load_params = None
-        self.query_params = None
+        update_map_layers(self)
+
+    # Update basemap
+    def update_basemap(self, change):
+        self.basemap = change.new
+        update_map_layers(self, update_basemap=True)
+        
+    # Change layers shown on the map
+    def update_dealayer(self, change):
+        self.dealayer = change.new
+
+        if change.new == "ga_ls_ard_3":
+            self.text_resolution.value = 30
+
+        else:
+            self.text_resolution.value = 10
+
+    # Set imagery style
+    def update_styles(self, change):
+        self.style = change.new
+
+        # Clear data load params to trigger data re-load
+        update_map_layers(self)
+        
+    # Update good data slider
+    def update_floatslider_max_cloud_cover(self, change):
+        self.max_cloud_cover = change.new
+
+        # Clear data load params to trigger data re-load
+        update_map_layers(self)
+    
+    # Set output file format
+    def update_output(self, change):
+        self.output_format = change.new
 
     # Update colour stretch
     def update_slider_percentile(self, change):
@@ -773,14 +807,7 @@ class animation_app(HBox):
     def update_slider_power(self, change):
         self.power = change.new
 
-    # Update good data slider
-    def update_floatslider_max_cloud_cover(self, change):
-        self.max_cloud_cover = change.new
 
-        # Clear data load params to trigger data re-load
-        self.timeseries_ds = None
-        self.load_params = None
-        self.query_params = None
 
     # Enable unsharp masking and show/hide custom params
     def update_checkbox_unsharp_mask(self, change):
@@ -829,9 +856,7 @@ class animation_app(HBox):
         self.cloud_mask = change.new
 
         # Clear data load params to trigger data re-load
-        self.timeseries_ds = None
-        self.load_params = None
-        self.query_params = None
+        update_map_layers(self)
 
     # Override min width
     def update_width(self, change):
@@ -846,41 +871,14 @@ class animation_app(HBox):
         self.resolution = change.new
 
         # Clear data load params to trigger data re-load
-        self.timeseries_ds = None
-        self.load_params = None
-        self.query_params = None
-
-    # Change layers shown on the map
-    def update_dealayer(self, change):
-        self.dealayer = change.new
-
-        if change.new == "ga_ls_ard_3":
-            self.text_resolution.value = 30
-
-        else:
-            self.text_resolution.value = 10
-
-    # Update basemap
-    def update_basemap(self, change):
-        self.basemap = change.new
         update_map_layers(self)
-
-    # Set imagery style
-    def update_styles(self, change):
-        self.style = change.new
-
-        # Clear data load params to trigger data re-load
-        self.timeseries_ds = None
-        self.load_params = None
-        self.query_params = None
-
-    # Set output file format
-    def update_output(self, change):
-        self.output_format = change.new
 
     # Set output file format
     def update_dropdown_resampling(self, change):
         self.resample_freq = change.new
+        
+        # Clear data load params to trigger data re-load
+        update_map_layers(self)
 
     def run_app(self, change):
 
