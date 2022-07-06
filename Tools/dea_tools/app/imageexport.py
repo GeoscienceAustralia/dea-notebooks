@@ -550,7 +550,7 @@ class imageexport_app(HBox):
                                                              'padding': '0px',
                                                              'display': 'none'})
         checkbox_max_size = deawidgets.create_checkbox(
-            self.unsharp_mask, 'Enable')        
+            self.max_size, 'Enable')        
         text_dpi = widgets.IntText(value=0, 
                                      description="", 
                                      step=50, 
@@ -828,4 +828,4 @@ class imageexport_app(HBox):
         
         else:
             with self.status_info:
-                print('Please draw a rectangle on the map, then press "Export imagery"')
+                print('Please draw a valid rectangle on the map, then press "Export imagery"')
