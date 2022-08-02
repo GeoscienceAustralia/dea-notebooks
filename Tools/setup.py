@@ -28,12 +28,10 @@ IS_DEA = IS_NCI or IS_SANDBOX
 # What packages are required for this module to be executed?
 # These are all on the Sandbox/NCI so shouldn't need installing on those platforms.
 REQUIRED = [
-    # bom
     'ciso8601',
     'pytz',
     'requests',
     'lxml',
-    # classification
     'numpy',
     'xarray',
     'geopandas',
@@ -42,24 +40,21 @@ REQUIRED = [
     'dask',
     'rasterio',
     'scikit-learn',
-    # coastal
-    'matplotlib',
+    'rasterstats',
+    'geopy',
     'pandas',
     'scipy',
     # 'otps',  # Hard to install, but available on Sandbox and NCI
-    # datahandling
     'GDAL',
     'odc-ui',
     'numexpr',
-    # plotting
+    'matplotlib',
     'folium',
     'pyproj',
     'branca',
     'shapely',
     'scikit-image',
-    # climate
     'python-dateutil',
-    # waterbodies
     'OWSLib',
 ]
 
