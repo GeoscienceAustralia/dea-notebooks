@@ -27,8 +27,10 @@ Functions included:
     transform_geojson_wgs_to_epsg
     zonal_stats_parallel
     reverse_geocode
+    hillshade
+    sun_angles
 
-Last modified: October 2021
+Last modified: August 2022
 
 '''
 
@@ -949,4 +951,97 @@ def reverse_geocode(coords, site_classes=None, state_classes=None):
         # If no geocoding result, return N/E/S/W coordinates
         print('No valid geocoded location; returning coordinates instead')
         return f'{lat}, {lon}'
-        
+
+
+def hillshade(dem, elevation, azimuth, vert_exag=1, dx=30, dy=30):
+    """
+    Calculate hillshade from an input Digital Elevation Model
+    (DEM) array and a sun elevation and azimith.
+
+    Parameters:
+    -----------
+    dem : numpy.array
+        A 2D Digital Elevation Model array.
+    elevation : int or float
+        Sun elevation (0-90, degrees up from horizontal).
+    azimith : int or float
+        Sun azimuth (0-360, degrees clockwise from north).
+    vert_exag : int or float, optional
+        The amount to exaggerate the elevation values by
+        when calculating illumination. This can be used either
+        to correct for differences in units between the x-y coordinate
+        system and the elevation coordinate system (e.g. decimal
+        degrees vs. meters) or to exaggerate or de-emphasize
+        topographic effects.
+    dx : int or float, optional
+        The x-spacing (columns) of the input DEM. This
+        is typically the spatial resolution of the DEM.
+    dy : int or float, optional
+        The y-spacing (rows) of the input input DEM. This
+        is typically the spatial resolution of the DEM.
+
+    Returns:
+    --------
+    hs : numpy.array
+        A 2D hillshade array with values between 0-1, where
+        0 is completely in shadow and 1 is completely
+        illuminated.
+    """
+
+    from matplotlib.colors import LightSource
+
+    hs = LightSource(azdeg=azimuth, altdeg=elevation).hillshade(
+        dem, vert_exag=vert_exag, dx=dx, dy=dy
+    )
+    return hs
+
+
+def sun_angles(dc, query):
+    """
+    For a given spatiotemporal query, calculate mean sun
+    azimuth and elevation for each satellite observation, and
+    return these as a new `xarray.Dataset` with 'sun_elevation'
+    and 'sun_azimuth' variables.
+
+    Parameters:
+    -----------
+    dc : datacube.Datacube object
+        Datacube instance used to load data.
+    query : dict
+        A dictionary containing query parameters used to identify
+        satellite observations and load metadata.
+
+    Returns:
+    --------
+    sun_angles_ds : xarray.Dataset
+        An `xarray.set` containing a 'sun_elevation' and
+        'sun_azimuth' variables.
+    """
+
+    from datacube.api.query import query_group_by
+    from datacube.model.utils import xr_apply
+
+    # Identify satellite datasets and group outputs using the
+    # same approach used to group satellite imagery (i.e. solar day)
+    gb = query_group_by(**query)
+    datasets = dc.find_datasets(**query)
+    dataset_array = dc.group_datasets(datasets, gb)
+
+    # Load and take the mean of metadata from each product
+    sun_azimuth = xr_apply(
+        dataset_array,
+        lambda t, dd: np.mean([d.metadata.eo_sun_azimuth for d in dd]),
+        dtype=float,
+    )
+    sun_elevation = xr_apply(
+        dataset_array,
+        lambda t, dd: np.mean([d.metadata.eo_sun_elevation for d in dd]),
+        dtype=float,
+    )
+
+    # Combine into new xarray.Dataset
+    sun_angles_ds = xr.merge(
+        [sun_elevation.rename("sun_elevation"), sun_azimuth.rename("sun_azimuth")]
+    )
+
+    return sun_angles_ds

@@ -26,12 +26,12 @@ Functions included:
     dilate
     pan_sharpen_brovey
     paths_to_datetimeindex
-    _select_along_axis
     nearest
     last
     first
+    parallel_apply
 
-Last modified: September 2021
+Last modified: August 2022
 
 '''
 
@@ -896,3 +896,52 @@ def nearest(array: xr.DataArray,
                                              da_before[index_name],
                                              da_after[index_name])
     return nearest_array
+
+
+def parallel_apply(ds, dim, func, *args):
+    """
+    Applies a custom function in parallel along the dimension of an 
+    xarray.Dataset or xarray.DataArray.
+    
+    The function can be any function that can be applied to an
+    individual xarray.Dataset or xarray.DataArray (e.g. data for a 
+    single timestep). The function should also return data in 
+    xarray.Dataset or xarray.DataArray format.
+    
+    This function is useful as a simple method for parallising code
+    that cannot easily be parallised using Dask.
+    
+    Parameters:
+    -----------
+    ds : xarray.Dataset or xarray.DataArray
+        xarray data with a dimension `dim` to apply the custom function
+        along.
+    dim : string
+        The dimension along which the custom function will be applied.
+    func : function
+        The function that will be applied in parallel to each array
+        along dimension `dim`. The first argument passed to this
+        function should be the array along `dim`.
+    *args :
+        Any number of arguments that will be passed to `func`.
+        
+    Returns:
+    --------
+    xarray.Dataset
+        A concatenated dataset containing an output for each array
+        along the input `dim` dimension.
+    """
+
+    from concurrent.futures import ProcessPoolExecutor
+    from tqdm import tqdm
+    from itertools import repeat
+
+    with ProcessPoolExecutor() as executor:
+
+        # Apply func in parallel
+        groups = [group for (i, group) in ds.groupby(dim)]
+        to_iterate = (groups, *(repeat(i, len(groups)) for i in args))
+        out_list = list(tqdm(executor.map(func, *to_iterate), total=len(groups)))
+
+    # Combine to match the original dataset
+    return xr.concat(out_list, dim=ds[dim])
