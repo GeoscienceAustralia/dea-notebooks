@@ -900,13 +900,21 @@ def nearest(array: xr.DataArray,
 
 def parallel_apply(ds, dim, func, *args):
     """
-    Applies a custom function along the dimension of an xarray.Dataset,
-    then combines the output to match the original dataset.
+    Applies a custom function in parallel along the dimension of an 
+    xarray.Dataset or xarray.DataArray.
+    
+    The function can be any function that can be applied to an
+    individual xarray.Dataset or xarray.DataArray (e.g. data for a 
+    single timestep). The function should also return data in 
+    xarray.Dataset or xarray.DataArray format.
+    
+    This function is useful as a simple method for parallising code
+    that cannot easily be parallised using Dask.
     
     Parameters:
     -----------
-    ds : xarray.Dataset
-        A dataset with a dimension `dim` to apply the custom function
+    ds : xarray.Dataset or xarray.DataArray
+        xarray data with a dimension `dim` to apply the custom function
         along.
     dim : string
         The dimension along which the custom function will be applied.
