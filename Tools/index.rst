@@ -12,15 +12,7 @@ Core modules
 .. autosummary::
    :toctree: gen
 
-   dea_tools.bandindices
-   dea_tools.classification
-   dea_tools.coastal
-   dea_tools.dask
    dea_tools.datahandling
-   dea_tools.load_era5
-   dea_tools.plotting
-   deaa_tools.spatial
-   dea_tools.temporal
 
 License
 -------
