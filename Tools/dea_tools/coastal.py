@@ -38,10 +38,12 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from scipy import stats
-import odc.algo
-from datacube.utils.geometry import CRS
 from shapely.geometry import box, shape
 from owslib.wfs import WebFeatureService
+
+import odc.algo
+from datacube.utils.geometry import CRS
+from dea_tools.datahandling import parallel_apply
 
 try:
     from otps import TimePoint
@@ -831,6 +833,7 @@ def pixel_tides(
     calculate_quantiles=None,
     resolution=5000,
     buffer=12000,
+    resample_method="bilinear",
     model="FES2014",
     directory="~/tide_models_clipped",
 ):
@@ -852,7 +855,7 @@ def pixel_tides(
         `times=pd.date_range(start="2000", end="2020", freq="30min")`
     resample : bool, optional
         Whether to resample low resolution tides back into `ds`'s original
-        higher resolution grid. Set this to `False` if you do not want 
+        higher resolution grid. Set this to `False` if you do not want
         low resolution tides to be re-projected back to higher resolution.
     calculate_quantiles : list or np.array, optional
         Rather than returning all individual tides, low-resolution tides
@@ -873,6 +876,11 @@ def pixel_tides(
         resolution and extent of the higher resolution dataset. Defaults
         to 12,000 m to ensure that at least two 5,000 m pixels occur
         outside of the dataset bounds.
+    resample_method : string, optional
+        If resampling is requested (see `resample` above), use this
+        resampling method when converting from low resolution to high
+        resolution pixels. Defaults to "bilinear"; valid options include
+        "nearest", "cubic", "min", "max", "average" etc.
     model : string, optional
         The tide model used to model tides. Options include:
         - "FES2014"
@@ -968,7 +976,11 @@ def pixel_tides(
 
         print("Reprojecting tides into original array")
         tides_highres = parallel_apply(
-            tides_lowres, reproject_dim, odc.algo.xr_reproject, ds.odc.geobox.compat
+            tides_lowres,
+            reproject_dim,
+            odc.algo.xr_reproject,
+            ds.odc.geobox.compat,
+            resample_method,
         )
 
         return tides_highres, tides_lowres
