@@ -7,12 +7,40 @@ Australia Sandbox environment. More information on installing this package can b
 <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Tools/>`_ section of the GitHub repository.
 
 Core modules
------------------
+------------
 
 .. autosummary::
    :toctree: gen
 
    dea_tools.datahandling
+   dea_tools.bandindices
+   dea_tools.bom
+   dea_tools.classification
+   dea_tools.climate
+   dea_tools.coastal
+   dea_tools.dask
+   dea_tools.datahandling
+   dea_tools.landcover
+   dea_tools.plotting
+   dea_tools.spatial
+   dea_tools.temporal
+   dea_tools.waterbodies
+   
+Apps and widgets
+-----------------
+
+``dea_tools`` interactive app sub-packages can be accessed through ``dea_tools.app``.
+
+.. autosummary::
+   :toctree: gen
+   
+   dea_tools.app.animations
+   dea_tools.app.changefilmstrips
+   dea_tools.app.crophealth
+   dea_tools.app.deacoastlines
+   dea_tools.app.imageexport
+   dea_tools.app.miningrehab
+   dea_tools.app.widgetconstructors
 
 License
 -------
