@@ -1,8 +1,6 @@
 '''
-Calculating remote sensing band indices (e.g. NDVI, NDWI)
-'''
+Calculating band indices from remote sensing data (NDVI, NDWI etc).
 
-'''
 License: The code in this notebook is licensed under the Apache License,
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
 Australia data is licensed under the Creative Commons by Attribution 4.0
