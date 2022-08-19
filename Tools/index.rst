@@ -22,7 +22,6 @@ Core modules
    dea_tools.datahandling
    dea_tools.landcover
    dea_tools.plotting
-   dea_tools.segmentation
    dea_tools.spatial
    dea_tools.temporal
    dea_tools.waterbodies
