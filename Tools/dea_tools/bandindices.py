@@ -1,7 +1,5 @@
-## dea_bandindices.py
 '''
-Description: This file contains a set of python functions for computing
-remote sensing band indices on Digital Earth Australia data.
+Calculating band indices from remote sensing data (NDVI, NDWI etc).
 
 License: The code in this notebook is licensed under the Apache License,
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
@@ -18,7 +16,6 @@ If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Last modified: March 2021
-
 '''
 
 # Import required packages
