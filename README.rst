@@ -61,7 +61,7 @@ All notebooks in the ``dea-notebooks`` repository contain tags describing their 
 Getting started with DEA Notebooks
 ==================================
 
-To get started with using ``dea-notebooks``, `visit the DEA Notebooks Wiki page <https://github.com/GeoscienceAustralia/dea-notebooks/wiki>`_. This page includes guides for getting started on both the `DEA Sandbox <https://github.com/GeoscienceAustralia/dea-notebooks/wiki#getting-started-on-the-dea-sandbox>`_ and `NCI environments <https://github.com/GeoscienceAustralia/dea-notebooks/wiki#getting-started-on-the-nci>`_.
+To get started with using ``dea-notebooks``, `visit the DEA Notebooks Wiki page <https://github.com/GeoscienceAustralia/dea-notebooks/wiki>`_ (Note this is a GitHub wiki, not part of the codebase of this repo). This page includes guides for getting started on both the `DEA Sandbox <https://github.com/GeoscienceAustralia/dea-notebooks/wiki#getting-started-on-the-dea-sandbox>`_ and `NCI environments <https://github.com/GeoscienceAustralia/dea-notebooks/wiki#getting-started-on-the-nci>`_.
 
 Once you're set up, there are two main options for interacting with ``dea-notebooks`` and contributing back to the repository:
 
