@@ -3,6 +3,9 @@ Frequently used code
 
 A recipe book of simple code examples demonstrating how to perform common geospatial analysis tasks using DEA and open-source software.
 
+**See also:** `dea-notebooks wiki <https://github.com/GeoscienceAustralia/dea-notebooks/wiki>`_ which contains links to additional resources.
+
+
 .. toctree::
    :maxdepth: 1
    :caption: Frequently Used Code
