@@ -56,6 +56,7 @@ REQUIRED = [
     'scikit-image',
     'python-dateutil',
     'OWSLib',
+    'fiona',
 ]
 
 # What packages are optional?
