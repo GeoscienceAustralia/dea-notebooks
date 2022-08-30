@@ -1,26 +1,31 @@
-# notebookapp_crophealth.py
 '''
 Testing
 '''
 
-# Load modules
-from ipyleaflet import (
-    Map,
-    GeoJSON,
-    DrawControl,
-    basemaps
-)
-import datetime as dt
+# # Load modules
+# from ipyleaflet import (
+#     Map,
+#     GeoJSON,
+#     DrawControl,
+#     basemaps
+# )
+# import datetime as dt
 import datacube
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import rasterio
-from rasterio.features import geometry_mask
-import xarray as xr
-from IPython.display import display
-import warnings
-import ipywidgets as widgets
-import geopandas as gpd
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
+# import rasterio
+# from rasterio.features import geometry_mask
+# import xarray as xr
+# from IPython.display import display
+# import warnings
+# import ipywidgets as widgets
+# import geopandas as gpd
+
+def test_func(a):
+    """
+    This is a func.
+    """
+    return a + 1
 
 # # Load utility functions
 # import sys
