@@ -35,12 +35,14 @@ Last modified: August 2022
 '''
 
 # Import required packages
+import fiona
 import collections
 import numpy as np
 import xarray as xr
 import geopandas as gpd
 import rasterio.features
 import scipy.interpolate
+import multiprocessing as mp
 from scipy import ndimage as nd
 from skimage.measure import label
 from rasterstats import zonal_stats
@@ -49,7 +51,7 @@ from geopy.geocoders import Nominatim
 from datacube.utils.cog import write_cog
 from datacube.utils.geometry import assign_crs
 from datacube.utils.geometry import CRS, Geometry
-from shapely.geometry import LineString, MultiLineString, shape
+from shapely.geometry import LineString, MultiLineString, shape, mapping
 
 def xr_vectorize(da, 
                  attribute_col='attribute', 
