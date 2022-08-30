@@ -1,287 +1,397 @@
 '''
-Testing
+Description: Functions for easily defining widgets for Digital Earth 
+Australia notebooks. These functions are directly modified from 
+originals developed by Digital Earth Africa: 
+https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/blob/main/Tools/deafrica_tools/app/widgetconstructors.py
+
+License: The code in this notebook is licensed under the Apache License, 
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
+Australia data is licensed under the Creative Commons by Attribution 4.0 
+license (https://creativecommons.org/licenses/by/4.0/).
+
+Contact: If you need assistance, post a question on the Open Data Cube 
+Slack channel (http://slack.opendatacube.org/) or the GIS Stack Exchange 
+(https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using 
+the `open-data-cube` tag (you can view previously asked questions here: 
+https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+
+If you would like to report an issue with this script, you can file one 
+on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+
+Last modified: June 2022
 '''
 
-# # Load modules
-# from ipyleaflet import (
-#     Map,
-#     GeoJSON,
-#     DrawControl,
-#     basemaps
-# )
-# import datetime as dt
-import datacube
-# import matplotlib as mpl
-# import matplotlib.pyplot as plt
-# import rasterio
-# from rasterio.features import geometry_mask
-# import xarray as xr
-# from IPython.display import display
-# import warnings
-# import ipywidgets as widgets
-# import geopandas as gpd
-
-def test_func(a):
-    """
-    This is a func.
-    """
-    return a + 1
-
-# # Load utility functions
-# import sys
-# from dea_tools.datahandling import load_ard
-# from dea_tools.spatial import transform_geojson_wgs_to_epsg
-# from dea_tools.bandindices import calculate_indices
+import ipyleaflet as leaflet
+from ipyleaflet import LayersControl
+import ipywidgets as widgets
+from traitlets import Unicode
 
 
-# def load_crophealth_data():
-#     """
-#     Loads Sentinel-2 analysis-ready data (ARD) product for the crop health
-#     case-study area. The ARD product is provided for the last year.
-#     Last modified: January 2020
-
-#     outputs
-#     ds - data set containing combined, masked data from Sentinel-2a and -2b.
-#     Masked values are set to 'nan'
-#     """
+def create_datepicker(description='', value=None, layout={'width': '85%'}):
+    '''
+    Create a DatePicker widget
     
-#     # Suppress warnings
-#     warnings.filterwarnings('ignore')
-
-#     # Initialise the data cube. 'app' argument is used to identify this app
-#     dc = datacube.Datacube(app='Crophealth-app')
-
-#     # Specify latitude and longitude ranges
-#     latitude = (-24.974997, -24.995971)
-#     longitude = (152.429994, 152.395805)
-
-#     # Specify the date range
-#     # Calculated as today's date, subtract 90 days to match NRT availability
-#     # Dates are converted to strings as required by loading function below
-#     end_date = dt.date.today()
-#     start_date = end_date - dt.timedelta(days=365)
-
-#     time = (start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
-
-#     # Construct the data cube query
-#     products = ["s2a_ard_granule", "s2b_ard_granule"]
+    Last modified: October 2021
     
-#     query = {
-#         'x': longitude,
-#         'y': latitude,
-#         'time': time,
-#         'measurements': [
-#             'nbart_red',
-#             'nbart_green',
-#             'nbart_blue',
-#             'nbart_nir_1',
-#             'nbart_swir_2',
-#             'nbart_swir_3'
-#         ],
-#         'output_crs': 'EPSG:3577',
-#         'resolution': (-10, 10)
-#     }
+    Parameters
+    ----------
+    description : string
+        descirption label to attach
+    layout : dictionary
+        any layout commands for the widget
+        
+    Returns
+    -------
+    date_picker : ipywidgets.widgets.widget_date.DatePicker
+        
+    '''
 
-#     # Load the data and mask out bad quality pixels
-#     ds_s2 = load_ard(dc, products=products, min_gooddata=0.5, **query)
+    date_picker = widgets.DatePicker(description=description,
+                                     layout=layout,
+                                     disabled=False,
+                                     value=value)
 
-#     # Calculate the normalised difference vegetation index (NDVI) across
-#     # all pixels for each image.
-#     # This is stored as an attribute of the data
-#     ds_s2 = calculate_indices(ds_s2, index='NDVI', collection='ga_s2_1')
-
-#     # Return the data
-#     return(ds_s2)
+    return date_picker
 
 
-# def run_crophealth_app(ds):
-#     """
-#     Plots an interactive map of the crop health case-study area and allows
-#     the user to draw polygons. This returns a plot of the average NDVI value
-#     in the polygon area.
-#     Last modified: January 2020
+def create_inputtext(value,
+                     placeholder,
+                     description="",
+                     layout={'width': '85%'}):
+    '''
+    Create a Text widget
     
-#     inputs
-#     ds - data set containing combined, masked data from Sentinel-2a and -2b.
-#     Must also have an attribute containing the NDVI value for each pixel
-#     """
+    Last modified: October 2021
     
-#     # Suppress warnings
-#     warnings.filterwarnings('ignore')
+    Parameters
+    ----------
+    value : string
+        initial value of the widget
+    placeholder : string
+        placeholder text to display to the user before intput
+    description : string
+        descirption label to attach
+    layout : dictionary
+        any layout commands for the widget
+        
+    Returns
+    -------
+    input_text : ipywidgets.widgets.widget_string.Text
+        
+    '''
 
-#     # Update plotting functionality through rcParams
-#     mpl.rcParams.update({'figure.autolayout': True})
+    input_text = widgets.Text(value=value,
+                              placeholder=placeholder,
+                              description=description,
+                              layout=layout,
+                              disabled=False)
 
-#     # Define the bounding box that will be overlayed on the interactive map
-#     # The bounds are hard-coded to match those from the loaded data
-#     geom_obj = {
-#         "type": "Feature",
-#         "properties": {
-#             "style": {
-#                 "stroke": True,
-#                 "color": 'red',
-#                 "weight": 4,
-#                 "opacity": 0.8,
-#                 "fill": True,
-#                 "fillColor": False,
-#                 "fillOpacity": 0,
-#                 "showArea": True,
-#                 "clickable": True
-#             }
-#         },
-#         "geometry": {
-#             "type": "Polygon",
-#             "coordinates": [
-#                 [
-#                     [152.395805, -24.995971],
-#                     [152.395805, -24.974997],
-#                     [152.429994, -24.974997],
-#                     [152.429994, -24.995971],
-#                     [152.395805, -24.995971]
-#                 ]
-#             ]
-#         }
-#     }
+    return input_text
 
-#     # Create a map geometry from the geom_obj dictionary
-#     # center specifies where the background map view should focus on
-#     # zoom specifies how zoomed in the background map should be
-#     centroid = gpd.GeoDataFrame.from_features([geom_obj]).geometry.centroid
-#     loadeddata_center = centroid.y.item(), centroid.x.item()
-#     loadeddata_zoom = 14
 
-#     # define the study area map
-#     studyarea_map = Map(
-#         center=loadeddata_center,
-#         zoom=loadeddata_zoom,
-#         basemap=basemaps.Esri.WorldImagery
-#     )
+def create_boundedfloattext(value,
+                            min_val,
+                            max_val,
+                            step_val,
+                            description="",
+                            layout={'width': '85%'}):
+    '''
+    Create a BoundedFloatText widget
+    
+    Last modified: October 2021
+    
+    Parameters
+    ----------
+    value : float
+        initial value of the widget
+    min_val : float
+        minimum allowed value for the float
+    max_val : float
+        maximum allowed value for the float
+    step_val : float
+        allowed increment for the float
+    description : string
+        descirption label to attach
+    layout : dictionary
+        any layout commands for the widget
+        
+    Returns
+    -------
+    float_text : ipywidgets.widgets.widget_float.BoundedFloatText
+        
+    '''
 
-#     # define the drawing controls
-#     studyarea_drawctrl = DrawControl(
-#         polygon={"shapeOptions": {"fillOpacity": 0}},
-#         marker={},
-#         circle={},
-#         circlemarker={},
-#         polyline={},
-#     )
+    float_text = widgets.BoundedFloatText(
+        value=value,
+        min=min_val,
+        max=max_val,
+        step=step_val,
+        description=description,
+        layout=layout,
+        disabled=False,
+    )
 
-#     # add drawing controls and data bound geometry to the map
-#     studyarea_map.add_control(studyarea_drawctrl)
-#     studyarea_map.add_layer(GeoJSON(data=geom_obj))
+    return float_text
 
-#     # Index to count drawn polygons
-#     polygon_number = 0
 
-#     # Define widgets to interact with
-#     instruction = widgets.Output(layout={'border': '1px solid black'})
-#     with instruction:
-#         print("Draw a polygon within the red box to view a plot of "
-#               "average NDVI over time in that area.")
+def create_dropdown(options, value, description="", layout={'width': '85%'}):
+    '''
+    Create a Dropdown widget
+    
+    Last modified: October 2021
+    
+    Parameters
+    ----------
+    options : list
+        a list of options for the user to select from
+    value : string
+        initial value of the widget
+    description : string
+        descirption label to attach
+    layout : dictionary
+        any layout commands for the widget
+        
+    Returns
+    -------
+    dropdown : ipywidgets.widgets.widget_selection.Dropdown
+        
+    '''
 
-#     info = widgets.Output(layout={'border': '1px solid black'})
-#     with info:
-#         print("Plot status:")
+    dropdown = widgets.Dropdown(
+        options=options,
+        value=value,
+        description=description,
+        layout=layout,
+        disabled=False,
+    )
 
-#     fig_display = widgets.Output(layout=widgets.Layout(
-#         width="50%",  # proportion of horizontal space taken by plot
-#     ))
+    return dropdown
 
-#     with fig_display:
-#         plt.ioff()
-#         fig, ax = plt.subplots(figsize=(8, 6))
-#         ax.set_ylim([-1, 1])
 
-#     colour_list = plt.rcParams['axes.prop_cycle'].by_key()['color']
+def create_checkbox(value, description="", layout={'width': '85%'}):
+    '''
+    Create a Checkbox widget
+    
+    Last modified: January 2022
+    
+    Parameters
+    ----------
+    value : string
+        initial value of the widget; True or False
+    description : string
+        description label to attach
+    layout : dictionary
+        any layout commands for the widget
+        
+    Returns
+    -------
+    dropdown : ipywidgets.widgets.widget_selection.Dropdown
+        
+    '''
 
-#     # Function to execute each time something is drawn on the map
-#     def handle_draw(self, action, geo_json):
-#         nonlocal polygon_number
+    checklist = widgets.Checkbox(value=value,
+                                 description=description,
+                                 layout=layout,
+                                 disabled=False,
+                                 indent=False)
 
-#         # Execute behaviour based on what the user draws
-#         if geo_json['geometry']['type'] == 'Polygon':
+    return checklist
 
-#             info.clear_output(wait=True)  # wait=True reduces flicker effect
-#             with info:
-#                 print("Plot status: polygon sucessfully added to plot.")
 
-#             # Convert the drawn geometry to pixel coordinates
-#             geom_selectedarea = transform_geojson_wgs_to_epsg(
-#                 geo_json,
-#                 EPSG=3577  # hard-coded to be same as case-study data
-#             )
+def create_html(value):
+    '''
+    Create a HTML widget
+    
+    Last modified: October 2021
+    
+    Parameters
+    ----------
+    value : string
+        HTML text to display
+        
+    Returns
+    -------
+    html : ipywidgets.widgets.widget_string.HTML
+        
+    '''
 
-#             # Construct a mask to only select pixels within the drawn polygon
-#             mask = geometry_mask(
-#                 [geom_selectedarea for geoms in [geom_selectedarea]],
-#                 out_shape=ds.geobox.shape,
-#                 transform=ds.geobox.affine,
-#                 all_touched=False,
-#                 invert=True
-#             )
+    html = widgets.HTML(value=value,)
 
-#             masked_ds = ds.NDVI.where(mask)
-#             masked_ds_mean = masked_ds.mean(dim=['x', 'y'], skipna=True)
-#             colour = colour_list[polygon_number % len(colour_list)]
+    return html
 
-#             # Add a layer to the map to make the most recently drawn polygon
-#             # the same colour as the line on the plot
-#             studyarea_map.add_layer(
-#                 GeoJSON(
-#                     data=geo_json,
-#                     style={
-#                         'color': colour,
-#                         'opacity': 1,
-#                         'weight': 4.5,
-#                         'fillOpacity': 0.0
-#                     }
-#                 )
-#             )
 
-#             # add new data to the plot
-#             xr.plot.plot(
-#                 masked_ds_mean,
-#                 marker='*',
-#                 color=colour,
-#                 ax=ax
-#             )
+def create_map(map_center=(-28, 135),
+               zoom_level=4,
+               basemap=leaflet.basemaps.OpenStreetMap.Mapnik,
+               basemap_name='Open Street Map',
+               **kwargs):
+    '''
+    Create an interactive ipyleaflet map
+    
+    Last modified: October 2021
+    
+    Parameters
+    ----------
+    map_center : tuple
+        A tuple containing the latitude and longitude to focus on.
+        Defaults to center of Australia (-28, 135)
+    zoom_level : integer
+        Zoom level for the map
+        Defaults to 4 to view all of Australia
+    basemap : ipyleaflet basemap (dict)
+        Basemap to use, can be any from https://ipyleaflet.readthedocs.io/en/latest/api_reference/basemaps.html
+        Defaults to Open Street Map (basemaps.OpenStreetMap.Mapnik)
+    basemap_name : string
+        Layer name for the basemap
+        
+    Returns
+    -------
+    m : ipyleaflet.leaflet.Map
+        interactive ipyleaflet map
+        
+    '''
 
-#             # reset titles back to custom
-#             ax.set_title("Average NDVI from Sentinel-2")
-#             ax.set_xlabel("Date")
-#             ax.set_ylabel("NDVI")
+    basemap_tiles = leaflet.basemap_to_tiles(basemap)
+    basemap_tiles.name = basemap_name
 
-#             # refresh display
-#             fig_display.clear_output(wait=True)  # wait=True reduces flicker effect
-#             with fig_display:
-#                 display(fig)
+    m = leaflet.Map(center=map_center,
+                    zoom=zoom_level,
+                    basemap=basemap_tiles,
+                    scroll_wheel_zoom=True,
+                    **kwargs)
 
-#             # Iterate the polygon number before drawing another polygon
-#             polygon_number = polygon_number + 1
+    return m
 
-#         else:
-#             info.clear_output(wait=True)
-#             with info:
-#                 print("Plot status: this drawing tool is not currently "
-#                       "supported. Please use the polygon tool.")
 
-#     # call to say activate handle_draw function on draw
-#     studyarea_drawctrl.on_draw(handle_draw)
+def create_dea_wms_layer(product, date, **params):
+    '''
+    Create a Digital Earth Australia WMS layer to add to a map
+    
+    Last modified: October 2021
+    
+    Parameters
+    ----------
+    product : string
+        The Digital Earth Australia product to load
+        (e.g. 'ga_ls8c_nbart_gm_cyear_3')
+    date : string (yyyy-mm-dd format)
+        The date to load the product for
+        
+    Returns
+    -------
+    time_wms : ipyleaflet WMS layer
+        
+    '''
 
-#     with fig_display:
-#         # TODO: update with user friendly something
-#         display(widgets.HTML(""))
+    # Load DEA WMS
+    class TimeWMSLayer(leaflet.WMSLayer):
+        time = Unicode("").tag(sync=True, o=True)
 
-#     # Construct UI:
-#     #  +-----------------------+
-#     #  | instruction           |
-#     #  +-----------+-----------+
-#     #  |  map      |  plot     |
-#     #  |           |           |
-#     #  +-----------+-----------+
-#     #  | info                  |
-#     #  +-----------------------+
-#     ui = widgets.VBox([instruction,
-#                        widgets.HBox([studyarea_map, fig_display]),
-#                        info])
-#     display(ui)
+    time_wms = TimeWMSLayer(
+        url="https://ows.dea.ga.gov.au/",
+        layers=product,
+        time=date,
+        format="image/png",
+        transparent=True,
+        attribution="Digital Earth Australia",
+        **params
+    )
+
+    return time_wms
+
+
+def create_drawcontrol(
+    draw_controls=[
+        'rectangle', 'polygon', 'circle', 'polyline', 'marker', 'circlemarker'
+    ],
+    rectangle_options={},
+    polygon_options={},
+    circle_options={},
+    polyline_options={},
+    marker_options={},
+    circlemarker_options={},
+):
+    '''
+    Create a draw control widget to add to ipyleaflet maps
+    
+    Last modified: October 2021
+    
+    Parameters
+    ----------
+    draw_controls : list
+        List of draw controls to add to the map. Defaults to adding all
+        Viable options are 'rectangle', 'polygon', 'circle', 'polyline', 
+        'marker', 'circlemarker'.
+    rectangle_options : dict
+        Options to customise the appearence of the relevant shape. 
+        Leave blank for default styling.
+    polygon_options : dict
+        Options to customise the appearence of the relevant shape. 
+        Leave blank for default styling.
+    circle_options : dict
+        Options to customise the appearence of the relevant shape. 
+        Leave blank for default styling.
+    polyline_options : dict
+        Options to customise the appearence of the relevant shape. 
+        Leave blank for default styling.
+    marker_options : dict
+        Options to customise the appearence of the relevant shape. 
+        Leave blank for default styling.
+    circlemarker_options : dict
+        Options to customise the appearence of the relevant shape. 
+        Leave blank for default styling.
+    
+        
+    Returns
+    -------
+    draw_control : ipyleaflet.leaflet.DrawControl
+        
+    '''
+
+    # Set defualt DE Africa styling options for polygons
+    default_shapeoptions = {
+        "color": "#FFFFFF",
+        "opacity": 0.8,
+        "fillColor": "#336699",
+        "fillOpacity": 0.4,
+    }
+    default_drawerror = {
+        "color": "#FF6633",
+        "message": "Drawing error, clear all and try again"
+    }
+
+    # Set draw control appearence to DE Africa defaults
+    # Do this if user has requested a control, but has not provided a corresponding options dict
+
+    if ('rectangle' in draw_controls) and (not rectangle_options):
+        rectangle_options = {"shapeOptions": default_shapeoptions}
+
+    if ('polygon' in draw_controls) and (not polygon_options):
+        polygon_options = {
+            "shapeOptions": default_shapeoptions,
+            "drawError": default_drawerror,
+            "allowIntersection": False,
+        }
+
+    if ('circle' in draw_controls) and (not circle_options):
+        circle_options = {"shapeOptions": default_shapeoptions}
+
+    if ('polyline' in draw_controls) and (not polyline_options):
+        polyline_options = {"shapeOptions": default_shapeoptions}
+
+    if ('marker' in draw_controls) and (not marker_options):
+        marker_options = {'shapeOptions': {'opacity': 1.0}}
+
+    if ('circlemarker' in draw_controls) and (not circlemarker_options):
+        circlemarker_options = {"shapeOptions": default_shapeoptions}
+
+    # Instantiate draw control and add options
+    draw_control = leaflet.DrawControl()
+    draw_control.rectangle = rectangle_options
+    draw_control.polygon = polygon_options
+    draw_control.marker = marker_options
+    draw_control.circle = circle_options
+    draw_control.circlemarker = circlemarker_options
+    draw_control.polyline = polyline_options
+
+    return draw_control
