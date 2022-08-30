@@ -27,7 +27,6 @@ from ipyleaflet import basemaps, basemap_to_tiles
 
 # Load utility functions
 import sys
-sys.path.insert(1, '../Tools/')
 from dea_tools.datahandling import load_ard, mostcommon_crs
 from dea_tools.coastal import tidal_tag
 from dea_tools.dask import create_local_dask_cluster
