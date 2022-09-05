@@ -45,12 +45,6 @@ import odc.algo
 from datacube.utils.geometry import CRS
 from dea_tools.datahandling import parallel_apply
 
-try:
-    from otps import TimePoint
-    from otps import predict_tide
-except ImportError:
-    from dea_tools.pyfes_model import TimePoint, predict_tide
-
 # Fix converters for tidal plot
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
@@ -110,6 +104,13 @@ def tidal_tag(ds,
     `tidepost_lon` and `tidepost_lat` location used in the analysis)
     
     """
+    
+    # Load tide modelling functions from either OTPS for pyfes
+    try:
+        from otps import TimePoint
+        from otps import predict_tide
+    except ImportError:
+        from dea_tools.pyfes_model import TimePoint, predict_tide
 
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
@@ -267,6 +268,13 @@ def tidal_stats(ds,
                   all modelled tide heights and time
     
     """
+    
+    # Load tide modelling functions from either OTPS for pyfes
+    try:
+        from otps import TimePoint
+        from otps import predict_tide
+    except ImportError:
+        from dea_tools.pyfes_model import TimePoint, predict_tide
     
     # Model tides for each observation in the supplied xarray object
     ds_tides, tidepost_lon, tidepost_lat = tidal_tag(ds,
