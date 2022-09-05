@@ -808,8 +808,14 @@ def model_tides(
     npts = len(t)
     tide = np.ma.zeros((npts), fill_value=np.nan)
     tide.mask = np.any(hc.mask, axis=1)
-    tide.data[:] = predict_tide_drift(t, hc, c, DELTAT=deltat, CORRECTIONS=model.format)
-    minor = infer_minor_corrections(t, hc, c, DELTAT=deltat, CORRECTIONS=model.format)
+    
+    # Depending on pyTMD version (<=1.06 vs > 1.06), use different params:
+    try:
+        tide.data[:] = predict_tide_drift(t, hc, c, deltat=deltat, corrections=model.format)
+        minor = infer_minor_corrections(t, hc, c, deltat=deltat, corrections=model.format)
+    except:
+        tide.data[:] = predict_tide_drift(t, hc, c, DELTAT=deltat, CORRECTIONS=model.format)
+        minor = infer_minor_corrections(t, hc, c, DELTAT=deltat, CORRECTIONS=model.format)
     tide.data[:] += minor.data[:]
 
     # Replace invalid values with fill value
