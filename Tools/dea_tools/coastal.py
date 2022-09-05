@@ -809,7 +809,8 @@ def model_tides(
     tide = np.ma.zeros((npts), fill_value=np.nan)
     tide.mask = np.any(hc.mask, axis=1)
     
-    # Depending on pyTMD version (<=1.06 vs > 1.06), use different params:
+    # Depending on pyTMD version (<=1.06 vs > 1.06), use different params
+    # TODO: Remove once Sandbox is updated to use pyTMD version 1.0.9
     try:
         tide.data[:] = predict_tide_drift(t, hc, c, deltat=deltat, corrections=model.format)
         minor = infer_minor_corrections(t, hc, c, deltat=deltat, corrections=model.format)
