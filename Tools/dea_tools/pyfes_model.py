@@ -20,15 +20,14 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from pyfes import Handler
-
-
 def initialise_handler():
     """Initialise Aviso FES Handler from INI file.
 
     The path to the INI file must be set in the `FES2014_OCEAN_INI` environment
     variable.
     """
+    from pyfes import Handler
+    
     ini_path = Path(environ.get("FES2014_OCEAN_INI", "."))
     if not ini_path.exists() or not ini_path.is_file():
         raise ValueError("FES2014_OCEAN_INI environment variable must be set")
@@ -48,7 +47,9 @@ def predict_tide(timepoints):
     This is the sum of the computed height of the diurnal and semi-diurnal
     constituents of the tidal spectrum and of the long period wave constituents
     of the tidal spectrum.
-    """        
+    """
+    from pyfes import Handler
+    
     lons, lats, times = tuple(np.array(timepoints).T)
     # aviso-fes requires naive UTC times in microseconds
     times_us = times.astype("datetime64[us]")
