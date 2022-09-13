@@ -70,8 +70,8 @@ sat_params = {
         "products": [
             "s2a_ard_granule",
             "s2b_ard_granule",
-            "s2a_nrt_granule",
-            "s2b_nrt_granule",
+            "ga_s2am_ard_provisional_3",
+            "ga_s2bm_ard_provisional_3",
         ],
         "styles": {
             "True colour": ("simple_rgb", ["nbart_red", "nbart_green", "nbart_blue"]),

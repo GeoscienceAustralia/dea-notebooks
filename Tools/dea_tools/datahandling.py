@@ -133,8 +133,8 @@ def load_ard(dc,
         ga_ls8c_ard_3
         s2a_ard_granule
         s2b_ard_granule
-        s2a_nrt_granule
-        s2b_nrt_granule
+        ga_s2am_ard_provisional_3
+        ga_s2bm_ard_provisional_3
 
     Last modified: April 2022
 
@@ -147,7 +147,7 @@ def load_ard(dc,
         A list of product names to load data from. Valid options are
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] for Landsat,
         ['s2a_ard_granule', 's2b_ard_granule'] for Sentinel 2 Definitive,
-        and ['s2a_nrt_granule', 's2b_nrt_granule'] for Sentinel 2 Near
+        and ['ga_s2am_ard_provisional_3', 'ga_s2bm_ard_provisional_3'] for Sentinel 2 Near
         Real Time (on the DEA Sandbox only).
     min_gooddata : float, optional
         An optional float giving the minimum percentage of good quality
@@ -260,7 +260,7 @@ def load_ard(dc,
                          "['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'] "
                          "for Landsat, ['s2a_ard_granule', "
                          "'s2b_ard_granule'] \nfor Sentinel 2 Definitive, or "
-                         "['s2a_nrt_granule', 's2b_nrt_granule'] for "
+                         "['ga_s2am_ard_provisional_3', 'ga_s2bm_ard_provisional_3'] for "
                          "Sentinel 2 Near Real Time")
     elif all(['ls' in product for product in products]):
         product_type = 'ls'
