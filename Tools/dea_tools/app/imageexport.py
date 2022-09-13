@@ -70,8 +70,8 @@ sat_params = {
                              ['nbart_swir_2', 'nbart_nir_1', 'nbart_green'])
         }
     },
-    's2_nrt_granule_nbar_t': {
-        'products': ['s2a_nrt_granule', 's2b_nrt_granule'],
+    'ga_s2m_ard_provisional_3_nbar_t': {
+        'products': ['ga_s2am_ard_provisional_3', 'ga_s2bm_ard_provisional_3'],
         'styles': {
             'True colour':
                 ('simple_rgb', ['nbart_red', 'nbart_green', 'nbart_blue']),
@@ -365,7 +365,7 @@ class imageexport_app(HBox):
         self.dealayer_list = [
             ("Landsat", 'ga_ls_ard_3'),
             ("Sentinel-2", 's2_ard_granule_nbar_t'),
-            ("Sentinel-2 NRT", 's2_nrt_granule_nbar_t'),
+            ("Sentinel-2 NRT", 'ga_s2m_ard_provisional_3_nbar_t'),
         ]
         self.dealayer = self.dealayer_list[0][1]
 
