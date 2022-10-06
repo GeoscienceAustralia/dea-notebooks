@@ -1,7 +1,6 @@
 ## dea_spatialtools.py
 '''
-Description: This file contains a set of python functions for conducting 
-spatial analyses on Digital Earth Australia data.
+Tools for spatially manipulating Digital Earth Australia data (vectorising, rasterising, interpolating etc).
 
 License: The code in this notebook is licensed under the Apache License, 
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
@@ -16,19 +15,6 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
-
-Functions included:
-    xr_vectorize
-    xr_rasterize
-    subpixel_contours
-    interpolate_2d
-    contours_to_array
-    largest_region
-    transform_geojson_wgs_to_epsg
-    zonal_stats_parallel
-    reverse_geocode
-    hillshade
-    sun_angles
 
 Last modified: August 2022
 
