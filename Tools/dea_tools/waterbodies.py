@@ -1,7 +1,6 @@
 ## dea_waterbodies.py
 """
-Description: This file contains a set of python functions for loading
-and processing DEA Waterbodies.
+Loading and processing DEA Waterbodies data.
 
 License: The code in this notebook is licensed under the Apache License, 
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
@@ -16,12 +15,6 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
-
-Functions included:
-    get_waterbody
-    get_waterbodies
-    get_geohashes
-    get_time_series
 
 Last modified: September 2021
 """

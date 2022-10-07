@@ -1,7 +1,7 @@
 ## dea_datahandling.py
 '''
-Description: This file contains a set of python functions for handling
-Digital Earth Australia data.
+Loading and manipulating Digital Earth Australia products and data
+using the Open Data Cube and xarray.
 
 License: The code in this notebook is licensed under the Apache License,
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
@@ -14,25 +14,10 @@ Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
 using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, you can file one on
-Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
-
-Functions included:
-    load_ard
-    array_to_geotiff
-    mostcommon_crs
-    download_unzip
-    wofs_fuser
-    dilate
-    pan_sharpen_brovey
-    paths_to_datetimeindex
-    nearest
-    last
-    first
-    parallel_apply
+If you would like to report an issue with this script, you can file one
+on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Last modified: August 2022
-
 '''
 
 # Import required packages
@@ -127,14 +112,13 @@ def load_ard(dc,
     cloudy or shadowed) pixels.
 
     The function supports loading the following DEA products:
-
-        ga_ls5t_ard_3
-        ga_ls7e_ard_3
-        ga_ls8c_ard_3
-        s2a_ard_granule
-        s2b_ard_granule
-        ga_s2am_ard_provisional_3
-        ga_s2bm_ard_provisional_3
+        * ga_ls5t_ard_3
+        * ga_ls7e_ard_3
+        * ga_ls8c_ard_3
+        * s2a_ard_granule
+        * s2b_ard_granule
+        * ga_s2am_ard_provisional_3
+        * ga_s2bm_ard_provisional_3
 
     Last modified: April 2022
 
@@ -494,6 +478,10 @@ def array_to_geotiff(fname, data, geo_transform, projection,
         Defaults to gdal.GDT_Float32
 
     """
+    warnings.warn(
+        "The `array_to_geotiff` function is deprecated, and will "
+        "be removed from future versions of `dea-tools`.",
+        FutureWarning)
 
     # Set up driver
     driver = gdal.GetDriverByName('GTiff')
@@ -533,8 +521,9 @@ def mostcommon_crs(dc, product, query):
 
     Returns
     -------
-    A EPSG string giving the most common CRS from all datasets returned
-    by the query above
+    epsg_string : str
+        An EPSG string giving the most common CRS from all datasets returned
+        by the query above
 
     """
     
@@ -630,7 +619,7 @@ def download_unzip(url,
 
 def wofs_fuser(dest, src):
     """
-    Fuse two WOfS water measurements represented as `ndarray`s.
+    Fuse two WOfS water measurements represented as ``ndarray``s.
 
     Note: this is a copy of the function located here:
     https://github.com/GeoscienceAustralia/digitalearthau/blob/develop/digitalearthau/utils.py
@@ -743,8 +732,9 @@ def paths_to_datetimeindex(paths, string_slice=(0, 10)):
 
     Returns
     -------
-    A pandas.DatetimeIndex object containing a 'datetime64[ns]' derived
-    from the file paths provided by `paths`.
+    datetime : pandas.DatetimeIndex
+        A pandas.DatetimeIndex object containing a 'datetime64[ns]' derived
+        from the file paths provided by `paths`.
     """
 
     date_strings = [os.path.basename(i)[slice(*string_slice)]
@@ -911,8 +901,8 @@ def parallel_apply(ds, dim, func, *args):
     This function is useful as a simple method for parallising code
     that cannot easily be parallised using Dask.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     ds : xarray.Dataset or xarray.DataArray
         xarray data with a dimension `dim` to apply the custom function
         along.
@@ -925,8 +915,8 @@ def parallel_apply(ds, dim, func, *args):
     *args :
         Any number of arguments that will be passed to `func`.
         
-    Returns:
-    --------
+    Returns
+    -------
     xarray.Dataset
         A concatenated dataset containing an output for each array
         along the input `dim` dimension.

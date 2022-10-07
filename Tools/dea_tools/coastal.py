@@ -1,7 +1,6 @@
 ## dea_coastaltools.py
 '''
-Description: This file contains a set of python functions for conducting 
-coastal analyses on Digital Earth Australia data.
+Coastal analysis and tide modelling tools.
 
 License: The code in this notebook is licensed under the Apache License, 
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
@@ -16,14 +15,6 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
-
-Functions included:
-    tidal_tag
-    tidal_stats
-    transect_distances
-    get_coastlines
-    model_tides
-    pixel_tides
 
 Last modified: August 2022
 
@@ -98,10 +89,9 @@ def tidal_tag(ds,
     -------
     The original xarray.Dataset with a new `tide_height` variable giving
     the height of the tide (and optionally, its ebb-flow phase) at the 
-    exact moment of each satellite acquisition.  
-    
-    (if `return_tideposts=True`, the function will also return the 
-    `tidepost_lon` and `tidepost_lat` location used in the analysis)
+    exact moment of each satellite acquisition (if `return_tideposts=True`, 
+    the function will also return the `tidepost_lon` and `tidepost_lat` 
+    location used in the analysis).
     
     """
     

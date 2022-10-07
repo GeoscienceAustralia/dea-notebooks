@@ -1,7 +1,6 @@
 ## dea_dask.py
 '''
-Description: A set of python functions for simplifying the creation of a
-local dask cluster.
+Tools for simplifying the creation of Dask clusters for parallelised computing.
 
 License: The code in this notebook is licensed under the Apache License,
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
@@ -16,10 +15,6 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, you can file one on
 Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
-
-Functions included:
-    create_local_dask_cluster
-    create_dask_gateway_cluster
 
 Last modified: June 2022
 
