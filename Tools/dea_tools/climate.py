@@ -1,7 +1,6 @@
 # dea_climate.py
 '''
-Description: A set of python functions to retrieve and manipulate 
-gridded climate data.
+Retrieving and manipulating gridded climate data.
 
 Adapted from scripts by Andrew Cherry and Brian Killough.
 
@@ -19,14 +18,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one on 
 Github https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/issues
 
-Functions included:
-    get_era5_daily
-    era5_area_crop
-    era5_area_nearest
-    load_era5    
-    
 Last modified: October 2020
-
 '''
 
 import os

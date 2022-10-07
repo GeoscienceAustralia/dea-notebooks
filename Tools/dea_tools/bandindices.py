@@ -50,50 +50,57 @@ def calculate_indices(ds,
     index : str or list of strs
         A string giving the name of the index to calculate or a list of
         strings giving the names of the indices to calculate:
-        'AWEI_ns (Automated Water Extraction Index,
+        
+        * ``'AWEI_ns'`` (Automated Water Extraction Index,
                   no shadows, Feyisa 2014)
-        'AWEI_sh' (Automated Water Extraction Index,
+        * ``'AWEI_sh'`` (Automated Water Extraction Index,
                    shadows, Feyisa 2014)
-        'BAEI' (Built-Up Area Extraction Index, Bouzekri et al. 2015)
-        'BAI' (Burn Area Index, Martin 1998)
-        'BSI' (Bare Soil Index, Rikimaru et al. 2002)
-        'BUI' (Built-Up Index, He et al. 2010)
-        'CMR' (Clay Minerals Ratio, Drury 1987)
-        'EVI' (Enhanced Vegetation Index, Huete 2002)
-        'FMR' (Ferrous Minerals Ratio, Segal 1982)
-        'IOR' (Iron Oxide Ratio, Segal 1982)
-        'LAI' (Leaf Area Index, Boegh 2002)
-        'MNDWI' (Modified Normalised Difference Water Index, Xu 1996)
-        'MSAVI' (Modified Soil Adjusted Vegetation Index,
+        * ``'BAEI'`` (Built-Up Area Extraction Index, Bouzekri et al. 2015)
+        * ``'BAI'`` (Burn Area Index, Martin 1998)
+        * ``'BSI'`` (Bare Soil Index, Rikimaru et al. 2002)
+        * ``'BUI'`` (Built-Up Index, He et al. 2010)
+        * ``'CMR'`` (Clay Minerals Ratio, Drury 1987)
+        * ``'EVI'`` (Enhanced Vegetation Index, Huete 2002)
+        * ``'FMR'`` (Ferrous Minerals Ratio, Segal 1982)
+        * ``'IOR'`` (Iron Oxide Ratio, Segal 1982)
+        * ``'LAI'`` (Leaf Area Index, Boegh 2002)
+        * ``'MNDWI'`` (Modified Normalised Difference Water Index, Xu 1996)
+        * ``'MSAVI'`` (Modified Soil Adjusted Vegetation Index,
                  Qi et al. 1994)              
-        'NBI' (New Built-Up Index, Jieli et al. 2010)
-        'NBR' (Normalised Burn Ratio, Lopez Garcia 1991)
-        'NDBI' (Normalised Difference Built-Up Index, Zha 2003)
-        'NDCI' (Normalised Difference Chlorophyll Index, 
+        * ``'NBI'`` (New Built-Up Index, Jieli et al. 2010)
+        * ``'NBR'`` (Normalised Burn Ratio, Lopez Garcia 1991)
+        * ``'NDBI'`` (Normalised Difference Built-Up Index, Zha 2003)
+        * ``'NDCI'`` (Normalised Difference Chlorophyll Index, 
                 Mishra & Mishra, 2012)
-        'NDMI' (Normalised Difference Moisture Index, Gao 1996)        
-        'NDSI' (Normalised Difference Snow Index, Hall 1995)
-        'NDTI' (Normalise Difference Tillage Index,
+        * ``'NDMI'`` (Normalised Difference Moisture Index, Gao 1996)        
+        * ``'NDSI'`` (Normalised Difference Snow Index, Hall 1995)
+        * ``'NDTI'`` (Normalise Difference Tillage Index,
                 Van Deventeret et al. 1997)
-        'NDVI' (Normalised Difference Vegetation Index, Rouse 1973)
-        'NDWI' (Normalised Difference Water Index, McFeeters 1996)
-        'SAVI' (Soil Adjusted Vegetation Index, Huete 1988)
-        'TCB' (Tasseled Cap Brightness, Crist 1985)
-        'TCG' (Tasseled Cap Greeness, Crist 1985)
-        'TCW' (Tasseled Cap Wetness, Crist 1985)        
-        'TCB_GSO' (Tasseled Cap Brightness, Nedkov 2017)
-        'TCG_GSO' (Tasseled Cap Greeness, Nedkov 2017)
-        'TCW_GSO' (Tasseled Cap Wetness, Nedkov 2017)
-        'WI' (Water Index, Fisher 2016)
-        'kNDVI' (Non-linear Normalised Difference Vegation Index,
+        * ``'NDVI'`` (Normalised Difference Vegetation Index, Rouse 1973)
+        * ``'NDWI'`` (Normalised Difference Water Index, McFeeters 1996)
+        * ``'SAVI'`` (Soil Adjusted Vegetation Index, Huete 1988)
+        * ``'TCB'`` (Tasseled Cap Brightness, Crist 1985)
+        * ``'TCG'`` (Tasseled Cap Greeness, Crist 1985)
+        * ``'TCW'`` (Tasseled Cap Wetness, Crist 1985)        
+        * ``'TCB_GSO'`` (Tasseled Cap Brightness, Nedkov 2017)
+        * ``'TCG_GSO'`` (Tasseled Cap Greeness, Nedkov 2017)
+        * ``'TCW_GSO'`` (Tasseled Cap Wetness, Nedkov 2017)
+        * ``'WI'`` (Water Index, Fisher 2016)
+        * ``'kNDVI'`` (Non-linear Normalised Difference Vegation Index,
                  Camps-Valls et al. 2021)
+
     collection : str
         An string that tells the function what data collection is 
         being used to calculate the index. This is necessary because 
         different collections use different names for bands covering 
-        a similar spectra. Valid options are 'ga_ls_2' (for GA 
-        Landsat Collection 2), 'ga_ls_3' (for GA Landsat Collection 3) 
-        and 'ga_s2_1' (for GA Sentinel 2 Collection 1).
+        a similar spectra. 
+        
+        Valid options are: 
+        
+        * ``'ga_ls_2'`` (for GA Landsat Collection 2)
+        * ``'ga_ls_3'`` (for GA Landsat Collection 3) 
+        * ``'ga_s2_1'`` (for GA Sentinel 2 Collection 1)
+
     custom_varname : str, optional
         By default, the original dataset will be returned with 
         a new index variable named after `index` (e.g. 'NDVI'). To 
@@ -101,9 +108,10 @@ def calculate_indices(ds,
         `custom_varname='custom_name'`. Defaults to None, which uses
         `index` to name the variable. 
     normalise : bool, optional
-        Some coefficient-based indices (e.g. 'WI', 'BAEI', 'AWEI_ns', 
-        'AWEI_sh', 'TCW', 'TCG', 'TCB', 'TCW_GSO', 'TCG_GSO', 'TCB_GSO', 
-        'EVI', 'LAI', 'SAVI', 'MSAVI') produce different results if 
+        Some coefficient-based indices (e.g. ``'WI'``, ``'BAEI'``,
+        ``'AWEI_ns'``, ``'AWEI_sh'``, ``'TCW'``, ``'TCG'``, ``'TCB'``, 
+        ``'TCW_GSO'``, ``'TCG_GSO'``, ``'TCB_GSO'``, ``'EVI'``, 
+        ``'LAI'``, ``'SAVI'``, ``'MSAVI'``) produce different results if 
         surface reflectance values are not scaled between 0.0 and 1.0 
         prior to calculating the index. Setting `normalise=True` first 
         scales values to a 0.0-1.0 range by dividing by 10000.0. 

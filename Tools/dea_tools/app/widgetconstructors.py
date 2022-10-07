@@ -1,6 +1,7 @@
 '''
-Description: Functions for easily defining widgets for Digital Earth 
-Australia notebooks. These functions are directly modified from 
+Functions for defining widgets for interactive Digital Earth Australia notebooks. 
+
+These functions are directly modified from 
 originals developed by Digital Earth Africa: 
 https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/blob/main/Tools/deafrica_tools/app/widgetconstructors.py
 

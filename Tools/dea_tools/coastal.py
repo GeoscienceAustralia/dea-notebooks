@@ -1,7 +1,6 @@
 ## dea_coastaltools.py
 '''
-Description: This file contains a set of python functions for conducting 
-coastal analyses on Digital Earth Australia data.
+Coastal analysis and tide modelling tools.
 
 License: The code in this notebook is licensed under the Apache License, 
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
@@ -16,14 +15,6 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
-
-Functions included:
-    tidal_tag
-    tidal_stats
-    transect_distances
-    get_coastlines
-    model_tides
-    pixel_tides
 
 Last modified: August 2022
 
@@ -44,12 +35,6 @@ from owslib.wfs import WebFeatureService
 import odc.algo
 from datacube.utils.geometry import CRS
 from dea_tools.datahandling import parallel_apply
-
-try:
-    from otps import TimePoint
-    from otps import predict_tide
-except ImportError:
-    from dea_tools.pyfes_model import TimePoint, predict_tide
 
 # Fix converters for tidal plot
 from pandas.plotting import register_matplotlib_converters
@@ -104,12 +89,18 @@ def tidal_tag(ds,
     -------
     The original xarray.Dataset with a new `tide_height` variable giving
     the height of the tide (and optionally, its ebb-flow phase) at the 
-    exact moment of each satellite acquisition.  
-    
-    (if `return_tideposts=True`, the function will also return the 
-    `tidepost_lon` and `tidepost_lat` location used in the analysis)
+    exact moment of each satellite acquisition (if `return_tideposts=True`, 
+    the function will also return the `tidepost_lon` and `tidepost_lat` 
+    location used in the analysis).
     
     """
+    
+    # Load tide modelling functions from either OTPS for pyfes
+    try:
+        from otps import TimePoint
+        from otps import predict_tide
+    except ImportError:
+        from dea_tools.pyfes_model import TimePoint, predict_tide
 
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
@@ -267,6 +258,13 @@ def tidal_stats(ds,
                   all modelled tide heights and time
     
     """
+    
+    # Load tide modelling functions from either OTPS for pyfes
+    try:
+        from otps import TimePoint
+        from otps import predict_tide
+    except ImportError:
+        from dea_tools.pyfes_model import TimePoint, predict_tide
     
     # Model tides for each observation in the supplied xarray object
     ds_tides, tidepost_lon, tidepost_lat = tidal_tag(ds,
@@ -808,8 +806,15 @@ def model_tides(
     npts = len(t)
     tide = np.ma.zeros((npts), fill_value=np.nan)
     tide.mask = np.any(hc.mask, axis=1)
-    tide.data[:] = predict_tide_drift(t, hc, c, DELTAT=deltat, CORRECTIONS=model.format)
-    minor = infer_minor_corrections(t, hc, c, DELTAT=deltat, CORRECTIONS=model.format)
+    
+    # Depending on pyTMD version (<=1.06 vs > 1.06), use different params
+    # TODO: Remove once Sandbox is updated to use pyTMD version 1.0.9
+    try:
+        tide.data[:] = predict_tide_drift(t, hc, c, deltat=deltat, corrections=model.format)
+        minor = infer_minor_corrections(t, hc, c, deltat=deltat, corrections=model.format)
+    except:
+        tide.data[:] = predict_tide_drift(t, hc, c, DELTAT=deltat, CORRECTIONS=model.format)
+        minor = infer_minor_corrections(t, hc, c, DELTAT=deltat, CORRECTIONS=model.format)
     tide.data[:] += minor.data[:]
 
     # Replace invalid values with fill value

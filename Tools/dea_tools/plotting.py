@@ -1,7 +1,6 @@
 ## dea_plotting.py
 '''
-Description: This file contains a set of python functions for plotting 
-Digital Earth Australia data.
+Plotting and animating Digital Earth Australia products and data.
 
 License: The code in this notebook is licensed under the Apache License, 
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
@@ -16,13 +15,6 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
-
-Functions included:
-    rgb
-    display_map
-    xr_animation
-    plot_wo
-    plot_fmask
 
 Last modified: October 2021
 
