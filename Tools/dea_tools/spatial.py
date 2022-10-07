@@ -1,6 +1,6 @@
 ## dea_spatialtools.py
 '''
-Tools for spatially manipulating Digital Earth Australia data (vectorising, rasterising, interpolating etc).
+Tools for spatially manipulating Digital Earth Australia data.
 
 License: The code in this notebook is licensed under the Apache License, 
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
