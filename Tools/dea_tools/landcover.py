@@ -272,9 +272,10 @@ def get_layer_name(measurement, da):
 def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
     """
     Adds a new colorbar with appropriate land cover colours and labels.
-    
-    For level 4, must be used with a double plot, `ax` should be the left side canvas
-    the colour bar will go over the right hand side.
+
+    For DEA Land Cover Level 4 data, this function must be used with a double plot. 
+    The 'ax' should be on the left side of the figure, and the colour bar will added 
+    on the right hand side.
     
     Parameters
     ----------
