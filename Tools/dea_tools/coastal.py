@@ -1,7 +1,6 @@
 ## dea_coastaltools.py
 '''
-Description: This file contains a set of python functions for conducting 
-coastal analyses on Digital Earth Australia data.
+Coastal analysis and tide modelling tools.
 
 License: The code in this notebook is licensed under the Apache License, 
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
@@ -17,14 +16,7 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Functions included:
-    tidal_tag
-    tidal_stats
-    polyline_select
-    deacoastlines_transect
-    deacoastlines_histogram
-
-Last modified: November 2020
+Last modified: August 2022
 
 '''
 
@@ -37,22 +29,19 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from scipy import stats
-from otps import TimePoint
-from otps import predict_tide
-from datacube.utils.geometry import CRS
 from shapely.geometry import box, shape
+from owslib.wfs import WebFeatureService
 
-# Widgets and WMS
-from odc.ui import ui_poll, select_on_a_map
-from ipyleaflet import (Map, WMSLayer, WidgetControl, FullScreenControl, 
-                        DrawControl, basemaps, basemap_to_tiles, TileLayer)
-from ipywidgets.widgets import Layout, Button, HTML
-from IPython.display import display
-from types import SimpleNamespace
+import odc.algo
+from datacube.utils.geometry import CRS
+from dea_tools.datahandling import parallel_apply
 
 # Fix converters for tidal plot
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
+
+
+WFS_ADDRESS = "https://geoserver.dea.ga.gov.au/geoserver/wfs"
 
 
 def tidal_tag(ds,
@@ -100,12 +89,18 @@ def tidal_tag(ds,
     -------
     The original xarray.Dataset with a new `tide_height` variable giving
     the height of the tide (and optionally, its ebb-flow phase) at the 
-    exact moment of each satellite acquisition.  
-    
-    (if `return_tideposts=True`, the function will also return the 
-    `tidepost_lon` and `tidepost_lat` location used in the analysis)
+    exact moment of each satellite acquisition (if `return_tideposts=True`, 
+    the function will also return the `tidepost_lon` and `tidepost_lat` 
+    location used in the analysis).
     
     """
+    
+    # Load tide modelling functions from either OTPS for pyfes
+    try:
+        from otps import TimePoint
+        from otps import predict_tide
+    except ImportError:
+        from dea_tools.pyfes_model import TimePoint, predict_tide
 
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
@@ -132,10 +127,10 @@ def tidal_tag(ds,
 
         # Extract tide heights
         obs_tideheights = [predictedtide.tide_m for predictedtide 
-                           in obs_predictedtides]
+                           in obs_predictedtides]   
 
         # Assign tide heights to the dataset as a new variable
-        ds['tide_height'] = xr.DataArray(obs_tideheights, [('time', ds.time)])
+        ds['tide_height'] = xr.DataArray(obs_tideheights, coords=[ds.time]) 
 
         # Optionally calculate the tide phase for each observation
         if ebb_flow:
@@ -158,7 +153,7 @@ def tidal_tag(ds,
                                                obs_predictedtides)]
             
             # Assign tide phase to the dataset as a new variable
-            ds['ebb_flow'] = xr.DataArray(tidal_phase, [('time', ds.time)]) 
+            ds['ebb_flow'] = xr.DataArray(tidal_phase, coords=[ds.time]) 
             
         # If swap_dims = True, make tide height the primary dimension 
         # instead of time
@@ -264,11 +259,22 @@ def tidal_stats(ds,
     
     """
     
+    # Load tide modelling functions from either OTPS for pyfes
+    try:
+        from otps import TimePoint
+        from otps import predict_tide
+    except ImportError:
+        from dea_tools.pyfes_model import TimePoint, predict_tide
+    
     # Model tides for each observation in the supplied xarray object
     ds_tides, tidepost_lon, tidepost_lat = tidal_tag(ds,
                                                      tidepost_lat=tidepost_lat,
                                                      tidepost_lon=tidepost_lon,
                                                      return_tideposts=True)
+    
+    # Drop spatial ref for nicer plotting
+    if 'spatial_ref' in ds_tides:
+        ds_tides = ds_tides.drop('spatial_ref')
 
     # Generate range of times covering entire period of satellite record
     all_timerange = pd.date_range(start=ds_tides.time.min().item(),
@@ -317,14 +323,14 @@ def tidal_stats(ds,
     
     if plain_english:
         
-        print(f'\n{spread:.0%} of the full {all_range:.2f} m modelled tidal '
-              f'range is observed at this location.\nThe lowest '
+        print(f'\n{spread:.0%} of the {all_range:.2f} m modelled astronomical '
+              f'tidal range is observed at this location.\nThe lowest '
               f'{low_tide_offset:.0%} and highest {high_tide_offset:.0%} '
-              f'of tides are never observed.\n')
+              f'of astronomical tides are never observed.\n')
         
         # Plain english
         if obs_linreg.pvalue > 0.05:
-            print(f'Observed tides do not increase or decrease significantly '
+            print(f'Observed tides show no significant trends '
                   f'over the ~{time_period:.0f} year period.')
         else:
             obs_slope_desc = 'decrease' if obs_linreg.slope < 0 else 'increase'
@@ -335,8 +341,8 @@ def tidal_stats(ds,
                   f'{obs_slope_desc} over the ~{time_period:.0f} year period).')
 
         if all_linreg.pvalue > 0.05:
-            print(f'All tides do not increase or decrease significantly over '
-                  f'the ~{time_period:.0f} year period.')
+            print(f'All tides show no significant trends '
+                  f'over the ~{time_period:.0f} year period.')
         else:
             all_slope_desc = 'decrease' if all_linreg.slope < 0 else 'increase'
             print(f'All tides {all_slope_desc} significantly '
@@ -401,622 +407,589 @@ def tidal_stats(ds,
                       'observed_pval': obs_linreg.pvalue,
                       'all_pval': all_linreg.pvalue}).round(round_stats)
 
-        
-def polyline_select(center=(-26, 135),
-                    zoom=4,
-                    height='600px'):
+
+def transect_distances(transects_gdf, lines_gdf, mode='distance'):
     """
-    Allows the user to interactively draw a polyline on the map with a 
-    DEA CoastLines overlay.
+    Take a set of transects (e.g. shore-normal beach survey lines), and 
+    determine the distance along the transect to each object in a set of
+    lines (e.g. shorelines). Distances are measured in the CRS of the 
+    input datasets.
     
-    This is a line drawing equivelent of `select_on_a_map` from `odc.ui`.    
-    
+    For coastal applications, transects should be drawn from land to 
+    water (with the first point being on land so that it can be used
+    as a consistent location from which to measure distances.
+        
+    The distance calculation can be performed using two modes:
+        - 'distance': Distances are measured from the start of the 
+          transect to where it intersects with each line. Any transect 
+          that intersects a line more than once is ignored. This mode is 
+          useful for measuring e.g. the distance to the shoreline over 
+          time from a consistent starting location.
+        - 'width' Distances are measured between the first and last
+          intersection between a transect and each line. Any transect 
+          that intersects a line only once is ignored. This is useful 
+          for e.g. measuring the width of a narrow area of coastline over
+          time, e.g. the neck of a spit or tombolo.
+          
     Parameters
-    ----------
-    center : tuple, optional
-        An optional tuple providing the latitude and longitude over 
-        which to centre the interactive map. Defaults to 
-        `center=(-26, 135)`.
-    zoom : integer, optional
-        An optional integer giving the default zoom level for the map.
-        Defaults to `zoom=4`.
-    height : string, optional
-        An optional string giving the height of the map in pixels. 
-        Defaults to `height='600px'`.
+    ----------     
+    transects_gdf : geopandas.GeoDataFrame
+        A GeoDataFrame containing one or multiple vector profile lines.
+        The GeoDataFrame's index column will be used to name the rows in
+        the output distance table.
+    lines_gdf : geopandas.GeoDataFrame
+        A GeoDataFrame containing one or multiple vector line features
+        that intersect the profile lines supplied to `transects_gdf`.
+        The GeoDataFrame's index column will be used to name the columns
+        in the output distance table.
+    mode : string, optional
+        Whether to use 'distance' (for measuring distances from the
+        start of a profile) or 'width' mode (for measuring the width 
+        between two profile intersections). See docstring above for more
+        info; defaults to 'distance'.
         
     Returns
     -------
-    An interactive ipyleaflet map and interactive state used as an input
-    to the `deacoastlines_transect` function.
-    """    
-  
-    def update_info(txt):
-        html_info.value = '<pre style="color:grey">' + txt + '</pre>'
-
-    def render_bounds(bounds):
-        (lat1, lon1), (lat2, lon2) = bounds
-        txt = 'lat: [{:.{n}f}, {:.{n}f}]\nlon: [{:.{n}f}, {:.{n}f}]'.format(
-            lat1, lat2, lon1, lon2, n=4)
-        update_info(txt)
-        
-    def on_done(btn):
-        state.done = True
-        btn_done.disabled = True
-        m.remove_control(draw)
-        for w in widgets:
-            m.remove_control(w)
-
-    def bounds_handler(event):
-        bounds = event['new']
-        render_bounds(bounds)
-        (lat1, lon1), (lat2, lon2) = bounds
-        state.bounds = dict(lat=(lat1, lat2),
-                            lon=(lon1, lon2))
-
-    def on_draw(event):
-        v = event['new']
-        action = event['name']
-        if action == 'last_draw':
-            state.selection = v['geometry']
-        elif action == 'last_action' and v == 'deleted':
-            state.selection = None
-
-        btn_done.disabled = state.selection is None
-        
-
-    state = SimpleNamespace(selection=None,
-                            bounds=None,
-                            done=False)
-    
-    # Set up "Done" button
-    btn_done = Button(description='done',
-                      layout=Layout(width='5em'))
-    btn_done.style.button_color = 'green'
-    btn_done.disabled = True
-
-    html_info = HTML(layout=Layout(flex='1 0 20em',
-                                   width='20em',
-                                   height='3em'))
-
-    # Load DEACoastLines WMS
-    deacl_url='https://geoserver.dea.ga.gov.au/geoserver/wms'
-    deacl_layer='dea:DEACoastLines'
-    wms = WMSLayer(url=deacl_url,
-                   layers=deacl_layer,
-                   format='image/png',
-                   transparent=True,
-                   attribution='DEA CoastLines © 2020 Geoscience Australia')
-    
-    # Plot interactive map to select area
-    basemap = basemap_to_tiles(basemaps.Esri.WorldImagery)
-    places = TileLayer(url=('https://server.arcgisonline.com/ArcGIS/rest/'
-                            'services/Reference/World_Boundaries_and_Places'
-                            '/MapServer/tile/{z}/{y}/{x}'), opacity=1)
-    m = Map(layers=(basemap, wms, places, ),
-            center=center, 
-            zoom=zoom)
-    m.scroll_wheel_zoom = True
-    m.layout.height = height
-
-    # Set up done and info widgets
-    widgets = [WidgetControl(widget=btn_done, position='topright'),
-               WidgetControl(widget=html_info, position='bottomleft')]
-    for w in widgets:
-        m.add_control(w) 
-        
-    # Add polyline draw control option
-    draw = DrawControl(circlemarker={}, polygon={})
-    m.add_control(draw)
-    m.add_control(FullScreenControl())
-    draw.polyline =  {'shapeOptions': {'color': 'red', 'opacity': 1.0}}
-
-    # Set up interactivity
-    draw.observe(on_draw)
-    m.observe(bounds_handler, ('bounds',))
-    btn_done.on_click(on_done)
-
-    return m, state
-
-
-def deacoastlines_transect(transect_mode='distance',
-                           export_transect_data=True,
-                           export_transect=True,
-                           export_figure=True,
-                           length_limit=50):
-    
+    distance_df : pandas.DataFrame
+        A DataFrame containing distance measurements for each profile
+        line (rows) and line feature (columns). 
     """
-    Function for interactively drawing a transect line on a map,
-    and using this line to extract distances to each annual DEA 
-    Coastlines coastline along the transect. The function can also be
-    used to measure the width between two coastlines from the same year
-    through time.
+    
+    import warnings
+    from shapely.errors import ShapelyDeprecationWarning
+    from shapely.geometry import Point
+
+    def _intersect_dist(transect_gdf, lines_gdf, mode=mode):
+        """
+        Take an individual transect, and determine the distance along
+        the transect to each object in a set of lines (e.g. shorelines).        
+        """
+
+        # Identify intersections between transects and lines
+        intersect_points = lines_gdf.apply(
+            lambda x: x.geometry.intersection(transect_gdf.geometry), axis=1)
+
+        # In distance mode, identify transects with one intersection only,
+        # and use this as the end point and the start of the transect as the
+        # start point when measuring distances
+        if mode == 'distance':
+            start_point = Point(transect_gdf.geometry.coords[0])
+            point_df = intersect_points.apply(
+                lambda x: pd.Series({'start': start_point, 'end': x}) 
+                if x.type == 'Point'
+                else pd.Series({'start': None, 'end': None}))
+
+        # In width mode, identify transects with multiple intersections, and
+        # use the first intersection as the start point and the second
+        # intersection for the end point when measuring distances
+        if mode == 'width':
+            point_df = intersect_points.apply(
+                lambda x: pd.Series({'start': x.geoms[0], 'end': x.geoms[-1]})
+                if x.type == 'MultiPoint' 
+                else pd.Series({'start': None, 'end': None}))
+
+        # Calculate distances between valid start and end points
+        distance_df = point_df.apply(
+            lambda x: x.start.distance(x.end) if x.start else None, axis=1)
+            
+        return distance_df
+
+    # Run code after ignoring Shapely pre-v2.0 warnings
+    with warnings.catch_warnings():        
+        warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning) 
+        
+        # Assert that both datasets use the same CRS
+        assert transects_gdf.crs == lines_gdf.crs, ('Please ensure both '
+        'input datasets use the same CRS.')
+        
+        # Run distance calculations
+        distance_df = transects_gdf.apply(
+            lambda x: _intersect_dist(x, lines_gdf), axis=1)   
+        
+        return pd.DataFrame(distance_df)
+
+    
+def get_coastlines(bbox: tuple,
+                   crs="EPSG:4326",
+                   layer="shorelines",
+                   drop_wms=True) -> gpd.GeoDataFrame:
+    """
+    Get DEA Coastlines data for a provided bounding box using WFS.
+    
+    For a full description of the DEA Coastlines dataset, refer to the 
+    official Geoscience Australia product description:
+    https://cmi.ga.gov.au/data-products/dea/581/dea-coastlines
     
     Parameters
     ----------
-    transect_mode : string, optional
-        An optional string indicating whether to analyse coastlines 
-        using 'distance' or 'width' mode. The "distance" mode measures the 
-        distance from the start of the transect to each of the annual
-        coastlines, and will ignore any coastline that intersects the 
-        transect more than once. The 'width' mode will measure the 
-        width between two coastlines from the same year, which can be
-        useful for measuring e.g. the width of a tombolo or sandbank 
-        through time. This mode will ignore any annual coastline that 
-        intersections with the transect only once.
-    export_transect_data : boolean, optional
-        An optional boolean indicating whether to export the transect
-        data as a CSV file. This file will be automatically named using 
-        its centroid coordinates, and exported into the directory this 
-        code is being run in. The default is True.
-    export_transect : boolean, optional
-        An optional boolean indicating whether to export the transect
-        data as a GeoJSON and ESRI Shapefile. This file will be 
-        named automatically using its centroid coordinates, and exported
-        into the directory this code is being run in. Default is True.
-    export_figure : boolean, optional
-        An optional boolean indicating whether to export the transect
-        figure as an image file. This file will be automatically named 
-        using its centroid coordinates, and exported into the directory 
-        this code is being run in. The default is True.
+    bbox : (xmin, ymin, xmax, ymax), or geopandas object
+        Bounding box expressed as a tutple. Alternatively, a bounding 
+        box can be automatically extracted by suppling a 
+        geopandas.GeoDataFrame or geopandas.GeoSeries.
+    crs : str, optional
+        Optional CRS for the bounding box. This is ignored if `bbox`
+        is provided as a geopandas object.
+    layer : str, optional
+        Which DEA Coastlines layer to load. Options include the annual
+        shoreline vectors ("shorelines") and the rates of change 
+        statistics points ("statistics"). Defaults to "shorelines".
+    drop_wms : bool, optional
+        Whether to drop WMS-specific attribute columns from the data.
+        These columns are used for visualising the dataset on DEA Maps,
+        and are unlikely to be useful for scientific analysis. Defaults
+        to True.
+    
+    Returns
+    -------
+    gpd.GeoDataFrame
+        A GeoDataFrame containing shoreline or point features and
+        associated metadata.
+    """
+
+    # If bbox is a geopandas object, convert to bbox
+    try:
+        crs = str(bbox.crs)
+        bbox = bbox.total_bounds
+    except:
+        pass
+
+    # Query WFS
+    wfs = WebFeatureService(url=WFS_ADDRESS, version="1.1.0")
+    layer_name = "dea:coastlines" if layer == "shorelines" else "dea:coastlines_statistics"
+    response = wfs.getfeature(
+        typename=layer_name,
+        bbox=tuple(bbox) + (crs,),
+        outputFormat="json",
+    )
+
+    # Load data as a geopandas.GeoDataFrame
+    coastlines_gdf = gpd.read_file(response)
+
+    # Clip to extent of bounding box
+    extent = gpd.GeoSeries(box(*bbox), crs=crs).to_crs(coastlines_gdf.crs)
+    coastlines_gdf = coastlines_gdf.clip(extent)
+    
+    # Optionally drop WMS-specific columns
+    if drop_wms:
+        coastlines_gdf = coastlines_gdf.loc[:, ~coastlines_gdf.columns.str.contains("wms_")]
+
+    return coastlines_gdf
+
+
+def model_tides(
+    x,
+    y,
+    time,
+    model="FES2014",
+    directory="~/tide_models",
+    epsg=4326,
+    method="bilinear",
+    extrapolate=True,
+    cutoff=10.0,
+):
+    """
+    Compute tides at points and times using tidal harmonics.
+    If multiple x, y points are provided, tides will be
+    computed for all timesteps at each point.
+
+    This function supports any tidal model supported by
+    `pyTMD`, including the FES2014 Finite Element Solution
+    tide model, and the TPXO8-atlas and TPXO9-atlas-v5
+    TOPEX/POSEIDON global tide models.
+
+    This function requires access to tide model data files
+    to work. These should be placed in a folder with
+    subfolders matching the formats specified by `pyTMD`:
+    https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories
+
+    For FES2014 (https://www.aviso.altimetry.fr/es/data/products/auxiliary-products/global-tide-fes/description-fes2014.html):
+        - {directory}/fes2014/ocean_tide/
+          {directory}/fes2014/load_tide/
+
+    For TPXO8-atlas (https://www.tpxo.net/tpxo-products-and-registration):
+        - {directory}/tpxo8_atlas/
+
+    For TPXO9-atlas-v5 (https://www.tpxo.net/tpxo-products-and-registration):
+        - {directory}/TPXO9_atlas_v5/
+
+    This function is a minor modification of the `pyTMD`
+    package's `compute_tide_corrections` function, adapted
+    to process multiple timesteps for multiple input point
+    locations. For more info:
+    https://pytmd.readthedocs.io/en/stable/user_guide/compute_tide_corrections.html
+
+    Parameters:
+    -----------
+    x, y : float or list of floats
+        One or more x and y coordinates used to define
+        the location at which to model tides. By default these
+        coordinates should be lat/lon; use `epsg` if they
+        are in a custom coordinate reference system.
+    time : A datetime array or pandas.DatetimeIndex
+        An array containing 'datetime64[ns]' values or a
+        'pandas.DatetimeIndex' providing the times at which to
+        model tides in UTC time.
+    model : string
+        The tide model used to model tides. Options include:
+        - "FES2014"
+        - "TPXO8-atlas"
+        - "TPXO9-atlas-v5"
+    directory : string
+        The directory containing tide model data files. These
+        data files should be stored in sub-folders for each
+        model that match the structure provided by `pyTMD`:
+        https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories
+        For example:
+        - {directory}/fes2014/ocean_tide/
+          {directory}/fes2014/load_tide/
+        - {directory}/tpxo8_atlas/
+        - {directory}/TPXO9_atlas_v5/
+    epsg : int
+        Input coordinate system for 'x' and 'y' coordinates.
+        Defaults to 4326 (WGS84).
+    method : string
+        Method used to interpolate tidal contsituents
+        from model files. Options include:
+        - bilinear: quick bilinear interpolation
+        - spline: scipy bivariate spline interpolation
+        - linear, nearest: scipy regular grid interpolations
+    extrapolate : bool
+        Whether to extrapolate tides for locations outside of
+        the tide modelling domain using nearest-neighbor
+    cutoff : int or float
+        Extrapolation cutoff in kilometers. Set to `np.inf`
+        to extrapolate for all points.
+
+    Returns
+    -------
+    A pandas.DataFrame containing tide heights for every
+    combination of time and point coordinates.
     """
     
-    # Run interactive map
-    m, state = polyline_select()
-    display(m)
+    import os
+    import pyproj
+    import numpy as np
+    import pyTMD.time
+    import pyTMD.model
+    import pyTMD.utilities
+    from pyTMD.calc_delta_time import calc_delta_time
+    from pyTMD.infer_minor_corrections import infer_minor_corrections
+    from pyTMD.predict_tide_drift import predict_tide_drift
+    from pyTMD.read_tide_model import extract_tidal_constants
+    from pyTMD.read_netcdf_model import extract_netcdf_constants
+    from pyTMD.read_GOT_model import extract_GOT_constants
+    from pyTMD.read_FES_model import extract_FES_constants
+
+    # Check that tide directory is accessible
+    try:
+        os.access(directory, os.F_OK)
+    except:
+        raise FileNotFoundError("Invalid tide directory")
+
+    # Get parameters for tide model
+    model = pyTMD.model(directory, format="netcdf", compressed=False).elevation(model)
+
+    # If time passed as a single Timestamp, convert to datetime64
+    if isinstance(time, pd.Timestamp):
+        time = time.to_datetime64()
+
+    # Handle numeric or array inputs
+    x = np.atleast_1d(x)
+    y = np.atleast_1d(y)
+    time = np.atleast_1d(time)
+
+    # Determine point and time counts
+    assert len(x) == len(y), "x and y must be the same length"
+    n_points = len(x)
+    n_times = len(time)
+
+    # Converting x,y from EPSG to latitude/longitude
+    try:
+        # EPSG projection code string or int
+        crs1 = pyproj.CRS.from_string("epsg:{0:d}".format(int(epsg)))
+    except (ValueError, pyproj.exceptions.CRSError):
+        # Projection SRS string
+        crs1 = pyproj.CRS.from_string(epsg)
+
+    crs2 = pyproj.CRS.from_string("epsg:{0:d}".format(4326))
+    transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
+    lon, lat = transformer.transform(x.flatten(), y.flatten())
+
+    # Assert delta time is an array and convert datetime
+    time = np.atleast_1d(time)
+    t = pyTMD.time.convert_datetime(time, epoch=(1992, 1, 1, 0, 0, 0)) / 86400.0
+
+    # Delta time (TT - UT1) file
+    delta_file = pyTMD.utilities.get_data_path(["data", "merged_deltat.data"])
+
+    # Read tidal constants and interpolate to grid points
+    if model.format in ("OTIS", "ATLAS"):
+        amp, ph, D, c = extract_tidal_constants(
+            lon,
+            lat,
+            model.grid_file,
+            model.model_file,
+            model.projection,
+            TYPE=model.type,
+            METHOD=method,
+            EXTRAPOLATE=extrapolate,
+            CUTOFF=cutoff,
+            GRID=model.format,
+        )
+        deltat = np.zeros_like(t)
+
+    elif model.format == "netcdf":
+        amp, ph, D, c = extract_netcdf_constants(
+            lon,
+            lat,
+            model.grid_file,
+            model.model_file,
+            TYPE=model.type,
+            METHOD=method,
+            EXTRAPOLATE=extrapolate,
+            CUTOFF=cutoff,
+            SCALE=model.scale,
+            GZIP=model.compressed,
+        )
+        deltat = np.zeros_like(t)
+
+    elif model.format == "GOT":
+        amp, ph, c = extract_GOT_constants(
+            lon,
+            lat,
+            model.model_file,
+            METHOD=method,
+            EXTRAPOLATE=extrapolate,
+            CUTOFF=cutoff,
+            SCALE=model.scale,
+            GZIP=model.compressed,
+        )
+
+        # Interpolate delta times from calendar dates to tide time
+        deltat = calc_delta_time(delta_file, t)
+
+    elif model.format == "FES":
+        amp, ph = extract_FES_constants(
+            lon,
+            lat,
+            model.model_file,
+            TYPE=model.type,
+            VERSION=model.version,
+            METHOD=method,
+            EXTRAPOLATE=extrapolate,
+            CUTOFF=cutoff,
+            SCALE=model.scale,
+            GZIP=model.compressed,
+        )
+
+        # Available model constituents
+        c = model.constituents
+
+        # Interpolate delta times from calendar dates to tide time
+        deltat = calc_delta_time(delta_file, t)
+
+    # Calculate complex phase in radians for Euler's
+    cph = -1j * ph * np.pi / 180.0
+
+    # Calculate constituent oscillation
+    hc = amp * np.exp(cph)
+
+    # Repeat constituents to length of time and number of input
+    # coords before passing to `predict_tide_drift`
+    t, hc, deltat = (
+        np.tile(t, n_points),
+        hc.repeat(n_times, axis=0),
+        np.tile(deltat, n_points),
+    )
+
+    # Predict tidal elevations at time and infer minor corrections
+    npts = len(t)
+    tide = np.ma.zeros((npts), fill_value=np.nan)
+    tide.mask = np.any(hc.mask, axis=1)
     
-    def extract_geometry(state):        
-        
-        # Convert geometry to a GeoSeries
-        profile = gpd.GeoSeries(shape(state.selection), 
-                                crs='EPSG:4326')  
-        
-        # Test length
-        transect_length = (profile.to_crs('EPSG:3577').length / 1000).sum()
-        if transect_length > length_limit:
-            raise ValueError(f'Your transect is {transect_length:.0f} km long. '
-                             f'Please draw a transect that is less than '
-                             f'{length_limit} km long.\nTo draw a shorter '
-                             f'transect, re-run the cell above and draw a new '
-                             f'polyline.')
+    # Depending on pyTMD version (<=1.06 vs > 1.06), use different params
+    # TODO: Remove once Sandbox is updated to use pyTMD version 1.0.9
+    try:
+        tide.data[:] = predict_tide_drift(t, hc, c, deltat=deltat, corrections=model.format)
+        minor = infer_minor_corrections(t, hc, c, deltat=deltat, corrections=model.format)
+    except:
+        tide.data[:] = predict_tide_drift(t, hc, c, DELTAT=deltat, CORRECTIONS=model.format)
+        minor = infer_minor_corrections(t, hc, c, DELTAT=deltat, CORRECTIONS=model.format)
+    tide.data[:] += minor.data[:]
 
-        # Load data from WFS
-        print('Loading DEA Coastlines data...\n')
-        xmin, ymin, xmax, ymax = profile.total_bounds
-        deacl_wfs = f'https://geoserver.dea.ga.gov.au/geoserver/wfs?' \
-                    f'service=WFS&version=1.1.0&request=GetFeature' \
-                    f'&typeName=dea:coastlines&maxFeatures=1000' \
-                    f'&bbox={ymin},{xmin},{ymax},{xmax},' \
-                    f'urn:ogc:def:crs:EPSG:4326'
-        deacl = gpd.read_file(deacl_wfs)
-        deacl.crs = 'EPSG:3577'
+    # Replace invalid values with fill value
+    tide.data[tide.mask] = tide.fill_value
 
-        # Raise exception if no coastlines are returned
-        if len(deacl.index) == 0:
-            raise ValueError('No annual coastlines were returned for the '
-                             'supplied transect. Please select another area.')
-            
-        # Dissolve by year to remove duplicates, then sort by date
-        deacl = deacl.dissolve(by='year', as_index=False)
-        deacl['year'] = deacl.year.astype(int)
-        deacl = deacl.sort_values('year')
-
-        # Extract intersections and determine type
-        profile = profile.to_crs('EPSG:3577')
-        intersects = deacl.apply(
-            lambda x: profile.intersection(x.geometry), axis=1)
-        intersects = gpd.GeoSeries(intersects[0])   
-        
-        # Select geometry depending on mode
-        intersects_type = (intersects.type == 'Point' if 
-                           transect_mode == 'distance' else 
-                           intersects.type == 'MultiPoint')
-
-        # Remove annual data according to intersections
-        deacl_filtered = deacl.loc[intersects_type]
-        drop_years = ', '.join(deacl.year
-                               .loc[~intersects_type]
-                               .astype(str)
-                               .values.tolist())
-
-        # In 'distance' mode, analyse years with one intersection only
-        if transect_mode == 'distance':  
-            
-            if drop_years:
-                print(f'Dropping years due to multiple intersections: {drop_years}\n')
-
-            # Add start and end coordinate
-            deacl_filtered = deacl_filtered.assign(
-                start=profile.interpolate(0).iloc[0])
-            deacl_filtered['end'] = intersects.loc[intersects_type]
-
-        # In 'width' mode, analyse years with multiple intersections only
-        elif transect_mode == 'width':
-
-            if drop_years:
-                print(f'Dropping years due to less than two intersections: {drop_years}\n')
-
-            # Add start and end coordinate
-            deacl_filtered = deacl_filtered.assign(
-                start=intersects.loc[intersects_type].apply(lambda x: x[0]))
-            deacl_filtered['end'] = intersects.loc[intersects_type].apply(
-                lambda x: x[1])
-
-        # If any data was returned:
-        if len(deacl_filtered.index) > 0:   
-
-            # Compute distance
-            deacl_filtered['dist'] = deacl_filtered.apply(
-                lambda x: x.start.distance(x.end), axis=1)
-
-            # Extract values
-            transect_df = pd.DataFrame(deacl_filtered[['year', 'dist']])
-            transect_df['dist'] = transect_df.dist.round(2)
-            
-            # Plot data
-            fig, ax = plt.subplots(1, 1, figsize=(5, 8))
-            transect_df.plot(x='dist', y='year', ax=ax, label='DEA Coastlines')
-            ax.set_xlabel(f'{transect_mode.title()} (metres)')
-            
-            # Extract coordinates fore unique file ID
-            x, y = profile.geometry.centroid.to_crs('EPSG:4326').iloc[0].xy
-            
-            # Create output folder if none exists
-            if export_transect_data or export_transect or export_figure:
-                out_dir = 'deacoastlines_outputs'
-                os.makedirs(out_dir, exist_ok=True)
-            
-            # Optionally write output CSV data
-            if export_transect_data:
-                csv_path = f'{out_dir}/deacoastlines_transect_{x[0]:.3f}_{y[0]:.3f}.csv'
-                
-                print(f"Exporting transect data to:\n"
-                      f"    {csv_path}\n")
-                transect_df.to_csv(csv_path, index=False)
-                
-            # Optionally write vector data
-            if export_transect:
-                shp_path = f'{out_dir}/deacoastlines_transect_{x[0]:.3f}_{y[0]:.3f}.shp'
-                geojson_path = f'{out_dir}/deacoastlines_transect_{x[0]:.3f}_{y[0]:.3f}.geojson'
-                
-                print(f"Exporting transect vectors to:\n"
-                      f"    {shp_path}\n"
-                      f"    {geojson_path}\n")
-                profile.to_crs('EPSG:3577').to_file(shp_path)
-                profile.to_crs('EPSG:4326').to_file(geojson_path,
-                                                    driver='GeoJSON')
-            
-            # Optionally write image
-            if export_figure:
-                fig_path = f'{out_dir}/deacoastlines_transect_{x[0]:.3f}_{y[0]:.3f}.png'
-                
-                print(f'Exporting transect figure to:\n'
-                      f'    {fig_path}\n')
-                fig.savefig(fig_path, bbox_inches='tight', dpi=200)
-                
-            # Plot figure
-            plt.show()
-
-            return transect_df
-
-        else:
-            raise ValueError('No valid intersections found for transect')
-
-    return ui_poll(lambda: extract_geometry(state) if state.done else None)
+    # Export data as a dataframe
+    return pd.DataFrame(
+        {
+            "time": np.tile(time, n_points),
+            "x": np.repeat(x, n_times),
+            "y": np.repeat(y, n_times),
+            "tide_m": tide,
+        }
+    ).set_index("time")
 
 
-def deacoastlines_histogram(extent_path=None,
-                            extent_id_col=None,
-                            export_points_data=True,
-                            export_summary_data=True,
-                            export_extent=True,
-                            export_figure=True,
-                            cmap='RdBu',
-                            hist_log=True, 
-                            hist_bins=60, 
-                            hist_range='auto',
-                            size_limit=100000,
-                            max_features=100000):
+def pixel_tides(
+    ds,
+    times=None,
+    resample=True,
+    calculate_quantiles=None,
+    resolution=5000,
+    buffer=12000,
+    resample_method="bilinear",
+    model="FES2014",
+    directory="~/tide_models",
+):
     """
-    Function for interactively selecting and analysing DEACoastlines 
-    statistics point data, and plotting results as histograms to 
-    compare rates of change.
-    
-    Parameters
-    ----------
-    extent_path : string, optional
-        An optional path to a shapefile or other vector file that will 
-        be used to extract a subset of DEACoastlines statistics. The 
-        default is None, which will select a subset of data using an 
-        interactive map.
-    extent_id_col : string, optional
-        If a vector file is supplied using `extent_path`, a column name
-        from the vector file must be specified using this parameter. 
-        Values from this column will be used to name any output files.       
-    export_points_data : boolean, optional
-        An optional boolean indicating whether to export the extracted
-        points data as a CSV file. This file will be automatically named 
-        using either its centroid coordinates or a value from any column
-        supplied using `extent_id_col`. The default is True.
-    export_summary_data : boolean, optional
-        An optional boolean indicating whether to export a CSV
-        containing summary statistics for all extracted points in the
-        selected extent. This file will contain a row for every selected
-        area and five attribute fields:
-             extent_id_col: A name for the selected area based either on
-                            its centroid coordinates or a value from any
-                            column supplied using `extent_id_col`
-            'mean_rate_zeros': Mean of all rates of change (e.g. m / 
-                               year) with non-significant points set to
-                               a rate of 0 m / year
-            'mean_rate_sigonly': Mean of all rates of change (e.g. m / 
-                               year) for significant points only
-            'n_zeros': Number of observations with non-significant
-                       points set to a rate of 0 m / year
-            'n_sigonly': Number of observations, significant points only
-    export_extent : boolean, optional
-        An optional boolean indicating whether to export the polygon
-        extent as a GeoJSON and ESRI Shapefile. This file will be 
-        automatically named using either its centroid coordinates or a 
-        value from any column supplied using `extent_id_col`. The 
-        default is True.
-    export_figure : boolean, optional
-        An optional boolean indicating whether to export the histogram
-        figure as an image file. This file will be automatically named 
-        using either its centroid coordinates or a value from any column
-        supplied using `extent_id_col`. The default is True.
-    hist_log : boolean, optional
-        An optional boolean indicating whether to plot histograms with 
-        a log y-axis. If True, all non-significant statistics points 
-        will be assigned a rate of 0 metres / year. If False, all 
-        non-significant points will be removed from the dataset, and 
-        plotted with a linear y-axis. 
-    hist_bins : int, optional
-        Number of bins to plot on the histogram. Defaults to 60.
-    hist_range : string or tuple, optional
-        A tuple giving the min and max range to plot on the x-axis, e.g.
-        `hist_range=(-30, 30)`. The default is 'auto', which will 
-        automatically optimise the x-axis of the plot based on the 0.001
-        and 0.999 percentile rates of change values. 
-    size_limit : int, optional
-        An optional size limit for the area selection in sq km. 
-        Defaults to 100,000 sq km.
-    max_features : int, optional
-        The maximum number of DEACoastLines statistics points to 
-        return from the WFS query. The default is 100,000.
+    Obtain tide heights for each pixel in a dataset by modelling
+    tides into a low-resolution grid surrounding the dataset,
+    then (optionally) spatially reprojecting this low-res data back
+    into the original higher resolution dataset extent and resolution.
+
+    Parameters:
+    -----------
+    ds : xarray.Dataset
+        A dataset whose geobox (`ds.odc.geobox`) will be used to define
+        the spatial extent of the low resolution tide modelling grid.
+    times : list or pandas.Series, optional
+        By default, the function will model tides using the times
+        contained in the `time` dimension of `ds`. This param can be used
+        to model tides for a custom set of times instead, for example:
+        `times=pd.date_range(start="2000", end="2020", freq="30min")`
+    resample : bool, optional
+        Whether to resample low resolution tides back into `ds`'s original
+        higher resolution grid. Set this to `False` if you do not want
+        low resolution tides to be re-projected back to higher resolution.
+    calculate_quantiles : list or np.array, optional
+        Rather than returning all individual tides, low-resolution tides
+        can be first aggregated using a quantile calculation by passing in
+        a list or array of quantiles to compute. For example, this could
+        be used to calculate the min/max tide across all times:
+        `calculate_quantiles=[0.0, 1.0]`.
+    resolution: int, optional
+        The desired resolution of the low-resolution grid used for tide
+        modelling. Defaults to 5000 for a 5,000 m grid (assuming `ds`'s
+        CRS uses project/metre units).
+    buffer : int, optional
+        The amount by which to buffer the higher resolution grid extent
+        when creating the new low resolution grid. This buffering is
+        important as it ensures that ensure pixel-based tides are seamless
+        across dataset boundaries. This buffer will eventually be clipped
+        away when the low-resolution data is re-projected back to the
+        resolution and extent of the higher resolution dataset. Defaults
+        to 12,000 m to ensure that at least two 5,000 m pixels occur
+        outside of the dataset bounds.
+    resample_method : string, optional
+        If resampling is requested (see `resample` above), use this
+        resampling method when converting from low resolution to high
+        resolution pixels. Defaults to "bilinear"; valid options include
+        "nearest", "cubic", "min", "max", "average" etc.
+    model : string, optional
+        The tide model used to model tides. Options include:
+        - "FES2014"
+        - "TPXO8-atlas"
+        - "TPXO9-atlas-v5"
+    directory : string, optional
+        The directory containing tide model data files. These
+        data files should be stored in sub-folders for each
+        model that match the structure provided by `pyTMD`:
+        https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories
+        For example:
+        - {directory}/fes2014/ocean_tide/
+          {directory}/fes2014/load_tide/
+        - {directory}/tpxo8_atlas/
+        - {directory}/TPXO9_atlas_v5/
+
+    Returns:
+    --------
+    If `resample` is True:
+
+        tides_lowres : xr.DataArray
+            A low resolution data array giving either tide heights every
+            timestep in `ds` (if `times` is None), tide heights at every
+            time in `times` (if `times` is not None), or tide height quantiles
+            for every quantile provided by `calculate_quantiles`.
+
+    If `resample` is False:
+
+        tides_highres, tides_lowres : tuple of xr.DataArrays
+            In addition to `tides_lowres` (see above), a high resolution
+            array of tide heights will be generated that matches the
+            exact spatial resolution and extent of `ds`. This will contain
+            either tide heights every timestep in `ds` (if `times` is None),
+            tide heights at every time in `times` (if `times` is not None),
+            or tide height quantiles for every quantile provided by
+            `calculate_quantiles`.
     """
-    
-    #############
-    # Load data #
-    #############
-    
-    # Load polygon from file if path is provided
-    if extent_path and extent_id_col:
-        extents = (gpd.read_file(extent_path)
-                   .to_crs('EPSG:4326')
-                   .set_index(extent_id_col))
-        
-    # Raise error if no column
-    elif extent_path and not extent_id_col:
-        raise ValueError("Please supply an attribute column using " \
-                         "'extent_id_col' when supplying a vector file.")         
 
-    # Otherwise, use interactive map to select region
-    else:        
-        
-        # Load DEACoastlines WMS
-        deacl_url='https://geoserver.dea.ga.gov.au/geoserver/wms'
-        deacl_layer='dea:DEACoastLines'
-        wms = WMSLayer(url=deacl_url,
-                       layers=deacl_layer,
-                       format='image/png',
-                       transparent=True,
-                       attribution='DEA CoastLines © 2020 Geoscience Australia')
-        
-        # Plot interactive map to select area
-        basemap = basemap_to_tiles(basemaps.Esri.WorldImagery)
-        places = TileLayer(url=('https://server.arcgisonline.com/ArcGIS/rest/'
-                               'services/Reference/World_Boundaries_and_Places'
-                               '/MapServer/tile/{z}/{y}/{x}'), opacity=1)
-        geopolygon = select_on_a_map(height='600px',
-                                     layers=(basemap, wms, places, ),
-                                     center=(-26, 135), 
-                                     zoom=4) 
+    import odc.geo.xr
+    from odc.geo.geobox import GeoBox
 
-        # Covert extent object to geopandas.GeoDataFrame object with CRS
-        extents = gpd.GeoDataFrame(geometry=[geopolygon], crs='EPSG:4326')        
-       
-    # List to hold summary stats
-    summary_stats = []
-    
-    # Set up figure
-    fig, ax1 = plt.subplots(1, 1, figsize=(10, 8))
-    ax1.grid(True, which='both', axis='y', color='0.9')
-    ax1.set_axisbelow(True)
-    
-    #########################
-    # Load and analyse data #
-    #########################
-        
-    # Run histogram extraction for each polygon in the extents data
-    for index, row in extents.iterrows():
-        
-        # Pull out single extent
-        extent = extents.loc[[index]]
-        
-        # Verify size
-        area = (extent.to_crs(crs='epsg:3577').area / 1000000).sum()
-        if area > size_limit:
-            raise ValueError(f'Your selected area is {area:.00f} sq km. '
-                             f'Please select an area of less than {size_limit} sq km.'
-                             f'\nTo select a smaller area, re-run the cell '
-                             f'above and draw a new polygon.')
-            
-        # Extract extent coordinates
-        xmin, ymin, xmax, ymax = extent.to_crs('epsg:4326').total_bounds
-            
-        # Set up analysis ID based on either vector row or coords
-        if extent_path:
-            extent_id = str(index)
-            file_id = os.path.splitext(extent_path)[0]
-        else:
-            x = (xmin + xmax) / 2
-            y = (ymin + ymax) / 2
-            extent_id = f'{x:.3f}_{y:.3f}'
-            file_id = 'polygon'
+    # Create a new reduced resolution (5km) tide modelling grid after
+    # first buffering the grid by 12km (i.e. at least two 5km pixels)
+    print("Creating reduced resolution tide modelling array")
+    buffered_geobox = ds.odc.geobox.buffered(buffer)
+    rescaled_geobox = GeoBox.from_bbox(
+        bbox=buffered_geobox.boundingbox, resolution=resolution
+    )
+    rescaled_ds = odc.geo.xr.xr_zeros(rescaled_geobox)
 
-        # Load data from WFS
-        print(f'Loading DEA Coastlines data for {extent_id}...')
-        deacl_wfs = f'https://geoserver.dea.ga.gov.au/geoserver/wfs?' \
-                    f'service=WFS&version=1.1.0&request=GetFeature' \
-                    f'&typeName=dea:coastlines_statistics' \
-                    f'&maxFeatures={max_features}' \
-                    f'&bbox={ymin},{xmin},{ymax},{xmax},' \
-                    f'urn:ogc:def:crs:EPSG:4326'
-        stats_df = gpd.read_file(deacl_wfs)
-        stats_df.crs = 'EPSG:3577'
+    # Flatten grid to 1D, then add time dimension. If custom times are
+    # provided use these, otherwise use times from `ds`
+    time_coords = ds.coords["time"] if times is None else times
+    flattened_ds = rescaled_ds.stack(z=("x", "y"))
+    flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords.values})
 
-        # Clip resulting data to extent shape
-        if len(stats_df.index) > 0:
-            stats_df = gpd.overlay(stats_df, 
-                                   extent.reset_index().to_crs('EPSG:3577'))
-        else:
-            raise ValueError('No statistics points were returned for the supplied '
-                             'extent. Please select another area.')
+    # Model tides for each timestep and x/y grid cell
+    print(f"Modelling tides using {model} tide model")
+    tide_df = model_tides(
+        x=flattened_ds.x,
+        y=flattened_ds.y,
+        time=flattened_ds.time,
+        model=model,
+        directory=directory,
+        epsg=ds.odc.geobox.crs.epsg,
+    )
 
-        #############
-        # Plot data #
-        #############
-        
-        # Create two different methods for subsetting data
-        stats_sig = stats_df.loc[stats_df.sig_time < 0.01].copy()
-        stats_zeros = stats_df.copy()
-        stats_zeros.loc[stats_df.sig_time > 0.01, 'rate_time'] = 0
-        
-        # Only generate plot if either only one polygon is being 
-        # analysed or if `export_figure == True`
-        if export_figure or len(extents.index) == 1:
+    # Insert modelled tide values back into flattened array, then unstack
+    # back to 3D (x, y, time)
+    tides_lowres = (
+        tide_df.set_index(["x", "y"], append=True)
+        .to_xarray()
+        .tide_m.reindex_like(rescaled_ds)
+        .transpose(*list(ds.dims.keys()))
+        .astype(np.float32)
+    )
 
-            if hist_log:
-                print('    Plotting data with log axis after setting ' \
-                      'non-significant points to 0 m / year\n')
-                stats_subset = stats_zeros.copy()
-                
-                if hist_range == 'auto':
-                    hist_max = stats_subset.rate_time.quantile([0.001, 0.999]).abs().max()
-                    hist_range = (-hist_max, hist_max)   
-                    
-                bin_offset = (hist_range[1] - hist_range[0]) / (hist_bins / 0.5)
-            else:
-                print('    Plotting data with linear axis after filtering ' \
-                      'to significant values\n')
-                stats_subset = stats_sig.copy()
-                
-                if hist_range == 'auto':
-                    hist_max = stats_subset.rate_time.quantile([0.001, 0.999]).abs().max()
-                    hist_range = (-hist_max, hist_max)   
-                
-                bin_offset = 0
+    # Optionally calculate and return quantiles rather than raw data
+    if calculate_quantiles is not None:
 
-            # Select colormap
-            cm = plt.cm.get_cmap(cmap)
+        print("Computing tide quantiles")
+        tides_lowres = tides_lowres.quantile(q=calculate_quantiles, dim="time")
+        reproject_dim = "quantile"
 
-            # Plot histogram    
-            n, bins, patches = ax1.hist(stats_subset.rate_time, 
-                                        bins=hist_bins, 
-                                        range=[(a + bin_offset) for a in hist_range], 
-                                        log=hist_log,
-                                        edgecolor='black')
+    else:
+        reproject_dim = "time"
 
-            # Scale values to interval [0,1]
-            bin_centers = 0.5 * (bins[:-1] + bins[1:])
-            norm = colors.SymLogNorm(linthresh=0.25, 
-                                     linscale=0.05,
-                                     vmin=hist_range[0], 
-                                     vmax=hist_range[1], 
-                                     base=10)
-            col = norm(bin_centers)  
+    # Ensure CRS is present
+    tides_lowres = tides_lowres.odc.assign_crs(ds.odc.geobox.crs)
 
-            # Apply colors to bars
-            for c, p in zip(col, patches):
-                plt.setp(p, 'facecolor', cm(c))
+    # Reproject each timestep into original high resolution grid
+    if resample:
 
-            ax1.set_title(f'Mean rate (non-significant points set to 0 m / ' \
-                          f'year): {stats_zeros.rate_time.mean():.2f} m / year\n'
-                          f'Mean rate (non-significant points excluded ' \
-                          f'from data): {stats_sig.rate_time.mean():.2f} m / year')
-            ax1.set_xlabel('Rate of change (m / year)')
-            ax1.set_ylabel('Frequency')
-            
-        ###############
-        # Export data #
-        ###############        
-        
-        # Create output folder if none exists
-        if (export_extent or
-            export_figure or 
-            export_points_data or 
-            export_summary_data):
-            out_dir = 'deacoastlines_outputs'
-            os.makedirs(out_dir, exist_ok=True)
+        print("Reprojecting tides into original array")
+        tides_highres = parallel_apply(
+            tides_lowres,
+            reproject_dim,
+            odc.algo.xr_reproject,
+            ds.odc.geobox.compat,
+            resample_method,
+        )
 
-        # Optionally write vector data
-        if export_extent:
-            shp_path = f'{out_dir}/deacoastlines_{file_id}_{extent_id}.shp'
-            geojson_path = f'{out_dir}/deacoastlines_{file_id}_{extent_id}.geojson'
+        return tides_highres, tides_lowres
 
-            print(f'Exporting extent vectors to:\n'
-                  f'    {shp_path}\n'
-                  f'    {geojson_path}\n')
-            extent.to_crs('EPSG:3577').to_file(shp_path)
-            extent.to_crs('EPSG:4326').to_file(geojson_path,
-                                                driver='GeoJSON')
-
-        # Optionally write image
-        if export_figure:
-            fig_path = f'{out_dir}/deacoastlines_{file_id}_{extent_id}.png'
-            print(f'Exporting histogram figure to:\n'
-                  f'    {fig_path}\n')
-            plt.savefig(fig_path, bbox_inches='tight', dpi=200)
-            
-        # Optionally write raw data to CSV
-        if export_points_data:
-            csv_path = f'{out_dir}/deacoastlines_{file_id}_{extent_id}.csv'
-            print(f'Exporting points data to:\n'
-                      f'    {csv_path}\n')
-            
-            # Prepare data for export            
-            stats_df = stats_df.to_crs('EPSG:4326')
-            stats_df['longitude'] = stats_df.geometry.x.round(4)
-            stats_df['latitude'] = stats_df.geometry.y.round(4)
-            stats_df = stats_df.drop(['gml_id', 'geometry'], axis=1)
-            
-            # Export
-            stats_df.to_csv(csv_path, index=False)
-            
-        # Add summary stats to list
-        summary_stats.append({extent_id_col: extent_id, 
-                              'mean_rate_zeros': stats_zeros.rate_time.mean(),
-                              'mean_rate_sigonly': stats_sig.rate_time.mean(),
-                              'n_zeros': len(stats_zeros.rate_time),
-                              'n_sigonly': len(stats_sig.rate_time)})
-        
-        # Close axes if multiple images
-        if len(extents.index) > 1:
-            ax1.cla()
-    
-    # Close figure if multiple images
-    if len(extents.index) > 1:
-        plt.close(fig)
-        
-    # Optionally write summary data to CSV
-    summary_stats_df = pd.DataFrame(summary_stats)
-    if export_summary_data:
-        summary_path = f'{out_dir}/deacoastlines_{file_id}_summary.csv'
-        print(f'Exporting summary data to:\n'
-              f'    {summary_path}\n')
-
-        # Combine into dataframe and export        
-        summary_stats_df.to_csv(summary_path, index=False)
-
-    # Return summary data
-    return summary_stats
+    else:
+        print("Returning low resolution tide array")
+        return tides_lowres

@@ -1,7 +1,6 @@
 ## dea_waterbodies.py
 """
-Description: This file contains a set of python functions for loading
-and processing DEA Waterbodies.
+Loading and processing DEA Waterbodies data.
 
 License: The code in this notebook is licensed under the Apache License, 
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
@@ -17,13 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Functions included:
-    get_waterbody
-    get_waterbodies
-    get_geohashes
-    get_time_series
-
-Last modified: November 2020
+Last modified: September 2021
 """
 
 import geopandas as gpd
@@ -52,7 +45,7 @@ def get_waterbody(geohash: str) -> gpd.GeoDataFrame:
     filter_ = PropertyIsEqualTo(propertyname="uid", literal=geohash)
     filterxml = etree.tostring(filter_.toXML()).decode("utf-8")
     response = wfs.getfeature(
-        typename="DigitalEarthAustraliaWaterbodies",
+        typename="DigitalEarthAustraliaWaterbodies_v2",
         filter=filterxml,
         outputFormat="json",
     )
@@ -77,7 +70,7 @@ def get_waterbodies(bbox: tuple, crs="EPSG:4326") -> gpd.GeoDataFrame:
     """
     wfs = WebFeatureService(url=WFS_ADDRESS, version="1.1.0")
     response = wfs.getfeature(
-        typename="DigitalEarthAustraliaWaterbodies",
+        typename="DigitalEarthAustraliaWaterbodies_v2",
         bbox=tuple(bbox) + (crs,),
         outputFormat="json",
     )
@@ -104,7 +97,7 @@ def get_geohashes(bbox: tuple = None, crs: str = "EPSG:4326") -> [str]:
     if bbox is not None:
         bbox = tuple(bbox) + (crs,)
     response = wfs.getfeature(
-        typename="DigitalEarthAustraliaWaterbodies",
+        typename="DigitalEarthAustraliaWaterbodies_v2",
         propertyname="uid",
         outputFormat="json",
         bbox=bbox,

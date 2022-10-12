@@ -1,7 +1,6 @@
 ## dea_spatialtools.py
 '''
-Description: This file contains a set of python functions for conducting 
-spatial analyses on Digital Earth Australia data.
+Tools for spatially manipulating Digital Earth Australia data.
 
 License: The code in this notebook is licensed under the Apache License, 
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
@@ -17,36 +16,28 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Functions included:
-    xr_vectorize
-    xr_rasterize
-    subpixel_contours
-    interpolate_2d
-    contours_to_array
-    largest_region
-    transform_geojson_wgs_to_epsg
-    zonal_stats_parallel
-
-Last modified: November 2020
+Last modified: August 2022
 
 '''
 
 # Import required packages
+import fiona
 import collections
 import numpy as np
 import xarray as xr
 import geopandas as gpd
 import rasterio.features
 import scipy.interpolate
+import multiprocessing as mp
 from scipy import ndimage as nd
 from skimage.measure import label
 from rasterstats import zonal_stats
 from skimage.measure import find_contours
+from geopy.geocoders import Nominatim
 from datacube.utils.cog import write_cog
-from datacube.helpers import write_geotiff
 from datacube.utils.geometry import assign_crs
 from datacube.utils.geometry import CRS, Geometry
-from shapely.geometry import LineString, MultiLineString, shape
+from shapely.geometry import LineString, MultiLineString, shape, mapping
 
 def xr_vectorize(da, 
                  attribute_col='attribute', 
@@ -152,7 +143,7 @@ def xr_vectorize(da,
     # Create a geopandas dataframe populated with the polygon shapes
     gdf = gpd.GeoDataFrame(data={attribute_col: values},
                            geometry=polygons,
-                           crs={'init': str(crs)})
+                           crs=str(crs))
     
     # If a file path is supplied, export a shapefile
     if export_shp:
@@ -280,7 +271,7 @@ def xr_rasterize(gdf,
     except:
         # Sometimes the crs can be a datacube utils CRS object
         # so convert to string before reprojecting
-        gdf_reproj = gdf.to_crs(crs={'init': str(crs)})
+        gdf_reproj = gdf.to_crs(crs=str(crs))
     
     # If an attribute column is specified, rasterise using vector 
     # attribute values. Otherwise, rasterise into a boolean array
@@ -676,7 +667,7 @@ def contours_to_arrays(gdf, col):
     can then be used as an input to interpolation procedures (e.g. using 
     a function like `interpolate_2d`.
     
-    Last modified: October 2019
+    Last modified: October 2021
     
     Parameters
     ----------  
@@ -702,7 +693,7 @@ def contours_to_arrays(gdf, col):
 
         try:
             coords = np.concatenate([np.vstack(x.coords.xy).T 
-                                     for x in gdf.iloc[i].geometry])
+                                     for x in gdf.iloc[i].geometry.geoms])
         except:
             coords = np.vstack(gdf.iloc[i].geometry.coords.xy).T
 
@@ -820,21 +811,22 @@ def zonal_stats_parallel(shp,
 
     #calculates zonal stats and adds results to a dictionary
     def worker(z,raster,d):	
-        z_stats = zonal_stats(z,raster,stats=statistics,**kwargs)	
+        z_stats = zonal_stats(z,raster,stats=statistics,**kwargs)
         for i in range(0,len(z_stats)):
             d[z[i]['id']]=z_stats[i]
 
     #write output polygon
     def write_output(zones, out_shp,d):
-        #copy schema and crs from input and add new fields for each statistic			
+        
+        #copy schema and crs from input and add new fields for each statistic     
         schema = zones.schema.copy()
         crs = zones.crs
-        for stat in statistics:			
+        for stat in statistics:
             schema['properties'][stat] = 'float'
 
         with fiona.open(out_shp, 'w', 'ESRI Shapefile', schema, crs) as output:
             for elem in zones:
-                for stat in statistics:			
+                for stat in statistics:
                     elem['properties'][stat]=d[elem['id']][stat]
                 output.write({'properties':elem['properties'],'geometry': mapping(shape(elem['geometry']))})
     
@@ -857,4 +849,187 @@ def zonal_stats_parallel(shp,
         #wait that all chunks are finished
         [j.join() for j in jobs]
 
-        write_output(zones,out_shp,d)		
+        write_output(zones,out_shp,d)
+
+
+def reverse_geocode(coords, site_classes=None, state_classes=None):
+    
+    """
+    Takes a latitude and longitude coordinate, and performs a reverse 
+    geocode to return a plain-text description of the location in the 
+    form:
+        
+        Site, State
+        
+    E.g.: `reverse_geocode(coords=(-35.282163, 149.128835))`
+    
+        'Canberra, Australian Capital Territory'
+
+    Parameters
+    ----------
+    coords : tuple of floats
+        A tuple of (latitude, longitude) coordinates used to perform 
+        the reverse geocode.
+    site_classes : list of strings, optional
+        A list of strings used to define the site part of the plain 
+        text location description. Because the contents of the geocoded 
+        address can vary greatly depending on location, these strings
+        are tested against the address one by one until a match is made.
+        Defaults to: `['city', 'town', 'village', 'suburb', 'hamlet', 
+                       'county', 'municipality']`.      
+    state_classes : list of strings, optional
+        A list of strings used to define the state part of the plain 
+        text location description. These strings are tested against the 
+        address one by one until a match is made. Defaults to: 
+        `['state', 'territory']`.
+
+    Returns
+    -------
+    If a valid geocoded address is found, a plain text location 
+    description will be returned:
+    
+        'Site, State'
+    
+    If no valid address is found, formatted coordinates will be returned
+    instead:
+    
+        'XX.XX S, XX.XX E'   
+
+    """
+
+    # Run reverse geocode using coordinates
+    geocoder = Nominatim(user_agent='Digital Earth Australia')
+    out = geocoder.reverse(coords)
+    
+    # Create plain text-coords as fall-back
+    lat = f'{-coords[0]:.2f} S' if coords[0] < 0 else f'{coords[0]:.2f} N'
+    lon = f'{-coords[1]:.2f} W' if coords[1] < 0 else f'{coords[1]:.2f} E'
+
+    try:
+        
+        # Get address from geocoded data
+        address = out.raw['address']
+
+        # Use site and state classes if supplied; else use defaults
+        default_site_classes = ['city', 'town', 'village', 'suburb', 'hamlet', 
+                                'county', 'municipality']
+        default_state_classes = ['state', 'territory']
+        site_classes = site_classes if site_classes else default_site_classes
+        state_classes = state_classes if state_classes else default_state_classes
+
+        # Return the first site or state class that exists in address dict
+        site = next((address[k] for k in site_classes if k in address), None)
+        state = next((address[k] for k in state_classes if k in address), None)
+        
+        # If site and state exist in the data, return this.
+        # Otherwise, return N/E/S/W coordinates.
+        if site and state:
+
+            # Return as site, state formatted string
+            return f'{site}, {state}'
+        
+        else:
+            
+            # If no geocoding result, return N/E/S/W coordinates
+            print('No valid geocoded location; returning coordinates instead')
+            return f'{lat}, {lon}'
+              
+    except (KeyError, AttributeError):
+
+        # If no geocoding result, return N/E/S/W coordinates
+        print('No valid geocoded location; returning coordinates instead')
+        return f'{lat}, {lon}'
+
+
+def hillshade(dem, elevation, azimuth, vert_exag=1, dx=30, dy=30):
+    """
+    Calculate hillshade from an input Digital Elevation Model
+    (DEM) array and a sun elevation and azimith.
+
+    Parameters:
+    -----------
+    dem : numpy.array
+        A 2D Digital Elevation Model array.
+    elevation : int or float
+        Sun elevation (0-90, degrees up from horizontal).
+    azimith : int or float
+        Sun azimuth (0-360, degrees clockwise from north).
+    vert_exag : int or float, optional
+        The amount to exaggerate the elevation values by
+        when calculating illumination. This can be used either
+        to correct for differences in units between the x-y coordinate
+        system and the elevation coordinate system (e.g. decimal
+        degrees vs. meters) or to exaggerate or de-emphasize
+        topographic effects.
+    dx : int or float, optional
+        The x-spacing (columns) of the input DEM. This
+        is typically the spatial resolution of the DEM.
+    dy : int or float, optional
+        The y-spacing (rows) of the input input DEM. This
+        is typically the spatial resolution of the DEM.
+
+    Returns:
+    --------
+    hs : numpy.array
+        A 2D hillshade array with values between 0-1, where
+        0 is completely in shadow and 1 is completely
+        illuminated.
+    """
+
+    from matplotlib.colors import LightSource
+
+    hs = LightSource(azdeg=azimuth, altdeg=elevation).hillshade(
+        dem, vert_exag=vert_exag, dx=dx, dy=dy
+    )
+    return hs
+
+
+def sun_angles(dc, query):
+    """
+    For a given spatiotemporal query, calculate mean sun
+    azimuth and elevation for each satellite observation, and
+    return these as a new `xarray.Dataset` with 'sun_elevation'
+    and 'sun_azimuth' variables.
+
+    Parameters:
+    -----------
+    dc : datacube.Datacube object
+        Datacube instance used to load data.
+    query : dict
+        A dictionary containing query parameters used to identify
+        satellite observations and load metadata.
+
+    Returns:
+    --------
+    sun_angles_ds : xarray.Dataset
+        An `xarray.set` containing a 'sun_elevation' and
+        'sun_azimuth' variables.
+    """
+
+    from datacube.api.query import query_group_by
+    from datacube.model.utils import xr_apply
+
+    # Identify satellite datasets and group outputs using the
+    # same approach used to group satellite imagery (i.e. solar day)
+    gb = query_group_by(**query)
+    datasets = dc.find_datasets(**query)
+    dataset_array = dc.group_datasets(datasets, gb)
+
+    # Load and take the mean of metadata from each product
+    sun_azimuth = xr_apply(
+        dataset_array,
+        lambda t, dd: np.mean([d.metadata.eo_sun_azimuth for d in dd]),
+        dtype=float,
+    )
+    sun_elevation = xr_apply(
+        dataset_array,
+        lambda t, dd: np.mean([d.metadata.eo_sun_elevation for d in dd]),
+        dtype=float,
+    )
+
+    # Combine into new xarray.Dataset
+    sun_angles_ds = xr.merge(
+        [sun_elevation.rename("sun_elevation"), sun_azimuth.rename("sun_azimuth")]
+    )
+
+    return sun_angles_ds

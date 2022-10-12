@@ -1,7 +1,6 @@
 ## dea_plotting.py
 '''
-Description: This file contains a set of python functions for plotting 
-Digital Earth Australia data.
+Plotting and animating Digital Earth Australia products and data.
 
 License: The code in this notebook is licensed under the Apache License, 
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
@@ -17,14 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Functions included:
-    rgb
-    display_map
-    map_shapefile
-    xr_animation
-    plot_wo
-
-Last modified: February 2021
+Last modified: October 2021
 
 '''
 
@@ -51,6 +43,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps, Choropleth
 from skimage import exposure
 from odc.ui import image_aspect
+import warnings
 
 from matplotlib.animation import FuncAnimation
 import pandas as pd
@@ -59,6 +52,7 @@ from shapely.geometry import box
 from skimage.exposure import rescale_intensity
 from tqdm.auto import tqdm
 import warnings
+
 
 def rgb(ds,
         bands=['nbart_red', 'nbart_green', 'nbart_blue'],
@@ -72,7 +66,6 @@ def rgb(ds,
         savefig_path=None,
         savefig_kwargs={},
         **kwargs):
-    
     """
     Takes an xarray dataset and plots RGB images using three imagery 
     bands (e.g ['nbart_red', 'nbart_green', 'nbart_blue']). The `index` 
@@ -158,50 +151,47 @@ def rgb(ds,
 
     # If ax is supplied via kwargs, ignore aspect and size
     if 'ax' in kwargs:
-        
+
         # Create empty aspect size kwarg that will be passed to imshow
-        aspect_size_kwarg = {}    
+        aspect_size_kwarg = {}
     else:
         # Compute image aspect
         if not aspect:
             aspect = image_aspect(ds)
-        
+
         # Populate aspect size kwarg with aspect and size data
         aspect_size_kwarg = {'aspect': aspect, 'size': size}
 
-    # If no value is supplied for `index` (the default), plot using default 
+    # If no value is supplied for `index` (the default), plot using default
     # values and arguments passed via `**kwargs`
     if index is None:
-        
+
         # Select bands and convert to DataArray
         da = ds[bands].to_array().compute()
 
         # If percentile_stretch == True, clip plotting to percentile vmin, vmax
         if percentile_stretch:
             vmin, vmax = da.quantile(percentile_stretch).values
-            kwargs.update({'vmin': vmin, 'vmax': vmax})        
-        
-        # If there are more than three dimensions and the index dimension == 1, 
+            kwargs.update({'vmin': vmin, 'vmax': vmax})
+
+        # If there are more than three dimensions and the index dimension == 1,
         # squeeze this dimension out to remove it
-        if ((len(ds.dims) > 2) and 
-            ('col' not in kwargs) and 
+        if ((len(ds.dims) > 2) and ('col' not in kwargs) and
             (len(da[index_dim]) == 1)):
-        
+
             da = da.squeeze(dim=index_dim)
-            
+
         # If there are more than three dimensions and the index dimension
         # is longer than 1, raise exception to tell user to use 'col'/`index`
-        elif ((len(ds.dims) > 2) and 
-              ('col' not in kwargs) and 
+        elif ((len(ds.dims) > 2) and ('col' not in kwargs) and
               (len(da[index_dim]) > 1)):
-                
+
             raise Exception(
                 f'The input dataset `ds` has more than two dimensions: '
                 f'{list(ds.dims.keys())}. Please select a single observation '
                 'using e.g. `index=0`, or enable faceted plotting by adding '
-                'the arguments e.g. `col="time", col_wrap=4` to the function ' 
-                'call'
-            )
+                'the arguments e.g. `col="time", col_wrap=4` to the function '
+                'call')
 
         img = da.plot.imshow(x=x_dim,
                              y=y_dim,
@@ -210,7 +200,7 @@ def rgb(ds,
                              **aspect_size_kwarg,
                              **kwargs)
 
-    # If values provided for `index`, extract corresponding observations and 
+    # If values provided for `index`, extract corresponding observations and
     # plot as either single image or facet plot
     else:
 
@@ -218,15 +208,13 @@ def rgb(ds,
         if isinstance(index, float):
             raise Exception(
                 f'Please supply `index` as either an integer or a list of '
-                'integers'
-            )
+                'integers')
 
         # If col argument is supplied as well as `index`, raise exception
         if 'col' in kwargs:
             raise Exception(
                 f'Cannot supply both `index` and `col`; please remove one and '
-                'try again'
-            )
+                'try again')
 
         # Convert index to generic type list so that number of indices supplied
         # can be computed
@@ -251,7 +239,7 @@ def rgb(ds,
                                  **aspect_size_kwarg,
                                  **kwargs)
 
-        # If only one index is supplied, squeeze out index_dim and plot as a 
+        # If only one index is supplied, squeeze out index_dim and plot as a
         # single panel
         else:
 
@@ -259,8 +247,8 @@ def rgb(ds,
                                                         **aspect_size_kwarg,
                                                         **kwargs)
 
-    # If an export path is provided, save image to file. Individual and 
-    # faceted plots have a different API (figure vs fig) so we get around this 
+    # If an export path is provided, save image to file. Individual and
+    # faceted plots have a different API (figure vs fig) so we get around this
     # using a try statement:
     if savefig_path:
 
@@ -271,7 +259,7 @@ def rgb(ds,
         except:
             img.figure.savefig(savefig_path, **savefig_kwargs)
 
-            
+
 def display_map(x, y, crs='EPSG:4326', margin=-0.5, zoom_bias=0):
     """ 
     Given a set of x and y coordinates, this function generates an 
@@ -314,17 +302,14 @@ def display_map(x, y, crs='EPSG:4326', margin=-0.5, zoom_bias=0):
     # Convert each corner coordinates to lat-lon
     all_x = (x[0], x[1], x[0], x[1])
     all_y = (y[0], y[0], y[1], y[1])
-    all_longitude, all_latitude = transform(Proj(crs),
-                                            Proj('EPSG:4326'),
-                                            all_x, all_y)
+    all_longitude, all_latitude = transform(Proj(crs), Proj('EPSG:4326'), all_x,
+                                            all_y)
 
     # Calculate zoom level based on coordinates
-    lat_zoom_level = _degree_to_zoom_level(min(all_latitude),
-                                           max(all_latitude),
-                                           margin=margin) + zoom_bias
-    lon_zoom_level = _degree_to_zoom_level(min(all_longitude),
-                                           max(all_longitude),
-                                           margin=margin) + zoom_bias
+    lat_zoom_level = _degree_to_zoom_level(
+        min(all_latitude), max(all_latitude), margin=margin) + zoom_bias
+    lon_zoom_level = _degree_to_zoom_level(
+        min(all_longitude), max(all_longitude), margin=margin) + zoom_bias
     zoom_level = min(lat_zoom_level, lon_zoom_level)
 
     # Identify centre point for plotting
@@ -414,54 +399,60 @@ def map_shapefile(gdf,
 
     """
 
+    warnings.warn(
+        "The `map_shapefile` function is deprecated, and will "
+        "be removed from future versions of `dea-tools`. Please "
+        "use Geopanda's built-in `.explore` functionality instead.",
+        FutureWarning)
+
     def on_hover(event, id, properties):
         with dbg:
             text = properties.get(hover_col, '???')
             lbl.value = f'{hover_col}: {text}'
-            
-    # Verify that attribute exists in shapefile   
+
+    # Verify that attribute exists in shapefile
     if attribute not in gdf.columns:
         raise ValueError(f"The `attribute` {attribute} does not exist "
                          f"in the geopandas.GeoDataFrame. "
                          f"Valid attributes include {gdf.columns.values}.")
-        
+
     # If hover_col is True, use 'attribute' as the default hover attribute.
     # Otherwise, hover_col will use the supplied attribute field name
     if hover_col and (hover_col is True):
         hover_col = attribute
-        
-    # If a custom string if supplied to hover_col, check this exists 
+
+    # If a custom string if supplied to hover_col, check this exists
     elif hover_col and (type(hover_col) == str):
         if hover_col not in gdf.columns:
-                raise ValueError(f"The `hover_col` field {hover_col} does "
-                                 f"not exist in the geopandas.GeoDataFrame. "
-                                 f"Valid attributes include "
-                                 f"{gdf.columns.values}.")
+            raise ValueError(f"The `hover_col` field {hover_col} does "
+                             f"not exist in the geopandas.GeoDataFrame. "
+                             f"Valid attributes include "
+                             f"{gdf.columns.values}.")
 
     # Convert to WGS 84 and GeoJSON format
     gdf_wgs84 = gdf.to_crs(epsg=4326)
     data_geojson = gdf_wgs84.__geo_interface__
-    
+
     # If continuous is False, remap categorical classes for visualisation
     if not continuous:
-        
+
         # Zip classes data together to make a dictionary
         classes_uni = list(gdf[attribute].unique())
         classes_clean = list(range(0, len(classes_uni)))
         classes_dict = dict(zip(classes_uni, classes_clean))
-        
-        # Get values to colour by as a list 
-        classes = gdf[attribute].map(classes_dict).tolist()  
-    
-    # If continuous is True then do not remap
-    else: 
-        
+
         # Get values to colour by as a list
-        classes = gdf[attribute].tolist()  
+        classes = gdf[attribute].map(classes_dict).tolist()
+
+    # If continuous is True then do not remap
+    else:
+
+        # Get values to colour by as a list
+        classes = gdf[attribute].tolist()
 
     # Create the dictionary to colour map by
     keys = gdf.index
-    id_class_dict = dict(zip(keys.astype(str), classes))  
+    id_class_dict = dict(zip(keys.astype(str), classes))
 
     # Get centroid to focus map on
     lon1, lat1, lon2, lat2 = gdf_wgs84.total_bounds
@@ -478,59 +469,58 @@ def map_shapefile(gdf,
             zoom=default_zoom,
             basemap=basemap,
             layout=dict(width='800px', height='600px'))
-    
-    # Define default plotting parameters for the choropleth map. 
-    # The nested dict structure sets default values which can be 
+
+    # Define default plotting parameters for the choropleth map.
+    # The nested dict structure sets default values which can be
     # overwritten/customised by `choropleth_kwargs` values
     style_kwargs = dict({'fillOpacity': 0.8}, **style_kwargs)
 
     # Get `branca.colormap` object from matplotlib string
     cm_cmap = cm.get_cmap(cmap, 30)
-    colormap = branca.colormap.LinearColormap([cm_cmap(i) for 
-                                               i in np.linspace(0, 1, 30)])
-    
+    colormap = branca.colormap.LinearColormap(
+        [cm_cmap(i) for i in np.linspace(0, 1, 30)])
+
     # Create the choropleth
     choropleth = Choropleth(geo_data=data_geojson,
                             choro_data=id_class_dict,
                             colormap=colormap,
                             style=style_kwargs)
-    
-    # If the vector data contains line features, they will not be 
+
+    # If the vector data contains line features, they will not be
     # be coloured by default. To resolve this, we need to manually copy
     # across the 'fillColor' attribute to the 'color' attribute for each
     # feature, then plot the data as a GeoJSON layer rather than the
     # choropleth layer that we use for polygon data.
-    linefeatures = any(x in ['LineString', 'MultiLineString'] 
+    linefeatures = any(x in ['LineString', 'MultiLineString']
                        for x in gdf.geometry.type.values)
     if linefeatures:
-    
+
         # Copy colour from fill to line edge colour
         for i in keys:
             choropleth.data['features'][i]['properties']['style']['color'] = \
             choropleth.data['features'][i]['properties']['style']['fillColor']
 
         # Add GeoJSON layer to map
-        feature_layer = GeoJSON(data=choropleth.data,
-                                style=style_kwargs)
+        feature_layer = GeoJSON(data=choropleth.data, style=style_kwargs)
         m.add_layer(feature_layer)
-        
+
     else:
-        
+
         # Add Choropleth layer to map
         m.add_layer(choropleth)
 
     # If a column is specified by `hover_col`, print data from the
     # hovered feature above the map
     if hover_col and not linefeatures:
-        
+
         # Use cholopleth object if data is polygon
         lbl = ipywidgets.Label()
         dbg = ipywidgets.Output()
         choropleth.on_hover(on_hover)
         display(lbl)
-        
+
     else:
-        
+
         lbl = ipywidgets.Label()
         dbg = ipywidgets.Output()
         feature_layer.on_hover(on_hover)
@@ -538,13 +528,13 @@ def map_shapefile(gdf,
 
     # Display the map
     display(m)
-    
+
 
 def xr_animation(ds,
                  bands=None,
                  output_path='animation.mp4',
                  width_pixels=500,
-                 interval=100,                 
+                 interval=100,
                  percentile_stretch=(0.02, 0.98),
                  image_proc_funcs=None,
                  show_gdf=None,
@@ -556,7 +546,6 @@ def xr_animation(ds,
                  imshow_kwargs={},
                  colorbar_kwargs={},
                  limit=None):
-    
     """
     Takes an `xarray` timeseries and animates the data as either a 
     three-band (e.g. true or false colour) or single-band animation, 
@@ -707,7 +696,6 @@ def xr_animation(ds,
 
         return gdf
 
-
     def _add_colorbar(fig, ax, vmin, vmax, imshow_defaults, colorbar_defaults):
         """
         Adds a new colorbar axis to the animation with custom minimum 
@@ -730,7 +718,6 @@ def xr_animation(ds,
         cax.get_xticklabels()[0].set_horizontalalignment('left')
         cax.get_xticklabels()[-1].set_horizontalalignment('right')
 
-
     def _frame_annotation(times, show_date, show_text):
         """
         Creates a custom annotation for the top-right of the animation
@@ -751,14 +738,17 @@ def xr_animation(ds,
                              f'either a length of 1, or a length >= the number '
                              f'of timesteps in `ds` (n={len(times)})')
 
-        times_list = (times.dt.strftime(show_date).values if show_date else [None] *
-                      len(times))
+        times_list = (times.dt.strftime(show_date).values
+                      if show_date else [None] * len(times))
         text_list = show_text if is_sequence else [show_text] * len(times)
-        annotation_list = ['\n'.join([str(i) for i in (a, b) if i])
-                           for a, b in zip(times_list, text_list)]
+        annotation_list = [
+            '\n'.join([str(i)
+                       for i in (a, b)
+                       if i])
+            for a, b in zip(times_list, text_list)
+        ]
 
         return annotation_list
-
 
     def _update_frames(i, ax, extent, annotation_text, gdf, gdf_defaults,
                        annotation_defaults, imshow_defaults):
@@ -767,13 +757,14 @@ def xr_animation(ds,
         animate each frame in the animation. Plots array and any text
         annotations, as well as a temporal subset of `gdf` data based
         on the times specified in 'start_time' and 'end_time' columns.
-        """        
+        """
 
         # Clear previous frame to optimise render speed and plot imagery
         ax.clear()
-        ax.imshow(array[i, ...].clip(0.0, 1.0), 
-                  extent=extent, 
-                  vmin=0.0, vmax=1.0, 
+        ax.imshow(array[i, ...].clip(0.0, 1.0),
+                  extent=extent,
+                  vmin=0.0,
+                  vmax=1.0,
                   **imshow_defaults)
 
         # Add annotation text
@@ -787,7 +778,7 @@ def xr_animation(ds,
 
             # Subset geodataframe using start and end dates
             gdf_subset = show_gdf.loc[(show_gdf.start_time <= time_i) &
-                                      (show_gdf.end_time >= time_i)]           
+                                      (show_gdf.end_time >= time_i)]
 
             if len(gdf_subset.index) > 0:
 
@@ -799,11 +790,10 @@ def xr_animation(ds,
 
         # Remove axes to show imagery only
         ax.axis('off')
-        
+
         # Update progress bar
         progress_bar.update(1)
-        
-    
+
     # Test if bands have been supplied, or convert to list to allow
     # iteration if a single band is provided as a string
     if bands is None:
@@ -812,18 +802,18 @@ def xr_animation(ds,
                          f'variables in `ds`, e.g. {list(ds.data_vars)}')
     elif isinstance(bands, str):
         bands = [bands]
-    
+
     # Test if bands exist in dataset
     missing_bands = [b for b in bands if b not in ds.data_vars]
     if missing_bands:
         raise ValueError(f'Band(s) {missing_bands} do not exist as '
                          f'variables in `ds` {list(ds.data_vars)}')
-    
+
     # Test if time dimension exists in dataset
     if 'time' not in ds.dims:
         raise ValueError(f"`ds` does not contain a 'time' dimension "
                          f"required for generating an animation")
-                
+
     # Set default parameters
     outline = [PathEffects.withStroke(linewidth=2.5, foreground='black')]
     annotation_defaults = {
@@ -858,7 +848,8 @@ def xr_animation(ds,
     # Prepare geodataframe
     if show_gdf is not None:
         show_gdf = show_gdf.to_crs(ds.geobox.crs)
-        show_gdf = gpd.clip(show_gdf, mask=box(left, bottom, right, top))
+        show_gdf = gpd.clip(show_gdf, mask=box(
+            left, bottom, right, top)).reindex(show_gdf.index).dropna(how='all')
         show_gdf = _start_end_times(show_gdf, ds)
 
     # Convert data to 4D numpy array of shape [time, y, x, bands]
@@ -881,16 +872,16 @@ def xr_animation(ds,
 
     # Clip to percentiles and rescale between 0.0 and 1.0 for plotting
     vmin, vmax = np.quantile(array[np.isfinite(array)], q=percentile_stretch)
-        
+
     # Replace with vmin and vmax if present in `imshow_defaults`
     if 'vmin' in imshow_defaults:
         vmin = imshow_defaults.pop('vmin')
     if 'vmax' in imshow_defaults:
         vmax = imshow_defaults.pop('vmax')
-    
+
     # Rescale between 0 and 1
-    array = rescale_intensity(array, 
-                              in_range=(vmin, vmax), 
+    array = rescale_intensity(array,
+                              in_range=(vmin, vmax),
                               out_range=(0.0, 1.0))
     array = np.squeeze(array)  # remove final axis if only one band
 
@@ -904,7 +895,7 @@ def xr_animation(ds,
         _add_colorbar(fig, ax, vmin, vmax, imshow_defaults, colorbar_defaults)
 
     # Animate
-    print(f'Exporting animation to {output_path}') 
+    print(f'Exporting animation to {output_path}')
     anim = FuncAnimation(
         fig=fig,
         func=_update_frames,
@@ -919,11 +910,11 @@ def xr_animation(ds,
         frames=len(ds.time),
         interval=interval,
         repeat=False)
-    
+
     # Set up progress bar
-    progress_bar = tqdm(total=len(ds.time), 
-                        unit=' frames', 
-                        bar_format=bar_format) 
+    progress_bar = tqdm(total=len(ds.time),
+                        unit=' frames',
+                        bar_format=bar_format)
 
     # Export animation to file
     if Path(output_path).suffix == '.gif':
@@ -938,11 +929,10 @@ def xr_animation(ds,
 
 
 def _degree_to_zoom_level(l1, l2, margin=0.0):
-    
     """
     Helper function to set zoom level for `display_map`
     """
-    
+
     degree = abs(l1 - l2) * (1 + margin)
     zoom_level_int = 0
     if degree != 0:
@@ -970,17 +960,17 @@ def plot_wo(wo, legend=True, **plot_kwargs):
     plot    
     """
     cmap = mcolours.ListedColormap([
-          np.array([150, 150, 110]) / 255,   # dry - 0
-          np.array([0, 0, 0]) / 255,   # nodata, - 1
-          np.array([119, 104, 87]) / 255,   # terrain - 16
-          np.array([89, 88, 86]) / 255,     # cloud_shadow - 32
-          np.array([216, 215, 214]) / 255,  # cloud - 64
-          np.array([242, 220, 180]) / 255,  # cloudy terrain - 80
-          np.array([79, 129, 189]) / 255,  # water - 128
-          np.array([51, 82, 119]) / 255,   # shady water - 160
-          np.array([186, 211, 242]) / 255, # cloudy water - 192
+        np.array([150, 150, 110]) / 255,  # dry - 0
+        np.array([0, 0, 0]) / 255,  # nodata, - 1
+        np.array([119, 104, 87]) / 255,  # terrain - 16
+        np.array([89, 88, 86]) / 255,  # cloud_shadow - 32
+        np.array([216, 215, 214]) / 255,  # cloud - 64
+        np.array([242, 220, 180]) / 255,  # cloudy terrain - 80
+        np.array([79, 129, 189]) / 255,  # water - 128
+        np.array([51, 82, 119]) / 255,  # shady water - 160
+        np.array([186, 211, 242]) / 255,  # cloudy water - 192
     ])
-    bounds=[
+    bounds = [
         0,
         1,
         16,
@@ -993,16 +983,70 @@ def plot_wo(wo, legend=True, **plot_kwargs):
         255,
     ]
     norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
-    cblabels = ['dry', 'nodata', 'terrain', 'cloud shadow', 'cloud', 'cloudy terrain', 'water', 'shady water', 'cloudy water']
+    cblabels = [
+        'dry', 'nodata', 'terrain', 'cloud shadow', 'cloud', 'cloudy terrain',
+        'water', 'shady water', 'cloudy water'
+    ]
 
     try:
-        im = wo.plot.imshow(cmap=cmap, norm=norm, colorbar=legend, **plot_kwargs)
+        im = wo.plot.imshow(cmap=cmap,
+                            norm=norm,
+                            add_colorbar=legend,
+                            **plot_kwargs)
     except AttributeError:
+        im = wo.plot(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
+
+    if legend:
         try:
-            im = wo.plot.imshow(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
+            cb = im.colorbar
         except AttributeError:
-            im = wo.plot(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
+            cb = im.cbar
+        ticks = cb.get_ticks()
+        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+        cb.set_ticklabels(cblabels)
+    return im
+
+
+def plot_fmask(fmask, legend=True, **plot_kwargs):
+    """
+    Plot an enumerated FMask flag image with human-readable colours.
     
+    Parameters
+    ----------
+    fmask : xr.DataArray
+        A DataArray containing Fmask flags.
+    legend : bool
+        Whether to plot a legend. Default True.
+    plot_kwargs : dict
+        Keyword arguments passed on to DataArray.plot.
+    
+    Returns
+    -------
+    plot    
+    """
+    cmap = mcolours.ListedColormap([
+        np.array([0, 0, 0]) / 255,  # nodata - 0
+        np.array([132, 162, 120]) / 255,  # clear - 1
+        np.array([208, 207, 206]) / 255,  # cloud - 2
+        np.array([70, 70, 51]) / 255,  # cloud_shadow - 3
+        np.array([224, 237, 255]) / 255,  # snow - 4
+        np.array([71, 91, 116]) / 255,  # water - 5
+    ])
+    bounds = [0, 1, 2, 3, 4, 5, 6]
+    norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
+    cblabels = ['nodata', 'clear', 'cloud', 'shadow', 'snow', 'water']
+
+    try:
+        im = fmask.plot.imshow(cmap=cmap,
+                               norm=norm,
+                               add_colorbar=legend,
+                               **plot_kwargs)
+    except AttributeError:
+        im = fmask.plot(cmap=cmap,
+                        norm=norm,
+                        add_colorbar=legend,
+                        **plot_kwargs)
+
     if legend:
         try:
             cb = im.colorbar
