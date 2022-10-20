@@ -26,6 +26,7 @@ Scientific papers
 Conferences
 --------------------
 - Förtsch, S. & Hill, S., 2021, April 22 - April 23. The Bavarian Open Data Cube [Presentation]. Geopython, online.
+- Förtsch, S., Otte, I., Thiel, M., Fäth, J., Schuldt, B., Ullmann, T., 2022, May 23 - May 27. Forets intelligence - The online analytical processing cube in the context of forestry [Poster]. ESA Living Planet Symposium, Bonn, Germany. http://dx.doi.org/10.13140/RG.2.2.31623.88483
 
 Courses and training
 --------------------
