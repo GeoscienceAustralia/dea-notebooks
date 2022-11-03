@@ -38,8 +38,8 @@ jobs:
         # uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
         uses: pypa/gh-action-pypi-publish@v1.4.2
         with:
-          # Password for your PyPI user or an access token
-          password: ${{ secrets.PYPI_PASS }}
+          # PyPI access token
+          password: ${{ secrets.PYPI_API_TOKEN }}
           # The target directory for distribution
           packages_dir: Tools/dist
           # Check metadata before uploading
