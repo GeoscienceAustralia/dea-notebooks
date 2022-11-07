@@ -581,7 +581,7 @@ def model_tides(
     y,
     time,
     model="FES2014",
-    directory="~/tide_models",
+    directory="/var/share/tide_models",
     epsg=4326,
     method="bilinear",
     extrapolate=True,
@@ -840,7 +840,7 @@ def pixel_tides(
     buffer=12000,
     resample_method="bilinear",
     model="FES2014",
-    directory="~/tide_models",
+    directory="/var/share/tide_models",
 ):
     """
     Obtain tide heights for each pixel in a dataset by modelling
