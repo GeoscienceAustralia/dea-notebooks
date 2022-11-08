@@ -68,8 +68,8 @@ sat_params = {
     },
     "Sentinel-2": {
         "products": [
-            "s2a_ard_granule",
-            "s2b_ard_granule",
+            "ga_s2am_ard_3",
+            "ga_s2bm_ard_3",
             "ga_s2am_ard_provisional_3",
             "ga_s2bm_ard_provisional_3",
         ],
