@@ -203,8 +203,8 @@ def extract_data(self):
                 'measurements':
                     sat_params[self.dealayer]['styles'][self.style][1],
                 'resolution': (-self.resolution, self.resolution),
-                'output_crs':
-                    crs
+                'output_crs': crs,
+                'skip_broken_datasets': True,
             }
 
         # Load data from datasets
