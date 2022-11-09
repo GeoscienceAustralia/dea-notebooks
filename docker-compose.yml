@@ -1,0 +1,46 @@
+version: "3.6"
+
+services:
+  postgres:
+    image: postgres:11.5-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=opendatacubepassword
+      - POSTGRES_USER=postgres
+    expose:
+      - 5432
+    restart: always
+
+  sandbox:
+     image: geoscienceaustralia/sandbox:latest
+     environment:
+       - DB_HOSTNAME=postgres
+       - DB_USERNAME=postgres
+       - DB_PASSWORD=opendatacubepassword
+       - DB_DATABASE=postgres
+       - AWS_DEFAULT_REGION=ap-southeast-2
+       - AWS_ACCESS_KEY_ID=fake_id
+       - AWS_SECRET_ACCESS_KEY=fake_key
+       - AWS_NO_SIGN_REQUEST=YES
+     depends_on:
+        - postgres
+     entrypoint: bash -c 'sleep infinity'
+     volumes:
+       - .:/dea-notebooks
+
+  index:
+     image: opendatacube/datacube-index:latest
+     environment:
+        - DB_HOSTNAME=postgres
+        - DB_USERNAME=postgres
+        - DB_PASSWORD=opendatacubepassword
+        - DB_DATABASE=postgres
+        - DB_PORT=5432
+        - AWS_DEFAULT_REGION=ap-southeast-2
+     volumes:
+        - ./Tests/setup_test_datacube.sh:/usr/local/bin/setup_test_datacube.sh
+     depends_on:
+        - postgres
+     entrypoint: bash -c 'sleep infinity'
