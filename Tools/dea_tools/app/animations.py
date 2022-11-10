@@ -163,6 +163,7 @@ def extract_data(self):
             "group_by": "solar_day",
             "dask_chunks": {"time": 1, "x": 2048, "y": 2048},
             "resampling": {"*": "cubic", "oa_fmask": "nearest", "fmask": "nearest"},
+            "skip_broken_datasets": True,
         }
 
         # Load data
