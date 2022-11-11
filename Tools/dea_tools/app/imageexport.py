@@ -71,7 +71,7 @@ sat_params = {
         }
     },
     's2_nrt_provisional_granule_nbar_t': {
-        'products': ['ga_s2am_ard_provisional_3', 'ga_s2bm_ard_provisional_3'],
+        'products': ['ga_s2am_ard_3', 'ga_s2bm_ard_3'],
         'styles': {
             'True colour':
                 ('simple_rgb', ['nbart_red', 'nbart_green', 'nbart_blue']),
