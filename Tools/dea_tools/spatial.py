@@ -234,7 +234,6 @@ def xr_rasterize(gdf,
 def subpixel_contours(da,
                       z_values=[0.0],
                       crs=None,
-                      affine=None,
                       attribute_df=None,
                       output_path=None,
                       min_vertices=2,
@@ -255,7 +254,7 @@ def subpixel_contours(da,
     `attribute_df` parameter can be used to pass custom attributes 
     to the output contour features.
     
-    Last modified: November 2020
+    Last modified: November 2022
     
     Parameters
     ----------  
@@ -277,14 +276,6 @@ def subpixel_contours(da,
         (e.g. 'EPSG:3577'). If none is provided, the function will 
         attempt to extract a CRS from the xarray object's `crs` 
         attribute.
-    affine : affine.Affine object, optional
-        An affine.Affine object (e.g. `from affine import Affine; 
-        Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "6886890.0) giving the 
-        affine transformation used to convert raster coordinates 
-        (e.g. [0, 0]) to geographic coordinates. If none is provided, 
-        the function will attempt to obtain an affine transformation 
-        from the xarray object (e.g. either at `da.transform` or
-        `da.geobox.transform`).
     output_path : string, optional
         The path and filename for the output shapefile.
     attribute_df : pandas.Dataframe, optional
@@ -336,35 +327,21 @@ def subpixel_contours(da,
         # contour into a Shapely LineString feature. If the function 
         # returns a KeyError, this may be due to an unresolved issue in
         # scikit-image: https://github.com/scikit-image/scikit-image/issues/4830
-        line_features = [LineString(i[:,[1, 0]]) 
-                         for i in find_contours(da_i.data, z_value) 
-                         if i.shape[0] > min_vertices]        
+        try:            
+            line_features = [LineString(i[:,[1, 0]]) 
+                             for i in find_contours(da_i.data, z_value) 
+                             if i.shape[0] > min_vertices]
+        except KeyError:
+            line_features = [LineString(i[:,[1, 0]]) 
+                             for i in find_contours(da_i.data, z_value + 1e-12) 
+                             if i.shape[0] > min_vertices]
 
         # Output resulting lines into a single combined MultiLineString
         return MultiLineString(line_features)
 
-    # Check if CRS is provided as a xarray.DataArray attribute.
-    # If not, require supplied CRS
-    try:
-        crs = da.crs
-    except:
-        if crs is None:
-            raise ValueError("Please add a `crs` attribute to the "
-                             "xarray.DataArray, or provide a CRS using the "
-                             "function's `crs` parameter (e.g. 'EPSG:3577')")
 
-    # Check if Affine transform is provided as a xarray.DataArray method.
-    # If not, require supplied Affine
-    try:
-        affine = da.geobox.transform
-    except KeyError:
-        affine = da.transform
-    except:
-        if affine is None:
-            raise TypeError("Please provide an Affine object using the "
-                            "`affine` parameter (e.g. `from affine import "
-                            "Affine; Affine(30.0, 0.0, 548040.0, 0.0, -30.0, "
-                            "6886890.0)`")
+    # Add GeoBox and odc.* accessor to array using `odc-geo`
+    da = _da_to_geo(da, crs)
 
     # If z_values is supplied is not a list, convert to list:
     z_values = z_values if (isinstance(z_values, list) or 
@@ -415,11 +392,12 @@ def subpixel_contours(da,
     # Convert output contours to a geopandas.GeoDataFrame
     contours_gdf = gpd.GeoDataFrame(data=attribute_df, 
                                     geometry=list(contour_arrays.values()),
-                                    crs=crs)   
+                                    crs=da.odc.crs)   
 
     # Define affine and use to convert array coords to geographic coords.
     # We need to add 0.5 x pixel size to the x and y to obtain the centre 
     # point of our pixels, rather than the top-left corner
+    affine = da.odc.geobox.transform
     shapely_affine = [affine.a, affine.b, affine.d, affine.e, 
                       affine.xoff + affine.a / 2.0, 
                       affine.yoff + affine.e / 2.0]
