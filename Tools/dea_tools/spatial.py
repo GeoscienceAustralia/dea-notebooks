@@ -16,11 +16,12 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: October 2022
+Last modified: November 2022
 
 '''
 
 # Import required packages
+import dask
 import fiona
 import warnings
 import collections
@@ -239,7 +240,7 @@ def subpixel_contours(da,
                       min_vertices=2,
                       dim='time',
                       errors='ignore',
-                      verbose=False):
+                      verbose=True):
     
     """
     Uses `skimage.measure.find_contours` to extract multiple z-value 
@@ -272,10 +273,9 @@ def subpixel_contours(da,
         from the array. If operating in 'single z-value, multiple 
         arrays' mode specify only a single z-value.
     crs : string or CRS object, optional
-        An EPSG string giving the coordinate system of the array 
-        (e.g. 'EPSG:3577'). If none is provided, the function will 
-        attempt to extract a CRS from the xarray object's `crs` 
-        attribute.
+        If ``da``'s coordinate reference system (CRS) cannot be
+        determined, provide a CRS using this parameter.
+        (e.g. 'EPSG:3577').
     output_path : string, optional
         The path and filename for the output shapefile.
     attribute_df : pandas.Dataframe, optional
@@ -302,7 +302,7 @@ def subpixel_contours(da,
         printed. If no contours are returned, an exception will always
         be raised.
     verbose : bool, optional
-        Print debugging messages. Default False.
+        Print debugging messages. Default is True.
         
     Returns
     -------
@@ -315,7 +315,7 @@ def subpixel_contours(da,
         attribute table.
     """
 
-    def contours_to_multiline(da_i, z_value, min_vertices=2):
+    def _contours_to_multiline(da_i, z_value, min_vertices=2):
         '''
         Helper function to apply marching squares contour extraction
         to an array and return a data as a shapely MultiLineString.
@@ -346,6 +346,12 @@ def subpixel_contours(da,
     # If z_values is supplied is not a list, convert to list:
     z_values = z_values if (isinstance(z_values, list) or 
                             isinstance(z_values, np.ndarray)) else [z_values]
+    
+    # If dask collection, load into memory
+    if dask.is_dask_collection(da):
+        if verbose:
+            print(f'Loading data into memory using Dask')
+        da = da.compute()
 
     # Test number of dimensions in supplied data array
     if len(da.shape) == 2:
@@ -353,7 +359,7 @@ def subpixel_contours(da,
             print(f'Operating in multiple z-value, single array mode')
         dim = 'z_value'
         contour_arrays = {str(i)[0:10]: 
-                          contours_to_multiline(da, i, min_vertices) 
+                          _contours_to_multiline(da, i, min_vertices) 
                           for i in z_values}    
 
     else:
@@ -367,7 +373,7 @@ def subpixel_contours(da,
                              'in single z-value, multiple arrays mode')
 
         contour_arrays = {str(i)[0:10]: 
-                          contours_to_multiline(da_i, z_values[0], min_vertices) 
+                          _contours_to_multiline(da_i, z_values[0], min_vertices) 
                           for i, da_i in da.groupby(dim)}
 
     # If attributes are provided, add the contour keys to that dataframe
@@ -432,8 +438,7 @@ def subpixel_contours(da,
     if output_path and output_path.endswith('.geojson'):
         if verbose:
             print(f'Writing contours to {output_path}')
-        contours_gdf.to_crs('EPSG:4326').to_file(filename=output_path, 
-                                                 driver='GeoJSON')
+        contours_gdf.to_crs('EPSG:4326').to_file(filename=output_path)
 
     if output_path and output_path.endswith('.shp'):
         if verbose:
