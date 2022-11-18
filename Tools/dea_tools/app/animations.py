@@ -57,7 +57,9 @@ warnings.filterwarnings("ignore")
 # WMS params and satellite style bands
 sat_params = {
     "Landsat": {
-        "products": ["ga_ls5t_ard_3", "ga_ls7e_ard_3", "ga_ls8c_ard_3"],
+        "products": ["ga_ls5t_ard_3", 
+                     "ga_ls7e_ard_3", 
+                     "ga_ls8c_ard_3"],
         "styles": {
             "True colour": ("true_colour", ["nbart_red", "nbart_green", "nbart_blue"]),
             "False colour": (
@@ -68,10 +70,8 @@ sat_params = {
     },
     "Sentinel-2": {
         "products": [
-            "s2a_ard_granule",
-            "s2b_ard_granule",
-            "ga_s2am_ard_provisional_3",
-            "ga_s2bm_ard_provisional_3",
+            "ga_s2am_ard_3",
+            "ga_s2bm_ard_3",
         ],
         "styles": {
             "True colour": ("simple_rgb", ["nbart_red", "nbart_green", "nbart_blue"]),
@@ -163,6 +163,7 @@ def extract_data(self):
             "group_by": "solar_day",
             "dask_chunks": {"time": 1, "x": 2048, "y": 2048},
             "resampling": {"*": "cubic", "oa_fmask": "nearest", "fmask": "nearest"},
+            "skip_broken_datasets": True,
         }
 
         # Load data

@@ -1,0 +1,30 @@
+reproject: 
+  output_crs: EPSG:3577 
+  resolution: [-30, 30]
+  resampling: nearest
+input:
+  transform: apply_mask
+  mask_measurement_name: pmask
+  apply_to: [bs, pv, npv, TCW]
+  input:
+     juxtapose:
+       - product: ga_ls_fc_3
+         measurements: [bs, pv, npv]
+       - transform: datacube_wps.processes.witprocess.TWnMask
+         input:
+           juxtapose:
+            - collate:
+                - product: ga_ls8c_ard_3
+                  measurements: [blue, green, red, nir, swir1, swir2, fmask, nbart_contiguity]
+                  gqa_iterative_mean_xy: [0, 1]
+                  dataset_predicate: datacube_wps.processes.witprocess.ls8_on
+                - product: ga_ls7e_ard_3 
+                  measurements: [blue, green, red, nir, swir1, swir2, fmask, nbart_contiguity]
+                  gqa_iterative_mean_xy: [0, 1]
+                  dataset_predicate: datacube_wps.processes.witprocess.ls7_on
+                - product: ga_ls5t_ard_3 
+                  measurements: [blue, green, red, nir, swir1, swir2, fmask, nbart_contiguity]
+                  gqa_iterative_mean_xy: [0, 1]
+                  dataset_predicate: datacube_wps.processes.witprocess.ls5_on_1ym
+            - product: ga_ls_wo_3
+              measurements: [water]
