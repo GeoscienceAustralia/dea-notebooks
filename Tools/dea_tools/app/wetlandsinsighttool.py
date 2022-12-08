@@ -1,3 +1,5 @@
+# notebookapp_wetlandsinsighttool.py
+
 """
 Wetlands insight tool widget, which can be used to run an interactive
 version of the wetlands insight tool.
@@ -35,10 +37,13 @@ import geopandas as gpd
 from io import BytesIO
 from dask.diagnostics import ProgressBar
 
-import deafrica_tools
-from deafrica_tools.dask import create_local_dask_cluster
-from deafrica_tools.wetlands import WIT_drill
-import deafrica_tools.app.widgetconstructors as deawidgets
+import dea_tools
+from dea_tools.dask import create_local_dask_cluster
+#from dea_tools.wetlands import WIT_drill
+import sys #while wit is not in develop
+sys.path.insert(1, '../Tools/dea_tools/') #while wit is not in develop
+from wetlands import WIT_drill                
+import dea_tools.app.widgetconstructors as deawidgets
 
 
 def make_box_layout():
@@ -60,11 +65,9 @@ def create_expanded_button(description, button_style):
 
 
 class wit_app(HBox):
-    def __init__(self, lang=None):
+    def __init__(self):
         super().__init__()
         
-        deafrica_tools.set_lang(lang)
-
         ##########################################################
         # INITIAL ATTRIBUTES #
 
@@ -142,8 +145,8 @@ class wit_app(HBox):
         draw_control = deawidgets.create_drawcontrol(desired_drawtools)
         
         # Begin by displaying an empty layer group, and update the group with desired WMS on interaction.
-        self.deafrica_layers = LayerGroup(layers=())
-        self.deafrica_layers.name = _('Map Overlays')
+        self.dea_layers = LayerGroup(layers=()) # 
+        self.dea_layers.name = _('Map Overlays') #
 
         # Create map widget
         self.m = deawidgets.create_map()
@@ -152,7 +155,7 @@ class wit_app(HBox):
         
         # Add tools to map widget
         self.m.add_control(draw_control)
-        self.m.add_layer(self.deafrica_layers)
+        self.m.add_layer(self.dea_layers)
         
         # Store current basemap for future use
         self.basemap = self.m.basemap
@@ -264,15 +267,15 @@ class wit_app(HBox):
         self.product = change.new
 
         if self.product == "none":
-            self.deafrica_layers.clear_layers()
+            self.dea_layers.clear_layers()
         elif self.product == "esri_world_imagery":
-            self.deafrica_layers.clear_layers()
+            self.dea_layers.clear_layers()
             layer = basemap_to_tiles(basemaps.Esri.WorldImagery)
-            self.deafrica_layers.add_layer(layer)
+            self.dea_layers.add_layer(layer)
         else:
-            self.deafrica_layers.clear_layers()
+            self.dea_layers.clear_layers()
             layer = deawidgets.create_dea_wms_layer(self.product, self.product_year)
-            self.deafrica_layers.add_layer(layer)
+            self.dea_layers.add_layer(layer)
 
     def run_app(self, change):
         
