@@ -210,13 +210,12 @@ def load_ard(
         True, which keeps all Landsat 7 observations > May 31 2003.
     predicate : function, optional
         DEPRECATED: Please use `dataset_predicate` instead.
-        An optional function that can be passed in to restrict the
-        datasets that are loaded by the function. A predicate function
-        should take a `datacube.model.Dataset` object as an input (i.e.
-        as returned from `dc.find_datasets`), and return a boolean.
-        For example, a predicate function could be used to return True
-        for only datasets acquired in January:
-        `dataset.time.begin.month == 1`
+        An function that can be passed in to restrict the datasets that 
+        are loaded. A predicate function should take a 
+        `datacube.model.Dataset` object as an input (i.e. as returned 
+        from `dc.find_datasets`), and return a boolean. For example, 
+        a predicate function could be used to return True for only 
+        datasets acquired in January: `dataset.time.begin.month == 1`
     **kwargs :
         A set of keyword arguments to `dc.load` that define the
         spatiotemporal query and load parameters used to extract data.
