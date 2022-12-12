@@ -178,9 +178,9 @@ def load_ard(
         operation: string; one of these morphological operations:
             * ``'dilation'`` = Expands poor quality pixels/clouds outwards
             * ``'erosion'``  = Shrinks poor quality pixels/clouds inwards
-            * ``'closing'``  = remove small holes in clouds by expanding
+            * ``'closing'``  = Remove small holes in clouds by expanding
                                then shrinking poor quality pixels
-            * ``'opening'``  = remove small or narrow clouds by shrinking
+            * ``'opening'``  = Remove small or narrow clouds by shrinking
                                then expanding poor quality pixels
         radius: int
         e.g. ``mask_filters=[('erosion', 5), ("opening", 2), ("dilation", 2)]``
@@ -209,6 +209,7 @@ def load_ard(
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to
         True, which keeps all Landsat 7 observations > May 31 2003.
     predicate : function, optional
+        DEPRECATED: Please use `dataset_predicate` instead.
         An optional function that can be passed in to restrict the
         datasets that are loaded by the function. A predicate function
         should take a `datacube.model.Dataset` object as an input (i.e.
@@ -363,6 +364,15 @@ def load_ard(
 
     # Pull out query params only to pass to dc.find_datasets
     query = _dc_query_only(**kwargs)
+    
+        # If predicate is specified, use this function to filter the list
+    # of datasets prior to load
+    if predicate:
+        print("The 'predicate' parameter will be deprecated in future "
+              "versions of this function as this functionality has now "
+              "been added to Datacube itself. Please use "
+              "`dataset_predicate=...` instead.")
+        query['dataset_predicate'] = predicate
 
     # Extract datasets for each product using subset of dcload_kwargs
     dataset_list = []
@@ -397,12 +407,6 @@ def load_ard(
             "the products specified have data for the "
             "time and location requested"
         )
-
-    # If predicate is specified, use this function to filter the list
-    # of datasets prior to load
-    if predicate:
-        print(f"Filtering datasets using predicate function")
-        dataset_list = [ds for ds in dataset_list if predicate(ds)]
 
     # Raise exception if filtering removes all datasets
     if len(dataset_list) == 0:
