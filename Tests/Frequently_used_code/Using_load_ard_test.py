@@ -31,6 +31,12 @@ def test_vars(tb):
         assert var in ds.variables
 
 
+def test_s2_hasdata(tb):
+    ds_s2 = tb.ref("ds_s2")
+
+    assert len(ds_s2.time) > 0
+
+        
 # def test_vars_s2(tb):
 #     ds_s2 = tb.ref("ds_s2")
 #     expected_vars = [
