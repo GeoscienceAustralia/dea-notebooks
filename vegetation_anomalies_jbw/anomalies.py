@@ -8,7 +8,7 @@ import warnings
 from datacube.storage import masking
 from datacube.utils import geometry
 from datacube.helpers import ga_pq_fuser
-from dea_datahandling import load_ard
+from dea_tools.datahandling import load_ard
 import folium
 from pyproj import Proj, transform
 import os
@@ -19,6 +19,8 @@ import datetime
 import requests
 import warnings
 import odc.algo
+
+
 
 
 def _dc_query_only(**kw):
