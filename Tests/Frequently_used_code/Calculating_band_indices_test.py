@@ -10,7 +10,7 @@ NB_PATH = NB_DIR / "Frequently_used_code" / "Calculating_band_indices.ipynb"
 
 @pytest.fixture(scope="module")
 def tb():
-    with testbook(NB_PATH, execute=True) as tb:
+    with testbook(NB_PATH, execute=True, timeout=180) as tb:
         yield tb
 
 

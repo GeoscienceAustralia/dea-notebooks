@@ -1,6 +1,23 @@
 """
-Scraping some BOM data
+Loading and processing Australian Bureau of Meteorology data.
+
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
+license (https://creativecommons.org/licenses/by/4.0/).
+
+Contact: If you need assistance, please post a question on the Open Data
+Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
+using the `open-data-cube` tag (you can view previously asked questions
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
+
+If you would like to report an issue with this script, you can file one
+on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+
+Last modified: March 2021
 """
+
 import datetime
 import pytz
 import ciso8601
@@ -114,10 +131,7 @@ def ui_select_station(stations,
                       center=(-24, 138),
                       **kw):
     """
-    Returns
-    =======
-
-    (gauge_data, station)
+    Create an interactive map for selecting river gauging stations.
     """
     import ipywidgets as W
     from IPython.display import display

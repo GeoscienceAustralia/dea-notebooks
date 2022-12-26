@@ -9,7 +9,7 @@ NB_PATH = NB_DIR / "Frequently_used_code" / "Rasterize_vectorize.ipynb"
 
 @pytest.fixture(scope="module")
 def tb():
-    with testbook(NB_PATH, execute=True) as tb:
+    with testbook(NB_PATH, execute=True, timeout=180) as tb:
         yield tb
 
 
@@ -24,5 +24,5 @@ def test_geometry(tb):
 
 def test_shape(tb):
     ds = tb.ref("water_bodies_again")
-    assert len(ds.x) == 2789
-    assert len(ds.y) == 2443
+    assert len(ds.x) == 2324
+    assert len(ds.y) == 2037
