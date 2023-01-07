@@ -12,7 +12,7 @@ from dea_tools.datahandling import load_ard
 import folium
 from pyproj import Proj, transform
 import os
-import gdal
+# import gdal
 import zipfile
 import numexpr
 import datetime
@@ -369,7 +369,7 @@ def calculate_anomalies(shp_fpath,
         if collection == 'c3': 
         
             ds = load_ard(dc=dc,
-                      products = ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
+                      products = ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3','ga_ls9c_ard_3'],
                       measurements = ['nbart_nir', 'nbart_red'],
                       ls7_slc_off = False,
                       #align = (15,15),
@@ -439,7 +439,7 @@ def calculate_anomalies(shp_fpath,
         if collection=='c3':
             
             ds = load_ard(dc=dc,
-                          products =['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3'],
+                          products =['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3','ga_ls9c_ard_3'],
                           measurements = ['nbart_nir', 'nbart_red'],
                           ls7_slc_off = False,
                           #align = (15,15),
