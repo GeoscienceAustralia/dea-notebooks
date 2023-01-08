@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: December 2022
+Last modified: January 2023
 """
 
 # Import required packages
@@ -111,7 +111,7 @@ def load_ard(
 
     """
     Loads multiple Geoscience Australia Landsat or Sentinel 2
-    Collection 3 products (e.g. Landsat 5-9, Sentinel 2A and 2B),
+    Collection 3 products (e.g. Landsat 5, 7, 8, 9; Sentinel 2A and 2B),
     optionally applies pixel quality and contiguity masks, and drops
     time steps that contain greater than a minimum proportion of
     good quality (e.g. non-cloudy or shadowed) pixels.
@@ -126,7 +126,7 @@ def load_ard(
         * ga_s2am_ard_3
         * ga_s2bm_ard_3
 
-    Last modified: December 2022
+    Last modified: January 2023
 
     Parameters
     ----------
@@ -190,7 +190,7 @@ def load_ard(
         generating clean composite datasets. The default of False will
         not apply any contiguity mask.
         If loading NBART data, set:
-            * ``mask_contiguity='nbart'`` or ``mask_contiguity=True``
+            * ``mask_contiguity='nbart'`` (or ``mask_contiguity=True``)
         If loading NBAR data, specify:
             * ``mask_contiguity='nbar'``
         Non-contiguous pixels will be set to NaN if `dtype='auto'`, or
@@ -210,11 +210,11 @@ def load_ard(
         True, which keeps all Landsat 7 observations > May 31 2003.
     predicate : function, optional
         DEPRECATED: Please use `dataset_predicate` instead.
-        An function that can be passed in to restrict the datasets that 
-        are loaded. A predicate function should take a 
-        `datacube.model.Dataset` object as an input (i.e. as returned 
-        from `dc.find_datasets`), and return a boolean. For example, 
-        a predicate function could be used to return True for only 
+        An function that can be passed in to restrict the datasets that
+        are loaded. A predicate function should take a
+        `datacube.model.Dataset` object as an input (i.e. as returned
+        from `dc.find_datasets`), and return a boolean. For example,
+        a predicate function could be used to return True for only
         datasets acquired in January: `dataset.time.begin.month == 1`
     **kwargs :
         A set of keyword arguments to `dc.load` that define the
@@ -230,8 +230,8 @@ def load_ard(
     Returns
     -------
     combined_ds : xarray.Dataset
-        An xarray dataset containing only satellite observations that
-        contains greater than `min_gooddata` proportion of good quality
+        An xarray.Dataset containing only satellite observations that
+        contain greater than `min_gooddata` proportion of good quality
         pixels.
 
     """
@@ -309,8 +309,24 @@ def load_ard(
             "'s2cloudless', True, or False."
         )
 
-    # We deal with `dask_chunks` separately as every function call
-    # uses dask internally regardless of whether the user
+    # To ensure that the categorical PQ/contiguity masking bands are
+    # loaded using nearest neighbour resampling, we need to add these to
+    # the resampling kwarg if it exists and is not "nearest". 
+    # This only applies if a string resampling method is supplied; 
+    # if a resampling dictionary (e.g. `resampling={'*': 'bilinear',
+    # 'oa_fmask': 'mode'}` is passed instead we assume the user wants 
+    # to select custom resampling methods for each of their bands.
+    resampling = kwargs.get("resampling", None)
+
+    if isinstance(resampling, str) and resampling not in (None, "nearest"):
+        kwargs["resampling"] = {
+            "*": resampling,
+            pq_band: "nearest",
+            contiguity_band: "nearest",
+        }
+
+    # We extract and deal with `dask_chunks` separately as every
+    # function call uses dask internally regardless of whether the user
     # sets `dask_chunks` themselves
     dask_chunks = kwargs.pop("dask_chunks", None)
 
@@ -363,17 +379,19 @@ def load_ard(
 
     # Pull out query params only to pass to dc.find_datasets
     query = _dc_query_only(**kwargs)
-    
-        # If predicate is specified, use this function to filter the list
+
+    # If predicate is specified, use this function to filter the list
     # of datasets prior to load
     if predicate:
-        print("The 'predicate' parameter will be deprecated in future "
-              "versions of this function as this functionality has now "
-              "been added to Datacube itself. Please use "
-              "`dataset_predicate=...` instead.")
-        query['dataset_predicate'] = predicate
+        print(
+            "The 'predicate' parameter will be deprecated in future "
+            "versions of this function as this functionality has now "
+            "been added to Datacube itself. Please use "
+            "`dataset_predicate=...` instead."
+        )
+        query["dataset_predicate"] = predicate
 
-    # Extract datasets for each product using subset of dcload_kwargs
+    # Extract list of datasets for each product using query params
     dataset_list = []
 
     # Get list of datasets for each product
@@ -407,17 +425,12 @@ def load_ard(
             "time and location requested"
         )
 
-    # Raise exception if filtering removes all datasets
-    if len(dataset_list) == 0:
-        raise ValueError("No data available after filtering with " 
-                         "predicate function")
-
     #############
     # Load data #
     #############
 
     # Note we always load using dask here so that we can lazy load data
-    # before filtering by good data
+    # before filtering by `min_gooddata`
     ds = dc.load(
         datasets=dataset_list,
         measurements=measurements,
@@ -432,7 +445,7 @@ def load_ard(
     # Calculate pixel quality mask
     pq_mask = odc.algo.fmask_to_bool(ds[pq_band], categories=pq_categories)
 
-    # The good data percentage calculation has to load in all `fmask`
+    # The good data percentage calculation has to load all pixel quality
     # data, which can be slow. If the user has chosen no filtering
     # by using the default `min_gooddata = 0`, we can skip this step
     # completely to save processing time
@@ -474,15 +487,17 @@ def load_ard(
     # Apply masks #
     ###############
 
-    # Create an overall mask to hold both pixel quality and contiguity
+    # Create a combined mask to hold both pixel quality and contiguity.
+    # This is more efficient than creating multiple dask tasks for 
+    # similar masking operations.
     mask = None
 
-    # Add pixel quality mask to overall mask
+    # Add pixel quality mask to combined mask
     if mask_pixel_quality:
         print(f"Applying pixel quality/cloud mask ({pq_band})")
         mask = pq_mask
 
-    # Add contiguity mask to overall mask
+    # Add contiguity mask to combined mask
     if mask_contiguity:
         print(f"Applying contiguity mask ({contiguity_band})")
         cont_mask = ds[contiguity_band] == 1
@@ -524,8 +539,8 @@ def load_ard(
     if requested_measurements:
         ds = ds[requested_measurements]
 
-    # If user supplied dask_chunks, return data as a dask array without
-    # actually loading it in
+    # If user supplied `dask_chunks`, return data as a dask array
+    # without actually loading it into memory
     if dask_chunks is not None:
         print(f"Returning {len(ds.time)} time steps as a dask array")
         return ds
