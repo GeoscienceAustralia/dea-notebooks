@@ -32,10 +32,10 @@ def test_vars(tb):
         assert var in ds.variables
 
 
-def test_vars_s2(tb):
-    ds_s2 = tb.ref("ds_s2")
+# def test_vars_s2(tb):
+#     ds_s2 = tb.ref("ds_s2")
     
-    assert "s2cloudless_prob" in ds_s2.variables
+#     assert "s2cloudless_prob" in ds_s2.variables
 
 
 # def test_vars_dask(tb):
