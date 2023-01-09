@@ -61,8 +61,8 @@ sat_params = {
                 ('false_colour', ['nbart_swir_1', 'nbart_nir', 'nbart_green'])
         }
     },
-    's2_ard_granule_nbar_t': {
-        'products': ['s2a_ard_granule', 's2b_ard_granule'],
+    'ga_s2m_ard_3_nbar_t': {
+        'products': ['ga_s2am_ard_3', 'ga_s2bm_ard_3'],
         'styles': {
             'True colour':
                 ('simple_rgb', ['nbart_red', 'nbart_green', 'nbart_blue']),
@@ -70,8 +70,8 @@ sat_params = {
                              ['nbart_swir_2', 'nbart_nir_1', 'nbart_green'])
         }
     },
-    's2_nrt_granule_nbar_t': {
-        'products': ['s2a_nrt_granule', 's2b_nrt_granule'],
+    's2_nrt_provisional_granule_nbar_t': {
+        'products': ['ga_s2am_ard_provisional_3', 'ga_s2bm_ard_provisional_3'],
         'styles': {
             'True colour':
                 ('simple_rgb', ['nbart_red', 'nbart_green', 'nbart_blue']),
@@ -203,8 +203,8 @@ def extract_data(self):
                 'measurements':
                     sat_params[self.dealayer]['styles'][self.style][1],
                 'resolution': (-self.resolution, self.resolution),
-                'output_crs':
-                    crs
+                'output_crs': crs,
+                'skip_broken_datasets': True,
             }
 
         # Load data from datasets
@@ -364,8 +364,8 @@ class imageexport_app(HBox):
         self.date = "2021-12-31"
         self.dealayer_list = [
             ("Landsat", 'ga_ls_ard_3'),
-            ("Sentinel-2", 's2_ard_granule_nbar_t'),
-            ("Sentinel-2 NRT", 's2_nrt_granule_nbar_t'),
+            ("Sentinel-2", 'ga_s2m_ard_3_nbar_t'),
+            ("Sentinel-2 NRT", 's2_nrt_provisional_granule_nbar_t'),
         ]
         self.dealayer = self.dealayer_list[0][1]
 
@@ -550,7 +550,7 @@ class imageexport_app(HBox):
                                                              'padding': '0px',
                                                              'display': 'none'})
         checkbox_max_size = deawidgets.create_checkbox(
-            self.unsharp_mask, 'Enable')        
+            self.max_size, 'Enable')        
         text_dpi = widgets.IntText(value=0, 
                                      description="", 
                                      step=50, 
@@ -828,4 +828,4 @@ class imageexport_app(HBox):
         
         else:
             with self.status_info:
-                print('Please draw a rectangle on the map, then press "Export imagery"')
+                print('Please draw a valid rectangle on the map, then press "Export imagery"')

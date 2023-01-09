@@ -67,7 +67,7 @@ def load_crophealth_data():
     time = (start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
 
     # Construct the data cube query
-    products = ["s2a_ard_granule", "s2b_ard_granule"]
+    products = ["ga_s2am_ard_3", "ga_s2bm_ard_3"]
     
     query = {
         'x': longitude,

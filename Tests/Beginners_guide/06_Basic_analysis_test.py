@@ -9,7 +9,7 @@ NB_PATH = NB_DIR / "Beginners_guide" / "06_Basic_analysis.ipynb"
 
 @pytest.fixture(scope="module")
 def tb():
-    with testbook(NB_PATH, execute=True) as tb:
+    with testbook(NB_PATH, execute=True, timeout=180) as tb:
         yield tb
 
 

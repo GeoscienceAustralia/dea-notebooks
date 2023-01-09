@@ -23,6 +23,11 @@ Scientific papers
 
 - Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806.
 
+Conferences
+--------------------
+- Förtsch, S. & Hill, S., 2021, April 22 - April 23. The Bavarian Open Data Cube [Presentation]. Geopython, online.
+- Förtsch, S., Otte, I., Thiel, M., Fäth, J., Schuldt, B., Ullmann, T., 2022, May 23 - May 27. Forest intelligence - The online analytical processing cube in the context of forestry [Poster]. ESA Living Planet Symposium, Bonn, Germany. http://dx.doi.org/10.13140/RG.2.2.31623.88483
+
 Courses and training
 --------------------
 - Australian National University, Centre for Water and Landscape Dynamics `(WALD) <http://wald.anu.edu.au/>`_ under contract for `Geoscience Australia <https://www.ga.gov.au/>`_, 2022.  `Digital Earth Australia for Geospatial Analysts <https://anu-wald.github.io/dea_course/about/>`_. Materials available under Apache 2.0 Licence `here <https://github.com/ANU-WALD/dea_course>`_ and link to github repository: https://github.com/ANU-WALD/dea_training 
@@ -30,6 +35,7 @@ Courses and training
 - University of Queensland, 2021. Code-Based Computing for Geospatial Data: the Digital Earth Australia (DEA) Sandbox platform. GEOM3001/7001 Advanced Earth Observation Sciences.
 - University of Tasmania, 2021. Remote Sensing: Image Analysis. Bachelor of Surveying and Spatial Sciences.
 - University of Tasmania, 2021. Spatial Research Project. Bachelor of Surveying and Spatial Sciences.
+
 
 Creative works
 --------------
