@@ -24,7 +24,7 @@ The sub-pixel waterline extraction method (`subpixel_contours`) has a low comput
 
 ## `subpixel_contours` function
 
-The [`subpixel_contours` function from the `dea-tools.spatial.py` module](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Tools/dea_tools/spatial.py#L321-L552) uses `skimage.measure.find_contours` to extract multiple z-value contour lines from a two-dimensional array (e.g. multiple elevations from a single digital elevation model), or one z-value for each array along a specified dimension of a multi-dimensional array (e.g. to map waterlines across time by extracting a 0 Normalised Difference Water Index contour from each individual timestep in an `xarray` timeseries).    
+The [`subpixel_contours` function from the `dea-tools.spatial.py` module](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Tools/dea_tools/spatial.py#L235-L448) uses `skimage.measure.find_contours` to extract multiple z-value contour lines from a two-dimensional array (e.g. multiple elevations from a single digital elevation model), or one z-value for each array along a specified dimension of a multi-dimensional array (e.g. to map waterlines across time by extracting a 0 Normalised Difference Water Index contour from each individual timestep in an `xarray` timeseries).    
     
 Contours are returned as a `geopandas.GeoDataFrame` with one row per z-value or one row per array along a specified dimension. The `attribute_df` parameter can be used to pass custom attributes to the output contour features.
 
