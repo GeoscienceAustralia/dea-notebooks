@@ -2,7 +2,7 @@ version: "3.6"
 
 services:
   postgres:
-    build: docker/db/
+    build: docker/database/
     ports:
       - "5434:5432"
     environment:
