@@ -1,0 +1,11 @@
+#!/bin/sh
+
+RETRIES=10
+
+# Wait until Database is ready
+until pg_isready --dbname=$DB_DATABASE --host=$DB_HOSTNAME --port=$DB_PORT --username=$DB_USERNAME || [ $RETRIES -eq 0 ]; do
+  echo "Waiting for $DB_HOSTNAME server, $((RETRIES-=1)) remaining attempts..."
+  sleep 2
+done
+
+exec "$@"

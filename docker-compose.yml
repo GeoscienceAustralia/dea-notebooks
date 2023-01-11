@@ -2,7 +2,7 @@ version: "3.6"
 
 services:
   postgres:
-    image: postgres:11.5-alpine
+    build: docker/db/
     ports:
       - "5434:5432"
     environment:
@@ -26,21 +26,7 @@ services:
        - AWS_NO_SIGN_REQUEST=YES
      depends_on:
         - postgres
-     entrypoint: bash -c 'sleep infinity'
+     entrypoint: tail -f /dev/null
      volumes:
        - .:/dea-notebooks
-
-  index:
-     image: opendatacube/datacube-index:latest
-     environment:
-        - DB_HOSTNAME=postgres
-        - DB_USERNAME=postgres
-        - DB_PASSWORD=opendatacubepassword
-        - DB_DATABASE=postgres
-        - DB_PORT=5432
-        - AWS_DEFAULT_REGION=ap-southeast-2
-     volumes:
-        - ./Tests/setup_test_datacube.sh:/usr/local/bin/setup_test_datacube.sh
-     depends_on:
-        - postgres
-     entrypoint: bash -c 'sleep infinity'
+       - ./docker/notebook/wait-for-db:/usr/local/bin/wait-for-db
