@@ -87,12 +87,6 @@ The ``dea-notebooks`` repository uses 'branches' to manage individuals' notebook
 * `stable branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable>`_: The ``stable`` branch contains DEA's collection of publicly available notebooks. Notebooks added to this branch will become part of the official DEA documentation and are published on the `DEA User Guide <https://docs.dea.ga.gov.au/>`_. The ``stable`` branch is protected, and is periodically updated with new content from the ``develop`` branch via a 'pull request' (for ``develop`` > ``stable`` pull requests, *merge using the 'Create a merge commit' option*).
 * `Working branches <https://github.com/GeoscienceAustralia/dea-notebooks/branches>`_: All other branches in the repository are working spaces for users of ``dea-notebooks``. They have a unique name (typically named after the user, e.g. ``ClaireK``, ``BexDunn``). The notebooks on these branches can be works-in-progress and do not need to be pretty or complete. By using a working branch, it is easy to use scripts and algorithms from ``dea-notebooks`` in your own work or share and collaborate on a working version of a notebook or code.
 
-Add integration tests for notebook
------------------------------------
-
-For notebook requiring product and data not currently available in the integration test db, please add indexing instruction to `Tests/index_additional_data.sh`.
-
-This is to allow development flexibility, once the test is fully functional, please reach  out to a maintainer to have additional data included in the base database.
 
 Publishing notebooks to the stable branch
 -----------------------------------------
