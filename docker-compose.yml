@@ -42,6 +42,7 @@ services:
         - AWS_DEFAULT_REGION=ap-southeast-2
      volumes:
         - ./Tests/index_additional_data.sh:/usr/local/bin/index_additional_data.sh
+        - ./Tests/docker/notebook/wait-for-db:/usr/local/bin/wait-for-db
      depends_on:
         - postgres
      entrypoint: bash -c 'sleep infinity'
