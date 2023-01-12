@@ -2,7 +2,7 @@ version: "3.6"
 
 services:
   postgres:
-    build: docker/database/
+    build: Tests/docker/database/
     ports:
       - "5434:5432"
     environment:
@@ -29,4 +29,4 @@ services:
      entrypoint: tail -f /dev/null
      volumes:
        - .:/dea-notebooks
-       - ./docker/notebook/wait-for-db:/usr/local/bin/wait-for-db
+       - ./Tests/docker/notebook/wait-for-db:/usr/local/bin/wait-for-db
