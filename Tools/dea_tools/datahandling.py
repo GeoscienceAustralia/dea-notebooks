@@ -210,7 +210,7 @@ def load_ard(
         True, which keeps all Landsat 7 observations > May 31 2003.
     predicate : function, optional
         DEPRECATED: Please use `dataset_predicate` instead.
-        An function that can be passed in to restrict the datasets that
+        An optional function that can be passed in to restrict the datasets that
         are loaded. A predicate function should take a
         `datacube.model.Dataset` object as an input (i.e. as returned
         from `dc.find_datasets`), and return a boolean. For example,
@@ -230,9 +230,8 @@ def load_ard(
     Returns
     -------
     combined_ds : xarray.Dataset
-        An xarray.Dataset containing only satellite observations that
-        contain greater than `min_gooddata` proportion of good quality
-        pixels.
+        An xarray.Dataset containing only satellite observations with
+        a proportion of good quality pixels greater than `min_gooddata`.
 
     """
 
