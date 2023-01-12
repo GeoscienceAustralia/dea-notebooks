@@ -17,6 +17,10 @@ jobs:
       run: |
         docker-compose up -d
 
+    - name: Index additional datasets
+      run: |
+        docker-compose exec -T index bash "-c" "sh ./docker/coastline/wait-for-db; sh index_additional_data.sh;"
+
     - name: Test with pytest
       run: |
         docker-compose exec -T sandbox pip install testbook

@@ -27,8 +27,8 @@ Digital Earth Australia notebooks and tools repository
 **Citing DEA Notebooks:** If you use any of the notebooks, code or tools in this repository in your work, please reference them using the following citation:
 
     Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234
-    
-We encourage you to check out the other usages of our notebooks, code and tools at our `USAGE <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/USAGE.rst>`_ page, and to add your paper, training course, creative work or other exciting project there as well!    
+
+We encourage you to check out the other usages of our notebooks, code and tools at our `USAGE <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/USAGE.rst>`_ page, and to add your paper, training course, creative work or other exciting project there as well!
 
 ----------
 
@@ -48,7 +48,7 @@ The repository is based around the following directory structure (from simple to
 
 Supporting functions and data for the notebooks are kept in the following directories:
 
-- `Tools <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Tools>`_: *Python module dea-tools, containing functions and algorithms developed to assist in analysing DEA data (e.g. loading data, plotting, spatial analysis, machine learning)* 
+- `Tools <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Tools>`_: *Python module dea-tools, containing functions and algorithms developed to assist in analysing DEA data (e.g. loading data, plotting, spatial analysis, machine learning)*
 
 - `Supplementary_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Supplementary_data>`_: *Supplementary files required for the analyses above (e.g. images, rasters, shapefiles, training data)*
 
@@ -65,11 +65,11 @@ To get started with using ``dea-notebooks``, `visit the DEA Notebooks Wiki page 
 
 Once you're set up, there are two main options for interacting with ``dea-notebooks`` and contributing back to the repository:
 
-* **DEA notebooks using git**: Git is a version-control software designed to help track changes to files and collaborate with multiple users on a project. Using ``git`` is the recommended workflow for working with ``dea-notebooks`` as it makes it easy to stay up to date with the latest versions of functions and code and makes it impossible to lose your work. 
+* **DEA notebooks using git**: Git is a version-control software designed to help track changes to files and collaborate with multiple users on a project. Using ``git`` is the recommended workflow for working with ``dea-notebooks`` as it makes it easy to stay up to date with the latest versions of functions and code and makes it impossible to lose your work.
 
   * Refer to the repository's `Guide to using DEA Notebooks with git <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-git>`_ wiki article.
 
-* **DEA notebooks using Github**: Alternatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with ``dea-notebooks``. 
+* **DEA notebooks using Github**: Alternatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with ``dea-notebooks``.
 
   * Refer to the repository's `Guide to DEA Notebooks using the Github website <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-the-Github-website>`_ wiki article.
 
@@ -87,7 +87,13 @@ The ``dea-notebooks`` repository uses 'branches' to manage individuals' notebook
 * `stable branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable>`_: The ``stable`` branch contains DEA's collection of publicly available notebooks. Notebooks added to this branch will become part of the official DEA documentation and are published on the `DEA User Guide <https://docs.dea.ga.gov.au/>`_. The ``stable`` branch is protected, and is periodically updated with new content from the ``develop`` branch via a 'pull request' (for ``develop`` > ``stable`` pull requests, *merge using the 'Create a merge commit' option*).
 * `Working branches <https://github.com/GeoscienceAustralia/dea-notebooks/branches>`_: All other branches in the repository are working spaces for users of ``dea-notebooks``. They have a unique name (typically named after the user, e.g. ``ClaireK``, ``BexDunn``). The notebooks on these branches can be works-in-progress and do not need to be pretty or complete. By using a working branch, it is easy to use scripts and algorithms from ``dea-notebooks`` in your own work or share and collaborate on a working version of a notebook or code.
 
- 
+Add integration tests for notebook
+-----------------------------------
+
+For notebook requiring product and data not currently available in the integration test db, please add indexing instruction to `Tests/index_additional_data.sh`.
+
+This is to allow development flexibility, once the test is fully functional, please reach  out to a maintainer to have additional data included in the base database.
+
 Publishing notebooks to the stable branch
 -----------------------------------------
 
