@@ -100,6 +100,7 @@ def calculate_indices(ds,
         * ``'ga_ls_2'`` (for GA Landsat Collection 2)
         * ``'ga_ls_3'`` (for GA Landsat Collection 3) 
         * ``'ga_s2_1'`` (for GA Sentinel 2 Collection 1)
+        * ``'ga_s2_3'`` (for GA Sentinel 2 Collection 3)
 
     custom_varname : str, optional
         By default, the original dataset will be returned with 
@@ -331,8 +332,8 @@ def calculate_indices(ds,
         if collection is None:
 
             raise ValueError("'No `collection` was provided. Please specify "
-                             "either 'ga_ls_2', 'ga_ls_3' or 'ga_s2_1' \nto "
-                             "ensure the function calculates indices using the "
+                             "either 'ga_ls_2', 'ga_ls_3', 'ga_s2_1' or "
+                             "'ga_s2_3' to ensure the function calculates indices using the "
                              "correct spectral bands")
 
         elif collection == 'ga_ls_3':
@@ -358,7 +359,7 @@ def calculate_indices(ds,
                 a: b for a, b in bandnames_dict.items() if a in ds.variables
             }
 
-        elif collection == 'ga_s2_1':
+        elif (collection == 'ga_s2_1') | (collection == 'ga_s2_3'):
 
             # Dictionary mapping full data names to simpler 'red' alias names
             bandnames_dict = {
@@ -394,7 +395,7 @@ def calculate_indices(ds,
         else:
             raise ValueError(f"'{collection}' is not a valid option for "
                               "`collection`. Please specify either \n"
-                              "'ga_ls_2', 'ga_ls_3' or 'ga_s2_1'")
+                              "'ga_ls_2', 'ga_ls_3', 'ga_s2_1' or 'ga_s2_3'")
 
         # Apply index function 
         try:
