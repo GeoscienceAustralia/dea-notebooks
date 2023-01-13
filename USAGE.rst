@@ -23,6 +23,8 @@ Scientific papers
 
 - Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806.
 
+- Sutton, A., Fisher, A., Metternicht, G. Assessing the Accuracy of Landsat Vegetation Fractional Cover for Monitoring Australian Drylands. Remote Sens. 2022, 14, 6322. https://doi.org/10.3390/rs14246322
+
 Conferences
 --------------------
 - Förtsch, S. & Hill, S., 2021, April 22 - April 23. The Bavarian Open Data Cube [Presentation]. Geopython, online.
