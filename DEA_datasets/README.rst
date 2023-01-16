@@ -8,12 +8,13 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
    :caption: DEA Datasets
 
    DEA_Landsat_Surface_Reflectance.ipynb
+   DEA_Sentinel2_Surface_Reflectance.ipynb
+   DEA_Water_Observations.ipynb
    DEA_Fractional_Cover.ipynb
+   DEA_Land_Cover.ipynb
    DEA_High_and_Low_Tide_Imagery.ipynb
    DEA_Coastlines.ipynb
-   DEA_Water_Observations.ipynb
    DEA_Waterbodies.ipynb
-   Sentinel_2.ipynb
 
 Citing DEA Notebooks
 --------------------

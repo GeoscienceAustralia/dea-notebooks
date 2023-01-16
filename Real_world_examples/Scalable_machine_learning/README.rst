@@ -36,9 +36,8 @@ two ways. Firstly, the critical steps in a ML workflow (in the context
 of the ODC) are broken down into discrete notebooks which are
 extensively documented. And secondly, a number of custom python
 functions have been written to ease the complexity of running ML on the
-ODC. These include (among others) ``collect_training_data``,
-``spatial_cluster``, ``SKCV``, and ``predict_xr``, all of which are
-contained in the
+ODC. These include (among others) ``collect_training_data``,  
+and ``predict_xr``, both of which are contained in the
 `dea\_tools.classification <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Tools/dea_tools/classification.py>`__
 package. These functions are introduced and explained further in the
 relevant sections of the notebooks.
@@ -58,7 +57,7 @@ workflow.
    useful for distinguishing between classes.
 3. ``3_Evaluate_optimize_fit_classifier.ipynb``: Using the training data
    extracted in the first notebook, this notebook first evaluates the
-   accuracy of a given ML model (using nested, spatial k-fold cross
+   accuracy of a given ML model (using nested, k-fold cross
    validation), performs a hyperparameter optimization, and then fits a
    model on the training data.
 4. ``4_Classify_satellite_data.ipynb``: This is where we load in satellite

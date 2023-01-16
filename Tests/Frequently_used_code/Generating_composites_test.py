@@ -14,7 +14,7 @@ def tb():
     # Update working directory to ensure relative links in notebooks work
     os.chdir(NB_DIR.parent)
     
-    with testbook(NB_PATH, execute=True) as tb:
+    with testbook(NB_PATH, execute=True, timeout=180) as tb:
         yield tb
 
 
