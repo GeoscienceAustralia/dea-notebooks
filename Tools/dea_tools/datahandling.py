@@ -31,9 +31,12 @@ import odc.algo
 import dask
 import numpy as np
 import pandas as pd
-import numexpr as ne
 import dask.array as da
 import xarray as xr
+import skimage.transform
+import sklearn.decomposition
+from skimage.exposure import match_histograms
+from skimage.color import rgb2hsv, hsv2rgb
 from osgeo import gdal
 from random import randint
 from collections import Counter
@@ -668,47 +671,6 @@ def dilate(array, dilation=10, invert=True):
                             structure=kernel.reshape((1,) + kernel.shape))
 
 
-def pan_sharpen_brovey(band_1, band_2, band_3, pan_band):
-    """
-    Brovey pan sharpening on surface reflectance input using numexpr
-    and return three xarrays.
-
-    Parameters
-    ----------
-    band_1, band_2, band_3 : xarray.DataArray or numpy.array
-        Three input multispectral bands, either as xarray.DataArrays or
-        numpy.arrays. These bands should have already been resampled to
-        the spatial resolution of the panchromatic band.
-    pan_band : xarray.DataArray or numpy.array
-        A panchromatic band corresponding to the above multispectral
-        bands that will be used to pan-sharpen the data.
-
-    Returns
-    -------
-    band_1_sharpen, band_2_sharpen, band_3_sharpen : numpy.arrays
-        Three numpy arrays equivelent to `band_1`, `band_2` and `band_3`
-        pan-sharpened to the spatial resolution of `pan_band`.
-
-    """
-    # Calculate total
-    exp = 'band_1 + band_2 + band_3'
-    total = numexpr.evaluate(exp)
-
-    # Perform Brovey Transform in form of: band/total*panchromatic
-    exp = 'a/b*c'
-    band_1_sharpen = numexpr.evaluate(exp, local_dict={'a': band_1,
-                                                       'b': total,
-                                                       'c': pan_band})
-    band_2_sharpen = numexpr.evaluate(exp, local_dict={'a': band_2,
-                                                       'b': total,
-                                                       'c': pan_band})
-    band_3_sharpen = numexpr.evaluate(exp, local_dict={'a': band_3,
-                                                       'b': total,
-                                                       'c': pan_band})
-
-    return band_1_sharpen, band_2_sharpen, band_3_sharpen
-
-
 def paths_to_datetimeindex(paths, string_slice=(0, 10)):
     """
     Helper function to generate a Pandas datetimeindex object
@@ -929,3 +891,459 @@ def parallel_apply(ds, dim, func, *args):
 
     # Combine to match the original dataset
     return xr.concat(out_list, dim=ds[dim])
+
+
+def _apply_weights(da, band_weights):
+    """
+    Apply weights from a dictionary to the bands of a
+    multispectral xarray.DataArray.  Raises a ValueError if any
+    bands in `da` are not present in the `band_weights` dictionary.
+
+    Parameters
+    ----------
+    da : xarray.DataArray object
+        DataArray containing multispectral data. The dataarray
+        should contain a "variable" dimension that corresponds
+        to the different bands of the data.
+    band_weights : dict
+        Mapping of band names to weights to be applied. The keys
+        of the dictionary should be the names of the bands in the
+        "variable" dimension of `da`, and the values should be
+        the weights to be applied to each band.
+
+    Returns
+    -------
+    xarray.DataArray object
+        DataArray with weights applied to the bands.
+    """
+
+    # Identify any bands without weights, and raise an
+    # error if they exist
+    bands_without_weights = set(da["variable"].values) - set(band_weights.keys())
+    if len(bands_without_weights) > 0:
+        raise ValueError(
+            f"The following multispectral bands are missing from the "
+            f"`band_weights` dictionary: {bands_without_weights}.\n"
+            f"Ensure that weights are supplied for all multispectral "
+            f"bands in `ds`, or set `band_weights=None`."
+        )
+
+    # Create xr.DataArray with weights for each variable
+    # along the "variable" dimension
+    weights_da = xr.DataArray(
+        data=list(band_weights.values()),
+        coords={"variable": list(band_weights.keys())},
+        dims="variable",
+    )
+
+    # Apply weights
+    return da.weighted(weights_da)
+
+
+def _brovey_pansharpen(ds, pan_band, band_weights=None):
+    """
+    Perform pansharpening on multiple timesteps of a multispectral
+    dataset using the Brovey transform (with optional per-band weights).
+
+    Source: https://pro.arcgis.com/en/pro-app/latest/help/analysis/
+            raster-functions/fundamentals-of-pan-sharpening-pro.htm
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset containing multispectral and panchromatic bands.
+    pan_band : str
+        Name of the panchromatic band in the dataset.
+    band_weights : dict, optional
+        Mapping of band names to weights to be applied to each band when
+        calculating the sum of all multispectral bands. The keys of
+        the dictionary should be the names of the bands, and the values
+        should be the weights to apply to each band, e.g.:
+        ``{"nbart_red": 0.4, "nbart_green": 0.4, "nbart_blue": 0.2}``.
+        The default accounts for Landsat 8 and 9's pan band only
+        partially overlapping with the blue band; this may not be
+        suitable for all applications. Setting `band_weights=None`
+        will use a simple unweighted sum.
+
+    Returns
+    -------
+    ds_pansharpened : xarray.Dataset
+        Pansharpened dataset with the same dimensions as the input dataset.
+    """
+
+    # Create new dataarrays with and without pan band
+    da_nopan = ds.drop(pan_band).to_array()
+    da_pan = ds[pan_band]
+
+    # Calculate weighted sum
+    if band_weights is not None:
+        da_total = _apply_weights(da_nopan, band_weights).sum(dim="variable")
+    else:
+        da_total = da_nopan.sum(dim="variable")
+
+    # Perform Brovey Transform in form of: band / total * panchromatic
+    da_pansharpened = da_nopan / da_total * da_pan
+    ds_pansharpened = da_pansharpened.to_dataset("variable")
+
+    return ds_pansharpened
+
+
+def _esri_pansharpen(ds, pan_band, band_weights=None):
+    """
+    Perform pansharpening on multiple timesteps of a multispectral
+    dataset using the ESRI transform (with optional per-band weights).
+
+    Source: https://pro.arcgis.com/en/pro-app/latest/help/analysis/
+            raster-functions/fundamentals-of-pan-sharpening-pro.htm
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset containing multispectral and panchromatic bands.
+    pan_band : str
+        Name of the panchromatic band in the dataset.
+    band_weights : dict, optional
+        Mapping of band names to weights to be applied to each band when
+        calculating the mean of all multispectral bands. The keys of
+        the dictionary should be the names of the bands, and the values
+        should be the weights to apply to each band, e.g.:
+        ``{"nbart_red": 0.4, "nbart_green": 0.4, "nbart_blue": 0.2}``.
+        The default accounts for Landsat 8 and 9's pan band only
+        partially overlapping with the blue band; this may not be
+        suitable for all applications. Setting `band_weights=None`
+        will use a simple unweighted mean.
+
+    Returns
+    -------
+    ds_pansharpened : xarray.Dataset
+        Pansharpened dataset with the same dimensions as the input dataset.
+    """
+
+    # Create new dataarrays with and without pan band
+    da_nopan = ds.drop(pan_band).to_array()
+    da_pan = ds[pan_band]
+
+    # Calculate weighted sum
+    if band_weights is not None:
+        da_mean = _apply_weights(da_nopan, band_weights).mean(dim="variable")
+    else:
+        da_mean = da_nopan.mean(dim="variable")
+
+    # Calculate adjustment and apply to multispectral bands
+    adj = da_pan - da_mean
+    da_pansharpened = da_nopan + adj
+    ds_pansharpened = da_pansharpened.to_dataset("variable")
+
+    return ds_pansharpened
+
+
+def _simple_mean_pansharpen(ds, pan_band):
+    """
+    Perform pansharpening on multiple timesteps of a multispectral
+    dataset using the Simple Mean transform.
+
+    Source: https://pro.arcgis.com/en/pro-app/latest/help/analysis/
+            raster-functions/fundamentals-of-pan-sharpening-pro.htm
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset containing multispectral and panchromatic bands.
+    pan_band : str
+        Name of the panchromatic band in the dataset.
+
+    Returns
+    -------
+    ds_pansharpened : xarray.Dataset
+        Pansharpened dataset with the same dimensions as the input dataset.
+    """
+
+    # Create new dataarrays with and without pan band
+    ds_nopan = ds.drop(pan_band)
+    da_pan = ds[pan_band]
+
+    # Take mean of pan band and RGBs
+    ds_pansharpened = (ds_nopan + da_pan) / 2.0
+
+    return ds_pansharpened
+
+
+def _hsv_timestep_pansharpen(ds_i, pan_band):
+    """
+    Perform pansharpening on a single timestep of a multispectral
+    dataset using the Hue Saturation Value (HSV) transform.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset containing multispectral and panchromatic bands.
+    pan_band : str
+        Name of the panchromatic band in the dataset.
+
+    Returns
+    -------
+    ds_pansharpened : xarray.Dataset
+        Pansharpened dataset with the same dimensions as the input dataset.
+    """
+
+    # Convert to an xr.DataArray and move "variable" to end
+    da_i = ds_i.to_array().transpose(..., "variable")
+
+    # Create new dataarrays with and without pan band
+    da_i_nopan = da_i.drop(pan_band, dim="variable")
+    da_i_pan = da_i.sel(variable=pan_band)
+
+    # Convert to HSV colour space
+    hsv = rgb2hsv(da_i_nopan)
+
+    # Replace value (lightness) channel with pan band data
+    hsv[:, :, 2] = da_i_pan.values
+
+    # Convert back to RGB colour space
+    pansharped_array = hsv2rgb(hsv)
+
+    # Add back into original array, reshape and return dataframe
+    da_i_nopan[:] = pansharped_array
+    ds_pansharpened = da_i_nopan.to_dataset("variable")
+
+    return ds_pansharpened
+
+
+def _pca_timestep_pansharpen(ds_i, pan_band, pca_rescaling="histogram"):
+    """
+    Perform pansharpening on a single timestep of a multispectral
+    dataset using the principal component analysis (PCA) transform.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset containing multispectral and panchromatic bands.
+    pan_band : str
+        Name of the panchromatic band in the dataset.
+    pca_rescaling : str, optional
+        Method to use for rescaling pan band to more closely match the
+        distribution of values in the first PCA component. "simple"
+        scales the pan band values to more closely match the first PCA
+        component by subtracting the mean of the pan band values from
+        each value, scaling the resulting values by the ratio of the
+        standard deviations of the first PCA component and the pan band,
+        and adding back the mean of the first PCA component.
+        "histogram" uses a histogram matching technique to adjust the
+        pan band values so that the resulting histogram more closely
+        matches the histogram of the first PCA component.
+
+    Returns
+    -------
+    ds_pansharpened : xarray.Dataset
+        Pansharpened dataset with the same dimensions as the input dataset.
+    """
+
+    # Reshape to 2D by stacking x and y dimensions to prepare it
+    # as an input to PCA. Drop NA rows as these are not supported
+    # by `pca.fit_transform`.
+    da_2d = (
+        ds_i.to_array()
+        .stack(pixel=("y", "x"))
+        .transpose("pixel", "variable")
+        .dropna(dim="pixel")
+    )
+
+    # Create new dataarrays with and without pan band
+    da_2d_nopan = da_2d.drop(pan_band, dim="variable")
+    da_2d_pan = da_2d.sel(variable=pan_band)
+
+    # Apply PCA transformation
+    pca = sklearn.decomposition.PCA()
+    pca_array = pca.fit_transform(da_2d_nopan)
+
+    # Rescale pan band to more closely match the first PCA component
+    if pca_rescaling == "simple":
+        pca_array[:, 0] = (da_2d_pan.values - da_2d_pan.values.mean()) * (
+            pca_array[:, 0].std() / da_2d_pan.values.std()
+        ) + pca_array[:, 0].mean()
+    elif pca_rescaling == "histogram":
+        pca_array[:, 0] = match_histograms(da_2d_pan.values, pca_array[:, 0])
+
+    # Apply reverse PCA transform to restore multispectral array
+    pansharped_array = pca.inverse_transform(pca_array)
+
+    # Add back into original array, reshape and return dataframe
+    da_2d_nopan[:] = pansharped_array
+    ds_pansharpened = da_2d_nopan.unstack("pixel").to_dataset("variable")
+
+    return ds_pansharpened
+
+
+def xr_pansharpen(
+    ds,
+    transform,
+    pan_band="nbart_panchromatic",
+    return_pan=False,
+    output_dtype=None,
+    parallelise=False,
+    band_weights={"nbart_red": 0.4, "nbart_green": 0.4, "nbart_blue": 0.2},
+    pca_rescaling="histogram",
+):
+
+    """
+    Apply pan-sharpening to multispectral satellite data with one
+    or more timesteps. The following pansharpening transforms are
+    currently supported:
+
+        - Brovey ("brovey"), with optional band weighting
+        - ESRI ("esri"), with optional band weighting
+        - Simple mean ("simple mean")
+        - PCA ("pca")
+        - HSV ("hsv"), similar to IHS
+
+    Note: Pan-sharpening transforms do not necessarily maintain
+    the spectral integrity of the input satellite data, and may
+    be more suitable for visualisation than quantitative work.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        An xarrray dataset containing the three input multispectral
+        bands, and a panchromatic band. This dataset should have
+        already been resampled to the spatial resolution of the
+        panchromatic band (15 m for Landsat). Due to differences in
+        the electromagnetic spectrum covered by the panchromatic band,
+        Landsat 8 and 9 data should be supplied with 'blue', 'green',
+        and 'red' multispectral bands, while Landsat 7 should be
+        supplied with 'green', 'red' and 'NIR'.
+    transform : string
+        The pansharpening transform to apply to the data. Valid options
+        include "brovey", "esri", "simple mean", "pca", "hsv".
+    pan_band : string, optional
+        The name of the panchromatic band that will be used to
+        pansharpen the multispectral data.
+    return_pan : bool, optional
+        Whether to return the panchromatic band in the output dataset.
+        Defaults to False.
+    output_dtype : string or numpy.dtype, optional
+        The dtype used for the output values. Defaults to the input
+        dtype of the multispectral bands in `ds`.
+    parallelise: bool, optional
+        Whether to parallelise transformations across multiple cores.
+        Used for PCA and HSV transforms that are applied to each
+        timestep in `ds` individually; defaults to False.
+    band_weights : dict, optional
+        Used for the Brovey and ESRI transforms. Mapping of band
+        names to weights to be applied to each band when calculating
+        the sum (Brovey) or mean (ESRI) of all multispectral bands.
+        The keys of the dictionary should be the names of the bands,
+        and the values should be the weights to apply to each band, e.g.:
+        ``{"nbart_red": 0.4, "nbart_green": 0.4, "nbart_blue": 0.2}``.
+        The default accounts for Landsat 8 and 9's pan band only
+        partially overlapping with the blue band; this may not be
+        suitable for all applications. Setting `band_weights=None`
+        will use a simple unweighted sum (for the Brovey transform)
+        or unweighted mean (for the ESRI transform).
+    pca_rescaling : str, optional
+        Used for the PCA transform. The method to use for rescaling
+        pan band to more closely match the distribution of values
+        in the first PCA component. "simple" scales the pan band
+        values to more closely match the first PCA component by
+        subtracting the mean of the pan band values from each value,
+        scaling the resulting values by the ratio of the standard
+        deviations of the first PCA component and the pan band, and
+        adding back the mean of the first PCA component.
+        "histogram" uses a histogram matching technique to adjust the
+        pan band values so that the resulting histogram more closely
+        matches the histogram of the first PCA component.
+
+    Returns
+    -------
+    ds_pansharpened : xarray.Dataset
+        An xarrray dataset containing the three pansharpened input
+        multispectral bands and optionally the panchromatic band
+        (if `return_pan=True`).
+    """
+
+    # Assert whether pan band exists in the dataset
+    if pan_band not in ds.data_vars:
+        raise ValueError(
+            f"The specified panchromatic band '{pan_band}' cannot be found in `ds`. "
+            f"Specify a panchromatic band name that exists in the dataset using `pan_band=...`."
+        )
+
+    # Assert whether exactly three multispectral bands are included in `ds`
+    n_multi = len(ds.drop(pan_band).data_vars)
+    if n_multi != 3:
+        raise ValueError(
+            f"`ds` should contain exactly three multispectral bands (not "
+            f"including the panchromatic band). However, {n_multi} "
+            f"multispectral bands were found: {list(ds.drop(pan_band).data_vars)}. "
+        )
+
+    # Define dict linking functions to each transform
+    transform_dict = {
+        "brovey": _brovey_pansharpen,
+        "esri": _esri_pansharpen,
+        "simple mean": _simple_mean_pansharpen,
+        "pca": _pca_timestep_pansharpen,
+        "hsv": _hsv_timestep_pansharpen,
+    }
+
+    # If Brovey, ESRI or Simple Mean pansharpening is specified, apply to
+    # entire `xr.Dataset` in one go (with optional weights for Brovey, ESRI)
+    if transform in ("brovey", "esri", "simple mean"):
+        print(f"Applying {transform.capitalize()} pansharpening")
+        extra_params = (
+            {"band_weights": band_weights} if transform in ("brovey", "esri") else {}
+        )
+        ds_pansharpened = transform_dict[transform](
+            ds,
+            pan_band=pan_band,
+            **extra_params,
+        )
+
+    # Otherwise, apply PCA or HSV pansharpening to each
+    # timestep in the `xr.Dataset` using `.apply`
+    elif transform in ("pca", "hsv"):
+
+        extra_params = {"pca_rescaling": pca_rescaling} if transform == "pca" else {}
+
+        # Apply pansharpening to all timesteps in data in parallel
+        if ("time" in ds.dims) and parallelise:
+            print(
+                f"Applying {transform.upper()} pansharpening to each timestep in parallel"
+            )
+            ds_pansharpened = parallel_apply(
+                ds,
+                "time",
+                transform_dict[transform],
+                pan_band,
+                *extra_params.values(),  # TODO: Update once `parallel_apply` supports kwargs
+            )
+
+        # Apply pansharpening to all timesteps in data sequentially
+        elif ("time" in ds.dims) and not parallelise:
+            print(f"Applying {transform.upper()} pansharpening to each timestep")
+            ds_pansharpened = ds.groupby("time").apply(
+                transform_dict[transform],
+                pan_band=pan_band,
+                **extra_params,
+            )
+
+        # Otherwise, apply func directly if only one timestep
+        else:
+            print(f"Applying {transform.upper()} pansharpening")
+            ds_pansharpened = transform_dict[transform](
+                ds, pan_band=pan_band, **extra_params
+            )
+
+    else:
+        raise ValueError(
+            f"Unsupported value '{transform}' passed to `method`. Please "
+            f"provide one of {list(transform_dict.keys())}."
+        )
+
+    # Optionally insert pan band back into dataset
+    if return_pan:
+        ds_pansharpened[pan_band] = ds[pan_band]
+
+    # Return data in original or requested dtype
+    return ds_pansharpened.astype(
+        ds.to_array().dtype if output_dtype is None else output_dtype
+    )

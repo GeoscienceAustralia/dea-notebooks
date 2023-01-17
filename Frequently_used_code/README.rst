@@ -27,7 +27,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Machine_learning_with_ODC.ipynb
    Masking_data.ipynb
    Opening_GeoTIFFs_NetCDFs.ipynb
-   Pan_sharpening_Brovey.ipynb
+   Pansharpening.ipynb
    Polygon_drill.ipynb
    Polygonise_pixel_edges.ipynb
    Principal_component_analysis.ipynb
