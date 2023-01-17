@@ -57,9 +57,12 @@ warnings.filterwarnings("ignore")
 # WMS params and satellite style bands
 sat_params = {
     "Landsat": {
-        "products": ["ga_ls5t_ard_3", 
-                     "ga_ls7e_ard_3", 
-                     "ga_ls8c_ard_3"],
+        "products": [
+            "ga_ls5t_ard_3",
+            "ga_ls7e_ard_3",
+            "ga_ls8c_ard_3",
+            "ga_ls9c_ard_3",
+        ],
         "styles": {
             "True colour": ("true_colour", ["nbart_red", "nbart_green", "nbart_blue"]),
             "False colour": (
@@ -115,7 +118,7 @@ def update_map_layers(self, update_basemap=False):
     self.query_params = None
 
     if update_basemap:
-        
+
         # Clear all layers and add basemap
         self.map_layers.clear_layers()
         self.map_layers.add_layer(self.basemap)
@@ -162,7 +165,7 @@ def extract_data(self):
             "output_crs": crs,
             "group_by": "solar_day",
             "dask_chunks": {"time": 1, "x": 2048, "y": 2048},
-            "resampling": {"*": "cubic", "oa_fmask": "nearest", "fmask": "nearest"},
+            "resampling": {"*": "bilinear", "oa_fmask": "nearest", "fmask": "nearest"},
             "skip_broken_datasets": True,
         }
 
@@ -195,7 +198,7 @@ def extract_data(self):
         timeseries_ds = None
 
     # Close down the dask client
-#     client.shutdown()
+    #     client.shutdown()
     client.close()
 
     return timeseries_ds
@@ -771,7 +774,7 @@ class animation_app(HBox):
     def update_basemap(self, change):
         self.basemap = change.new
         update_map_layers(self, update_basemap=True)
-        
+
     # Change layers shown on the map
     def update_dealayer(self, change):
         self.dealayer = change.new
@@ -788,14 +791,14 @@ class animation_app(HBox):
 
         # Clear data load params to trigger data re-load
         update_map_layers(self)
-        
+
     # Update good data slider
     def update_floatslider_max_cloud_cover(self, change):
         self.max_cloud_cover = change.new
 
         # Clear data load params to trigger data re-load
         update_map_layers(self)
-    
+
     # Set output file format
     def update_output(self, change):
         self.output_format = change.new
@@ -807,8 +810,6 @@ class animation_app(HBox):
     # Update power transform
     def update_slider_power(self, change):
         self.power = change.new
-
-
 
     # Enable unsharp masking and show/hide custom params
     def update_checkbox_unsharp_mask(self, change):
@@ -877,7 +878,7 @@ class animation_app(HBox):
     # Set output file format
     def update_dropdown_resampling(self, change):
         self.resample_freq = change.new
-        
+
         # Clear data load params to trigger data re-load
         update_map_layers(self)
 

@@ -16,7 +16,7 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: November 2022
+Last modified: January 2023
 
 """
 
@@ -653,12 +653,14 @@ def tidal_tag(
     `tide_m` variable giving the height of the tide at the exact
     moment of each satellite acquisition.
 
-    By default, the function models tides for the centroid of the
-    dataset, but a custom tidal modelling location can be specified
-    using `tidepost_lat` and `tidepost_lon`.
+    The function models tides at the centroid of the dataset by default, 
+    but a custom tidal modelling location can be specified using 
+    `tidepost_lat` and `tidepost_lon`.
 
-    Tides are modelled using the OTPS tidal modelling software based on
-    the TPXO8 tidal model: http://volkov.oce.orst.edu/tides/tpxo8_atlas.html
+    The default settings use the FES2014 global tidal model, implemented
+    using the pyTMD Python package. FES2014 was produced by NOVELTIS, 
+    LEGOS, CLS Space Oceanography Division and CNES. It is distributed 
+    by AVISO, with support from CNES (http://www.aviso.altimetry.fr/).
 
     Parameters
     ----------
@@ -802,17 +804,19 @@ def tidal_stats(
     tides observed by satellites (e.g. Landsat) are biased compared to
     the natural tidal range (e.g. fail to observe either the highest or
     lowest tides etc).
-
-    By default, the function models tides for the centroid of the
-    dataset, but a custom tidal modelling location can be specified
-    using `tidepost_lat` and `tidepost_lon`.
-
-    Tides are modelled using the OTPS tidal modelling software based on
-    the TPXO8 tidal model: http://volkov.oce.orst.edu/tides/tpxo8_atlas.html
-
+    
     For more information about the tidal statistics computed by this
     function, refer to Figure 8 in Bishop-Taylor et al. 2018:
     https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8
+
+    The function models tides at the centroid of the dataset by default, 
+    but a custom tidal modelling location can be specified using 
+    `tidepost_lat` and `tidepost_lon`.
+    
+    The default settings use the FES2014 global tidal model, implemented
+    using the pyTMD Python package. FES2014 was produced by NOVELTIS, 
+    LEGOS, CLS Space Oceanography Division and CNES. It is distributed 
+    by AVISO, with support from CNES (http://www.aviso.altimetry.fr/).
 
     Parameters
     ----------
@@ -1228,12 +1232,12 @@ def tidal_stats_otps(
     dataset, but a custom tidal modelling location can be specified
     using `tidepost_lat` and `tidepost_lon`.
 
-    Tides are modelled using the OTPS tidal modelling software based on
-    the TPXO8 tidal model: http://volkov.oce.orst.edu/tides/tpxo8_atlas.html
-
     For more information about the tidal statistics computed by this
     function, refer to Figure 8 in Bishop-Taylor et al. 2018:
     https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8
+    
+    Tides are modelled using the OTPS tidal modelling software based on
+    the TPXO8 tidal model: http://volkov.oce.orst.edu/tides/tpxo8_atlas.html
 
     Parameters
     ----------
