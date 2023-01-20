@@ -1,0 +1,20 @@
+name: Spell check
+on:
+  pull_request:
+    branches:
+      - 'develop'
+  push:
+    branches:
+      - 'develop'
+
+  workflow_dispatch:
+
+jobs:
+  pyspelling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: rojopolis/spellcheck-github-actions@0.29.0
+        name: Spellcheck
+        with:
+          config_path: .github/workflows/configs/spellcheck_config.yaml
