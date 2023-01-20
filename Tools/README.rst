@@ -20,7 +20,7 @@ Python functions and algorithms developed to assist in analysing Digital Earth A
 **Classification and segmentation**
 
 -  ``dea_tools.classification.py``: Machine learning classification (e.g. training and applying machine learning models on satellite data)
--  ``dea_tools.segmentation.py``: Image segmentation tools (e.g. applying image segementation with RSGISLIB)
+-  ``dea_tools.segmentation.py``: Image segmentation tools (e.g. applying image segmentation with RSGISLIB)
 
 **Parallel processing**
 
@@ -92,4 +92,3 @@ Build instructions:
         rm dea_tools/__version__.py  # if necessary
         pip install . --use-feature=in-tree-build
         python -m build
-
