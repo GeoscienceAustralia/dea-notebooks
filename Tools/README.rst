@@ -30,7 +30,7 @@ Python functions and algorithms developed to assist in analysing Digital Earth A
 
 -  ``dea_tools.land_cover``: Functions for plotting Digital Earth Australia Land Cover data.
 -  ``dea_tools.coastal``: Coastal and intertidal analysis tools (e.g. tidal tagging, coastal change timeseries)
--  ``dea_tools.bom``: Loading Bureau of Meteorology water data service data (e.g. guage data, discharge data)
+-  ``dea_tools.bom``: Loading Bureau of Meteorology water data service data (e.g. gauge data, discharge data)
 -  ``dea_tools.climate``: Retrieving and manipulating gridded climate data (e.g. ERA5)
 -  ``dea_tools.waterbodies``: Loading and processing DEA Waterbodies data (e.g. finding and loading waterbody timeseries data)
 
