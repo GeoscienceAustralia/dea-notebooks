@@ -18,7 +18,7 @@ Scalable Supervised Machine Learning on the Open Data Cube
 **Background**
 
 Classification of satellite images using supervised machine learning
-(ML) techniques has become a common occurence in the remote sensing
+(ML) techniques has become a common occurrence in the remote sensing
 literature. Machine learning offers an effective means for identifying
 complex land cover classes in a relatively efficient manner. However,
 sensibly implementing machine learning classifiers is not always
