@@ -16,3 +16,10 @@ jobs:
           token: ${{ secrets.REPO_PAT }}
           repository: GeoscienceAustralia/dea-docs
           event-type: republish-docs
+
+  documentation-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: readthedocs/actions/preview@v1
+        with:
+          project-slug: "datacube-ows"
