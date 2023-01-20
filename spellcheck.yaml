@@ -2,6 +2,7 @@ matrix:
 - name: Markdown
   sources:
   - '**/*.md'
+  - '**/*.rst'
   default_encoding: utf-8
   aspell:
     lang: en
