@@ -1,4 +1,4 @@
-name: Doc QA
+name: Spell check
 on:
   pull_request:
     branches:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  pyspellcheck:
+  pyspelling:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
