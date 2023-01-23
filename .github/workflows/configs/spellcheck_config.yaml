@@ -6,6 +6,7 @@ matrix:
   default_encoding: utf-8
   aspell:
     lang: en
+    d: en_AU
   dictionary:
     wordlists:
     - .github/workflows/configs/spellcheck_wordlist.txt
@@ -18,6 +19,9 @@ matrix:
       - code
       - pre
 - name: python
+  aspell:
+    lang: en
+    d: en_AU
   pipeline:
   - pyspelling.filters.python:
       strings: false
