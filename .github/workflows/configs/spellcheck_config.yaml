@@ -3,7 +3,7 @@ matrix:
   sources:
   - '**/*.md'
   - '**/*.rst'
-  - '**/*.ipynb'
+  - '**/*.py'
   default_encoding: utf-8
   aspell:
     lang: en
