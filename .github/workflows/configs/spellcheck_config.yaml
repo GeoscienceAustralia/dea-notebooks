@@ -3,7 +3,6 @@ matrix:
   sources:
   - '**/*.md'
   - '**/*.rst'
-  - '**/*.py'
   default_encoding: utf-8
   aspell:
     lang: en
@@ -18,3 +17,10 @@ matrix:
       ignores:
       - code
       - pre
+- name: python
+  pipeline:
+  - pyspelling.filters.python:
+      strings: false
+      comments: false
+  sources:
+  - Tools/dea_tools/*.py
