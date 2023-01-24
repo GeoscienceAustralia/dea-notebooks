@@ -1354,7 +1354,7 @@ def xr_pansharpen(
         # Apply pansharpening to all timesteps in data in parallel
         if ("time" in ds.dims) and parallelise:
             print(
-                f"Applying {transform.upper()} pansharpening to each timestep in parallel"
+                f"Applying {transform.upper()} pansharpening in parallel"
             )
             ds_pansharpened = parallel_apply(
                 ds,
@@ -1366,7 +1366,7 @@ def xr_pansharpen(
 
         # Apply pansharpening to all timesteps in data sequentially
         elif ("time" in ds.dims) and not parallelise:
-            print(f"Applying {transform.upper()} pansharpening to each timestep")
+            print(f"Applying {transform.upper()} pansharpening")
             ds_pansharpened = ds.groupby("time").apply(
                 transform_dict[transform],
                 pan_band=pan_band,
