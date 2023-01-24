@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: October 2021
+Last modified: January 2023
 
 '''
 
@@ -1002,7 +1002,7 @@ def plot_wo(wo, legend=True, **plot_kwargs):
         except AttributeError:
             cb = im.cbar
         ticks = cb.get_ticks()
-        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+        cb.set_ticks(ticks[:-1] + np.diff(ticks) / 2)
         cb.set_ticklabels(cblabels)
     return im
 
@@ -1053,6 +1053,6 @@ def plot_fmask(fmask, legend=True, **plot_kwargs):
         except AttributeError:
             cb = im.cbar
         ticks = cb.get_ticks()
-        cb.set_ticks(ticks + np.diff(ticks, append=256) / 2)
+        cb.set_ticks(ticks[:-1] + np.diff(ticks) / 2)
         cb.set_ticklabels(cblabels)
     return im
