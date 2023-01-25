@@ -47,7 +47,7 @@ from datacube.utils.geometry import Geometry
 import dea_tools.app.widgetconstructors as deawidgets
 from dea_tools.dask import create_local_dask_cluster
 from dea_tools.spatial import reverse_geocode
-from dea_tools.datahandling import pan_sharpen_brovey
+from dea_tools.datahandling import xr_pansharpen
 
 
 # WMS params and satellite style bands
@@ -213,24 +213,10 @@ def extract_data(self):
         # Create plain numpy array, optionally after pansharpening
         if self.pansharpen and can_pansharpen:
 
-            # Perform Brovey pan-sharpening and return three numpy.arrays
+            # Perform Brovey pan-sharpening and return numpy.array
             print(f"Pansharpening {self.sensor} image to 15 m resolution")
-            red_sharpen, green_sharpen, blue_sharpen = pan_sharpen_brovey(
-                band_1=ds.nbart_red,
-                band_2=ds.nbart_green,
-                band_3=ds.nbart_blue,
-                pan_band=ds.nbart_panchromatic,
-            )
-            rgb_array = np.vstack([red_sharpen, green_sharpen, blue_sharpen])
-
-            # Match histogram to original array
-            from skimage.exposure import match_histograms
-
-            original_array = (
-                ds.drop("nbart_panchromatic").to_array().squeeze("time").values
-            )
-            rgb_array = match_histograms(
-                image=rgb_array, reference=original_array, multichannel=True
+            rgb_array = (
+                xr_pansharpen(ds, transform="brovey").to_array().squeeze("time").values
             )
 
         # If pansharpening is requested but not possible, deactivate
