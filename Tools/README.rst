@@ -37,7 +37,7 @@ Python functions and algorithms developed to assist in analysing Digital Earth A
 Installation
 ------------
 
-with conda
+With conda
 ~~~~~~~~~~
 
 .. code-block:: bash
@@ -48,8 +48,8 @@ with conda
     conda activate cubeenv
 
 
-install tools
-~~~~~~~~~~~~~
+Install dea-tools
+~~~~~~~~~~~~~~~~~
 
 Install the package from the source on any system with ``pip``:
 
