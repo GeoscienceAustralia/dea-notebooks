@@ -37,6 +37,20 @@ Python functions and algorithms developed to assist in analysing Digital Earth A
 Installation
 ------------
 
+with conda
+~~~~~~~~~~
+
+.. code-block:: bash
+
+    wget -O conda-environment.yml https://raw.githubusercontent.com/opendatacube/datacube-core/develop/conda-environment.yml
+
+    mamba env create -f conda-environment.yml
+    conda activate cubeenv
+
+
+install tools
+~~~~~~~~~~~~~
+
 Install the package from the source on any system with ``pip``:
 
 .. code-block:: bash
