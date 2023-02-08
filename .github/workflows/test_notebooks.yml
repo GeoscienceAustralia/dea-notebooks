@@ -33,5 +33,5 @@ jobs:
 #        docker-compose exec -T sandbox bash "-c" "cd dea-notebooks; pytest --nbval-lax Beginners_guide/"
 #        docker-compose down
 
-     - name: Setup upterm session
-       uses: lhotari/action-upterm@v1
+    - name: Setup upterm session
+      uses: lhotari/action-upterm@v1
