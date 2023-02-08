@@ -23,7 +23,7 @@ jobs:
     - name: Test with pytest
       run: |
         # First copy DEA Notebooks into the home directory where it would live in the Sandbox
-        docker-compose exec -T sandbox cp -r dea-notebooks /home/jovyan/dea-notebooks
+        docker-compose exec -T sandbox cp -r /dea-notebooks /home/jovyan/dea-notebooks
 
         # Pip install `dea_tools` from the local Tools directory
         docker-compose exec -T sandbox pip install -e /home/jovyan/dea-notebooks/Tools
