@@ -16,13 +16,15 @@ jobs:
     - name: Set up containers
       run: |
         docker-compose up -d
-    - name: Set up Datacube
-      run: |
-        docker-compose exec -T index setup_test_datacube.sh
-        docker-compose exec -T index datacube product list
+#    - name: Set up Datacube
+#      run: |
+#        docker-compose exec -T index setup_test_datacube.sh
+#        docker-compose exec -T index datacube product list
     - name: Test with pytest
       run: |
-        docker-compose exec -T sandbox pip install --use-feature=in-tree-build /dea-notebooks/Tools
+        docker-compose exec -T sandbox bash "-c" "ls"
+        docker-compose exec -T sandbox bash "-c" "ls dea-notebooks"
+#        docker-compose exec -T sandbox pip install --use-feature=in-tree-build /dea-notebooks/Tools
 #        docker-compose down
 
     - name: Setup upterm session
