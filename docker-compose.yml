@@ -42,5 +42,5 @@ services:
      depends_on:
         - postgres
      entrypoint: bash -c 'sleep infinity'
-    #  volumes:
-    #    - .:/dea-notebooks
+     volumes:
+       - .:/dea-notebooks
