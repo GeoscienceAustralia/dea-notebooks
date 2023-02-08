@@ -20,13 +20,19 @@ jobs:
       run: |
         docker-compose exec -T index setup_test_datacube.sh
         docker-compose exec -T index datacube product list
-#    - name: Test with pytest
-#      run: |
-#        docker-compose exec -T sandbox bash "-c" "ls"
-#        docker-compose exec -T sandbox bash "-c" "find . -type f -name "*.ipynb""
-#        docker-compose exec -T sandbox bash "-c" "ls dea-notebooks"
-#        docker-compose exec -T sandbox pip install --use-feature=in-tree-build /dea-notebooks/Tools
-#        docker-compose down
+    - name: Test with pytest
+      run: |
+        # First copy DEA Notebooks into the home directory where it would live in the Sandbox
+        docker-compose exec -T sandbox cp -r dea-notebooks /home/jovyan/dea-notebooks
 
-    - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
+        # Pip install `dea_tools` from the local Tools directory
+        docker-compose exec -T sandbox pip install -e /home/jovyan/dea-notebooks/Tools
+
+        # Run pytest using `--nbval-lax` which tests if notebooks run sucessfully or error 
+        docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest --nbval-lax Beginners_guide"
+
+        # Shut down docker
+        docker-compose down
+
+#    - name: Setup upterm session
+#      uses: lhotari/action-upterm@v1
