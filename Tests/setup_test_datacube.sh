@@ -18,7 +18,7 @@ for prod_def_yaml in $(find ./dea-config/products -name '*.yaml' -regex '.*\(ga_
 done
 
 # Index scenes
-s3-to-dc --skip-lineage s3://dea-public-data/baseline/ga_ls8c_ard_3/089/083/2020/**/*.odc-metadata.yaml ga_ls9c_ard_3
+s3-to-dc --skip-lineage s3://dea-public-data/baseline/ga_ls8c_ard_3/089/083/2020/**/*.odc-metadata.yaml ga_ls8c_ard_3
 # s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
 # s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_nbart_gm_cyear_3/3-0-0/x49/y23/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls7e_nbart_gm_cyear_3'
 # s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_nbart_gm_cyear_3/3-0-0/x49/y24/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls7e_nbart_gm_cyear_3'
