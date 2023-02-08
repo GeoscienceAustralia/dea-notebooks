@@ -16,21 +16,13 @@ jobs:
     - name: Set up containers
       run: |
         docker-compose up -d
-
     - name: Set up Datacube
       run: |
         docker-compose exec -T index setup_test_datacube.sh
         docker-compose exec -T index datacube product list
-
     - name: Test with pytest
       run: |
-        docker-compose exec -T sandbox pip install testbook
-        docker-compose exec -T sandbox mkdir /home/jovyan/dea-notebooks
-        docker-compose exec -T sandbox cp -r /dea-notebooks/.git /home/jovyan/.git
-        docker-compose exec -T sandbox cp -r /dea-notebooks/Tools /home/jovyan/Tools
-        docker-compose exec -T sandbox pip install --use-feature=in-tree-build /home/jovyan/Tools
-        docker-compose exec -T sandbox bash "-c" "ls"
-#        docker-compose exec -T sandbox bash "-c" "cd dea-notebooks; pytest --nbval-lax Beginners_guide/"
+        docker-compose exec -T sandbox pip install -e /home/jovyan/dea-notebooks/Tools
 #        docker-compose down
 
     - name: Setup upterm session
