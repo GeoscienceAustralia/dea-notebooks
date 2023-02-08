@@ -43,4 +43,4 @@ services:
         - postgres
      entrypoint: bash -c 'sleep infinity'
      volumes:
-       - .:/home/jovyan/dea-notebooks
+       - .:/dea-notebooks
