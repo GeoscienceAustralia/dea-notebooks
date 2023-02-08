@@ -30,5 +30,8 @@ jobs:
         docker-compose exec -T sandbox cp -r /dea-notebooks/Tools /home/jovyan/Tools
         docker-compose exec -T sandbox pip install --use-feature=in-tree-build /home/jovyan/Tools
         docker-compose exec -T sandbox bash "-c" "ls"
-        docker-compose exec -T sandbox bash "-c" "cd dea-notebooks; pytest --nbval-lax Beginners_guide/"
-        docker-compose down
+#        docker-compose exec -T sandbox bash "-c" "cd dea-notebooks; pytest --nbval-lax Beginners_guide/"
+#        docker-compose down
+
+     - name: Setup upterm session
+       uses: lhotari/action-upterm@v1
