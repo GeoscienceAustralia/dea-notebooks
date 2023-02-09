@@ -29,7 +29,7 @@ jobs:
         docker-compose exec -T sandbox pip install -e /home/jovyan/dea-notebooks/Tools
 
         # Run pytest using `--nbval-lax` which tests if notebooks run sucessfully or error 
-        docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest --nbval-lax Beginners_guide DEA_datasets"
+        docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest --nbval-lax Frequently_used_code"
 
         # Shut down docker
         docker-compose down
