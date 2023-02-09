@@ -29,7 +29,7 @@ jobs:
         docker-compose exec -T sandbox pip install -e /home/jovyan/dea-notebooks/Tools
 
         # Run pytest using `--nbval-lax` which tests if notebookks run sucessfully or error 
-        docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest --nbval-lax Beginners_guide DEA_datasets Frequently_used_code/Calculating_band_indices.ipynb Frequently_used_code/Exporting_GeoTIFFs.ipynb Frequently_used_code/Generating_composites.ipynb Frequently_used_code/Image_segmentation.ipynb Frequently_used_code/Opening_GeoTIFFs_NetCDFs.ipynb Frequently_used_code/Pansharpening.ipynb Frequently_used_code/Rasterize_vectorize.ipynb Frequently_used_code/Using_load_ard.ipynb Frequently_used_code/Virtual_products.ipynb"
+        docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest --nbval-lax Beginners_guide DEA_datasets Frequently_used_code/Contour_extraction.ipynb Frequently_used_code/Calculating_band_indices.ipynb Frequently_used_code/Downloading_data_with_STAC.ipynb Frequently_used_code/Exporting_GeoTIFFs.ipynb Frequently_used_code/Generating_composites.ipynb Frequently_used_code/Image_segmentation.ipynb Frequently_used_code/Opening_GeoTIFFs_NetCDFs.ipynb Frequently_used_code/Pansharpening.ipynb Frequently_used_code/Polygon_drill.ipynb Frequently_used_code/Rasterize_vectorize.ipynb Frequently_used_code/Using_load_ard.ipynb Frequently_used_code/Virtual_products.ipynb"
 
         # Shut down docker
         docker-compose down
