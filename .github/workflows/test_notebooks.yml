@@ -23,8 +23,7 @@ jobs:
 #        docker-compose exec -T index datacube product list
 
     - name: Test with pytest
-      run: |
-        
+      run: |        
         # Download and unzip tide modelling files
 #        mkdir tide_models
 #        chmod a+rw tide_models
