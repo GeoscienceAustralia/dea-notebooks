@@ -44,4 +44,3 @@ services:
      entrypoint: bash -c 'sleep infinity'
      volumes:
        - .:/dea-notebooks
-       - ./tide_models/:/var/share/tide_models
