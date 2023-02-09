@@ -31,12 +31,12 @@ jobs:
 
         # First copy DEA Notebooks into the home directory where it lives in the Sandbox
         docker-compose exec -T sandbox cp -r /dea-notebooks /home/jovyan/dea-notebooks
-        docker-compose exec -T sandbox cp -r /dea-notebooks/tide_models /var/share/tide_models
+        docker-compose exec -T sandbox mkdir -p /var/share/tide_models && cp -r /dea-notebooks/tide_models /var/share/tide_models/
 
         # Pip install `dea_tools` from the local Tools directory
         docker-compose exec -T sandbox pip install -e /home/jovyan/dea-notebooks/Tools
 
-        # Run pytest using `--nbval-lax` which tests if notebooks run sucessfully or error 
+        # Run pytest using `--nbval-lax` which tests if notebookks run sucessfully or error 
         docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest --nbval-lax Frequently_used_code/Tidal_modelling.ipynb"
 
         # Shut down docker
