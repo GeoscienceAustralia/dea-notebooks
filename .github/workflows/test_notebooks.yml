@@ -16,24 +16,20 @@ jobs:
     - name: Set up containers
       run: |
         docker-compose up -d
+    - name: Set up Datacube
+      run: |
+        docker-compose exec -T index setup_test_datacube.sh
+        docker-compose exec -T index datacube product list
     - name: Test with pytest
       run: |
-        
-        # Download and unzip tide modelling files
-        # mkdir tide_models
-        # chmod a+rw tide_models
-        wget https://www.dropbox.com/s/vj2rqkwy9al144w/tide_models.zip?dl=1 -O tide_models.zip
-        unzip tide_models.zip
-
         # First copy DEA Notebooks into the home directory where it lives in the Sandbox
         docker-compose exec -T sandbox cp -r /dea-notebooks /home/jovyan/dea-notebooks
-        docker-compose exec -T sandbox chmod a+rw /var/share/ && mkdir -p /var/share/tide_models && cp -r /dea-notebooks/tide_models /var/share/tide_models/
 
         # Pip install `dea_tools` from the local Tools directory
         docker-compose exec -T sandbox pip install -e /home/jovyan/dea-notebooks/Tools
 
         # Run pytest using `--nbval-lax` which tests if notebookks run sucessfully or error 
-        docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest --nbval-lax Frequently_used_code/Tidal_modelling.ipynb"
+        docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest --nbval-lax Beginners_guide DEA_datasets Frequently_used_code/Calculating_band_indices.ipynb Frequently_used_code/Exporting_GeoTIFFs.ipynb Frequently_used_code/Generating_composites.ipynb Frequently_used_code/Image_segmentation.ipynb Frequently_used_code/Opening_GeoTIFFs_NetCDFs.ipynb Frequently_used_code/Pansharpening.ipynb Frequently_used_code/Rasterize_vectorize.ipynb Frequently_used_code/Using_load_ard.ipynb Frequently_used_code/Virtual_products.ipynb"
 
         # Shut down docker
         docker-compose down
