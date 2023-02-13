@@ -23,7 +23,6 @@ Last modified: February 2023
 # Import required packages
 import os
 import zipfile
-import numexpr
 import datetime
 import requests
 import warnings
@@ -37,7 +36,6 @@ import skimage.transform
 import sklearn.decomposition
 from skimage.exposure import match_histograms
 from skimage.color import rgb2hsv, hsv2rgb
-from osgeo import gdal
 from random import randint
 from collections import Counter
 from odc.algo import mask_cleanup
