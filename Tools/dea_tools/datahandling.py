@@ -17,13 +17,12 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: January 2023
+Last modified: February 2023
 """
 
 # Import required packages
 import os
 import zipfile
-import numexpr
 import datetime
 import requests
 import warnings
@@ -37,7 +36,6 @@ import skimage.transform
 import sklearn.decomposition
 from skimage.exposure import match_histograms
 from skimage.color import rgb2hsv, hsv2rgb
-from osgeo import gdal
 from random import randint
 from collections import Counter
 from odc.algo import mask_cleanup
@@ -100,24 +98,25 @@ def _common_bands(dc, products):
 def load_ard(
     dc,
     products=None,
+    cloud_mask='fmask',
     min_gooddata=0.00,
-    fmask_categories=["valid", "snow", "water"],
-    s2cloudless_categories=["valid"],
-    mask_pixel_quality="fmask",
+    mask_pixel_quality=True,
     mask_filters=None,
     mask_contiguity=False,
+    fmask_categories=["valid", "snow", "water"],
+    s2cloudless_categories=["valid"],
     ls7_slc_off=True,
-    predicate=None,
     dtype="auto",
+    predicate=None,
     **kwargs,
 ):
 
     """
-    Loads multiple Geoscience Australia Landsat or Sentinel 2
+    Load multiple Geoscience Australia Landsat or Sentinel 2
     Collection 3 products (e.g. Landsat 5, 7, 8, 9; Sentinel 2A and 2B),
-    optionally applies pixel quality and contiguity masks, and drops
-    time steps that contain greater than a minimum proportion of
-    good quality (e.g. non-cloudy or shadowed) pixels.
+    optionally apply pixel quality/cloud masking and contiguity masks, 
+    and drop time steps that contain greater than a minimum proportion 
+    of good quality (e.g. non-cloudy or shadowed) pixels.
 
     The function supports loading the following Landsat products:
         * ga_ls5t_ard_3
@@ -128,53 +127,47 @@ def load_ard(
     And Sentinel-2 products:
         * ga_s2am_ard_3
         * ga_s2bm_ard_3
+        
+    Cloud masking can be performed using the Fmask (Function of Mask)
+    cloud mask for Landsat and Sentinel-2, and the s2cloudless 
+    (Sentinel Hub cloud detector for Sentinel-2 imagery) cloud mask for 
+    Sentinel-2.
 
-    Last modified: January 2023
+    Last modified: February 2023
 
     Parameters
     ----------
     dc : datacube Datacube object
-        The Datacube to connect to, i.e. `dc = datacube.Datacube()`.
+        The Datacube to connect to, i.e. ``dc = datacube.Datacube()``.
         This allows you to also use development datacubes if required.
     products : list
         A list of product names to load. Valid options are
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3', 'ga_ls9c_ard_3']
         for Landsat, ['ga_s2am_ard_3', 'ga_s2bm_ard_3'] for Sentinel 2.
+    cloud_mask : string, optional
+        The cloud mask used by the function. This is used for both 
+        masking out poor quality pixels (e.g. clouds) if
+        ``mask_pixel_quality=True``, and for calculating the 
+        ``min_gooddata`` percentage when dropping cloudy or low quality
+        satellite observations. Two cloud masks are supported:
+            * 'fmask': (default; available for Landsat, Sentinel-2)
+            * 's2cloudless' (Sentinel-2 only)
     min_gooddata : float, optional
-        An optional float giving the minimum percentage of good quality
-        pixels required for a satellite observation to be loaded.
-        Defaults to 0.00 which will return all observations regardless of
-        pixel quality (set to e.g. 0.99 to return only observations with
-        more than 99% good quality pixels).
-    fmask_categories : list, optional
-        A list of Fmask cloud mask categories to consider as good
-        quality pixels when calculating `min_gooddata` and when masking
-        data by pixel quality if ``mask_pixel_quality=True``.
-        The default is `['valid', 'snow', 'water']`; all other Fmask
-        categories ('cloud', 'shadow', 'nodata') will be treated as low
-        quality pixels. Choose from: 'nodata', 'valid', 'cloud',
-        'shadow', 'snow', and 'water'.
-    s2cloudless_categories : list, optional
-        A list of s2cloudless cloud mask categories to consider as good
-        quality pixels when calculating `min_gooddata` and when masking
-        data by pixel quality if ``mask_pixel_quality=True``. The default
-        is `['valid']`; all other s2cloudless categories ('cloud',
-        'nodata') will be treated as low quality pixels. Choose from:
-        'nodata', 'valid', or 'cloud'.
+        The minimum percentage of good quality pixels required for a 
+        satellite observation to be loaded. Defaults to 0.00 which will
+        return all observations regardless of pixel quality (set to e.g.
+        0.99 to return only observations with more than 99% good quality
+        pixels).
     mask_pixel_quality : str or bool, optional
-        Whether to automatically mask out poor quality (e.g. cloudy)
-        pixels by setting them as nodata. Two pixel quality/cloud masks
-        are supported:
-            * ``mask_pixel_quality='fmask'`` (for Landsat, Sentinel-2)
-            * ``mask_pixel_quality='s2cloudless'`` (for Sentinel-2 only)
-        Depending on the choice of cloud mask, the function will
-        identify good quality pixels using the categories passed to
-        `fmask_categories` or `s2cloudless_categories' above.
-        The default is 'fmask'; set to False to turn off pixel quality
-        masking completely. Poor quality pixels will be set to NaN (and
-        convert all data to `float32`) if  `dtype='auto'`, or be set to
-        the data's native nodata value (usually -999) if `dtype='native'
-        (see 'dtype' below for more details).
+        Whether to mask out poor quality (e.g. cloudy) pixels by setting 
+        them as nodata. Depending on the choice of cloud mask, the 
+        function will identify good quality pixels using the categories 
+        passed to the ``fmask_categories`` or ``s2cloudless_categories``
+        params. Set to False to turn off pixel quality masking completely. 
+        Poor quality pixels will be set to NaN (and convert all data to 
+        `float32`) if  ``dtype='auto'``, or be set to the data's native 
+        nodata value (usually -999) if ``dtype='native'`` (see 'dtype' 
+        below for more details).
     mask_filters : iterable of tuples, optional
         Iterable tuples of morphological operations - ("<operation>", <radius>)
         to apply to the inverted pixel quality mask, where:
@@ -199,6 +192,25 @@ def load_ard(
         Non-contiguous pixels will be set to NaN if `dtype='auto'`, or
         set to the data's native nodata value if `dtype='native'` (see
         'dtype' below).
+    fmask_categories : list, optional
+        A list of Fmask cloud mask categories to consider as good
+        quality pixels when calculating `min_gooddata` and when masking
+        data by pixel quality if ``mask_pixel_quality=True``.
+        The default is ``['valid', 'snow', 'water']``; all other Fmask
+        categories ('cloud', 'shadow', 'nodata') will be treated as low
+        quality pixels. Choose from: 'nodata', 'valid', 'cloud',
+        'shadow', 'snow', and 'water'.
+    s2cloudless_categories : list, optional
+        A list of s2cloudless cloud mask categories to consider as good
+        quality pixels when calculating `min_gooddata` and when masking
+        data by pixel quality if ``mask_pixel_quality=True``. The default
+        is `['valid']`; all other s2cloudless categories ('cloud',
+        'nodata') will be treated as low quality pixels. Choose from:
+        'nodata', 'valid', or 'cloud'.
+    ls7_slc_off : bool, optional
+        An optional boolean indicating whether to include data from
+        after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to
+        True, which keeps all Landsat 7 observations > May 31 2003.
     dtype : string, optional
         Controls the data type/dtype that layers are coerced to after
         loading. Valid values: 'native', 'auto', and 'float{16|32|64}'.
@@ -207,10 +219,6 @@ def load_ard(
         native data type of the data. Be aware that if data is loaded
         in its native dtype, nodata and masked pixels will be returned
         with the data's native nodata value (typically -999), not NaN.
-    ls7_slc_off : bool, optional
-        An optional boolean indicating whether to include data from
-        after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to
-        True, which keeps all Landsat 7 observations > May 31 2003.
     predicate : function, optional
         DEPRECATED: Please use `dataset_predicate` instead.
         An optional function that can be passed in to restrict the datasets that
@@ -284,13 +292,12 @@ def load_ard(
             "True, or False."
         )
 
-    # Set pixel quality (PQ) band depending on `mask_pixel_quality`;
-    # Fmask if True, False or "fmask", s2cloudless if "s2cloudless"
-    if mask_pixel_quality in ("fmask", True, False):
+    # Set pixel quality (PQ) band depending on `cloud_mask`
+    if cloud_mask == 'fmask': 
         pq_band = "oa_fmask"
         pq_categories = fmask_categories
 
-    elif mask_pixel_quality == "s2cloudless":
+    elif cloud_mask == "s2cloudless":
         pq_band = "oa_s2cloudless_mask"
         pq_categories = s2cloudless_categories
 
@@ -302,12 +309,11 @@ def load_ard(
                 "Landsat products. Please set `mask_pixel_quality` to "
                 "'fmask' or False."
             )
-
     else:
 
         raise ValueError(
-            f"Unsupported value '{mask_pixel_quality}' passed to "
-            "`mask_pixel_quality`. Please provide either 'fmask', "
+            f"Unsupported value '{cloud_mask}' passed to "
+            "`cloud_mask`. Please provide either 'fmask', "
             "'s2cloudless', True, or False."
         )
 
@@ -454,7 +460,7 @@ def load_ard(
     if min_gooddata > 0.0:
 
         # Compute good data for each observation as % of total pixels
-        print("Counting good quality pixels for each time step")
+        print(f"Counting good quality pixels for each time step using {cloud_mask}")
         data_perc = pq_mask.sum(axis=[1, 2], dtype="int32") / (
             pq_mask.shape[1] * pq_mask.shape[2]
         )
@@ -496,7 +502,7 @@ def load_ard(
 
     # Add pixel quality mask to combined mask
     if mask_pixel_quality:
-        print(f"Applying pixel quality/cloud mask ({pq_band})")
+        print(f"Applying {cloud_mask} pixel quality/cloud mask")
         mask = pq_mask
 
     # Add contiguity mask to combined mask

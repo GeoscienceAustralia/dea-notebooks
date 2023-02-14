@@ -9,6 +9,7 @@ bandindices
 bom
 Brovey
 changefilmstrips
+conda
 creativecommons
 crophealth
 CRSs
