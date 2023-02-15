@@ -53,6 +53,8 @@ s3-to-dc 's3://dea-public-data/hltc/v2.0.0/composite/high-tide/lon_121/lat_-18/*
 s3-to-dc 's3://dea-public-data/hltc/v2.0.0/composite/low-tide/lon_121/lat_-18/*.yaml' --no-sign-request --skip-lineage 'low_tide_comp_20p'
 
 # Index Sentinel-2
+s3-to-dc 's3://dea-public-data/baseline/ga_s2am_ard_3/54/KVF/2019/12/16/20191216T020938/*.json' --no-sign-request --skip-lineage --stac 'ga_s2am_ard_3'
+s3-to-dc 's3://dea-public-data/baseline/ga_s2am_ard_3/54/KWF/2020/03/15/20200315T022254/*.json' --no-sign-request --skip-lineage --stac 'ga_s2am_ard_3'
 s3-to-dc 's3://dea-public-data/baseline/ga_s2am_ard_3/55/LBD/2018/09/09/20180909T020622/*.json' --no-sign-request --skip-lineage --stac 'ga_s2am_ard_3'
 s3-to-dc 's3://dea-public-data/baseline/ga_s2am_ard_3/55/LBD/2018/09/19/20180919T021041/*.json' --no-sign-request --skip-lineage --stac 'ga_s2am_ard_3'
 s3-to-dc 's3://dea-public-data/baseline/ga_s2am_ard_3/55/LBD/2018/09/29/20180929T020742/*.json' --no-sign-request --skip-lineage --stac 'ga_s2am_ard_3'
