@@ -48,10 +48,8 @@ from datacube.utils.masking import mask_invalid_data
 import dea_tools.app.widgetconstructors as deawidgets
 from dea_tools.dask import create_local_dask_cluster
 from dea_tools.spatial import reverse_geocode
-from dea_tools.datahandling import pan_sharpen_brovey
 
 import warnings
-
 warnings.filterwarnings("ignore")
 
 # WMS params and satellite style bands
