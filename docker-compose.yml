@@ -39,6 +39,7 @@ services:
        - AWS_ACCESS_KEY_ID=fake_id
        - AWS_SECRET_ACCESS_KEY=fake_key
        - AWS_NO_SIGN_REQUEST=YES
+       - GDAL_HTTP_MAX_RETRY=3
      depends_on:
         - postgres
      entrypoint: bash -c 'sleep infinity'
