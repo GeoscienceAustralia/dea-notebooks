@@ -22,7 +22,6 @@ More complex case study-based workflows demonstrating how DEA can be used to add
    Radar_water_detection.ipynb
    Shipping_lane_identification.ipynb
    Surface_area_duration.ipynb
-   Subpixel_waterbodies.ipynb
    Urban_change_detection.ipynb
    Vegetation_phenology.ipynb
    Wetness_stream_gauge_correlations.ipynb

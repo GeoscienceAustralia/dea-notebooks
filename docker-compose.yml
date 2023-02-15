@@ -29,7 +29,7 @@ services:
      entrypoint: bash -c 'sleep infinity'
 
   sandbox:
-     image: geoscienceaustralia/sandbox:1.0.9
+     image: geoscienceaustralia/sandbox:latest
      environment:
        - DB_HOSTNAME=postgres
        - DB_USERNAME=postgres
