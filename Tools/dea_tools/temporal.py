@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
     
-Last modified: September 2021    
+Last modified: February 2023
 '''
 
 import sys
@@ -112,7 +112,7 @@ def _vsos(da, pos, method_sos="first"):
     # find where the first order slope is postive
     pos_green_deriv = green_deriv.where(green_deriv > 0)
     # positive slopes on greening side
-    pos_greenup = greenup.where(~xr.ufuncs.isnan(pos_green_deriv))
+    pos_greenup = greenup.where(~np.isnan(pos_green_deriv))
     # find the median
     median = pos_greenup.median("time")
     # distance of values from median
@@ -124,7 +124,7 @@ def _vsos(da, pos, method_sos="first"):
 
     if method_sos == "median":
         # find index (argmin) where distance is smallest absolute value
-        idx = allNaN_arg(xr.ufuncs.fabs(distance), "time", "min").astype("int16")
+        idx = allNaN_arg(np.fabs(distance), "time", "min").astype("int16")
 
     return pos_greenup.isel(time=idx)
 
@@ -154,7 +154,7 @@ def _veos(da, pos, method_eos="last"):
     # find the first order slopes
     senesce_deriv = senesce.differentiate("time")
     # find where the fst order slope is negative
-    neg_senesce_deriv = senesce_deriv.where(~xr.ufuncs.isnan(senesce_deriv < 0))
+    neg_senesce_deriv = senesce_deriv.where(~np.isnan(senesce_deriv < 0))
     # negative slopes on senescing side
     neg_senesce = senesce.where(neg_senesce_deriv)
     # find medians
@@ -168,7 +168,7 @@ def _veos(da, pos, method_eos="last"):
 
     if method_eos == "median":
         # index where median occurs
-        idx = allNaN_arg(xr.ufuncs.fabs(distance), "time", "min").astype("int16")
+        idx = allNaN_arg(np.fabs(distance), "time", "min").astype("int16")
 
     return neg_senesce.isel(time=idx)
 
@@ -233,7 +233,7 @@ def xr_phenology(
     xarray.DataArray containing a timeseries of a
     vegetation index like NDVI.
 
-    last modified June 2020
+    Last modified February 2023
 
     Parameters
     ----------
