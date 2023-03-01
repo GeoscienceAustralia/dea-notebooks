@@ -11,28 +11,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
-    - name: Set up containers
+    - name: Set up Datacube and Test
       run: |
         docker-compose up -d
-    - name: Set up Datacube
-      run: |
-        docker-compose exec -T index setup_test_datacube.sh
-        docker-compose exec -T index datacube product list
-    - name: Test with pytest
-      run: |
-        # First copy DEA Notebooks into the home directory where it lives in the Sandbox
-        docker-compose exec -T sandbox cp -r /dea-notebooks /home/jovyan/dea-notebooks
-
-        # Pip install `dea_tools` from the local Tools directory
-        docker-compose exec -T sandbox pip install -e /home/jovyan/dea-notebooks/Tools
-
-        # Run pytest using `--nbval-lax` which tests if notebookks run sucessfully or error 
-        docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest --durations=10 --nbval-lax Beginners_guide DEA_datasets Frequently_used_code/Contour_extraction.ipynb Frequently_used_code/Calculating_band_indices.ipynb Frequently_used_code/Downloading_data_with_STAC.ipynb Frequently_used_code/Exporting_GeoTIFFs.ipynb Frequently_used_code/Generating_composites.ipynb Frequently_used_code/Image_segmentation.ipynb Frequently_used_code/Opening_GeoTIFFs_NetCDFs.ipynb Frequently_used_code/Pansharpening.ipynb Frequently_used_code/Polygon_drill.ipynb Frequently_used_code/Principal_component_analysis.ipynb Frequently_used_code/Rasterize_vectorize.ipynb Frequently_used_code/Using_load_ard.ipynb Frequently_used_code/Virtual_products.ipynb"
-
-        # Shut down docker
-        docker-compose down
+        docker-compose exec -T sandbox ./dea-notebooks/Tests/setup_test_datacube.sh
+        docker-compose exec -T sandbox ./dea-notebooks/Tests/test_notebooks.sh
 
 #    - name: Setup upterm session
 #      uses: lhotari/action-upterm@v1

@@ -13,23 +13,8 @@ services:
       - 5432
     restart: always
 
-  index:
-     image: opendatacube/datacube-index:latest
-     environment:
-        - DB_HOSTNAME=postgres
-        - DB_USERNAME=postgres
-        - DB_PASSWORD=opendatacubepassword
-        - DB_DATABASE=postgres
-        - DB_PORT=5432
-        - AWS_DEFAULT_REGION=ap-southeast-2
-     volumes:
-        - ./Tests/setup_test_datacube.sh:/usr/local/bin/setup_test_datacube.sh
-     depends_on:
-        - postgres
-     entrypoint: bash -c 'sleep infinity'
-
   sandbox:
-     image: geoscienceaustralia/sandbox:latest
+     image: 538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:latest
      environment:
        - DB_HOSTNAME=postgres
        - DB_USERNAME=postgres
@@ -44,4 +29,4 @@ services:
         - postgres
      entrypoint: bash -c 'sleep infinity'
      volumes:
-       - .:/dea-notebooks
+       - ${GITHUB_WORKSPACE}:/home/jovyan/dea-notebooks
