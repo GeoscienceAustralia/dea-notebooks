@@ -34,7 +34,7 @@ import pandas as pd
 import numexpr as ne
 import dask.array as da
 import xarray as xr
-from osgeo import gdal
+# from osgeo import gdal
 from random import randint
 from collections import Counter
 from odc.algo import mask_cleanup
@@ -432,67 +432,67 @@ def load_ard(dc,
         return ds.compute()
 
 
-def array_to_geotiff(fname, data, geo_transform, projection,
-                     nodata_val=0, dtype=gdal.GDT_Float32):
-    """
-    Create a single band GeoTIFF file with data from an array.
+# def array_to_geotiff(fname, data, geo_transform, projection,
+#                      nodata_val=0, dtype=gdal.GDT_Float32):
+#     """
+#     Create a single band GeoTIFF file with data from an array.
 
-    Because this works with simple arrays rather than xarray datasets
-    from DEA, it requires geotransform info ("(upleft_x, x_size,
-    x_rotation, upleft_y, y_rotation, y_size)") and projection data
-    (in "WKT" format) for the output raster. These are typically
-    obtained from an existing raster using the following GDAL calls:
+#     Because this works with simple arrays rather than xarray datasets
+#     from DEA, it requires geotransform info ("(upleft_x, x_size,
+#     x_rotation, upleft_y, y_rotation, y_size)") and projection data
+#     (in "WKT" format) for the output raster. These are typically
+#     obtained from an existing raster using the following GDAL calls:
 
-        import gdal
-        gdal_dataset = gdal.Open(raster_path)
-        geotrans = gdal_dataset.GetGeoTransform()
-        prj = gdal_dataset.GetProjection()
+#         import gdal
+#         gdal_dataset = gdal.Open(raster_path)
+#         geotrans = gdal_dataset.GetGeoTransform()
+#         prj = gdal_dataset.GetProjection()
 
-    ...or alternatively, directly from an xarray dataset:
+#     ...or alternatively, directly from an xarray dataset:
 
-        geotrans = xarraydataset.geobox.transform.to_gdal()
-        prj = xarraydataset.geobox.crs.wkt
+#         geotrans = xarraydataset.geobox.transform.to_gdal()
+#         prj = xarraydataset.geobox.crs.wkt
 
-    Parameters
-    ----------
-    fname : str
-        Output geotiff file path including extension
-    data : numpy array
-        Input array to export as a geotiff
-    geo_transform : tuple
-        Geotransform for output raster; e.g. "(upleft_x, x_size,
-        x_rotation, upleft_y, y_rotation, y_size)"
-    projection : str
-        Projection for output raster (in "WKT" format)
-    nodata_val : int, optional
-        Value to convert to nodata in the output raster; default 0
-    dtype : gdal dtype object, optional
-        Optionally set the dtype of the output raster; can be
-        useful when exporting an array of float or integer values.
-        Defaults to gdal.GDT_Float32
+#     Parameters
+#     ----------
+#     fname : str
+#         Output geotiff file path including extension
+#     data : numpy array
+#         Input array to export as a geotiff
+#     geo_transform : tuple
+#         Geotransform for output raster; e.g. "(upleft_x, x_size,
+#         x_rotation, upleft_y, y_rotation, y_size)"
+#     projection : str
+#         Projection for output raster (in "WKT" format)
+#     nodata_val : int, optional
+#         Value to convert to nodata in the output raster; default 0
+#     dtype : gdal dtype object, optional
+#         Optionally set the dtype of the output raster; can be
+#         useful when exporting an array of float or integer values.
+#         Defaults to gdal.GDT_Float32
 
-    """
-    warnings.warn(
-        "The `array_to_geotiff` function is deprecated, and will "
-        "be removed from future versions of `dea-tools`.",
-        FutureWarning)
+#     """
+#     warnings.warn(
+#         "The `array_to_geotiff` function is deprecated, and will "
+#         "be removed from future versions of `dea-tools`.",
+#         FutureWarning)
 
-    # Set up driver
-    driver = gdal.GetDriverByName('GTiff')
+#     # Set up driver
+#     driver = gdal.GetDriverByName('GTiff')
 
-    # Create raster of given size and projection
-    rows, cols = data.shape
-    dataset = driver.Create(fname, cols, rows, 1, dtype)
-    dataset.SetGeoTransform(geo_transform)
-    dataset.SetProjection(projection)
+#     # Create raster of given size and projection
+#     rows, cols = data.shape
+#     dataset = driver.Create(fname, cols, rows, 1, dtype)
+#     dataset.SetGeoTransform(geo_transform)
+#     dataset.SetProjection(projection)
 
-    # Write data to array and set nodata values
-    band = dataset.GetRasterBand(1)
-    band.WriteArray(data)
-    band.SetNoDataValue(nodata_val)
+#     # Write data to array and set nodata values
+#     band = dataset.GetRasterBand(1)
+#     band.WriteArray(data)
+#     band.SetNoDataValue(nodata_val)
 
-    # Close file
-    dataset = None
+#     # Close file
+#     dataset = None
 
 
 def mostcommon_crs(dc, product, query):
