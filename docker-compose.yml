@@ -29,4 +29,4 @@ services:
         - postgres
      entrypoint: bash -c 'sleep infinity'
      volumes:
-       - ${GITHUB_WORKSPACE}:/home/jovyan/dea-notebooks
+       - ${GITHUB_WORKSPACE}:/tmp/dea-notebooks

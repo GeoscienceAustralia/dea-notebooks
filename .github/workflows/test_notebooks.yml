@@ -30,8 +30,8 @@ jobs:
     - name: Set up Datacube and Test
       run: |
         docker-compose up -d
-        docker-compose exec -T sandbox ./dea-notebooks/Tests/setup_test_datacube.sh
-        docker-compose exec -T sandbox ./dea-notebooks/Tests/test_notebooks.sh
+        # docker-compose exec -T sandbox ./dea-notebooks/Tests/setup_test_datacube.sh
+        docker-compose exec -T sandbox /tmp/dea-notebooks/Tests/test_notebooks.sh
 
 #    - name: Setup upterm session
 #      uses: lhotari/action-upterm@v1
