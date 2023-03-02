@@ -123,31 +123,9 @@ class UploadCommand(Command):
 
         sys.exit()
 
-
-# Versioning magic.
-VERSION_FILE_PATH = Path('dea_tools/__version__.py')
-about = {}
-try:
-    version = setuptools_scm.get_version(
-        root='..',
-        write_to='Tools' / VERSION_FILE_PATH,
-        relative_to=__file__,
-        local_scheme=lambda _: '')
-except (LookupError, FileNotFoundError):
-    # python -m build will trip the FNFError
-    try:
-        # no .git folder, so read from __version__.py
-        with open(VERSION_FILE_PATH) as f_version:
-            exec(f_version.read(), about)
-            version = about['version']
-    except FileNotFoundError:
-        # No __version__.py, yikes
-        raise RuntimeError('Build in-place with --use-feature=in-tree-build.')
-
 # Where the magic happens:
 setup(
     name=NAME,
-    version=version,
     description=DESCRIPTION,
     long_description=long_description,
     long_description_content_type='text/x-rst',
@@ -160,6 +138,11 @@ setup(
     # entry_points={
     #     'console_scripts': ['mycli=mymodule:cli'],
     # },
+    use_scm_version = {
+        "root": '..',
+        "relative_to": __file__,
+        "local_scheme": "no-local-version",
+        },
     install_requires=REQUIRED if not IS_DEA else [],
     extras_require=EXTRAS if not IS_DEA else {k: [] for k in EXTRAS},
     include_package_data=True,
