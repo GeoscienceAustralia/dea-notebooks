@@ -28,5 +28,6 @@ services:
      depends_on:
         - postgres
      entrypoint: bash -c 'sleep infinity'
+     user: ${CURRENT_UID}
      volumes:
-       - ${GITHUB_WORKSPACE}:/home/jovyan/dea-notebooks
+       - ${GITHUB_WORKSPACE}/dea-notebooks:/home/jovyan/dea-notebooks
