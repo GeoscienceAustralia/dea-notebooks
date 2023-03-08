@@ -41,6 +41,9 @@ import dea_tools.app.widgetconstructors as deawidgets
 from dea_tools.coastal import get_coastlines, transect_distances
 
 
+WMS_ADDRESS = "https://geoserver.dea.ga.gov.au/geoserver/wms"
+
+
 def make_box_layout():
     return Layout(
         #          border='solid 1px black',
@@ -149,7 +152,7 @@ class transect_app(HBox):
         draw_control = deawidgets.create_drawcontrol(desired_drawtools)
 
         # Load DEACoastLines WMS
-        deacl_url = 'https://geoserver.dea.ga.gov.au/geoserver/wms'
+        deacl_url = WMS_ADDRESS
         deacl_layer = 'dea:DEACoastlines'
         deacoastlines = WMSLayer(
             url=deacl_url,
@@ -363,7 +366,7 @@ class transect_app(HBox):
         self.product = change.new
 
         # Load DEACoastLines WMS
-        deacl_url = "https://geoserver.dea.ga.gov.au/geoserver/wms"
+        deacl_url = WMS_ADDRESS
         deacl_layer = "dea:DEACoastlines"
         deacoastlines = WMSLayer(
             url=deacl_url,
