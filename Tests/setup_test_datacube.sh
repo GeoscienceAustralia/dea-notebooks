@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+
+# pipe the exit code to the parent process
 set -ex
 set -o pipefail
 
