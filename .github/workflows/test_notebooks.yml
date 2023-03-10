@@ -32,6 +32,7 @@ jobs:
     - name: Set up Datacube and Test
       run: |
         sudo chown -R 1000:100 ./dea-notebooks
+        cd ./dea-notebooks 
         CURRENT_UID=1000:100 docker-compose up -d
         docker-compose exec -T sandbox ./dea-notebooks/Tests/setup_test_datacube.sh
         docker-compose exec -T sandbox ./dea-notebooks/Tests/test_notebooks.sh
