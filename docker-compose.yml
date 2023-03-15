@@ -14,7 +14,7 @@ services:
     restart: always
 
   sandbox:
-     image: 538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:latest
+     image: 538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable
      environment:
        - DB_HOSTNAME=postgres
        - DB_USERNAME=postgres
