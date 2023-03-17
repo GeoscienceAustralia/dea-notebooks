@@ -83,6 +83,7 @@ def points_on_line(gdf, index, distance=30):
 
     return points_gdf
 
+
 def _da_to_geo(da, crs):
     """
     Helper function that uses `odc-geo` to ensure that an 
