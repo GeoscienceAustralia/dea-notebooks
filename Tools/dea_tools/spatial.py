@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: November 2022
+Last modified: March 2023
 
 '''
 
@@ -42,6 +42,46 @@ from datacube.utils.geometry import assign_crs
 from datacube.utils.geometry import CRS, Geometry
 from shapely.geometry import LineString, MultiLineString, shape, mapping
 
+
+def points_on_line(gdf, index, distance=30):
+    """
+    Generates evenly-spaced point features along a specific line feature
+    in a `geopandas.GeoDataFrame`.
+    Parameters:
+    -----------
+    gdf : geopandas.GeoDataFrame
+        A `geopandas.GeoDataFrame` containing line features with an
+        index and CRS.
+    index : string or int
+        An value giving the index of the line to generate points along
+    distance : integer or float, optional
+        A number giving the interval at which to generate points along
+        the line feature. Defaults to 30, which will generate a point
+        at every 30 metres along the line.
+    Returns:
+    --------
+    points_gdf : geopandas.GeoDataFrame
+        A `geopandas.GeoDataFrame` containing point features at every
+        `distance` along the selected line.
+    """
+
+    # Select individual line to generate points along
+    line_feature = gdf.loc[[index]].geometry
+
+    # If multiple features are returned, take unary union
+    if line_feature.shape[0] > 0:
+        line_feature = line_feature.unary_union
+    else:
+        line_feature = line_feature.iloc[0]
+
+    # Generate points along line and convert to geopandas.GeoDataFrame
+    points_line = [
+        line_feature.interpolate(i)
+        for i in range(0, int(line_feature.length), distance)
+    ]
+    points_gdf = gpd.GeoDataFrame(geometry=points_line, crs=gdf.crs)
+
+    return points_gdf
 
 def _da_to_geo(da, crs):
     """
