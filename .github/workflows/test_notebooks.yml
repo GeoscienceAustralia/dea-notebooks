@@ -5,13 +5,17 @@ on:
   push:
     branches: [ develop, stable, nbtests ]
     paths-ignore:
-      - '**.md'
-      - '**.rst'
+      - '**/*.md' # ignore markdown files
+      - '**/*.rst' # ignore restructured text files
+      - '.github/**' # ignore anything in .github folder
+      - '!.github/workflows/test_notebooks.yml' # except test_notebooks.yml
   pull_request:
     branches: [ develop, stable ]
     paths-ignore:
-      - '**.md'
-      - '**.rst'
+      - '**/*.md'
+      - '**/*.rst'
+      - '.github/**'
+      - '!.github/workflows/test_notebooks.yml'
 
 permissions:
   id-token: write   # This is required for requesting the JSON web token
