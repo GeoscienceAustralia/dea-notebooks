@@ -21,7 +21,7 @@ Scientific papers
 
 - Bishop-Taylor, R., Nanson, R., Sagar, S., Lymburner, L., 2021. Mapping Australia's dynamic coastline at mean sea level using three decades of Landsat imagery. Remote Sensing of Environment, 267, 112734. https://doi.org/10.1016/j.rse.2021.112734
 
-- Tsai, Ya-Lun & Tseng, Kuo-Hsin. (2023). Monitoring Multidecadal Coastline Change and Reconstructing Tidal Flat Topography. International Journal of Applied Earth Observation and Geoinformation. 118. 103260. 10.1016/j.jag.2023.103260. 
+- Tsai, Ya-Lun & Tseng, Kuo-Hsin., 2023. Monitoring Multidecadal Coastline Change and Reconstructing Tidal Flat Topography. International Journal of Applied Earth Observation and Geoinformation, 118, 103260. https://doi.org/10.1016/j.jag.2023.103260
 
 - Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806.
 
