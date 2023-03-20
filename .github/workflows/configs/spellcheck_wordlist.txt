@@ -39,6 +39,7 @@ fbf
 Fäth
 Förtsch
 Gb
+Geoinformation
 geojson
 geomedian
 Geopython
@@ -72,12 +73,15 @@ ipynb
 jpg
 Jupyter
 landcover
+Lun
 Lymburner
+Kuo
 maxdepth
 McPhail
 mdpi
 Metternicht
 miningrehab
+Multidecadal
 Nanson
 NDVI
 NDWI
@@ -135,6 +139,8 @@ Thiel
 timeseries
 toctree
 toolchain
+Tsai
+Tseng
 ubuntu
 Ullmann
 Usback
