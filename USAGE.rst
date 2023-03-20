@@ -19,6 +19,8 @@ Scientific papers
 
 - Chen, Y., Guerschman, J., Shendryk, Y., Henry, D., Harrison, M.T., 2021. Estimating Pasture Biomass Using Sentinel-2 Imagery and Machine Learning. Remote Sens. 2021, Vol. 13, Page 603 13, 603. https://doi.org/10.3390/RS13040603
 
+- Choo, J., Cherukuru, N., Lehmann, E., Paget, M., Mujahid, A., Martin, P. and Müller, M., 2022. Spatial and temporal dynamics of suspended sediment concentrations in coastal waters of the South China Sea, off Sarawak, Borneo: ocean colour remote sensing observations and analysis. Biogeosciences, 19(24), pp.5837-5857.
+
 - Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806.
 
 - Krause, C.E., Newey, V., Alger, M.J. and Lymburner, L., 2021. Mapping and monitoring the multi-decadal dynamics of Australia’s open waterbodies using Landsat. Remote Sensing, 13(8), p.1437.
