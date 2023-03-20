@@ -11,21 +11,32 @@ If you have used material from this repository, please reference them using this
 Scientific papers
 -----------------
 
-- Short, M.A., Norman, R.S., Pillans, B., De Deckker, P., Usback, R., Opdyke, B.N., Ransley, T.R., Gray, S. and McPhail, D.C., 2020. Two centuries of water-level records at Lake George, NSW. Australian Journal of Earth Sciences, pp.1-20. https://www.tandfonline.com/doi/pdf/10.1080/08120099.2020.1821247
-
-- Bishop-Taylor, R., Sagar, S., Lymburner, L., Alam, I. and Sixsmith, J., 2019. Sub-pixel waterline extraction: Characterising accuracy and sensitivity to indices and spectra. Remote Sensing, 11(24), p.2984. https://www.mdpi.com/2072-4292/11/24/2984
-
 - Abhik, S., Hope, P., Hendon, H.H., Hutley, L.B., Johnson, S., Drosdowsky, W. and Brown, J., 2021. The Influence of 2015-16 El Niño On the Record-Breaking Mangrove Dieback Along Northern Australia Coast. Scientific Reports, Preprint. https://doi.org/10.21203/rs.3.rs-650667/v1
-
-- Chen, Y., Guerschman, J., Shendryk, Y., Henry, D., Harrison, M.T., 2021. Estimating Pasture Biomass Using Sentinel-2 Imagery and Machine Learning. Remote Sens. 2021, Vol. 13, Page 603 13, 603. https://doi.org/10.3390/RS13040603
 
 - Bishop-Taylor, R., Nanson, R., Sagar, S., Lymburner, L., 2021. Mapping Australia's dynamic coastline at mean sea level using three decades of Landsat imagery. Remote Sensing of Environment, 267, 112734. https://doi.org/10.1016/j.rse.2021.112734
 
-- Tsai, Ya-Lun & Tseng, Kuo-Hsin., 2023. Monitoring Multidecadal Coastline Change and Reconstructing Tidal Flat Topography. International Journal of Applied Earth Observation and Geoinformation, 118, 103260. https://doi.org/10.1016/j.jag.2023.103260
+- Bishop-Taylor, R., Sagar, S., Lymburner, L., Alam, I. and Sixsmith, J., 2019. Sub-pixel waterline extraction: Characterising accuracy and sensitivity to indices and spectra. Remote Sensing, 11(24), p.2984. https://www.mdpi.com/2072-4292/11/24/2984
+
+- Chen, Y., Guerschman, J., Shendryk, Y., Henry, D., Harrison, M.T., 2021. Estimating Pasture Biomass Using Sentinel-2 Imagery and Machine Learning. Remote Sens. 2021, Vol. 13, Page 603 13, 603. https://doi.org/10.3390/RS13040603
 
 - Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806.
 
+- Krause, C.E., Newey, V., Alger, M.J. and Lymburner, L., 2021. Mapping and monitoring the multi-decadal dynamics of Australia’s open waterbodies using Landsat. Remote Sensing, 13(8), p.1437.
+
+- Nanson, R., Bishop-Taylor, R., Sagar, S., Lymburner, L., (2022). Geomorphic insights into Australia's coastal change using a national dataset derived from the multi-decadal Landsat archive. Estuarine, Coastal and Shelf Science, 265, p.107712. Available: https://doi.org/10.1016/j.ecss.2021.107712
+
+- Pucino, N., Kennedy, D.M., Young, M. and Ierodiaconou, D., 2022. Assessing the accuracy of Sentinel-2 instantaneous subpixel shorelines using synchronous UAV ground truth surveys. Remote Sensing of Environment, 282, p.113293.
+
+- Short, M.A., Norman, R.S., Pillans, B., De Deckker, P., Usback, R., Opdyke, B.N., Ransley, T.R., Gray, S. and McPhail, D.C., 2020. Two centuries of water-level records at Lake George, NSW. Australian Journal of Earth Sciences, pp.1-20. https://www.tandfonline.com/doi/pdf/10.1080/08120099.2020.1821247
+
 - Sutton, A., Fisher, A., Metternicht, G. Assessing the Accuracy of Landsat Vegetation Fractional Cover for Monitoring Australian Drylands. Remote Sens. 2022, 14, 6322. https://doi.org/10.3390/rs14246322
+
+- Teng, J., Penton, D.J., Ticehurst, C., Sengupta, A., Freebairn, A., Marvanek, S., Vaze, J., Gibbs, M., Streeton, N., Karim, F. and Morton, S., 2022. A Comprehensive Assessment of Floodwater Depth Estimation Models in Semiarid Regions. Water Resources Research, 58(11), p.e2022WR032031.
+
+- Tsai, Ya-Lun & Tseng, Kuo-Hsin., 2023. Monitoring Multidecadal Coastline Change and Reconstructing Tidal Flat Topography. International Journal of Applied Earth Observation and Geoinformation, 118, 103260. https://doi.org/10.1016/j.jag.2023.103260
+
+- Wellington, M.J. and Renzullo, L.J., 2021. High-Dimensional Satellite Image Compositing and Statistics for Enhanced Irrigated Crop Mapping. Remote Sensing, 13(7), p.1300.
+
 
 Conferences
 --------------------
