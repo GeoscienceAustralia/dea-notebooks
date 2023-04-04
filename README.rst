@@ -38,7 +38,7 @@ The repository is based around the following directory structure (from simple to
 
 1. `Beginners_guide <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Beginners_guide>`_: *Introductory notebooks aimed at introducing Jupyter Notebooks and how to load, plot and interact with DEA data*
 
-2. `DEA_datasets <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/DEA_datasets>`_: *Notebooks introducing DEA's satellite datasets and derived products, including how to load each dataset and any special features of the data*
+2. `DEA_products <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/DEA_products>`_: *Notebooks introducing DEA's satellite datasets and derived products, including how to load each dataset and any special features of the data*
 
 3. `Frequently_used_code <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Frequently_used_code>`_: *A recipe book of simple code examples demonstrating how to perform common geospatial analysis tasks using DEA and open-source software*
 
