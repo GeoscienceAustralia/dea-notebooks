@@ -131,7 +131,7 @@ before altering the notebooks for your specific use case.
    provides a nice overview of machine learning in the context of remote
    sensing.
 -  The stand alone notebook,
-   `Machine\_learning\_with\_ODC <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Frequently_used_code/Machine_learning_with_ODC.ipynb>`__,
+   `Machine\_learning\_with\_ODC <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/How_to_guides/Machine_learning_with_ODC.ipynb>`__,
    in the ``Real_world_examples/`` folder is a companion piece to these
    notebooks and provides a more succinct (but less descriptive) version
    of the workflow demonstrated here.

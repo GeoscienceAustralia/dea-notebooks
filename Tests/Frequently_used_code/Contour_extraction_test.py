@@ -5,7 +5,7 @@ from testbook import testbook
 
 TEST_DIR = Path(__file__).parent.parent.resolve()
 NB_DIR = TEST_DIR.parent
-NB_PATH = NB_DIR / "Frequently_used_code" / "Contour_extraction.ipynb"
+NB_PATH = NB_DIR / "How_to_guides" / "Contour_extraction.ipynb"
 
 
 @pytest.fixture(scope="module")

@@ -7,6 +7,6 @@ set -o pipefail
 cd ./dea-notebooks
 pip3 install ./Tools
 
-pytest --durations=10 --nbval-lax Beginners_guide DEA_products Frequently_used_code/Contour_extraction.ipynb Frequently_used_code/Calculating_band_indices.ipynb Frequently_used_code/Downloading_data_with_STAC.ipynb Frequently_used_code/Exporting_GeoTIFFs.ipynb Frequently_used_code/Generating_composites.ipynb Frequently_used_code/Image_segmentation.ipynb Frequently_used_code/Opening_GeoTIFFs_NetCDFs.ipynb Frequently_used_code/Pansharpening.ipynb Frequently_used_code/Polygon_drill.ipynb Frequently_used_code/Principal_component_analysis.ipynb Frequently_used_code/Rasterize_vectorize.ipynb Frequently_used_code/Using_load_ard.ipynb Frequently_used_code/Virtual_products.ipynb
+pytest --durations=10 --nbval-lax Beginners_guide DEA_products How_to_guides/Contour_extraction.ipynb How_to_guides/Calculating_band_indices.ipynb How_to_guides/Downloading_data_with_STAC.ipynb How_to_guides/Exporting_GeoTIFFs.ipynb How_to_guides/Generating_composites.ipynb How_to_guides/Image_segmentation.ipynb How_to_guides/Opening_GeoTIFFs_NetCDFs.ipynb How_to_guides/Pansharpening.ipynb How_to_guides/Polygon_drill.ipynb How_to_guides/Principal_component_analysis.ipynb How_to_guides/Rasterize_vectorize.ipynb How_to_guides/Using_load_ard.ipynb How_to_guides/Virtual_products.ipynb
 
 

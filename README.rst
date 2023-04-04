@@ -40,7 +40,7 @@ The repository is based around the following directory structure (from simple to
 
 2. `DEA_products <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/DEA_products>`_: *Notebooks introducing DEA's satellite datasets and derived products, including how to load each dataset and any special features of the data*
 
-3. `Frequently_used_code <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Frequently_used_code>`_: *A recipe book of simple code examples demonstrating how to perform common geospatial analysis tasks using DEA and open-source software*
+3. `How_to_guides <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/How_to_guides>`_: *A recipe book of simple code examples demonstrating how to perform common geospatial analysis tasks using DEA and open-source software*
 
 4. `Real_world_examples <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Real_world_examples>`_: *More complex workflows demonstrating how DEA can be used to address real-world problems*
 
