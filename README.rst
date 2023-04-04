@@ -20,7 +20,7 @@ Digital Earth Australia notebooks and tools repository
   :target: https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml
   :alt: Notebook testing
 
-**Contribute:** We'd love your contribution! DEA Notebooks is a opensource project and welcomes contributions from everyone. Please use this handy  `template notebook <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/DEA_notebooks_template.ipynb>`_ to construct your contribution!
+**Contribute:** We'd love your contribution! DEA Notebooks is an opensource project and welcomes contributions from everyone. Please use this handy  `template notebook <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/DEA_notebooks_template.ipynb>`_ to construct your contribution!
 
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
