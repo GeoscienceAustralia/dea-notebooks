@@ -1,11 +1,11 @@
-DEA datasets
+DEA products
 ============
 
 Notebooks introducing DEA's satellite datasets and derived products, including how to load each dataset and any special features of the data.
 
 .. toctree::
    :maxdepth: 1
-   :caption: DEA Datasets
+   :caption: DEA products
 
    DEA_Landsat_Surface_Reflectance.ipynb
    DEA_Sentinel2_Surface_Reflectance.ipynb

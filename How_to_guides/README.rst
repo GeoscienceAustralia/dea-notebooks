@@ -1,11 +1,11 @@
-Frequently used code
+How to guides
 ====================
 
 A recipe book of simple code examples demonstrating how to perform common geospatial analysis tasks using DEA and open-source software.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Frequently Used Code
+   :caption: How to guides
 
    Analyse_multiple_polygons.ipynb
    Animated_timeseries.ipynb
