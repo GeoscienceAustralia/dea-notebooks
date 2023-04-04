@@ -85,6 +85,7 @@ def calculate_indices(ds,
         * ``'TCB_GSO'`` (Tasseled Cap Brightness, Nedkov 2017)
         * ``'TCG_GSO'`` (Tasseled Cap Greeness, Nedkov 2017)
         * ``'TCW_GSO'`` (Tasseled Cap Wetness, Nedkov 2017)
+        * ``'TI'`` (Normalised Difference Turbidity Index, Lacaux et al 2007)
         * ``'WI'`` (Water Index, Fisher 2016)
         * ``'kNDVI'`` (Non-linear Normalised Difference Vegation Index,
                  Camps-Valls et al. 2021)
@@ -286,7 +287,12 @@ def calculate_indices(ds,
                   'FMR': lambda ds: (ds.swir1 / ds.nir),
 
                   # Iron Oxide Ratio, Segal 1982
-                  'IOR': lambda ds: (ds.red / ds.blue)
+                  'IOR': lambda ds: (ds.red / ds.blue),
+      
+                  # Normalised Difference Turbidity Index , Lacaux et al 2007
+                  #NB. 'NDTI' key already used. 'TI' used in lieu.
+                  'TI': lambda ds:  (ds.red - ds.green) /
+                                    (ds.red + ds.green)
     }
     
     # If index supplied is not a list, convert to list. This allows us to
