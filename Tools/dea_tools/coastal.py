@@ -506,11 +506,12 @@ def pixel_tides(
     ds : xarray.Dataset
         A dataset whose geobox (`ds.odc.geobox`) will be used to define
         the spatial extent of the low resolution tide modelling grid.
-    times : list or pandas.Series, optional
+    times : pandas.DatetimeIndex or list of pandas.Timestamps, optional
         By default, the function will model tides using the times
-        contained in the `time` dimension of `ds`. This param can be used
-        to model tides for a custom set of times instead, for example:
-        `times=pd.date_range(start="2000", end="2020", freq="30min")`
+        contained in the `time` dimension of `ds`. Alternatively, this 
+        param can be used to model tides for a custom set of times 
+        instead. For example:
+        `times=pd.date_range(start="2000", end="2001", freq="5h")`
     resample : bool, optional
         Whether to resample low resolution tides back into `ds`'s original
         higher resolution grid. Set this to `False` if you do not want
@@ -568,8 +569,31 @@ def pixel_tides(
 
     import odc.geo.xr
     from odc.geo.geobox import GeoBox
+    
+    # First test if no time dimension and nothing passed to `times`
+    if ('time' not in ds.dims) & (times is None):
+        raise ValueError(
+            "`ds` does not contain a 'time' dimension. Times are required "
+            "for modelling tides: please pass in a set of custom tides "
+            "using the `times` parameter. For example: "
+            "`times=pd.date_range(start='2000', end='2001', freq='5h')`"
+        )
+        
+    # If custom times are provided, convert them to a consistent 
+    # pandas.DatatimeIndex format
+    if times is not None:
+        if isinstance(times, list):
+            time_coords = pd.DatetimeIndex(times)
+        elif isinstance(times, pd.Timestamp):
+            time_coords = pd.DatetimeIndex([times])
+        else: 
+            time_coords = times
+            
+    # Otherwise, use times from `ds` directly
+    else:
+        time_coords = ds.coords["time"]
 
-    # Create a new reduced resolution (5km) tide modelling grid after
+    # Create a new reduced resolution (e.g. 5km) tide modelling grid after
     # first buffering the grid by 12km (i.e. at least two 5km pixels)
     print("Creating reduced resolution tide modelling array")
     buffered_geobox = ds.odc.geobox.buffered(buffer)
@@ -578,10 +602,8 @@ def pixel_tides(
     )
     rescaled_ds = odc.geo.xr.xr_zeros(rescaled_geobox)
 
-    # Flatten grid to 1D, then add time dimension. If custom times are
-    # provided use these, otherwise use times from `ds`
-    time_coords = ds.coords["time"] if times is None else times
-    flattened_ds = rescaled_ds.stack(z=("x", "y"))
+    # Flatten grid to 1D, then add time dimension  
+    flattened_ds = rescaled_ds.stack(z=("x", "y"))    
     flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords.values})
 
     # Model tides for each timestep
@@ -600,10 +622,16 @@ def pixel_tides(
     # Insert modelled tide values back into flattened array, then unstack
     # back to 3D (x, y, time)
     tides_lowres = (
+        
+        # Convert dataframe to xarray format
         tide_df.set_index(["x", "y"], append=True)
         .to_xarray()
+        
+        # Re-index and transpose to match dimensions in `ds`. The `...`
+        # places any extra dimensions (like "time" if it did not exist
+        # in the original `ds`) at the end
         .tide_m.reindex_like(rescaled_ds)
-        .transpose(*list(ds.dims.keys()))
+        .transpose(*list(ds.dims.keys()), ...)
         .astype(np.float32)
     )
 
@@ -884,13 +912,6 @@ def tidal_stats(
                   all available tide heights and time
 
     """
-
-    # Load tide modelling functions from either OTPS for pyfes
-    try:
-        from otps import TimePoint
-        from otps import predict_tide
-    except ImportError:
-        from dea_tools.pyfes_model import TimePoint, predict_tide
 
     # Model tides for each observation in the supplied xarray object
     ds_tides, tidepost_lon, tidepost_lat = tidal_tag(
