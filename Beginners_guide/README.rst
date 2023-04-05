@@ -19,9 +19,9 @@ The Beginners Guide contains introductory notebooks aimed at introducing Jupyter
    
 Once you have you have completed the beginner tutorials, join advanced users in exploring:
 
-    - The "Datasets" directory in the repository, where you can explore DEA products in depth.
+    - The "DEA_products" directory in the repository, where you can explore DEA products in depth.
     - The "How_to_guides" directory, which contains a recipe book of common techniques and methods for analysing DEA data.
-    - The "Real-world examples" directory, which provides more complex workflows and analysis case studies.  
+    - The "Real_world_examples" directory, which provides more complex workflows and analysis case studies.  
 
 .. toctree::
    :maxdepth: 2   
