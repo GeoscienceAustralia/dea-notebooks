@@ -16,7 +16,7 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: March 2023
+Last modified: January 2023
 
 """
 
@@ -153,11 +153,10 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
 
 
 def get_coastlines(
-    bbox: tuple, crs="EPSG:4326", layer="shorelines_annual", drop_wms=True
+    bbox: tuple, crs="EPSG:4326", layer="shorelines", drop_wms=True
 ) -> gpd.GeoDataFrame:
     """
-    Load DEA Coastlines annual shorelines or rates of change points data
-    for a provided bounding box using WFS.
+    Get DEA Coastlines data for a provided bounding box using WFS.
 
     For a full description of the DEA Coastlines dataset, refer to the
     official Geoscience Australia product description:
@@ -174,8 +173,8 @@ def get_coastlines(
         is provided as a geopandas object.
     layer : str, optional
         Which DEA Coastlines layer to load. Options include the annual
-        shoreline vectors ("shorelines_annual") and the rates of change
-        points ("rates_of_change"). Defaults to "shorelines_annual".
+        shoreline vectors ("shorelines") and the rates of change
+        statistics points ("statistics"). Defaults to "shorelines".
     drop_wms : bool, optional
         Whether to drop WMS-specific attribute columns from the data.
         These columns are used for visualising the dataset on DEA Maps,
@@ -198,7 +197,9 @@ def get_coastlines(
 
     # Query WFS
     wfs = WebFeatureService(url=WFS_ADDRESS, version="1.1.0")
-    layer_name = f"dea:{layer}"
+    layer_name = (
+        "dea:coastlines" if layer == "shorelines" else "dea:coastlines_statistics"
+    )
     response = wfs.getfeature(
         typename=layer_name,
         bbox=tuple(bbox) + (crs,),
@@ -505,11 +506,12 @@ def pixel_tides(
     ds : xarray.Dataset
         A dataset whose geobox (`ds.odc.geobox`) will be used to define
         the spatial extent of the low resolution tide modelling grid.
-    times : list or pandas.Series, optional
+    times : pandas.DatetimeIndex or list of pandas.Timestamps, optional
         By default, the function will model tides using the times
-        contained in the `time` dimension of `ds`. This param can be used
-        to model tides for a custom set of times instead, for example:
-        `times=pd.date_range(start="2000", end="2020", freq="30min")`
+        contained in the `time` dimension of `ds`. Alternatively, this 
+        param can be used to model tides for a custom set of times 
+        instead. For example:
+        `times=pd.date_range(start="2000", end="2001", freq="5h")`
     resample : bool, optional
         Whether to resample low resolution tides back into `ds`'s original
         higher resolution grid. Set this to `False` if you do not want
@@ -567,8 +569,31 @@ def pixel_tides(
 
     import odc.geo.xr
     from odc.geo.geobox import GeoBox
+    
+    # First test if no time dimension and nothing passed to `times`
+    if ('time' not in ds.dims) & (times is None):
+        raise ValueError(
+            "`ds` does not contain a 'time' dimension. Times are required "
+            "for modelling tides: please pass in a set of custom tides "
+            "using the `times` parameter. For example: "
+            "`times=pd.date_range(start='2000', end='2001', freq='5h')`"
+        )
+        
+    # If custom times are provided, convert them to a consistent 
+    # pandas.DatatimeIndex format
+    if times is not None:
+        if isinstance(times, list):
+            time_coords = pd.DatetimeIndex(times)
+        elif isinstance(times, pd.Timestamp):
+            time_coords = pd.DatetimeIndex([times])
+        else: 
+            time_coords = times
+            
+    # Otherwise, use times from `ds` directly
+    else:
+        time_coords = ds.coords["time"]
 
-    # Create a new reduced resolution (5km) tide modelling grid after
+    # Create a new reduced resolution (e.g. 5km) tide modelling grid after
     # first buffering the grid by 12km (i.e. at least two 5km pixels)
     print("Creating reduced resolution tide modelling array")
     buffered_geobox = ds.odc.geobox.buffered(buffer)
@@ -577,10 +602,8 @@ def pixel_tides(
     )
     rescaled_ds = odc.geo.xr.xr_zeros(rescaled_geobox)
 
-    # Flatten grid to 1D, then add time dimension. If custom times are
-    # provided use these, otherwise use times from `ds`
-    time_coords = ds.coords["time"] if times is None else times
-    flattened_ds = rescaled_ds.stack(z=("x", "y"))
+    # Flatten grid to 1D, then add time dimension  
+    flattened_ds = rescaled_ds.stack(z=("x", "y"))    
     flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords.values})
 
     # Model tides for each timestep
@@ -599,10 +622,16 @@ def pixel_tides(
     # Insert modelled tide values back into flattened array, then unstack
     # back to 3D (x, y, time)
     tides_lowres = (
+        
+        # Convert dataframe to xarray format
         tide_df.set_index(["x", "y"], append=True)
         .to_xarray()
+        
+        # Re-index and transpose to match dimensions in `ds`. The `...`
+        # places any extra dimensions (like "time" if it did not exist
+        # in the original `ds`) at the end
         .tide_m.reindex_like(rescaled_ds)
-        .transpose(*list(ds.dims.keys()))
+        .transpose(*list(ds.dims.keys()), ...)
         .astype(np.float32)
     )
 
@@ -883,13 +912,6 @@ def tidal_stats(
                   all available tide heights and time
 
     """
-
-    # Load tide modelling functions from either OTPS for pyfes
-    try:
-        from otps import TimePoint
-        from otps import predict_tide
-    except ImportError:
-        from dea_tools.pyfes_model import TimePoint, predict_tide
 
     # Model tides for each observation in the supplied xarray object
     ds_tides, tidepost_lon, tidepost_lat = tidal_tag(
