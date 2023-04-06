@@ -619,21 +619,19 @@ def pixel_tides(
     )
 
     # Insert modelled tide values back into flattened array, then unstack
-    # back to 3D (x, y, time)
+    # back to 3D (y, x, time)
     tides_lowres = (
         
         # Convert dataframe to xarray format
         tide_df.set_index(["x", "y"], append=True)
         .to_xarray()
         
-        # Re-index and transpose to match dimensions in `ds`. The `...`
-        # places any extra dimensions (like "time" if it did not exist
-        # in the original `ds`) at the end
+        # Re-index and transpose back into 3D
         .tide_m.reindex_like(rescaled_ds)
-        .transpose(*list(ds.dims.keys()), ...)
+        .transpose("y", "x", "time")
         .astype(np.float32)
     )
-
+    
     # Optionally calculate and return quantiles rather than raw data
     if calculate_quantiles is not None:
 
@@ -643,6 +641,9 @@ def pixel_tides(
 
     else:
         reproject_dim = "time"
+
+
+    # return tides_lowres, rescaled_ds
 
     # Ensure CRS is present
     tides_lowres = tides_lowres.odc.assign_crs(ds.odc.geobox.crs)
