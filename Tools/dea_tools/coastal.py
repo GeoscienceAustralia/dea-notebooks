@@ -568,7 +568,7 @@ def pixel_tides(
 
     import odc.geo.xr
     from odc.geo.geobox import GeoBox
-    
+
     # First test if no time dimension and nothing passed to `times`
     if ('time' not in ds.dims) & (times is None):
         raise ValueError(
@@ -577,7 +577,7 @@ def pixel_tides(
             "using the `times` parameter. For example: "
             "`times=pd.date_range(start='2000', end='2001', freq='5h')`"
         )
-        
+
     # If custom times are provided, convert them to a consistent 
     # pandas.DatatimeIndex format
     if times is not None:
@@ -587,7 +587,7 @@ def pixel_tides(
             time_coords = pd.DatetimeIndex([times])
         else: 
             time_coords = times
-            
+
     # Otherwise, use times from `ds` directly
     else:
         time_coords = ds.coords["time"]
@@ -621,17 +621,17 @@ def pixel_tides(
     # Insert modelled tide values back into flattened array, then unstack
     # back to 3D (y, x, time)
     tides_lowres = (
-        
+
         # Convert dataframe to xarray format
         tide_df.set_index(["x", "y"], append=True)
         .to_xarray()
-        
+
         # Re-index and transpose back into 3D
         .tide_m.reindex_like(rescaled_ds)
         .transpose("y", "x", "time")
         .astype(np.float32)
     )
-    
+
     # Optionally calculate and return quantiles rather than raw data
     if calculate_quantiles is not None:
 
@@ -641,9 +641,6 @@ def pixel_tides(
 
     else:
         reproject_dim = "time"
-
-
-    # return tides_lowres, rescaled_ds
 
     # Ensure CRS is present
     tides_lowres = tides_lowres.odc.assign_crs(ds.odc.geobox.crs)
