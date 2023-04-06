@@ -16,7 +16,7 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: January 2023
+Last modified: March 2023
 
 """
 
@@ -153,10 +153,11 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
 
 
 def get_coastlines(
-    bbox: tuple, crs="EPSG:4326", layer="shorelines", drop_wms=True
+    bbox: tuple, crs="EPSG:4326", layer="shorelines_annual", drop_wms=True
 ) -> gpd.GeoDataFrame:
     """
-    Get DEA Coastlines data for a provided bounding box using WFS.
+    Load DEA Coastlines annual shorelines or rates of change points data
+    for a provided bounding box using WFS.
 
     For a full description of the DEA Coastlines dataset, refer to the
     official Geoscience Australia product description:
@@ -173,8 +174,8 @@ def get_coastlines(
         is provided as a geopandas object.
     layer : str, optional
         Which DEA Coastlines layer to load. Options include the annual
-        shoreline vectors ("shorelines") and the rates of change
-        statistics points ("statistics"). Defaults to "shorelines".
+        shoreline vectors ("shorelines_annual") and the rates of change
+        points ("rates_of_change"). Defaults to "shorelines_annual".
     drop_wms : bool, optional
         Whether to drop WMS-specific attribute columns from the data.
         These columns are used for visualising the dataset on DEA Maps,
@@ -197,9 +198,7 @@ def get_coastlines(
 
     # Query WFS
     wfs = WebFeatureService(url=WFS_ADDRESS, version="1.1.0")
-    layer_name = (
-        "dea:coastlines" if layer == "shorelines" else "dea:coastlines_statistics"
-    )
+    layer_name = f"dea:{layer}"
     response = wfs.getfeature(
         typename=layer_name,
         bbox=tuple(bbox) + (crs,),
