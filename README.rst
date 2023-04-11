@@ -20,6 +20,8 @@ Digital Earth Australia notebooks and tools repository
   :target: https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml
   :alt: Notebook testing
 
+**Contribute:** We'd love your contribution! DEA Notebooks is an open-source project and welcomes contributions from everyone. Please use this handy `template notebook <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/DEA_notebooks_template.ipynb>`_ to construct your contribution!
+
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
 **Contact:** If you need assistance with any of the Jupyter Notebooks or Python code in this repository, please post a question on the `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/ask?tags=open-data-cube>`_ using the ``open-data-cube`` tag (you can view `previously asked questions here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_). If you would like to report an issue with this notebook, you can `file one on Github <https://github.com/GeoscienceAustralia/dea-notebooks>`_.
@@ -120,3 +122,5 @@ Commit and push any changes you make, which will become part of the open pull re
 If the notebook meets all the checklist requirements, click the green 'Review' button and click 'Approve' (with an optional comment). You can also 'Request changes' here if any of the checklist items are not complete.
 
 Once the pull request has been approved, you can merge it into the ``develop`` branch. Select the 'Squash and merge' option from the drop-down menu to the right of the green 'merge' button. Once you have merged the new branch in, you need to delete the branch. There is a button on the page that asks you if you would like to delete the now merged branch. Select 'Yes' to delete it.
+
+See also `wiki <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-git#reviewing-and-approving-a-pull-request>`_.
