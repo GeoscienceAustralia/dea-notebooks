@@ -9,16 +9,11 @@ More complex case study-based workflows demonstrating how DEA can be used to add
    
    Burnt_area_mapping.ipynb
    Change_detection.ipynb
-   Change_filmstrips.ipynb
    Chlorophyll_monitoring.ipynb
    Coastal_erosion.ipynb
-   Crop_health.ipynb
    Estimate_climate_driver_influence_on_rainfall.ipynb
-   Exporting_satellite_images.ipynb
-   Generating_satellite_animations.ipynb
    Intertidal_elevation.ipynb
    Mapping_inundation_using_stream_gauges.ipynb
-   Mining_rehabilitation.ipynb
    Radar_water_detection.ipynb
    Shipping_lane_identification.ipynb
    Surface_area_duration.ipynb
