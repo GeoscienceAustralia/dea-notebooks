@@ -881,7 +881,7 @@ def reverse_geocode(coords, site_classes=None, state_classes=None):
             print('No valid geocoded location; returning coordinates instead')
             return f'{lat}, {lon}'
               
-    except(KeyError, AttributeError, GeocoderUnavailable, GeocoderServiceError):
+    except (KeyError, AttributeError, GeocoderUnavailable, GeocoderServiceError):
 
         # If no geocoding result, return N/E/S/W coordinates
         print('No valid geocoded location; returning coordinates instead')
