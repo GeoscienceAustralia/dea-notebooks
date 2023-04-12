@@ -8,6 +8,7 @@ Interactive widgets and apps that require little or no coding to run
    :caption: Interactive apps
    
    Change_filmstrips.ipynb
+   Coastal_transects.ipynb
    Crop_health.ipynb
    Exporting_satellite_images.ipynb
    Generating_satellite_animations.ipynb
