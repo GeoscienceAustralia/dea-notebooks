@@ -37,6 +37,7 @@ from skimage.measure import label
 from rasterstats import zonal_stats
 from skimage.measure import find_contours
 from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderUnavailable, GeocoderServiceError
 from datacube.utils.cog import write_cog
 from datacube.utils.geometry import assign_crs
 from datacube.utils.geometry import CRS, Geometry
@@ -845,7 +846,6 @@ def reverse_geocode(coords, site_classes=None, state_classes=None):
 
     # Run reverse geocode using coordinates
     geocoder = Nominatim(user_agent='Digital Earth Australia')
-    out = geocoder.reverse(coords)
     
     # Create plain text-coords as fall-back
     lat = f'{-coords[0]:.2f} S' if coords[0] < 0 else f'{coords[0]:.2f} N'
@@ -854,6 +854,7 @@ def reverse_geocode(coords, site_classes=None, state_classes=None):
     try:
         
         # Get address from geocoded data
+        out = geocoder.reverse(coords)
         address = out.raw['address']
 
         # Use site and state classes if supplied; else use defaults
@@ -880,7 +881,7 @@ def reverse_geocode(coords, site_classes=None, state_classes=None):
             print('No valid geocoded location; returning coordinates instead')
             return f'{lat}, {lon}'
               
-    except (KeyError, AttributeError):
+    except (KeyError, AttributeError, GeocoderUnavailable, GeocoderServiceError):
 
         # If no geocoding result, return N/E/S/W coordinates
         print('No valid geocoded location; returning coordinates instead')
