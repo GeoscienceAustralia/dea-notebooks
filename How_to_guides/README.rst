@@ -1,4 +1,4 @@
-How to guides
+How-to guides
 ====================
 
 A recipe book of simple code examples demonstrating how to perform common geospatial analysis tasks using DEA and open-source software.
