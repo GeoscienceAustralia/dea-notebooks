@@ -23,7 +23,7 @@ Scientific papers
 
 - DaSilva, MD., Bruce, D., Hesp, PA., da Silva, GM., Downes, J., 2023. Post-Wildfire Coastal Dunefield Response using Photogrammetry and Satellite Indices. Earth Surf. Process. Landforms. https://doi.org/10.1002/esp.5591
 
-- Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806.
+- Dunn, B., Ai, E., Alger, M.J., Fanson, B., Fickas, K.C., Krause, C.E., Lymburner, L., Nanson, R., Papas, P., Ronan, M., Thomas, R.F., 2023. Wetlands Insight Tool: Characterising the Surface Water and Vegetation Cover Dynamics of Individual Wetlands Using Multidecadal Landsat Satellite Data. Wetlands 43, 37. https://doi.org/10.1007/s13157-023-01682-7
 
 - Krause, C.E., Newey, V., Alger, M.J. and Lymburner, L., 2021. Mapping and monitoring the multi-decadal dynamics of Australia’s open waterbodies using Landsat. Remote Sensing, 13(8), p.1437.
 
