@@ -126,14 +126,12 @@ def rgb(ds,
     file written to file.
     
     """
-
+    
+    # Add GeoBox and odc.* accessor to array using `odc-geo`
+    ds = add_geobox(ds)
+    
     # Get names of x and y dims
-    # TODO: remove geobox and try/except once datacube 1.8 is default
-    try:
-        y_dim, x_dim = ds.geobox.dimensions
-    except AttributeError:
-        from datacube.utils import spatial_dims
-        y_dim, x_dim = spatial_dims(ds)
+    y_dim, x_dim = ds.odc.spatial_dims
 
     # If ax is supplied via kwargs, ignore aspect and size
     if 'ax' in kwargs:
@@ -143,7 +141,7 @@ def rgb(ds,
     else:
         # Compute image aspect
         if not aspect:
-            aspect = image_aspect(ds)
+            aspect = ds.odc.geobox.aspect
 
         # Populate aspect size kwarg with aspect and size data
         aspect_size_kwarg = {'aspect': aspect, 'size': size}
