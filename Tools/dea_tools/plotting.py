@@ -16,42 +16,28 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: January 2023
+Last modified: April 2023
 
 '''
 
 # Import required packages
 import math
-import branca
 import folium
-import calendar
-import ipywidgets
 import numpy as np
+import pandas as pd
 import geopandas as gpd
-import matplotlib as mpl
-import matplotlib.cm as cm
-from matplotlib import colors as mcolours
 import matplotlib.patheffects as PathEffects
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from datetime import datetime
-from pyproj import Transformer
-from IPython.display import display
-from matplotlib.colors import ListedColormap
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps, Choropleth
-from skimage import exposure
-from odc.ui import image_aspect
-import warnings
-
+from matplotlib import colors as mcolours
 from matplotlib.animation import FuncAnimation
-import pandas as pd
 from pathlib import Path
+from pyproj import Transformer
 from shapely.geometry import box
 from skimage.exposure import rescale_intensity
 from tqdm.auto import tqdm
-import warnings
+
+from odc.ui import image_aspect
+from dea_tools.spatial import add_geobox
 
 
 def rgb(ds,
@@ -370,7 +356,7 @@ def xr_animation(ds,
     Supports .mp4 (ideal for Twitter/social media) and .gif (ideal 
     for all purposes, but can have large file sizes) format files. 
     
-    Last modified: October 2020
+    Last modified: April 2023
     
     Parameters
     ----------  
@@ -605,6 +591,9 @@ def xr_animation(ds,
         # Update progress bar
         progress_bar.update(1)
 
+    # Add GeoBox and odc.* accessor to array using `odc-geo`
+    ds = add_geobox(ds)
+    
     # Test if bands have been supplied, or convert to list to allow
     # iteration if a single band is provided as a string
     if bands is None:
@@ -649,16 +638,16 @@ def xr_animation(ds,
     gdf_defaults.update(gdf_kwargs)
 
     # Get info on dataset dimensions
-    height, width = ds.geobox.shape
+    height, width = ds.odc.geobox.shape
     scale = width_pixels / width
-    left, bottom, right, top = ds.geobox.extent.boundingbox
+    left, bottom, right, top = ds.odc.geobox.extent.boundingbox
 
     # Prepare annotations
     annotation_list = _frame_annotation(ds.time, show_date, show_text)
 
     # Prepare geodataframe
     if show_gdf is not None:
-        show_gdf = show_gdf.to_crs(ds.geobox.crs)
+        show_gdf = show_gdf.to_crs(ds.odc.geobox.crs)
         show_gdf = gpd.clip(show_gdf, mask=box(
             left, bottom, right, top)).reindex(show_gdf.index).dropna(how='all')
         show_gdf = _start_end_times(show_gdf, ds)
