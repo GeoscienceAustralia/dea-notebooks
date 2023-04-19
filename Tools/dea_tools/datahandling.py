@@ -483,7 +483,7 @@ def load_ard(
         pq_mask = ~mask_cleanup(~pq_mask, mask_filters=mask_filters)
 
         warnings.warn(
-            "As of `dea_tools` v0.3.0, pixel quality masks are "
+            "As of `dea_tools` v1.0.0, pixel quality masks are "
             "inverted before being passed to `mask_filters` (i.e. so "
             "that good quality/clear pixels are False and poor quality "
             "pixels/clouds are True). This means that 'dilation' will "
@@ -887,13 +887,14 @@ def nearest(
 
     target = array[dim].dtype.type(target)
     is_before_closer = abs(target - da_before[dim]) < abs(target - da_after[dim])
-    nearest_array = xr.where(is_before_closer, da_before, da_after)
-    nearest_array[dim] = xr.where(is_before_closer, da_before[dim], da_after[dim])
+    nearest_array = xr.where(is_before_closer, da_before, da_after, keep_attrs=True)
+    nearest_array[dim] = xr.where(is_before_closer, da_before[dim], da_after[dim], keep_attrs=True)
 
     if index_name is not None:
         nearest_array[index_name] = xr.where(
-            is_before_closer, da_before[index_name], da_after[index_name]
+            is_before_closer, da_before[index_name], da_after[index_name], keep_attrs=True
         )
+
     return nearest_array
 
 
