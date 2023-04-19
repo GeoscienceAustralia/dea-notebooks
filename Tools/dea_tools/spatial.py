@@ -119,7 +119,7 @@ def add_geobox(ds, crs=None):
     if ds.odc.crs is None and crs is not None:
         ds = ds.odc.assign_crs(crs)
     elif ds.odc.crs is None and crs is None:
-        raise Exception(
+        raise ValueError(
             "Unable to determine `ds`'s coordinate "
             "reference system (CRS). Please provide a "
             "CRS using the `crs` parameter "
