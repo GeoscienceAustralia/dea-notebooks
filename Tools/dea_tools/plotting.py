@@ -1056,3 +1056,59 @@ def plot_fmask(fmask, legend=True, **plot_kwargs):
         cb.set_ticks(ticks[:-1] + np.diff(ticks) / 2)
         cb.set_ticklabels(cblabels)
     return im
+
+
+def plot_variable_images(img_collection):
+    """
+    Plot a dynamic number of images from a xarray dataset that
+    includes Date and Index in the title. Optional ability to
+    also include the sensor in the title if a 'sensor' attribute
+    is added to the dataset using dataset.assign_attrs
+    Parameters
+    ----------
+    img_collection : xr.Dataset
+        A Dataset containing imagery with RBG bands
+    Returns
+    -------
+    plot    
+    """
+    #Calculate number of images in `img_collection`
+    plot_count = img_collection.dims["time"]
+    
+    # Divide the number of images by 2 rounding up to calculate the number of rows required
+    plot_rows = math.ceil(plot_count / 2)
+
+    # Construct a figure to visualise the imagery
+    f, axarr = plt.subplots(plot_rows, 2, figsize=(10, plot_rows * 4.5), squeeze=False)
+
+    # Flatten the subplots so they can easily be enumerated through
+    axarr = axarr.flatten()
+    
+    # Plot each image on a subplot
+    for t in range(plot_count):
+        rgb(
+            img_collection.isel(time=t),
+            bands=["nbart_red", "nbart_green", "nbart_blue"],
+            ax=axarr[t],
+            robust=True
+        )
+        if hasattr(img_collection, 'sensor'):
+            title = (
+                str(img_collection.time[t].values)[:10] + "  ||  Index: " + str(t) + "  ||  Sensor: " + img_collection.sensor
+            )
+        else: 
+            title = (
+                str(img_collection.time[t].values)[:10] + "  ||  Index: " + str(t) 
+            )
+        axarr[t].set_title(title)
+        axarr[t].set_xlabel("X coordinate")
+        axarr[t].set_ylabel("Y coordinate")
+        axarr[t].yaxis.offsetText.set_fontsize(6)
+        axarr[t].xaxis.offsetText.set_fontsize(6)
+        
+    #Adjust padding arround subplots to prevent overlapping elements
+    plt.tight_layout() 
+    
+    # Remove the last empty subplot if an odd number of images are being displayed
+    if plot_count % 2 != 0:
+        f.delaxes(axarr[plot_count])
