@@ -36,6 +36,7 @@ from shapely.geometry import box
 from skimage.exposure import rescale_intensity
 from tqdm.auto import tqdm
 
+import odc.geo.xr
 from odc.ui import image_aspect
 from dea_tools.spatial import add_geobox
 
@@ -126,9 +127,6 @@ def rgb(ds,
     file written to file.
     
     """
-    
-    # Add GeoBox and odc.* accessor to array using `odc-geo`
-    ds = add_geobox(ds)
     
     # Get names of x and y dims
     y_dim, x_dim = ds.odc.spatial_dims
@@ -590,7 +588,14 @@ def xr_animation(ds,
         progress_bar.update(1)
 
     # Add GeoBox and odc.* accessor to array using `odc-geo`
-    ds = add_geobox(ds)
+    try:
+        ds = add_geobox(ds)
+    except ValueError:
+        raise ValueError("Unable to determine `ds`'s coordinate "
+                         "reference system (CRS). Please assign a CRS "
+                         "to the array before passing it to this "
+                         "function, e.g.: "
+                         "`ds.odc.assign_crs(crs='EPSG:3577')`")
     
     # Test if bands have been supplied, or convert to list to allow
     # iteration if a single band is provided as a string
