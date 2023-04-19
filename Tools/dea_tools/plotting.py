@@ -1070,45 +1070,55 @@ def plot_variable_images(img_collection):
         A Dataset containing imagery with RBG bands
     Returns
     -------
-    plot    
+    plot
     """
-    #Calculate number of images in `img_collection`
+    # Calculate number of images in `img_collection`
     plot_count = img_collection.dims["time"]
-    
-    # Divide the number of images by 2 rounding up to calculate the number of rows required
+
+    # Divide the number of images by 2 rounding up to
+    # calculate the number of rows required
     plot_rows = math.ceil(plot_count / 2)
 
     # Construct a figure to visualise the imagery
-    f, axarr = plt.subplots(plot_rows, 2, figsize=(10, plot_rows * 4.5), squeeze=False)
+    f, axarr = plt.subplots(plot_rows, 2, figsize=(10, plot_rows * 4.5),
+                            squeeze=False)
 
     # Flatten the subplots so they can easily be enumerated through
     axarr = axarr.flatten()
-    
-    # Plot each image on a subplot
+
+    # Iterate through each image in the dataset and plot
+    # each image on a subplot
     for t in range(plot_count):
         rgb(
             img_collection.isel(time=t),
             bands=["nbart_red", "nbart_green", "nbart_blue"],
             ax=axarr[t],
-            robust=True
+            robust=True,
         )
-        if hasattr(img_collection, 'sensor'):
-            title = (
-                str(img_collection.time[t].values)[:10] + "  ||  Index: " + str(t) + "  ||  Sensor: " + img_collection.sensor
-            )
-        else: 
-            title = (
-                str(img_collection.time[t].values)[:10] + "  ||  Index: " + str(t) 
-            )
+        # Test to see if the dataset has a custom 'sensor' attribute.
+        # If so, include the string in each subplot title.
+        if hasattr(img_collection, "sensor"):
+            title = str(img_collection.time[t].values)[:10]
+            +"  ||  Index: "
+            +str(t)
+            +"  ||  Sensor: "
+            +img_collection.sensor
+
+        else:
+            title = str(img_collection.time[t].values)[:10]
+            +"  ||  Index: " + str(t)
+
+        # Set subplot title, axis label, and set text size
         axarr[t].set_title(title)
         axarr[t].set_xlabel("X coordinate")
         axarr[t].set_ylabel("Y coordinate")
         axarr[t].yaxis.offsetText.set_fontsize(6)
         axarr[t].xaxis.offsetText.set_fontsize(6)
-        
-    #Adjust padding arround subplots to prevent overlapping elements
-    plt.tight_layout() 
-    
-    # Remove the last empty subplot if an odd number of images are being displayed
+
+    # Adjust padding arround subplots to prevent overlapping elements
+    plt.tight_layout()
+
+    # Remove the last empty subplot if an odd number of
+    # images are being displayed
     if plot_count % 2 != 0:
         f.delaxes(axarr[plot_count])
