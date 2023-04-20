@@ -1072,11 +1072,15 @@ def plot_variable_images(img_collection):
     -------
     plot
     """
+    # Check that img_collection is a xarray dataset
+    if not isinstance(img_collection, xr.Dataset):
+        raise TypeError("img_collection must be a xarray dataset.")
+
     # Calculate number of images in `img_collection`
     plot_count = img_collection.dims["time"]
 
-    # Divide the number of images by 2 rounding up to
-    # calculate the number of rows required
+    # Divide the number of images by 2 rounding up to calculate the
+    # number of rows for the below figure are needed
     plot_rows = math.ceil(plot_count / 2)
 
     # Construct a figure to visualise the imagery
@@ -1087,7 +1091,7 @@ def plot_variable_images(img_collection):
     axarr = axarr.flatten()
 
     # Iterate through each image in the dataset and plot
-    # each image on a subplot
+    # each image as a RGB on a subplot
     for t in range(plot_count):
         rgb(
             img_collection.isel(time=t),
@@ -1098,17 +1102,20 @@ def plot_variable_images(img_collection):
         # Test to see if the dataset has a custom 'sensor' attribute.
         # If so, include the string in each subplot title.
         if hasattr(img_collection, "sensor"):
-            title = str(img_collection.time[t].values)[:10]
-            +"  ||  Index: "
-            +str(t)
-            +"  ||  Sensor: "
-            +img_collection.sensor
-
+            title = (
+                str(img_collection.time[t].values)[:10]
+                + "  ||  Index: "
+                + str(t)
+                + "  ||  Sensor: "
+                + img_collection.sensor
+            )
         else:
-            title = str(img_collection.time[t].values)[:10]
-            +"  ||  Index: " + str(t)
-
-        # Set subplot title, axis label, and set text size
+            title = (
+                str(img_collection.time[t].values)[:10]
+                + "  ||  Index: "
+                + str(t)
+            )
+        # Set subplot title, axis label, and shrink offset text
         axarr[t].set_title(title)
         axarr[t].set_xlabel("X coordinate")
         axarr[t].set_ylabel("Y coordinate")
@@ -1118,7 +1125,7 @@ def plot_variable_images(img_collection):
     # Adjust padding arround subplots to prevent overlapping elements
     plt.tight_layout()
 
-    # Remove the last empty subplot if an odd number of
-    # images are being displayed
+    # Remove the last subplot if an odd number of images are being displayed
     if plot_count % 2 != 0:
         f.delaxes(axarr[plot_count])
+
