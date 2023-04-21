@@ -795,10 +795,10 @@ class animation_app(HBox):
     def update_dealayer(self, change):
         self.dealayer = change.new
 
-        if change.new == "ga_ls_ard_3":
+        if change.new == "Landsat":
             self.text_resolution.value = 30
 
-        else:
+        elif change.new == "Sentinel-2":
             self.text_resolution.value = 10
 
     # Set imagery style
