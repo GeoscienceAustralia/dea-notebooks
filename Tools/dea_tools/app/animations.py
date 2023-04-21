@@ -800,6 +800,9 @@ class animation_app(HBox):
 
         elif change.new == "Sentinel-2":
             self.text_resolution.value = 10
+        
+        elif change.new == "Sentinel-2 and Landsat":
+            self.text_resolution.value = 30
 
     # Set imagery style
     def update_styles(self, change):
