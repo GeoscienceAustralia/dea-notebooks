@@ -1078,16 +1078,16 @@ def plot_variable_images(img_collection):
 
     # Calculate number of images in `img_collection`
     plot_count = img_collection.dims["time"]
-        
+    
     # Check if dataset has 0 images
     if plot_count == 0:
         if hasattr(img_collection, "sensor"):
-            return ("The {} dataset has no images to display for the " 
+            raise ValueError("The {} dataset has no images to display for the " 
             "given query parameters".format(img_collection.sensor))
         else:
-            return ("The supplied xarray dataset has no images to "
+            raise ValueError("The supplied xarray dataset has no images to "
             "display for the given query parameters")
-
+                  
     # Divide the number of images by 2 rounding up to calculate the
     # number of rows for the below figure are needed
     plot_rows = math.ceil(plot_count / 2)
