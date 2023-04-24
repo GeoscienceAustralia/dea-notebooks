@@ -803,6 +803,9 @@ class animation_app(HBox):
         
         elif change.new == "Sentinel-2 and Landsat":
             self.text_resolution.value = 30
+            
+        # Clear data load params to trigger data re-load
+        update_map_layers(self)
 
     # Set imagery style
     def update_styles(self, change):
