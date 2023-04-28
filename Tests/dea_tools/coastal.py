@@ -17,7 +17,7 @@ def load_measured_tides():
 
     # Load measured tides from ABSLMP tide gauge data
     measured_tides_df = pd.read_csv(
-        "data/IDO71013_2020.csv",
+        "../data/IDO71013_2020.csv",
         index_col=0,
         parse_dates=True,
         na_values=-9999,
