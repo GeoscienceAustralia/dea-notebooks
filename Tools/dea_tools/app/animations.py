@@ -82,6 +82,23 @@ sat_params = {
             ),
         },
     },
+    "Sentinel-2 and Landsat": {
+        "products": [
+            "ga_s2am_ard_3",
+            "ga_s2bm_ard_3",
+            "ga_ls5t_ard_3",
+            "ga_ls7e_ard_3",
+            "ga_ls8c_ard_3",
+            "ga_ls9c_ard_3",
+        ],
+        "styles": {
+            "True colour": ("simple_rgb", ["nbart_red", "nbart_green", "nbart_blue"]),
+            "False colour": (
+                "infrared_green",
+                ["nbart_common_swir_1", "nbart_common_nir", "nbart_green"],
+            ),
+        },
+    },
 }
 
 
@@ -325,6 +342,7 @@ class animation_app(HBox):
         self.dealayer_list = [
             ("Landsat", "Landsat"),
             ("Sentinel-2", "Sentinel-2"),
+            ("Sentinel-2 and Landsat", "Sentinel-2 and Landsat")
         ]
         self.dealayer = self.dealayer_list[0][1]
 
@@ -527,13 +545,13 @@ class animation_app(HBox):
 
         checkbox_rolling_median = deawidgets.create_checkbox(
             self.rolling_median,
-            "Apply rolling median to produce<br>smooth, cloud-free animations",
+            "Apply rolling median to produce smooth, cloud-free animations",
             layout={"width": "85%"},
         )
         text_rolling_median_window = widgets.IntText(
             value=20,
             step=1,
-            description="</br>Rolling window (timesteps)",
+            description="Rolling window (timesteps)",
             layout={
                 "width": "85%",
                 "margin": "0px",
@@ -777,11 +795,17 @@ class animation_app(HBox):
     def update_dealayer(self, change):
         self.dealayer = change.new
 
-        if change.new == "ga_ls_ard_3":
+        if change.new == "Landsat":
             self.text_resolution.value = 30
 
-        else:
+        elif change.new == "Sentinel-2":
             self.text_resolution.value = 10
+        
+        elif change.new == "Sentinel-2 and Landsat":
+            self.text_resolution.value = 30
+            
+        # Clear data load params to trigger data re-load
+        update_map_layers(self)
 
     # Set imagery style
     def update_styles(self, change):

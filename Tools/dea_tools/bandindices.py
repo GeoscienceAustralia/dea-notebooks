@@ -39,7 +39,7 @@ def calculate_indices(ds,
     in memory. This can be a memory-expensive operation, so to avoid
     this, set `inplace=True`.
 
-    Last modified: March 2021
+    Last modified: April 2023
     
     Parameters
     ----------
@@ -85,6 +85,7 @@ def calculate_indices(ds,
         * ``'TCB_GSO'`` (Tasseled Cap Brightness, Nedkov 2017)
         * ``'TCG_GSO'`` (Tasseled Cap Greeness, Nedkov 2017)
         * ``'TCW_GSO'`` (Tasseled Cap Wetness, Nedkov 2017)
+        * ``'TI'`` (Normalised Difference Turbidity Index, Lacaux et al 2007)
         * ``'WI'`` (Water Index, Fisher 2016)
         * ``'kNDVI'`` (Non-linear Normalised Difference Vegation Index,
                  Camps-Valls et al. 2021)
@@ -97,10 +98,9 @@ def calculate_indices(ds,
         
         Valid options are: 
         
-        * ``'ga_ls_2'`` (for GA Landsat Collection 2)
         * ``'ga_ls_3'`` (for GA Landsat Collection 3) 
-        * ``'ga_s2_1'`` (for GA Sentinel 2 Collection 1)
         * ``'ga_s2_3'`` (for GA Sentinel 2 Collection 3)
+        * ``'ga_gm_3'`` (for GA Geomedian Collection 3)
 
     custom_varname : str, optional
         By default, the original dataset will be returned with 
@@ -286,14 +286,19 @@ def calculate_indices(ds,
                   'FMR': lambda ds: (ds.swir1 / ds.nir),
 
                   # Iron Oxide Ratio, Segal 1982
-                  'IOR': lambda ds: (ds.red / ds.blue)
+                  'IOR': lambda ds: (ds.red / ds.blue),
+      
+                  # Normalised Difference Turbidity Index , Lacaux et al 2007
+                  #NB. 'NDTI' key already used. 'TI' used in lieu.
+                  'TI': lambda ds:  (ds.red - ds.green) /
+                                    (ds.red + ds.green)
     }
     
     # If index supplied is not a list, convert to list. This allows us to
     # iterate through either multiple or single indices in the loop below
     indices = index if isinstance(index, list) else [index]
     
-    #calculate for each index in the list of indices supplied (indexes)
+    # Calculate for each index in the list of indices supplied (indexes)
     for index in indices:
 
         # Select an index function from the dictionary
@@ -332,10 +337,10 @@ def calculate_indices(ds,
         if collection is None:
 
             raise ValueError("'No `collection` was provided. Please specify "
-                             "either 'ga_ls_2', 'ga_ls_3', 'ga_s2_1' or "
-                             "'ga_s2_3' to ensure the function calculates indices using the "
-                             "correct spectral bands")
-
+                             "either 'ga_ls_3', 'ga_s2_3' or 'ga_gm_3' "
+                             "to ensure the function calculates indices "
+                             "using the correct spectral bands")            
+        
         elif collection == 'ga_ls_3':
 
             # Dictionary mapping full data names to simpler 'red' alias names
@@ -359,7 +364,7 @@ def calculate_indices(ds,
                 a: b for a, b in bandnames_dict.items() if a in ds.variables
             }
 
-        elif (collection == 'ga_s2_1') | (collection == 'ga_s2_3'):
+        elif collection == 'ga_s2_3':
 
             # Dictionary mapping full data names to simpler 'red' alias names
             bandnames_dict = {
@@ -385,17 +390,17 @@ def calculate_indices(ds,
             bands_to_rename = {
                 a: b for a, b in bandnames_dict.items() if a in ds.variables
             }
-
-        elif collection == 'ga_ls_2':
-
+           
+        elif collection == 'ga_gm_3':
+            
             # Pass an empty dict as no bands need renaming
             bands_to_rename = {}
 
         # Raise error if no valid collection name is provided:
         else:
             raise ValueError(f"'{collection}' is not a valid option for "
-                              "`collection`. Please specify either \n"
-                              "'ga_ls_2', 'ga_ls_3', 'ga_s2_1' or 'ga_s2_3'")
+                             "`collection`. Please specify either \n"
+                             "'ga_ls_3', 'ga_s2_3' or 'ga_gm_3'")
 
         # Apply index function 
         try:
