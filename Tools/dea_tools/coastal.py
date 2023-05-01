@@ -669,7 +669,7 @@ def pixel_tides(
 
         # Re-index and transpose back into 3D
         .tide_m.reindex_like(rescaled_ds)
-        .transpose(y_dim, x_dim, "time")
+        .transpose("time", y_dim, x_dim)
         .astype(np.float32)
     )
 
