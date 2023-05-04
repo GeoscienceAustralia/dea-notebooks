@@ -16,7 +16,7 @@ import setuptools_scm
 NAME = 'dea-tools'
 DESCRIPTION = 'Functions and algorithms for analysing Digital Earth Australia data.'
 URL = 'https://github.com/GeoscienceAustralia/dea-notebooks'
-EMAIL = 'dea@ga.gov.au'
+EMAIL = 'earth.observation@ga.gov.au'
 AUTHOR = 'Geoscience Australia'
 REQUIRES_PYTHON = '>=3.6.0'
 
@@ -28,41 +28,47 @@ IS_DEA = IS_NCI or IS_SANDBOX
 # What packages are required for this module to be executed?
 # These are all on the Sandbox/NCI so shouldn't need installing on those platforms.
 REQUIRED = [
-    'ciso8601',
-    'pytz',
-    'requests',
-    'lxml',
-    'numpy',
-    'xarray',
-    'geopandas',
-    'datacube',
-    'tqdm',
-    'dask',
-    'rasterio',
-    'scikit-learn',
-    'rasterstats',
-    'geopy',
-    'pandas',
-    'scipy',
-    # 'otps',  # Hard to install, but available on Sandbox and NCI
-    'GDAL',
-    'odc-ui',
-    'numexpr',
-    'matplotlib',
-    'folium',
-    'pyproj',
+    'aiohttp',
+    'boto3', 
+    'botocore',
     'branca',
-    'shapely',
-    'scikit-image',
-    'python-dateutil',
+    'ciso8601',
+    'dask-ml',
+    'datacube',
+    'Fiona',
+    'folium',
+    'geopandas',
+    'geopy',
+    'hdstats',
+    'joblib',
+    'lxml',
+    'matplotlib',
+    'numpy',
+    'odc-ui',
     'OWSLib',
-    'fiona',
+    'packaging',
+    'pandas',
+    'pyproj',
+    'python_dateutil',
+    'pyTMD<2.0.0',    
+    'pytz',
+    'rasterio',
+    'rasterstats',
+    'requests',
+    'scikit-image',
+    'scikit-learn',
+    'scipy',
+    'setuptools',
+    'Shapely',
+    'tqdm',
+    'xarray',
 ]
 
 # What packages are optional?
 EXTRAS = {
-    'jupyter': ['IPython', 'ipywidgets', 'ipyleaflet'],
-    'boto': ['boto3'],
+    'jupyter': ['ipython', 'ipywidgets', 'ipyleaflet'],
+    'dask_gateway': ['dask_gateway'],
+    'otps': ['otps'],  # tidal model, hard to install; available on Sandbox/NCI
 }
 
 # The rest you shouldn't have to touch too much :)
@@ -117,31 +123,9 @@ class UploadCommand(Command):
 
         sys.exit()
 
-
-# Versioning magic.
-VERSION_FILE_PATH = Path('dea_tools/__version__.py')
-about = {}
-try:
-    version = setuptools_scm.get_version(
-        root='..',
-        write_to='Tools' / VERSION_FILE_PATH,
-        relative_to=__file__,
-        local_scheme=lambda _: '')
-except (LookupError, FileNotFoundError):
-    # python -m build will trip the FNFError
-    try:
-        # no .git folder, so read from __version__.py
-        with open(VERSION_FILE_PATH) as f_version:
-            exec(f_version.read(), about)
-            version = about['version']
-    except FileNotFoundError:
-        # No __version__.py, yikes
-        raise RuntimeError('Build in-place with --use-feature=in-tree-build.')
-
 # Where the magic happens:
 setup(
     name=NAME,
-    version=version,
     description=DESCRIPTION,
     long_description=long_description,
     long_description_content_type='text/x-rst',
@@ -154,6 +138,11 @@ setup(
     # entry_points={
     #     'console_scripts': ['mycli=mymodule:cli'],
     # },
+    use_scm_version = {
+        "root": '..',
+        "relative_to": __file__,
+        "local_scheme": "no-local-version",
+        },
     install_requires=REQUIRED if not IS_DEA else [],
     extras_require=EXTRAS if not IS_DEA else {k: [] for k in EXTRAS},
     include_package_data=True,

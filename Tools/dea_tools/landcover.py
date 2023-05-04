@@ -422,7 +422,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         all time slices are plotted.
     measurement : string, optional
         Name of the DEA land cover classification to be plotted. Passed to 
-        lc_colourmap to specify which colour scheme will ve used. If non 
+        lc_colourmap to specify which colour scheme will be used. If non 
         provided, reads data array name from `da` to determine.
     """
     # get measurement name

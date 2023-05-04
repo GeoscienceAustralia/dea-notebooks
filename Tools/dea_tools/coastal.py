@@ -16,7 +16,7 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: November 2022
+Last modified: March 2023
 
 """
 
@@ -153,10 +153,11 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
 
 
 def get_coastlines(
-    bbox: tuple, crs="EPSG:4326", layer="shorelines", drop_wms=True
+    bbox: tuple, crs="EPSG:4326", layer="shorelines_annual", drop_wms=True
 ) -> gpd.GeoDataFrame:
     """
-    Get DEA Coastlines data for a provided bounding box using WFS.
+    Load DEA Coastlines annual shorelines or rates of change points data
+    for a provided bounding box using WFS.
 
     For a full description of the DEA Coastlines dataset, refer to the
     official Geoscience Australia product description:
@@ -173,8 +174,8 @@ def get_coastlines(
         is provided as a geopandas object.
     layer : str, optional
         Which DEA Coastlines layer to load. Options include the annual
-        shoreline vectors ("shorelines") and the rates of change
-        statistics points ("statistics"). Defaults to "shorelines".
+        shoreline vectors ("shorelines_annual") and the rates of change
+        points ("rates_of_change"). Defaults to "shorelines_annual".
     drop_wms : bool, optional
         Whether to drop WMS-specific attribute columns from the data.
         These columns are used for visualising the dataset on DEA Maps,
@@ -197,9 +198,7 @@ def get_coastlines(
 
     # Query WFS
     wfs = WebFeatureService(url=WFS_ADDRESS, version="1.1.0")
-    layer_name = (
-        "dea:coastlines" if layer == "shorelines" else "dea:coastlines_statistics"
-    )
+    layer_name = f"dea:{layer}"
     response = wfs.getfeature(
         typename=layer_name,
         bbox=tuple(bbox) + (crs,),
@@ -506,11 +505,12 @@ def pixel_tides(
     ds : xarray.Dataset
         A dataset whose geobox (`ds.odc.geobox`) will be used to define
         the spatial extent of the low resolution tide modelling grid.
-    times : list or pandas.Series, optional
+    times : pandas.DatetimeIndex or list of pandas.Timestamps, optional
         By default, the function will model tides using the times
-        contained in the `time` dimension of `ds`. This param can be used
-        to model tides for a custom set of times instead, for example:
-        `times=pd.date_range(start="2000", end="2020", freq="30min")`
+        contained in the `time` dimension of `ds`. Alternatively, this 
+        param can be used to model tides for a custom set of times 
+        instead. For example:
+        `times=pd.date_range(start="2000", end="2001", freq="5h")`
     resample : bool, optional
         Whether to resample low resolution tides back into `ds`'s original
         higher resolution grid. Set this to `False` if you do not want
@@ -569,7 +569,30 @@ def pixel_tides(
     import odc.geo.xr
     from odc.geo.geobox import GeoBox
 
-    # Create a new reduced resolution (5km) tide modelling grid after
+    # First test if no time dimension and nothing passed to `times`
+    if ('time' not in ds.dims) & (times is None):
+        raise ValueError(
+            "`ds` does not contain a 'time' dimension. Times are required "
+            "for modelling tides: please pass in a set of custom tides "
+            "using the `times` parameter. For example: "
+            "`times=pd.date_range(start='2000', end='2001', freq='5h')`"
+        )
+
+    # If custom times are provided, convert them to a consistent 
+    # pandas.DatatimeIndex format
+    if times is not None:
+        if isinstance(times, list):
+            time_coords = pd.DatetimeIndex(times)
+        elif isinstance(times, pd.Timestamp):
+            time_coords = pd.DatetimeIndex([times])
+        else: 
+            time_coords = times
+
+    # Otherwise, use times from `ds` directly
+    else:
+        time_coords = ds.coords["time"]
+
+    # Create a new reduced resolution (e.g. 5km) tide modelling grid after
     # first buffering the grid by 12km (i.e. at least two 5km pixels)
     print("Creating reduced resolution tide modelling array")
     buffered_geobox = ds.odc.geobox.buffered(buffer)
@@ -578,10 +601,8 @@ def pixel_tides(
     )
     rescaled_ds = odc.geo.xr.xr_zeros(rescaled_geobox)
 
-    # Flatten grid to 1D, then add time dimension. If custom times are
-    # provided use these, otherwise use times from `ds`
-    time_coords = ds.coords["time"] if times is None else times
-    flattened_ds = rescaled_ds.stack(z=("x", "y"))
+    # Flatten grid to 1D, then add time dimension  
+    flattened_ds = rescaled_ds.stack(z=("x", "y"))    
     flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords.values})
 
     # Model tides for each timestep
@@ -598,12 +619,16 @@ def pixel_tides(
     )
 
     # Insert modelled tide values back into flattened array, then unstack
-    # back to 3D (x, y, time)
+    # back to 3D (y, x, time)
     tides_lowres = (
+
+        # Convert dataframe to xarray format
         tide_df.set_index(["x", "y"], append=True)
         .to_xarray()
+
+        # Re-index and transpose back into 3D
         .tide_m.reindex_like(rescaled_ds)
-        .transpose(*list(ds.dims.keys()))
+        .transpose("y", "x", "time")
         .astype(np.float32)
     )
 
@@ -653,12 +678,14 @@ def tidal_tag(
     `tide_m` variable giving the height of the tide at the exact
     moment of each satellite acquisition.
 
-    By default, the function models tides for the centroid of the
-    dataset, but a custom tidal modelling location can be specified
-    using `tidepost_lat` and `tidepost_lon`.
+    The function models tides at the centroid of the dataset by default, 
+    but a custom tidal modelling location can be specified using 
+    `tidepost_lat` and `tidepost_lon`.
 
-    Tides are modelled using the OTPS tidal modelling software based on
-    the TPXO8 tidal model: http://volkov.oce.orst.edu/tides/tpxo8_atlas.html
+    The default settings use the FES2014 global tidal model, implemented
+    using the pyTMD Python package. FES2014 was produced by NOVELTIS, 
+    LEGOS, CLS Space Oceanography Division and CNES. It is distributed 
+    by AVISO, with support from CNES (http://www.aviso.altimetry.fr/).
 
     Parameters
     ----------
@@ -802,17 +829,19 @@ def tidal_stats(
     tides observed by satellites (e.g. Landsat) are biased compared to
     the natural tidal range (e.g. fail to observe either the highest or
     lowest tides etc).
-
-    By default, the function models tides for the centroid of the
-    dataset, but a custom tidal modelling location can be specified
-    using `tidepost_lat` and `tidepost_lon`.
-
-    Tides are modelled using the OTPS tidal modelling software based on
-    the TPXO8 tidal model: http://volkov.oce.orst.edu/tides/tpxo8_atlas.html
-
+    
     For more information about the tidal statistics computed by this
     function, refer to Figure 8 in Bishop-Taylor et al. 2018:
     https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8
+
+    The function models tides at the centroid of the dataset by default, 
+    but a custom tidal modelling location can be specified using 
+    `tidepost_lat` and `tidepost_lon`.
+    
+    The default settings use the FES2014 global tidal model, implemented
+    using the pyTMD Python package. FES2014 was produced by NOVELTIS, 
+    LEGOS, CLS Space Oceanography Division and CNES. It is distributed 
+    by AVISO, with support from CNES (http://www.aviso.altimetry.fr/).
 
     Parameters
     ----------
@@ -880,13 +909,6 @@ def tidal_stats(
                   all available tide heights and time
 
     """
-
-    # Load tide modelling functions from either OTPS for pyfes
-    try:
-        from otps import TimePoint
-        from otps import predict_tide
-    except ImportError:
-        from dea_tools.pyfes_model import TimePoint, predict_tide
 
     # Model tides for each observation in the supplied xarray object
     ds_tides, tidepost_lon, tidepost_lat = tidal_tag(
@@ -1228,12 +1250,12 @@ def tidal_stats_otps(
     dataset, but a custom tidal modelling location can be specified
     using `tidepost_lat` and `tidepost_lon`.
 
-    Tides are modelled using the OTPS tidal modelling software based on
-    the TPXO8 tidal model: http://volkov.oce.orst.edu/tides/tpxo8_atlas.html
-
     For more information about the tidal statistics computed by this
     function, refer to Figure 8 in Bishop-Taylor et al. 2018:
     https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8
+    
+    Tides are modelled using the OTPS tidal modelling software based on
+    the TPXO8 tidal model: http://volkov.oce.orst.edu/tides/tpxo8_atlas.html
 
     Parameters
     ----------
