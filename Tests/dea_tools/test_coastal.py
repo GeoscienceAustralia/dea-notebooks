@@ -46,7 +46,8 @@ def measured_tides_ds():
     params=[
         ("EPSG:3577", (-30, 30)),  # Australian Albers 30 m pixels
         ("EPSG:4326", (-0.00025, 0.00025)),  # WGS84, 0.0025 degree pixels
-    ]
+    ],
+    ids=["satellite_ds_epsg3577", "satellite_ds_epsg4326"],
 )
 def satellite_ds(request):
     """
