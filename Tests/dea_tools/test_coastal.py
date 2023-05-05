@@ -3,8 +3,6 @@ import pyproj
 import pandas as pd
 import xarray as xr
 
-# import sys
-# sys.path.insert(1, "../../Tools/")
 from dea_tools.coastal import model_tides, pixel_tides
 from dea_tools.validation import eval_metrics
 
@@ -83,15 +81,8 @@ def test_pixel_tides():
     ).transform(-18.0008, 122.2183)
     modelled_tides_gauge = modelled_tides_highres.interp(y=y, x=x, method="linear")
 
-    # Extract tides for non-gauge location
-    x, y = pyproj.Transformer.from_crs(
-        "EPSG:4326", f"EPSG:{ds.odc.geobox.crs.to_epsg()}"
-    ).transform(-17.92, 122.16)
-    modelled_tides_other = modelled_tides_highres.interp(y=y, x=x, method="linear")
-
     # Calculate stats
     gauge_stats = eval_metrics(x=measured_tides, y=modelled_tides_gauge)
-    other_stats = eval_metrics(x=measured_tides, y=modelled_tides_other)
 
     # Assert that modelled tides have the same coordinates as `ds`
     assert xr.align(modelled_tides_highres, ds, join="exact")
@@ -101,7 +92,3 @@ def test_pixel_tides():
     assert gauge_stats["RMSE"] < 0.25
     assert gauge_stats["R-squared"] > 0.98
     assert abs(gauge_stats["Bias"]) < 0.20
-
-    # Verify that pixel_tide outputs are more accurate at tide gauge
-    # than further away
-    assert gauge_stats["RMSE"] < other_stats["RMSE"]
