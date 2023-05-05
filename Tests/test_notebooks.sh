@@ -9,7 +9,7 @@ pip3 install ./Tools
 
 pip3 install pytest-cov
 
-pytest --durations=10 --nbval-lax --cov=Tools/dea_tools Beginners_guide
+pytest --durations=10 --nbval-lax --cov=Tools Beginners_guide
 
 # Test DEA Tools functions
 # pytest Tests/dea_tools
