@@ -9,8 +9,7 @@ pip3 install ./Tools
 
 pip3 install pytest-cov
 
-pytest --durations=10 --nbval-lax --cov=Tools Beginners_guide
-
+pytest --durations=10 --nbval-lax --cov=Tools/dea_tools Tools/dea_tools/DEA_Landsat_Surface_Reflectance.ipynb
 # Test DEA Tools functions
 # pytest Tests/dea_tools
 
