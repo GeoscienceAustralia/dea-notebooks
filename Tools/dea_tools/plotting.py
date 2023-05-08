@@ -25,7 +25,10 @@ import math
 import folium
 import numpy as np
 import pandas as pd
+<<<<<<< HEAD
 import xarray as xr
+=======
+>>>>>>> develop
 import geopandas as gpd
 import matplotlib.patheffects as PathEffects
 import matplotlib.pyplot as plt
