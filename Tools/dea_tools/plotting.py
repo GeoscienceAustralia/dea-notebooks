@@ -28,6 +28,7 @@ import pandas as pd
 import geopandas as gpd
 import matplotlib.patheffects as PathEffects
 import matplotlib.pyplot as plt
+import xarray as xr
 from matplotlib import colors as mcolours
 from matplotlib.animation import FuncAnimation
 from pathlib import Path
