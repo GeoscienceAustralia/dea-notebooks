@@ -132,5 +132,6 @@ s3-to-dc 's3://dea-public-data/baseline/ga_ls7e_ard_3/090/084/2021/07/05/*.json'
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/111/073/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Roebuck 1, 2020
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/110/073/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Roebuck 2, 2020
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/111/072/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Roebuck 3, 2020
+s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/110/072/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Roebuck 4, 2020
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/089/079/2019/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Brisbane, 2019
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/089/079/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Brisbane, 2020
