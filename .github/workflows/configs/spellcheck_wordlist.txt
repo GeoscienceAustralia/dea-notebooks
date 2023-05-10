@@ -173,6 +173,7 @@ pypi
 pyspelling
 rasterising
 rasters
+realtime
 rgb
 rse
 rst
