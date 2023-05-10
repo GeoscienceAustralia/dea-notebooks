@@ -8,6 +8,7 @@ More complex case study-based workflows demonstrating how DEA can be used to add
    :caption: Real World Examples
    
    Burnt_area_mapping.ipynb
+   Burnt_area_mapping_near_realtime.ipynb
    Change_detection.ipynb
    Chlorophyll_monitoring.ipynb
    Coastal_erosion.ipynb
