@@ -2,12 +2,13 @@ import pytest
 import rioxarray
 import numpy as np
 import pandas as pd
+import xarray as xr
 import geopandas as gpd
 
 import datacube
 from datacube.utils.masking import mask_invalid_data
 
-from dea_tools.spatial import subpixel_contours
+from dea_tools.spatial import subpixel_contours, xr_vectorize, xr_rasterize
 
 
 @pytest.fixture(
@@ -65,6 +66,117 @@ def satellite_da(request):
 
     # Return single array
     return ds.nbart_nir
+
+
+@pytest.fixture(
+    params=[
+        None,  # Default WGS84
+        "EPSG:3577",  # Australian Albers
+        "EPSG:32756",  # UTM 56S
+    ],
+    ids=[
+        "categorical_da_epsg4326",
+        "categorical_da_epsg3577",
+        "categorical_da_epsg32756",
+    ],
+)
+def categorical_da(request):
+    # Read categorical raster from file
+    raster_path = "Tests/data/categorical_raster.tif"
+    da = rioxarray.open_rasterio(raster_path).squeeze("band")
+
+    # Reproject if required
+    crs = request.param
+    if crs:
+        # Reproject and mask out nodata
+        da = da.odc.reproject(crs, resampling="nearest")
+
+    return da
+
+
+@pytest.mark.parametrize(
+    "attribute_col, expected_col",
+    [
+        (None, "attribute"),  # Default creates a column called "attribute"
+        ("testing", "testing"),  # Use custom output column name
+    ],
+)
+def test_xr_vectorize(categorical_da, attribute_col, expected_col):
+    # Vectorize data
+    categorical_gdf = xr_vectorize(categorical_da, attribute_col=attribute_col)
+
+    # Test correct columns are included
+    assert expected_col in categorical_gdf
+    assert "geometry" in categorical_gdf
+
+    # Assert geometry
+    assert isinstance(categorical_gdf, gpd.GeoDataFrame)
+    assert (categorical_gdf.geometry.type.values == "Polygon").all()
+
+    # Assert values
+    assert len(categorical_gdf.index) >= 26
+    assert len(categorical_gdf[expected_col].unique()) == len(np.unique(categorical_da))
+    assert categorical_gdf.crs == categorical_da.odc.crs
+
+
+def test_xr_vectorize_mask(categorical_da):
+    # Vectorize data using a mask to remove non-1 values
+    categorical_gdf = xr_vectorize(categorical_da, mask=categorical_da == 1)
+
+    # Verify only values in array are 1
+    assert (categorical_gdf.attribute == 1).all()
+
+
+def test_xr_vectorize_output_path(categorical_da):
+    # Vectorize and export to file
+    categorical_gdf = xr_vectorize(categorical_da, output_path="testing.geojson")
+
+    # Test that data on file is the same as original data
+    assert gpd.read_file("testing.geojson").equals(categorical_gdf)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        None,  # Default does not rename output array
+        "testing",  # Use custom output array name
+    ],
+)
+def test_xr_rasterize(categorical_da, name):
+    # Create vector to rasterize
+    categorical_gdf = xr_vectorize(categorical_da)
+
+    # Rasterize vector using attributes
+    rasterized_da = xr_rasterize(
+        gdf=categorical_gdf, da=categorical_da, attribute_col="attribute", name=name
+    )
+
+    # Assert that output is an xarray.DataArray
+    assert isinstance(rasterized_da, xr.DataArray)
+
+    # Assert that array has correct name
+    assert rasterized_da.name == name
+
+    # Assert that rasterized output is the same as original input after round trip
+    assert np.allclose(rasterized_da, categorical_da)
+    assert rasterized_da.odc.geobox.crs == categorical_da.odc.geobox.crs
+
+
+def test_xr_rasterize_output_path(categorical_da):
+    # Create vector to rasterize
+    categorical_gdf = xr_vectorize(categorical_da)
+
+    # Rasterize vector using attributes
+    rasterized_da = xr_rasterize(
+        gdf=categorical_gdf,
+        da=categorical_da,
+        attribute_col="attribute",
+        output_path="testing.tif",
+    )
+
+    # Assert that output GeoTIFF data is same as input
+    loaded_da = rioxarray.open_rasterio("testing.tif").squeeze("band")
+    assert np.allclose(loaded_da, rasterized_da)
 
 
 def test_subpixel_contours_dataseterror(dem_da):

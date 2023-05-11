@@ -39,9 +39,7 @@ from skimage.measure import find_contours
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderUnavailable, GeocoderServiceError
 
-# from datacube.utils.cog import write_cog
-# from datacube.utils.geometry import assign_crs
-# from datacube.utils.geometry import CRS, Geometry
+from datacube.utils.cog import write_cog
 from shapely.geometry import LineString, MultiLineString, shape, mapping
 
 
@@ -282,7 +280,7 @@ def xr_rasterize(
     # Convert numpy array to a full xarray.DataArray
     # and set array name if supplied
     da_rasterized = odc.geo.xr.wrap_xr(im=im, gbox=da.odc.geobox)
-    da_rasterized.rename(name)
+    da_rasterized = da_rasterized.rename(name)
 
     # If a file path is supplied, export to file
     if output_path is not None:
