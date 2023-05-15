@@ -16,42 +16,30 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: January 2023
+Last modified: April 2023
 
 '''
 
 # Import required packages
 import math
-import branca
 import folium
-import calendar
-import ipywidgets
 import numpy as np
+import pandas as pd
 import geopandas as gpd
-import matplotlib as mpl
-import matplotlib.cm as cm
-from matplotlib import colors as mcolours
 import matplotlib.patheffects as PathEffects
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from datetime import datetime
-from pyproj import Transformer
-from IPython.display import display
-from matplotlib.colors import ListedColormap
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from ipyleaflet import Map, Marker, Popup, GeoJSON, basemaps, Choropleth
-from skimage import exposure
-from odc.ui import image_aspect
-import warnings
-
+import xarray as xr
+from matplotlib import colors as mcolours
 from matplotlib.animation import FuncAnimation
-import pandas as pd
 from pathlib import Path
+from pyproj import Transformer
 from shapely.geometry import box
 from skimage.exposure import rescale_intensity
 from tqdm.auto import tqdm
-import warnings
+
+import odc.geo.xr
+from odc.ui import image_aspect
+from dea_tools.spatial import add_geobox
 
 
 def rgb(ds,
@@ -140,14 +128,9 @@ def rgb(ds,
     file written to file.
     
     """
-
+    
     # Get names of x and y dims
-    # TODO: remove geobox and try/except once datacube 1.8 is default
-    try:
-        y_dim, x_dim = ds.geobox.dimensions
-    except AttributeError:
-        from datacube.utils import spatial_dims
-        y_dim, x_dim = spatial_dims(ds)
+    y_dim, x_dim = ds.odc.spatial_dims
 
     # If ax is supplied via kwargs, ignore aspect and size
     if 'ax' in kwargs:
@@ -157,7 +140,7 @@ def rgb(ds,
     else:
         # Compute image aspect
         if not aspect:
-            aspect = image_aspect(ds)
+            aspect = ds.odc.geobox.aspect
 
         # Populate aspect size kwarg with aspect and size data
         aspect_size_kwarg = {'aspect': aspect, 'size': size}
@@ -341,195 +324,6 @@ def display_map(x, y, crs='EPSG:4326', margin=-0.5, zoom_bias=0):
     return interactive_map
 
 
-def map_shapefile(gdf,
-                  attribute,
-                  continuous=False,
-                  cmap='viridis',
-                  basemap=basemaps.Esri.WorldImagery,
-                  default_zoom=None,
-                  hover_col=True,
-                  **style_kwargs):
-    """
-    Plots a geopandas GeoDataFrame over an interactive ipyleaflet 
-    basemap, with features coloured based on attribute column values. 
-    Optionally, can be set up to print selected data from features in 
-    the GeoDataFrame. 
-
-    Last modified: February 2020
-
-    Parameters
-    ----------  
-    gdf : geopandas.GeoDataFrame
-        A GeoDataFrame containing the spatial features to be plotted 
-        over the basemap.
-    attribute: string, required
-        An required string giving the name of any column in the
-        GeoDataFrame you wish to have coloured on the choropleth.
-    continuous: boolean, optional
-        Whether to plot data as a categorical or continuous variable. 
-        Defaults to remapping the attribute which is suitable for 
-        categorical data. For continuous data set `continuous` to True.
-    cmap : string, optional
-        A string giving the name of a `matplotlib.cm` colormap that will
-        be used to style the features in the GeoDataFrame. Features will
-        be coloured based on the selected attribute. Defaults to the 
-        'viridis' colormap.
-    basemap : ipyleaflet.basemaps object, optional
-        An optional `ipyleaflet.basemaps` object used as the basemap for 
-        the interactive plot. Defaults to `basemaps.Esri.WorldImagery`.
-    default_zoom : int, optional
-        An optional integer giving a default zoom level for the 
-        interactive ipyleaflet plot. Defaults to None, which infers
-        the zoom level from the extent of the data.
-    hover_col : boolean or str, optional
-        If True (the default), the function will print  values from the 
-        GeoDataFrame's `attribute` column above the interactive map when 
-        a user hovers over the features in the map. Alternatively, a 
-        custom shapefile field can be specified by supplying a string
-        giving the name of the field to print. Set to False to prevent 
-        any attributes from being printed.
-    **style_kwargs :
-        Optional keyword arguments to pass to the `style` paramemter of
-        the `ipyleaflet.Choropleth` function. This can be used to 
-        control the appearance of the shapefile, for example 'stroke' 
-        and 'weight' (controlling line width), 'fillOpacity' (polygon 
-        transparency) and 'dashArray' (whether to plot lines/outlines
-        with dashes). For more information:
-        https://ipyleaflet.readthedocs.io/en/latest/api_reference/choropleth.html
-
-    """
-
-    warnings.warn(
-        "The `map_shapefile` function is deprecated, and will "
-        "be removed from future versions of `dea-tools`. Please "
-        "use Geopanda's built-in `.explore` functionality instead.",
-        FutureWarning)
-
-    def on_hover(event, id, properties):
-        with dbg:
-            text = properties.get(hover_col, '???')
-            lbl.value = f'{hover_col}: {text}'
-
-    # Verify that attribute exists in shapefile
-    if attribute not in gdf.columns:
-        raise ValueError(f"The `attribute` {attribute} does not exist "
-                         f"in the geopandas.GeoDataFrame. "
-                         f"Valid attributes include {gdf.columns.values}.")
-
-    # If hover_col is True, use 'attribute' as the default hover attribute.
-    # Otherwise, hover_col will use the supplied attribute field name
-    if hover_col and (hover_col is True):
-        hover_col = attribute
-
-    # If a custom string if supplied to hover_col, check this exists
-    elif hover_col and (type(hover_col) == str):
-        if hover_col not in gdf.columns:
-            raise ValueError(f"The `hover_col` field {hover_col} does "
-                             f"not exist in the geopandas.GeoDataFrame. "
-                             f"Valid attributes include "
-                             f"{gdf.columns.values}.")
-
-    # Convert to WGS 84 and GeoJSON format
-    gdf_wgs84 = gdf.to_crs(epsg=4326)
-    data_geojson = gdf_wgs84.__geo_interface__
-
-    # If continuous is False, remap categorical classes for visualisation
-    if not continuous:
-
-        # Zip classes data together to make a dictionary
-        classes_uni = list(gdf[attribute].unique())
-        classes_clean = list(range(0, len(classes_uni)))
-        classes_dict = dict(zip(classes_uni, classes_clean))
-
-        # Get values to colour by as a list
-        classes = gdf[attribute].map(classes_dict).tolist()
-
-    # If continuous is True then do not remap
-    else:
-
-        # Get values to colour by as a list
-        classes = gdf[attribute].tolist()
-
-    # Create the dictionary to colour map by
-    keys = gdf.index
-    id_class_dict = dict(zip(keys.astype(str), classes))
-
-    # Get centroid to focus map on
-    lon1, lat1, lon2, lat2 = gdf_wgs84.total_bounds
-    lon = (lon1 + lon2) / 2
-    lat = (lat1 + lat2) / 2
-
-    if default_zoom is None:
-
-        # Calculate default zoom from latitude of features
-        default_zoom = _degree_to_zoom_level(lat1, lat2, margin=-0.5)
-
-    # Plot map
-    m = Map(center=(lat, lon),
-            zoom=default_zoom,
-            basemap=basemap,
-            layout=dict(width='800px', height='600px'))
-
-    # Define default plotting parameters for the choropleth map.
-    # The nested dict structure sets default values which can be
-    # overwritten/customised by `choropleth_kwargs` values
-    style_kwargs = dict({'fillOpacity': 0.8}, **style_kwargs)
-
-    # Get `branca.colormap` object from matplotlib string
-    cm_cmap = cm.get_cmap(cmap, 30)
-    colormap = branca.colormap.LinearColormap(
-        [cm_cmap(i) for i in np.linspace(0, 1, 30)])
-
-    # Create the choropleth
-    choropleth = Choropleth(geo_data=data_geojson,
-                            choro_data=id_class_dict,
-                            colormap=colormap,
-                            style=style_kwargs)
-
-    # If the vector data contains line features, they will not be
-    # be coloured by default. To resolve this, we need to manually copy
-    # across the 'fillColor' attribute to the 'color' attribute for each
-    # feature, then plot the data as a GeoJSON layer rather than the
-    # choropleth layer that we use for polygon data.
-    linefeatures = any(x in ['LineString', 'MultiLineString']
-                       for x in gdf.geometry.type.values)
-    if linefeatures:
-
-        # Copy colour from fill to line edge colour
-        for i in keys:
-            choropleth.data['features'][i]['properties']['style']['color'] = \
-            choropleth.data['features'][i]['properties']['style']['fillColor']
-
-        # Add GeoJSON layer to map
-        feature_layer = GeoJSON(data=choropleth.data, style=style_kwargs)
-        m.add_layer(feature_layer)
-
-    else:
-
-        # Add Choropleth layer to map
-        m.add_layer(choropleth)
-
-    # If a column is specified by `hover_col`, print data from the
-    # hovered feature above the map
-    if hover_col and not linefeatures:
-
-        # Use cholopleth object if data is polygon
-        lbl = ipywidgets.Label()
-        dbg = ipywidgets.Output()
-        choropleth.on_hover(on_hover)
-        display(lbl)
-
-    else:
-
-        lbl = ipywidgets.Label()
-        dbg = ipywidgets.Output()
-        feature_layer.on_hover(on_hover)
-        display(lbl)
-
-    # Display the map
-    display(m)
-
-
 def xr_animation(ds,
                  bands=None,
                  output_path='animation.mp4',
@@ -559,7 +353,7 @@ def xr_animation(ds,
     Supports .mp4 (ideal for Twitter/social media) and .gif (ideal 
     for all purposes, but can have large file sizes) format files. 
     
-    Last modified: October 2020
+    Last modified: April 2023
     
     Parameters
     ----------  
@@ -794,6 +588,16 @@ def xr_animation(ds,
         # Update progress bar
         progress_bar.update(1)
 
+    # Add GeoBox and odc.* accessor to array using `odc-geo`
+    try:
+        ds = add_geobox(ds)
+    except ValueError:
+        raise ValueError("Unable to determine `ds`'s coordinate "
+                         "reference system (CRS). Please assign a CRS "
+                         "to the array before passing it to this "
+                         "function, e.g.: "
+                         "`ds.odc.assign_crs(crs='EPSG:3577')`")
+    
     # Test if bands have been supplied, or convert to list to allow
     # iteration if a single band is provided as a string
     if bands is None:
@@ -838,16 +642,16 @@ def xr_animation(ds,
     gdf_defaults.update(gdf_kwargs)
 
     # Get info on dataset dimensions
-    height, width = ds.geobox.shape
+    height, width = ds.odc.geobox.shape
     scale = width_pixels / width
-    left, bottom, right, top = ds.geobox.extent.boundingbox
+    left, bottom, right, top = ds.odc.geobox.extent.boundingbox
 
     # Prepare annotations
     annotation_list = _frame_annotation(ds.time, show_date, show_text)
 
     # Prepare geodataframe
     if show_gdf is not None:
-        show_gdf = show_gdf.to_crs(ds.geobox.crs)
+        show_gdf = show_gdf.to_crs(ds.odc.geobox.crs)
         show_gdf = gpd.clip(show_gdf, mask=box(
             left, bottom, right, top)).reindex(show_gdf.index).dropna(how='all')
         show_gdf = _start_end_times(show_gdf, ds)
@@ -1056,3 +860,85 @@ def plot_fmask(fmask, legend=True, **plot_kwargs):
         cb.set_ticks(ticks[:-1] + np.diff(ticks) / 2)
         cb.set_ticklabels(cblabels)
     return im
+
+
+def plot_variable_images(img_collection):
+    """
+    Plot a dynamic number of images from a xarray dataset that
+    includes Date and Index in the title. Optional ability to
+    also include the sensor in the title if a 'sensor' attribute
+    is added to the dataset using dataset.assign_attrs
+    Parameters
+    ----------
+    img_collection : xr.Dataset
+        A Dataset containing imagery with RBG bands
+    Returns
+    -------
+    plot
+    """
+    # Check that img_collection is a xarray dataset
+    if not isinstance(img_collection, xr.Dataset):
+        raise TypeError("img_collection must be a xarray dataset.")
+
+    # Calculate number of images in `img_collection`
+    plot_count = img_collection.dims["time"]
+    
+    # Check if dataset has 0 images
+    if plot_count == 0:
+        if hasattr(img_collection, "sensor"):
+            raise ValueError("The {} dataset has no images to display for the " 
+            "given query parameters".format(img_collection.sensor))
+        else:
+            raise ValueError("The supplied xarray dataset has no images to "
+            "display for the given query parameters")
+                  
+    # Divide the number of images by 2 rounding up to calculate the
+    # number of rows for the below figure are needed
+    plot_rows = math.ceil(plot_count / 2)
+
+    # Construct a figure to visualise the imagery
+    f, axarr = plt.subplots(plot_rows, 2, figsize=(10, plot_rows * 4.5),
+                            squeeze=False)
+
+    # Flatten the subplots so they can easily be enumerated through
+    axarr = axarr.flatten()
+
+    # Iterate through each image in the dataset and plot
+    # each image as a RGB on a subplot
+    for t in range(plot_count):
+        rgb(
+            img_collection.isel(time=t),
+            bands=["nbart_red", "nbart_green", "nbart_blue"],
+            ax=axarr[t],
+            robust=True,
+        )
+        # Test to see if the dataset has a custom 'sensor' attribute.
+        # If so, include the string in each subplot title.
+        if hasattr(img_collection, "sensor"):
+            title = (
+                str(img_collection.time[t].values)[:10]
+                + "  ||  Index: "
+                + str(t)
+                + "  ||  Sensor: "
+                + img_collection.sensor
+            )
+        else:
+            title = (
+                str(img_collection.time[t].values)[:10]
+                + "  ||  Index: "
+                + str(t)
+            )
+        # Set subplot title, axis label, and shrink offset text
+        axarr[t].set_title(title)
+        axarr[t].set_xlabel("X coordinate")
+        axarr[t].set_ylabel("Y coordinate")
+        axarr[t].yaxis.offsetText.set_fontsize(6)
+        axarr[t].xaxis.offsetText.set_fontsize(6)
+
+    # Adjust padding arround subplots to prevent overlapping elements
+    plt.tight_layout()
+
+    # Remove the last subplot if an odd number of images are being displayed
+    if plot_count % 2 != 0:
+        f.delaxes(axarr[plot_count])
+

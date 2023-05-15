@@ -16,12 +16,13 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: March 2023
+Last modified: April 2023
 
 """
 
 # Import required packages
 import os
+import warnings
 import numpy as np
 import xarray as xr
 import pandas as pd
@@ -489,15 +490,15 @@ def pixel_tides(
     times=None,
     resample=True,
     calculate_quantiles=None,
-    resolution=5000,
-    buffer=12000,
+    resolution=None,
+    buffer=None,
     resample_method="bilinear",
     **model_tides_kwargs,
 ):
     """
     Obtain tide heights for each pixel in a dataset by modelling
     tides into a low-resolution grid surrounding the dataset,
-    then (optionally) spatially reprojecting this low-res data back
+    then (optionally) spatially resample this low-res data back
     into the original higher resolution dataset extent and resolution.
 
     Parameters:
@@ -523,17 +524,24 @@ def pixel_tides(
         `calculate_quantiles=[0.0, 1.0]`.
     resolution: int, optional
         The desired resolution of the low-resolution grid used for tide
-        modelling. Defaults to 5000 for a 5,000 m grid (assuming `ds`'s
-        CRS uses project/metre units).
+        modelling. The default None will create a 5000 m resolution grid
+        if `ds` has a projected CRS (i.e. metre units), or a 0.05 degree
+        resolution grid if `ds` has a geographic CRS (e.g. degree units).
+        Note: higher resolutions do not necessarily provide better
+        tide modelling performance, as results will be limited by the
+        resolution of the underlying global tide model (e.g. 1/16th 
+        degree / ~5 km resolution grid for FES2014).
     buffer : int, optional
         The amount by which to buffer the higher resolution grid extent
         when creating the new low resolution grid. This buffering is
         important as it ensures that ensure pixel-based tides are seamless
         across dataset boundaries. This buffer will eventually be clipped
         away when the low-resolution data is re-projected back to the
-        resolution and extent of the higher resolution dataset. Defaults
-        to 12,000 m to ensure that at least two 5,000 m pixels occur
-        outside of the dataset bounds.
+        resolution and extent of the higher resolution dataset. To 
+        ensure that at least two pixels occur outside of the dataset 
+        bounds, the default None applies a 12000 m buffer if `ds` has a 
+        projected CRS (i.e. metre units), or a 0.12 degree buffer if 
+        `ds` has a geographic CRS (e.g. degree units).
     resample_method : string, optional
         If resampling is requested (see `resample` above), use this
         resampling method when converting from low resolution to high
@@ -591,10 +599,40 @@ def pixel_tides(
     # Otherwise, use times from `ds` directly
     else:
         time_coords = ds.coords["time"]
+        
+    # Determine spatial dimensions
+    y_dim, x_dim = ds.odc.spatial_dims
+    
+    # Determine resolution and buffer, using different defaults for
+    # geographic (i.e. degrees) and projected (i.e. metres) CRSs:
+    crs_units = ds.odc.geobox.crs.units[0][0:6]
+    if ds.odc.geobox.crs.geographic:
+        if resolution is None:
+            resolution = 0.05
+        elif resolution > 360:
+            raise ValueError(f"A resolution of greater than 360 was "
+                             f"provided, but `ds` has a geographic CRS "
+                             f"in {crs_units} units. Did you accidently "
+                             f"provide a resolution in projected "
+                             f"(i.e. metre) units?")
+        if buffer is None:
+            buffer = 0.12
+    else:
+        if resolution is None:
+            resolution = 5000
+        elif resolution < 1:
+            raise ValueError(f"A resolution of less than 1 was provided, "
+                             f"but `ds` has a projected CRS in "
+                             f"{crs_units} units. Did you accidently "
+                             f"provide a resolution in geographic "
+                             f"(degree) units?")
+        if buffer is None:
+            buffer = 12000
 
-    # Create a new reduced resolution (e.g. 5km) tide modelling grid after
-    # first buffering the grid by 12km (i.e. at least two 5km pixels)
-    print("Creating reduced resolution tide modelling array")
+    # Create a new reduced resolution tide modelling grid after
+    # first buffering the grid
+    print(f"Creating reduced resolution {resolution} x {resolution} "
+          f"{crs_units} tide modelling array")
     buffered_geobox = ds.odc.geobox.buffered(buffer)
     rescaled_geobox = GeoBox.from_bbox(
         bbox=buffered_geobox.boundingbox, resolution=resolution
@@ -602,7 +640,7 @@ def pixel_tides(
     rescaled_ds = odc.geo.xr.xr_zeros(rescaled_geobox)
 
     # Flatten grid to 1D, then add time dimension  
-    flattened_ds = rescaled_ds.stack(z=("x", "y"))    
+    flattened_ds = rescaled_ds.stack(z=(x_dim, y_dim))    
     flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords.values})
 
     # Model tides for each timestep
@@ -611,24 +649,27 @@ def pixel_tides(
     )
     print(f"Modelling tides using {model} tide model")
     tide_df = model_tides(
-        x=flattened_ds.x,
-        y=flattened_ds.y,
+        x=flattened_ds[x_dim],
+        y=flattened_ds[y_dim],
         time=flattened_ds.time,
         epsg=ds.odc.geobox.crs.epsg,
         **model_tides_kwargs,
     )
+    
+    # Rename x and y coordinates to match satellite array
+    tide_df = tide_df.rename({"x": x_dim, "y": y_dim}, axis=1)
 
     # Insert modelled tide values back into flattened array, then unstack
     # back to 3D (y, x, time)
     tides_lowres = (
 
         # Convert dataframe to xarray format
-        tide_df.set_index(["x", "y"], append=True)
+        tide_df.set_index([x_dim, y_dim], append=True)
         .to_xarray()
 
         # Re-index and transpose back into 3D
         .tide_m.reindex_like(rescaled_ds)
-        .transpose("y", "x", "time")
+        .transpose(y_dim, x_dim, "time")
         .astype(np.float32)
     )
 

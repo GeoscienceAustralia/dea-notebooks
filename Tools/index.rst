@@ -19,12 +19,12 @@ Core modules
    dea_tools.climate
    dea_tools.coastal
    dea_tools.dask
-   dea_tools.datahandling
    dea_tools.landcover
    dea_tools.plotting
    dea_tools.spatial
    dea_tools.temporal
    dea_tools.waterbodies
+   dea_tools.validation
    
 Apps and widgets
 -----------------

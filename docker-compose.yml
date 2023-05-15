@@ -31,3 +31,4 @@ services:
      user: ${CURRENT_UID}
      volumes:
        - ${GITHUB_WORKSPACE}/dea-notebooks:/home/jovyan/dea-notebooks
+       - ${GITHUB_WORKSPACE}/tide_models:/var/share/tide_models

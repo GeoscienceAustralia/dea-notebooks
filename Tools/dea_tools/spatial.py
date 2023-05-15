@@ -85,33 +85,48 @@ def points_on_line(gdf, index, distance=30):
     return points_gdf
 
 
-def _da_to_geo(da, crs):
+def add_geobox(ds, crs=None):
     """
-    Helper function that uses `odc-geo` to ensure that an 
-    `xarray.DataArray` has a GeoBox and .odc.* accessor. 
-    This is used to ensure that spatial information can be 
-    consistently accessed from any input array.
+    Ensure that an xarray DataArray has a GeoBox and .odc.* accessor
+    using `odc.geo`.
     
-    If `da` has missing Coordinate Reference System (CRS)
-    information, this can be supplied using the `crs` param.
+    If `ds` is missing a Coordinate Reference System (CRS), this can be
+    supplied using the `crs` param.
+    
+    Parameters
+    ----------
+    ds : xarray.Dataset or xarray.DataArray
+        Input xarray object that needs to be checked for spatial 
+        information.
+    crs : str, optional
+        Coordinate Reference System (CRS) information for the input `ds` 
+        array. If `ds` already has a CRS, then `crs` is not required. 
+        Default is None.
+        
+    Returns
+    -------
+    xarray.Dataset or xarray.DataArray
+        The input xarray object with added `.odc.x` attributes to access
+        spatial information.
+    
     """
     
     # Import the odc-geo package to add `.odc.x` attributes
-    # to our input xr.DataArray
+    # to our input xarray object
     import odc.geo.xr
 
     # If a CRS is not found, use custom provided CRS
-    if da.odc.crs is None and crs is not None:
-        da = da.odc.assign_crs(crs)
-    elif da.odc.crs is None and crs is None:
-        raise Exception(
-            "Unable to determine `da`'s coordinate "
+    if ds.odc.crs is None and crs is not None:
+        ds = ds.odc.assign_crs(crs)
+    elif ds.odc.crs is None and crs is None:
+        raise ValueError(
+            "Unable to determine `ds`'s coordinate "
             "reference system (CRS). Please provide a "
             "CRS using the `crs` parameter "
             "(e.g. `crs='EPSG:3577'`)."
         )
         
-    return da
+    return ds
 
 
 def xr_vectorize(
@@ -160,7 +175,7 @@ def xr_vectorize(
     """
     
     # Add GeoBox and odc.* accessor to array using `odc-geo`
-    da = _da_to_geo(da, crs)
+    da = add_geobox(da, crs)
 
     # Run the vectorizing function
     vectors = rasterio.features.shapes(
@@ -238,7 +253,7 @@ def xr_rasterize(gdf,
     """
     
     # Add GeoBox and odc.* accessor to array using `odc-geo`
-    da = _da_to_geo(da, crs)
+    da = add_geobox(da, crs)
 
     # Reproject vector data to raster's CRS
     gdf_reproj = gdf.to_crs(crs=da.odc.crs)
@@ -383,7 +398,7 @@ def subpixel_contours(da,
 
 
     # Add GeoBox and odc.* accessor to array using `odc-geo`
-    da = _da_to_geo(da, crs)
+    da = add_geobox(da, crs)
 
     # If z_values is supplied is not a list, convert to list:
     z_values = z_values if (isinstance(z_values, list) or 

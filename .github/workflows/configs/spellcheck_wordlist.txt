@@ -1,3 +1,4 @@
+Ai
 AEO
 ANU
 Abhik
@@ -24,6 +25,8 @@ EO
 ESA
 El
 Estuarine
+Fanson
+Fickas
 Flinders
 Freebairn
 Fäth
@@ -91,6 +94,7 @@ Rasterize
 Reflectance
 Renzullo
 Reprojecting
+Ronan
 STAC
 Sagar
 Schuldt
@@ -169,6 +173,7 @@ pypi
 pyspelling
 rasterising
 rasters
+realtime
 rgb
 rse
 rst
