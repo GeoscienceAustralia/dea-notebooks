@@ -628,6 +628,17 @@ def pixel_tides(
                              f"(degree) units?")
         if buffer is None:
             buffer = 12000
+    
+    # Raise error if resolution is less than dataset resolution
+    dataset_res = ds.odc.geobox.resolution.x
+    if resolution < dataset_res:
+            raise ValueError(f"The resolution of the low-resolution tide "
+                             f"modelling grid ({resolution:.2f}) is less "
+                             f"than `ds`'s pixel resolution ({dataset_res:.2f}). "
+                             f"This can cause extremely slow tide modelling "
+                             f"performance. Please select provide a resolution "
+                             f"greater than {dataset_res:.2f} using "
+                             f"`pixel_tides`'s 'resolution' parameter.")
 
     # Create a new reduced resolution tide modelling grid after
     # first buffering the grid
@@ -669,7 +680,7 @@ def pixel_tides(
 
         # Re-index and transpose back into 3D
         .tide_m.reindex_like(rescaled_ds)
-        .transpose(y_dim, x_dim, "time")
+        .transpose("time", y_dim, x_dim)
         .astype(np.float32)
     )
 
@@ -844,7 +855,7 @@ def tidal_tag(
         # Swap dimensions and sort by tide height
         ds = ds.swap_dims({"time": "tide_m"})
         ds = ds.sortby("tide_m")
-        ds = ds.drop("time")
+        ds = ds.drop_vars("time")
 
     if return_tideposts:
         return ds, tidepost_lon, tidepost_lat
@@ -962,7 +973,7 @@ def tidal_stats(
 
     # Drop spatial ref for nicer plotting
     if "spatial_ref" in ds_tides:
-        ds_tides = ds_tides.drop("spatial_ref")
+        ds_tides = ds_tides.drop_vars("spatial_ref")
 
     # Generate range of times covering entire period of satellite record
     all_timerange = pd.date_range(
@@ -1001,7 +1012,7 @@ def tidal_stats(
         + ((all_tides_df.index.dayofyear - 1) / 365)
         + ((all_tides_df.index.hour - 1) / 24)
     )
-    all_y = all_tides_df.tide_m.values.astype(np.float)
+    all_y = all_tides_df.tide_m.values.astype(np.float32)
     time_period = all_x.max() - all_x.min()
 
     # Extract x (time in decimal years) and y (distance) values
@@ -1010,7 +1021,7 @@ def tidal_stats(
         + ((ds_tides.time.dt.dayofyear - 1) / 365)
         + ((ds_tides.time.dt.hour - 1) / 24)
     )
-    obs_y = ds_tides.tide_m.values.astype(np.float)
+    obs_y = ds_tides.tide_m.values.astype(np.float32)
 
     # Compute linear regression
     obs_linreg = stats.linregress(x=obs_x, y=obs_y)
@@ -1251,7 +1262,7 @@ def tidal_tag_otps(
             # Swap dimensions and sort by tide height
             ds = ds.swap_dims({"time": "tide_m"})
             ds = ds.sortby("tide_m")
-            ds = ds.drop("time")
+            ds = ds.drop_vars("time")
 
         if return_tideposts:
             return ds, tidepost_lon, tidepost_lat
@@ -1375,7 +1386,7 @@ def tidal_stats_otps(
 
     # Drop spatial ref for nicer plotting
     if "spatial_ref" in ds_tides:
-        ds_tides = ds_tides.drop("spatial_ref")
+        ds_tides = ds_tides.drop_vars("spatial_ref")
 
     # Generate range of times covering entire period of satellite record
     all_timerange = pd.date_range(
@@ -1420,7 +1431,7 @@ def tidal_stats_otps(
         + ((ds_tides.time.dt.dayofyear - 1) / 365)
         + ((ds_tides.time.dt.hour - 1) / 24)
     )
-    obs_y = ds_tides.tide_m.values.astype(np.float)
+    obs_y = ds_tides.tide_m.values.astype(np.float32)
 
     # Compute linear regression
     obs_linreg = stats.linregress(x=obs_x, y=obs_y)
