@@ -27,6 +27,7 @@ import warnings
 import collections
 import odc.geo.xr
 import numpy as np
+import pandas as pd
 import xarray as xr
 import geopandas as gpd
 import rasterio.features
