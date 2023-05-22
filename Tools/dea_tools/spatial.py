@@ -418,7 +418,7 @@ def subpixel_contours(
         """
         if isinstance(i, np.datetime64):
             ts = pd.to_datetime(str(i))
-            i = ts.strftime(date_format)
+            i = ts.strftime(time_format)
         return i
 
     # Verify input data is a xr.DataArray
