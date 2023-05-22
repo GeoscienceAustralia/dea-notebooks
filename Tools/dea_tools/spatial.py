@@ -299,6 +299,7 @@ def subpixel_contours(
     output_path=None,
     min_vertices=2,
     dim="time",
+    time_format="%Y-%m-%d",
     errors="ignore",
     verbose=True,
 ):
@@ -315,7 +316,7 @@ def subpixel_contours(
     `attribute_df` parameter can be used to pass custom attributes
     to the output contour features.
 
-    Last modified: November 2022
+    Last modified: May 2023
 
     Parameters
     ----------
@@ -356,6 +357,10 @@ def subpixel_contours(
         operating in 'single z-value, multiple arrays' mode. The default
         is 'time', which extracts contours for each array along the time
         dimension.
+    time_format : string, optional
+        The format used to convert `numpy.datetime64` values to strings
+        if applied to data with a "time" dimension. Defaults to
+        "%Y-%m-%d".
     errors : string, optional
         If 'raise', then any failed contours will raise an exception.
         If 'ignore' (the default), a list of failed contours will be
@@ -387,6 +392,8 @@ def subpixel_contours(
         # contour into a Shapely LineString feature. If the function
         # returns a KeyError, this may be due to an unresolved issue in
         # scikit-image: https://github.com/scikit-image/scikit-image/issues/4830
+        # A temporary workaround is to peturb the z-value by a tiny
+        # amount (1e-12) before using it to extract the contour.
         try:
             line_features = [
                 LineString(i[:, [1, 0]])
@@ -402,13 +409,25 @@ def subpixel_contours(
 
         # Output resulting lines into a single combined MultiLineString
         return MultiLineString(line_features)
-    
+
+    def _time_format(i, time_format):
+        """
+        Converts numpy.datetime64 into formatted strings;
+        otherwise returns data as-is.
+        """
+        if isinstance(i, np.datetime64):
+            ts = pd.to_datetime(str(i))
+            i = ts.strftime(date_format)
+        return i
+
     # Verify input data is a xr.DataArray
     if not isinstance(da, xr.DataArray):
-        raise ValueError("The input `da` is not an xarray.DataArray. "
-                         "If you supplied an xarray.Dataset, pass in one "
-                         "of its data variables using the syntax "
-                         "`da=ds.<variable name>`.")
+        raise ValueError(
+            "The input `da` is not an xarray.DataArray. "
+            "If you supplied an xarray.Dataset, pass in one "
+            "of its data variables using the syntax "
+            "`da=ds.<variable name>`."
+        )
 
     # Add GeoBox and odc.* accessor to array using `odc-geo`
     da = add_geobox(da, crs)
@@ -432,7 +451,8 @@ def subpixel_contours(
             print(f"Operating in multiple z-value, single array mode")
         dim = "z_value"
         contour_arrays = {
-            str(i)[0:10]: _contours_to_multiline(da, i, min_vertices) for i in z_values
+            _time_format(i, time_format): _contours_to_multiline(da, i, min_vertices)
+            for i in z_values
         }
 
     else:
@@ -447,7 +467,9 @@ def subpixel_contours(
             )
 
         contour_arrays = {
-            str(i)[0:10]: _contours_to_multiline(da_i, z_values[0], min_vertices)
+            _time_format(i, time_format): _contours_to_multiline(
+                da_i, z_values[0], min_vertices
+            )
             for i, da_i in da.groupby(dim)
         }
 
@@ -455,7 +477,7 @@ def subpixel_contours(
     if attribute_df is not None:
         try:
             attribute_df.insert(0, dim, contour_arrays.keys())
-            
+
         # If this fails, it is due to the applied attribute table not
         # matching the structure of the loaded data
         except ValueError:
@@ -526,7 +548,8 @@ def subpixel_contours(
         if verbose:
             print(f"Failed to generate contours: {failed}")
 
-    # If asked to write out file, test if geojson or shapefile
+    # If asked to write out file, test if GeoJSON or ESRI Shapefile. If
+    # GeoJSON, convert to EPSG:4326 before exporting.
     if output_path and output_path.endswith(".geojson"):
         if verbose:
             print(f"Writing contours to {output_path}")
