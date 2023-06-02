@@ -2,10 +2,4 @@
 # for any pull requests in this repository.
 
 # Default reviewers for the entire repository
-*       @robbibt @BexDunn @erialC-P @uchchwhash @Matt-dea @Kooie-cate @geoscience-aman @JM-GA @treefern @margaretharrison @vnewey @Ariana-B
-
-<!-- # Example default reviewers for the "Tools" directory
-/Tools/* @user1 @user2
-
-# Example default reviewers for specific files
-DEA_notebooks_template.ipynb @user3 -->
+*       @robbibt @BexDunn @erialC-P @uchchwhash @Matt-dea @Kooie-cate @geoscience-aman @JM-GA @treefern @margaretharrison @vnewey @Ariana-B @amanda2099 @supermarkion
