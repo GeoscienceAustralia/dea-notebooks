@@ -1,6 +1,6 @@
 # classification.py
 """
-Machnine learning classification tools for analysing remote sensing data
+Machine learning classification tools for analysing remote sensing data
 using the Open Data Cube.
 
 License: The code in this notebook is licensed under the Apache License,
@@ -645,7 +645,7 @@ def collect_training_data(
     """
 
     # check the dtype of the class field
-    if gdf[field].dtype != np.int:
+    if gdf[field].dtype != int:
         raise ValueError(
             'The "field" column of the input vector must contain integer dtypes'
         )
