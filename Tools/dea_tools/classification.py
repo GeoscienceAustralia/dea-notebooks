@@ -29,21 +29,29 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import time
-from tqdm.auto import tqdm
-import dask.array as da
+from datetime import timedelta
 import geopandas as gpd
 from copy import deepcopy
-import multiprocessing as mp
-import dask.distributed as dd
+from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
+
+from typing import Callable, Tuple, Any, Optional, List, Dict
+
+import dask.array as da
+from dask_ml.wrappers import ParallelPostFit
+import dask.distributed as dd
+from dask.diagnostics import ProgressBar
+
+import multiprocessing as mp
+
 from sklearn.cluster import KMeans
 from sklearn.utils import check_random_state
 from abc import ABCMeta, abstractmethod
 from datacube.utils import geometry
 from sklearn.base import ClusterMixin
-from dask.diagnostics import ProgressBar
+
 from rasterio.features import rasterize
-from dask_ml.wrappers import ParallelPostFit
+
 from sklearn.mixture import GaussianMixture
 from datacube.utils.geometry import assign_crs
 from sklearn.cluster import AgglomerativeClustering
@@ -404,16 +412,18 @@ class HiddenPrints:
 
 
 def _get_training_data_for_shp(
-    gdf,
-    index,
-    row,
-    out_arrs,
-    out_vars,
-    dc_query,
-    return_coords,
-    feature_func=None,
-    field=None,
-    zonal_stats=None,
+    gdf: gpd.GeoDataFrame,
+    index: int,
+    row: gpd.GeoSeries,
+    out_arrs: List[np.ndarray],
+    out_vars: List[List[str]],
+    dc_query: Dict,
+    return_coords: bool,
+    feature_func: Optional[callable] = None,
+    field: Optional[str] = None,
+    zonal_stats: Optional[str] = None,
+    time_field: Optional[str] = None,
+    time_delta: Optional[timedelta] = None,
 ):
     """
     This is the core function that is triggered by `collect_training_data`.
@@ -424,11 +434,31 @@ def _get_training_data_for_shp(
 
     Parameters
     ----------
-    index, row : iterables inherited from geopandas object
-    out_arrs : list
+    gdf : gpd.GeoDataFrame
+        Geopandas GeoDataFrame containing geometries.
+    index : int
+        Index of the current geometry in the GeoDataFrame.
+    row : gpd.GeoSeries
+        GeoSeries representing the current row in the GeoDataFrame.
+    out_arrs : List[np.ndarray]
         An empty list into which the training data arrays are stored.
-    out_vars : list
-        An empty list into which the data varaible names are stored.
+    out_vars : List[List[str]]
+        An empty list into which the data variable names are stored.
+    dc_query : Dict
+        ODC query.
+    return_coords : bool
+        Flag indicating whether to return coordinates in the dataset.
+    feature_func : callable, optional
+        Optional function to extract data based on `dc_query`. Defaults to None.
+    field : str, optional
+        Name of the class field. Defaults to None.
+    zonal_stats : str, optional
+        Zonal statistics method. Defaults to None.
+    time_field : str, optional
+        Name of the column containing timestamp data in the input gdf. Defaults to None.
+    time_delta : timedelta, optional
+        Time delta used to match a data point with all the scenes falling between
+        `time_stamp - time_delta` and `time_stamp + time_delta`. Defaults to None.
 
 
     Returns
@@ -445,25 +475,39 @@ def _get_training_data_for_shp(
     # mulitprocessing for parallization
     if "dask_chunks" in dc_query.keys():
         dc_query.pop("dask_chunks", None)
-    
+
     # set up query based on polygon
     geom = geometry.Geometry(geom=gdf.iloc[index].geometry, crs=gdf.crs)
     q = {"geopolygon": geom}
-
-    # merge polygon query with user supplied query params
+        # merge polygon query with user supplied query params
     dc_query.update(q)
+
+    # Update time range if a time window is specified
+    if time_delta is not None:
+        timestamp = gdf.loc[index][time_field]
+        start_time = timestamp - time_delta
+        end_time = timestamp + time_delta
+        timestamp = {"time": (start_time, end_time)}
+        # merge time query with user supplied query params
+        dc_query.update(timestamp)
 
     # Use input feature function
     data = feature_func(dc_query)
 
-    # create polygon mask
-    mask = xr_rasterize(gdf.iloc[[index]], data)
-    data = data.where(mask)
+    # if no data is present then return
+    if len(data) == 0:
+        return None, None
+
+    if gdf.iloc[[index]].geometry.geom_type.values != 'Point':
+        # If the geometry type is a polygon extract all pixels
+        # create polygon mask
+        mask = xr_rasterize(gdf.iloc[[index]], data)
+        data = data.where(mask)
 
     # Check that feature_func has removed time
     if "time" in data.dims:
         t = data.dims["time"]
-        if t > 1:
+        if t > 1 and time_delta is not None:
             raise ValueError(
                 "After running the feature_func, the dataset still has "
                 + str(t)
@@ -506,8 +550,17 @@ def _get_training_data_for_shp(
 
 
 def _get_training_data_parallel(
-    gdf, dc_query, ncpus, return_coords, feature_func=None, field=None, zonal_stats=None
-):
+    gdf: gpd.GeoDataFrame,
+    dc_query: str,
+    ncpus: int,
+    return_coords: bool,
+    feature_func: Optional[Callable] = None,
+    field: Optional[str] = None,
+    zonal_stats: Optional[str] = None,
+    time_field: Optional[str] = None,
+    time_delta: Optional[int] = None
+) -> Tuple[List[str], List[Any]]:
+
     """
     Function passing the '_get_training_data_for_shp' function
     to a mulitprocessing.Pool.
@@ -553,6 +606,8 @@ def _get_training_data_parallel(
                     feature_func,
                     field,
                     zonal_stats,
+                    time_field,
+                    time_delta,
                 ],
                 callback=update,
             )
@@ -565,20 +620,22 @@ def _get_training_data_parallel(
 
 
 def collect_training_data(
-    gdf,
-    dc_query,
-    ncpus=1,
-    return_coords=False,
-    feature_func=None,
-    field=None,
-    zonal_stats=None,
-    clean=True,
-    fail_threshold=0.02,
-    fail_ratio=0.5,
-    max_retries=3,
-):
+    gdf: gpd.GeoDataFrame,
+    dc_query: dict,
+    ncpus: int = 1,
+    return_coords: bool = False,
+    feature_func: callable = None,
+    field: str = None,
+    zonal_stats: str = None,
+    clean: bool = True,
+    fail_threshold: float = 0.02,
+    fail_ratio: float = 0.5,
+    max_retries: int = 3,
+    time_field: str = None,
+    time_delta: timedelta = None
+) -> Tuple[List[np.ndarray], List[str]]:
     """
-    This function provides methods for gathering training data from the ODC over 
+    This function provides methods for gathering training data from the ODC over
     geometries stored within a geopandas geodataframe. The function will return a
     'model_input' array containing stacked training data arrays with all NaNs & Infs removed.
     In the instance where ncpus > 1, a parallel version of the function will be run
@@ -612,7 +669,6 @@ def collect_training_data(
                 ds = dc.load(**query)
                 ds = ds.mean('time')
                 return ds
-
     field : str
         Name of the column in the gdf that contains the class labels
     zonal_stats : string, optional
@@ -637,11 +693,17 @@ def collect_training_data(
     max_retries: int, default 3
         Maximum number of times to retry collecting samples. This number is invoked
         if the 'fail_threshold' is not reached.
+    time_field: str
+        The name of the attribute in the input dataframe containing capture timestamp
+    time_delta: time_delta
+        The size of the window used as timestamp +/- time_delta.
+        This is used to allow matching a single field data point with multiple scenes
 
     Returns
     --------
     Two lists, a list of numpy.arrays containing classes and extracted data for
     each pixel or polygon, and another containing the data variable names.
+
     """
 
     # check the dtype of the class field
@@ -659,7 +721,7 @@ def collect_training_data(
 
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
-    
+
     # add unique id to gdf to help with indexing failed rows
     # during multiprocessing
     # if zonal_stats is not None:
@@ -689,6 +751,8 @@ def collect_training_data(
                 feature_func,
                 field,
                 zonal_stats,
+                time_field,
+                time_delta,
             )
             i += 1
 
@@ -702,6 +766,8 @@ def collect_training_data(
             feature_func=feature_func,
             field=field,
             zonal_stats=zonal_stats,
+            time_field=time_field,
+            time_delta=time_delta,
         )
 
     # column names are appended during each iteration
@@ -760,6 +826,8 @@ def collect_training_data(
                     feature_func=feature_func,
                     field=field,
                     zonal_stats=zonal_stats,
+                    time_field=time_field,
+                    time_delta=time_delta
                 )
 
                 # Stack the extracted training data for each feature into a single array
