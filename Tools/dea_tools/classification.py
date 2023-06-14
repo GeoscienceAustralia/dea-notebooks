@@ -23,8 +23,6 @@ Last modified: May 2021
 import os
 import sys
 import joblib
-import datacube
-import rasterio
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -496,7 +494,7 @@ def _get_training_data_for_shp(
 
     # if no data is present then return
     if len(data) == 0:
-        return None, None
+        return
 
     if gdf.iloc[[index]].geometry.geom_type.values != 'Point':
         # If the geometry type is a polygon extract all pixels
