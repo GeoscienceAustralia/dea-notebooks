@@ -52,7 +52,7 @@ from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.model_selection import BaseCrossValidator
 
 from datacube.utils.geometry import assign_crs
-from datacube.utils import geometryblack
+from datacube.utils import geometry
 from dea_tools.spatial import xr_rasterize
 
 
