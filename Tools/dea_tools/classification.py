@@ -1027,7 +1027,7 @@ def spatial_clusters(
     """
     if method not in ["Hierarchical", "KMeans", "GMM"]:
         raise ValueError(
-            "method must be one of: 'Hierarchical','KMeans' or 'GMM'"
+            "Method must be one of: 'Hierarchical','KMeans' or 'GMM'"
         )
 
     if (method in ["GMM", "KMeans"]) & (n_groups is None):
