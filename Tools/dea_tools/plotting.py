@@ -51,6 +51,7 @@ def rgb(ds,
         col_wrap=4,
         size=6,
         aspect=None,
+        titles=None,
         savefig_path=None,
         savefig_kwargs={},
         **kwargs):
@@ -107,6 +108,10 @@ def rgb(ds,
         gives width of each facet in inches. Defaults to None, which 
         will calculate the aspect based on the x and y dimensions of 
         the input data.
+    titles : string or list of strings, optional
+        Replace the xarray 'time' dimension on plot titles with a string
+        or list of string titles, when a list of index values are
+        provided, of your choice. Defaults to None.
     savefig_path : string, optional
         Path to export image file for the RGB plot. Defaults to None, 
         which does not export an image file.
@@ -182,6 +187,9 @@ def rgb(ds,
                              col_wrap=col_wrap,
                              **aspect_size_kwarg,
                              **kwargs)
+        if titles is not None:
+            for ax, title in zip(img.axs.flat, titles):
+                ax.set_title(title)
 
     # If values provided for `index`, extract corresponding observations and
     # plot as either single image or facet plot
@@ -221,6 +229,9 @@ def rgb(ds,
                                  col_wrap=col_wrap,
                                  **aspect_size_kwarg,
                                  **kwargs)
+            if titles is not None:
+                for ax, title in zip(img.axs.flat, titles):
+                    ax.set_title(title)
 
         # If only one index is supplied, squeeze out index_dim and plot as a
         # single panel
@@ -229,6 +240,9 @@ def rgb(ds,
             img = da.squeeze(dim=index_dim).plot.imshow(robust=robust,
                                                         **aspect_size_kwarg,
                                                         **kwargs)
+            if titles is not None:
+                for ax, title in zip(img.axs.flat, titles):
+                    ax.set_title(title)
 
     # If an export path is provided, save image to file. Individual and
     # faceted plots have a different API (figure vs fig) so we get around this
