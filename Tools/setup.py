@@ -50,7 +50,7 @@ REQUIRED = [
     'pandas',
     'pyproj',
     'python_dateutil',
-    'pyTMD<2.0.0',    
+    'pyTMD>=2.0.0',    
     'pytz',
     'rasterio',
     'rasterstats',
