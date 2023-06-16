@@ -108,7 +108,7 @@ def rgb(ds,
         gives width of each facet in inches. Defaults to None, which 
         will calculate the aspect based on the x and y dimensions of 
         the input data.
-    titles : string or list of strings (optional)
+    titles : string or list of strings, optional
         Replace the xarray 'time' dimension on plot titles with a string
         or list of string titles, when a list of index values are
         provided, of your choice. Defaults to None.
