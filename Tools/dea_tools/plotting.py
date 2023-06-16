@@ -51,7 +51,7 @@ def rgb(ds,
         col_wrap=4,
         size=6,
         aspect=None,
-        titles = None,
+        titles=None,
         savefig_path=None,
         savefig_kwargs={},
         **kwargs):
