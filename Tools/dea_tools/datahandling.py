@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: February 2023
+Last modified: June 2023
 """
 
 # Import required packages
@@ -133,7 +133,7 @@ def load_ard(
     (Sentinel Hub cloud detector for Sentinel-2 imagery) cloud mask for 
     Sentinel-2.
 
-    Last modified: February 2023
+    Last modified: June 2023
 
     Parameters
     ----------
@@ -236,7 +236,7 @@ def load_ard(
         dictionary (e.g. `**query`). Keywords can include `measurements`,
         `x`, `y`, `time`, `resolution`, `resampling`, `group_by`, `crs`;
         see the `dc.load` documentation for all possible options:
-        https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html
+        https://datacube-core.readthedocs.io/en/latest/api/indexed-data/generate/datacube.Datacube.load.html
 
     Returns
     -------
@@ -244,6 +244,13 @@ def load_ard(
         An xarray.Dataset containing only satellite observations with
         a proportion of good quality pixels greater than `min_gooddata`.
 
+    Notes
+    -----
+    The `load_ard` function builds on the Open Data Cube's native `dc.load`
+    function by adding the ability to load multiple satellite data
+    products at once, and automatically apply cloud masking and filtering.
+    For loading non-satellite data products (e.g. DEA Water Observations),
+    use `dc.load` instead.
     """
 
     #########
