@@ -692,8 +692,8 @@ def wofs_fuser(dest, src):
     Note: this is a copy of the function located here:
     https://github.com/GeoscienceAustralia/digitalearthau/blob/develop/digitalearthau/utils.py
     """
-    empty = (dest & 1).astype(np.bool)
-    both = ~empty & ~((src & 1).astype(np.bool))
+    empty = (dest & 1).astype(bool)
+    both = ~empty & ~((src & 1).astype(bool))
     dest[empty] = src[empty]
     dest[both] |= src[both]
 
@@ -739,7 +739,7 @@ def dilate(array, dilation=10, invert=True):
         array = ~array
 
     return ~binary_dilation(
-        array.astype(np.bool), structure=kernel.reshape((1,) + kernel.shape)
+        array.astype(bool), structure=kernel.reshape((1,) + kernel.shape)
     )
 
 
