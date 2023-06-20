@@ -34,7 +34,7 @@ s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/091/085/2020/*/*/*.json' -
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/090/084/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Canberra 3, 2020
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/090/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Canberra 4, 2020
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/089/079/2019/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Brisbane 1, 2019
-s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/089/079/2019/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Brisbane 1, 2019
+s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/089/079/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Brisbane 1, 2019
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/096/082/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Menindee 1, 2020
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/095/082/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Menindee 2, 2020
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/095/083/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Menindee 3, 2020
@@ -42,6 +42,40 @@ s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/110/072/2020/*/*/*.json' -
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/110/073/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Roebuck 2, 2020
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/111/072/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Roebuck 3, 2020
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/111/073/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Roebuck 4, 2020
+
+# Index WO path/rows
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/093/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Murray 1, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/094/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Murray 2, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/091/084/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Canberra 1, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/091/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Canberra 2, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/090/084/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Canberra 3, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/090/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Canberra 4, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/089/079/2019/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Brisbane 1, 2019
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/089/079/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Brisbane 1, 2019
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/096/082/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Menindee 1, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/095/082/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Menindee 2, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/095/083/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Menindee 3, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/110/072/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Roebuck 1, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/110/073/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Roebuck 2, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/111/072/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Roebuck 3, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_wo_3/1-6-0/111/073/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_wo_3'  # Roebuck 4, 2020
+
+# Index FC path/rows
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/093/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Murray 1, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/094/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Murray 2, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/091/084/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Canberra 1, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/091/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Canberra 2, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/090/084/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Canberra 3, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/090/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Canberra 4, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/089/079/2019/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Brisbane 1, 2019
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/089/079/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Brisbane 1, 2019
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/096/082/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Menindee 1, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/095/082/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Menindee 2, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/095/083/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Menindee 3, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/110/072/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Roebuck 1, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/110/073/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Roebuck 2, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/111/072/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Roebuck 3, 2020
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/111/073/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'  # Roebuck 4, 2020
 
 # Index Sentinel-2 granules
 s3-to-dc 's3://dea-public-data/baseline/ga_s2am_ard_3/54/HYF/2020/*/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_s2am_ard_3'  # Murray 1, 2020
@@ -58,7 +92,19 @@ s3-to-dc 's3://dea-public-data/baseline/ga_s2am_ard_3/51/KUV/2020/*/*/*/*.json' 
 s3-to-dc 's3://dea-public-data/baseline/ga_s2am_ard_3/51/KVA/2020/*/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_s2am_ard_3'  # Roebuck 3, 2020
 s3-to-dc 's3://dea-public-data/baseline/ga_s2am_ard_3/51/KVV/2020/*/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_s2am_ard_3'  # Roebuck 4, 2020
 
-# # Index GeoMAD
+# Index GeoMAD Collection 3 albers tiles
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x39/y15/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Murray 1, all
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x43/y15/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Canberra 1, all
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x44/y15/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Canberra 2, all
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x44/y16/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Canberra 3, all
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y23/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Brisbane 1, all
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Brisbane 2, all
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x37/y19/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Menindee 1, all
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x37/y20/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Menindee 2, all
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x38/y19/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Menindee 3, all
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x38/y20/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Menindee 4, all
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x17/y36/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_nbart_gm_cyear_3'  # Roebuck 1, all
+
 # s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
 # s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_nbart_gm_cyear_3/3-0-0/x49/y23/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls7e_nbart_gm_cyear_3'
 # s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_nbart_gm_cyear_3/3-0-0/x49/y24/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls7e_nbart_gm_cyear_3'
