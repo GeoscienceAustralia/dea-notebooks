@@ -19,6 +19,7 @@ More complex case study-based workflows demonstrating how DEA can be used to add
    Seasonal_water_extents.ipynb
    Shipping_lane_identification.ipynb
    Surface_area_duration.ipynb
+   Turbidity_animated_timeseries.ipynb
    Urban_change_detection.ipynb
    Vegetation_phenology.ipynb
    Wetness_stream_gauge_correlations.ipynb

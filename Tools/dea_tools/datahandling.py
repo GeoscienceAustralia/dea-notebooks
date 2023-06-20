@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: February 2023
+Last modified: June 2023
 """
 
 # Import required packages
@@ -133,7 +133,7 @@ def load_ard(
     (Sentinel Hub cloud detector for Sentinel-2 imagery) cloud mask for 
     Sentinel-2.
 
-    Last modified: February 2023
+    Last modified: June 2023
 
     Parameters
     ----------
@@ -692,8 +692,8 @@ def wofs_fuser(dest, src):
     Note: this is a copy of the function located here:
     https://github.com/GeoscienceAustralia/digitalearthau/blob/develop/digitalearthau/utils.py
     """
-    empty = (dest & 1).astype(np.bool)
-    both = ~empty & ~((src & 1).astype(np.bool))
+    empty = (dest & 1).astype(bool)
+    both = ~empty & ~((src & 1).astype(bool))
     dest[empty] = src[empty]
     dest[both] |= src[both]
 
@@ -739,7 +739,7 @@ def dilate(array, dilation=10, invert=True):
         array = ~array
 
     return ~binary_dilation(
-        array.astype(np.bool), structure=kernel.reshape((1,) + kernel.shape)
+        array.astype(bool), structure=kernel.reshape((1,) + kernel.shape)
     )
 
 
