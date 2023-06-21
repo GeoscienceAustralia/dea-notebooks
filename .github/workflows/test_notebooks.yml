@@ -50,5 +50,5 @@ jobs:
         docker-compose exec -T sandbox ./dea-notebooks/Tests/setup_test_datacube.sh
 # docker-compose exec -T sandbox ./dea-notebooks/Tests/test_notebooks.sh
 
-     - name: Setup upterm session
-       uses: lhotari/action-upterm@v1
+    - name: Setup upterm session
+      uses: lhotari/action-upterm@v1
