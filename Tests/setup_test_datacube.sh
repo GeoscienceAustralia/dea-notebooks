@@ -35,8 +35,6 @@ datacube product list
 s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/093/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Murray 1, 2020
 
 
-pg_dump -U odc -p 5432 -h postgres odc > dump.sql
-
 # s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/094/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Murray 2, 2020
 # s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/091/084/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Canberra 1, 2020
 # s3-to-dc 's3://dea-public-data/baseline/ga_ls8c_ard_3/091/085/2020/*/*/*.json' --no-sign-request --skip-lineage --stac 'ga_ls8c_ard_3'  # Canberra 2, 2020
