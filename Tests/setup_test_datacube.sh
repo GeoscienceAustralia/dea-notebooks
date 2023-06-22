@@ -160,3 +160,5 @@ s3-to-dc 's3://dea-public-data/derivative/ga_ls_landcover_class_cyear_2/1-0-0/*/
 # Index tidal polygons - HLTC
 s3-to-dc 's3://dea-public-data/hltc/v2.0.0/composite/high-tide/lon_121/lat_-18/*.yaml' --no-sign-request --skip-lineage 'high_tide_comp_20p'
 s3-to-dc 's3://dea-public-data/hltc/v2.0.0/composite/low-tide/lon_121/lat_-18/*.yaml' --no-sign-request --skip-lineage 'low_tide_comp_20p'
+
+# Extra bespoke locations and datasets
