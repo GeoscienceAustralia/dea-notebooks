@@ -485,6 +485,7 @@ def pixel_tides(
     resolution=None,
     buffer=None,
     resample_method="bilinear",
+    model="FES2014",
     **model_tides_kwargs,
 ):
     """
@@ -539,10 +540,17 @@ def pixel_tides(
         resampling method when converting from low resolution to high
         resolution pixels. Defaults to "bilinear"; valid options include
         "nearest", "cubic", "min", "max", "average" etc.
+    model : string or list of strings
+        The tide model or a list of models used to model tides. Options 
+        include:
+        - "FES2014" (only pre-configured option on DEA Sandbox)
+        - "TPXO8-atlas"
+        - "TPXO9-atlas-v5"
     **model_tides_kwargs :
         Optional parameters passed to the `dea_tools.coastal.model_tides`
-        function. Important parameters include "model" and "directory",
-        used to specify the tide model to use and the location of its files.
+        function. Important parameters include "directory" (used to 
+        specify the location of input tide modelling files) and "cutoff" 
+        (used to extrapolate modelled tides away from the coast.)
 
     Returns:
     --------
@@ -568,8 +576,20 @@ def pixel_tides(
 
     import odc.geo.xr
     from odc.geo.geobox import GeoBox
+    
+    # Standardise model into a list for easy handling
+    model = [model] if isinstance(model, str) else model
 
-    # First test if no time dimension and nothing passed to `times`
+    # Verify that all provided models are in list of supported models
+    valid_models = ["FES2014", "FES2012", "TPXO9-atlas-v5", "TPXO8-atlas"]
+    if not all(m in valid_models for m in model):
+        raise ValueError(
+            f"One or more of the models requested ({model}) is not valid. "
+            "The following models are currently supported: 'FES2014', "
+            "'FES2012', 'TPXO9-atlas-v5', 'TPXO8-atlas'."
+        )
+
+    # Test if no time dimension and nothing passed to `times`
     if ("time" not in ds.dims) & (times is None):
         raise ValueError(
             "`ds` does not contain a 'time' dimension. Times are required "
@@ -653,34 +673,54 @@ def pixel_tides(
     # Flatten grid to 1D, then add time dimension
     flattened_ds = rescaled_ds.stack(z=(x_dim, y_dim))
     flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords.values})
+    
+    # Model tides for each model, for each coord and timestep
+    model_outputs = []
 
-    # Model tides for each timestep
-    model = (
-        "FES2014" if "model" not in model_tides_kwargs else model_tides_kwargs["model"]
-    )
-    print(f"Modelling tides using {model} tide model")
-    tide_df = model_tides(
-        x=flattened_ds[x_dim],
-        y=flattened_ds[y_dim],
-        time=flattened_ds.time,
-        epsg=ds.odc.geobox.crs.epsg,
-        **model_tides_kwargs,
-    )
+    for model_i in model:
+        print(model_i)
 
-    # Rename x and y coordinates to match satellite array
-    tide_df = tide_df.rename({"x": x_dim, "y": y_dim}, axis=1)
+        tide_df = model_tides(
+            x=flattened_ds[x_dim],
+            y=flattened_ds[y_dim],
+            time=flattened_ds.time,
+            epsg=ds.odc.geobox.crs.epsg,
+            model=model_i,
+            **model_tides_kwargs,
+        )
+
+        # Rename x and y coordinates to match satellite array, and use
+        # tide model name 
+        tide_df = tide_df.rename({"x": x_dim, "y": y_dim, "tide_m": model_i}, axis=1)
+
+        # Include x/y coords in index, allowing us to later merge our results
+        tide_df = tide_df.set_index([x_dim, y_dim], append=True)
+
+        model_outputs.append(tide_df)
 
     # Insert modelled tide values back into flattened array, then unstack
-    # back to 3D (y, x, time)
+    # back to the dimensions of the original rescaled array 
     tides_lowres = (
-        # Convert dataframe to xarray format
-        tide_df.set_index([x_dim, y_dim], append=True)
-        .to_xarray()
-        # Re-index and transpose back into 3D
-        .tide_m.reindex_like(rescaled_ds)
-        .transpose("time", y_dim, x_dim)
+        # Merge all our results into a single pandas.DataFrame
+        pd.concat(model_outputs, axis=1)
+
+        # Convert to an xarray.DataArray, with columns (i.e. different tide
+        # model outputs) used to create a new "tide_model" dimension
+        .to_xarray()  
+        .to_array("tide_model")  
+
+        # Re-index and transpose back into the original 3D shape of our data
+        .reindex_like(rescaled_ds)  
+        .transpose("tide_model", "time", y_dim, x_dim)
         .astype(np.float32)
+
+        # Rename the entire array as "tide_m"
+        .rename("tide_m")
     )
+
+    # If only one tidal model is requested, squeeze out "tide_model" dim
+    if len(tides_lowres.tide_model) == 1:
+        tides_lowres = tides_lowres.squeeze("tide_model")
 
     # Optionally calculate and return quantiles rather than raw data
     if calculate_quantiles is not None:
@@ -703,7 +743,7 @@ def pixel_tides(
             odc.algo.xr_reproject,
             ds.odc.geobox.compat,
             resample_method,
-        )
+        ).transpose(*tides_lowres.dims)
 
         return tides_highres, tides_lowres
 
