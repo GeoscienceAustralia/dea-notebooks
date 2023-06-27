@@ -250,7 +250,7 @@ def model_tides(
     to work. These should be placed in a folder with
     subfolders matching the formats specified by `pyTMD`:
     https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories
-    
+
     For FES2014 (https://www.aviso.altimetry.fr/es/data/products/auxiliary-products/global-tide-fes/description-fes2014.html):
         - {directory}/fes2014/ocean_tide/
           {directory}/fes2014/load_tide/
@@ -453,14 +453,12 @@ def model_tides(
     npts = len(t)
     tide = np.ma.zeros((npts), fill_value=np.nan)
     tide.mask = np.any(hc.mask, axis=1)
-    
+
     # Predict tides
     tide.data[:] = pyTMD.predict.drift(
         t, hc, c, deltat=deltat, corrections=model.format
     )
-    minor = pyTMD.predict.infer_minor(
-        t, hc, c, deltat=deltat, corrections=model.format
-    )
+    minor = pyTMD.predict.infer_minor(t, hc, c, deltat=deltat, corrections=model.format)
     tide.data[:] += minor.data[:]
 
     # Replace invalid values with fill value
@@ -541,15 +539,15 @@ def pixel_tides(
         resolution pixels. Defaults to "bilinear"; valid options include
         "nearest", "cubic", "min", "max", "average" etc.
     model : string or list of strings
-        The tide model or a list of models used to model tides. Options 
+        The tide model or a list of models used to model tides. Options
         include:
         - "FES2014" (only pre-configured option on DEA Sandbox)
         - "TPXO8-atlas"
         - "TPXO9-atlas-v5"
     **model_tides_kwargs :
         Optional parameters passed to the `dea_tools.coastal.model_tides`
-        function. Important parameters include "directory" (used to 
-        specify the location of input tide modelling files) and "cutoff" 
+        function. Important parameters include "directory" (used to
+        specify the location of input tide modelling files) and "cutoff"
         (used to extrapolate modelled tides away from the coast.)
 
     Returns:
@@ -576,7 +574,7 @@ def pixel_tides(
 
     import odc.geo.xr
     from odc.geo.geobox import GeoBox
-    
+
     # Standardise model into a list for easy handling
     model = [model] if isinstance(model, str) else model
 
@@ -673,12 +671,12 @@ def pixel_tides(
     # Flatten grid to 1D, then add time dimension
     flattened_ds = rescaled_ds.stack(z=(x_dim, y_dim))
     flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords.values})
-    
+
     # Model tides for each model, for each coord and timestep
     model_outputs = []
 
     for model_i in model:
-        print(model_i)
+        print(f"Modelling tides with {model_i}")
 
         tide_df = model_tides(
             x=flattened_ds[x_dim],
@@ -690,7 +688,7 @@ def pixel_tides(
         )
 
         # Rename x and y coordinates to match satellite array, and use
-        # tide model name 
+        # tide model name
         tide_df = tide_df.rename({"x": x_dim, "y": y_dim, "tide_m": model_i}, axis=1)
 
         # Include x/y coords in index, allowing us to later merge our results
@@ -699,21 +697,18 @@ def pixel_tides(
         model_outputs.append(tide_df)
 
     # Insert modelled tide values back into flattened array, then unstack
-    # back to the dimensions of the original rescaled array 
+    # back to the dimensions of the original rescaled array
     tides_lowres = (
         # Merge all our results into a single pandas.DataFrame
         pd.concat(model_outputs, axis=1)
-
         # Convert to an xarray.DataArray, with columns (i.e. different tide
         # model outputs) used to create a new "tide_model" dimension
-        .to_xarray()  
-        .to_array("tide_model")  
-
+        .to_xarray()
+        .to_array("tide_model")
         # Re-index and transpose back into the original 3D shape of our data
-        .reindex_like(rescaled_ds)  
+        .reindex_like(rescaled_ds)
         .transpose("tide_model", "time", y_dim, x_dim)
         .astype(np.float32)
-
         # Rename the entire array as "tide_m"
         .rename("tide_m")
     )
@@ -740,10 +735,12 @@ def pixel_tides(
         tides_highres = parallel_apply(
             tides_lowres,
             reproject_dim,
-            odc.algo.xr_reproject,
-            ds.odc.geobox.compat,
-            resample_method,
-        ).transpose(*tides_lowres.dims)
+            odc.geo.xr.xr_reproject,
+            how=ds.odc.geobox,
+            resampling=resample_method,
+        ).transpose(
+            *tides_lowres.dims
+        )  # Reorder dims to match low-res
 
         return tides_highres, tides_lowres
 
