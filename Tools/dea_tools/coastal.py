@@ -701,15 +701,16 @@ def pixel_tides(
     tides_lowres = (
         # Merge all our results into a single pandas.DataFrame
         pd.concat(model_outputs, axis=1)
-        # Convert to an xarray.DataArray, with columns (i.e. different tide
-        # model outputs) used to create a new "tide_model" dimension
+        # Convert to an xarray.DataArray, with each column (i.e. 
+        # different tide model outputs) converted to a new array along
+        # "tide_model" dimension
         .to_xarray()
         .to_array("tide_model")
-        # Re-index and transpose back into the original 3D shape of our data
+        # Re-index and transpose back into the original dimensions
         .reindex_like(rescaled_ds)
         .transpose("tide_model", "time", y_dim, x_dim)
         .astype(np.float32)
-        # Rename the entire array as "tide_m"
+        # Rename the entire array to "tide_m"
         .rename("tide_m")
     )
 
@@ -740,7 +741,7 @@ def pixel_tides(
             resampling=resample_method,
         ).transpose(
             *tides_lowres.dims
-        )  # Reorder dims to match low-res
+        )  # Reorder dims to match `tides_lowres` array
 
         return tides_highres, tides_lowres
 

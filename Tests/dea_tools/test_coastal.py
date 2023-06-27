@@ -191,9 +191,11 @@ def test_pixel_tides_quantile(satellite_ds):
     assert modelled_tides_ds["quantile"].values.tolist() == quantiles
     assert modelled_tides_lowres["quantile"].values.tolist() == quantiles
 
-    # Verify tides are monotonically increasing from  along
-    # quantile dim (in this case, axis=0)
+    # Verify tides are monotonically increasing along quantile dim 
+    # (in this case, axis=0)
     assert np.all(np.diff(modelled_tides_ds, axis=0) > 0)
+    
+    # Test results match expected results for a set of points across array
 
     # Set up pyproj transformer to convert between coordinates
     reproject = pyproj.Transformer.from_crs(
@@ -210,7 +212,7 @@ def test_pixel_tides_quantile(satellite_ds):
     x_coords = xr.DataArray(x, dims=["point"])
     y_coords = xr.DataArray(y, dims=["point"])
 
-    # Extract modelled tides for each corner
+    # Extract modelled tides for each point
     try:
         extracted_tides = modelled_tides_ds.sel(
             x=x_coords, y=y_coords, method="nearest"
