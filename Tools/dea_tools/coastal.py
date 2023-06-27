@@ -552,7 +552,7 @@ def pixel_tides(
 
     Returns:
     --------
-    If `resample` is True:
+    If `resample` is False:
 
         tides_lowres : xr.DataArray
             A low resolution data array giving either tide heights every
@@ -560,7 +560,7 @@ def pixel_tides(
             time in `times` (if `times` is not None), or tide height quantiles
             for every quantile provided by `calculate_quantiles`.
 
-    If `resample` is False:
+    If `resample` is True:
 
         tides_highres, tides_lowres : tuple of xr.DataArrays
             In addition to `tides_lowres` (see above), a high resolution
