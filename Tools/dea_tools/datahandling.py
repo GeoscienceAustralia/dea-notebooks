@@ -932,7 +932,7 @@ def parallel_apply(ds, dim, func, *args, **kwargs):
     *args :
         Any number of arguments that will be passed to `func`.
     **kwargs :
-        Any number of keywork arguments that will be passed to `func`.
+        Any number of keyword arguments that will be passed to `func`.
 
     Returns
     -------
