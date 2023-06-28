@@ -36,7 +36,6 @@ from scipy import stats
 from shapely.geometry import box, shape
 from owslib.wfs import WebFeatureService
 
-import odc.algo
 from datacube.utils.geometry import CRS
 from dea_tools.datahandling import parallel_apply
 
@@ -701,7 +700,7 @@ def pixel_tides(
     tides_lowres = (
         # Merge all our results into a single pandas.DataFrame
         pd.concat(model_outputs, axis=1)
-        # Convert to an xarray.DataArray, with each column (i.e. 
+        # Convert to an xarray.DataArray, with each column (i.e.
         # different tide model outputs) converted to a new array along
         # "tide_model" dimension
         .to_xarray()
@@ -714,10 +713,6 @@ def pixel_tides(
         .rename("tide_m")
     )
 
-    # If only one tidal model is requested, squeeze out "tide_model" dim
-    if len(tides_lowres.tide_model) == 1:
-        tides_lowres = tides_lowres.squeeze("tide_model")
-
     # Optionally calculate and return quantiles rather than raw data
     if calculate_quantiles is not None:
         print("Computing tide quantiles")
@@ -726,6 +721,10 @@ def pixel_tides(
 
     else:
         reproject_dim = "time"
+
+    # If only one tidal model is requested, squeeze out "tide_model" dim
+    if len(tides_lowres.tide_model) == 1:
+        tides_lowres = tides_lowres.squeeze("tide_model")
 
     # Ensure CRS is present
     tides_lowres = tides_lowres.odc.assign_crs(ds.odc.geobox.crs)
@@ -739,9 +738,10 @@ def pixel_tides(
             odc.geo.xr.xr_reproject,
             how=ds.odc.geobox,
             resampling=resample_method,
-        ).transpose(
-            *tides_lowres.dims
-        )  # Reorder dims to match `tides_lowres` array
+        )
+
+        # Reorder dims to match `tides_lowres` array, and assign name
+        tides_highres = tides_highres.transpose(*tides_lowres.dims).rename("tide_m")
 
         return tides_highres, tides_lowres
 
