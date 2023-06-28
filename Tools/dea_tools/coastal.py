@@ -16,12 +16,16 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: January 2023
+Last modified: June 2023
 
 """
 
 # Import required packages
 import os
+import pyproj
+import pathlib
+import warnings
+import scipy.interpolate
 import numpy as np
 import xarray as xr
 import pandas as pd
@@ -153,10 +157,11 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
 
 
 def get_coastlines(
-    bbox: tuple, crs="EPSG:4326", layer="shorelines", drop_wms=True
+    bbox: tuple, crs="EPSG:4326", layer="shorelines_annual", drop_wms=True
 ) -> gpd.GeoDataFrame:
     """
-    Get DEA Coastlines data for a provided bounding box using WFS.
+    Load DEA Coastlines annual shorelines or rates of change points data
+    for a provided bounding box using WFS.
 
     For a full description of the DEA Coastlines dataset, refer to the
     official Geoscience Australia product description:
@@ -173,8 +178,8 @@ def get_coastlines(
         is provided as a geopandas object.
     layer : str, optional
         Which DEA Coastlines layer to load. Options include the annual
-        shoreline vectors ("shorelines") and the rates of change
-        statistics points ("statistics"). Defaults to "shorelines".
+        shoreline vectors ("shorelines_annual") and the rates of change
+        points ("rates_of_change"). Defaults to "shorelines_annual".
     drop_wms : bool, optional
         Whether to drop WMS-specific attribute columns from the data.
         These columns are used for visualising the dataset on DEA Maps,
@@ -197,9 +202,7 @@ def get_coastlines(
 
     # Query WFS
     wfs = WebFeatureService(url=WFS_ADDRESS, version="1.1.0")
-    layer_name = (
-        "dea:coastlines" if layer == "shorelines" else "dea:coastlines_statistics"
-    )
+    layer_name = f"dea:{layer}"
     response = wfs.getfeature(
         typename=layer_name,
         bbox=tuple(bbox) + (crs,),
@@ -247,7 +250,7 @@ def model_tides(
     to work. These should be placed in a folder with
     subfolders matching the formats specified by `pyTMD`:
     https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories
-
+    
     For FES2014 (https://www.aviso.altimetry.fr/es/data/products/auxiliary-products/global-tide-fes/description-fes2014.html):
         - {directory}/fes2014/ocean_tide/
           {directory}/fes2014/load_tide/
@@ -311,29 +314,32 @@ def model_tides(
     A pandas.DataFrame containing tide heights for every
     combination of time and point coordinates.
     """
-
-    import os
-    import pyproj
-    import numpy as np
+    import pyTMD.constants
+    import pyTMD.eop
+    import pyTMD.io
     import pyTMD.time
-    import pyTMD.model
+    import pyTMD.io.model
+    import pyTMD.predict
+    import pyTMD.spatial
     import pyTMD.utilities
-    from pyTMD.calc_delta_time import calc_delta_time
-    from pyTMD.infer_minor_corrections import infer_minor_corrections
-    from pyTMD.predict_tide_drift import predict_tide_drift
-    from pyTMD.read_tide_model import extract_tidal_constants
-    from pyTMD.read_netcdf_model import extract_netcdf_constants
-    from pyTMD.read_GOT_model import extract_GOT_constants
-    from pyTMD.read_FES_model import extract_FES_constants
 
-    # Check that tide directory is accessible
-    try:
-        os.access(directory, os.F_OK)
-    except:
-        raise FileNotFoundError("Invalid tide directory")
+    # Check tide directory is accessible
+    if directory is not None:
+        directory = pathlib.Path(directory).expanduser()
+        if not directory.exists():
+            raise FileNotFoundError("Invalid tide directory")
 
-    # Get parameters for tide model
-    model = pyTMD.model(directory, format="netcdf", compressed=False).elevation(model)
+    # Validate input arguments
+    assert method in ("bilinear", "spline", "linear", "nearest")
+
+    # Get parameters for tide model; use custom definition file for
+    # FES2012 (leave this as an undocumented feature for now)
+    if model == "FES2012":
+        model = pyTMD.io.model(directory).from_file(directory / "model_FES2012.def")
+    else:
+        model = pyTMD.io.model(directory, format="netcdf", compressed=False).elevation(
+            model
+        )
 
     # If time passed as a single Timestamp, convert to datetime64
     if isinstance(time, pd.Timestamp):
@@ -352,87 +358,82 @@ def model_tides(
     # Converting x,y from EPSG to latitude/longitude
     try:
         # EPSG projection code string or int
-        crs1 = pyproj.CRS.from_string("epsg:{0:d}".format(int(epsg)))
+        crs1 = pyproj.CRS.from_epsg(int(epsg))
     except (ValueError, pyproj.exceptions.CRSError):
         # Projection SRS string
         crs1 = pyproj.CRS.from_string(epsg)
 
-    crs2 = pyproj.CRS.from_string("epsg:{0:d}".format(4326))
+    # Output coordinate reference system
+    crs2 = pyproj.CRS.from_epsg(4326)
     transformer = pyproj.Transformer.from_crs(crs1, crs2, always_xy=True)
     lon, lat = transformer.transform(x.flatten(), y.flatten())
 
-    # Assert delta time is an array and convert datetime
-    time = np.atleast_1d(time)
-    t = pyTMD.time.convert_datetime(time, epoch=(1992, 1, 1, 0, 0, 0)) / 86400.0
-
-    # Delta time (TT - UT1) file
-    delta_file = pyTMD.utilities.get_data_path(["data", "merged_deltat.data"])
+    # Convert datetime
+    timescale = pyTMD.time.timescale().from_datetime(time.flatten())
 
     # Read tidal constants and interpolate to grid points
-    if model.format in ("OTIS", "ATLAS"):
-        amp, ph, D, c = extract_tidal_constants(
+    if model.format in ("OTIS", "ATLAS", "ESR"):
+        amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
             lon,
             lat,
             model.grid_file,
             model.model_file,
             model.projection,
-            TYPE=model.type,
-            METHOD=method,
-            EXTRAPOLATE=extrapolate,
-            CUTOFF=cutoff,
-            GRID=model.format,
+            type=model.type,
+            method=method,
+            extrapolate=extrapolate,
+            cutoff=cutoff,
+            grid=model.format,
         )
-        deltat = np.zeros_like(t)
-
+        # Use delta time at 2000.0 to match TMD outputs
+        deltat = np.zeros((n_times), dtype=np.float64)
     elif model.format == "netcdf":
-        amp, ph, D, c = extract_netcdf_constants(
+        amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
             lon,
             lat,
             model.grid_file,
             model.model_file,
-            TYPE=model.type,
-            METHOD=method,
-            EXTRAPOLATE=extrapolate,
-            CUTOFF=cutoff,
-            SCALE=model.scale,
-            GZIP=model.compressed,
+            type=model.type,
+            method=method,
+            extrapolate=extrapolate,
+            cutoff=cutoff,
+            scale=model.scale,
+            compressed=model.compressed,
         )
-        deltat = np.zeros_like(t)
-
+        # Use delta time at 2000.0 to match TMD outputs
+        deltat = np.zeros((n_times), dtype=np.float64)
     elif model.format == "GOT":
-        amp, ph, c = extract_GOT_constants(
+        amp, ph, c = pyTMD.io.GOT.extract_constants(
             lon,
             lat,
             model.model_file,
-            METHOD=method,
-            EXTRAPOLATE=extrapolate,
-            CUTOFF=cutoff,
-            SCALE=model.scale,
-            GZIP=model.compressed,
+            method=method,
+            extrapolate=extrapolate,
+            cutoff=cutoff,
+            scale=model.scale,
+            compressed=model.compressed,
         )
-
-        # Interpolate delta times from calendar dates to tide time
-        deltat = calc_delta_time(delta_file, t)
-
+        # Delta time (TT - UT1)
+        deltat = timescale.tt_ut1
     elif model.format == "FES":
-        amp, ph = extract_FES_constants(
+        amp, ph = pyTMD.io.FES.extract_constants(
             lon,
             lat,
             model.model_file,
-            TYPE=model.type,
-            VERSION=model.version,
-            METHOD=method,
-            EXTRAPOLATE=extrapolate,
-            CUTOFF=cutoff,
-            SCALE=model.scale,
-            GZIP=model.compressed,
+            type=model.type,
+            version=model.version,
+            method=method,
+            extrapolate=extrapolate,
+            cutoff=cutoff,
+            scale=model.scale,
+            compressed=model.compressed,
         )
 
         # Available model constituents
         c = model.constituents
 
-        # Interpolate delta times from calendar dates to tide time
-        deltat = calc_delta_time(delta_file, t)
+        # Delta time (TT - UT1)
+        deltat = timescale.tt_ut1
 
     # Calculate complex phase in radians for Euler's
     cph = -1j * ph * np.pi / 180.0
@@ -443,7 +444,7 @@ def model_tides(
     # Repeat constituents to length of time and number of input
     # coords before passing to `predict_tide_drift`
     t, hc, deltat = (
-        np.tile(t, n_points),
+        np.tile(timescale.tide, n_points),
         hc.repeat(n_times, axis=0),
         np.tile(deltat, n_points),
     )
@@ -452,23 +453,14 @@ def model_tides(
     npts = len(t)
     tide = np.ma.zeros((npts), fill_value=np.nan)
     tide.mask = np.any(hc.mask, axis=1)
-
-    # Depending on pyTMD version (<=1.06 vs > 1.06), use different params
-    # TODO: Remove once Sandbox is updated to use pyTMD version 1.0.9
-    try:
-        tide.data[:] = predict_tide_drift(
-            t, hc, c, deltat=deltat, corrections=model.format
-        )
-        minor = infer_minor_corrections(
-            t, hc, c, deltat=deltat, corrections=model.format
-        )
-    except:
-        tide.data[:] = predict_tide_drift(
-            t, hc, c, DELTAT=deltat, CORRECTIONS=model.format
-        )
-        minor = infer_minor_corrections(
-            t, hc, c, DELTAT=deltat, CORRECTIONS=model.format
-        )
+    
+    # Predict tides
+    tide.data[:] = pyTMD.predict.drift(
+        t, hc, c, deltat=deltat, corrections=model.format
+    )
+    minor = pyTMD.predict.infer_minor(
+        t, hc, c, deltat=deltat, corrections=model.format
+    )
     tide.data[:] += minor.data[:]
 
     # Replace invalid values with fill value
@@ -490,15 +482,15 @@ def pixel_tides(
     times=None,
     resample=True,
     calculate_quantiles=None,
-    resolution=5000,
-    buffer=12000,
+    resolution=None,
+    buffer=None,
     resample_method="bilinear",
     **model_tides_kwargs,
 ):
     """
     Obtain tide heights for each pixel in a dataset by modelling
     tides into a low-resolution grid surrounding the dataset,
-    then (optionally) spatially reprojecting this low-res data back
+    then (optionally) spatially resample this low-res data back
     into the original higher resolution dataset extent and resolution.
 
     Parameters:
@@ -508,8 +500,8 @@ def pixel_tides(
         the spatial extent of the low resolution tide modelling grid.
     times : pandas.DatetimeIndex or list of pandas.Timestamps, optional
         By default, the function will model tides using the times
-        contained in the `time` dimension of `ds`. Alternatively, this 
-        param can be used to model tides for a custom set of times 
+        contained in the `time` dimension of `ds`. Alternatively, this
+        param can be used to model tides for a custom set of times
         instead. For example:
         `times=pd.date_range(start="2000", end="2001", freq="5h")`
     resample : bool, optional
@@ -524,17 +516,24 @@ def pixel_tides(
         `calculate_quantiles=[0.0, 1.0]`.
     resolution: int, optional
         The desired resolution of the low-resolution grid used for tide
-        modelling. Defaults to 5000 for a 5,000 m grid (assuming `ds`'s
-        CRS uses project/metre units).
+        modelling. The default None will create a 5000 m resolution grid
+        if `ds` has a projected CRS (i.e. metre units), or a 0.05 degree
+        resolution grid if `ds` has a geographic CRS (e.g. degree units).
+        Note: higher resolutions do not necessarily provide better
+        tide modelling performance, as results will be limited by the
+        resolution of the underlying global tide model (e.g. 1/16th
+        degree / ~5 km resolution grid for FES2014).
     buffer : int, optional
         The amount by which to buffer the higher resolution grid extent
         when creating the new low resolution grid. This buffering is
         important as it ensures that ensure pixel-based tides are seamless
         across dataset boundaries. This buffer will eventually be clipped
         away when the low-resolution data is re-projected back to the
-        resolution and extent of the higher resolution dataset. Defaults
-        to 12,000 m to ensure that at least two 5,000 m pixels occur
-        outside of the dataset bounds.
+        resolution and extent of the higher resolution dataset. To
+        ensure that at least two pixels occur outside of the dataset
+        bounds, the default None applies a 12000 m buffer if `ds` has a
+        projected CRS (i.e. metre units), or a 0.12 degree buffer if
+        `ds` has a geographic CRS (e.g. degree units).
     resample_method : string, optional
         If resampling is requested (see `resample` above), use this
         resampling method when converting from low resolution to high
@@ -593,17 +592,89 @@ def pixel_tides(
     else:
         time_coords = ds.coords["time"]
 
-    # Create a new reduced resolution (e.g. 5km) tide modelling grid after
-    # first buffering the grid by 12km (i.e. at least two 5km pixels)
-    print("Creating reduced resolution tide modelling array")
+    # First test if no time dimension and nothing passed to `times`
+    if ("time" not in ds.dims) & (times is None):
+        raise ValueError(
+            "`ds` does not contain a 'time' dimension. Times are required "
+            "for modelling tides: please pass in a set of custom tides "
+            "using the `times` parameter. For example: "
+            "`times=pd.date_range(start='2000', end='2001', freq='5h')`"
+        )
+
+    # If custom times are provided, convert them to a consistent
+    # pandas.DatatimeIndex format
+    if times is not None:
+        if isinstance(times, list):
+            time_coords = pd.DatetimeIndex(times)
+        elif isinstance(times, pd.Timestamp):
+            time_coords = pd.DatetimeIndex([times])
+        else:
+            time_coords = times
+
+    # Otherwise, use times from `ds` directly
+    else:
+        time_coords = ds.coords["time"]
+
+    # Determine spatial dimensions
+    y_dim, x_dim = ds.odc.spatial_dims
+
+    # Determine resolution and buffer, using different defaults for
+    # geographic (i.e. degrees) and projected (i.e. metres) CRSs:
+    crs_units = ds.odc.geobox.crs.units[0][0:6]
+    if ds.odc.geobox.crs.geographic:
+        if resolution is None:
+            resolution = 0.05
+        elif resolution > 360:
+            raise ValueError(
+                f"A resolution of greater than 360 was "
+                f"provided, but `ds` has a geographic CRS "
+                f"in {crs_units} units. Did you accidently "
+                f"provide a resolution in projected "
+                f"(i.e. metre) units?"
+            )
+        if buffer is None:
+            buffer = 0.12
+    else:
+        if resolution is None:
+            resolution = 5000
+        elif resolution < 1:
+            raise ValueError(
+                f"A resolution of less than 1 was provided, "
+                f"but `ds` has a projected CRS in "
+                f"{crs_units} units. Did you accidently "
+                f"provide a resolution in geographic "
+                f"(degree) units?"
+            )
+        if buffer is None:
+            buffer = 12000
+
+    # Raise error if resolution is less than dataset resolution
+    dataset_res = ds.odc.geobox.resolution.x
+    if resolution < dataset_res:
+        raise ValueError(
+            f"The resolution of the low-resolution tide "
+            f"modelling grid ({resolution:.2f}) is less "
+            f"than `ds`'s pixel resolution ({dataset_res:.2f}). "
+            f"This can cause extremely slow tide modelling "
+            f"performance. Please select provide a resolution "
+            f"greater than {dataset_res:.2f} using "
+            f"`pixel_tides`'s 'resolution' parameter."
+        )
+
+    # Create a new reduced resolution tide modelling grid after
+    # first buffering the grid
+    print(
+        f"Creating reduced resolution {resolution} x {resolution} "
+        f"{crs_units} tide modelling array"
+    )
     buffered_geobox = ds.odc.geobox.buffered(buffer)
     rescaled_geobox = GeoBox.from_bbox(
         bbox=buffered_geobox.boundingbox, resolution=resolution
     )
     rescaled_ds = odc.geo.xr.xr_zeros(rescaled_geobox)
 
-    # Flatten grid to 1D, then add time dimension  
-    flattened_ds = rescaled_ds.stack(z=("x", "y"))    
+    # Flatten grid to 1D, then add time dimension
+    flattened_ds = rescaled_ds.stack(z=(x_dim, y_dim))
     flattened_ds = flattened_ds.expand_dims(dim={"time": time_coords.values})
 
     # Model tides for each timestep
@@ -612,32 +683,30 @@ def pixel_tides(
     )
     print(f"Modelling tides using {model} tide model")
     tide_df = model_tides(
-        x=flattened_ds.x,
-        y=flattened_ds.y,
+        x=flattened_ds[x_dim],
+        y=flattened_ds[y_dim],
         time=flattened_ds.time,
         epsg=ds.odc.geobox.crs.epsg,
         **model_tides_kwargs,
     )
 
+    # Rename x and y coordinates to match satellite array
+    tide_df = tide_df.rename({"x": x_dim, "y": y_dim}, axis=1)
+
     # Insert modelled tide values back into flattened array, then unstack
-    # back to 3D (x, y, time)
+    # back to 3D (y, x, time)
     tides_lowres = (
-        
         # Convert dataframe to xarray format
-        tide_df.set_index(["x", "y"], append=True)
+        tide_df.set_index([x_dim, y_dim], append=True)
         .to_xarray()
-        
-        # Re-index and transpose to match dimensions in `ds`. The `...`
-        # places any extra dimensions (like "time" if it did not exist
-        # in the original `ds`) at the end
+        # Re-index and transpose back into 3D
         .tide_m.reindex_like(rescaled_ds)
-        .transpose(*list(ds.dims.keys()), ...)
+        .transpose("time", y_dim, x_dim)
         .astype(np.float32)
     )
 
     # Optionally calculate and return quantiles rather than raw data
     if calculate_quantiles is not None:
-
         print("Computing tide quantiles")
         tides_lowres = tides_lowres.quantile(q=calculate_quantiles, dim="time")
         reproject_dim = "quantile"
@@ -650,7 +719,6 @@ def pixel_tides(
 
     # Reproject each timestep into original high resolution grid
     if resample:
-
         print("Reprojecting tides into original array")
         tides_highres = parallel_apply(
             tides_lowres,
@@ -681,13 +749,13 @@ def tidal_tag(
     `tide_m` variable giving the height of the tide at the exact
     moment of each satellite acquisition.
 
-    The function models tides at the centroid of the dataset by default, 
-    but a custom tidal modelling location can be specified using 
+    The function models tides at the centroid of the dataset by default,
+    but a custom tidal modelling location can be specified using
     `tidepost_lat` and `tidepost_lon`.
 
     The default settings use the FES2014 global tidal model, implemented
-    using the pyTMD Python package. FES2014 was produced by NOVELTIS, 
-    LEGOS, CLS Space Oceanography Division and CNES. It is distributed 
+    using the pyTMD Python package. FES2014 was produced by NOVELTIS,
+    LEGOS, CLS Space Oceanography Division and CNES. It is distributed
     by AVISO, with support from CNES (http://www.aviso.altimetry.fr/).
 
     Parameters
@@ -732,7 +800,6 @@ def tidal_tag(
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
     if not tidepost_lat or not tidepost_lon:
-
         tidepost_lon, tidepost_lat = ds.odc.geobox.geographic_extent.centroid.coords[0]
         print(
             f"Setting tide modelling location from dataset centroid: "
@@ -761,7 +828,6 @@ def tidal_tag(
     # If tides cannot be successfully modeled (e.g. if the centre of the
     # xarray dataset is located is over land), raise an exception
     if tide_df.tide_m.isnull().all():
-
         raise ValueError(
             f"Tides could not be modelled for dataset centroid located "
             f"at {tidepost_lon:.2f}, {tidepost_lat:.2f}. This can occur if "
@@ -775,7 +841,6 @@ def tidal_tag(
 
     # Optionally calculate the tide phase for each observation
     if ebb_flow:
-
         # Model tides for a time 15 minutes prior to each previously
         # modelled satellite acquisition time. This allows us to compare
         # tide heights to see if they are rising or falling.
@@ -802,11 +867,10 @@ def tidal_tag(
     # If swap_dims = True, make tide height the primary dimension
     # instead of time
     if swap_dims:
-
         # Swap dimensions and sort by tide height
         ds = ds.swap_dims({"time": "tide_m"})
         ds = ds.sortby("tide_m")
-        ds = ds.drop("time")
+        ds = ds.drop_vars("time")
 
     if return_tideposts:
         return ds, tidepost_lon, tidepost_lat
@@ -832,18 +896,18 @@ def tidal_stats(
     tides observed by satellites (e.g. Landsat) are biased compared to
     the natural tidal range (e.g. fail to observe either the highest or
     lowest tides etc).
-    
+
     For more information about the tidal statistics computed by this
     function, refer to Figure 8 in Bishop-Taylor et al. 2018:
     https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8
 
-    The function models tides at the centroid of the dataset by default, 
-    but a custom tidal modelling location can be specified using 
+    The function models tides at the centroid of the dataset by default,
+    but a custom tidal modelling location can be specified using
     `tidepost_lat` and `tidepost_lon`.
-    
+
     The default settings use the FES2014 global tidal model, implemented
-    using the pyTMD Python package. FES2014 was produced by NOVELTIS, 
-    LEGOS, CLS Space Oceanography Division and CNES. It is distributed 
+    using the pyTMD Python package. FES2014 was produced by NOVELTIS,
+    LEGOS, CLS Space Oceanography Division and CNES. It is distributed
     by AVISO, with support from CNES (http://www.aviso.altimetry.fr/).
 
     Parameters
@@ -924,7 +988,7 @@ def tidal_stats(
 
     # Drop spatial ref for nicer plotting
     if "spatial_ref" in ds_tides:
-        ds_tides = ds_tides.drop("spatial_ref")
+        ds_tides = ds_tides.drop_vars("spatial_ref")
 
     # Generate range of times covering entire period of satellite record
     all_timerange = pd.date_range(
@@ -963,7 +1027,7 @@ def tidal_stats(
         + ((all_tides_df.index.dayofyear - 1) / 365)
         + ((all_tides_df.index.hour - 1) / 24)
     )
-    all_y = all_tides_df.tide_m.values.astype(np.float)
+    all_y = all_tides_df.tide_m.values.astype(np.float32)
     time_period = all_x.max() - all_x.min()
 
     # Extract x (time in decimal years) and y (distance) values
@@ -972,14 +1036,13 @@ def tidal_stats(
         + ((ds_tides.time.dt.dayofyear - 1) / 365)
         + ((ds_tides.time.dt.hour - 1) / 24)
     )
-    obs_y = ds_tides.tide_m.values.astype(np.float)
+    obs_y = ds_tides.tide_m.values.astype(np.float32)
 
     # Compute linear regression
     obs_linreg = stats.linregress(x=obs_x, y=obs_y)
     all_linreg = stats.linregress(x=all_x, y=all_y)
 
     if plain_english:
-
         print(
             f"\n{spread:.0%} of the {all_range:.2f} m modelled astronomical "
             f"tidal range is observed at this location.\nThe lowest "
@@ -988,7 +1051,6 @@ def tidal_stats(
         )
 
         if linear_reg:
-
             if obs_linreg.pvalue > 0.05:
                 print(
                     f"Observed tides show no significant trends "
@@ -1020,7 +1082,6 @@ def tidal_stats(
                 )
 
     if plot:
-
         # Create plot and add all time and observed tide data
         fig, ax = plt.subplots(figsize=(10, 5))
         all_tides_df.tide_m.plot(ax=ax, alpha=0.4)
@@ -1150,7 +1211,6 @@ def tidal_tag_otps(
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
     if not tidepost_lat or not tidepost_lon:
-
         tidepost_lon, tidepost_lat = ds.extent.centroid.to_crs(
             crs=CRS("EPSG:4326")
         ).coords[0]
@@ -1174,7 +1234,6 @@ def tidal_tag_otps(
     # If tides cannot be successfully modeled (e.g. if the centre of the
     # xarray dataset is located is over land), raise an exception
     if len(obs_predictedtides) > 0:
-
         # Extract tide heights
         obs_tideheights = [predictedtide.tide_m for predictedtide in obs_predictedtides]
 
@@ -1183,7 +1242,6 @@ def tidal_tag_otps(
 
         # Optionally calculate the tide phase for each observation
         if ebb_flow:
-
             # Model tides for a time 15 minutes prior to each previously
             # modelled satellite acquisition time. This allows us to compare
             # tide heights to see if they are rising or falling.
@@ -1209,11 +1267,10 @@ def tidal_tag_otps(
         # If swap_dims = True, make tide height the primary dimension
         # instead of time
         if swap_dims:
-
             # Swap dimensions and sort by tide height
             ds = ds.swap_dims({"time": "tide_m"})
             ds = ds.sortby("tide_m")
-            ds = ds.drop("time")
+            ds = ds.drop_vars("time")
 
         if return_tideposts:
             return ds, tidepost_lon, tidepost_lat
@@ -1221,7 +1278,6 @@ def tidal_tag_otps(
             return ds
 
     else:
-
         raise ValueError(
             f"Tides could not be modelled for dataset centroid located "
             f"at {tidepost_lon:.2f}, {tidepost_lat:.2f}. This can occur if "
@@ -1256,7 +1312,7 @@ def tidal_stats_otps(
     For more information about the tidal statistics computed by this
     function, refer to Figure 8 in Bishop-Taylor et al. 2018:
     https://www.sciencedirect.com/science/article/pii/S0272771418308783#fig8
-    
+
     Tides are modelled using the OTPS tidal modelling software based on
     the TPXO8 tidal model: http://volkov.oce.orst.edu/tides/tpxo8_atlas.html
 
@@ -1337,7 +1393,7 @@ def tidal_stats_otps(
 
     # Drop spatial ref for nicer plotting
     if "spatial_ref" in ds_tides:
-        ds_tides = ds_tides.drop("spatial_ref")
+        ds_tides = ds_tides.drop_vars("spatial_ref")
 
     # Generate range of times covering entire period of satellite record
     all_timerange = pd.date_range(
@@ -1382,23 +1438,21 @@ def tidal_stats_otps(
         + ((ds_tides.time.dt.dayofyear - 1) / 365)
         + ((ds_tides.time.dt.hour - 1) / 24)
     )
-    obs_y = ds_tides.tide_m.values.astype(np.float)
+    obs_y = ds_tides.tide_m.values.astype(np.float32)
 
     # Compute linear regression
     obs_linreg = stats.linregress(x=obs_x, y=obs_y)
     all_linreg = stats.linregress(x=all_x, y=all_y)
 
     if plain_english:
-
         print(
             f"\n{spread:.0%} of the {all_range:.2f} m modelled astronomical "
             f"tidal range is observed at this location.\nThe lowest "
             f"{low_tide_offset:.0%} and highest {high_tide_offset:.0%} "
             f"of astronomical tides are never observed.\n"
         )
-        
-        if linear_reg:
 
+        if linear_reg:
             # Plain english
             if obs_linreg.pvalue > 0.05:
                 print(
@@ -1431,7 +1485,6 @@ def tidal_stats_otps(
                 )
 
     if plot:
-
         # Create plot and add all time and observed tide data
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.plot(all_timerange, all_tideheights, alpha=0.4)

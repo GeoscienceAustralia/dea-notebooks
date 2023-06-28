@@ -15,7 +15,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: March 2021
+Last modified: June 2023
 '''
 
 # Import required packages
@@ -39,7 +39,7 @@ def calculate_indices(ds,
     in memory. This can be a memory-expensive operation, so to avoid
     this, set `inplace=True`.
 
-    Last modified: March 2021
+    Last modified: June 2023
     
     Parameters
     ----------
@@ -76,6 +76,7 @@ def calculate_indices(ds,
         * ``'NDSI'`` (Normalised Difference Snow Index, Hall 1995)
         * ``'NDTI'`` (Normalise Difference Tillage Index,
                 Van Deventeret et al. 1997)
+        * ``'NDTI2'`` (Normalised Difference Turbidity Index, Lacaux et al., 2007)
         * ``'NDVI'`` (Normalised Difference Vegetation Index, Rouse 1973)
         * ``'NDWI'`` (Normalised Difference Water Index, McFeeters 1996)
         * ``'SAVI'`` (Soil Adjusted Vegetation Index, Huete 1988)
@@ -97,10 +98,9 @@ def calculate_indices(ds,
         
         Valid options are: 
         
-        * ``'ga_ls_2'`` (for GA Landsat Collection 2)
         * ``'ga_ls_3'`` (for GA Landsat Collection 3) 
-        * ``'ga_s2_1'`` (for GA Sentinel 2 Collection 1)
         * ``'ga_s2_3'`` (for GA Sentinel 2 Collection 3)
+        * ``'ga_gm_3'`` (for GA Geomedian Collection 3)
 
     custom_varname : str, optional
         By default, the original dataset will be returned with 
@@ -201,6 +201,11 @@ def calculate_indices(ds,
                   # Van Deventer et al. 1997
                   'NDTI': lambda ds: (ds.swir1 - ds.swir2) /
                                      (ds.swir1 + ds.swir2),
+        
+                  # Normalised Difference Turbidity Index,
+                  # Lacaux et al., 2007
+                  'NDTI2': lambda ds: (ds.red - ds.green) /
+                                     (ds.red + ds.green),
 
                   # Normalised Difference Water Index, McFeeters 1996
                   'NDWI': lambda ds: (ds.green - ds.nir) /
@@ -286,14 +291,15 @@ def calculate_indices(ds,
                   'FMR': lambda ds: (ds.swir1 / ds.nir),
 
                   # Iron Oxide Ratio, Segal 1982
-                  'IOR': lambda ds: (ds.red / ds.blue)
+                  'IOR': lambda ds: (ds.red / ds.blue),
+
     }
     
     # If index supplied is not a list, convert to list. This allows us to
     # iterate through either multiple or single indices in the loop below
     indices = index if isinstance(index, list) else [index]
     
-    #calculate for each index in the list of indices supplied (indexes)
+    # Calculate for each index in the list of indices supplied (indexes)
     for index in indices:
 
         # Select an index function from the dictionary
@@ -332,10 +338,10 @@ def calculate_indices(ds,
         if collection is None:
 
             raise ValueError("'No `collection` was provided. Please specify "
-                             "either 'ga_ls_2', 'ga_ls_3', 'ga_s2_1' or "
-                             "'ga_s2_3' to ensure the function calculates indices using the "
-                             "correct spectral bands")
-
+                             "either 'ga_ls_3', 'ga_s2_3' or 'ga_gm_3' "
+                             "to ensure the function calculates indices "
+                             "using the correct spectral bands")            
+        
         elif collection == 'ga_ls_3':
 
             # Dictionary mapping full data names to simpler 'red' alias names
@@ -359,7 +365,7 @@ def calculate_indices(ds,
                 a: b for a, b in bandnames_dict.items() if a in ds.variables
             }
 
-        elif (collection == 'ga_s2_1') | (collection == 'ga_s2_3'):
+        elif collection == 'ga_s2_3':
 
             # Dictionary mapping full data names to simpler 'red' alias names
             bandnames_dict = {
@@ -385,17 +391,17 @@ def calculate_indices(ds,
             bands_to_rename = {
                 a: b for a, b in bandnames_dict.items() if a in ds.variables
             }
-
-        elif collection == 'ga_ls_2':
-
+           
+        elif collection == 'ga_gm_3':
+            
             # Pass an empty dict as no bands need renaming
             bands_to_rename = {}
 
         # Raise error if no valid collection name is provided:
         else:
             raise ValueError(f"'{collection}' is not a valid option for "
-                              "`collection`. Please specify either \n"
-                              "'ga_ls_2', 'ga_ls_3', 'ga_s2_1' or 'ga_s2_3'")
+                             "`collection`. Please specify either \n"
+                             "'ga_ls_3', 'ga_s2_3' or 'ga_gm_3'")
 
         # Apply index function 
         try:

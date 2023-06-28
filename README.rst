@@ -20,6 +20,8 @@ Digital Earth Australia notebooks and tools repository
   :target: https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml
   :alt: Notebook testing
 
+**Contribute:** We'd love your contribution! DEA Notebooks is an open-source project and welcomes contributions from everyone. Please use this handy `template notebook <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/DEA_notebooks_template.ipynb>`_ to construct your contribution!
+
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
 **Contact:** If you need assistance with any of the Jupyter Notebooks or Python code in this repository, please post a question on the `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/ask?tags=open-data-cube>`_ using the ``open-data-cube`` tag (you can view `previously asked questions here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_). If you would like to report an issue with this notebook, you can `file one on Github <https://github.com/GeoscienceAustralia/dea-notebooks>`_.
@@ -28,7 +30,7 @@ Digital Earth Australia notebooks and tools repository
 
     Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234
     
-We encourage you to check out the other usages of our notebooks, code and tools at our `USAGE <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/USAGE.rst>`_ page, and to add your paper, training course, creative work or other exciting project there as well!    
+We encourage you to check out the other usages of our notebooks, code and tools at our `USAGE <https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst>`_ page, and to add your paper, training course, creative work or other exciting project there as well!    
 
 ----------
 
@@ -38,13 +40,13 @@ The repository is based around the following directory structure (from simple to
 
 1. `Beginners_guide <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Beginners_guide>`_: *Introductory notebooks aimed at introducing Jupyter Notebooks and how to load, plot and interact with DEA data*
 
-2. `DEA_datasets <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/DEA_datasets>`_: *Notebooks introducing DEA's satellite datasets and derived products, including how to load each dataset and any special features of the data*
+2. `DEA_products <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/DEA_products>`_: *Notebooks introducing DEA's satellite datasets and derived products, including how to load each dataset and any special features of the data*
 
-3. `Frequently_used_code <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Frequently_used_code>`_: *A recipe book of simple code examples demonstrating how to perform common geospatial analysis tasks using DEA and open-source software*
+3. `Interactive_apps <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Interactive_apps>`_: *Interactive apps and widgets that require little or no coding to run*
 
-4. `Real_world_examples <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Real_world_examples>`_: *More complex workflows demonstrating how DEA can be used to address real-world problems*
+4. `How_to_guides <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/How_to_guides>`_: *A recipe book of simple code examples demonstrating how to perform common geospatial analysis tasks using DEA and open-source software*
 
-5. `Scientific_workflows <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Scientific_workflows>`_: *Production code and notebooks for generating published DEA products or analysis tools*
+5. `Real_world_examples <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Real_world_examples>`_: *More complex case study workflows demonstrating how DEA can be used to address real-world problems*
 
 Supporting functions and data for the notebooks are kept in the following directories:
 
@@ -120,3 +122,5 @@ Commit and push any changes you make, which will become part of the open pull re
 If the notebook meets all the checklist requirements, click the green 'Review' button and click 'Approve' (with an optional comment). You can also 'Request changes' here if any of the checklist items are not complete.
 
 Once the pull request has been approved, you can merge it into the ``develop`` branch. Select the 'Squash and merge' option from the drop-down menu to the right of the green 'merge' button. Once you have merged the new branch in, you need to delete the branch. There is a button on the page that asks you if you would like to delete the now merged branch. Select 'Yes' to delete it.
+
+See also `wiki <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-git#reviewing-and-approving-a-pull-request>`_.

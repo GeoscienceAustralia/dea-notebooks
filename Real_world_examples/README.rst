@@ -8,21 +8,18 @@ More complex case study-based workflows demonstrating how DEA can be used to add
    :caption: Real World Examples
    
    Burnt_area_mapping.ipynb
+   Burnt_area_mapping_near_realtime.ipynb
    Change_detection.ipynb
-   Change_filmstrips.ipynb
    Chlorophyll_monitoring.ipynb
    Coastal_erosion.ipynb
-   Crop_health.ipynb
    Estimate_climate_driver_influence_on_rainfall.ipynb
-   Exporting_satellite_images.ipynb
-   Generating_satellite_animations.ipynb
    Intertidal_elevation.ipynb
    Mapping_inundation_using_stream_gauges.ipynb
-   Mining_rehabilitation.ipynb
    Radar_water_detection.ipynb
+   Seasonal_water_extents.ipynb
    Shipping_lane_identification.ipynb
    Surface_area_duration.ipynb
-   Subpixel_waterbodies.ipynb
+   Turbidity_animated_timeseries.ipynb
    Urban_change_detection.ipynb
    Vegetation_phenology.ipynb
    Wetness_stream_gauge_correlations.ipynb
