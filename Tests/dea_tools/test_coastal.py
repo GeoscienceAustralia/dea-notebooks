@@ -1,6 +1,5 @@
 import pytest
 import datacube
-import pyproj
 import numpy as np
 import pandas as pd
 import xarray as xr
