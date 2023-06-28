@@ -4,6 +4,7 @@ import pyproj
 import numpy as np
 import pandas as pd
 import xarray as xr
+import geopandas as gpd
 
 from dea_tools.coastal import model_tides, pixel_tides, tidal_tag, tidal_stats
 from dea_tools.validation import eval_metrics
@@ -128,20 +129,24 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
 
     # Test through time at tide gauge
 
-    # Set up pyproj transformer to convert between coordinates
-    reproject = pyproj.Transformer.from_crs(
-        crs_from="EPSG:4326",
-        crs_to=f"EPSG:{satellite_ds.odc.geobox.crs.to_epsg()}",
-        always_xy=True,
-    )
+    # Create tide gauge point, and reproject to dataset CRS
+    tide_gauge_point = gpd.points_from_xy(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        crs="EPSG:4326",
+    ).to_crs(satellite_ds.odc.geobox.crs)
 
-    # Extract tides through time for tide gauge location
-    x, y = reproject.transform(GAUGE_X, GAUGE_Y)
     try:
-        modelled_tides_gauge = modelled_tides_ds.sel(y=y, x=x, method="nearest")
+        modelled_tides_gauge = modelled_tides_ds.sel(
+            y=tide_gauge_point[0].y,
+            x=tide_gauge_point[0].x,
+            method="nearest",
+        )
     except KeyError:
         modelled_tides_gauge = modelled_tides_ds.sel(
-            latitude=y, longitude=x, method="nearest"
+            latitude=tide_gauge_point[0].y,
+            longitude=tide_gauge_point[0].x,
+            method="nearest",
         )
 
     # Calculate accuracy stats
@@ -155,13 +160,15 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
 
     # Test spatially for a single timestep at corners of array
 
-    # Reproject test point coordinates and create arrays
-    x, y = reproject.transform(
-        [122.14438, 122.30304, 122.12964, 122.29235],
-        [-17.91625, -17.92713, -18.07656, -18.08751],
-    )
-    x_coords = xr.DataArray(x, dims=["point"])
-    y_coords = xr.DataArray(y, dims=["point"])
+    # Create test points, reproject to dataset CRS, and extract coords
+    # as xr.DataArrays so we can select data from our array
+    points = gpd.points_from_xy(
+        x=[122.14438, 122.30304, 122.12964, 122.29235],
+        y=[-17.91625, -17.92713, -18.07656, -18.08751],
+        crs="EPSG:4326",
+    ).to_crs(satellite_ds.odc.geobox.crs)
+    x_coords = xr.DataArray(points.x, dims=["point"])
+    y_coords = xr.DataArray(points.y, dims=["point"])
 
     # Extract modelled tides for each corner
     try:
@@ -191,26 +198,21 @@ def test_pixel_tides_quantile(satellite_ds):
     assert modelled_tides_ds["quantile"].values.tolist() == quantiles
     assert modelled_tides_lowres["quantile"].values.tolist() == quantiles
 
-    # Verify tides are monotonically increasing along quantile dim 
+    # Verify tides are monotonically increasing along quantile dim
     # (in this case, axis=0)
     assert np.all(np.diff(modelled_tides_ds, axis=0) > 0)
-    
+
     # Test results match expected results for a set of points across array
 
-    # Set up pyproj transformer to convert between coordinates
-    reproject = pyproj.Transformer.from_crs(
-        crs_from="EPSG:4326",
-        crs_to=f"EPSG:{satellite_ds.odc.geobox.crs.to_epsg()}",
-        always_xy=True,
-    )
-
-    # Reproject test point coordinates and create arrays
-    x, y = reproject.transform(
-        [122.14438, 122.30304, 122.12964, 122.29235],
-        [-17.91625, -17.92713, -18.07656, -18.08751],
-    )
-    x_coords = xr.DataArray(x, dims=["point"])
-    y_coords = xr.DataArray(y, dims=["point"])
+    # Create test points, reproject to dataset CRS, and extract coords
+    # as xr.DataArrays so we can select data from our array
+    points = gpd.points_from_xy(
+        x=[122.14438, 122.30304, 122.12964, 122.29235],
+        y=[-17.91625, -17.92713, -18.07656, -18.08751],
+        crs="EPSG:4326",
+    ).to_crs(satellite_ds.odc.geobox.crs)
+    x_coords = xr.DataArray(points.x, dims=["point"])
+    y_coords = xr.DataArray(points.y, dims=["point"])
 
     # Extract modelled tides for each point
     try:
