@@ -538,9 +538,9 @@ def pixel_tides(
         resolution pixels. Defaults to "bilinear"; valid options include
         "nearest", "cubic", "min", "max", "average" etc.
     model : string or list of strings
-        The tide model or a list of models used to model tides. Options
-        include:
-        - "FES2014" (only pre-configured option on DEA Sandbox)
+        The tide model or a list of models used to model tides, as 
+        supported by the `pyTMD` Python package. Options include:
+        - "FES2014" (default; pre-configured on DEA Sandbox)
         - "TPXO8-atlas"
         - "TPXO9-atlas-v5"
     **model_tides_kwargs :
