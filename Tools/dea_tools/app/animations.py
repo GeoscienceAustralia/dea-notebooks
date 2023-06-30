@@ -18,6 +18,8 @@ from ipyleaflet import (
     Map,
     DrawControl,
     WidgetControl,
+    SearchControl,
+    Marker,
     LayerGroup,
     LayersControl,
     GeoData,
@@ -496,6 +498,12 @@ class animation_app(HBox):
 
         # Add tools to map widget
         self.m.add_control(draw_control)
+        self.m.add_control(SearchControl(
+        position="topleft",
+        url='https://nominatim.openstreetmap.org/search?format=json&q={s}',
+        zoom=13, # 'Village / Suburb' level zoom
+        marker=Marker(draggable=False)
+        ))
         self.m.add_layer(self.map_layers)
 
         # Update all maps to starting defaults
