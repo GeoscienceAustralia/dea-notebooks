@@ -490,7 +490,7 @@ def load_ard(
         pq_mask = ~mask_cleanup(~pq_mask, mask_filters=mask_filters)
 
         warnings.warn(
-            "As of `dea_tools` v1.0.0, pixel quality masks are "
+            "As of `dea_tools` v0.3.0, pixel quality masks are "
             "inverted before being passed to `mask_filters` (i.e. so "
             "that good quality/clear pixels are False and poor quality "
             "pixels/clouds are True). This means that 'dilation' will "
