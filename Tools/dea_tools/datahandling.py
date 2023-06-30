@@ -490,7 +490,7 @@ def load_ard(
         pq_mask = ~mask_cleanup(~pq_mask, mask_filters=mask_filters)
 
         warnings.warn(
-            "As of `dea_tools` v1.0.0, pixel quality masks are "
+            "As of `dea_tools` v0.3.0, pixel quality masks are "
             "inverted before being passed to `mask_filters` (i.e. so "
             "that good quality/clear pixels are False and poor quality "
             "pixels/clouds are True). This means that 'dilation' will "
@@ -905,7 +905,7 @@ def nearest(
     return nearest_array
 
 
-def parallel_apply(ds, dim, func, *args):
+def parallel_apply(ds, dim, func, *args, **kwargs):
     """
     Applies a custom function in parallel along the dimension of an
     xarray.Dataset or xarray.DataArray.
@@ -931,6 +931,8 @@ def parallel_apply(ds, dim, func, *args):
         function should be the array along `dim`.
     *args :
         Any number of arguments that will be passed to `func`.
+    **kwargs :
+        Any number of keyword arguments that will be passed to `func`.
 
     Returns
     -------
@@ -942,8 +944,12 @@ def parallel_apply(ds, dim, func, *args):
     from concurrent.futures import ProcessPoolExecutor
     from tqdm import tqdm
     from itertools import repeat
+    from functools import partial
 
     with ProcessPoolExecutor() as executor:
+        
+        # Update func to add kwargs
+        func = partial(func, **kwargs)
 
         # Apply func in parallel
         groups = [group for (i, group) in ds.groupby(dim)]
