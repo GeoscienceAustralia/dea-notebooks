@@ -28,6 +28,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Masking_data.ipynb
    Opening_GeoTIFFs_NetCDFs.ipynb
    Pansharpening.ipynb
+   Planetary_computer.ipynb
    Polygon_drill.ipynb
    Polygonise_pixel_edges.ipynb
    Principal_component_analysis.ipynb
