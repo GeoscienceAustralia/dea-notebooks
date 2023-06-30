@@ -442,7 +442,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     height, width = data.geobox.shape
     scale = out_width / width
 
-     if year:
+    if year:
         #plotting protocall if 'year' variable is passed
         year_string = f"{year}-01-01"
         data = data.sel(time=year_string, method="nearest")
