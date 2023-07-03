@@ -432,8 +432,8 @@ def calculate_anomalies(shp_fpath,
         
     else: 
         print('Extracting data based on lat, lon coords')
-        query = {'lon': (140,141),
-                 'lat': (-33,-32),
+        query = {'lon': (query_box[1] - query_box[2], query_box[1] + query_box[2]),
+                 'lat': (query_box[0] - query_box[2], query_box[0] + query_box[2]),
                  'time': time}
             
         if collection=='c3':
@@ -506,11 +506,11 @@ def calculate_anomalies(shp_fpath,
     y_slice = [i for i in range(int(ymin),int(ymax-30),-30)]
     
     #index the climatology dataset to the location of our AOI
-    climatology_mean = xr.open_rasterio('/scratch/q81/dn7196/vegetation_anomalies_jbw/results/NSW_NDVI_Climatologies_mean/mosaics/ndvi_clim_mean_'+season+'_nsw.tif').sel(x=x_slice,
+    climatology_mean = xr.open_rasterio('results/NSW_NDVI_Climatologies_mean/mosaics/ndvi_clim_mean_'+season+'_nsw.tif').sel(x=x_slice,
                                                                 y=y_slice,
                                                                 method='nearest').chunk(chunks=dask_chunks).squeeze()
     
-    climatology_std = xr.open_rasterio('/scratch/q81/dn7196/vegetation_anomalies_jbw/results/NSW_NDVI_Climatologies_std/mosaics/ndvi_clim_std_'+season+'_nsw.tif').sel(x=x_slice,
+    climatology_std = xr.open_rasterio('results/NSW_NDVI_Climatologies_std/mosaics/ndvi_clim_std_'+season+'_nsw.tif').sel(x=x_slice,
                                                                 y=y_slice,
                                                                 method='nearest').chunk(chunks=dask_chunks).squeeze()
     

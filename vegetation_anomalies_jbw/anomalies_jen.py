@@ -304,38 +304,68 @@ def _common_bands(dc, products):
 def calculate_anomalies(shp_fpath,
                         collection,
                         year,
-                        season,
+                        startingmonth,
                         query_box,
                         dask_chunks):
     
-    # dict of all seasons for indexing datacube
-    all_seasons = {'JFM': [1,2,3],
-                   'FMA': [2,3,4],
-                   'MAM': [3,4,5],
-                   'AMJ': [4,5,6],
-                   'MJJ': [5,6,7],
-                   'JJA': [6,7,8],
-                   'JAS': [7,8,9],
-                   'ASO': [8,9,10],
-                   'SON': [9,10,11],
-                   'OND': [10,11,12],
-                   'NDJ': [11,12,1],
-                   'DJF': [12,1,2],
-                  }
+#     # dict of all seasons for indexing datacube
+#     all_seasons = {'JFM': [1,2,3],
+#                    'FMA': [2,3,4],
+#                    'MAM': [3,4,5],
+#                    'AMJ': [4,5,6],
+#                    'MJJ': [5,6,7],
+#                    'JJA': [6,7,8],
+#                    'JAS': [7,8,9],
+#                    'ASO': [8,9,10],
+#                    'SON': [9,10,11],
+#                    'OND': [10,11,12],
+#                    'NDJ': [11,12,1],
+#                    'DJF': [12,1,2],
+#                   }
 
-    if season not in all_seasons:
-        raise ValueError("Not a valid season, "
-                         "must be one of: " + str(all_seasons.keys()))
+#     if season not in all_seasons:
+#         raise ValueError("Not a valid season, "
+#                          "must be one of: " + str(all_seasons.keys()))
          
-    #Depending on the season, grab the time for the dc.load
-    months=all_seasons.get(season)
+#     #Depending on the season, grab the time for the dc.load
+#     months=all_seasons.get(season)
         
-    if (season == 'DJF') or (season == 'NDJ'):
+#     if (season == 'DJF') or (season == 'NDJ'):
+#         time= (year+"-"+str(months[0]), str(int(year)+1)+"-"+str(months[2]))
+    
+#     else:
+#         time = (year+"-"+str(months[0]), year+"-"+str(months[2]))
+   
+    # by starting month
+    all_seasons = {1: [1,2,3,'JFM'],
+               2: [2,3,4,'FMA'],
+               3: [3,4,5,'MAM'],
+               4: [4,5,6,'AMJ'],
+               5: [5,6,7,'MJJ'],
+               6: [6,7,8,'JJA'],
+               7: [7,8,9,'JAS'],
+               8: [8,9,10,'ASO'],
+               9: [9,10,11,'SON'],
+               10: [10,11,12,'OND'],
+               11: [11,12,1,'NDJ'],
+               12: [12,1,2,'DJF']
+              }
+
+
+# #Depending on the season, grab the time for the dc.load
+    months=all_seasons.get(startingmonth)    
+    season=months[3]
+
+
+        
+    if (months[0] == 11) or (months[0] == 12):
         time= (year+"-"+str(months[0]), str(int(year)+1)+"-"+str(months[2]))
     
     else:
         time = (year+"-"+str(months[0]), year+"-"+str(months[2]))
-   
+  
+
+
     #connect to datacube
     try:
         if collection == 'c3':
@@ -432,8 +462,8 @@ def calculate_anomalies(shp_fpath,
         
     else: 
         print('Extracting data based on lat, lon coords')
-        query = {'lon': (140,141),
-                 'lat': (-33,-32),
+        query = {'lon': (query_box[1] - query_box[2], query_box[1] + query_box[2]),
+                 'lat': (query_box[0] - query_box[2], query_box[0] + query_box[2]),
                  'time': time}
             
         if collection=='c3':
@@ -506,11 +536,11 @@ def calculate_anomalies(shp_fpath,
     y_slice = [i for i in range(int(ymin),int(ymax-30),-30)]
     
     #index the climatology dataset to the location of our AOI
-    climatology_mean = xr.open_rasterio('/scratch/q81/dn7196/vegetation_anomalies_jbw/results/NSW_NDVI_Climatologies_mean/mosaics/ndvi_clim_mean_'+season+'_nsw.tif').sel(x=x_slice,
+    climatology_mean = xr.open_rasterio('results/NSW_NDVI_Climatologies_mean/mosaics/ndvi_clim_mean_'+season+'_nsw.tif').sel(x=x_slice,
                                                                 y=y_slice,
                                                                 method='nearest').chunk(chunks=dask_chunks).squeeze()
     
-    climatology_std = xr.open_rasterio('/scratch/q81/dn7196/vegetation_anomalies_jbw/results/NSW_NDVI_Climatologies_std/mosaics/ndvi_clim_std_'+season+'_nsw.tif').sel(x=x_slice,
+    climatology_std = xr.open_rasterio('results/NSW_NDVI_Climatologies_std/mosaics/ndvi_clim_std_'+season+'_nsw.tif').sel(x=x_slice,
                                                                 y=y_slice,
                                                                 method='nearest').chunk(chunks=dask_chunks).squeeze()
     

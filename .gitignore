@@ -30,4 +30,4 @@
 __pycache__
 *.dirlock
 Transitory_notebooks/
-
+*.qmd
