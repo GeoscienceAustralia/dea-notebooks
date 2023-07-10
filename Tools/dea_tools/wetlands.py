@@ -2,15 +2,17 @@
 '''
 This module is for processing DEA wetlands data. 
 
-License: The code in this notebook is licensed under the Apache License, 
-Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
-Australia data is licensed under the Creative Commons by Attribution 4.0 
-license (https://creativecommons.org/licenses/by/4.0/).
+License: The code in this notebook is licensed under the Apache 
+License,Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). 
+Digital Earth Australia data is licensed under the Creative Commons 
+by Attribution 4.0 license 
+(https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open Data 
-Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack 
-Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) 
-using the `open-data-cube` tag (you can view previously asked questions 
+Contact: If you need assistance, please post a question on the Open 
+Data Cube Slack channel (http://slack.opendatacube.org/) or on the 
+GIS Stack Exchange 
+(https://gis.stackexchange.com/questions/ask?tags=open-data-cube)using
+the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
 
 If you would like to report an issue with this script, file one on 
@@ -20,19 +22,28 @@ Last modified: July 2023
 '''
 
 import pandas as pd
-# disable DeprecationWarning for chained assignments in conversion to datetime format
+# disable DeprecationWarning for chained assignments in conversion to 
+# datetime format
 pd.options.mode.chained_assignment = None  # default='warn'
 
 def normalise_wit(polygon_base_df):
     '''
-    This function is to normalise the Fractional Cover vegetation components so users can choose to display the WIT plot in a more readable way.
-    Normalising vegetation components so they total to 1. Normalised values are returned as additional columns. 
+    This function is to normalise the Fractional Cover vegetation
+    components so users can choose to display the WIT plot in a more
+    readable way. Normalising vegetation components so they total to 1.
+    Normalised values are returned as additional columns. 
     
     Last modified: July 2023
 
     Parameters
     ----------
-    polygon_base_df : pandas DataFrame with columns: ['date', 'pv', 'npv', 'bs', 'wet', 'water']
+    polygon_base_df : pandas DataFrame with columns: 
+    ['date',
+    'pv',
+    'npv',
+    'bs',
+    'wet',
+    'water']
     
     Returns
     -------
@@ -84,20 +95,25 @@ def normalise_wit(polygon_base_df):
 
     vegetation_overall_value = pv + npv + bs
 
-    print(f"The pv is {pv} \nThe npv is {npv} \nThe bs is {bs} \nThe overall number is {water + wet + pv + npv + bs}")
+    print(f"The pv is {pv} \nThe npv is {npv} \nThe bs is {bs} 
+    \nThe overall number is {water + wet + pv + npv + bs}")
     
     The pv is 0.05 
     The npv is 0.04 
     The bs is 0.02 
     The overall number is 1.01
     
-    The overall number is greater than 1. Let us normalise the result. The water and wet are pixel classification result, so we should not touch them.
+    The overall number is greater than 1. Let us normalise the result. 
+    The water and wet are pixel classification result, so we should 
+    not touch them.
     
     pv = pv/vegetation_overall_value*vegetation_area
     npv = npv/vegetation_overall_value*vegetation_area
     bs = bs/vegetation_overall_value*vegetation_area
     
-    print(f"The normalised pv is {pv} \nThe normalised npv is {npv} \nThe normalised bs is {bs} \nThe normalised overall number is {water + wet + pv + npv + bs}")
+    print(f"The normalised pv is {pv} \nThe normalised npv is {npv} 
+    \nThe normalised bs is {bs} \nThe normalised overall number is 
+    {water + wet + pv + npv + bs}")
     
     The normalised pv is 0.04545454545454545 
     The normalised npv is 0.036363636363636355 
@@ -133,7 +149,6 @@ def normalise_wit(polygon_base_df):
     polygon_base_df.reset_index(inplace=True)
     
     return polygon_base_df
-
 
 def generate_low_quality_data_periods(df):
     # the generate_low_quality is: SLC off period: https://www.usgs.gov/faqs/what-landsat-7-etm-slc-data
