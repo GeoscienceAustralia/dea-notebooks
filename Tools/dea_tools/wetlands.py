@@ -20,8 +20,92 @@ Last modified: July 2023
 '''
 
 import pandas as pd
+# disable DeprecationWarning for chained assignments in conversion to datetime format
+pd.options.mode.chained_assignment = None  # default='warn'
 
 def normalise_wit(polygon_base_df):
+    '''
+    This function is to normalise the Fractional Cover vegetation components so users can choose to display the WIT plot in a more readable way.
+    Normalising vegetation components so they total to 1. Normalised values are returned as additional columns. 
+    
+    Last modified: July 2023
+
+    Parameters
+    ----------
+    polygon_base_df : pandas DataFrame with columns: ['date', 'pv', 'npv', 'bs', 'wet', 'water']
+    
+    Returns
+    -------
+    polygon_base_df with columns: 
+    ['index',
+     'date',
+     'pv',
+     'npv',
+     'bs',
+     'wet',
+     'water',
+     'veg_areas',
+     'overall_veg_num',
+     'norm_bs',
+     'norm_pv',
+     'norm_npv']
+    
+    Example 
+    --------
+    
+    A polygon has 11 pixels
+
+    [cloud][water][wet][wet][wet][wet][wet][wet][wet][wet][vegetation]
+      |      |        |                                        |
+      |      |        |                                        |
+      |      |        |__> wet = 8/10 = 80%                    |__> pv/npv/bs == 1/10 = 10%
+      |      |
+      |      |__> water = 1/10 = 10% 
+      |
+      |__> pc_missing = 1/11 ~+ 9.1%
+      
+    The vegetation pixel relative np, npv, and bs values
+
+     [vegetation]
+          |
+          |__> [pv] [npv] [bs]
+               [ 5] [  4] [ 2]
+               
+    Assume vegetation relative values are:
+
+    water = 0.1
+    wet = 0.8
+
+    pv = 0.05
+    npv = 0.04
+    bs = 0.02
+
+    vegetation_area = 1 - water - wet
+
+    vegetation_overall_value = pv + npv + bs
+
+    print(f"The pv is {pv} \nThe npv is {npv} \nThe bs is {bs} \nThe overall number is {water + wet + pv + npv + bs}")
+    
+    The pv is 0.05 
+    The npv is 0.04 
+    The bs is 0.02 
+    The overall number is 1.01
+    
+    The overall number is greater than 1. Let us normalise the result. The water and wet are pixel classification result, so we should not touch them.
+    
+    pv = pv/vegetation_overall_value*vegetation_area
+    npv = npv/vegetation_overall_value*vegetation_area
+    bs = bs/vegetation_overall_value*vegetation_area
+    
+    print(f"The normalised pv is {pv} \nThe normalised npv is {npv} \nThe normalised bs is {bs} \nThe normalised overall number is {water + wet + pv + npv + bs}")
+    
+    The normalised pv is 0.04545454545454545 
+    The normalised npv is 0.036363636363636355 
+    The normalised bs is 0.018181818181818177 
+    The normalised overall number is 1.0
+    
+    '''
+       
     # ignore high pixel missing timestamp result
     polygon_base_df = polygon_base_df.dropna(subset=['bs'])
     
@@ -49,3 +133,27 @@ def normalise_wit(polygon_base_df):
     polygon_base_df.reset_index(inplace=True)
     
     return polygon_base_df
+
+
+def generate_low_quality_data_periods(df):
+    # the generate_low_quality is: SLC off period: https://www.usgs.gov/faqs/what-landsat-7-etm-slc-data
+    # and periods with an observation density of less than four observations within a twelve month (365 days) period
+    
+    # default: all data points are good
+    df.loc[:, "off_value"] = 0
+    
+    # Add the first no-data times (SLC-off only)
+    LS5_8_gap_start = datetime.datetime(2011,11,1)
+    LS5_8_gap_end = datetime.datetime(2013,4,1)
+    
+    df.loc[df[(df['date'] >= LS5_8_gap_start) & (df['date'] <= LS5_8_gap_end)].index, "off_value"] = 100
+    
+    # periods with an observation density of less than four observations within a twelve month (365 days) period
+    for i in range(3, len(df) - 3):               
+        # can change to another threshold (like: 100 days) to test dyanmic no-data-period display
+        if ((df.loc[i + 3, "date"] - df.loc[i, "date"]).days) > 365:
+            df.loc[df[(df['date'] >= df.loc[i, "date"]) & (df['date'] <= df.loc[i + 3, "date"])].index, "off_value"] = 100
+                                                         
+    return df
+
+
