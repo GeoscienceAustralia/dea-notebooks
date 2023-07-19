@@ -21,10 +21,14 @@ Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 Last modified: July 2023
 '''
 
+import datetime
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 import pandas as pd
 # disable DeprecationWarning for chained assignments in conversion to 
 # datetime format
 pd.options.mode.chained_assignment = None  # default='warn'
+import seaborn as sns
 
 def normalise_wit(polygon_base_df):
     '''
@@ -151,8 +155,24 @@ def normalise_wit(polygon_base_df):
     return polygon_base_df
 
 def generate_low_quality_data_periods(df):
-    # the generate_low_quality is: SLC off period: https://www.usgs.gov/faqs/what-landsat-7-etm-slc-data
-    # and periods with an observation density of less than four observations within a twelve month (365 days) period
+    '''
+    This function generates low quality data periods, includimg the SLC off period: https://www.usgs.gov/faqs/what-landsat-7-etm-slc-data
+    and periods with an observation density of less than four observations within a twelve month (365 days) period. 
+    Off value is 100 where there is low data quality and 0 for good data.
+    
+    Last modified: July 2023
+
+    Parameters
+    ----------
+    df : pandas DataFrame with columns including:
+    ['date']
+    
+    Returns
+    -------
+    df : pandas DataFrame with additional column: 
+    ['off_value']
+    
+    '''
     
     # default: all data points are good
     df.loc[:, "off_value"] = 0
@@ -171,4 +191,73 @@ def generate_low_quality_data_periods(df):
                                                          
     return df
 
+
+def display_wit_stack_with_df(polygon_base_df, polygon_name="your_wetland_name", png_name="your_file_name", width=32, height=6):
+    '''
+    This functions produces WIT plots. Function displays a stack plot and saves as a png.
+    
+    Last modified: July 2023
+
+    Parameters
+    ----------
+    polygon_base_df : pandas DataFrame with columns including:
+    ['date',
+     'wet',
+     'water',
+     'norm_bs',
+     'norm_pv',
+     'norm_npv']
+     polygon_name : string
+     png_name : string
+    
+    '''
+    
+    plt.rcParams['axes.facecolor']='white'
+    plt.rcParams['savefig.facecolor']='white'
+    plt.rcParams['text.usetex'] = False
+    
+    fig = plt.figure()
+    fig.set_size_inches(width, height)
+    ax = fig.add_subplot(111)
+    ax.autoscale(enable=True)
+
+    pal = [sns.xkcd_rgb["cobalt blue"],
+           sns.xkcd_rgb["neon blue"],
+           sns.xkcd_rgb["grass"],
+           sns.xkcd_rgb["beige"],
+           sns.xkcd_rgb["brown"]]  
+
+    plt.title(f"Percentage of area dominated by WOfS, Wetness, Fractional Cover for\n {polygon_name}", fontsize=16)
+    
+    ax.stackplot(polygon_base_df["date"], polygon_base_df["water"]*100, polygon_base_df["wet"]*100, polygon_base_df["norm_pv"]*100, polygon_base_df["norm_npv"]*100, polygon_base_df["norm_bs"]*100, colors=pal, alpha=0.7)
+
+    # manually change the legend display order
+    legend  = ax.legend(["open water", "wet", "green veg", "dry veg", "bare soil"][::-1], loc='lower left')
+    handles = legend.legendHandles
+    
+    for i, handle in enumerate(handles):
+        handle.set_facecolor(pal[::-1][i])
+        handle.set_alpha(0.7)
+    
+    # setup the display ranges
+    ax.set_ylim(0, 100)
+    ax.set_xlim(polygon_base_df["date"].min(), polygon_base_df["date"].max())
+    
+    # add a new column: 'off_value' based on low quality data setting
+    polygon_base_df = generate_low_quality_data_periods(polygon_base_df)
+    
+    ax.fill_between(polygon_base_df["date"], 0, 100, where=polygon_base_df["off_value"] == 100, color='white', alpha=0.5, hatch="//")
+    
+    # modify the xaxis settings
+    ax.xaxis.set_major_locator(mdates.YearLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+    
+    x_label_text = "The Fractional Cover algorithm developed by the Joint Remote Sensing Research Program and\n the Water Observations from Space algorithm developed by Geoscience Australia are used in the production of this data"
+    
+    ax.set_xlabel(x_label_text, style='italic')
+    
+    plt.savefig(f"{png_name}.png", bbox_inches='tight')
+    plt.show()
+    
+    plt.close(fig)
 
