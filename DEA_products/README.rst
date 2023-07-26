@@ -15,6 +15,7 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
    DEA_High_and_Low_Tide_Imagery.ipynb
    DEA_Coastlines.ipynb
    DEA_Waterbodies.ipynb
+   DEA_Wetlands_Insight_Tool.ipynb
 
 Citing DEA Notebooks
 --------------------
