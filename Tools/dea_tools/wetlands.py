@@ -136,7 +136,7 @@ def normalise_wit(polygon_base_df):
         1 - polygon_base_df["water"] - polygon_base_df["wet"]
     )
 
-    # 2. normalse the vegetation values based on vegetation size (to handle FC values more than 100 issue)
+    # 2. normalise the vegetation values based on vegetation size (to handle FC values more than 100 issue)
     # WARNNING: Not touch the water and wet, cause they are pixel classification result
     polygon_base_df.loc[:, "overall_veg_num"] = (
         polygon_base_df["pv"] + polygon_base_df["npv"] + polygon_base_df["bs"]
