@@ -165,7 +165,7 @@ def normalise_wit(polygon_base_df):
 
 def generate_low_quality_data_periods(df):
     """
-    This function generates low quality data periods, includimg the SLC off period: https://www.usgs.gov/faqs/what-landsat-7-etm-slc-data
+    This function generates low quality data periods, including the SLC off period: https://www.usgs.gov/faqs/what-landsat-7-etm-slc-data
     and periods with an observation density of less than four observations within a twelve month (365 days) period.
     Off value is 100 where there is low data quality and 0 for good data.
 
