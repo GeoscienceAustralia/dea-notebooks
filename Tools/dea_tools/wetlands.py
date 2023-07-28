@@ -197,7 +197,7 @@ def generate_low_quality_data_periods(df):
 
     # periods with an observation density of less than four observations within a twelve month (365 days) period
     for i in range(3, len(df) - 3):
-        # can change to another threshold (like: 100 days) to test dyanmic no-data-period display
+        # can change to another threshold (like: 100 days) to test dynamic no-data-period display
         if ((df.loc[i + 3, "date"] - df.loc[i, "date"]).days) > 365:
             df.loc[
                 df[
