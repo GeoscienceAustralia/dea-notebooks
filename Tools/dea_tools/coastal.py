@@ -16,7 +16,7 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: June 2023
+Last modified: July 2023
 
 """
 
@@ -1564,3 +1564,60 @@ def tidal_stats_otps(
         )
 
     return pd.Series(output_stats).round(round_stats)
+
+
+def glint_angle(solar_azimuth, solar_zenith, view_azimuth, view_zenith):
+    """
+    Calculates glint angles for each pixel in a satellite image based
+    on the relationship between the solar and sensor zenith and azimuth
+    viewing angles at the moment the image was acquired.
+
+    Glint angle is considered a predictor of sunglint over water; small
+    glint angles (e.g. < 20 degrees) are associated with a high
+    probability of sunglint due to the viewing angle of the sensor
+    being aligned with specular reflectance of the sun from the water's
+    surface.
+
+    Based on code from https://towardsdatascience.com/how-to-implement-
+    sunglint-detection-for-sentinel-2-images-in-python-using-metadata-
+    info-155e683d50
+
+    Parameters
+    ----------
+    solar_azimuth : array-like
+        Array of solar azimuth angles in degrees. In DEA Collection 3,
+        this is contained in the "oa_solar_azimuth" band.
+    solar_zenith : array-like
+        Array of solar zenith angles in degrees. In DEA Collection 3,
+        this is contained in the "oa_solar_zenith" band.
+    view_azimuth : array-like
+        Array of sensor/viewing azimuth angles in degrees. In DEA
+        Collection 3, this is contained in the "oa_satellite_azimuth"
+        band.
+    view_zenith : array-like
+        Array of sensor/viewing zenith angles in degrees. In DEA
+        Collection 3, this is contained in the "oa_satellite_view" band.
+
+    Returns
+    -------
+    glint_array : numpy.ndarray
+        Array of glint angles in degrees. Small values indicate higher
+        probabilities of sunglint.
+    """
+
+    # Convert angle arrays to radians
+    solar_zenith_rad = np.deg2rad(solar_zenith)
+    solar_azimuth_rad = np.deg2rad(solar_azimuth)
+    view_zenith_rad = np.deg2rad(view_zenith)
+    view_azimuth_rad = np.deg2rad(view_azimuth)
+
+    # Calculate sunglint angle
+    phi = solar_azimuth_rad - view_azimuth_rad
+    glint_angle = np.cos(view_zenith_rad) * np.cos(solar_zenith_rad) - np.sin(
+        view_zenith_rad
+    ) * np.sin(solar_zenith_rad) * np.cos(phi)
+
+    # Convert to degrees
+    glint_array = np.degrees(np.arccos(glint_angle))
+
+    return glint_array
