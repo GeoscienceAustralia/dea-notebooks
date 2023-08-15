@@ -429,6 +429,7 @@ def _get_training_data_for_shp(
     zonal_stats: Optional[str] = None,
     time_field: Optional[str] = None,
     time_delta: Optional[timedelta] = None,
+    keep_columns: Optional[str] = None,
 ):
     """
     This is the core function that is triggered by `collect_training_data`.
@@ -464,15 +465,20 @@ def _get_training_data_for_shp(
     time_delta : timedelta, optional
         Time delta used to match a data point with all the scenes falling between
         `time_stamp - time_delta` and `time_stamp + time_delta`. Defaults to None.
-
+    keep_columns: List of columns from gdf to keep
 
     Returns
     --------
     Two lists, a list of numpy.arrays containing classes and extracted data for
     each pixel or polygon, and another containing the data variable names.
 
-    """
-
+    """    
+         
+#     keep = ['num_points', \
+#     'dead', 'litter', \
+#     'crust', 'dist', 'rock', \
+#     'green', 'over_g','over_d', 'over_b', 'mid_g', 'mid_d', 'mid_b', \
+#     'dead', 'litter', 'crypto', 'unoccluded']
     # prevent function altering dictionary kwargs
     dc_query = deepcopy(dc_query)
 
@@ -500,7 +506,8 @@ def _get_training_data_for_shp(
     data = feature_func(dc_query)
 
     # if no data is present then return
-    if len(data) == 0:
+
+    if len(data) == 0:        
         return
 
     if gdf.iloc[[index]].geometry.geom_type.values != "Point":
@@ -512,7 +519,7 @@ def _get_training_data_for_shp(
     # Check that feature_func has removed time
     if "time" in data.dims:
         t = data.dims["time"]
-        if t > 1 and time_delta is not None:
+        if t > 1 and time_delta is None:
             raise ValueError(
                 "After running the feature_func, the dataset still has "
                 + str(t)
@@ -528,8 +535,12 @@ def _get_training_data_for_shp(
     # append ID measurement to dataset for tracking failures
     band = [m for m in data.data_vars][0]
     _id = xr.zeros_like(data[band])
+
+    for col in keep_columns:
+        data[col] = row[col]
+
     data["id"] = _id
-    data["id"] = data["id"] + gdf.iloc[index]["id"]
+    data["id"] = data["id"] + gdf.iloc[index]["id"]    
 
     # If no zonal stats were requested then extract all pixel values
     if zonal_stats is None:
@@ -564,6 +575,7 @@ def _get_training_data_parallel(
     zonal_stats: Optional[str] = None,
     time_field: Optional[str] = None,
     time_delta: Optional[int] = None,
+    keep_columns: Optional[str] = None,
 ) -> Tuple[List[str], List[Any]]:
     """
     Function passing the '_get_training_data_for_shp' function
@@ -612,6 +624,7 @@ def _get_training_data_parallel(
                     zonal_stats,
                     time_field,
                     time_delta,
+                    keep_columns,
                 ],
                 callback=update,
             )
@@ -637,6 +650,7 @@ def collect_training_data(
     max_retries: int = 3,
     time_field: str = None,
     time_delta: timedelta = None,
+    keep_columns: List[str] = [],
 ) -> Tuple[List[np.ndarray], List[str]]:
     """
     This function provides methods for gathering training data from the ODC over
@@ -708,8 +722,9 @@ def collect_training_data(
     Two lists, a list of numpy.arrays containing classes and extracted data for
     each pixel or polygon, and another containing the data variable names.
 
-    """
-
+    """  
+    
+    
     # check the dtype of the class field
     if gdf[field].dtype != int:
         raise ValueError(
@@ -757,6 +772,7 @@ def collect_training_data(
                 zonal_stats,
                 time_field,
                 time_delta,
+                keep_columns,
             )
             i += 1
 
@@ -772,8 +788,12 @@ def collect_training_data(
             zonal_stats=zonal_stats,
             time_field=time_field,
             time_delta=time_delta,
+            keep_columns=keep_columns,
         )
 
+    if len(results) == 0:
+        return                          
+            
     # column names are appended during each iteration
     # but they are identical, grab only the first instance
     column_names = column_names[0]
@@ -869,7 +889,7 @@ def collect_training_data(
     else:
         print("Returning data without cleaning")
         print("Output shape: ", model_input.shape)
-
+        
     return column_names[0:-1], model_input
 
 
