@@ -74,27 +74,34 @@ def satellite_ds(request):
 
 # Run test for multiple input coordinates, CRSs and interpolation methods
 @pytest.mark.parametrize(
-    "x, y, epsg, method",
+    "x, y, crs, method",
     [
-        (GAUGE_X, GAUGE_Y, 4326, "bilinear"),  # WGS84, bilinear interp
-        (GAUGE_X, GAUGE_Y, 4326, "spline"),  # WGS84, spline interp
-        (-1034913, -1961916, 3577, "bilinear"),  # Australian Albers, spline interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "bilinear"),  # WGS84, bilinear interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline"),  # WGS84, spline interp
+        (
+            -1034913,
+            -1961916,
+            "EPSG:3577",
+            "bilinear",
+        ),  # Australian Albers, bilinear interp
     ],
 )
-def test_model_tides(measured_tides_ds, x, y, epsg, method):
+def test_model_tides(measured_tides_ds, x, y, crs, method):
     # Run FES2014 tidal model for locations and timesteps in tide gauge data
     modelled_tides_df = model_tides(
         x=[x],
         y=[y],
         time=measured_tides_ds.time,
-        epsg=epsg,
+        crs=crs,
         method=method,
     )
 
     # Compare measured and modelled tides
     val_stats = eval_metrics(x=measured_tides_ds.tide_m, y=modelled_tides_df.tide_m)
 
-    # Test that modelled tides have same number of timesteps
+    # Test that modelled tides contain correct headings and have same
+    # number of timesteps
+    assert modelled_tides_df.columns.tolist() == ["x", "y", "tide_model", "tide_m"]
     assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
 
     # Test that modelled tides meet expected accuracy
@@ -102,6 +109,74 @@ def test_model_tides(measured_tides_ds, x, y, epsg, method):
     assert val_stats["RMSE"] < 0.26
     assert val_stats["R-squared"] > 0.96
     assert abs(val_stats["Bias"]) < 0.20
+
+
+# Run tests for one or multiple models, and long and wide format outputs
+@pytest.mark.parametrize(
+    "models, output_format",
+    [
+        (["FES2014"], "long"),
+        (["FES2014"], "wide"),
+        (["FES2014", "HAMTIDE11"], "long"),
+        (["FES2014", "HAMTIDE11"], "wide"),
+    ],
+    ids=[
+        "single_model_long",
+        "single_model_wide",
+        "multiple_models_long",
+        "multiple_models_wide",
+    ],
+)
+def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
+    # Model tides for one or multiple tide models and output formats
+    modelled_tides_df = model_tides(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        time=measured_tides_ds.time,
+        model=models,
+        output_format=output_format,
+    )
+
+    if output_format == "long":
+        # Verify output has correct columns
+        assert modelled_tides_df.columns.tolist() == ["x", "y", "tide_model", "tide_m"]
+
+        # Verify tide model column contains correct values
+        assert modelled_tides_df.tide_model.unique().tolist() == models
+
+        # Verify that dataframe has length of original timesteps multipled by
+        # n models
+        assert len(modelled_tides_df.index) == len(measured_tides_ds.time) * len(models)
+
+    elif output_format == "wide":
+        # Verify output has correct columns
+        assert modelled_tides_df.columns[2:].tolist() == models
+
+        # Verify output has same length as orginal timesteps
+        assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
+
+
+# Run tests for one or multiple models, and long and wide format outputs
+@pytest.mark.parametrize(
+    "units, expected_range, expected_dtype",
+    [("m", 10, "float32"), ("cm", 1000, "int16"), ("mm", 10000, "int16")],
+    ids=["metres", "centimetres", "millimetres"],
+)
+def test_model_tides_units(measured_tides_ds, units, expected_range, expected_dtype):
+    # Model tides
+    modelled_tides_df = model_tides(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        time=measured_tides_ds.time,
+        output_units=units,
+    )
+
+    # Calculate tide range
+    tide_range = modelled_tides_df.tide_m.max() - modelled_tides_df.tide_m.min()
+
+    # Verify tide range and dtypes are as expected for unit
+    assert np.isclose(tide_range, expected_range, rtol=0.01)
+    assert modelled_tides_df.tide_m.dtype == expected_dtype
 
 
 # Run tests for default and custom resolutions
@@ -125,6 +200,9 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
     # arrays in `satellite_ds`
     assert modelled_tides_ds.shape == satellite_ds.nbart_red.shape
     assert modelled_tides_ds.dims == satellite_ds.nbart_red.dims
+
+    # Assert that high res and low res data have the same dims
+    assert modelled_tides_ds.dims == modelled_tides_lowres.dims
 
     # Test through time at tide gauge
 
@@ -192,6 +270,7 @@ def test_pixel_tides_quantile(satellite_ds):
     )
 
     # Verify that outputs contain quantile dim and values match inputs
+    assert modelled_tides_ds.dims == modelled_tides_lowres.dims
     assert "quantile" in modelled_tides_ds.dims
     assert "quantile" in modelled_tides_lowres.dims
     assert modelled_tides_ds["quantile"].values.tolist() == quantiles
@@ -235,6 +314,32 @@ def test_pixel_tides_quantile(satellite_ds):
         ]
     )
     assert np.allclose(extracted_tides.values, expected_tides, atol=0.03)
+
+
+# Run test with quantile calculation off and on
+@pytest.mark.parametrize("quantiles", [None, [0.0, 0.5, 1.0]])
+def test_pixel_tides_multiplemodels(satellite_ds, quantiles):
+    # Model tides using `pixel_tides` and multiple models
+    models = ["FES2014", "HAMTIDE11"]
+    modelled_tides_ds, modelled_tides_lowres = pixel_tides(
+        satellite_ds, model=models, calculate_quantiles=quantiles
+    )
+
+    # Verify that outputs contain quantile dim and values match inputs
+    assert modelled_tides_ds.dims == modelled_tides_lowres.dims
+    assert "tide_model" in modelled_tides_ds.dims
+    assert "tide_model" in modelled_tides_lowres.dims
+    assert modelled_tides_ds["tide_model"].values.tolist() == models
+    assert modelled_tides_lowres["tide_model"].values.tolist() == models
+
+    # Verify that both model outputs are correlated
+    assert (
+        xr.corr(
+            modelled_tides_ds.sel(tide_model="FES2014"),
+            modelled_tides_ds.sel(tide_model="HAMTIDE11"),
+        )
+        > 0.98
+    )
 
 
 @pytest.mark.parametrize(
