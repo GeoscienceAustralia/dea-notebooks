@@ -156,7 +156,7 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
         assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
 
 
-# Run tests for one or multiple models, and long and wide format outputs
+# Run tests for each unit, providing expected outputs
 @pytest.mark.parametrize(
     "units, expected_range, expected_dtype",
     [("m", 10, "float32"), ("cm", 1000, "int16"), ("mm", 10000, "int16")],
