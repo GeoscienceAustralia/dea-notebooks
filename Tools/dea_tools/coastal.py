@@ -33,6 +33,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from scipy import stats
+from warnings import warn
 from functools import partial
 from shapely.geometry import box, shape
 from owslib.wfs import WebFeatureService
@@ -405,6 +406,7 @@ def model_tides(
     parallel_splits=5,
     output_units="m",
     output_format="long",
+    epsg=None,
 ):
     """
     Compute tides at points and times using tidal harmonics.
@@ -416,20 +418,30 @@ def model_tides(
     tide model, and the TPXO8-atlas and TPXO9-atlas-v5
     TOPEX/POSEIDON global tide models.
 
-    This function requires access to tide model data files
-    to work. These should be placed in a folder with
-    subfolders matching the formats specified by `pyTMD`:
+    This function requires access to tide model data files.
+    These should be placed in a folder with subfolders matching
+    the formats specified by `pyTMD`:
     https://pytmd.readthedocs.io/en/latest/getting_started/Getting-Started.html#directories
 
     For FES2014 (https://www.aviso.altimetry.fr/es/data/products/auxiliary-products/global-tide-fes/description-fes2014.html):
         - {directory}/fes2014/ocean_tide/
-          {directory}/fes2014/load_tide/
+        - {directory}/fes2014/load_tide/
 
     For TPXO8-atlas (https://www.tpxo.net/tpxo-products-and-registration):
         - {directory}/tpxo8_atlas/
 
     For TPXO9-atlas-v5 (https://www.tpxo.net/tpxo-products-and-registration):
         - {directory}/TPXO9_atlas_v5/
+
+    For EOT20 (https://www.seanoe.org/data/00683/79489/):
+        - {directory}/EOT20/ocean_tides/
+        - {directory}/EOT20/load_tides/
+
+    For GOT4.10c (https://earth.gsfc.nasa.gov/geo/data/ocean-tide-models):
+        - {directory}/GOT4.10c/grids_oceantide_netcdf/
+
+    For HAMTIDE (https://www.cen.uni-hamburg.de/en/icdc/data/ocean/hamtide.html):
+        - {directory}/hamtide/
 
     This function is a minor modification of the `pyTMD`
     package's `compute_tide_corrections` function, adapted
@@ -507,6 +519,8 @@ def model_tides(
         results stacked vertically along "tide_model" and "tide_m"
         columns), or wide format (with a column for each tide model).
         Defaults to "long".
+    epsg : int, DEPRECATED
+        Deprecated; use 'crs' instead.
 
     Returns
     -------
@@ -514,6 +528,15 @@ def model_tides(
     combination of time and point coordinates.
 
     """
+
+    # Deprecate `epsg` param
+    if epsg is not None:
+        warn(
+            "The `epsg` parameter is deprecated; please use `crs` to "
+            "provide CRS information in the form 'EPSG:XXXX'",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     # Set tide modelling files directory. If no custom path is provided,
     # first try global environmental var, then "/var/share/tide_models"
