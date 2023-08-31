@@ -7,7 +7,7 @@ Available functions:
     load_crophealth_data
     run_crophelath_app
 
-Last modified: September 2021
+Last modified: August 2023
 '''
 
 # Load modules
@@ -91,7 +91,7 @@ def load_crophealth_data():
     # Calculate the normalised difference vegetation index (NDVI) across
     # all pixels for each image.
     # This is stored as an attribute of the data
-    ds_s2 = calculate_indices(ds_s2, index='NDVI', collection='ga_s2_1')
+    ds_s2 = calculate_indices(ds_s2, index='NDVI', collection='ga_s2_3')
 
     # Return the data
     return(ds_s2)
