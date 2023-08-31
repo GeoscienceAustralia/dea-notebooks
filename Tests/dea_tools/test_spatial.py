@@ -22,7 +22,7 @@ from dea_tools.spatial import subpixel_contours, xr_vectorize, xr_rasterize
 def dem_da(request):
     # Read elevation data from file
     raster_path = "Supplementary_data/Reprojecting_data/canberra_dem_250m.tif"
-    da = riorioxarray.open_rasterio(raster_path).squeeze("band")
+    da = rioxarray.open_rasterio(raster_path).squeeze("band")
 
     # Reproject if required
     crs = request.param
@@ -83,7 +83,7 @@ def satellite_da(request):
 def categorical_da(request):
     # Read categorical raster from file
     raster_path = "Tests/data/categorical_raster.tif"
-    da = riorioxarray.open_rasterio(raster_path).squeeze("band")
+    da = rioxarray.open_rasterio(raster_path).squeeze("band")
 
     # Reproject if required
     crs = request.param
@@ -175,7 +175,7 @@ def test_xr_rasterize_output_path(categorical_da):
     )
 
     # Assert that output GeoTIFF data is same as input
-    loaded_da = riorioxarray.open_rasterio("testing.tif").squeeze("band")
+    loaded_da = rioxarray.open_rasterio("testing.tif").squeeze("band")
     assert np.allclose(loaded_da, rasterized_da)
 
 
