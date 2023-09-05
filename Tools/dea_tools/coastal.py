@@ -16,7 +16,7 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: August 2023
+Last modified: September 2023
 
 """
 
@@ -594,17 +594,19 @@ def model_tides(
         output_units=output_units,
     )
 
+    # Ensure requested parallel splits is not smaller than number of points
+    parallel_splits = min(parallel_splits, len(x))
+
     # Parallelise if either multiple models or multiple splits requested
     if parallel & ((len(model) > 1) | (parallel_splits > 1)):
         from concurrent.futures import ProcessPoolExecutor
         from tqdm import tqdm
 
         with ProcessPoolExecutor() as executor:
-            print(f"Modelling tides for {', '.join(model)} in parallel")
+            print(f"Modelling tides using {', '.join(model)} in parallel")
 
             # Optionally split lon/lat points into `splits_n` chunks
             # that will be applied in parallel
-            parallel_splits = min(parallel_splits, len(x))
             x_split = np.array_split(x, parallel_splits)
             y_split = np.array_split(y, parallel_splits)
 
@@ -631,7 +633,7 @@ def model_tides(
         model_outputs = []
 
         for model_i in model:
-            print(f"Modelling tides with {model_i}")
+            print(f"Modelling tides using {model_i}")
             tide_df = iter_func(model_i, x, y)
             model_outputs.append(tide_df)
 
@@ -660,6 +662,8 @@ def pixel_tides(
     buffer=None,
     resample_method="bilinear",
     model="FES2014",
+    dask_chunks="auto",
+    dask_compute=True,
     **model_tides_kwargs,
 ):
     """
@@ -720,6 +724,19 @@ def pixel_tides(
         - "FES2014" (default; pre-configured on DEA Sandbox)
         - "TPXO8-atlas"
         - "TPXO9-atlas-v5"
+        - "EOT20"
+        - "HAMTIDE11"
+        - "GOT4.10"
+    dask_chunks : str or tuple, optional
+        Can be used to configure custom Dask chunking for the final
+        resampling step. The default of "auto" will automatically set
+        x/y chunks to match those in `ds` if they exist, otherwise will
+        set x/y chunks that cover the entire extent of the dataset.
+        For custom chunks, provide a tuple in the form `(y, x)`, e.g.
+        `(2048, 2048)`.
+    dask_compute : bool, optional
+        Whether to compute results of the resampling step using Dask.
+        If False, this will return `tides_highres` as a Dask array.
     **model_tides_kwargs :
         Optional parameters passed to the `dea_tools.coastal.model_tides`
         function. Important parameters include "directory" (used to
@@ -893,19 +910,27 @@ def pixel_tides(
             {d: None if d in [y_dim, x_dim] else 1 for d in tides_lowres.dims}
         )
 
-        # Reproject into the GeoBox of `ds` using odc.geo and Dask.
-        # Specify custom chunks (covering entire x and y dims) so we
-        # don't end up with hundreds of tiny x and y chunks due to the
-        # small size of `tides_lowres` (possible odc.geo bug?)
-        tides_highres = (
-            tides_lowres_dask.odc.reproject(
-                how=ds.odc.geobox,
-                chunks=ds.odc.geobox.shape,
-                resampling=resample_method,
-            )
-            .compute()  # Process and load into memory with Dask
-            .rename("tide_m")  # Make sure name is set correctly
-        )
+        # Automatically set Dask chunks for reprojection if set to "auto". 
+        # This will either use x/y chunks if they exist in `ds`, else 
+        # will cover the entire x and y dims) so we don't end up with 
+        # hundreds of tiny x and y chunks due to the small size of 
+        # `tides_lowres` (possible odc.geo bug?)
+        if dask_chunks == "auto":
+            if (y_dim in ds.chunks) & (x_dim in ds.chunks):
+                dask_chunks = (ds.chunks[y_dim], ds.chunks[x_dim])
+            else:
+                dask_chunks = ds.odc.geobox.shape
+
+        # Reproject into the GeoBox of `ds` using odc.geo and Dask
+        tides_highres = tides_lowres_dask.odc.reproject(
+            how=ds.odc.geobox,
+            chunks=dask_chunks,
+            resampling=resample_method,
+        ).rename("tide_m")
+
+        # Optionally process and load into memory with Dask
+        if dask_compute:
+            tides_highres.load()
 
         return tides_highres, tides_lowres
 
@@ -992,10 +1017,9 @@ def tidal_tag(
         )
 
     # Use tidal model to compute tide heights for each observation:
-    model = (
-        "FES2014" if "model" not in model_tides_kwargs else model_tides_kwargs["model"]
-    )
-    print(f"Modelling tides using {model} tidal model")
+    # model = (
+    #     "FES2014" if "model" not in model_tides_kwargs else model_tides_kwargs["model"]
+    # )
     tide_df = model_tides(
         x=tidepost_lon,
         y=tidepost_lat,
