@@ -1,3 +1,4 @@
+import dask
 import pytest
 import datacube
 import numpy as np
@@ -340,6 +341,30 @@ def test_pixel_tides_multiplemodels(satellite_ds, quantiles):
         )
         > 0.98
     )
+
+
+# Run test for different combinations of Dask chunking
+@pytest.mark.parametrize(
+    "dask_chunks",
+    ["auto", (300, 300), (200, 300)],
+)
+def test_pixel_tides_dask(satellite_ds, dask_chunks):
+    # Model tides with Dask compute turned off to return Dask arrays
+    modelled_tides_ds, modelled_tides_lowres = pixel_tides(
+        satellite_ds, dask_compute=False, dask_chunks=dask_chunks
+    )
+
+    # Verify output is Dask-enabled
+    assert dask.is_dask_collection(modelled_tides_ds)
+
+    # If chunks set to "auto", check output matches `satellite_ds` chunks
+    if dask_chunks == "auto":
+        assert modelled_tides_ds.chunks == satellite_ds.nbart_red.chunks
+
+    # Otherwise, check output chunks match requested chunks
+    else:
+        output_chunks = tuple([i[0] for i in modelled_tides_ds.chunks[1:]])
+        assert output_chunks == dask_chunks
 
 
 @pytest.mark.parametrize(
