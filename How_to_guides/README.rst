@@ -34,6 +34,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Principal_component_analysis.ipynb
    Rasterize_vectorize.ipynb
    Reprojecting_data.ipynb
+   Sunglint_masking.ipynb
    Tidal_modelling.ipynb
    Using_load_ard.ipynb
    Virtual_products.ipynb

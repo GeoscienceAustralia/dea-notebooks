@@ -37,12 +37,15 @@ Scientific papers
 
 - Sutton, A., Fisher, A., Metternicht, G. Assessing the Accuracy of Landsat Vegetation Fractional Cover for Monitoring Australian Drylands. Remote Sens. 2022, 14, 6322. https://doi.org/10.3390/rs14246322
 
+- Taylor, P., Almeida, A. C. D., Kemmerer, E., & de Salles Abreu, R. O. 2023. Improving spatial predictions of Eucalypt plantation growth by combining interpretable machine-learning with the 3-PG model. Frontiers in Forests and Global Change, 6, 1181049. https://doi.org/10.3389/ffgc.2023.1181049
+
 - Teng, J., Penton, D.J., Ticehurst, C., Sengupta, A., Freebairn, A., Marvanek, S., Vaze, J., Gibbs, M., Streeton, N., Karim, F. and Morton, S., 2022. A Comprehensive Assessment of Floodwater Depth Estimation Models in Semiarid Regions. Water Resources Research, 58(11), p.e2022WR032031.
 
 - Tsai, Ya-Lun & Tseng, Kuo-Hsin., 2023. Monitoring Multidecadal Coastline Change and Reconstructing Tidal Flat Topography. International Journal of Applied Earth Observation and Geoinformation, 118, 103260. https://doi.org/10.1016/j.jag.2023.103260
 
 - Wellington, M.J. and Renzullo, L.J., 2021. High-Dimensional Satellite Image Compositing and Statistics for Enhanced Irrigated Crop Mapping. Remote Sensing, 13(7), p.1300.
 
+- Wellington, M.J., Lawes, R. and Kuhnert, P., 2023. A framework for modelling spatio-temporal trends in crop production using generalised additive models. Computers and Electronics in Agriculture, 212, p.108111. https://doi.org/10.1016/j.compag.2023.108111
 
 Conferences
 --------------------
