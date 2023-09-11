@@ -27,7 +27,8 @@ done
 datacube product list
 
 # Index Mangroves
-s3-to-dc 's3://dea-public-data/derivative/ga_ls_mangrove_cover_cyear_3/3-0-0/x33/y39/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls_mangrove_cover_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls_mangrove_cover_cyear_3/3-0-0/x33/y39/*/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls_mangrove_cover_cyear_3'
+
 
 # Index GeoMAD
 s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
