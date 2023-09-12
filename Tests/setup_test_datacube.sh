@@ -5,7 +5,7 @@ set -ex
 set -o pipefail
 
 # install indexing tool
-pip3 install --no-cache --upgrade odc-apps-dc-tools
+pip3 install --no-cache  "odc-apps-dc-tools==0.2.12"
 
 # Setup datacube
 datacube system init --no-init-users

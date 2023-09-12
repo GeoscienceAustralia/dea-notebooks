@@ -1,11 +1,18 @@
+import dask
 import pytest
 import datacube
-import pyproj
 import numpy as np
 import pandas as pd
 import xarray as xr
+import geopandas as gpd
 
-from dea_tools.coastal import model_tides, pixel_tides, tidal_tag, tidal_stats
+from dea_tools.coastal import (
+    model_tides,
+    pixel_tides,
+    tidal_tag,
+    tidal_stats,
+    glint_angle,
+)
 from dea_tools.validation import eval_metrics
 
 GAUGE_X = 122.2183
@@ -72,29 +79,59 @@ def satellite_ds(request):
     )
 
 
+@pytest.fixture()
+def angle_metadata_ds():
+    """
+    Create a sample xarray.Dataset containing sun and satellite view
+    angle data
+    """
+
+    # Create sample data as a dataframe
+    df = pd.DataFrame(
+        index=pd.Index(pd.date_range("2020", "2021", 2), name="time"),
+        data=np.array([[22, 78, 99, 10], [21, 76, 280, 5]]),
+        columns=[
+            "oa_solar_zenith",
+            "oa_solar_azimuth",
+            "oa_satellite_azimuth",
+            "oa_satellite_view",
+        ],
+    )
+
+    # Convert to xarray to simulate data loaded from datacube
+    return df.to_xarray()
+
+
 # Run test for multiple input coordinates, CRSs and interpolation methods
 @pytest.mark.parametrize(
-    "x, y, epsg, method",
+    "x, y, crs, method",
     [
-        (GAUGE_X, GAUGE_Y, 4326, "bilinear"),  # WGS84, bilinear interp
-        (GAUGE_X, GAUGE_Y, 4326, "spline"),  # WGS84, spline interp
-        (-1034913, -1961916, 3577, "bilinear"),  # Australian Albers, spline interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "bilinear"),  # WGS84, bilinear interp
+        (GAUGE_X, GAUGE_Y, "EPSG:4326", "spline"),  # WGS84, spline interp
+        (
+            -1034913,
+            -1961916,
+            "EPSG:3577",
+            "bilinear",
+        ),  # Australian Albers, bilinear interp
     ],
 )
-def test_model_tides(measured_tides_ds, x, y, epsg, method):
+def test_model_tides(measured_tides_ds, x, y, crs, method):
     # Run FES2014 tidal model for locations and timesteps in tide gauge data
     modelled_tides_df = model_tides(
         x=[x],
         y=[y],
         time=measured_tides_ds.time,
-        epsg=epsg,
+        crs=crs,
         method=method,
     )
 
     # Compare measured and modelled tides
     val_stats = eval_metrics(x=measured_tides_ds.tide_m, y=modelled_tides_df.tide_m)
 
-    # Test that modelled tides have same number of timesteps
+    # Test that modelled tides contain correct headings and have same
+    # number of timesteps
+    assert modelled_tides_df.columns.tolist() == ["x", "y", "tide_model", "tide_m"]
     assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
 
     # Test that modelled tides meet expected accuracy
@@ -102,6 +139,74 @@ def test_model_tides(measured_tides_ds, x, y, epsg, method):
     assert val_stats["RMSE"] < 0.26
     assert val_stats["R-squared"] > 0.96
     assert abs(val_stats["Bias"]) < 0.20
+
+
+# Run tests for one or multiple models, and long and wide format outputs
+@pytest.mark.parametrize(
+    "models, output_format",
+    [
+        (["FES2014"], "long"),
+        (["FES2014"], "wide"),
+        (["FES2014", "HAMTIDE11"], "long"),
+        (["FES2014", "HAMTIDE11"], "wide"),
+    ],
+    ids=[
+        "single_model_long",
+        "single_model_wide",
+        "multiple_models_long",
+        "multiple_models_wide",
+    ],
+)
+def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
+    # Model tides for one or multiple tide models and output formats
+    modelled_tides_df = model_tides(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        time=measured_tides_ds.time,
+        model=models,
+        output_format=output_format,
+    )
+
+    if output_format == "long":
+        # Verify output has correct columns
+        assert modelled_tides_df.columns.tolist() == ["x", "y", "tide_model", "tide_m"]
+
+        # Verify tide model column contains correct values
+        assert modelled_tides_df.tide_model.unique().tolist() == models
+
+        # Verify that dataframe has length of original timesteps multipled by
+        # n models
+        assert len(modelled_tides_df.index) == len(measured_tides_ds.time) * len(models)
+
+    elif output_format == "wide":
+        # Verify output has correct columns
+        assert modelled_tides_df.columns[2:].tolist() == models
+
+        # Verify output has same length as orginal timesteps
+        assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
+
+
+# Run tests for each unit, providing expected outputs
+@pytest.mark.parametrize(
+    "units, expected_range, expected_dtype",
+    [("m", 10, "float32"), ("cm", 1000, "int16"), ("mm", 10000, "int16")],
+    ids=["metres", "centimetres", "millimetres"],
+)
+def test_model_tides_units(measured_tides_ds, units, expected_range, expected_dtype):
+    # Model tides
+    modelled_tides_df = model_tides(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        time=measured_tides_ds.time,
+        output_units=units,
+    )
+
+    # Calculate tide range
+    tide_range = modelled_tides_df.tide_m.max() - modelled_tides_df.tide_m.min()
+
+    # Verify tide range and dtypes are as expected for unit
+    assert np.isclose(tide_range, expected_range, rtol=0.01)
+    assert modelled_tides_df.tide_m.dtype == expected_dtype
 
 
 # Run tests for default and custom resolutions
@@ -126,22 +231,29 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
     assert modelled_tides_ds.shape == satellite_ds.nbart_red.shape
     assert modelled_tides_ds.dims == satellite_ds.nbart_red.dims
 
+    # Assert that high res and low res data have the same dims
+    assert modelled_tides_ds.dims == modelled_tides_lowres.dims
+
     # Test through time at tide gauge
 
-    # Set up pyproj transformer to convert between coordinates
-    reproject = pyproj.Transformer.from_crs(
-        crs_from="EPSG:4326",
-        crs_to=f"EPSG:{satellite_ds.odc.geobox.crs.to_epsg()}",
-        always_xy=True,
-    )
+    # Create tide gauge point, and reproject to dataset CRS
+    tide_gauge_point = gpd.points_from_xy(
+        x=[GAUGE_X],
+        y=[GAUGE_Y],
+        crs="EPSG:4326",
+    ).to_crs(satellite_ds.odc.geobox.crs)
 
-    # Extract tides through time for tide gauge location
-    x, y = reproject.transform(GAUGE_X, GAUGE_Y)
     try:
-        modelled_tides_gauge = modelled_tides_ds.sel(y=y, x=x, method="nearest")
+        modelled_tides_gauge = modelled_tides_ds.sel(
+            y=tide_gauge_point[0].y,
+            x=tide_gauge_point[0].x,
+            method="nearest",
+        )
     except KeyError:
         modelled_tides_gauge = modelled_tides_ds.sel(
-            latitude=y, longitude=x, method="nearest"
+            latitude=tide_gauge_point[0].y,
+            longitude=tide_gauge_point[0].x,
+            method="nearest",
         )
 
     # Calculate accuracy stats
@@ -155,13 +267,15 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
 
     # Test spatially for a single timestep at corners of array
 
-    # Reproject test point coordinates and create arrays
-    x, y = reproject.transform(
-        [122.14438, 122.30304, 122.12964, 122.29235],
-        [-17.91625, -17.92713, -18.07656, -18.08751],
-    )
-    x_coords = xr.DataArray(x, dims=["point"])
-    y_coords = xr.DataArray(y, dims=["point"])
+    # Create test points, reproject to dataset CRS, and extract coords
+    # as xr.DataArrays so we can select data from our array
+    points = gpd.points_from_xy(
+        x=[122.14438, 122.30304, 122.12964, 122.29235],
+        y=[-17.91625, -17.92713, -18.07656, -18.08751],
+        crs="EPSG:4326",
+    ).to_crs(satellite_ds.odc.geobox.crs)
+    x_coords = xr.DataArray(points.x, dims=["point"])
+    y_coords = xr.DataArray(points.y, dims=["point"])
 
     # Extract modelled tides for each corner
     try:
@@ -176,6 +290,110 @@ def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
     # Test if extracted tides match expected results (to within ~3 cm)
     expected_tides = [-1.82249, -1.977088, -1.973618, -2.071242]
     assert np.allclose(extracted_tides.values, expected_tides, atol=0.03)
+
+
+def test_pixel_tides_quantile(satellite_ds):
+    # Model tides using `pixel_tides` and `calculate_quantiles`
+    quantiles = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    modelled_tides_ds, modelled_tides_lowres = pixel_tides(
+        satellite_ds, calculate_quantiles=quantiles
+    )
+
+    # Verify that outputs contain quantile dim and values match inputs
+    assert modelled_tides_ds.dims == modelled_tides_lowres.dims
+    assert "quantile" in modelled_tides_ds.dims
+    assert "quantile" in modelled_tides_lowres.dims
+    assert modelled_tides_ds["quantile"].values.tolist() == quantiles
+    assert modelled_tides_lowres["quantile"].values.tolist() == quantiles
+
+    # Verify tides are monotonically increasing along quantile dim
+    # (in this case, axis=0)
+    assert np.all(np.diff(modelled_tides_ds, axis=0) > 0)
+
+    # Test results match expected results for a set of points across array
+
+    # Create test points, reproject to dataset CRS, and extract coords
+    # as xr.DataArrays so we can select data from our array
+    points = gpd.points_from_xy(
+        x=[122.14438, 122.30304, 122.12964, 122.29235],
+        y=[-17.91625, -17.92713, -18.07656, -18.08751],
+        crs="EPSG:4326",
+    ).to_crs(satellite_ds.odc.geobox.crs)
+    x_coords = xr.DataArray(points.x, dims=["point"])
+    y_coords = xr.DataArray(points.y, dims=["point"])
+
+    # Extract modelled tides for each point
+    try:
+        extracted_tides = modelled_tides_ds.sel(
+            x=x_coords, y=y_coords, method="nearest"
+        )
+    except KeyError:
+        extracted_tides = modelled_tides_ds.sel(
+            longitude=x_coords, latitude=y_coords, method="nearest"
+        )
+
+    # Test if extracted tides match expected results (to within ~3 cm)
+    expected_tides = np.array(
+        [
+            [-1.83, -1.98, -1.98, -2.07],
+            [-1.38, -1.44, -1.44, -1.47],
+            [-0.73, -0.78, -0.79, -0.82],
+            [-0.38, -0.36, -0.36, -0.35],
+            [0.49, 0.44, 0.44, 0.41],
+            [1.58, 1.61, 1.62, 1.64],
+        ]
+    )
+    assert np.allclose(extracted_tides.values, expected_tides, atol=0.03)
+
+
+# Run test with quantile calculation off and on
+@pytest.mark.parametrize("quantiles", [None, [0.0, 0.5, 1.0]])
+def test_pixel_tides_multiplemodels(satellite_ds, quantiles):
+    # Model tides using `pixel_tides` and multiple models
+    models = ["FES2014", "HAMTIDE11"]
+    modelled_tides_ds, modelled_tides_lowres = pixel_tides(
+        satellite_ds, model=models, calculate_quantiles=quantiles
+    )
+
+    # Verify that outputs contain quantile dim and values match inputs
+    assert modelled_tides_ds.dims == modelled_tides_lowres.dims
+    assert "tide_model" in modelled_tides_ds.dims
+    assert "tide_model" in modelled_tides_lowres.dims
+    assert modelled_tides_ds["tide_model"].values.tolist() == models
+    assert modelled_tides_lowres["tide_model"].values.tolist() == models
+
+    # Verify that both model outputs are correlated
+    assert (
+        xr.corr(
+            modelled_tides_ds.sel(tide_model="FES2014"),
+            modelled_tides_ds.sel(tide_model="HAMTIDE11"),
+        )
+        > 0.98
+    )
+
+
+# Run test for different combinations of Dask chunking
+@pytest.mark.parametrize(
+    "dask_chunks",
+    ["auto", (300, 300), (200, 300)],
+)
+def test_pixel_tides_dask(satellite_ds, dask_chunks):
+    # Model tides with Dask compute turned off to return Dask arrays
+    modelled_tides_ds, modelled_tides_lowres = pixel_tides(
+        satellite_ds, dask_compute=False, dask_chunks=dask_chunks
+    )
+
+    # Verify output is Dask-enabled
+    assert dask.is_dask_collection(modelled_tides_ds)
+
+    # If chunks set to "auto", check output matches `satellite_ds` chunks
+    if dask_chunks == "auto":
+        assert modelled_tides_ds.chunks == satellite_ds.nbart_red.chunks
+
+    # Otherwise, check output chunks match requested chunks
+    else:
+        output_chunks = tuple([i[0] for i in modelled_tides_ds.chunks[1:]])
+        assert output_chunks == dask_chunks
 
 
 @pytest.mark.parametrize(
@@ -270,3 +488,19 @@ def test_tidal_stats(satellite_ds, modelled_freq):
         }
     )
     assert np.allclose(tidal_stats_df, expected_results, atol=0.05)
+
+
+def test_glint_angle(angle_metadata_ds):
+    # Calculate glint angles
+    glint_array = glint_angle(
+        solar_azimuth=angle_metadata_ds.oa_solar_azimuth,
+        solar_zenith=angle_metadata_ds.oa_solar_zenith,
+        view_azimuth=angle_metadata_ds.oa_satellite_azimuth,
+        view_zenith=angle_metadata_ds.oa_satellite_view,
+    )
+
+    # Verify values are expected
+    assert np.allclose(glint_array, np.array([31.5297584, 16.5520374]))
+
+    # Verify output as an xarray.DataArray
+    assert isinstance(glint_array, xr.DataArray)
