@@ -16,6 +16,7 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
    DEA_Coastlines.ipynb
    DEA_Waterbodies.ipynb
    DEA_Wetlands_Insight_Tool.ipynb
+   DEA_Mangroves.ipynb
 
 Citing DEA Notebooks
 --------------------
