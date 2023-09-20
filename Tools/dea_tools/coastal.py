@@ -606,13 +606,13 @@ def model_tides(
     # Verify that all provided models are in list of supported models
     valid_models = [
         "FES2014",
-        "FES2012",
         "TPXO9-atlas-v5",
         "TPXO8-atlas",
-        "TPXO8-atlas-v1",
         "EOT20",
         "HAMTIDE11",
         "GOT4.10",
+        "FES2012",  # Requires custom tide model definition file
+        "TPXO8-atlas-v1",  # Requires custom tide model definition file
     ]
     if not all(m in valid_models for m in model):
         raise ValueError(
