@@ -131,7 +131,8 @@ def test_model_tides(measured_tides_ds, x, y, crs, method):
 
     # Test that modelled tides contain correct headings and have same
     # number of timesteps
-    assert modelled_tides_df.columns.tolist() == ["x", "y", "tide_model", "tide_m"]
+    assert modelled_tides_df.index.names == ["time", "x", "y"]
+    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
     assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
 
     # Test that modelled tides meet expected accuracy
@@ -169,7 +170,8 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
 
     if output_format == "long":
         # Verify output has correct columns
-        assert modelled_tides_df.columns.tolist() == ["x", "y", "tide_model", "tide_m"]
+        assert modelled_tides_df.index.names == ["time", "x", "y"]
+        assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
 
         # Verify tide model column contains correct values
         assert modelled_tides_df.tide_model.unique().tolist() == models
@@ -180,7 +182,8 @@ def test_model_tides_multiplemodels(measured_tides_ds, models, output_format):
 
     elif output_format == "wide":
         # Verify output has correct columns
-        assert modelled_tides_df.columns[2:].tolist() == models
+        assert modelled_tides_df.index.names == ["time", "x", "y"]
+        assert modelled_tides_df.columns.tolist() == models
 
         # Verify output has same length as orginal timesteps
         assert len(modelled_tides_df.index) == len(measured_tides_ds.time)
@@ -207,6 +210,95 @@ def test_model_tides_units(measured_tides_ds, units, expected_range, expected_dt
     # Verify tide range and dtypes are as expected for unit
     assert np.isclose(tide_range, expected_range, rtol=0.01)
     assert modelled_tides_df.tide_m.dtype == expected_dtype
+
+
+# Run test for each combination of mode, output format, and one or
+# multiple tide models
+@pytest.mark.parametrize(
+    "mode, models, output_format",
+    [
+        ("one-to-many", ["FES2014"], "long"),
+        ("one-to-one", ["FES2014"], "long"),
+        ("one-to-many", ["FES2014"], "wide"),
+        ("one-to-one", ["FES2014"], "wide"),
+        ("one-to-many", ["FES2014", "HAMTIDE11"], "long"),
+        ("one-to-one", ["FES2014", "HAMTIDE11"], "long"),
+        ("one-to-many", ["FES2014", "HAMTIDE11"], "wide"),
+        ("one-to-one", ["FES2014", "HAMTIDE11"], "wide"),
+    ],
+)
+def test_model_tides_mode(mode, models, output_format):
+    # Input params
+    x = [122.14, 122.30, 122.12]
+    y = [-17.91, -17.92, -18.07]
+    times = pd.date_range("2020", "2021", periods=3)
+
+    # Model tides
+    modelled_tides_df = model_tides(
+        x=x,
+        y=y,
+        time=times,
+        mode=mode,
+        output_format=output_format,
+        model=models,
+    )
+
+    if mode == "one-to-one":
+        if output_format == "wide":
+            # Should have the same number of rows as input x, y, times
+            assert len(modelled_tides_df.index) == len(x)
+            assert len(modelled_tides_df.index) == len(times)
+
+            # Output indexes should match order of input x, y, times
+            assert all(modelled_tides_df.index.get_level_values("time") == times)
+            assert all(modelled_tides_df.index.get_level_values("x") == x)
+            assert all(modelled_tides_df.index.get_level_values("y") == y)
+
+        elif output_format == "long":
+            # In "long" format, the number of x, y points multiplied by
+            # the number of tide models
+            assert len(modelled_tides_df.index) == len(x) * len(models)
+
+            # Verify index values match expected x, y, time order
+            assert all(
+                modelled_tides_df.index.get_level_values("time")
+                == np.tile(times, len(models))
+            )
+            assert all(
+                modelled_tides_df.index.get_level_values("x") == np.tile(x, len(models))
+            )
+            assert all(
+                modelled_tides_df.index.get_level_values("y") == np.tile(y, len(models))
+            )
+
+    if mode == "one-to-many":
+        if output_format == "wide":
+            # In "wide" output format, the number of rows should equal
+            # the number of x, y points multiplied by timesteps
+            assert len(modelled_tides_df.index) == len(x) * len(times)
+
+            # TODO: Work out what order rows should be returned in in
+            # "one-to-many" and "wide" mode
+
+        elif output_format == "long":
+            # In "long" output format, the number of rows should equal
+            # the number of x, y points multiplied by timesteps and
+            # the number of tide models
+            assert len(modelled_tides_df.index) == len(x) * len(times) * len(models)
+
+            # Verify index values match expected x, y, time order
+            assert all(
+                modelled_tides_df.index.get_level_values("time")
+                == np.tile(times, len(x) * len(models))
+            )
+            assert all(
+                modelled_tides_df.index.get_level_values("x")
+                == np.tile(np.repeat(x, len(times)), len(models))
+            )
+            assert all(
+                modelled_tides_df.index.get_level_values("y")
+                == np.tile(np.repeat(y, len(times)), len(models))
+            )
 
 
 # Run tests for default and custom resolutions
