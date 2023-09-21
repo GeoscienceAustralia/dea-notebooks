@@ -19,6 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          micromamba-version: '1.5.1-0'
+          environment-name: test-env
+          create-args: >-
+            python=3.10
+            datacube
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -29,9 +36,9 @@ jobs:
       - name: Get Database Credentials
         run: |
           username_password=$(aws ssm get-parameter --name /dea-sandbox-eks/sandbox_reader/db.creds --with-decryption  --query Parameter.Value --output text)
-          IFS=: read -r PGUSERNAME PGPASSWORD <<< $username_password
-          echo "PGUSERNAME=${PGUSERNAME}" >> $GITHUB_ENV
-          echo "PGPASSWORD=${PGPASSWORD}" >> $GITHUB_ENV
+          # IFS=: read -r PGUSERNAME PGPASSWORD <<< $username_password
+          # echo "PGUSERNAME=${PGUSERNAME}" >> $GITHUB_ENV
+          # echo "PGPASSWORD=${PGPASSWORD}" >> $GITHUB_ENV
           echo DATACUBE_DB_URL=postgresql://${username_password}@localhost:5432/odc >> $GITHUB_ENV
 
       - name: Open Port Forward to RDS
@@ -46,13 +53,6 @@ jobs:
           echo "PGPORT=5432" >> $GITHUB_ENV
           echo "PGHOST=localhost" >> $GITHUB_ENV
 
-      - uses: mamba-org/setup-micromamba@v1
-        with:
-          micromamba-version: '1.5.1'
-          environment-name: test-env
-          create-args: >-
-            python=3.10
-            datacube
 
       - name: Test RDS Connection
         run: |
