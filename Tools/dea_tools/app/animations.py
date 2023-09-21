@@ -18,6 +18,8 @@ from ipyleaflet import (
     Map,
     DrawControl,
     WidgetControl,
+    SearchControl,
+    Marker,
     LayerGroup,
     LayersControl,
     GeoData,
@@ -48,18 +50,19 @@ from datacube.utils.masking import mask_invalid_data
 import dea_tools.app.widgetconstructors as deawidgets
 from dea_tools.dask import create_local_dask_cluster
 from dea_tools.spatial import reverse_geocode
-from dea_tools.datahandling import pan_sharpen_brovey
 
 import warnings
-
 warnings.filterwarnings("ignore")
 
 # WMS params and satellite style bands
 sat_params = {
     "Landsat": {
-        "products": ["ga_ls5t_ard_3", 
-                     "ga_ls7e_ard_3", 
-                     "ga_ls8c_ard_3"],
+        "products": [
+            "ga_ls5t_ard_3",
+            "ga_ls7e_ard_3",
+            "ga_ls8c_ard_3",
+            "ga_ls9c_ard_3",
+        ],
         "styles": {
             "True colour": ("true_colour", ["nbart_red", "nbart_green", "nbart_blue"]),
             "False colour": (
@@ -78,6 +81,23 @@ sat_params = {
             "False colour": (
                 "infrared_green",
                 ["nbart_swir_2", "nbart_nir_1", "nbart_green"],
+            ),
+        },
+    },
+    "Sentinel-2 and Landsat": {
+        "products": [
+            "ga_s2am_ard_3",
+            "ga_s2bm_ard_3",
+            "ga_ls5t_ard_3",
+            "ga_ls7e_ard_3",
+            "ga_ls8c_ard_3",
+            "ga_ls9c_ard_3",
+        ],
+        "styles": {
+            "True colour": ("simple_rgb", ["nbart_red", "nbart_green", "nbart_blue"]),
+            "False colour": (
+                "infrared_green",
+                ["nbart_common_swir_1", "nbart_common_nir", "nbart_green"],
             ),
         },
     },
@@ -115,7 +135,7 @@ def update_map_layers(self, update_basemap=False):
     self.query_params = None
 
     if update_basemap:
-        
+
         # Clear all layers and add basemap
         self.map_layers.clear_layers()
         self.map_layers.add_layer(self.basemap)
@@ -162,7 +182,7 @@ def extract_data(self):
             "output_crs": crs,
             "group_by": "solar_day",
             "dask_chunks": {"time": 1, "x": 2048, "y": 2048},
-            "resampling": {"*": "cubic", "oa_fmask": "nearest", "fmask": "nearest"},
+            "resampling": {"*": "bilinear", "oa_fmask": "nearest", "fmask": "nearest"},
             "skip_broken_datasets": True,
         }
 
@@ -195,7 +215,7 @@ def extract_data(self):
         timeseries_ds = None
 
     # Close down the dask client
-#     client.shutdown()
+    #     client.shutdown()
     client.close()
 
     return timeseries_ds
@@ -324,6 +344,7 @@ class animation_app(HBox):
         self.dealayer_list = [
             ("Landsat", "Landsat"),
             ("Sentinel-2", "Sentinel-2"),
+            ("Sentinel-2 and Landsat", "Sentinel-2 and Landsat")
         ]
         self.dealayer = self.dealayer_list[0][1]
 
@@ -477,6 +498,12 @@ class animation_app(HBox):
 
         # Add tools to map widget
         self.m.add_control(draw_control)
+        self.m.add_control(SearchControl(
+        position="topleft",
+        url='https://nominatim.openstreetmap.org/search?format=json&q={s}',
+        zoom=13, # 'Village / Suburb' level zoom
+        marker=Marker(draggable=False)
+        ))
         self.m.add_layer(self.map_layers)
 
         # Update all maps to starting defaults
@@ -526,13 +553,13 @@ class animation_app(HBox):
 
         checkbox_rolling_median = deawidgets.create_checkbox(
             self.rolling_median,
-            "Apply rolling median to produce<br>smooth, cloud-free animations",
+            "Apply rolling median to produce smooth, cloud-free animations",
             layout={"width": "85%"},
         )
         text_rolling_median_window = widgets.IntText(
             value=20,
             step=1,
-            description="</br>Rolling window (timesteps)",
+            description="Rolling window (timesteps)",
             layout={
                 "width": "85%",
                 "margin": "0px",
@@ -771,16 +798,22 @@ class animation_app(HBox):
     def update_basemap(self, change):
         self.basemap = change.new
         update_map_layers(self, update_basemap=True)
-        
+
     # Change layers shown on the map
     def update_dealayer(self, change):
         self.dealayer = change.new
 
-        if change.new == "ga_ls_ard_3":
+        if change.new == "Landsat":
             self.text_resolution.value = 30
 
-        else:
+        elif change.new == "Sentinel-2":
             self.text_resolution.value = 10
+        
+        elif change.new == "Sentinel-2 and Landsat":
+            self.text_resolution.value = 30
+            
+        # Clear data load params to trigger data re-load
+        update_map_layers(self)
 
     # Set imagery style
     def update_styles(self, change):
@@ -788,14 +821,14 @@ class animation_app(HBox):
 
         # Clear data load params to trigger data re-load
         update_map_layers(self)
-        
+
     # Update good data slider
     def update_floatslider_max_cloud_cover(self, change):
         self.max_cloud_cover = change.new
 
         # Clear data load params to trigger data re-load
         update_map_layers(self)
-    
+
     # Set output file format
     def update_output(self, change):
         self.output_format = change.new
@@ -807,8 +840,6 @@ class animation_app(HBox):
     # Update power transform
     def update_slider_power(self, change):
         self.power = change.new
-
-
 
     # Enable unsharp masking and show/hide custom params
     def update_checkbox_unsharp_mask(self, change):
@@ -877,7 +908,7 @@ class animation_app(HBox):
     # Set output file format
     def update_dropdown_resampling(self, change):
         self.resample_freq = change.new
-        
+
         # Clear data load params to trigger data re-load
         update_map_layers(self)
 

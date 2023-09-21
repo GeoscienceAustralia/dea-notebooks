@@ -422,7 +422,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         all time slices are plotted.
     measurement : string, optional
         Name of the DEA land cover classification to be plotted. Passed to 
-        lc_colourmap to specify which colour scheme will ve used. If non 
+        lc_colourmap to specify which colour scheme will be used. If non 
         provided, reads data array name from `da` to determine.
     """
     # get measurement name
@@ -443,16 +443,24 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     scale = out_width / width
 
     if year:
+        #plotting protocall if 'year' variable is passed
         year_string = f"{year}-01-01"
         data = data.sel(time=year_string, method="nearest")
-
-    # plot all dates for the provided measurement
-    if len(data.dims) < 3:
+        
         fig, ax = plt.subplots()
         fig.set_size_inches(width * scale, height * scale)
         make_colorbar(fig, ax, measurement)
         im = ax.imshow(data, cmap=cmap, norm=norm, interpolation="nearest")
+
+    
+    elif len(data.time) == 1:
+        #plotting protocall if only one timestep is passed and not a year variable
+        fig, ax = plt.subplots()
+        fig.set_size_inches(width * scale, height * scale)
+        make_colorbar(fig, ax, measurement)
+        im = ax.imshow(data.isel(time=0), cmap=cmap, norm=norm, interpolation="nearest")
     else:
+        #plotting protocall if multible time steps are passed to plot
         if cols > len(data.time):
             cols = len(data.time)
         rows = int((len(data.time) + cols-1)/cols)

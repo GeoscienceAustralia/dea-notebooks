@@ -20,7 +20,7 @@ Python functions and algorithms developed to assist in analysing Digital Earth A
 **Classification and segmentation**
 
 -  ``dea_tools.classification.py``: Machine learning classification (e.g. training and applying machine learning models on satellite data)
--  ``dea_tools.segmentation.py``: Image segmentation tools (e.g. applying image segementation with RSGISLIB)
+-  ``dea_tools.segmentation.py``: Image segmentation tools (e.g. applying image segmentation with RSGISLIB)
 
 **Parallel processing**
 
@@ -30,14 +30,29 @@ Python functions and algorithms developed to assist in analysing Digital Earth A
 
 -  ``dea_tools.land_cover``: Functions for plotting Digital Earth Australia Land Cover data.
 -  ``dea_tools.coastal``: Coastal and intertidal analysis tools (e.g. tidal tagging, coastal change timeseries)
--  ``dea_tools.bom``: Loading Bureau of Meteorology water data service data (e.g. guage data, discharge data)
+-  ``dea_tools.bom``: Loading Bureau of Meteorology water data service data (e.g. gauge data, discharge data)
 -  ``dea_tools.climate``: Retrieving and manipulating gridded climate data (e.g. ERA5)
 -  ``dea_tools.waterbodies``: Loading and processing DEA Waterbodies data (e.g. finding and loading waterbody timeseries data)
 
 Installation
 ------------
 
-Install the package from the source on any system with ``pip``:
+With conda
+~~~~~~~~~~
+
+.. code-block:: bash
+
+    wget -O conda-environment.yml https://raw.githubusercontent.com/opendatacube/datacube-core/develop/conda-environment.yml
+
+    mamba env create -f conda-environment.yml
+    conda activate cubeenv
+
+
+Install dea-tools
+~~~~~~~~~~~~~~~~~
+
+You can install ``dea-tools`` with ``pip`` in a Python environment where
+`GDAL <https://pypi.org/project/GDAL/>`_ and `pyproj <https://pypi.org/project/pyproj/>`_ are already installed.
 
 .. code-block:: bash
 
@@ -92,4 +107,3 @@ Build instructions:
         rm dea_tools/__version__.py  # if necessary
         pip install . --use-feature=in-tree-build
         python -m build
-

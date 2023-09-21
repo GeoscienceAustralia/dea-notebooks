@@ -41,6 +41,9 @@ import dea_tools.app.widgetconstructors as deawidgets
 from dea_tools.coastal import get_coastlines, transect_distances
 
 
+WMS_ADDRESS = "https://geoserver.dea.ga.gov.au/geoserver/wms"
+
+
 def make_box_layout():
     return Layout(
         #          border='solid 1px black',
@@ -149,7 +152,7 @@ class transect_app(HBox):
         draw_control = deawidgets.create_drawcontrol(desired_drawtools)
 
         # Load DEACoastLines WMS
-        deacl_url = 'https://geoserver.dea.ga.gov.au/geoserver/wms'
+        deacl_url = WMS_ADDRESS
         deacl_layer = 'dea:DEACoastlines'
         deacoastlines = WMSLayer(
             url=deacl_url,
@@ -281,11 +284,16 @@ class transect_app(HBox):
 
         # Clear any drawn data if present
         self.gdf_drawn = None
+        
+        # Temporary compatibility fix for ipywidget > 8.0
+        # TODO: Update code to use new fileupload API documented here:
+        # https://ipywidgets.readthedocs.io/en/latest/user_migration_guides.html#fileupload
+        uploaded_data = {f["name"]: {"content": f.content.tobytes()} for f in change.new}            
 
         # Save to file
-        for uploaded_filename in change.new.keys():
+        for uploaded_filename in uploaded_data.keys():
             with open(uploaded_filename, "wb") as output_file:
-                content = change.new[uploaded_filename]['content']
+                content = uploaded_data[uploaded_filename]["content"]
                 output_file.write(content)
 
         with self.status_info:
@@ -294,12 +302,12 @@ class transect_app(HBox):
 
                 print('Loading vector data...', end='\r')
                 valid_files = [
-                    file for file in change.new.keys()
+                    file for file in uploaded_data.keys()
                     if file.lower().endswith(('.shp', '.geojson'))
                 ]
                 valid_file = valid_files[0]
                 transect_gdf = (gpd.read_file(valid_file).to_crs(
-                    "EPSG:4326").explode().reset_index(drop=True))
+                    "EPSG:4326").explode(index_parts=True).reset_index(drop=True))
 
                 # Use ID column if it exists
                 if 'id' in transect_gdf:
@@ -363,14 +371,14 @@ class transect_app(HBox):
         self.product = change.new
 
         # Load DEACoastLines WMS
-        deacl_url = "https://geoserver.dea.ga.gov.au/geoserver/wms"
+        deacl_url = WMS_ADDRESS
         deacl_layer = "dea:DEACoastlines"
         deacoastlines = WMSLayer(
             url=deacl_url,
             layers=deacl_layer,
             format="image/png",
             transparent=True,
-            attribution="DEA Coastlines © 2020 Geoscience Australia")
+            attribution="DEA Coastlines © 2023 Geoscience Australia")
 
         if self.product == "none":
             self.map_layers.clear_layers()
