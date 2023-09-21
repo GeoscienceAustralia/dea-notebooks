@@ -1369,7 +1369,7 @@ def tidal_stats(
     if plot:
         # Create plot and add all time and observed tide data
         fig, ax = plt.subplots(figsize=(10, 5))
-        all_tides_df.tide_m.plot(ax=ax, alpha=0.4)
+        all_tides_df.reset_index(["x", "y"]).tide_m.plot(ax=ax, alpha=0.4)
         ds_tides.tide_m.plot.line(
             ax=ax, marker="o", linewidth=0.0, color="black", markersize=2
         )
