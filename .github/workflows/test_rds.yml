@@ -1,0 +1,60 @@
+
+name: Test RDS Connection
+
+on:
+  push:
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+jobs:
+  test-rds:
+    runs-on: ubuntu-latest
+
+    # Once we've setup our mamba environment, activate it automatically
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::060378307146:role/github-actions-dea-notebooks--sandbox
+          aws-region: ap-southeast-2
+
+
+      - name: Get Database Credentials
+        run: |
+          username_password=$(aws ssm get-parameter --name /dea-sandbox-eks/sandbox_reader/db.creds --with-decryption  --query Parameter.Value --output text)
+          IFS=: read -r PGUSERNAME PGPASSWORD <<< $username_password
+          echo "PGUSERNAME=${PGUSERNAME}" >> $GITHUB_ENV
+          echo "PGPASSWORD=${PGPASSWORD}" >> $GITHUB_ENV
+          echo DATACUBE_DB_URL=postgresql://${username_password}@localhost:5432/odc >> $GITHUB_ENV
+
+      - name: Open Port Forward to RDS
+        run: |
+          npx basti connect \
+            --custom-target-vpc vpc-086904199e505c1f6 \
+            --custom-target-host db-aurora-dea-sandbox-eks-1.cos5zfpkso9m.ap-southeast-2.rds.amazonaws.com \
+            --custom-target-port 5432 \
+            --local-port 5432 &
+          # Wait until the connection comes up, but, if it doesn't, don't hang forever.
+          npx wait-on --verbose --timeout 60000 --interval 1000 tcp:127.0.0.1:5432
+          echo "PGPORT=5432" >> $GITHUB_ENV
+          echo "PGHOST=localhost" >> $GITHUB_ENV
+
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          micromamba-version: '1.5.1'
+          environment-name: test-env
+          create-args: >-
+            python=3.10
+            datacube
+
+      - name: Test RDS Connection
+        run: |
+          datacube system check
+          datacube product list
