@@ -79,7 +79,7 @@ jobs:
         run: |
           sudo chown -R 1000:100 ./dea-notebooks
           cd ./dea-notebooks
-          docker run \
+          docker run --rm \
             --env DATACUBE_DB_URL \
             --env AWS_SESSION_TOKEN \
             --env AWS_REGION \
@@ -90,8 +90,8 @@ jobs:
             --volume ${GITHUB_WORKSPACE}/tide_models:/var/share/tide_models \
             --env GDAL_HTTP_MAX_RETRY=3 \
             --entrypoint /bin/bash \
-            538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable
-            ./dea-notebooks/Tests/test_notebooks.sh
+            538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable \
+            /home/jovyan/dea-notebooks/Tests/test_notebooks.sh
 
   #  login-to-amazon-ecr:
   #    runs-on: ubuntu-latest
