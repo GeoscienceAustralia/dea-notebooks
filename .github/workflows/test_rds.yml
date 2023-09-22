@@ -5,13 +5,13 @@ on:
   push:
 
 permissions:
-  id-token: write # Required for OIDC
+  id-token: write # Required for OIDC authentication to AWS
   contents: read
 jobs:
   test-rds:
     runs-on: ubuntu-latest
 
-    # Once we've setup our mamba environment, activate it automatically
+    # Automatically activate our mamba environment when it's ready
     defaults:
       run:
         shell: bash -l {0}
@@ -26,16 +26,18 @@ jobs:
           create-args: >-
             python=3.10
             datacube
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::060378307146:role/github-actions-dea-notebooks--sandbox
           aws-region: ap-southeast-2
 
-
       - name: Get Database Credentials
         run: |
           username_password=$(aws ssm get-parameter --name /dea-sandbox-eks/sandbox_reader/db.creds --with-decryption  --query Parameter.Value --output text)
+          # If we need separate username/password they can be split as follows.
+          # However exporting them to GitHub Environment variables will leave the Password in the Logs, if further steps aren't taken.
           # IFS=: read -r PGUSERNAME PGPASSWORD <<< $username_password
           # echo "PGUSERNAME=${PGUSERNAME}" >> $GITHUB_ENV
           # echo "PGPASSWORD=${PGPASSWORD}" >> $GITHUB_ENV
@@ -49,7 +51,7 @@ jobs:
             --custom-target-port 5432 \
             --local-port 5432 &
           # Wait until the connection comes up, but, if it doesn't, don't hang forever.
-          npx wait-on --verbose --timeout 60000 --interval 1000 tcp:127.0.0.1:5432
+          npx wait-on --timeout 120000 --interval 1000 tcp:127.0.0.1:5432
           echo "PGPORT=5432" >> $GITHUB_ENV
           echo "PGHOST=localhost" >> $GITHUB_ENV
 
@@ -58,3 +60,9 @@ jobs:
         run: |
           datacube system check
           datacube product list
+
+      - name: Test S3 Access
+        run: |
+          aws s3 ls dea-public-data
+          aws s3 ls dea-public-data-dev
+          aws s3 cp s3://dea-public-data/index.html .
