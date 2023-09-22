@@ -30,7 +30,7 @@ jobs:
       #            datacube
       #
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::538673716275:role/github-actions-role-readonly
           aws-region: ap-southeast-2
@@ -40,7 +40,7 @@ jobs:
 
       - name: Login to Amazon ECR Private
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Pull dea-sandbox image from ECR
         run: |
