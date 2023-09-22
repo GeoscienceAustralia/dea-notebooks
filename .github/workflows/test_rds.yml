@@ -80,7 +80,8 @@ jobs:
           sudo chown -R 1000:100 ./dea-notebooks
           cd ./dea-notebooks
           docker run --rm \
-            --env DATACUBE_DB_URL \
+            --add-host=host.docker.internal:host-gateway \
+            --env "DATACUBE_DB_URL=${DATACUBE_DB_URL/localhost/host.docker.internal}" \
             --env AWS_SESSION_TOKEN \
             --env AWS_REGION \
             --env AWS_ACCESS_KEY_ID \
