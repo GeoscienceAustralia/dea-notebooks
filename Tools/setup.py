@@ -36,6 +36,7 @@ REQUIRED = [
     'dask',
     'dask-ml',
     'datacube',
+    'datacube-ows',
     'Fiona',
     'folium',
     'geopandas',

@@ -1,11 +1,28 @@
+import numpy
+
 import folium
 import folium.plugins        
 
-from odc.ui import image_aspect, mk_data_uri, to_png_data, mk_image_overlay, zoom_from_bbox
-from odc.algo import to_rgba
+from odc.ui import mk_data_uri, zoom_from_bbox
+from odc.ui._images import xr_bounds
 from datacube.testutils.geom import epsg4326
-        
-# TODO favor datacube OWS style config over the ad hoc (clamp, bands) settings
+from datacube_ows.styles.api import apply_ows_style_cfg, xarray_image_as_png
+
+# ipyleaflet is listed as an optional dependency for the dea-tools package
+# so instead of trying to import it here, we do that as needed
+
+# default fallback OWS style configuration
+RGB_CFG = {
+    "components": {
+        "red": {"red": 1.0},
+        "green": {"green": 1.0},
+        "blue": {"blue": 1.0},
+    },
+
+    "scale_range": (50, 3000),
+}
+
+
 
 def folium_map_default(bbox, zoom_start=None, location=None, **kwargs):
     """
@@ -26,7 +43,6 @@ def ipyleaflet_map_default(bbox, zoom=None, center=None, **kwargs):
     """
     Sensible defaults for a map based on the bounding box of the image to be shown.
     """
-    # this is an optional dependency
     import ipyleaflet
 
     if zoom is None:
@@ -40,17 +56,91 @@ def ipyleaflet_map_default(bbox, zoom=None, center=None, **kwargs):
     return ipyleaflet.Map(**kwargs)
 
 
-def folium_image_overlay(data, bounds, clamp=None, bands=('red', 'green', 'blue'), name=None):
-    # this is a partial port of odc.ui.mk_image_overlay
-    # too bad that function returns an ipyleaflet.ImageOverlay but we need the folium one
-    rgba = to_rgba(data, clamp=clamp, bands=bands)
-    png_str = mk_data_uri(to_png_data(rgba.values), "image/png")
-    return folium.raster_layers.ImageOverlay(png_str, bounds=bounds, name=name)
+def valid_data_mask(data):
+    """
+    Calculate valid data mask array for xarray dataset.
+    """
+    def mask_array(data_array):
+        # adopted from odc.algo._rgba.to_rgba_np
+        nodata = data_array.attrs.get('nodata')
+        if data_array.dtype.kind == "f":
+            valid = ~numpy.isnan(data_array)
+            if nodata is not None:
+                valid = valid & (data_array != nodata)
+        elif nodata is not None:
+            valid = data_array != nodata
+        else:
+            valid = np.ones(data_array.shape, dtype=bool)
+            
+        return valid
+    
+    var_names = list(data.data_vars)
+    if var_names == []:
+        raise ValueError("no data given")
+    
+    first, *rest = var_names
+    mask = mask_array(data.data_vars[first])
+    for other in rest:
+        mask = mask & mask_array(data.data_vars[other])
+    return mask
+
+
+def apply_ows_style(data, ows_style_config=None):
+    """
+    Convert xarray dataset to a PNG image by applying the OWS style.
+    """
+    # inspired by odc.ui.mk_image_overlay
+    # and https://datacube-ows.readthedocs.io/en/latest/styling_howto.html
+
+    # get rid of the time dimension
+    if "time" in data.dims:
+        assert data.time.shape[0] == 1, "multiple observations not supported yet"
+        data = data.isel(time=0)
+    
+    if ows_style_config is None:
+        ows_style_config = RGB_CFG
+
+    mask = valid_data_mask(data)
+    xr_image = apply_ows_style_cfg(ows_style_config, data, valid_data_mask=mask)   
+    return xarray_image_as_png(xr_image)
+    
+
+def folium_image_overlay(data, ows_style_config=None, name=None):
+    png_str = mk_data_uri(apply_ows_style(data, ows_style_config=ows_style_config), "image/png")
+    return folium.raster_layers.ImageOverlay(png_str, bounds=xr_bounds(data), name=name)
+
+
+def ipyleaflet_image_overlay(data, ows_style_config=None, layer_name="Image"):
+    import ipyleaflet
+    
+    png_str = mk_data_uri(apply_ows_style(data, ows_style_config=ows_style_config), "image/png")
+    return ipyleaflet.ImageOverlay(url=png_str, bounds=xr_bounds(data), layer_name=layer_name)
+
+
+def folium_add_controls(fm, enable_fullscreen=True, enable_layers_control=False):
+    if enable_fullscreen:
+        folium.plugins.Fullscreen(position="topright", title="Fullscreen", title_cancel="Exit fullscreen").add_to(fm)
+        
+    if enable_layers_control:
+        folium.LayerControl().add_to(fm)
+
+        
+def ipyleaflet_add_controls(im, enable_fullscreen=True, enable_layers_control=False):
+    import ipyleaflet
+
+    if enable_fullscreen:
+        im.add_control(ipyleaflet.FullScreenControl())
+    
+    if enable_layers_control:
+        im.add_control(ipyleaflet.LayersControl())
+
+
+def bounding_box(data):
+    return data.extent.to_crs(epsg4326).boundingbox
     
 
 def folium_map(data,
-               clamp=None,
-               bands=('red', 'green', 'blue'),
+               ows_style_config=None,
                enable_fullscreen=True,
                enable_layers_control=False,
                zoom_start=None,
@@ -70,37 +160,19 @@ def folium_map(data,
     -------
     the newly created `folium` map
     """
+    fm = folium_map_default(bounding_box(data), zoom_start=zoom_start, location=location, **folium_map_kwargs)
 
-    # get rid of the time dimension
-    if "time" in data.dims:
-        assert data.time.shape[0] == 1, "multiple observations not supported yet"
-        data = data.isel(time=0)
-
-    for band in bands:
-        assert band in data, f"band {band} is not found in dataset"
-
-    bbox = data.extent.to_crs(epsg4326).boundingbox
-    bounds = ((bbox.top, bbox.left), (bbox.bottom, bbox.right))
-
-    fm = folium_map_default(bbox, zoom_start=zoom_start, location=location, **folium_map_kwargs)
-
-    folium_image_overlay(data, bounds, clamp=clamp, bands=bands).add_to(fm)
+    folium_image_overlay(data, ows_style_config=ows_style_config).add_to(fm)
     
-    if enable_fullscreen:
-        folium.plugins.Fullscreen(position="topright", title="Fullscreen", title_cancel="Exit fullscreen").add_to(fm)
-        
-    if enable_layers_control:
-        folium.LayerControl().add_to(fm)
-
+    folium_add_controls(fm, enable_fullscreen=enable_fullscreen, enable_layers_control=enable_layers_control)
+    
     return fm
 
 
 def folium_sidebyside_map(left_data,
                           right_data,
-                          left_clamp=None,
-                          left_bands=('red', 'green', 'blue'),
-                          right_clamp=None,
-                          right_bands=('red', 'green', 'blue'),
+                          left_ows_style=None,
+                          right_ows_style=None,
                           enable_fullscreen=True,
                           enable_layers_control=False,
                           zoom_start=None,
@@ -120,29 +192,11 @@ def folium_sidebyside_map(left_data,
     -------
     the newly created `folium` map
     """
+    
+    fm = folium_map_default(bounding_box(left_data), zoom_start=zoom_start, location=location, **folium_map_kwargs)
 
-    # get rid of the time dimension
-    if "time" in left_data.dims:
-        assert left_data.time.shape[0] == 1, "multiple observations not supported yet"
-        left_data = left_data.isel(time=0)
-
-    if "time" in right_data.dims:
-        assert right_data.time.shape[0] == 1, "multiple observations not supported yet"
-        right_data = right_data.isel(time=0)
-
-    for band in left_bands:
-        assert band in left_data, f"band {band} is not found in left dataset"
-        
-    for band in right_bands:
-        assert band in right_data, f"band {band} is not found in right dataset"
-
-    bbox = left_data.extent.to_crs(epsg4326).boundingbox
-    bounds = ((bbox.top, bbox.left), (bbox.bottom, bbox.right))
-
-    fm = folium_map_default(bbox, zoom_start=zoom_start, location=location, **folium_map_kwargs)
-
-    left_layer = folium_image_overlay(left_data, bounds, clamp=left_clamp, bands=left_bands, name="left")
-    right_layer = folium_image_overlay(right_data, bounds, clamp=right_clamp, bands=right_bands, name="right")
+    left_layer = folium_image_overlay(left_data, ows_style_config=left_ows_style, name="left")
+    right_layer = folium_image_overlay(right_data, ows_style_config=right_ows_style, name="right")
     
     left_layer.add_to(fm)
     right_layer.add_to(fm)    
@@ -150,18 +204,13 @@ def folium_sidebyside_map(left_data,
     sbs = folium.plugins.SideBySideLayers(left_layer, right_layer)
     sbs.add_to(fm)
     
-    if enable_fullscreen:
-        folium.plugins.Fullscreen(position="topright", title="Fullscreen", title_cancel="Exit fullscreen").add_to(fm)
-        
-    if enable_layers_control:
-        folium.LayerControl().add_to(fm)
+    folium_add_controls(fm, enable_fullscreen=enable_fullscreen, enable_layers_control=enable_layers_control)
 
     return fm
 
 
 def ipyleaflet_map(data,
-                   clamp=None,
-                   bands=('red', 'green', 'blue'),
+                   ows_style_config=None,
                    enable_fullscreen=True,
                    enable_layers_control=False,
                    zoom=None,
@@ -181,36 +230,22 @@ def ipyleaflet_map(data,
     -------
     the newly created `ipyleaflet` map
     """
-    # this is an optional dependency
     import ipyleaflet
 
-    for band in bands:
-        assert band in data, f"band {band} is not found in left dataset"
+    im = ipyleaflet_map_default(bounding_box(data), zoom=zoom, center=center, **ipyleaflet_map_kwargs)
 
-    bbox = data.extent.to_crs(epsg4326).boundingbox
-    bounds = ((bbox.top, bbox.left), (bbox.bottom, bbox.right))
-
-    im = ipyleaflet_map_default(bbox, zoom=zoom, center=center, **ipyleaflet_map_kwargs)
-
-    layer = mk_image_overlay(data, clamp=clamp, bands=bands)
-    
+    layer = ipyleaflet_image_overlay(data, ows_style_config=ows_style_config)
     im.add_layer(layer)
 
-    if enable_fullscreen:
-        im.add_control(ipyleaflet.FullScreenControl())
-    
-    if enable_layers_control:
-        im.add_control(ipyleaflet.LayersControl())
+    ipyleaflet_add_controls(im, enable_fullscreen=enable_fullscreen, enable_layers_control=enable_layers_control)
 
     return im
 
 
 def ipyleaflet_split_map(left_data,
                          right_data,
-                         left_clamp=None,
-                         left_bands=('red', 'green', 'blue'),
-                         right_clamp=None,
-                         right_bands=('red', 'green', 'blue'),
+                         left_ows_style=None,
+                         right_ows_style=None,
                          enable_fullscreen=True,
                          enable_layers_control=True,
                          zoom=None,
@@ -230,22 +265,12 @@ def ipyleaflet_split_map(left_data,
     -------
     the newly created `ipyleaflet` map
     """
-    # this is an optional dependency
     import ipyleaflet
 
-    for band in left_bands:
-        assert band in left_data, f"band {band} is not found in left dataset"
-        
-    for band in right_bands:
-        assert band in right_data, f"band {band} is not found in right dataset"
+    im = ipyleaflet_map_default(bounding_box(left_data), zoom=zoom, center=center, **ipyleaflet_map_kwargs)
 
-    bbox = left_data.extent.to_crs(epsg4326).boundingbox
-    bounds = ((bbox.top, bbox.left), (bbox.bottom, bbox.right))
-
-    im = ipyleaflet_map_default(bbox, zoom=zoom, center=center, **ipyleaflet_map_kwargs)
-
-    left_layer = mk_image_overlay(left_data, clamp=left_clamp, bands=left_bands, layer_name="left")
-    right_layer = mk_image_overlay(right_data, clamp=right_clamp, bands=right_bands, layer_name="right")
+    left_layer = ipyleaflet_image_overlay(left_data, ows_style_config=left_ows_style, layer_name="left")
+    right_layer = ipyleaflet_image_overlay(right_data, ows_style_config=right_ows_style, layer_name="right")
     
     im.add_layer(left_layer)
     im.add_layer(right_layer)    
@@ -253,10 +278,6 @@ def ipyleaflet_split_map(left_data,
     smc = ipyleaflet.SplitMapControl(left_layer=left_layer, right_layer=right_layer)
     im.add_control(smc)
 
-    if enable_fullscreen:
-        im.add_control(ipyleaflet.FullScreenControl())
-    
-    if enable_layers_control:
-        im.add_control(ipyleaflet.LayersControl())
+    ipyleaflet_add_controls(im, enable_fullscreen=enable_fullscreen, enable_layers_control=enable_layers_control)
 
     return im
