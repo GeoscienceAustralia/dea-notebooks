@@ -39,6 +39,21 @@ def folium_map_default(bbox, zoom_start=None, location=None, **kwargs):
     return folium.Map(**kwargs)
 
 
+def folium_dualmap_default(bbox, zoom_start=None, location=None, **kwargs):
+    """
+    Sensible defaults for a dual map based on the bounding box of the image to be shown.
+    """
+    if zoom_start is None:
+        zoom_start = zoom_from_bbox(bbox)
+    if location is None:
+        location = (bbox.bottom + bbox.top) * 0.5, (bbox.right + bbox.left) * 0.5
+
+    kwargs['zoom_start'] = zoom_start
+    kwargs['location'] = location
+    
+    return folium.plugins.DualMap(**kwargs)
+
+
 def ipyleaflet_map_default(bbox, zoom=None, center=None, **kwargs):
     """
     Sensible defaults for a map based on the bounding box of the image to be shown.
@@ -169,15 +184,15 @@ def folium_map(data,
     return fm
 
 
-def folium_sidebyside_map(left_data,
-                          right_data,
-                          left_ows_style=None,
-                          right_ows_style=None,
-                          enable_fullscreen=True,
-                          enable_layers_control=False,
-                          zoom_start=None,
-                          location=None,
-                          **folium_map_kwargs):
+def folium_dual_map(left_data,
+                    right_data,
+                    left_ows_style=None,
+                    right_ows_style=None,
+                    enable_fullscreen=False,
+                    enable_layers_control=False,
+                    zoom_start=None,
+                    location=None,
+                    **folium_map_kwargs):
     """
     Puts two xarray datasets side-by-side for comparison
     on to a `folium` map (see: https://python-visualization.github.io/folium/).
@@ -193,21 +208,60 @@ def folium_sidebyside_map(left_data,
     the newly created `folium` map
     """
     
-    fm = folium_map_default(bounding_box(left_data), zoom_start=zoom_start, location=location, **folium_map_kwargs)
+    fm = folium_dualmap_default(bounding_box(left_data), zoom_start=zoom_start, location=location, **folium_map_kwargs)
 
     left_layer = folium_image_overlay(left_data, ows_style_config=left_ows_style, name="left")
     right_layer = folium_image_overlay(right_data, ows_style_config=right_ows_style, name="right")
     
-    left_layer.add_to(fm)
-    right_layer.add_to(fm)    
+    left_layer.add_to(fm.m1)
+    right_layer.add_to(fm.m2)    
 
+    folium_add_controls(fm, enable_fullscreen=enable_fullscreen, enable_layers_control=enable_layers_control)
+
+    return fm
+
+
+def folium_sidebyside_map(left_data,
+                          right_data,
+                          left_ows_style=None,
+                          right_ows_style=None,
+                          enable_fullscreen=True,
+                          enable_layers_control=False,
+                          zoom_start=None,
+                          location=None,
+                          **folium_map_kwargs):
+    """
+    DOES NOT WORK AS INTENDED.
+    
+    Puts two xarray datasets side-by-side for comparison
+    on to a `folium` map (see: https://python-visualization.github.io/folium/).
+
+    Parameters
+    ----------
+    data : xarray Dataset
+        A dataset with a single observation in time (or without a time dimension)
+    TODO: ...
+
+    Returns
+    -------
+    the newly created `folium` map
+    """
+    
+    fm = folium_map_default(bounding_box(left_data), zoom_start=zoom_start, location=location, **folium_map_kwargs)
+    
+    left_layer = folium_image_overlay(left_data, ows_style_config=left_ows_style, name="left")
+    right_layer = folium_image_overlay(right_data, ows_style_config=right_ows_style, name="right")
+    
+    left_layer.add_to(fm)
+    right_layer.add_to(fm)
+    
     sbs = folium.plugins.SideBySideLayers(left_layer, right_layer)
     sbs.add_to(fm)
     
     folium_add_controls(fm, enable_fullscreen=enable_fullscreen, enable_layers_control=enable_layers_control)
 
     return fm
-
+    
 
 def ipyleaflet_map(data,
                    ows_style_config=None,
@@ -252,6 +306,8 @@ def ipyleaflet_split_map(left_data,
                          center=None,
                          **ipyleaflet_map_kwargs):
     """
+    DOES NOT WORK AS INTENDED.
+    
     Puts two xarray datasets side-by-side for comparison
     on to a `ipyleaflet` map.
 
