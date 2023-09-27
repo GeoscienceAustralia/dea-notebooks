@@ -23,15 +23,18 @@ RGB_CFG = {
 }
 
 
+def center_of_bbox(bbox):
+    return (bbox.bottom + bbox.top) * 0.5, (bbox.right + bbox.left) * 0.5
+
 
 def folium_map_default(bbox, zoom_start=None, location=None, **kwargs):
     """
-    Sensible defaults for a map based on the bounding box of the image to be shown.
+    Sensible defaults for a folium map based on the bounding box of the image to be shown.
     """
     if zoom_start is None:
         zoom_start = zoom_from_bbox(bbox)
     if location is None:
-        location = (bbox.bottom + bbox.top) * 0.5, (bbox.right + bbox.left) * 0.5
+        location = center_of_bbox(bbox)
 
     kwargs['zoom_start'] = zoom_start
     kwargs['location'] = location
@@ -41,12 +44,12 @@ def folium_map_default(bbox, zoom_start=None, location=None, **kwargs):
 
 def folium_dualmap_default(bbox, zoom_start=None, location=None, **kwargs):
     """
-    Sensible defaults for a dual map based on the bounding box of the image to be shown.
+    Sensible defaults for a folium dual map based on the bounding box of the image to be shown.
     """
     if zoom_start is None:
         zoom_start = zoom_from_bbox(bbox)
     if location is None:
-        location = (bbox.bottom + bbox.top) * 0.5, (bbox.right + bbox.left) * 0.5
+        location = center_of_bbox(bbox)
 
     kwargs['zoom_start'] = zoom_start
     kwargs['location'] = location
@@ -56,14 +59,14 @@ def folium_dualmap_default(bbox, zoom_start=None, location=None, **kwargs):
 
 def ipyleaflet_map_default(bbox, zoom=None, center=None, **kwargs):
     """
-    Sensible defaults for a map based on the bounding box of the image to be shown.
+    Sensible defaults for a ipyleaflet map based on the bounding box of the image to be shown.
     """
     import ipyleaflet
 
     if zoom is None:
         zoom = zoom_from_bbox(bbox)
     if center is None:
-        center = (bbox.bottom + bbox.top) * 0.5, (bbox.right + bbox.left) * 0.5
+        center = center_of_bbox(bbox)
 
     kwargs['zoom'] = zoom
     kwargs['center'] = center
@@ -169,7 +172,16 @@ def folium_map(data,
     ----------
     data : xarray Dataset
         A dataset with a single observation in time (or without a time dimension)
-    TODO: ...
+    ows_style_config : dict 
+        Datacube OWS style configuration (see https://datacube-ows.readthedocs.io/en/latest/styling_howto.html)
+    enable_fullscreen : bool
+        Enable a Full Screen control on the map
+    enable_layers_control : bool
+        Enable a Layers control (that lists the layers to show/hide them)
+    zoom_start : int
+        The zoom level (default: a zoom layer that shows the whole dataset)
+    location : (float, float)
+        The location the starting view is centered on (default: center of the dataset bounds)
 
     Returns
     -------
@@ -201,7 +213,16 @@ def folium_dual_map(left_data,
     ----------
     data : xarray Dataset
         A dataset with a single observation in time (or without a time dimension)
-    TODO: ...
+    ows_style_config : dict 
+        Datacube OWS style configuration (see https://datacube-ows.readthedocs.io/en/latest/styling_howto.html)
+    enable_fullscreen : bool
+        Enable a Full Screen control on the map
+    enable_layers_control : bool
+        Enable a Layers control (that lists the layers to show/hide them)
+    zoom_start : int
+        The zoom level (default: a zoom layer that shows the whole dataset)
+    location : (float, float)
+        The location the starting view is centered on (default: center of the dataset bounds)
 
     Returns
     -------
@@ -216,48 +237,6 @@ def folium_dual_map(left_data,
     left_layer.add_to(fm.m1)
     right_layer.add_to(fm.m2)    
 
-    folium_add_controls(fm, enable_fullscreen=enable_fullscreen, enable_layers_control=enable_layers_control)
-
-    return fm
-
-
-def folium_sidebyside_map(left_data,
-                          right_data,
-                          left_ows_style=None,
-                          right_ows_style=None,
-                          enable_fullscreen=True,
-                          enable_layers_control=False,
-                          zoom_start=None,
-                          location=None,
-                          **folium_map_kwargs):
-    """
-    DOES NOT WORK AS INTENDED.
-    
-    Puts two xarray datasets side-by-side for comparison
-    on to a `folium` map (see: https://python-visualization.github.io/folium/).
-
-    Parameters
-    ----------
-    data : xarray Dataset
-        A dataset with a single observation in time (or without a time dimension)
-    TODO: ...
-
-    Returns
-    -------
-    the newly created `folium` map
-    """
-    
-    fm = folium_map_default(bounding_box(left_data), zoom_start=zoom_start, location=location, **folium_map_kwargs)
-    
-    left_layer = folium_image_overlay(left_data, ows_style_config=left_ows_style, name="left")
-    right_layer = folium_image_overlay(right_data, ows_style_config=right_ows_style, name="right")
-    
-    left_layer.add_to(fm)
-    right_layer.add_to(fm)
-    
-    sbs = folium.plugins.SideBySideLayers(left_layer, right_layer)
-    sbs.add_to(fm)
-    
     folium_add_controls(fm, enable_fullscreen=enable_fullscreen, enable_layers_control=enable_layers_control)
 
     return fm
@@ -278,7 +257,16 @@ def ipyleaflet_map(data,
     ----------
     data : xarray Dataset
         A dataset with a single observation in time (or without a time dimension)
-    TODO: ...
+    ows_style_config : dict 
+        Datacube OWS style configuration (see https://datacube-ows.readthedocs.io/en/latest/styling_howto.html)
+    enable_fullscreen : bool
+        Enable a Full Screen control on the map
+    enable_layers_control : bool
+        Enable a Layers control (that lists the layers to show/hide them)
+    zoom_start : int
+        The zoom level (default: a zoom layer that shows the whole dataset)
+    location : (float, float)
+        The location the starting view is centered on (default: center of the dataset bounds)
 
     Returns
     -------
@@ -290,49 +278,6 @@ def ipyleaflet_map(data,
 
     layer = ipyleaflet_image_overlay(data, ows_style_config=ows_style_config)
     im.add_layer(layer)
-
-    ipyleaflet_add_controls(im, enable_fullscreen=enable_fullscreen, enable_layers_control=enable_layers_control)
-
-    return im
-
-
-def ipyleaflet_split_map(left_data,
-                         right_data,
-                         left_ows_style=None,
-                         right_ows_style=None,
-                         enable_fullscreen=True,
-                         enable_layers_control=True,
-                         zoom=None,
-                         center=None,
-                         **ipyleaflet_map_kwargs):
-    """
-    DOES NOT WORK AS INTENDED.
-    
-    Puts two xarray datasets side-by-side for comparison
-    on to a `ipyleaflet` map.
-
-    Parameters
-    ----------
-    data : xarray Dataset
-        A dataset with a single observation in time (or without a time dimension)
-    TODO: ...
-
-    Returns
-    -------
-    the newly created `ipyleaflet` map
-    """
-    import ipyleaflet
-
-    im = ipyleaflet_map_default(bounding_box(left_data), zoom=zoom, center=center, **ipyleaflet_map_kwargs)
-
-    left_layer = ipyleaflet_image_overlay(left_data, ows_style_config=left_ows_style, layer_name="left")
-    right_layer = ipyleaflet_image_overlay(right_data, ows_style_config=right_ows_style, layer_name="right")
-    
-    im.add_layer(left_layer)
-    im.add_layer(right_layer)    
-    
-    smc = ipyleaflet.SplitMapControl(left_layer=left_layer, right_layer=right_layer)
-    im.add_control(smc)
 
     ipyleaflet_add_controls(im, enable_fullscreen=enable_fullscreen, enable_layers_control=enable_layers_control)
 
