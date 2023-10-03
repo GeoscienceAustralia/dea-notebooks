@@ -22,6 +22,7 @@ More complex case study-based workflows demonstrating how DEA can be used to add
    Turbidity_animated_timeseries.ipynb
    Urban_change_detection.ipynb
    Vegetation_phenology.ipynb
+   Water_quality_suspended_matter.ipynb
    Wetness_stream_gauge_correlations.ipynb
    Scalable_machine_learning/README.rst
 
