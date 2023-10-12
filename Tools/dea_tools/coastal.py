@@ -606,13 +606,14 @@ def model_tides(
     # Verify that all provided models are in list of supported models
     valid_models = [
         "FES2014",
-        "FES2012",
         "TPXO9-atlas-v5",
         "TPXO8-atlas",
         "TPXO8-atlas-v1",
         "EOT20",
         "HAMTIDE11",
         "GOT4.10",
+        "FES2012",  # Requires custom tide model definition file
+        "TPXO8-atlas-v1",  # Requires custom tide model definition file
     ]
     if not all(m in valid_models for m in model):
         raise ValueError(
@@ -1369,7 +1370,7 @@ def tidal_stats(
     if plot:
         # Create plot and add all time and observed tide data
         fig, ax = plt.subplots(figsize=(10, 5))
-        all_tides_df.tide_m.plot(ax=ax, alpha=0.4)
+        all_tides_df.reset_index(["x", "y"]).tide_m.plot(ax=ax, alpha=0.4)
         ds_tides.tide_m.plot.line(
             ax=ax, marker="o", linewidth=0.0, color="black", markersize=2
         )
