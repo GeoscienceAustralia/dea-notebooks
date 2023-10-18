@@ -15,7 +15,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: March 2021
+Last modified: June 2023
 '''
 
 # Import required packages
@@ -39,7 +39,7 @@ def calculate_indices(ds,
     in memory. This can be a memory-expensive operation, so to avoid
     this, set `inplace=True`.
 
-    Last modified: April 2023
+    Last modified: June 2023
     
     Parameters
     ----------
@@ -76,6 +76,7 @@ def calculate_indices(ds,
         * ``'NDSI'`` (Normalised Difference Snow Index, Hall 1995)
         * ``'NDTI'`` (Normalise Difference Tillage Index,
                 Van Deventeret et al. 1997)
+        * ``'NDTI2'`` (Normalised Difference Turbidity Index, Lacaux et al., 2007)
         * ``'NDVI'`` (Normalised Difference Vegetation Index, Rouse 1973)
         * ``'NDWI'`` (Normalised Difference Water Index, McFeeters 1996)
         * ``'SAVI'`` (Soil Adjusted Vegetation Index, Huete 1988)
@@ -85,7 +86,6 @@ def calculate_indices(ds,
         * ``'TCB_GSO'`` (Tasseled Cap Brightness, Nedkov 2017)
         * ``'TCG_GSO'`` (Tasseled Cap Greeness, Nedkov 2017)
         * ``'TCW_GSO'`` (Tasseled Cap Wetness, Nedkov 2017)
-        * ``'TI'`` (Normalised Difference Turbidity Index, Lacaux et al 2007)
         * ``'WI'`` (Water Index, Fisher 2016)
         * ``'kNDVI'`` (Non-linear Normalised Difference Vegation Index,
                  Camps-Valls et al. 2021)
@@ -201,6 +201,11 @@ def calculate_indices(ds,
                   # Van Deventer et al. 1997
                   'NDTI': lambda ds: (ds.swir1 - ds.swir2) /
                                      (ds.swir1 + ds.swir2),
+        
+                  # Normalised Difference Turbidity Index,
+                  # Lacaux et al., 2007
+                  'NDTI2': lambda ds: (ds.red - ds.green) /
+                                     (ds.red + ds.green),
 
                   # Normalised Difference Water Index, McFeeters 1996
                   'NDWI': lambda ds: (ds.green - ds.nir) /
@@ -287,11 +292,7 @@ def calculate_indices(ds,
 
                   # Iron Oxide Ratio, Segal 1982
                   'IOR': lambda ds: (ds.red / ds.blue),
-      
-                  # Normalised Difference Turbidity Index , Lacaux et al 2007
-                  #NB. 'NDTI' key already used. 'TI' used in lieu.
-                  'TI': lambda ds:  (ds.red - ds.green) /
-                                    (ds.red + ds.green)
+
     }
     
     # If index supplied is not a list, convert to list. This allows us to

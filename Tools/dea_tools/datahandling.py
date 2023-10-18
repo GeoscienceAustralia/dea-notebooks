@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: February 2023
+Last modified: June 2023
 """
 
 # Import required packages
@@ -133,7 +133,7 @@ def load_ard(
     (Sentinel Hub cloud detector for Sentinel-2 imagery) cloud mask for 
     Sentinel-2.
 
-    Last modified: February 2023
+    Last modified: June 2023
 
     Parameters
     ----------
@@ -236,7 +236,7 @@ def load_ard(
         dictionary (e.g. `**query`). Keywords can include `measurements`,
         `x`, `y`, `time`, `resolution`, `resampling`, `group_by`, `crs`;
         see the `dc.load` documentation for all possible options:
-        https://datacube-core.readthedocs.io/en/latest/dev/api/generate/datacube.Datacube.load.html
+        https://datacube-core.readthedocs.io/en/latest/api/indexed-data/generate/datacube.Datacube.load.html
 
     Returns
     -------
@@ -244,6 +244,13 @@ def load_ard(
         An xarray.Dataset containing only satellite observations with
         a proportion of good quality pixels greater than `min_gooddata`.
 
+    Notes
+    -----
+    The `load_ard` function builds on the Open Data Cube's native `dc.load`
+    function by adding the ability to load multiple satellite data
+    products at once, and automatically apply cloud masking and filtering.
+    For loading non-satellite data products (e.g. DEA Water Observations),
+    use `dc.load` instead.
     """
 
     #########
@@ -483,7 +490,7 @@ def load_ard(
         pq_mask = ~mask_cleanup(~pq_mask, mask_filters=mask_filters)
 
         warnings.warn(
-            "As of `dea_tools` v1.0.0, pixel quality masks are "
+            "As of `dea_tools` v0.3.0, pixel quality masks are "
             "inverted before being passed to `mask_filters` (i.e. so "
             "that good quality/clear pixels are False and poor quality "
             "pixels/clouds are True). This means that 'dilation' will "
@@ -685,8 +692,8 @@ def wofs_fuser(dest, src):
     Note: this is a copy of the function located here:
     https://github.com/GeoscienceAustralia/digitalearthau/blob/develop/digitalearthau/utils.py
     """
-    empty = (dest & 1).astype(np.bool)
-    both = ~empty & ~((src & 1).astype(np.bool))
+    empty = (dest & 1).astype(bool)
+    both = ~empty & ~((src & 1).astype(bool))
     dest[empty] = src[empty]
     dest[both] |= src[both]
 
@@ -732,7 +739,7 @@ def dilate(array, dilation=10, invert=True):
         array = ~array
 
     return ~binary_dilation(
-        array.astype(np.bool), structure=kernel.reshape((1,) + kernel.shape)
+        array.astype(bool), structure=kernel.reshape((1,) + kernel.shape)
     )
 
 
@@ -898,7 +905,7 @@ def nearest(
     return nearest_array
 
 
-def parallel_apply(ds, dim, func, *args):
+def parallel_apply(ds, dim, func, *args, **kwargs):
     """
     Applies a custom function in parallel along the dimension of an
     xarray.Dataset or xarray.DataArray.
@@ -924,6 +931,8 @@ def parallel_apply(ds, dim, func, *args):
         function should be the array along `dim`.
     *args :
         Any number of arguments that will be passed to `func`.
+    **kwargs :
+        Any number of keyword arguments that will be passed to `func`.
 
     Returns
     -------
@@ -935,8 +944,12 @@ def parallel_apply(ds, dim, func, *args):
     from concurrent.futures import ProcessPoolExecutor
     from tqdm import tqdm
     from itertools import repeat
+    from functools import partial
 
     with ProcessPoolExecutor() as executor:
+        
+        # Update func to add kwargs
+        func = partial(func, **kwargs)
 
         # Apply func in parallel
         groups = [group for (i, group) in ds.groupby(dim)]

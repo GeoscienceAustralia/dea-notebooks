@@ -51,7 +51,8 @@ With conda
 Install dea-tools
 ~~~~~~~~~~~~~~~~~
 
-Install the package from the source on any system with ``pip``:
+You can install ``dea-tools`` with ``pip`` in a Python environment where
+`GDAL <https://pypi.org/project/GDAL/>`_ and `pyproj <https://pypi.org/project/pyproj/>`_ are already installed.
 
 .. code-block:: bash
 
