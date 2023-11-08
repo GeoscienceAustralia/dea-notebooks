@@ -133,5 +133,4 @@ See also `wiki <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-
    How_to_guides/README
    Interactive_apps/README
    Real_world_examples/README
-   Supplementary_data/README
    Tools/index
