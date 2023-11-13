@@ -715,8 +715,6 @@ def model_tides(
 def _pixel_tides_resample(
     tides_lowres,
     ds,
-    y_dim,
-    x_dim,
     resample_method="bilinear",
     dask_chunks="auto",
     dask_compute=True,
@@ -755,6 +753,9 @@ def _pixel_tides_resample(
         array of tide heights will be generated matching the
         exact spatial resolution and extent of `ds`.
     """
+    # Determine spatial dimensions
+    y_dim, x_dim = ds.odc.spatial_dims
+    
     # Convert array to Dask, using no chunking along y and x dims,
     # and a single chunk for each timestep/quantile and tide model
     tides_lowres_dask = tides_lowres.chunk(
