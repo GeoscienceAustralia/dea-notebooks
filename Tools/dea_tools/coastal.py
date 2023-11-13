@@ -1061,7 +1061,7 @@ def pixel_tides(
     if resample:
         print("Reprojecting tides into original array")
         tides_highres, tides_lowres = _pixel_tides_resample(
-            tides_lowres, ds, y_dim, x_dim, resample_method, dask_chunks, dask_compute
+            tides_lowres, ds, resample_method, dask_chunks, dask_compute
         )
         return tides_highres, tides_lowres
 
