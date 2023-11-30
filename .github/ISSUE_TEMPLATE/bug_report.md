@@ -21,4 +21,4 @@ Steps to reproduce the behaviour. For example:
 A clear and concise description of what you expected to happen.
 
 **Environment information**
-What datacube environment are you using? i.e. [DEA Sandbox](/guides/setup/Sandbox/sandbox/) or the [NCI (Gadi or VDI)](/setup/NCI/README.html)
+What datacube environment are you using? i.e. [DEA Sandbox](/setup/sandbox.html) or the [NCI (Gadi or VDI)](/setup/NCI/README.html)
