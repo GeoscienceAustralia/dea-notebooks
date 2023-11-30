@@ -16,7 +16,6 @@ More complex case study-based workflows demonstrating how DEA can be used to add
    Intertidal_elevation.ipynb
    Mapping_inundation_using_stream_gauges.ipynb
    Radar_water_detection.ipynb
-   Scalable_machine_learning/0_README
    Seasonal_water_extents.ipynb
    Shipping_lane_identification.ipynb
    Surface_area_duration.ipynb

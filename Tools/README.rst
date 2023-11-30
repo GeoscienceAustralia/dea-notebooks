@@ -1,5 +1,5 @@
-dea-tools Readme
-================
+dea-tools
+=========
 
 Python functions and algorithms developed to assist in analysing Digital Earth Australia (DEA) data (e.g. loading data, plotting, spatial analysis, machine learning). This includes the following modules:
 

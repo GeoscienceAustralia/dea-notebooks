@@ -9,11 +9,6 @@ Australia Sandbox environment. More information on installing this package can b
 Core modules
 ------------
 
-.. toctree::
-   :titlesonly:
-
-   README.rst
-
 .. autosummary::
    :toctree: gen
 
