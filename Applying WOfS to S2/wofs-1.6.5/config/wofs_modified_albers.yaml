@@ -1,0 +1,114 @@
+version: 1.0.4
+
+location: '/g/data/v10/WOfS_with_orig_pq//'
+file_path_template: '{tile_index[0]}_{tile_index[1]}/{start_time}_{platform}_{sensor}_WATER_3577_{tile_index[0]}_{tile_index[1]}_v{version}.nc'
+
+product_definition:
+    name: wofs_modified_albers2
+    description: Historic Flood Mapping Water Observations from Space
+    managed: True
+    metadata_type: eo
+    metadata:
+      product_type: wofs
+      format:
+        name: NetCDF
+    storage:
+        crs: EPSG:3577
+        resolution:
+            x: 25
+            y: -25
+        tile_size:
+            x: 100000.0
+            y: 100000.0
+        driver: NetCDF CF
+        dimension_order: [time, y, x]
+        chunking:
+            x: 200
+            y: 200
+            time: 1
+    measurements:
+      - name: water
+        dtype: uint8
+        nodata: 1
+        units: '1'
+        flags_definition:
+            dry:
+              bits: [7, 6, 5, 4, 3, 1, 0]  # Ignore sea mask
+              description: No water detected
+              values: {0: true}
+            nodata:
+              bits: 0
+              description: No data
+              values: {1: true}
+            noncontiguous:
+              bits: 1
+              description: At least one EO band is missing over over/undersaturated
+              values: {0: false, 1: true}
+            sea:
+              bits: 2
+              description: Sea
+              values: {0: false, 1: true}
+            terrain_or_low_angle:
+              bits: 3
+              description: terrain shadow or low solar angle
+              values: {0: false, 1: true}
+            high_slope:
+              bits: 4
+              description: High slope
+              values: {0: false, 1: true}
+            cloud_shadow:
+              bits: 5
+              description: Cloud shadow
+              values: {0: false, 1: true}
+            cloud:
+              bits: 6
+              description: Cloudy
+              values: {0: false, 1: true}
+            wet:
+              bits: [7, 6, 5, 4, 3, 1, 0]  # Ignore sea mask
+              description: Clear and Wet
+              values: {128: true}
+
+variable_params:
+    water:
+        zlib: True
+        fletcher32: True
+        chunksizes: [5, 200, 200]
+        attrs:
+          long_name: Water observation feature layer
+          coverage_content_type: "thematicClassification"
+
+global_attributes:
+    cmi_id: "WO_25_2.1.5"
+    cmi_nid: "5"
+    title: "Water Observations from Space 25 v. 2.1.5"
+    summary: |
+      Water Observations from Space (WO_25_2.0) is a gridded dataset indicating areas where surface water has been observed using the Geoscience Australia (GA) Earth observation satellite data holdings. The current product (Version 1.5) includes observations taken between 1987 and 2016 (inclusive) from the Landsat 5, 7 and 8 satellites. WO_25_2.0 covers all of mainland Australia and Tasmania but excludes off-shore Territories.
+
+      WO_25_2.0 shows water observed for every Landsat-5, Landsat-7 and Landsat-8 image across Australia (excluding External Territories) for the period of 1987 to 2016. The dataset is updated quarterly and is expected to increase in update frequency in the future so that as a satellite acquires data, it will automatically be analysed for the presence of water and added to the WO_25_2.0 product in near real time.
+
+      Data is provided as Water Observation Feature Layers (WOFLs), in a 1 to 1 relationship with the input satellite data. Hence there is one WOFL for each NBAR dataset processed for the occurrence of water. The details of the content of each WOFL is below.
+
+      In the future, WO_25_2.0 will be updated as new data are added. This is potentially possible because the dataset is produced using the Australian Geoscience Data Cube, containing GA's entire Australian Landsat archive in a supercomputing environment at the National Computational Infrastructure at the Australian National University.
+
+      The Water Observations from Space product (WO_25_2.0) is a key component of the National Flood Risk Information Portal (NFRIP), developed by Geoscience Australia (GA). The objective of Water Observations from Space is to analyse GA's historic archive of satellite imagery to derive water observations, to help understand where flooding may have occurred in the past.
+
+    source: "SR-N_25_2.0"
+    institution: "Commonwealth of Australia (Geoscience Australia)"
+    keywords: "AU/GA,NASA/GSFC/SED/ESD/LANDSAT,ETM+,TM,OLI,EARTH SCIENCE,SURFACE WATER,FLOOD"
+    keywords_vocabulary: "GCMD"
+    product_version: "2.1.5"
+    publisher_email: earth.observation@ga.gov.au
+    publisher_name: Section Leader, Operations Section, NEMO, Geoscience Australia
+    publisher_url: http://www.ga.gov.au
+    license: "CC BY Attribution 4.0 International License"
+    cdm_data_type: "Grid"
+    product_suite: "Water Observations from Space 25m"
+    references: |
+      Geoscience Australia (2013) Australian Reflectance Grid (ARG25) Product Information - Beta Release- External Document TRIM Ref D2013-41317, Geoscience Australia, Canberra.
+
+      Gallant, J., Dowling, T., and Austin, J. (2012): Multi-resolution Valley Bottom Flatness (MrVBF, 3&quot; resolution). v2. CSIRO. Data Collection. 10.4225/08/512EF27AC3888 http://dx.doi.org/10.4225/08/512EF27AC3888.
+
+      Ticehurst, C J., Bartsch, A., Doubkova M.,and van Dijk, A.I.J.M. (2010) Comparison of ENVISAT ASAR ASAR GM, AMSR-E Passive Microwave, and MODIS Optical Remote Sensing for Flood Monitoring in Australia. Proceedings of the 'Earth Observation and Water Cycle Science', Frascati, Italy, 18-20 November 2009 (ESA SP-674, January 2010).
+
+      N. Mueller, A. Lewis, D. Roberts, S. Ring, R. Melrose, J. Sixsmith, L. Lymburner, A. McIntyre, P. Tan, S. Curnow, A. Ip, Water observations from space: Mapping surface water from 25 years of Landsat imagery across Australia, Remote Sensing of Environment, Volume 174, 1 March 2016, Pages 341-352, ISSN 0034-4257, http://dx.doi.org/10.1016/j.rse.2015.11.003. (http://www.sciencedirect.com/science/article/pii/S0034425715301929)
