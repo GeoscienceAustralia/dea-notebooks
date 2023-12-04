@@ -5,6 +5,7 @@ set -ex
 set -o pipefail
 
 cd ./dea-notebooks
+pip3 install ./Tools
 
 # Test DEA Tools functions
 pytest Tests/dea_tools
