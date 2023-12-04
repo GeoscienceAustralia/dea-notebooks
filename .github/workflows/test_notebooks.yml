@@ -3,7 +3,7 @@ name: Test DEA Notebooks with RDS Connection
 
 on:
   push:
-    branches: [ develop, stable, nbtests ]
+    branches: [ develop, stable, nbtests, testing_tests ]
     paths-ignore:
       - '**/*.md' # ignore markdown files
       - '**/*.rst' # ignore restructured text files
