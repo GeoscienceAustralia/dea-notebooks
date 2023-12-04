@@ -5,12 +5,9 @@ set -ex
 set -o pipefail
 
 cd ./dea-notebooks
-pip3 install ./Tools
 
 # Test DEA Tools functions
-# pytest Tests/dea_tools
+pytest Tests/dea_tools
 
 # Test Juputer Notebooks
 pytest --durations=10 --nbval-lax Beginners_guide
-
-

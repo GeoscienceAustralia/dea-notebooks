@@ -1,8 +1,21 @@
 
-name: Test RDS Connection
+name: Test DEA Notebooks with RDS Connection
 
 on:
   push:
+    branches: [ develop, stable, nbtests ]
+    paths-ignore:
+      - '**/*.md' # ignore markdown files
+      - '**/*.rst' # ignore restructured text files
+      - '.github/**' # ignore anything in .github folder
+      - '!.github/workflows/test_notebooks.yml' # except test_notebooks.yml
+  pull_request:
+    branches: [ develop, stable ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.rst'
+      - '.github/**'
+      - '!.github/workflows/test_notebooks.yml'
 
 permissions:
   id-token: write # Required for OIDC authentication to AWS
