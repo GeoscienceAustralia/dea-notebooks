@@ -65,6 +65,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::060378307146:role/github-actions-dea-notebooks--sandbox
           aws-region: ap-southeast-2
+          role-duration-seconds: 7200  # 2 hours
 
       - name: Get Database Credentials
         run: |
