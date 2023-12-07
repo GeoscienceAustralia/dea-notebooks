@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: March 2023
+Last modified: August 2023
 
 """
 
@@ -33,6 +33,8 @@ import geopandas as gpd
 import rasterio.features
 import scipy.interpolate
 import multiprocessing as mp
+from odc.geo.geom import Geometry
+from odc.geo.crs import CRS
 from scipy import ndimage as nd
 from skimage.measure import label
 from rasterstats import zonal_stats

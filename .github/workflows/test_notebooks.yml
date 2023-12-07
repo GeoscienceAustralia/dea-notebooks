@@ -1,9 +1,9 @@
 
-name: Test notebooks
+name: Test DEA Notebooks with RDS Connection
 
 on:
   push:
-    branches: [ develop, stable, nbtests ]
+    branches: [ develop, stable, nbtests, testing_tests ]
     paths-ignore:
       - '**/*.md' # ignore markdown files
       - '**/*.rst' # ignore restructured text files
@@ -18,34 +18,136 @@ on:
       - '!.github/workflows/test_notebooks.yml'
 
 permissions:
-  id-token: write   # This is required for requesting the JSON web token
-  contents: read    # This is required for actions/checkout
-
+  id-token: write # Required for OIDC authentication to AWS
+  contents: read
 jobs:
-  test:
+  test-rds:
     runs-on: ubuntu-latest
+
+    # Automatically activate our mamba environment when it's ready
+    defaults:
+      run:
+        shell: bash -l {0}
+
     steps:
-    - uses: actions/checkout@v3
-      with:
-        path: dea-notebooks
+      - uses: actions/checkout@v4
+        with:
+          path: dea-notebooks
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        role-to-assume: arn:aws:iam::538673716275:role/github-actions-role-readonly
-        aws-region: ap-southeast-2
+      #      - uses: mamba-org/setup-micromamba@v1
+      #        with:
+      #          micromamba-version: '1.5.1-0'
+      #          environment-name: test-env
+      #          create-args: >-
+      #            python=3.10
+      #            datacube
+      #
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::538673716275:role/github-actions-role-readonly
+          aws-region: ap-southeast-2
+          role-duration-seconds: 7200  # 2 hours
 
-    - name: Copy tide modelling files with the AWS CLI
-      run: aws s3 sync s3://dea-non-public-data/tide_models/tide_models tide_models
+      - name: Copy tide modelling files with the AWS CLI
+        run: aws s3 sync s3://dea-non-public-data/tide_models/tide_models tide_models
 
-    - name: Login to Amazon ECR Private
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      - name: Login to Amazon ECR Private
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Set up Datacube and test
-      run: |
-        sudo chown -R 1000:100 ./dea-notebooks
-        cd ./dea-notebooks 
-        CURRENT_UID=1000:100 docker-compose up -d
-        docker-compose exec -T sandbox ./dea-notebooks/Tests/setup_test_datacube.sh
-        docker-compose exec -T sandbox ./dea-notebooks/Tests/test_notebooks.sh
+      - name: Pull dea-sandbox image from ECR
+        run: |
+          docker pull 538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::060378307146:role/github-actions-dea-notebooks--sandbox
+          aws-region: ap-southeast-2
+          role-duration-seconds: 7200  # 2 hours
+
+      - name: Get Database Credentials
+        run: |
+          username_password=$(aws ssm get-parameter --name /dea-sandbox-eks/sandbox_reader/db.creds --with-decryption  --query Parameter.Value --output text)
+          # If we need separate username/password they can be split as follows.
+          # However exporting them to GitHub Environment variables will leave the Password in the Logs, if further steps aren't taken.
+          # IFS=: read -r PGUSERNAME PGPASSWORD <<< $username_password
+          # echo "PGUSERNAME=${PGUSERNAME}" >> $GITHUB_ENV
+          # echo "PGPASSWORD=${PGPASSWORD}" >> $GITHUB_ENV
+          echo DATACUBE_DB_URL=postgresql://${username_password}@localhost:5432/odc >> $GITHUB_ENV
+
+      - name: Open Port Forward to RDS
+        run: |
+          npx basti connect \
+            --custom-target-vpc vpc-086904199e505c1f6 \
+            --custom-target-host db-aurora-dea-sandbox-eks-1.cos5zfpkso9m.ap-southeast-2.rds.amazonaws.com \
+            --custom-target-port 5432 \
+            --local-port 5432 &
+          # Wait until the connection comes up, but, if it doesn't, don't hang forever.
+          npx wait-on --timeout 120000 --interval 1000 tcp:127.0.0.1:5432
+          echo "PGPORT=5432" >> $GITHUB_ENV
+          echo "PGHOST=localhost" >> $GITHUB_ENV
+
+
+      - name: Run the Notebook tests
+        run: |
+          sudo chown -R 1000:100 ./dea-notebooks
+          cd ./dea-notebooks
+          docker run --rm \
+            --net=host \
+            --env DATACUBE_DB_URL \
+            --env AWS_SESSION_TOKEN \
+            --env AWS_REGION \
+            --env AWS_ACCESS_KEY_ID \
+            --env AWS_SECRET_ACCESS_KEY \
+            --env AWS_SESSION_TOKEN \
+            --volume ${GITHUB_WORKSPACE}/dea-notebooks:/home/jovyan/dea-notebooks \
+            --volume ${GITHUB_WORKSPACE}/tide_models:/var/share/tide_models \
+            --env GDAL_HTTP_MAX_RETRY=3 \
+            --entrypoint /bin/bash \
+            538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable \
+            /home/jovyan/dea-notebooks/Tests/test_notebooks.sh
+
+  #  login-to-amazon-ecr:
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - name: Configure AWS credentials
+  #        uses: aws-actions/configure-aws-credentials@v2
+  #        with:
+  #          role-to-assume: arn:aws:iam::538673716275:role/github-actions-role-readonly
+  #          aws-region: ap-southeast-2
+  #          mask-aws-account-id: 'false'
+  #      - name: Login to Amazon ECR
+  #        id: login-ecr
+  #        uses: aws-actions/amazon-ecr-login@v1
+  #    outputs:
+  #      registry: ${{ steps.login-ecr.outputs.registry }}
+  #      docker_username: ${{ steps.login-ecr.outputs.docker_username_538673716275_dkr_ecr_ap_southeast_2_amazonaws_com }} # More information on these outputs can be found below in the 'Docker Credentials' section
+  #      docker_password: ${{ steps.login-ecr.outputs.docker_password_538673716275_dkr_ecr_ap_southeast_2_amazonaws_com }}
+  #
+  #  run-with-internal-service:
+  #    name: Run tests using dea-sandbox image
+  #    needs: login-to-amazon-ecr
+  #    runs-on: ubuntu-latest
+  #    container:
+  #      image: ${{ needs.login-to-amazon-ecr.outputs.registry }}/geoscienceaustralia/sandbox:stable
+  #      credentials:
+  #        username: ${{ needs.login-to-amazon-ecr.outputs.docker_username }}
+  #        password: ${{ needs.login-to-amazon-ecr.outputs.docker_password }}
+  #      ports:
+  #        - '80:80'
+  #    steps:
+  #      - name: Run steps in container
+  #        run: echo "run steps in container"
+      #      - name: Test RDS Connection
+      #        run: |
+      #          datacube system check
+      #          datacube product list
+      #
+      #      - name: Test S3 Access
+      #        run: |
+      #          aws s3 ls dea-public-data
+      #          aws s3 ls dea-public-data-dev
+      #          aws s3 cp s3://dea-public-data/index.html .
+
