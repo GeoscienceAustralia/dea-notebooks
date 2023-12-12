@@ -166,7 +166,7 @@ def get_coastlines(
 
     For a full description of the DEA Coastlines dataset, refer to the
     official Geoscience Australia product description:
-    https://cmi.ga.gov.au/data-products/dea/581/dea-coastlines
+    https://docs.dea.ga.gov.au/data-products/dea/581/dea-coastlines
 
     Parameters
     ----------
