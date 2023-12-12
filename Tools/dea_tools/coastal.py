@@ -768,8 +768,11 @@ def _pixel_tides_resample(
     # hundreds of tiny x and y chunks due to the small size of
     # `tides_lowres` (possible odc.geo bug?)
     if dask_chunks == "auto":
-        if (y_dim in ds.chunks) & (x_dim in ds.chunks):
-            dask_chunks = (ds.chunks[y_dim], ds.chunks[x_dim])
+        if ds.chunks is not None:
+            if (y_dim in ds.chunks) & (x_dim in ds.chunks):
+                dask_chunks = (ds.chunks[y_dim], ds.chunks[x_dim])
+            else:
+                dask_chunks = ds.odc.geobox.shape
         else:
             dask_chunks = ds.odc.geobox.shape
 
