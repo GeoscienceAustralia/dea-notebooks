@@ -38,7 +38,7 @@ extensively documented. And secondly, a number of custom python
 functions have been written to ease the complexity of running ML on the
 ODC. These include (among others) ``collect_training_data``,
 and ``predict_xr``, both of which are contained in the
-`dea\_tools.classification <../Tools/dea_tools/classification.py>`__
+`dea\_tools.classification <../../Tools/dea_tools/classification.py>`__
 package. These functions are introduced and explained further in the
 relevant sections of the notebooks.
 
