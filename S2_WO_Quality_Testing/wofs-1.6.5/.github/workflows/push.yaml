@@ -1,0 +1,66 @@
+name: Test and Release
+
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9]
+    name: Python ${{ matrix.python-version }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -f libudunits2-dev
+          pip install .[test]
+
+      - name: Run tests
+        run: ./check-code.sh
+
+      - name: Build package
+        run: |
+          python setup.py sdist bdist_wheel
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: packages
+          path: dist
+
+      - uses: codecov/codecov-action@v1
+        with:
+          env_vars: OS,PYTHON
+          file: ./coverage.xml
+
+  deploy-packages:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Download a single artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: packages
+          path: dist
+
+      - name: Display directory structure of downloaded files
+        run: ls -lR
+
+      - name: Deploy packages
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --follow-symlinks
+        env:
+          AWS_S3_BUCKET: "datacube-core-deployment"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "ap-southeast-2" # optional: defaults to us-east-1
+          SOURCE_DIR: "dist" # optional: defaults to entire repository
+          DEST_DIR: "wofs"

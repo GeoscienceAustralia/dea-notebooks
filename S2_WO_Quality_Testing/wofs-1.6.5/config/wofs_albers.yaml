@@ -1,0 +1,113 @@
+version: ${version}
+
+location: '/g/data/fk4/datacube/002/WOfS/WOfS_25_2_1/netcdf'
+file_path_template: '{tile_index[0]}_{tile_index[1]}/LS_WATER_3577_{tile_index[0]}_{tile_index[1]}_{start_time}_v{version}.nc'
+
+product_definition:
+    name: wofs_albers
+    description: Historic Flood Mapping Water Observations from Space
+    managed: True
+    metadata_type: eo
+    metadata:
+      product_type: wofs
+      format:
+        name: NetCDF
+    storage:
+        crs: EPSG:3577
+        resolution:
+            x: 25
+            y: -25
+        tile_size:
+            x: 100000.0
+            y: 100000.0
+        driver: NetCDF CF
+        dimension_order: [time, y, x]
+        chunking:
+            x: 200
+            y: 200
+            time: 5
+    measurements:
+      - name: water
+        dtype: int16
+        nodata: 1
+        units: '1'
+        flags_definition:
+            dry:
+              bits: [7, 6, 5, 4, 3, 1, 0]  # Ignore sea mask
+              description: Clear and dry
+              values: {0: true}
+            nodata:
+              bits: 0
+              description: No data
+              values: {0: false, 1: true}
+            noncontiguous:
+              bits: 1
+              description: At least one EO band is missing over over/undersaturated
+              values: {0: false, 1: true}
+            sea:
+              bits: 2
+              description: Sea
+              values: {0: false, 1: true}
+            terrain_or_low_angle:
+              bits: 3
+              description: Terrain shadow or low solar angle
+              values: {0: false, 1: true}
+            high_slope:
+              bits: 4
+              description: High slope
+              values: {0: false, 1: true}
+            cloud_shadow:
+              bits: 5
+              description: Cloud shadow
+              values: {0: false, 1: true}
+            cloud:
+              bits: 6
+              description: Cloudy
+              values: {0: false, 1: true}
+            water_observed:
+              bits: 7
+              description: Classified as water by the decision tree
+              values: {0: false, 1: true}
+            wet:
+              bits: [7, 6, 5, 4, 3, 1, 0]  # Ignore sea mask
+              description: Clear and Wet
+              values: {128: true}
+
+variable_params:
+    water:
+        zlib: True
+        fletcher32: True
+        chunksizes: [5, 200, 200]
+        attrs:
+          long_name: Water observation feature layer
+          coverage_content_type: "thematicClassification"
+
+global_attributes:
+    cmi_id: "WO_25_2.1.5"
+    cmi_nid: "5"
+    title: "Water Observations from Space 25 v. 2.1.5"
+    summary: |
+      Water Observations from Space (WOfS) is a gridded dataset indicating areas where surface water has been observed using the Geoscience Australia (GA) Earth observation satellite data holdings. The current product (Version 2.1.5) includes observations taken between 1986 and 2017 (inclusive) from the Landsat 5, 7 and 8 satellites. WOfS covers all of mainland Australia and Tasmania but excludes off-shore Territories.
+
+      WOfS shows water observed for every Landsat-5, Landsat-7 and Landsat-8 image across Australia (excluding External Territories) for the period of 1987 to 2017. The dataset is updated quarterly and is expected to increase in update frequency in the future so that as a satellite acquires data, it will automatically be analysed for the presence of water and added to the WOfS product in near real time.
+
+      Data is provided as Water Observation Feature Layers (WOFLs), in a 1 to 1 relationship with the input satellite data. Hence there is one WOFL for each satellite dataset processed for the occurrence of water.
+
+      In the future, WOfS will be updated as new data are added. This is potentially possible because the dataset is produced using Digital Earth Australia, containing GA's entire Australian Landsat archive in a high performance computing environment at the National Computational Infrastructure at the Australian National University.
+
+      The Water Observations from Space product (WOfS) is a key component of the National Flood Risk Information Portal (NFRIP), developed by Geoscience Australia (GA). The objective of Water Observations from Space is to analyse GA's historic archive of satellite imagery to derive water observations, to help understand where flooding may have occurred in the past.
+
+
+    source: "Water Observations from Space Detection Algorithm v1.2"
+    institution: "Commonwealth of Australia (Geoscience Australia)"
+    keywords: "AU/GA,NASA/GSFC/SED/ESD/LANDSAT,ETM+,TM,OLI,EARTH SCIENCE,SURFACE WATER,FLOOD"
+    keywords_vocabulary: "GCMD"
+    product_version: "2.1.5"
+    publisher_email: earth.observation@ga.gov.au
+    publisher_name: Section Leader, Operations Section, NEMO, Geoscience Australia
+    publisher_url: http://www.ga.gov.au
+    license: "CC BY Attribution 4.0 International License"
+    cdm_data_type: "Grid"
+    product_suite: "Water Observations from Space 25m"
+    references: |
+      N. Mueller, A. Lewis, D. Roberts, S. Ring, R. Melrose, J. Sixsmith, L. Lymburner, A. McIntyre, P. Tan, S. Curnow, A. Ip, Water observations from space: Mapping surface water from 25 years of Landsat imagery across Australia, Remote Sensing of Environment, Volume 174, 1 March 2016, Pages 341-352, ISSN 0034-4257, http://dx.doi.org/10.1016/j.rse.2015.11.003. (http://www.sciencedirect.com/science/article/pii/S0034425715301929)
