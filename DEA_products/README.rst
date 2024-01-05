@@ -3,7 +3,20 @@ DEA products
 
 Notebooks introducing DEA's satellite datasets and derived products, including how to load each dataset and any special features of the data.
 
-.. tableofcontents::
+.. toctree::
+   :maxdepth: 1
+   :caption: DEA products
+
+   DEA_Landsat_Surface_Reflectance.ipynb
+   DEA_Sentinel2_Surface_Reflectance.ipynb
+   DEA_Water_Observations.ipynb
+   DEA_Fractional_Cover.ipynb
+   DEA_Land_Cover.ipynb
+   DEA_High_and_Low_Tide_Imagery.ipynb
+   DEA_Coastlines.ipynb
+   DEA_Waterbodies.ipynb
+   DEA_Wetlands_Insight_Tool.ipynb
+   DEA_Mangroves.ipynb
 
 Citing DEA Notebooks
 --------------------
