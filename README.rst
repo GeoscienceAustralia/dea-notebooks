@@ -125,3 +125,12 @@ Once the pull request has been approved, you can merge it into the ``develop`` b
 
 See also `wiki <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-git#reviewing-and-approving-a-pull-request>`_.
 
+.. toctree::
+   :hidden:
+
+   Beginners_guide/README
+   DEA_products/README
+   How_to_guides/README
+   Interactive_apps/README
+   Real_world_examples/README
+   Tools/index
