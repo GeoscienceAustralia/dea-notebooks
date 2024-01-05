@@ -5,7 +5,6 @@ Interactive widgets and apps that require little or no coding to run
 
 .. toctree::
    :maxdepth: 1
-   :caption: Interactive apps
    
    Change_filmstrips.ipynb
    Coastal_transects.ipynb
