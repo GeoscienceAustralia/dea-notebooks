@@ -5,7 +5,6 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
 
 .. toctree::
    :maxdepth: 1
-   :caption: DEA products
 
    DEA_Landsat_Surface_Reflectance.ipynb
    DEA_Sentinel2_Surface_Reflectance.ipynb
