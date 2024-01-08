@@ -5,7 +5,6 @@ The Beginners Guide contains introductory notebooks aimed at introducing Jupyter
 
 .. toctree::
    :maxdepth: 1
-   :caption: Beginner's Guide
 
    01_Jupyter_notebooks.ipynb
    02_DEA.ipynb
@@ -25,7 +24,6 @@ Once you have you have completed the beginner tutorials, join advanced users in 
 
 .. toctree::
    :maxdepth: 2   
-   :caption: Guided Tutorial
    
    Guided_tutorial.ipynb
 
