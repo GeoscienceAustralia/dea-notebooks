@@ -905,7 +905,7 @@ def nearest(
     return nearest_array
 
 
-def parallel_apply(ds, dim, func, *args, **kwargs):
+def parallel_apply(ds, dim, func, use_threads=False, *args, **kwargs):
     """
     Applies a custom function in parallel along the dimension of an
     xarray.Dataset or xarray.DataArray.
@@ -929,6 +929,9 @@ def parallel_apply(ds, dim, func, *args, **kwargs):
         The function that will be applied in parallel to each array
         along dimension `dim`. The first argument passed to this
         function should be the array along `dim`.
+    use_threads : bool, optional
+        Whether to use threads instead of processes for parallelisation.
+        Defaults to False, which means it'll use multi-processing.
     *args :
         Any number of arguments that will be passed to `func`.
     **kwargs :
@@ -941,13 +944,19 @@ def parallel_apply(ds, dim, func, *args, **kwargs):
         along the input `dim` dimension.
     """
 
-    from concurrent.futures import ProcessPoolExecutor
-    from tqdm import tqdm
-    from itertools import repeat
+    from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
     from functools import partial
+    from itertools import repeat
 
-    with ProcessPoolExecutor() as executor:
-        
+    from tqdm import tqdm
+
+    # Use threads or processes
+    if use_threads:
+        Executor = ThreadPoolExecutor
+    else:
+        Executor = ProcessPoolExecutor
+
+    with Executor as executor:
         # Update func to add kwargs
         func = partial(func, **kwargs)
 
