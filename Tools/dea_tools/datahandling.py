@@ -929,6 +929,8 @@ def parallel_apply(ds, dim, func, use_threads=False, *args, **kwargs):
     use_threads : bool, optional
         Whether to use threads instead of processes for parallelisation.
         Defaults to False, which means it'll use multi-processing.
+        In brief, the difference between threads and processes is that threads
+        share memory, while processes have separate memory.
     *args :
         Any number of arguments that will be passed to `func`.
     **kwargs :
