@@ -55,6 +55,7 @@ Conferences
 
 Courses and training
 --------------------
+- University of New England, 2023. `GISC436 : Remote Sensing and Image analysis <https://www.une.edu.au/study/units/remote-sensing-and-image-analysis-gisc436/>`_
 - Swinburne University of Technology, Space Technology and Industry Institute, 2023. `Earth Observation and Data Analysis Short Course <https://www.swinburne.edu.au/events/2023/10/earth-observation-data-analysis-short-course/>`_
 - Australian National University, Centre for Water and Landscape Dynamics `(WALD) <http://wald.anu.edu.au/>`_ under contract for `Geoscience Australia <https://www.ga.gov.au/>`_, 2022.  `Digital Earth Australia for Geospatial Analysts <https://anu-wald.github.io/dea_course/about/>`_. Materials available under Apache 2.0 Licence `here <https://github.com/ANU-WALD/dea_course>`_ and link to github repository: https://github.com/ANU-WALD/dea_training 
 - Flinders University, 2021, 2022. Remote Sensing for All Disciplines. Undergrad and postgrad course.
