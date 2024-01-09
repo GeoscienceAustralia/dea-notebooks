@@ -1,4 +1,4 @@
-## dea_datahandling.py
+# dea_datahandling.py
 """
 Loading and manipulating Digital Earth Australia products and data
 using the Open Data Cube and xarray.
@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: June 2023
+Last modified: Jan 2024
 """
 
 import datetime
