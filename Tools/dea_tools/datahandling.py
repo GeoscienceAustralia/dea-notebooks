@@ -20,28 +20,25 @@ on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 Last modified: June 2023
 """
 
+import datetime
+
 # Import required packages
 import os
-import zipfile
-import datetime
-import requests
 import warnings
-import odc.algo
-import dask
-import numpy as np
-import pandas as pd
-import dask.array as da
-import xarray as xr
-import skimage.transform
-import sklearn.decomposition
-from skimage.exposure import match_histograms
-from skimage.color import rgb2hsv, hsv2rgb
-from random import randint
+import zipfile
 from collections import Counter
-from odc.algo import mask_cleanup
-from datacube.utils import masking
-from scipy.ndimage import binary_dilation
+
+import numpy as np
+import odc.algo
+import pandas as pd
+import requests
+import sklearn.decomposition
+import xarray as xr
 from datacube.utils.dates import normalise_dt
+from odc.algo import mask_cleanup
+from scipy.ndimage import binary_dilation
+from skimage.color import hsv2rgb, rgb2hsv
+from skimage.exposure import match_histograms
 
 
 def _dc_query_only(**kw):
