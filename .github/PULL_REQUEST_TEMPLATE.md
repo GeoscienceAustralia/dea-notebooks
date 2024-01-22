@@ -3,9 +3,10 @@ Include a brief description of the changes being proposed, and why they are nece
 
 ### Closes issues (optional)
 - Closes Issue #000
-- Closes Issue #000
 
-### Checklist (replace `[ ]` with `[x]` to check off)
+### Checklist 
+(Replace `[ ]` with `[x]` to check off)
+
 - [ ] Notebook created using the [DEA-notebooks template](https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop)
 - [ ] Remove any unused Python packages from `Load packages`
 - [ ] Remove any unused/empty code cells
@@ -15,5 +16,6 @@ Include a brief description of the changes being proposed, and why they are nece
 - [ ] Clear all outputs, run notebook from start to finish, and save the notebook in the state where all cells have been sequentially evaluated
 - [ ] Test notebook on both the `NCI` and `DEA Sandbox` (flag if not working as part of PR and ask for help to solve if needed)
 - [ ] If applicable, update the `Notebook currently compatible with the NCI|DEA Sandbox environment only` line below the notebook title to reflect the environments the notebook is compatible with
+- [ ] Check for any spelling mistakes using the DEA Sandbox's built-in spellchecker (double click on markdown cells then right-click on pink highlighted words). For example:
 
-
+![sandbox_spellchecker](https://github.com/GeoscienceAustralia/dea-notebooks/assets/17680388/c5e5848b-fd54-4eb5-aae9-29838761f2af)
