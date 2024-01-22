@@ -8,6 +8,7 @@ Almeida
 ANU
 apache
 ard
+automodule
 autosummary
 bandindices
 Biogeosciences
