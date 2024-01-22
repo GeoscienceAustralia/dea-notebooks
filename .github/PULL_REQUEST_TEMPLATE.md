@@ -18,4 +18,4 @@ Include a brief description of the changes being proposed, and why they are nece
 - [ ] If applicable, update the `Notebook currently compatible with the NCI|DEA Sandbox environment only` line below the notebook title to reflect the environments the notebook is compatible with
 - [ ] Check for any spelling mistakes using the DEA Sandbox's built-in spellchecker (double click on markdown cells then right-click on pink highlighted words). For example:
 
-![](sandbox_spellchecker.jpg)
+![sandbox_spellchecker](https://github.com/GeoscienceAustralia/dea-notebooks/assets/17680388/c5e5848b-fd54-4eb5-aae9-29838761f2af)
