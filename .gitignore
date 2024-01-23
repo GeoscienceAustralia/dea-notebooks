@@ -6,4 +6,4 @@
 *.xml
 __pycache__
 Transitory_notebooks/
-S2_WO_Quality_Testing/wofs-1.6.5/*
+S2_WO_Quality_Testing/wofs-1.6.5/
