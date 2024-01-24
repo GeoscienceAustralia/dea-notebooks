@@ -24,7 +24,9 @@ Digital Earth Australia notebooks and tools repository
 
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
-**Contact:** If you need assistance with any of the Jupyter Notebooks or Python code in this repository, please post a question on the `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/ask?tags=open-data-cube>`_ using the ``open-data-cube`` tag (you can view `previously asked questions here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_). If you would like to report an issue with this notebook, you can `file one on Github <https://github.com/GeoscienceAustralia/dea-notebooks>`_.
+**Documentation:** The **Digital Earth Australia Knowledge Hub** is located at: `<https://docs.dea.ga.gov.au/>`_ . The DEA Notebooks section in the DEA Knowledge Hub is generated from the Jupyter notebooks on the ``stable`` branch of this repository. 
+
+**Contact:** If you need assistance with any of the Jupyter Notebooks or Python code in this repository, please post a question on the `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/ask?tags=open-data-cube>`_ using the ``open-data-cube`` tag (you can view `previously asked questions here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_). If you would like to report an issue with a notebook, you can `file one on Github <https://github.com/GeoscienceAustralia/dea-notebooks>`_.
 
 **Citing DEA Notebooks:** If you use any of the notebooks, code or tools in this repository in your work, please reference them using the following citation:
 
@@ -53,8 +55,6 @@ Supporting functions and data for the notebooks are kept in the following direct
 - `Tools <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Tools>`_: *Python module dea-tools, containing functions and algorithms developed to assist in analysing DEA data (e.g. loading data, plotting, spatial analysis, machine learning)* 
 
 - `Supplementary_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Supplementary_data>`_: *Supplementary files required for the analyses above (e.g. images, rasters, shapefiles, training data)*
-
-The Jupyter notebooks on the ``stable`` branch of this repository are used to generate the **Digital Earth Australia User Guide** located at: `</>`_
 
 All notebooks in the ``dea-notebooks`` repository contain tags describing their functionality. If you are searching for a specific functionality, use the `Tags Index </genindex/>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an 'Issue' in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
 
@@ -86,14 +86,14 @@ Develop, stable and working branches
 The ``dea-notebooks`` repository uses 'branches' to manage individuals' notebooks, and to allow easy publishing of notebooks ready to be shared. There are two main types of branches:
 
 * `develop branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop>`_: The ``develop`` branch is the **default branch** where notebooks are put as they are being prepared to be shared publicly. Notebooks added to this branch will be periodically merged into the ``stable`` branch after testing and evaluation. The ``develop`` branch is protected and requires changes to be approved via a 'pull request' and review checklist before they appear on the branch.
-* `stable branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable>`_: The ``stable`` branch contains DEA's collection of publicly available notebooks. Notebooks added to this branch will become part of the official DEA documentation and are published on the `DEA User Guide </>`_. The ``stable`` branch is protected, and is periodically updated with new content from the ``develop`` branch via a 'pull request' (for ``develop`` > ``stable`` pull requests, *merge using the 'Create a merge commit' option*).
+* `stable branch <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable>`_: The ``stable`` branch contains DEA's collection of publicly available notebooks. Notebooks added to this branch will become part of the official DEA documentation and are published on the `DEA Knowledge Hub <https://docs.dea.ga.gov.au/>`_. The ``stable`` branch is protected, and is periodically updated with new content from the ``develop`` branch via a 'pull request' (for ``develop`` > ``stable`` pull requests, *merge using the 'Create a merge commit' option*).
 * `Working branches <https://github.com/GeoscienceAustralia/dea-notebooks/branches>`_: All other branches in the repository are working spaces for users of ``dea-notebooks``. They have a unique name (typically named after the user, e.g. ``ClaireK``, ``BexDunn``). The notebooks on these branches can be works-in-progress and do not need to be pretty or complete. By using a working branch, it is easy to use scripts and algorithms from ``dea-notebooks`` in your own work or share and collaborate on a working version of a notebook or code.
 
  
 Publishing notebooks to the stable branch
 -----------------------------------------
 
-Once you have a notebook that is ready to be published on the ``develop`` branch, you can submit a 'pull request' in the `Pull requests tab at the top of the repository <https://github.com/GeoscienceAustralia/dea-notebooks/pulls>`_. The default pull request template contains a check-list to ensure that all ``stable`` branch Jupyter notebooks are consistent and well-documented so they can be understood by future users, and rendered correctly in the `DEA User Guide </>`_. Please ensure that as many of these checklist items are complete as possible or leave a comment in the pull request asking for help with any remaining checklist items.
+Once you have a notebook that is ready to be published from the ``develop`` branch to the DEA Knowledge Hub, you can submit a 'pull request' in the `Pull requests tab at the top of the repository <https://github.com/GeoscienceAustralia/dea-notebooks/pulls>`_. The default pull request template contains a check-list to ensure that all ``stable`` branch Jupyter notebooks are consistent and well-documented so they can be understood by future users, and rendered correctly in the `DEA Knowledge Hub <https://docs.dea.ga.gov.au/>`_. Please ensure that as many of these checklist items are complete as possible or leave a comment in the pull request asking for help with any remaining checklist items.
 
 Draft pull requests
 ^^^^^^^^^^^^^^^^^^^
