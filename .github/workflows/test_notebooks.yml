@@ -36,7 +36,9 @@ jobs:
         aws-region: ap-southeast-2
 
     - name: Copy tide modelling files with the AWS CLI
-      run: aws s3 sync s3://dea-non-public-data/tide_models/tide_models tide_models
+      run: |
+        aws s3 sync s3://dea-non-public-data/tide_models/tide_models/fes2014 tide_models/fes2014
+        aws s3 sync s3://dea-non-public-data/tide_models/tide_models/hamtide tide_models/hamtide
 
     - name: Login to Amazon ECR Private
       id: login-ecr
