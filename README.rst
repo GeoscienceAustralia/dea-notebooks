@@ -27,13 +27,14 @@ This is the Digital Earth Australia notebooks and tools repository.
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
 **Documentation:** See the `DEA Notebooks Wiki </GeoscienceAustralia/dea-notebooks/wiki>`_.
+
 **Contact:** For assistance with any of these notebooks and tools, please ask a question on our `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_ using the ``open-data-cube`` tag. You can also `report an issue on this repository </GeoscienceAustralia/dea-notebooks/issues>`_.
 
-**Citing DEA Notebooks:** If you use any of the notebooks, code or tools in this repository in your work, please reference them using the following citation:
+**Citation:** If you use this repository in your work, please reference it with the following citation.
 
     Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234
-    
-We encourage you to check out the other usages of our notebooks, code and tools at our `USAGE <https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst>`_ page, and to add your paper, training course, creative work or other exciting project there as well!    
+
+We would also appreciate it if you add a citation of your work to our `USAGE <https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst>`_ page.
 
 ----------
 
@@ -61,6 +62,8 @@ Supporting functions and data for the notebooks are kept in the following direct
 - `Supplementary_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Supplementary_data>`_: *Supplementary files required for the analyses above (e.g. images, rasters, shapefiles, training data)*
 
 All notebooks in the ``dea-notebooks`` repository contain tags describing their functionality. If you are searching for a specific functionality, use the `Tags Index </genindex/>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an 'Issue' in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
+
+We encourage you to check out the other usages of our notebooks, code and tools at our `USAGE <https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst>`_ page.
 
 ----------
 
