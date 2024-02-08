@@ -26,9 +26,9 @@ This is the notebooks and tools repository of Digital Earth Australia (DEA).
 
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. DEA data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
-**Documentation:** See the `DEA Notebooks Wiki </GeoscienceAustralia/dea-notebooks/wiki>`_.
+**Documentation:** See the `DEA Notebooks Wiki <https://github.com/GeoscienceAustralia/dea-notebooks/wiki>`_.
 
-**Contact:** For assistance with any of these notebooks and tools, please ask a question on our `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_ using the ``open-data-cube`` tag. You can also `report an issue on this repository </GeoscienceAustralia/dea-notebooks/issues>`_.
+**Contact:** For assistance with any of these notebooks and tools, please ask a question on our `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_ using the ``open-data-cube`` tag. You can also `report an issue on this repository <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_.
 
 **Citation:** If you use this repository in your work, please reference it with the following citation.
 
@@ -72,8 +72,8 @@ Contributing to DEA Notebooks
 
 To get started, see either of these articles.
 
-* `Create a DEA Notebook </GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook>`_
-* `Edit a DEA Notebook </GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook>`_
+* `Create a DEA Notebook <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook>`_
+* `Edit a DEA Notebook <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook>`_
 
 ----------
 
