@@ -37,15 +37,8 @@ We encourage you to check out the other usages of our notebooks, code and tools 
 
 ----------
 
-Contributing to DEA Notebooks
-=============================
-
-To get started, see either of these articles on our Wiki.
-
-* `Create a DEA Notebook </GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook>`_
-* `Edit a DEA Notebook </GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook>`_
-
-----------
+Introduction
+============
 
 The Digital Earth Australia notebooks and tools repository (``dea-notebooks``) hosts Jupyter Notebooks, Python scripts and workflows for analysing `Digital Earth Australia (DEA) <https://www.ga.gov.au/dea>`_ satellite data and derived products. This documentation is designed to provide a guide to getting started with DEA, and to showcase the wide range of geospatial analyses that can be achieved using DEA data and open-source software including `Open Data Cube <https://www.opendatacube.org/>`_ and `xarray <http://xarray.pydata.org/en/stable/>`_.
 
@@ -68,6 +61,16 @@ Supporting functions and data for the notebooks are kept in the following direct
 - `Supplementary_data <https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Supplementary_data>`_: *Supplementary files required for the analyses above (e.g. images, rasters, shapefiles, training data)*
 
 All notebooks in the ``dea-notebooks`` repository contain tags describing their functionality. If you are searching for a specific functionality, use the `Tags Index </genindex/>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an 'Issue' in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
+
+----------
+
+Contributing to DEA Notebooks
+=============================
+
+To get started, see either of these articles.
+
+* `Create a DEA Notebook </GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook>`_
+* `Edit a DEA Notebook </GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook>`_
 
 ----------
 
