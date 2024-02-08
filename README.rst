@@ -7,7 +7,7 @@
 DEA Notebooks
 #############
 
-This is the Digital Earth Australia notebooks and tools repository.
+This is the notebooks and tools repository of Digital Earth Australia (DEA).
 
 .. image:: https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg
   :target: https://doi.org/10.26186/145234
@@ -24,7 +24,7 @@ This is the Digital Earth Australia notebooks and tools repository.
 
 **Contribute:** We'd love your contribution! DEA Notebooks is an open-source project and welcomes contributions from everyone.
 
-**License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
+**License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. DEA data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
 **Documentation:** See the `DEA Notebooks Wiki </GeoscienceAustralia/dea-notebooks/wiki>`_.
 
@@ -41,7 +41,7 @@ We would also appreciate it if you add a citation of your work to our `USAGE <ht
 Introduction
 ============
 
-The Digital Earth Australia notebooks and tools repository (``dea-notebooks``) hosts Jupyter Notebooks, Python scripts and workflows for analysing `Digital Earth Australia (DEA) <https://www.ga.gov.au/dea>`_ satellite data and derived products. This documentation is designed to provide a guide to getting started with DEA, and to showcase the wide range of geospatial analyses that can be achieved using DEA data and open-source software including `Open Data Cube <https://www.opendatacube.org/>`_ and `xarray <http://xarray.pydata.org/en/stable/>`_.
+This repository hosts Jupyter Notebooks, Python scripts and workflows for analysing `Digital Earth Australia (DEA) <https://www.ga.gov.au/dea>`_ satellite data and derived products. This documentation is designed to provide a guide to getting started with DEA, and to showcase the wide range of geospatial analyses that can be achieved using DEA data and open-source software including `Open Data Cube <https://www.opendatacube.org/>`_ and `xarray <http://xarray.pydata.org/en/stable/>`_.
 
 The repository is based around the following directory structure (from simple to increasingly complex applications):
 
