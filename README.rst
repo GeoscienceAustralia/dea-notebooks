@@ -4,8 +4,8 @@
   :width: 900
   :alt: Digital Earth Australia logo
 
-Digital Earth Australia notebooks and tools repository
-######################################################
+DEA Notebooks
+#############
 
 .. image:: https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg
   :target: https://doi.org/10.26186/145234
@@ -20,11 +20,13 @@ Digital Earth Australia notebooks and tools repository
   :target: https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml
   :alt: Notebook testing
 
+This is the Digital Earth Australia notebooks and tools repository.
+
 **Contribute:** We'd love your contribution! DEA Notebooks is an open-source project and welcomes contributions from everyone.
 
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
-**Documentation:** The **Digital Earth Australia Knowledge Hub** is located at: `<https://docs.dea.ga.gov.au/>`_ . The DEA Notebooks section in the DEA Knowledge Hub is generated from the Jupyter notebooks on the ``stable`` branch of this repository. 
+**Documentation:** See the `DEA Notebooks Wiki </GeoscienceAustralia/dea-notebooks/wiki>`.
 
 **Contact:** If you need assistance with any of the Jupyter Notebooks or Python code in this repository, please post a question on the `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/ask?tags=open-data-cube>`_ using the ``open-data-cube`` tag (you can view `previously asked questions here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_). If you would like to report an issue with a notebook, you can `file one on Github <https://github.com/GeoscienceAustralia/dea-notebooks>`_.
 
