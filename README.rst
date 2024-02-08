@@ -7,6 +7,8 @@
 DEA Notebooks
 #############
 
+This is the Digital Earth Australia notebooks and tools repository.
+
 .. image:: https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg
   :target: https://doi.org/10.26186/145234
   :alt: DOI
@@ -20,13 +22,11 @@ DEA Notebooks
   :target: https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml
   :alt: Notebook testing
 
-This is the Digital Earth Australia notebooks and tools repository.
-
 **Contribute:** We'd love your contribution! DEA Notebooks is an open-source project and welcomes contributions from everyone.
 
 **License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
-**Documentation:** See the `DEA Notebooks Wiki </GeoscienceAustralia/dea-notebooks/wiki>`.
+**Documentation:** See the `DEA Notebooks Wiki </GeoscienceAustralia/dea-notebooks/wiki>`_.
 
 **Contact:** If you need assistance with any of the Jupyter Notebooks or Python code in this repository, please post a question on the `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/ask?tags=open-data-cube>`_ using the ``open-data-cube`` tag (you can view `previously asked questions here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_). If you would like to report an issue with a notebook, you can `file one on Github <https://github.com/GeoscienceAustralia/dea-notebooks>`_.
 
@@ -41,17 +41,10 @@ We encourage you to check out the other usages of our notebooks, code and tools 
 Contributing to DEA Notebooks
 =============================
 
-To get started with using ``dea-notebooks``, `visit the DEA Notebooks Wiki page <https://github.com/GeoscienceAustralia/dea-notebooks/wiki>`_. This page includes guides for getting started on both the `DEA Sandbox <https://github.com/GeoscienceAustralia/dea-notebooks/wiki#getting-started-on-the-dea-sandbox>`_ and `NCI environments <https://github.com/GeoscienceAustralia/dea-notebooks/wiki#getting-started-on-the-nci>`_.
+To get started, see either of these articles on our Wiki.
 
-Once you're set up, there are two main options for interacting with ``dea-notebooks`` and contributing back to the repository:
-
-* **DEA notebooks using git**: Git is a version-control software designed to help track changes to files and collaborate with multiple users on a project. Using ``git`` is the recommended workflow for working with ``dea-notebooks`` as it makes it easy to stay up to date with the latest versions of functions and code and makes it impossible to lose your work. 
-
-  * Refer to the repository's `Guide to using DEA Notebooks with git <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-git>`_ wiki article.
-
-* **DEA notebooks using Github**: Alternatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with ``dea-notebooks``. 
-
-  * Refer to the repository's `Guide to DEA Notebooks using the Github website <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-the-Github-website>`_ wiki article.
+* `Create a DEA Notebook </GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook>`_
+* `Edit a DEA Notebook </GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook>`_
 
 ----------
 
