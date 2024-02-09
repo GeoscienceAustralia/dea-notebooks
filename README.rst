@@ -4,8 +4,10 @@
   :width: 900
   :alt: Digital Earth Australia logo
 
-Digital Earth Australia notebooks and tools repository
-######################################################
+DEA Notebooks
+#############
+
+This is the notebooks and tools repository of Digital Earth Australia (DEA).
 
 .. image:: https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg
   :target: https://doi.org/10.26186/145234
@@ -20,23 +22,26 @@ Digital Earth Australia notebooks and tools repository
   :target: https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml
   :alt: Notebook testing
 
-**Contribute:** We'd love your contribution! DEA Notebooks is an open-source project and welcomes contributions from everyone. Please use this handy `template notebook <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/DEA_notebooks_template.ipynb>`_ to construct your contribution!
+**Contribute:** We'd love your contribution! DEA Notebooks is an open-source project and welcomes contributions from everyone.
 
-**License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. Digital Earth Australia data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
+**License:** The code in this repository is licensed under the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_. DEA data is licensed under the `Creative Commons by Attribution 4.0 license <https://creativecommons.org/licenses/by/4.0/>`_.
 
-**Documentation:** The **Digital Earth Australia Knowledge Hub** is located at: `<https://docs.dea.ga.gov.au/>`_ . The DEA Notebooks section in the DEA Knowledge Hub is generated from the Jupyter notebooks on the ``stable`` branch of this repository. 
+**Documentation:** See the `DEA Notebooks Wiki <https://github.com/GeoscienceAustralia/dea-notebooks/wiki>`_.
 
-**Contact:** If you need assistance with any of the Jupyter Notebooks or Python code in this repository, please post a question on the `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/ask?tags=open-data-cube>`_ using the ``open-data-cube`` tag (you can view `previously asked questions here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_). If you would like to report an issue with a notebook, you can `file one on Github <https://github.com/GeoscienceAustralia/dea-notebooks>`_.
+**Contact:** For assistance with any of these notebooks and tools, please ask a question on our `Open Data Cube Slack channel <http://slack.opendatacube.org/>`_ or on the `GIS Stack Exchange <https://gis.stackexchange.com/questions/tagged/open-data-cube>`_ using the ``open-data-cube`` tag. You can also `report an issue on this repository <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_.
 
-**Citing DEA Notebooks:** If you use any of the notebooks, code or tools in this repository in your work, please reference them using the following citation:
+**Citation:** If you use this repository in your work, please reference it with the following citation.
 
     Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234
-    
-We encourage you to check out the other usages of our notebooks, code and tools at our `USAGE <https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst>`_ page, and to add your paper, training course, creative work or other exciting project there as well!    
+
+We would also appreciate it if you add a citation of your work to our `USAGE <https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst>`_ page.
 
 ----------
 
-The Digital Earth Australia notebooks and tools repository (``dea-notebooks``) hosts Jupyter Notebooks, Python scripts and workflows for analysing `Digital Earth Australia (DEA) <https://www.ga.gov.au/dea>`_ satellite data and derived products. This documentation is designed to provide a guide to getting started with DEA, and to showcase the wide range of geospatial analyses that can be achieved using DEA data and open-source software including `Open Data Cube <https://www.opendatacube.org/>`_ and `xarray <http://xarray.pydata.org/en/stable/>`_.
+Introduction
+============
+
+This repository hosts Jupyter Notebooks, Python scripts and workflows for analysing `Digital Earth Australia (DEA) <https://www.ga.gov.au/dea>`_ satellite data and derived products. This documentation is designed to provide a guide to getting started with DEA, and to showcase the wide range of geospatial analyses that can be achieved using DEA data and open-source software including `Open Data Cube <https://www.opendatacube.org/>`_ and `xarray <http://xarray.pydata.org/en/stable/>`_.
 
 The repository is based around the following directory structure (from simple to increasingly complex applications):
 
@@ -58,27 +63,22 @@ Supporting functions and data for the notebooks are kept in the following direct
 
 All notebooks in the ``dea-notebooks`` repository contain tags describing their functionality. If you are searching for a specific functionality, use the `Tags Index </genindex/>`_ to search for a suitable example. If there is a functionality that has not been documented that you think should be, please create an 'Issue' in the `dea-notebooks repository. <https://github.com/GeoscienceAustralia/dea-notebooks/issues>`_
 
-----------
-
-Getting started with DEA Notebooks
-==================================
-
-To get started with using ``dea-notebooks``, `visit the DEA Notebooks Wiki page <https://github.com/GeoscienceAustralia/dea-notebooks/wiki>`_. This page includes guides for getting started on both the `DEA Sandbox <https://github.com/GeoscienceAustralia/dea-notebooks/wiki#getting-started-on-the-dea-sandbox>`_ and `NCI environments <https://github.com/GeoscienceAustralia/dea-notebooks/wiki#getting-started-on-the-nci>`_.
-
-Once you're set up, there are two main options for interacting with ``dea-notebooks`` and contributing back to the repository:
-
-* **DEA notebooks using git**: Git is a version-control software designed to help track changes to files and collaborate with multiple users on a project. Using ``git`` is the recommended workflow for working with ``dea-notebooks`` as it makes it easy to stay up to date with the latest versions of functions and code and makes it impossible to lose your work. 
-
-  * Refer to the repository's `Guide to using DEA Notebooks with git <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-git>`_ wiki article.
-
-* **DEA notebooks using Github**: Alternatively, the Github website can be used to upload and modify the ``dea-notebooks`` repository directly. This can be a good way to get started with ``dea-notebooks``. 
-
-  * Refer to the repository's `Guide to DEA Notebooks using the Github website <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-the-Github-website>`_ wiki article.
+We encourage you to check out the other usages of our notebooks, code and tools at our `USAGE <https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst>`_ page.
 
 ----------
 
 Contributing to DEA Notebooks
 =============================
+
+To get started, see either of these articles.
+
+* `Create a DEA Notebook <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook>`_
+* `Edit a DEA Notebook <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook>`_
+
+----------
+
+Git workflow
+============
 
 Develop, stable and working branches
 ------------------------------------
@@ -122,6 +122,4 @@ Commit and push any changes you make, which will become part of the open pull re
 If the notebook meets all the checklist requirements, click the green 'Review' button and click 'Approve' (with an optional comment). You can also 'Request changes' here if any of the checklist items are not complete.
 
 Once the pull request has been approved, you can merge it into the ``develop`` branch. Select the 'Squash and merge' option from the drop-down menu to the right of the green 'merge' button. Once you have merged the new branch in, you need to delete the branch. There is a button on the page that asks you if you would like to delete the now merged branch. Select 'Yes' to delete it.
-
-See also `wiki <https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Guide-to-using-DEA-Notebooks-with-git#reviewing-and-approving-a-pull-request>`_.
 
