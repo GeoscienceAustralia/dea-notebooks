@@ -27,6 +27,8 @@ Scientific papers
 
 - Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806.
 
+- Konstantinos Chatzopoulos-Vouzoglanis, Karin J. Reinke, Mariela Soto-Berelov, Simon D. Jones, Are fire intensity and burn severity associated? Advancing our understanding of FRP and NBR metrics from Himawari-8/9 and Sentinel-2, International Journal of Applied Earth Observation and Geoinformation, Volume 127, 2024, 103673, ISSN 1569-8432,https://doi.org/10.1016/j.jag.2024.103673.
+
 - Krause, C.E., Newey, V., Alger, M.J. and Lymburner, L., 2021. Mapping and monitoring the multi-decadal dynamics of Australia’s open waterbodies using Landsat. Remote Sensing, 13(8), p.1437.
 
 - Malan, N., Roughan, M., Hemming, M. et al. Quantifying coastal freshwater extremes during unprecedented rainfall using long timeseries multi-platform salinity observations. Nat Commun 15, 424 (2024). https://doi.org/10.1038/s41467-023-44398-2
