@@ -44,8 +44,6 @@ from odc.algo import mask_cleanup
 from datacube.utils.dates import normalise_dt
 
 
-
-
 def _dc_query_only(**kw):
     """
     Remove load-only datacube parameters, the rest can be
@@ -100,7 +98,7 @@ def _common_bands(dc, products):
 def load_ard(
     dc,
     products=None,
-    cloud_mask='fmask',
+    cloud_mask="fmask",
     min_gooddata=0.00,
     mask_pixel_quality=True,
     mask_filters=None,
@@ -112,12 +110,11 @@ def load_ard(
     predicate=None,
     **kwargs,
 ):
-
     """
     Load multiple Geoscience Australia Landsat or Sentinel 2
     Collection 3 products (e.g. Landsat 5, 7, 8, 9; Sentinel 2A and 2B),
-    optionally apply pixel quality/cloud masking and contiguity masks, 
-    and drop time steps that contain greater than a minimum proportion 
+    optionally apply pixel quality/cloud masking and contiguity masks,
+    and drop time steps that contain greater than a minimum proportion
     of good quality (e.g. non-cloudy or shadowed) pixels.
 
     The function supports loading the following Landsat products:
@@ -129,10 +126,10 @@ def load_ard(
     And Sentinel-2 products:
         * ga_s2am_ard_3
         * ga_s2bm_ard_3
-        
+
     Cloud masking can be performed using the Fmask (Function of Mask)
-    cloud mask for Landsat and Sentinel-2, and the s2cloudless 
-    (Sentinel Hub cloud detector for Sentinel-2 imagery) cloud mask for 
+    cloud mask for Landsat and Sentinel-2, and the s2cloudless
+    (Sentinel Hub cloud detector for Sentinel-2 imagery) cloud mask for
     Sentinel-2.
 
     Last modified: June 2023
@@ -147,28 +144,28 @@ def load_ard(
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3', 'ga_ls9c_ard_3']
         for Landsat, ['ga_s2am_ard_3', 'ga_s2bm_ard_3'] for Sentinel 2.
     cloud_mask : string, optional
-        The cloud mask used by the function. This is used for both 
+        The cloud mask used by the function. This is used for both
         masking out poor quality pixels (e.g. clouds) if
-        ``mask_pixel_quality=True``, and for calculating the 
+        ``mask_pixel_quality=True``, and for calculating the
         ``min_gooddata`` percentage when dropping cloudy or low quality
         satellite observations. Two cloud masks are supported:
             * 'fmask': (default; available for Landsat, Sentinel-2)
             * 's2cloudless' (Sentinel-2 only)
     min_gooddata : float, optional
-        The minimum percentage of good quality pixels required for a 
+        The minimum percentage of good quality pixels required for a
         satellite observation to be loaded. Defaults to 0.00 which will
         return all observations regardless of pixel quality (set to e.g.
         0.99 to return only observations with more than 99% good quality
         pixels).
     mask_pixel_quality : str or bool, optional
-        Whether to mask out poor quality (e.g. cloudy) pixels by setting 
-        them as nodata. Depending on the choice of cloud mask, the 
-        function will identify good quality pixels using the categories 
+        Whether to mask out poor quality (e.g. cloudy) pixels by setting
+        them as nodata. Depending on the choice of cloud mask, the
+        function will identify good quality pixels using the categories
         passed to the ``fmask_categories`` or ``s2cloudless_categories``
-        params. Set to False to turn off pixel quality masking completely. 
-        Poor quality pixels will be set to NaN (and convert all data to 
-        `float32`) if  ``dtype='auto'``, or be set to the data's native 
-        nodata value (usually -999) if ``dtype='native'`` (see 'dtype' 
+        params. Set to False to turn off pixel quality masking completely.
+        Poor quality pixels will be set to NaN (and convert all data to
+        `float32`) if  ``dtype='auto'``, or be set to the data's native
+        nodata value (usually -999) if ``dtype='native'`` (see 'dtype'
         below for more details).
     mask_filters : iterable of tuples, optional
         Iterable tuples of morphological operations - ("<operation>", <radius>)
@@ -294,7 +291,6 @@ def load_ard(
         contiguity_band = "oa_nbar_contiguity"
 
     else:
-
         raise ValueError(
             f"Unsupported value '{mask_contiguity}' passed to "
             "`mask_contiguity`. Please provide either 'nbart', 'nbar', "
@@ -302,7 +298,7 @@ def load_ard(
         )
 
     # Set pixel quality (PQ) band depending on `cloud_mask`
-    if cloud_mask == 'fmask': 
+    if cloud_mask == "fmask":
         pq_band = "oa_fmask"
         pq_categories = fmask_categories
 
@@ -312,14 +308,12 @@ def load_ard(
 
         # Raise error if s2cloudless is requested for Landsat products
         if product_type in ["ls", "mixed"]:
-
             raise ValueError(
                 "The 's2cloudless' cloud mask is not available for "
                 "Landsat products. Please set `mask_pixel_quality` to "
                 "'fmask' or False."
             )
     else:
-
         raise ValueError(
             f"Unsupported value '{cloud_mask}' passed to "
             "`cloud_mask`. Please provide either 'fmask', "
@@ -328,10 +322,10 @@ def load_ard(
 
     # To ensure that the categorical PQ/contiguity masking bands are
     # loaded using nearest neighbour resampling, we need to add these to
-    # the resampling kwarg if it exists and is not "nearest". 
-    # This only applies if a string resampling method is supplied; 
+    # the resampling kwarg if it exists and is not "nearest".
+    # This only applies if a string resampling method is supplied;
     # if a resampling dictionary (e.g. `resampling={'*': 'bilinear',
-    # 'oa_fmask': 'mode'}` is passed instead we assume the user wants 
+    # 'oa_fmask': 'mode'}` is passed instead we assume the user wants
     # to select custom resampling methods for each of their bands.
     resampling = kwargs.get("resampling", None)
 
@@ -358,13 +352,11 @@ def load_ard(
     # Deal with "load all" case: pick a set of bands that are common
     # across requested products
     if measurements is None:
-
         measurements = _common_bands(dc, products)
 
     # Deal with edge case where user supplies alias for PQ/contiguity
     # by stripping PQ/contiguity masks of their "oa_" prefix
     else:
-
         contiguity_band = (
             contiguity_band.replace("oa_", "")
             if contiguity_band.replace("oa_", "") in measurements
@@ -414,7 +406,6 @@ def load_ard(
     # Get list of datasets for each product
     print("Finding datasets")
     for product in products:
-
         # Obtain list of datasets for product
         print(
             f"    {product} (ignoring SLC-off observations)"
@@ -467,7 +458,6 @@ def load_ard(
     # by using the default `min_gooddata = 0`, we can skip this step
     # completely to save processing time
     if min_gooddata > 0.0:
-
         # Compute good data for each observation as % of total pixels
         print(f"Counting good quality pixels for each time step using {cloud_mask}")
         data_perc = pq_mask.sum(axis=[1, 2], dtype="int32") / (
@@ -505,7 +495,7 @@ def load_ard(
     ###############
 
     # Create a combined mask to hold both pixel quality and contiguity.
-    # This is more efficient than creating multiple dask tasks for 
+    # This is more efficient than creating multiple dask tasks for
     # similar masking operations.
     mask = None
 
@@ -606,14 +596,12 @@ def mostcommon_crs(dc, product, query):
 
     # If CRSs are returned
     if len(crs_list) > 0:
-
         # Identify most common CRS
         crs_counts = Counter(crs_list)
         crs_mostcommon = crs_counts.most_common(1)[0][0]
 
         # Warn user if multiple CRSs are encountered
         if len(crs_counts.keys()) > 1:
-
             warnings.warn(
                 f"Multiple UTM zones {list(crs_counts.keys())} "
                 f"were returned for this query. Defaulting to "
@@ -624,7 +612,6 @@ def mostcommon_crs(dc, product, query):
         return crs_mostcommon
 
     else:
-
         raise ValueError(
             f"No CRS was returned as no data was found for "
             f"the supplied product ({product}) and query. "
@@ -897,11 +884,16 @@ def nearest(
     target = array[dim].dtype.type(target)
     is_before_closer = abs(target - da_before[dim]) < abs(target - da_after[dim])
     nearest_array = xr.where(is_before_closer, da_before, da_after, keep_attrs=True)
-    nearest_array[dim] = xr.where(is_before_closer, da_before[dim], da_after[dim], keep_attrs=True)
+    nearest_array[dim] = xr.where(
+        is_before_closer, da_before[dim], da_after[dim], keep_attrs=True
+    )
 
     if index_name is not None:
         nearest_array[index_name] = xr.where(
-            is_before_closer, da_before[index_name], da_after[index_name], keep_attrs=True
+            is_before_closer,
+            da_before[index_name],
+            da_after[index_name],
+            keep_attrs=True,
         )
 
     return nearest_array
@@ -1264,7 +1256,6 @@ def xr_pansharpen(
     band_weights={"nbart_red": 0.4, "nbart_green": 0.4, "nbart_blue": 0.2},
     pca_rescaling="histogram",
 ):
-
     """
     Apply pan-sharpening to multispectral satellite data with one
     or more timesteps. The following pansharpening transforms are
@@ -1381,14 +1372,11 @@ def xr_pansharpen(
     # Otherwise, apply PCA or HSV pansharpening to each
     # timestep in the `xr.Dataset` using `.apply`
     elif transform in ("pca", "hsv"):
-
         extra_params = {"pca_rescaling": pca_rescaling} if transform == "pca" else {}
 
         # Apply pansharpening to all timesteps in data in parallel
         if ("time" in ds.dims) and parallelise:
-            print(
-                f"Applying {transform.upper()} pansharpening in parallel"
-            )
+            print(f"Applying {transform.upper()} pansharpening in parallel")
             ds_pansharpened = parallel_apply(
                 ds,
                 "time",
@@ -1439,7 +1427,7 @@ def load_reproject(
     bands=None,
     masked=True,
     reproject_kwds=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Load and reproject part of a raster dataset into a given GeoBox or
@@ -1465,7 +1453,7 @@ def load_reproject(
          to X/Y axis, suppling tight=True produces an unaligned geobox.
     resampling : str, optional
         Resampling method to use when reprojecting data, by default
-        "nearest", supports all standard GDAL options ("average", 
+        "nearest", supports all standard GDAL options ("average",
         "bilinear", "min", "max", "cubic" etc).
     chunks : dict, optional
         The size of the Dask chunks to load the data with, by default
@@ -1510,7 +1498,7 @@ def load_reproject(
         dst_nodata=np.NaN if masked else None,
         **reproject_kwds,
     )
-    
+
     # Squeeze if only one band
     da = da.squeeze()
 
