@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: Jan 2024
+Last modified: Feb 2024
 """
 
 import datetime
@@ -26,19 +26,24 @@ import datetime
 import os
 import warnings
 import zipfile
+import requests
 from collections import Counter
 
+import rioxarray
 import numpy as np
-import odc.algo
 import pandas as pd
-import requests
-import sklearn.decomposition
 import xarray as xr
-from datacube.utils.dates import normalise_dt
-from odc.algo import mask_cleanup
+import sklearn.decomposition
 from scipy.ndimage import binary_dilation
 from skimage.color import hsv2rgb, rgb2hsv
 from skimage.exposure import match_histograms
+
+import odc.geo.xr
+import odc.algo
+from odc.algo import mask_cleanup
+from datacube.utils.dates import normalise_dt
+
+
 
 
 def _dc_query_only(**kw):
@@ -1422,3 +1427,91 @@ def xr_pansharpen(
     return ds_pansharpened.astype(
         ds.to_array().dtype if output_dtype is None else output_dtype
     )
+
+
+def load_reproject(
+    path,
+    how,
+    resolution="auto",
+    tight=False,
+    resampling="nearest",
+    chunks={"x": 2048, "y": 2048},
+    bands=None,
+    masked=True,
+    reproject_kwds=None,
+    **kwargs
+):
+    """
+    Load and reproject part of a raster dataset into a given GeoBox or
+    custom CRS/resolution.
+
+    Parameters
+    ----------
+    path : str
+        Path to the raster dataset to be loaded and reprojected.
+    how : GeoBox, str or int
+        How to reproject the raster. Can be a GeoBox or a CRS (e.g.
+        "ESPG:XXXX" string or integer).
+    resolution : str or int, optional
+        The resolution to reproject the raster dataset into if `how` is
+        a CRS, by default "auto". Supports:
+            - "same" use exactly the same resolution as the input raster
+            - "fit" use center pixel to determine required scale change
+            - "auto" uses the same resolution on the output if CRS units
+             are the same between source and destination; otherwise "fit"
+            - Else, a specific resolution in the units of the output crs
+    tight : bool, optional
+         By default output pixel grid is adjusted to align pixel edges
+         to X/Y axis, suppling tight=True produces an unaligned geobox.
+    resampling : str, optional
+        Resampling method to use when reprojecting data, by default
+        "nearest", supports all standard GDAL options ("average", 
+        "bilinear", "min", "max", "cubic" etc).
+    chunks : dict, optional
+        The size of the Dask chunks to load the data with, by default
+        {"x": 2048, "y": 2048}.
+    bands : str or list, optional
+        Bands to optionally filter to when loading data.
+    masked : bool, optional
+        Whether to mask the data by its nodata value, by default True.
+    reproject_kwds : dict, optional
+        Additional keyword arguments to pass to the `.odc.reproject()`
+        method, by default None.
+    **kwargs : dict
+        Additional keyword arguments to be passed to the
+        `rioxarray.open_rasterio` function.
+
+    Returns
+    -------
+    xarray.Dataset
+        The reprojected raster dataset.
+    """
+    # Use empty kwds if not provided
+    reproject_kwds = {} if reproject_kwds is None else reproject_kwds
+
+    # Load data with rasterio
+    da = rioxarray.open_rasterio(
+        filename=path,
+        masked=masked,
+        chunks=chunks,
+        **kwargs,
+    )
+
+    # Optionally filter to bands
+    if bands is not None:
+        da = da.sel(band=bands)
+
+    # Reproject into GeoBox
+    da = da.odc.reproject(
+        how=how,
+        resolution=resolution,
+        tight=tight,
+        resampling=resampling,
+        dst_nodata=np.NaN if masked else None,
+        **reproject_kwds,
+    )
+    
+    # Squeeze if only one band
+    da = da.squeeze()
+
+    return da
