@@ -29,6 +29,8 @@ Scientific papers
 
 - Krause, C.E., Newey, V., Alger, M.J. and Lymburner, L., 2021. Mapping and monitoring the multi-decadal dynamics of Australia’s open waterbodies using Landsat. Remote Sensing, 13(8), p.1437.
 
+- Malan, N., Roughan, M., Hemming, M. et al. Quantifying coastal freshwater extremes during unprecedented rainfall using long timeseries multi-platform salinity observations. Nat Commun 15, 424 (2024). https://doi.org/10.1038/s41467-023-44398-2
+
 - Nanson, R., Bishop-Taylor, R., Sagar, S., Lymburner, L., (2022). Geomorphic insights into Australia's coastal change using a national dataset derived from the multi-decadal Landsat archive. Estuarine, Coastal and Shelf Science, 265, p.107712. Available: https://doi.org/10.1016/j.ecss.2021.107712
 
 - Pucino, N., Kennedy, D.M., Young, M. and Ierodiaconou, D., 2022. Assessing the accuracy of Sentinel-2 instantaneous subpixel shorelines using synchronous UAV ground truth surveys. Remote Sensing of Environment, 282, p.113293.
@@ -55,6 +57,7 @@ Conferences
 
 Courses and training
 --------------------
+- University of New England, 2023. `GISC436 : Remote Sensing and Image analysis <https://www.une.edu.au/study/units/remote-sensing-and-image-analysis-gisc436/>`_
 - Swinburne University of Technology, Space Technology and Industry Institute, 2023. `Earth Observation and Data Analysis Short Course <https://www.swinburne.edu.au/events/2023/10/earth-observation-data-analysis-short-course/>`_
 - Australian National University, Centre for Water and Landscape Dynamics `(WALD) <http://wald.anu.edu.au/>`_ under contract for `Geoscience Australia <https://www.ga.gov.au/>`_, 2022.  `Digital Earth Australia for Geospatial Analysts <https://anu-wald.github.io/dea_course/about/>`_. Materials available under Apache 2.0 Licence `here <https://github.com/ANU-WALD/dea_course>`_ and link to github repository: https://github.com/ANU-WALD/dea_training 
 - Flinders University, 2021, 2022. Remote Sensing for All Disciplines. Undergrad and postgrad course.

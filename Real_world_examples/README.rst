@@ -5,7 +5,6 @@ More complex case study-based workflows demonstrating how DEA can be used to add
 
 .. toctree::
    :maxdepth: 1
-   :caption: Real World Examples
    
    Burnt_area_mapping.ipynb
    Burnt_area_mapping_near_realtime.ipynb

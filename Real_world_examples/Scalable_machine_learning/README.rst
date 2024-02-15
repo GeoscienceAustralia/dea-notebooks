@@ -142,7 +142,6 @@ To begin working through the notebooks in this ``Scalable Supervised Machine Lea
 
 .. toctree::
    :maxdepth: 1
-   :caption: Scalable Supervised Machine Learning on the Open Data Cube
 
    1_Extract_training_data.ipynb
    2_Inspect_training_data.ipynb
