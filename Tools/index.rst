@@ -1,10 +1,9 @@
 DEA Tools Package
-=======================
+=================
 
-``dea_tools`` is a Python package contains several modules with functions to load, analyse
-and output data from Digital Earth Australia. It is automatically installed in the Digital Earth 
-Australia Sandbox environment. More information on installing this package can be found on the `Tools
-<https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Tools/>`_ section of the GitHub repository.
+``dea_tools`` is a Python package containing various functions to load, analyse, and output data from Digital Earth Australia.
+
+This package is installed by default in the DEA Sandbox. You can also install it in your own environment from `PyPi <https://pypi.org/project/dea-tools/>`_ by running ``pip install dea-tools``. Learn more in the `DEA Tools Readme <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Tools/>`_.
 
 Core modules
 ------------
@@ -49,6 +48,7 @@ Apps and widgets
 
 License
 -------
+
 The code in this module is licensed under the Apache License,
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
 
@@ -57,6 +57,7 @@ Attribution 4.0 license (https://creativecommons.org/licenses/by/4.0/).
 
 Contact
 -------
+
 If you need assistance, please post a question on the Open Data
 Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
 Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
