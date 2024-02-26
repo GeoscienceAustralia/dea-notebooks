@@ -6,8 +6,10 @@
 
 <br />
 
-This is the notebooks and tools repository of Digital Earth Australia
-(DEA).
+This is the DEA Notebooks and DEA Tools repository of Digital Earth Australia.
+You can browse and interactive with these Notebooks on the
+[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/) and the
+[DEA Knowledge Hub](https://docs.dea.ga.gov.au/).
 
 **Contribute** &mdash; DEA Notebooks is open-source and we would love your contribution!
 Learn [how to contribute](#contribute) below.
@@ -42,7 +44,7 @@ page.
 
 ## Introduction
 
-This repository hosts Jupyter Notebooks, Python scripts and workflows
+This repository contains Jupyter Notebooks and Python tools for
 for analysing [Digital Earth Australia (DEA)](https://www.ga.gov.au/dea)
 satellite data and derived products. This documentation is designed to
 provide a guide to getting started with DEA, and to showcase the wide
