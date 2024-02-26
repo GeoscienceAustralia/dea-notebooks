@@ -10,15 +10,6 @@ This is the DEA Notebooks and DEA Tools repository of [Digital Earth Australia](
 These can be viewed on the [DEA Knowledge Hub](https://docs.dea.ga.gov.au/) and used on the
 [DEA Sandbox](https://app.sandbox.dea.ga.gov.au/).
 
-The Jupyter Notebooks and Python tools in this repository are for
-analysing DEA's satellite data products. The notebooks are designed to demonstrate
-how to use the tools and data to conduct a broad range of geospatial
-analyses. They also demonstrate how to integrate with other open-source
-software such as [Open Data Cube](https://www.opendatacube.org/) and
-[xarray](http://xarray.pydata.org/en/stable/). You can see real-world
-use cases on the [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
-page.
-
 **Contribute** &mdash; DEA Notebooks is open-source and we would love your contribution!
 Learn [how to contribute](#contribute) below.
 
@@ -45,6 +36,17 @@ it with the following citation.
 > Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth
 > Australia notebooks and tools repository. Geoscience Australia,
 > Canberra. <https://doi.org/10.26186/145234>
+
+## Introduction
+
+The Jupyter Notebooks and Python tools in this repository are for
+analysing DEA's satellite data products. The notebooks are designed to demonstrate
+how to use the tools and data to conduct a broad range of geospatial
+analyses. They also demonstrate how to integrate with other open-source
+software such as [Open Data Cube](https://www.opendatacube.org/) and
+[xarray](http://xarray.pydata.org/en/stable/). You can see real-world
+use cases on the [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
+page.
 
 ## Browse the DEA Knowledge Hub
 
