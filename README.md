@@ -40,8 +40,6 @@ We would also appreciate it if you add your own citation to our
 [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
 page.
 
-*****
-
 ## Introduction
 
 This repository hosts Jupyter Notebooks, Python scripts and workflows
@@ -97,7 +95,7 @@ page
 
 <span id="contribute"></span>
 
-## Contributing to DEA Notebooks
+## How to contribute
 
 To get started, see these articles in the wiki.
 
