@@ -47,7 +47,7 @@ it with the following citation.
 > Australia notebooks and tools repository. Geoscience Australia,
 > Canberra. <https://doi.org/10.26186/145234>
 
-## View the DEA Knowledge Hub
+## Browse the DEA Knowledge Hub
 
 The Knowledge Hub is where you can easily view the notebooks and read DEA Tools documentation. You can browse the following sections.
 
@@ -72,9 +72,9 @@ The Knowledge Hub is where you can easily view the notebooks and read DEA Tools 
   developed to assist in analysing DEA data (e.g. loading data,
   plotting, spatial analysis, machine learning)
 
-## Using the DEA Sandbox
+## Use the DEA Sandbox
 
-[![The cover page of the DEA Sandbox.](Supplementary_data/DEA_Sandbox/DEA_Sandbox_cover_page.png)](https://app.sandbox.dea.ga.gov.au/)
+<a href="https://app.sandbox.dea.ga.gov.au/"><img src="Supplementary_data/DEA_Sandbox/DEA_Sandbox_cover_page.png" width="500" alt="The cover page of the DEA Sandbox." /></a>
 
 The **[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/)** is a free virtual environment for interacting with the notebooks and tools. You can use the sandbox to conduct geospatial analysis without installing anything to your computer.
 
