@@ -87,14 +87,7 @@ To get started, see these articles in the wiki.
 * [Create a DEA Notebook](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook)
 * [Edit a DEA Notebook](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook)
 
-
-
-
-
-
-All notebooks in the `dea-notebooks` repository contain tags describing
-their functionality. If there is a functionality that has not been
-documented that you think should be, please create an \'Issue\' in the
-[dea-notebooks
-repository.](https://github.com/GeoscienceAustralia/dea-notebooks/issues)
+All notebooks in this repository contain tags describing
+their functionality.<!-- If you are searching for a specific functionality, use the [Tags Index](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/genindex) to search for a suitable example. --> If there is an important functionality that has not been
+documented, please [create an 'issue' in the repository](https://github.com/GeoscienceAustralia/dea-notebooks/issues).
 
