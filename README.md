@@ -8,7 +8,7 @@
 
 This is the DEA Notebooks and DEA Tools repository of [Digital Earth Australia](https://www.dea.ga.gov.au/).
 These can be viewed on the [DEA Knowledge Hub](https://docs.dea.ga.gov.au/) and run on the
-[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/) and the [National Computational Infrastructure (NCI)](https://nci.org.au/).
+[DEA Sandbox](https://docs.dea.ga.gov.au/guides/setup/Sandbox/sandbox/) and the [National Computational Infrastructure (NCI)](https://docs.dea.ga.gov.au/guides/setup/NCI/README/).
 
 **Contribute** &mdash; DEA Notebooks is open-source and we would love your contribution!
 Learn [how to contribute](#contribute) below.
@@ -72,13 +72,13 @@ The Knowledge Hub is where you can easily view the notebooks and read DEA Tools 
 
 ## Run on the DEA Sandbox
 
-The **DEA Sandbox** is a free virtual environment for interacting with the notebooks and tools. You can use the sandbox to conduct geospatial analysis without installing anything on your computer. Get started with the [DEA Sandbox](https://app.sandbox.dea.ga.gov.au/).
+The **DEA Sandbox** is a free virtual environment for interacting with the notebooks and tools from your web browser. You can use the Sandbox to conduct geospatial analysis without installing anything on your computer. Learn how to [use the DEA Sandbox](https://docs.dea.ga.gov.au/guides/setup/Sandbox/sandbox/).
 
 <a href="https://app.sandbox.dea.ga.gov.au/"><img src="Supplementary_data/DEA_Sandbox/DEA_Sandbox_cover_page.png" width="500" alt="The cover page of the DEA Sandbox." /></a>
 
 ## Run on the NCI
 
-The National Computational Infrastructure is a supercomputer environment available to Australian researchers, academics, and other users by negotiation. The NCI can be used for high-performance geospatial analysis. Learn how to get started with the [NCI](https://docs.dea.ga.gov.au/guides/setup/NCI/README/).
+The National Computational Infrastructure is a supercomputer environment available to Australian researchers, academics, and other users by negotiation. The NCI can be used for high-performance geospatial analysis. Learn how to [use the NCI](https://docs.dea.ga.gov.au/guides/setup/NCI/README/).
 
 <span id="contribute"></span>
 
