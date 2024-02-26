@@ -7,8 +7,8 @@
 <br />
 
 This is the DEA Notebooks and DEA Tools repository of [Digital Earth Australia](https://www.dea.ga.gov.au/).
-These can be viewed on the [DEA Knowledge Hub](https://docs.dea.ga.gov.au/) and used on the
-[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/).
+These can be viewed on the [DEA Knowledge Hub](https://docs.dea.ga.gov.au/) and run on the
+[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/) and the [National Computational Infrastructure (NCI)](https://nci.org.au/).
 
 **Contribute** &mdash; DEA Notebooks is open-source and we would love your contribution!
 Learn [how to contribute](#contribute) below.
@@ -70,11 +70,17 @@ The Knowledge Hub is where you can easily view the notebooks and read DEA Tools 
   An open-source Python package containing functions and
   algorithms to assist in analysing DEA data.
 
-## Use the DEA Sandbox
+## Run on the DEA Sandbox
 
-The **[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/)** is a free virtual environment for interacting with the notebooks and tools. You can use the sandbox to conduct geospatial analysis without installing anything on your computer.
+The **DEA Sandbox** is a free virtual environment for interacting with the notebooks and tools. You can use the sandbox to conduct geospatial analysis without installing anything on your computer. Get started with the [DEA Sandbox](https://app.sandbox.dea.ga.gov.au/).
 
 <a href="https://app.sandbox.dea.ga.gov.au/"><img src="Supplementary_data/DEA_Sandbox/DEA_Sandbox_cover_page.png" width="500" alt="The cover page of the DEA Sandbox." /></a>
+
+## Run on the NCI
+
+The National Computational Infrastructure is a supercomputer environment available to academic researchers. Registered users can use the NCI for high-performance geospatial analysis. Learn how to use the [NCI](https://docs.dea.ga.gov.au/guides/setup/NCI/README/).
+
+https://docs.dea.ga.gov.au/guides/setup/NCI/README/
 
 <span id="contribute"></span>
 
