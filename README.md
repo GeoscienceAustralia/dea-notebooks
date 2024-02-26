@@ -11,6 +11,15 @@ You can view and interact with these Notebooks on the
 [DEA Sandbox](https://app.sandbox.dea.ga.gov.au/) and the
 [DEA Knowledge Hub](https://docs.dea.ga.gov.au/).
 
+This repository contains Jupyter Notebooks and Python tools for
+for analysing DEA's satellite data products. The notebooks are designed to demonstrate
+how to use the tools and data to conduct a broad range of geospatial
+analyses. They also demonstrate how to integrate with other open-source
+software such as [Open Data Cube](https://www.opendatacube.org/) and
+[xarray](http://xarray.pydata.org/en/stable/). You can see real-world
+use cases on the [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
+page.
+
 **Contribute** &mdash; DEA Notebooks is open-source and we would love your contribution!
 Learn [how to contribute](#contribute) below.
 
@@ -38,23 +47,9 @@ it with the following citation.
 > Australia notebooks and tools repository. Geoscience Australia,
 > Canberra. <https://doi.org/10.26186/145234>
 
-We would also appreciate it if you add your own citation to our
-[USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
-page.
+## View the DEA Knowledge Hub
 
-## Introduction
-
-This repository contains Jupyter Notebooks and Python tools for
-for analysing Digital Earth Australia (DEA)
-satellite data products. The notebooks are designed to demonstrate
-how to use DEA tools and data to conduct a broad range of geospatial
-analyses. They also demonstrate how to integrate with other open-source
-software such as [Open Data Cube](https://www.opendatacube.org/) and
-[xarray](http://xarray.pydata.org/en/stable/). You can see real-world
-use cases on the [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
-page.
-
-You can view and interact with the following sections of the Knowledge Hub and also in the [DEA Sandbox](https://app.sandbox.dea.ga.gov.au/).
+The Knowledge Hub is where you can easily view the notebooks and read DEA Tools documentation. You can browse the following sections.
 
 * **[Beginner’s guide](https://docs.dea.ga.gov.au/notebooks/Beginners_guide/)** &mdash;
   Introductory notebooks aimed at introducing Jupyter Notebooks and
@@ -77,6 +72,10 @@ You can view and interact with the following sections of the Knowledge Hub and a
   developed to assist in analysing DEA data (e.g. loading data,
   plotting, spatial analysis, machine learning)
 
+## Using the DEA Sandbox
+
+The **[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/)** is a free virtual environment for interacting with the notebooks and tools. You can use the sandbox to conduct geospatial analysis without installing anything to your computer.
+
 <span id="contribute"></span>
 
 ## How to contribute
@@ -86,6 +85,10 @@ To get started, see these articles in the wiki.
 * [Git workflow](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Git-workflow)
 * [Create a DEA Notebook](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook)
 * [Edit a DEA Notebook](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook)
+
+We would also appreciate it if you add your own citation to our
+[USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
+page.
 
 All notebooks in this repository contain tags describing
 their functionality.<!-- If you are searching for a specific functionality, use the [Tags Index](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/genindex) to search for a suitable example. --> If there is an important functionality that has not been
