@@ -7,11 +7,10 @@
 <br />
 
 This is the DEA Notebooks and DEA Tools repository of [Digital Earth Australia](https://www.dea.ga.gov.au/).
-You can view and interact with these Notebooks on the
-[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/) and the
-[DEA Knowledge Hub](https://docs.dea.ga.gov.au/).
+These can be viewed on the [DEA Knowledge Hub](https://docs.dea.ga.gov.au/) and used on the
+[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/).
 
-This repository contains Jupyter Notebooks and Python tools for
+The Jupyter Notebooks and Python tools in this repository are for
 analysing DEA's satellite data products. The notebooks are designed to demonstrate
 how to use the tools and data to conduct a broad range of geospatial
 analyses. They also demonstrate how to integrate with other open-source
@@ -53,24 +52,24 @@ The Knowledge Hub is where you can easily view the notebooks and read DEA Tools 
 
 * **[Beginner’s guide](https://docs.dea.ga.gov.au/notebooks/Beginners_guide/)** &mdash;
   Introductory notebooks aimed at introducing Jupyter Notebooks and
-  how to load, plot, and interact with DEA data
+  how to load, plot, and interact with DEA data.
 * **[DEA products](https://docs.dea.ga.gov.au/notebooks/DEA_products/)** &mdash;
   Notebooks introducing DEA\'s satellite datasets and derived
   products, including how to load each dataset and any special
-  features of the data
+  features of the data.
 * **[How-to guides](https://docs.dea.ga.gov.au/notebooks/How_to_guides/)** &mdash;
   A recipe book of simple code examples demonstrating how to perform
-  common geospatial analysis tasks using DEA and open-source software
+  common geospatial analysis tasks using DEA and open-source software.
 * **[Interactive apps](https://docs.dea.ga.gov.au/notebooks/Interactive_apps/)** &mdash;
   Interactive apps and widgets that require little or no coding to
-  run
+  run.
 * **[Real-world examples](https://docs.dea.ga.gov.au/notebooks/Real_world_examples/)** &mdash;
   More complex case study workflows demonstrating how DEA can be used
-  to address real-world problems
+  to address real-world problems.
 * **[DEA Tools Package](https://docs.dea.ga.gov.au/notebooks/Tools/)** &mdash;
   Python module dea-tools, containing functions and algorithms
   developed to assist in analysing DEA data (e.g. loading data,
-  plotting, spatial analysis, machine learning)
+  plotting, spatial analysis, machine learning).
 
 ## Use the DEA Sandbox
 
@@ -88,11 +87,12 @@ To get started, see these articles in the wiki.
 * [Create a DEA Notebook](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook)
 * [Edit a DEA Notebook](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook)
 
-We would also appreciate it if you add your own citation to our
+We would also appreciate it if you could add your a citation to our
 [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
 page.
 
 All notebooks in this repository contain tags describing
 their functionality.<!-- If you are searching for a specific functionality, use the [Tags Index](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/genindex) to search for a suitable example. --> If there is an important functionality that has not been
-documented, please [create an 'issue' in the repository](https://github.com/GeoscienceAustralia/dea-notebooks/issues).
+documented, please [report an issue on this
+repository](https://github.com/GeoscienceAustralia/dea-notebooks/issues).
 
