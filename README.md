@@ -94,8 +94,8 @@ We would also appreciate it if you could add your a citation to our
 [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
 page.
 
-All notebooks in this repository contain tags describing
-their functionality.<!-- If you are searching for a specific functionality, use the [Tags Index](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/genindex) to search for a suitable example. --> If there is an important functionality that has not been
-documented, please [report an issue on this
-repository](https://github.com/GeoscienceAustralia/dea-notebooks/issues).
+<!-- All notebooks in this repository contain tags describing -->
+<!-- their functionality. If you are searching for a specific functionality, use the [Tags Index](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/genindex) to search for a suitable example. If there is an important functionality that has not been -->
+<!-- documented, please [report an issue on this -->
+<!-- repository](https://github.com/GeoscienceAustralia/dea-notebooks/issues). -->
 
