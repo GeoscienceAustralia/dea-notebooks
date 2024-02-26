@@ -51,25 +51,22 @@ it with the following citation.
 The Knowledge Hub is where you can easily view the notebooks and read DEA Tools documentation. You can browse the following sections.
 
 * **[Beginner’s guide](https://docs.dea.ga.gov.au/notebooks/Beginners_guide/)** &mdash;
-  Introductory notebooks aimed at introducing Jupyter Notebooks and
-  how to load, plot, and interact with DEA data.
+  Introductory notebooks aimed at introducing Jupyter Notebooks and how to load,
+  plot, and interact with DEA data.
 * **[DEA products](https://docs.dea.ga.gov.au/notebooks/DEA_products/)** &mdash;
-  Notebooks introducing DEA\'s satellite datasets and derived
-  products, including how to load each dataset and any special
-  features of the data.
+  Notebooks introducing DEA's satellite datasets and derived products,
+  including how to load each dataset and any special features of the data.
 * **[How-to guides](https://docs.dea.ga.gov.au/notebooks/How_to_guides/)** &mdash;
-  A recipe book of simple code examples demonstrating how to perform
-  common geospatial analysis tasks using DEA and open-source software.
+  A recipe book of simple code examples demonstrating how to perform common
+  geospatial analysis tasks using DEA and open-source software.
 * **[Interactive apps](https://docs.dea.ga.gov.au/notebooks/Interactive_apps/)** &mdash;
-  Interactive apps and widgets that require little or no coding to
-  run.
+  Interactive apps and widgets that require little or no coding to run.
 * **[Real-world examples](https://docs.dea.ga.gov.au/notebooks/Real_world_examples/)** &mdash;
-  More complex case study workflows demonstrating how DEA can be used
-  to address real-world problems.
+  More complex case study workflows demonstrating how DEA can be
+  used to address real-world problems.
 * **[DEA Tools Package](https://docs.dea.ga.gov.au/notebooks/Tools/)** &mdash;
-  Python module dea-tools, containing functions and algorithms
-  developed to assist in analysing DEA data (e.g. loading data,
-  plotting, spatial analysis, machine learning).
+  An open-source Python package containing functions and
+  algorithms to assist in analysing DEA data.
 
 ## Use the DEA Sandbox
 
