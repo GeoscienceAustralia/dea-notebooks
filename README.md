@@ -74,6 +74,8 @@ The Knowledge Hub is where you can easily view the notebooks and read DEA Tools 
 
 ## Using the DEA Sandbox
 
+[![The cover page of the DEA Sandbox.](Supplementary_data/DEA_Sandbox/DEA_Sandbox_cover_page.png)](https://app.sandbox.dea.ga.gov.au/)
+
 The **[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/)** is a free virtual environment for interacting with the notebooks and tools. You can use the sandbox to conduct geospatial analysis without installing anything to your computer.
 
 <span id="contribute"></span>
