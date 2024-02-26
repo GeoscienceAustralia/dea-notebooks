@@ -54,25 +54,25 @@ software such as [Open Data Cube](https://www.opendatacube.org/) and
 use cases on the [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
 page.
 
-You can view and interact with the following folders in the Knowledge Hub and also in the [DEA Sandbox](https://app.sandbox.dea.ga.gov.au/).
+You can view and interact with the following sections of the Knowledge Hub and also in the [DEA Sandbox](https://app.sandbox.dea.ga.gov.au/).
 
-* [Beginners_guide](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Beginners_guide) &mdash;
+* **[Beginner’s guide](https://docs.dea.ga.gov.au/notebooks/Beginners_guide/)** &mdash;
   Introductory notebooks aimed at introducing Jupyter Notebooks and
   how to load, plot and interact with DEA data
-* [DEA_products](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/DEA_products) &mdash;
+* **[DEA products](https://docs.dea.ga.gov.au/notebooks/DEA_products/)** &mdash;
   Notebooks introducing DEA\'s satellite datasets and derived
   products, including how to load each dataset and any special
   features of the data
-* [Interactive_apps](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Interactive_apps) &mdash;
-  Interactive apps and widgets that require little or no coding to
-  run
-* [How_to_guides](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/How_to_guides) &mdash;
+* **[How-to guides](https://docs.dea.ga.gov.au/notebooks/How_to_guides/)** &mdash;
   A recipe book of simple code examples demonstrating how to perform
   common geospatial analysis tasks using DEA and open-source software
-* [Real_world_examples](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Real_world_examples) &mdash;
+* **[Interactive apps](https://docs.dea.ga.gov.au/notebooks/Interactive_apps/)** &mdash;
+  Interactive apps and widgets that require little or no coding to
+  run
+* **[Real-world examples](https://docs.dea.ga.gov.au/notebooks/Real_world_examples/)** &mdash;
   More complex case study workflows demonstrating how DEA can be used
   to address real-world problems
-* [Tools](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Tools):
+* **[DEA Tools Package](https://docs.dea.ga.gov.au/notebooks/Tools/)** &mdash;
   Python module dea-tools, containing functions and algorithms
   developed to assist in analysing DEA data (e.g. loading data,
   plotting, spatial analysis, machine learning)
