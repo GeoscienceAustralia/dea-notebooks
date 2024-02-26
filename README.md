@@ -12,7 +12,7 @@ You can view and interact with these Notebooks on the
 [DEA Knowledge Hub](https://docs.dea.ga.gov.au/).
 
 This repository contains Jupyter Notebooks and Python tools for
-for analysing DEA's satellite data products. The notebooks are designed to demonstrate
+analysing DEA's satellite data products. The notebooks are designed to demonstrate
 how to use the tools and data to conduct a broad range of geospatial
 analyses. They also demonstrate how to integrate with other open-source
 software such as [Open Data Cube](https://www.opendatacube.org/) and
@@ -53,7 +53,7 @@ The Knowledge Hub is where you can easily view the notebooks and read DEA Tools 
 
 * **[Beginner’s guide](https://docs.dea.ga.gov.au/notebooks/Beginners_guide/)** &mdash;
   Introductory notebooks aimed at introducing Jupyter Notebooks and
-  how to load, plot and interact with DEA data
+  how to load, plot, and interact with DEA data
 * **[DEA products](https://docs.dea.ga.gov.au/notebooks/DEA_products/)** &mdash;
   Notebooks introducing DEA\'s satellite datasets and derived
   products, including how to load each dataset and any special
@@ -74,7 +74,7 @@ The Knowledge Hub is where you can easily view the notebooks and read DEA Tools 
 
 ## Use the DEA Sandbox
 
-The **[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/)** is a free virtual environment for interacting with the notebooks and tools. You can use the sandbox to conduct geospatial analysis without installing anything to your computer.
+The **[DEA Sandbox](https://app.sandbox.dea.ga.gov.au/)** is a free virtual environment for interacting with the notebooks and tools. You can use the sandbox to conduct geospatial analysis without installing anything on your computer.
 
 <a href="https://app.sandbox.dea.ga.gov.au/"><img src="Supplementary_data/DEA_Sandbox/DEA_Sandbox_cover_page.png" width="500" alt="The cover page of the DEA Sandbox." /></a>
 
