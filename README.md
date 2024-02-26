@@ -2,12 +2,12 @@
 
 # DEA Notebooks
 
-This is the notebooks and tools repository of Digital Earth Australia
-(DEA).
-
 [![DOI](https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg)](https://doi.org/10.26186/145234) [![Apache license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![PyPI](https://img.shields.io/pypi/v/dea-tools)](https://pypi.org/project/dea-tools/) [![Notebook testing](https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml/badge.svg?branch=develop)](https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml)
 
 <br />
+
+This is the notebooks and tools repository of Digital Earth Australia
+(DEA).
 
 **Contribute:** DEA Notebooks is open-source and we would love your contribution!
 Learn [how to contribute](#contribute) below.
