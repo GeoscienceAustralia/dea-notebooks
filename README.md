@@ -7,8 +7,8 @@ This is the notebooks and tools repository of Digital Earth Australia
 
 [![DOI](https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg)](https://doi.org/10.26186/145234) [![Apache license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![PyPI](https://img.shields.io/pypi/v/dea-tools)](https://pypi.org/project/dea-tools/) [![Notebook testing](https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml/badge.svg?branch=develop)](https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml)
 
-**Contribute:** We'd love your contribution! DEA Notebooks is an
-open-source project and welcomes contributions from everyone.
+**Contribute:** DEA Notebooks is open-source and we would love your contribution!
+Learn [how to contribute](#contribute) below.
 
 **License:** The code in this repository is licensed under the [Apache
 License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0). DEA
@@ -92,6 +92,8 @@ We encourage you to check out the other usages of our notebooks, code
 and tools at our
 [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
 page
+
+<span id="contribute"></span>
 
 ## Contributing to DEA Notebooks
 
