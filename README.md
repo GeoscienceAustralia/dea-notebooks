@@ -78,7 +78,7 @@ The **DEA Sandbox** is a free virtual environment for interacting with the noteb
 
 ## Run on the NCI
 
-The National Computational Infrastructure is a supercomputer environment available to academic researchers. Registered users can use the NCI for high-performance geospatial analysis. Learn how to use the [NCI](https://docs.dea.ga.gov.au/guides/setup/NCI/README/).
+The National Computational Infrastructure is a supercomputer environment available to Australian researchers, academics, and other users by negotiation. The NCI can be used for high-performance geospatial analysis. Learn how to get started with the [NCI](https://docs.dea.ga.gov.au/guides/setup/NCI/README/).
 
 https://docs.dea.ga.gov.au/guides/setup/NCI/README/
 
