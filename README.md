@@ -9,25 +9,25 @@
 This is the notebooks and tools repository of Digital Earth Australia
 (DEA).
 
-**Contribute:** DEA Notebooks is open-source and we would love your contribution!
+**Contribute** &mdash; DEA Notebooks is open-source and we would love your contribution!
 Learn [how to contribute](#contribute) below.
 
-**License:** The code in this repository is licensed under the [Apache
+**License** &mdash; The code in this repository is licensed under the [Apache
 License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0). DEA
 data is licensed under the [Creative Commons by Attribution 4.0
 license](https://creativecommons.org/licenses/by/4.0/).
 
-**Documentation:** See the [DEA Notebooks
+**Documentation** &mdash; See the [DEA Notebooks
 Wiki](https://github.com/GeoscienceAustralia/dea-notebooks/wiki).
 
-**Contact:** For assistance with any of these notebooks and tools,
+**Contact** &mdash; For assistance with any of these notebooks and tools,
 please ask a question on our [Open Data Cube Slack
 channel](http://slack.opendatacube.org/) or on the [GIS Stack
 Exchange](https://gis.stackexchange.com/questions/tagged/open-data-cube)
 using the `open-data-cube` tag. You can also [report an issue on this
 repository](https://github.com/GeoscienceAustralia/dea-notebooks/issues).
 
-**Citation:** If you use this repository in your work, please reference
+**Citation** &mdash; If you use this repository in your work, please reference
 it with the following citation.
 
 > Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger,
@@ -56,20 +56,20 @@ Cube](https://www.opendatacube.org/) and
 The repository is based around the following directory structure (from
 simple to increasingly complex applications):
 
-1. [Beginners_guide](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Beginners_guide):
+1. [Beginners_guide](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Beginners_guide) &mdash;
    *Introductory notebooks aimed at introducing Jupyter Notebooks and
    how to load, plot and interact with DEA data*
-1. [DEA_products](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/DEA_products):
+1. [DEA_products](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/DEA_products) &mdash;
    *Notebooks introducing DEA\'s satellite datasets and derived
    products, including how to load each dataset and any special
    features of the data*
-1. [Interactive_apps](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Interactive_apps):
+1. [Interactive_apps](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Interactive_apps) &mdash;
    *Interactive apps and widgets that require little or no coding to
    run*
-1. [How_to_guides](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/How_to_guides):
+1. [How_to_guides](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/How_to_guides) &mdash;
    *A recipe book of simple code examples demonstrating how to perform
    common geospatial analysis tasks using DEA and open-source software*
-1. [Real_world_examples](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Real_world_examples):
+1. [Real_world_examples](https://github.com/GeoscienceAustralia/dea-notebooks/tree/stable/Real_world_examples) &mdash;
    *More complex case study workflows demonstrating how DEA can be used
    to address real-world problems*
 
