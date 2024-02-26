@@ -41,10 +41,10 @@ it with the following citation.
 
 The Jupyter Notebooks and Python tools in this repository are for
 analysing DEA's satellite data products. The notebooks are designed to demonstrate
-how to use the tools and data to conduct a broad range of geospatial
+how to use the DEA data and tools to conduct a broad range of geospatial
 analyses. They also demonstrate how to integrate with other open-source
 software such as [Open Data Cube](https://www.opendatacube.org/) and
-[xarray](http://xarray.pydata.org/en/stable/). You can see real-world
+[xarray](http://xarray.pydata.org/en/stable/). You can see examples of
 use cases on the [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
 page.
 
@@ -79,8 +79,6 @@ The **DEA Sandbox** is a free virtual environment for interacting with the noteb
 ## Run on the NCI
 
 The National Computational Infrastructure is a supercomputer environment available to Australian researchers, academics, and other users by negotiation. The NCI can be used for high-performance geospatial analysis. Learn how to get started with the [NCI](https://docs.dea.ga.gov.au/guides/setup/NCI/README/).
-
-https://docs.dea.ga.gov.au/guides/setup/NCI/README/
 
 <span id="contribute"></span>
 
