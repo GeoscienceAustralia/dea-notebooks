@@ -49,9 +49,9 @@ software such as [Open Data Cube](https://www.opendatacube.org/) and
 use cases on the [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
 page.
 
-## View on the Knowledge Hub
+## View on the DEA Knowledge Hub
 
-The DEA Knowledge Hub is where you can easily view the notebooks and read DEA Tools documentation. You can browse the following sections.
+The Knowledge Hub is where you can easily view the notebooks and read DEA Tools documentation. You can browse the following sections.
 
 * **[Beginner’s guide](https://docs.dea.ga.gov.au/notebooks/Beginners_guide/)** &mdash;
   Introductory notebooks aimed at introducing Jupyter Notebooks and how to load,
