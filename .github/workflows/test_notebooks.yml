@@ -5,13 +5,19 @@ on:
   push:
     branches: [ develop, stable, nbtests ]
     paths-ignore:
-      - '**/*.md' # ignore markdown files
+      - 'README.md' # ignore readme
+      - 'DEA_Sandbox.ipynb' # ignore landing page
+      - 'DEA_notebooks_template.ipynb' # ignore template
+      - '**/*.md' # ignore markdown files in nested folders
       - '**/*.rst' # ignore restructured text files
       - '.github/**' # ignore anything in .github folder
       - '!.github/workflows/test_notebooks.yml' # except test_notebooks.yml
   pull_request:
     branches: [ develop, stable ]
     paths-ignore:
+      - 'README.md'
+      - 'DEA_Sandbox.ipynb'
+      - 'DEA_notebooks_template.ipynb'
       - '**/*.md'
       - '**/*.rst'
       - '.github/**'
