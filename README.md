@@ -51,7 +51,7 @@ page.
 
 ## View on the DEA Knowledge Hub
 
-The Knowledge Hub is where you can easily view the notebooks and read DEA Tools documentation. You can browse the following sections.
+The **DEA Knowledge Hub** is where you can easily view the notebooks and read DEA Tools documentation. You can browse the following sections.
 
 * **[Beginner’s guide](https://docs.dea.ga.gov.au/notebooks/Beginners_guide/)** &mdash;
   Introductory notebooks aimed at introducing Jupyter Notebooks and how to load,
@@ -79,7 +79,7 @@ The **DEA Sandbox** is a free virtual environment for interacting with the noteb
 
 ## Run on the NCI
 
-The National Computational Infrastructure is a supercomputer environment available to Australian researchers, academics, and other users by negotiation. The NCI can be used for high-performance geospatial analysis. Learn how to [use the NCI](https://docs.dea.ga.gov.au/guides/setup/NCI/README/).
+The **National Computational Infrastructure** is a supercomputer environment available to Australian researchers, academics, and other users by negotiation. The NCI can be used for high-performance geospatial analysis. Learn how to [use the NCI](https://docs.dea.ga.gov.au/guides/setup/NCI/README/).
 
 <span id="contribute"></span>
 
