@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/GeoscienceAustralia/dea-notebooks/develop/Supplementary_data/dea_logo_wide.jpg" width="900" alt="Digital Earth Australia logo" />
+<img src="https://raw.githubusercontent.com/GeoscienceAustralia/dea-notebooks/stable/Supplementary_data/dea_logo_wide.jpg" width="900" alt="Digital Earth Australia logo" />
 
 # DEA Notebooks
 
