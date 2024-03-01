@@ -45,7 +45,7 @@ def get_waterbody(geohash: str) -> gpd.GeoDataFrame:
     filter_ = PropertyIsEqualTo(propertyname="uid", literal=geohash)
     filterxml = etree.tostring(filter_.toXML()).decode("utf-8")
     response = wfs.getfeature(
-        typename="DigitalEarthAustraliaWaterbodies_v2",
+        typename="DigitalEarthAustraliaWaterbodies_v3",
         filter=filterxml,
         outputFormat="json",
     )
@@ -70,7 +70,7 @@ def get_waterbodies(bbox: tuple, crs="EPSG:4326") -> gpd.GeoDataFrame:
     """
     wfs = WebFeatureService(url=WFS_ADDRESS, version="1.1.0")
     response = wfs.getfeature(
-        typename="DigitalEarthAustraliaWaterbodies_v2",
+        typename="DigitalEarthAustraliaWaterbodies_v3",
         bbox=tuple(bbox) + (crs,),
         outputFormat="json",
     )
@@ -97,7 +97,7 @@ def get_geohashes(bbox: tuple = None, crs: str = "EPSG:4326") -> [str]:
     if bbox is not None:
         bbox = tuple(bbox) + (crs,)
     response = wfs.getfeature(
-        typename="DigitalEarthAustraliaWaterbodies_v2",
+        typename="DigitalEarthAustraliaWaterbodies_v3",
         propertyname="uid",
         outputFormat="json",
         bbox=bbox,
