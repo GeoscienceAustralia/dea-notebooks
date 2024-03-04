@@ -31,8 +31,7 @@ LAYER_SELECT = {
     "v3" : "DigitalEarthAustraliaWaterbodies_v3"
 }
 
-
-def get_waterbody(geohash: str) -> gpd.GeoDataFrame:
+def get_waterbody(geohash: str, version: str = "v3") -> gpd.GeoDataFrame:
     """Gets a waterbody polygon and metadata by geohash.
     
     Parameters
