@@ -18,6 +18,7 @@
       first
       last
       load_ard
+      load_reproject
       mostcommon_crs
       nearest
       parallel_apply
