@@ -1,9 +1,9 @@
 
 name: Trigger DEA Docs Build
-# Documentation in this repo is not built in this GitHub Action. Instead, it is built by a separate Action in the dea-docs repo.
-# See here: https://github.com/GeoscienceAustralia/dea-docs/blob/master/.github/workflows/main.yml
+# Documentation in this repo is not built in this GitHub Action. Instead, it is built by a separate Action in the dea-knowledge-hub repo.
+# See here: https://github.com/GeoscienceAustralia/dea-knowledge-hub/blob/main/.github/workflows/deploy-production.yaml
 
-# The below action triggers a build in dea-docs when changes are pushed to the 'stable' branch in the current repo
+# The below action triggers a build in dea-knowledge-hub when changes are pushed to the 'stable' branch in the current repo
 
 on:
   push:
@@ -18,6 +18,6 @@ jobs:
         uses: peter-evans/repository-dispatch@v1
         with:
           token: ${{ secrets.REPO_PAT }}
-          repository: GeoscienceAustralia/dea-docs
+          repository: GeoscienceAustralia/dea-knowledge-hub
           event-type: republish-docs
 
