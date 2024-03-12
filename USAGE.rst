@@ -29,7 +29,7 @@ Scientific papers
 
 - Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806
 
-- Gale, M.G., Cary, G.J., van Dijk, A.I.J.M., Yebra,M., 2023. Untangling fuel, weather and management effects on fire severity: Insights from large-sample LiDAR remote sensing analysis of conditions preceding the 2019-20 Australian wildfires. Journal of Environmental Management, Volume 348, p.119474, ISSN 0301-4797. https://doi.org/10.1016/j.jenvman.2023.119474
+- Gale, M.G., Cary, G.J., van Dijk, A.I.J.M., Yebra, M., 2023. Untangling fuel, weather and management effects on fire severity: Insights from large-sample LiDAR remote sensing analysis of conditions preceding the 2019-20 Australian wildfires. Journal of Environmental Management, Volume 348, p.119474, ISSN 0301-4797. https://doi.org/10.1016/j.jenvman.2023.119474
 
 - Krause, C.E., Newey, V., Alger, M.J. and Lymburner, L., 2021. Mapping and monitoring the multi-decadal dynamics of Australia’s open waterbodies using Landsat. Remote Sensing, 13(8), p.1437.
 
