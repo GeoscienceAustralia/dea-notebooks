@@ -348,7 +348,7 @@ def test_subpixel_contours_dim(satellite_da):
     "method",
     ["linear", "cubic", "nearest", "rbf", "idw"],
 )
-def test_interpolate_2d(dem_da, points_gdf, method):
+def test_xr_interpolate(dem_da, points_gdf, method):
     # Run interpolation and verify that pixel grids are the same and
     # output contains data
     interpolated_ds = xr_interpolate(
