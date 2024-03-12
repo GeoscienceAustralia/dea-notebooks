@@ -168,4 +168,4 @@ questions
 `here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`__).
 If you would like to report an issue with this notebook, you can file
 one on
-`Github <https://github.com/GeoscienceAustralia/dea-notebooks/>`__.
+`GitHub <https://github.com/GeoscienceAustralia/dea-notebooks/>`__.
