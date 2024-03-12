@@ -696,7 +696,6 @@ def xr_interpolate(
 
     # Output dict
     correlation_outputs = {}
-    # correlation_outputs = []
 
     # For each numeric column, run interpolation
     for col, z_values in numeric_gdf.items():
