@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: September 2021
+Last modified: March 2024
 """
 
 import geopandas as gpd
@@ -26,9 +26,12 @@ from owslib.etree import etree
 import pandas as pd
 
 WFS_ADDRESS = "https://geoserver.dea.ga.gov.au/geoserver/wfs"
+LAYER_SELECT = {
+    "v2" : "DigitalEarthAustraliaWaterbodies_v2",
+    "v3" : "DigitalEarthAustraliaWaterbodies_v3"
+}
 
-
-def get_waterbody(geohash: str) -> gpd.GeoDataFrame:
+def get_waterbody(geohash: str, version: str = "v3") -> gpd.GeoDataFrame:
     """Gets a waterbody polygon and metadata by geohash.
     
     Parameters
@@ -45,7 +48,7 @@ def get_waterbody(geohash: str) -> gpd.GeoDataFrame:
     filter_ = PropertyIsEqualTo(propertyname="uid", literal=geohash)
     filterxml = etree.tostring(filter_.toXML()).decode("utf-8")
     response = wfs.getfeature(
-        typename="DigitalEarthAustraliaWaterbodies_v2",
+        typename=LAYER_SELECT[version],
         filter=filterxml,
         outputFormat="json",
     )
@@ -53,7 +56,7 @@ def get_waterbody(geohash: str) -> gpd.GeoDataFrame:
     return wb_gpd
 
 
-def get_waterbodies(bbox: tuple, crs="EPSG:4326") -> gpd.GeoDataFrame:
+def get_waterbodies(bbox: tuple, crs="EPSG:4326", version: str = "v3") -> gpd.GeoDataFrame:
     """Gets the polygons and metadata for multiple waterbodies by bbox.
     
     Parameters
@@ -70,7 +73,7 @@ def get_waterbodies(bbox: tuple, crs="EPSG:4326") -> gpd.GeoDataFrame:
     """
     wfs = WebFeatureService(url=WFS_ADDRESS, version="1.1.0")
     response = wfs.getfeature(
-        typename="DigitalEarthAustraliaWaterbodies_v2",
+        typename=LAYER_SELECT[version],
         bbox=tuple(bbox) + (crs,),
         outputFormat="json",
     )
@@ -78,7 +81,7 @@ def get_waterbodies(bbox: tuple, crs="EPSG:4326") -> gpd.GeoDataFrame:
     return wb_gpd
 
 
-def get_geohashes(bbox: tuple = None, crs: str = "EPSG:4326") -> [str]:
+def get_geohashes(bbox: tuple = None, crs: str = "EPSG:4326", version: str = "v3") -> [str]:
     """Gets all waterbody geohashes.
     
     Parameters
@@ -97,7 +100,7 @@ def get_geohashes(bbox: tuple = None, crs: str = "EPSG:4326") -> [str]:
     if bbox is not None:
         bbox = tuple(bbox) + (crs,)
     response = wfs.getfeature(
-        typename="DigitalEarthAustraliaWaterbodies_v2",
+        typename=LAYER_SELECT[version],
         propertyname="uid",
         outputFormat="json",
         bbox=bbox,
@@ -106,7 +109,7 @@ def get_geohashes(bbox: tuple = None, crs: str = "EPSG:4326") -> [str]:
     return list(wb_gpd["uid"])
 
 
-def get_time_series(geohash: str = None, waterbody: pd.Series = None) -> pd.DataFrame:
+def get_time_series(geohash: str = None, waterbody: pd.Series = None, version: str = "v3") -> pd.DataFrame:
     """Gets the time series for a waterbody. Specify either a GeoDataFrame row or a geohash.
     
     Parameters
@@ -127,7 +130,7 @@ def get_time_series(geohash: str = None, waterbody: pd.Series = None) -> pd.Data
         raise ValueError("One of waterbody and geohash must be specified")
 
     if geohash is not None:
-        wb = get_waterbody(geohash)
+        wb = get_waterbody(geohash, version)
         url = wb.timeseries[0]
     else:
         url = waterbody.timeseries
