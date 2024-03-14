@@ -646,10 +646,10 @@ def xr_interpolate(
     ds = add_geobox(ds, crs)
     y_dim, x_dim = ds.odc.spatial_dims
 
-    # Reproject to match input `ds`, and raise error if there are no overlaps
+    # Reproject to match input `ds`, and raise warning if there are no overlaps
     gdf = gdf.to_crs(ds.odc.crs)
     if not gdf.dissolve().intersects(ds.odc.geobox.extent.geom).item():
-        raise ValueError("The supplied `gdf` does not overlap spatially with `ds`.")
+        warnings.warn("The supplied `gdf` does not overlap spatially with `ds`.", stacklevel=2)
 
     # Select subset of numeric columns (non-numeric are not supported)
     numeric_gdf = gdf.select_dtypes("number")
