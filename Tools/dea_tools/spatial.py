@@ -601,7 +601,7 @@ def xr_interpolate(
         A dataset of spatial points including at least one numeric column.
         By default all numeric columns in this dataset will be spatially
         interpolated into the extent of `ds`; specific columns can be
-        selected using `columns`. An error will be raised if the points
+        selected using `columns`. An warning will be raised if the points
         in `gdf` do not overlap with the extent of `ds`.
     columns : list, optional
         An optional list of specific columns in gdf` to run the
