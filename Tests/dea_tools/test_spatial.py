@@ -417,8 +417,8 @@ def test_xr_interpolate(dem_da, points_gdf, method):
             k=5,
         )
 
-    # Verify that error is raised if `gdf` doesn't overlap with `ds`
-    with pytest.raises(ValueError):
+    # Verify that warning is raised if `gdf` doesn't overlap with `ds`
+    with pytest.warns():
         xr_interpolate(
             dem_da,
             gdf=points_gdf.set_crs("EPSG:3577", allow_override=True),
