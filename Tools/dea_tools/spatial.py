@@ -601,7 +601,7 @@ def xr_interpolate(
         A dataset of spatial points including at least one numeric column.
         By default all numeric columns in this dataset will be spatially
         interpolated into the extent of `ds`; specific columns can be
-        selected using `columns`. An error will be raised if the points
+        selected using `columns`. An warning will be raised if the points
         in `gdf` do not overlap with the extent of `ds`.
     columns : list, optional
         An optional list of specific columns in gdf` to run the
@@ -646,10 +646,10 @@ def xr_interpolate(
     ds = add_geobox(ds, crs)
     y_dim, x_dim = ds.odc.spatial_dims
 
-    # Reproject to match input `ds`, and raise error if there are no overlaps
+    # Reproject to match input `ds`, and raise warning if there are no overlaps
     gdf = gdf.to_crs(ds.odc.crs)
     if not gdf.dissolve().intersects(ds.odc.geobox.extent.geom).item():
-        raise ValueError("The supplied `gdf` does not overlap spatially with `ds`.")
+        warnings.warn("The supplied `gdf` does not overlap spatially with `ds`.", stacklevel=2)
 
     # Select subset of numeric columns (non-numeric are not supported)
     numeric_gdf = gdf.select_dtypes("number")
