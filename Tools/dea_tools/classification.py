@@ -474,11 +474,6 @@ def _get_training_data_for_shp(
 
     """    
          
-#     keep = ['num_points', \
-#     'dead', 'litter', \
-#     'crust', 'dist', 'rock', \
-#     'green', 'over_g','over_d', 'over_b', 'mid_g', 'mid_d', 'mid_b', \
-#     'dead', 'litter', 'crypto', 'unoccluded']
     # prevent function altering dictionary kwargs
     dc_query = deepcopy(dc_query)
 
@@ -501,14 +496,14 @@ def _get_training_data_for_shp(
         timestamp = {"time": (start_time, end_time)}
         # merge time query with user supplied query params
         dc_query.update(timestamp)
-
+        
     # Use input feature function
     data = feature_func(dc_query)
 
     # if no data is present then return
-
     if len(data) == 0:        
         return
+
 
     if gdf.iloc[[index]].geometry.geom_type.values != "Point":
         # If the geometry type is a polygon extract all pixels
@@ -534,11 +529,15 @@ def _get_training_data_for_shp(
 
     # append ID measurement to dataset for tracking failures
     band = [m for m in data.data_vars][0]
+    
     _id = xr.zeros_like(data[band])
 
     for col in keep_columns:
-        data[col] = row[col]
-
+        data[f'fractional_{col}'] = row[col]
+              
+    
+    data['datetime'] = (data['time'] - np.datetime64('1970-01-01T00:00:00')) // np.timedelta64(1, 'ns') 
+    data[time_field] = (row[time_field] - np.datetime64('1970-01-01T00:00:00')) // np.timedelta64(1, 'ns') 
     data["id"] = _id
     data["id"] = data["id"] + gdf.iloc[index]["id"]    
 
