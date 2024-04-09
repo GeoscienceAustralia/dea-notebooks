@@ -10,6 +10,7 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
    DEA_Sentinel2_Surface_Reflectance.ipynb
    DEA_Water_Observations.ipynb
    DEA_Fractional_Cover.ipynb
+   DEA_Intertidal.ipynb
    DEA_Land_Cover.ipynb
    DEA_High_and_Low_Tide_Imagery.ipynb
    DEA_Coastlines.ipynb
