@@ -26,11 +26,18 @@ done
 
 datacube product list
 
+# Index DEA Intertidal
+s3-to-dc 's3://dea-public-data/derivative/ga_s2ls_intertidal_cyear_3/1-0-0/x080/y127/2018--P1Y/*.json' --no-sign-request --skip-lineage --stac 'ga_s2ls_intertidal_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_s2ls_intertidal_cyear_3/1-0-0/x080/y127/2019--P1Y/*.json' --no-sign-request --skip-lineage --stac 'ga_s2ls_intertidal_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_s2ls_intertidal_cyear_3/1-0-0/x080/y127/2020--P1Y/*.json' --no-sign-request --skip-lineage --stac 'ga_s2ls_intertidal_cyear_3'
+
 # Index Mangroves
 s3-to-dc 's3://dea-public-data/derivative/ga_ls_mangrove_cover_cyear_3/3-0-0/x33/y39/*/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls_mangrove_cover_cyear_3'
 
-
 # Index GeoMAD
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x08/y27/2018--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x08/y27/2019--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x08/y27/2020--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
 s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
 s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_nbart_gm_cyear_3/3-0-0/x49/y23/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls7e_nbart_gm_cyear_3'
 s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_nbart_gm_cyear_3/3-0-0/x49/y24/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls7e_nbart_gm_cyear_3'
