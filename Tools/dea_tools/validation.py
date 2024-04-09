@@ -23,7 +23,6 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import r2_score
 from math import sqrt
 from scipy import stats
 
@@ -72,7 +71,7 @@ def eval_metrics(x, y, round=3, all_regress=False):
         "Correlation": xy_df.corr().iloc[0, 1],
         "RMSE": sqrt(mean_squared_error(xy_df.x, xy_df.y)),
         "MAE": mean_absolute_error(xy_df.x, xy_df.y),
-        "R-squared": r2_score(xy_df.x, xy_df.y),
+        "R-squared": lin_reg.rvalue**2,
         "Bias": (xy_df.y - xy_df.x).mean(),
         "Regression slope": lin_reg.slope,
     }
