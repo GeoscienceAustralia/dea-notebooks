@@ -18,11 +18,11 @@ Scalable Supervised Machine Learning on the Open Data Cube
 **Background**
 
 Classification of satellite images using supervised machine learning
-(ML) techniques has become a common occurence in the remote sensing
+(ML) techniques has become a common occurrence in the remote sensing
 literature. Machine learning offers an effective means for identifying
 complex land cover classes in a relatively efficient manner. However,
 sensibly implementing machine learning classifiers is not always
-straighforward owing to the training data requirements, the
+straightforward owing to the training data requirements, the
 computational requirements, and the challenge of sorting through a
 proliferating number of software libraries. Add to this the complexity
 of handling large volumes of satellite data and the task can become
@@ -36,7 +36,7 @@ two ways. Firstly, the critical steps in a ML workflow (in the context
 of the ODC) are broken down into discrete notebooks which are
 extensively documented. And secondly, a number of custom python
 functions have been written to ease the complexity of running ML on the
-ODC. These include (among others) ``collect_training_data``,  
+ODC. These include (among others) ``collect_training_data``,
 and ``predict_xr``, both of which are contained in the
 `dea\_tools.classification <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Tools/dea_tools/classification.py>`__
 package. These functions are introduced and explained further in the
@@ -48,7 +48,7 @@ workflow.
 
 1. ``1_Extract_training_data.ipynb`` explores how to extract training
    data (feature layers) from the ODC using geometries within a
-   shapefile (or geojson). The goal of this notebook is to familarise
+   shapefile (or geojson). The goal of this notebook is to familiarise
    users with the ``collect_training_data`` function so you can extract
    the appropriate data for your use-case.
 2. ``2_Inspect_training_data.ipynb``: After having extracted training data
@@ -101,16 +101,16 @@ before altering the notebooks for your specific use case.
    Remember, the first step of any scientific pursuit is to precisely
    define the problem.
 -  The word "**Scalable**\ " in the title *Scalable Supervised Machine Learning on the Open Data Cube*
-   refers to scalability within the contraints of the machine you're
+   refers to scalability within the constraints of the machine you're
    running. These notebooks rely on `dask <https://dask.org/>`__ (and
    `dask-ml <https://ml.dask.org/>`__) to manage memory and distribute
-   the computations across mulitple cores. However, the notebooks are
+   the computations across multiple cores. However, the notebooks are
    set up for the case of running on a single machine. For example, if
    your machine has 2 cores and 16 Gb of RAM (these are the specs on the
    default Sandbox), then you'll only be able to load and classify data
    up to that 16 Gb limit (and parallelization will be limited to 2
    cores). Access to larger machines is required to scale analyses to
-   very large areas. Its unlikley you'll be able to use these notebooks
+   very large areas. Its unlikely you'll be able to use these notebooks
    to classify satellite data at the country-level scale using laptop
    sized machines. To better understand how we use dask, have a look at
    the `dask
@@ -131,9 +131,9 @@ before altering the notebooks for your specific use case.
    provides a nice overview of machine learning in the context of remote
    sensing.
 -  The stand alone notebook,
-   `Machine\_learning\_with\_ODC <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/Frequently_used_code/Machine_learning_with_ODC.ipynb>`__,
+   `Machine\_learning\_with\_ODC <https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/How_to_guides/Machine_learning_with_ODC.ipynb>`__,
    in the ``Real_world_examples/`` folder is a companion piece to these
-   notebooks and provides a more succint (but less descriptive) version
+   notebooks and provides a more succinct (but less descriptive) version
    of the workflow demonstrated here.
 
 **Getting started**
@@ -142,8 +142,7 @@ To begin working through the notebooks in this ``Scalable Supervised Machine Lea
 
 .. toctree::
    :maxdepth: 1
-   :caption: Scalable Supervised Machine Learning on the Open Data Cube
-   
+
    1_Extract_training_data.ipynb
    2_Inspect_training_data.ipynb
    3_Evaluate_optimize_fit_classifier.ipynb
@@ -169,4 +168,4 @@ questions
 `here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`__).
 If you would like to report an issue with this notebook, you can file
 one on
-`Github <https://github.com/GeoscienceAustralia/dea-notebooks/>`__.
+`GitHub <https://github.com/GeoscienceAustralia/dea-notebooks/>`__.

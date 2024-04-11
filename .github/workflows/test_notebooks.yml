@@ -4,31 +4,50 @@ name: Test notebooks
 on:
   push:
     branches: [ develop, stable, nbtests ]
+    paths-ignore:
+      - '**/*.md' # ignore markdown files
+      - '**/*.rst' # ignore restructured text files
+      - '.github/**' # ignore anything in .github folder
+      - '!.github/workflows/test_notebooks.yml' # except test_notebooks.yml
   pull_request:
     branches: [ develop, stable ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.rst'
+      - '.github/**'
+      - '!.github/workflows/test_notebooks.yml'
+
+permissions:
+  id-token: write   # This is required for requesting the JSON web token
+  contents: read    # This is required for actions/checkout
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+      with:
+        path: dea-notebooks
 
-    - name: Set up containers
-      run: |
-        docker-compose up -d
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: arn:aws:iam::538673716275:role/github-actions-role-readonly
+        aws-region: ap-southeast-2
 
-    - name: Set up Datacube
+    - name: Copy tide modelling files with the AWS CLI
       run: |
-        docker-compose exec -T index setup_test_datacube.sh
-        docker-compose exec -T index datacube product list
+        aws s3 sync s3://dea-non-public-data/tide_models/tide_models/fes2014 tide_models/fes2014
+        aws s3 sync s3://dea-non-public-data/tide_models/tide_models/hamtide tide_models/hamtide
 
-    - name: Test with pytest
+    - name: Login to Amazon ECR Private
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Set up Datacube and test
       run: |
-        docker-compose exec -T sandbox pip install testbook
-        docker-compose exec -T sandbox mkdir /home/jovyan/dea-notebooks
-        docker-compose exec -T sandbox cp -r /dea-notebooks/.git /home/jovyan/.git
-        docker-compose exec -T sandbox cp -r /dea-notebooks/Tools /home/jovyan/Tools
-        docker-compose exec -T sandbox pip install --use-feature=in-tree-build /home/jovyan/Tools
-        docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest /dea-notebooks/Tests --ignore /dea-notebooks/Tests/Beginners_guide/07_Intro_to_numpy_test.py --ignore /dea-notebooks/Tests/Frequently_used_code/Animated_timeseries_test.py --ignore /dea-notebooks/Tests/Frequently_used_code/Contour_extraction_test.py --ignore /dea-notebooks/Tests/Frequently_used_code/Polygon_drill_test.py --ignore /dea-notebooks/Tests/Frequently_used_code/Tidal_modelling_test.py --ignore /dea-notebooks/Tests/Frequently_used_code/Rasterize_vectorize_test.py"
-        docker-compose exec -T sandbox bash "-c" "cd /home/jovyan/dea-notebooks; pytest /dea-notebooks/Tests/Frequently_used_code/Rasterize_vectorize_test.py"
-        docker-compose down
+        sudo chown -R 1000:100 ./dea-notebooks
+        cd ./dea-notebooks 
+        CURRENT_UID=1000:100 docker-compose up -d
+        docker-compose exec -T sandbox ./dea-notebooks/Tests/setup_test_datacube.sh
+        docker-compose exec -T sandbox ./dea-notebooks/Tests/test_notebooks.sh

@@ -1,7 +1,6 @@
 # dea_climate.py
 '''
-Description: A set of python functions to retrieve and manipulate 
-gridded climate data.
+Retrieving and manipulating gridded climate data.
 
 Adapted from scripts by Andrew Cherry and Brian Killough.
 
@@ -17,16 +16,9 @@ using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
 
 If you would like to report an issue with this script, you can file one on 
-Github https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/issues
+GitHub https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/issues
 
-Functions included:
-    get_era5_daily
-    era5_area_crop
-    era5_area_nearest
-    load_era5    
-    
 Last modified: October 2020
-
 '''
 
 import os
@@ -280,7 +272,7 @@ def era5_area_nearest(ds, lat, lon):
         ds = ds.reindex({ "lon": np.sort(ds.lon)})
         
     # find the nearest lat lon boundary points
-    test = ds.sel(lat=lat, lon=lon, method='nearest')
+    test = ds.sel(lat=list(lat), lon=list(lon), method='nearest')
     
     # define the lat/lon grid
     lat_range = slice(test.lat.max().values, test.lat.min().values)

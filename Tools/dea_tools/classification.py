@@ -1,11 +1,12 @@
 # classification.py
 """
-Description: This file contains a set of python functions for conducting
-machine learning classification on remote sensing data contained in an
-Open Data Cube instance.
+Machine learning classification tools for analysing remote sensing data
+using the Open Data Cube.
 
 License: The code in this notebook is licensed under the Apache License,
-Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
+license (https://creativecommons.org/licenses/by/4.0/).
 
 Contact: If you need assistance, please post a question on the Open Data
 Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
@@ -13,45 +14,45 @@ Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
 using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, you can file one on
-Github https://github.com/GeoscienceAustralia/dea-notebooks/issues
+If you would like to report an issue with this script, you can file one
+on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Last modified: May 2021
-
-
 """
+
 import os
 import sys
 import joblib
-import datacube
-import rasterio
 import numpy as np
 import pandas as pd
 import xarray as xr
 import time
-from tqdm.auto import tqdm
-import dask.array as da
+import warnings
+from datetime import timedelta
 import geopandas as gpd
 from copy import deepcopy
+from tqdm.auto import tqdm
 import multiprocessing as mp
-import dask.distributed as dd
 import matplotlib.pyplot as plt
+
+from typing import Callable, Tuple, Any, Optional, List, Dict
+
+import dask.array as da
+from dask_ml.wrappers import ParallelPostFit
+import dask.distributed as dd
+from dask.diagnostics import ProgressBar
+
 from sklearn.cluster import KMeans
 from sklearn.utils import check_random_state
 from abc import ABCMeta, abstractmethod
-from datacube.utils import geometry
 from sklearn.base import ClusterMixin
-from dask.diagnostics import ProgressBar
-from rasterio.features import rasterize
-from dask_ml.wrappers import ParallelPostFit
 from sklearn.mixture import GaussianMixture
-from datacube.utils.geometry import assign_crs
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.model_selection import BaseCrossValidator
 
-import warnings
-
+from datacube.utils.geometry import assign_crs
+from datacube.utils import geometry
 from dea_tools.spatial import xr_rasterize
 
 
@@ -184,7 +185,10 @@ def sklearn_unflatten(output_np, input_xr):
     output_xr = xr.DataArray(
         output_ma,
         coords={"z": stacked["z"]},
-        dims=["z", *["output_dim_" + str(idx) for idx in range(len(output_px_shape))]],
+        dims=[
+            "z",
+            *["output_dim_" + str(idx) for idx in range(len(output_px_shape))],
+        ],
     )
 
     output_xr = output_xr.unstack()
@@ -274,7 +278,9 @@ def predict_xr(
 
     # set chunk size if not supplied
     if chunk_size is None:
-        chunk_size = int(input_xr.chunks["x"][0]) * int(input_xr.chunks["y"][0])
+        chunk_size = int(input_xr.chunks["x"][0]) * int(
+            input_xr.chunks["y"][0]
+        )
 
     def _predict_func(model, input_xr, persist, proba, clean, return_input):
         x, y, crs = input_xr.x, input_xr.y, input_xr.geobox.crs
@@ -314,7 +320,9 @@ def predict_xr(
         out_class = out_class.reshape(len(y), len(x))
 
         # stack back into xarray
-        output_xr = xr.DataArray(out_class, coords={"x": x, "y": y}, dims=["y", "x"])
+        output_xr = xr.DataArray(
+            out_class, coords={"x": x, "y": y}, dims=["y", "x"]
+        )
 
         output_xr = output_xr.to_dataset(name="Predictions")
 
@@ -357,7 +365,10 @@ def predict_xr(
                 coords={"z": stacked["z"]},
                 dims=[
                     "z",
-                    *["output_dim_" + str(idx) for idx in range(len(output_px_shape))],
+                    *[
+                        "output_dim_" + str(idx)
+                        for idx in range(len(output_px_shape))
+                    ],
                 ],
             ).unstack()
 
@@ -369,7 +380,9 @@ def predict_xr(
             )
 
             # merge with predictions
-            output_xr = xr.merge([output_xr, output_features], compat="override")
+            output_xr = xr.merge(
+                [output_xr, output_features], compat="override"
+            )
 
         return assign_crs(output_xr, str(crs))
 
@@ -404,16 +417,18 @@ class HiddenPrints:
 
 
 def _get_training_data_for_shp(
-    gdf,
-    index,
-    row,
-    out_arrs,
-    out_vars,
-    dc_query,
-    return_coords,
-    feature_func=None,
-    field=None,
-    zonal_stats=None,
+    gdf: gpd.GeoDataFrame,
+    index: int,
+    row: gpd.GeoSeries,
+    out_arrs: List[np.ndarray],
+    out_vars: List[List[str]],
+    dc_query: Dict,
+    return_coords: bool,
+    feature_func: Optional[callable] = None,
+    field: Optional[str] = None,
+    zonal_stats: Optional[str] = None,
+    time_field: Optional[str] = None,
+    time_delta: Optional[timedelta] = None,
 ):
     """
     This is the core function that is triggered by `collect_training_data`.
@@ -424,11 +439,31 @@ def _get_training_data_for_shp(
 
     Parameters
     ----------
-    index, row : iterables inherited from geopandas object
-    out_arrs : list
+    gdf : gpd.GeoDataFrame
+        Geopandas GeoDataFrame containing geometries.
+    index : int
+        Index of the current geometry in the GeoDataFrame.
+    row : gpd.GeoSeries
+        GeoSeries representing the current row in the GeoDataFrame.
+    out_arrs : List[np.ndarray]
         An empty list into which the training data arrays are stored.
-    out_vars : list
-        An empty list into which the data varaible names are stored.
+    out_vars : List[List[str]]
+        An empty list into which the data variable names are stored.
+    dc_query : Dict
+        ODC query.
+    return_coords : bool
+        Flag indicating whether to return coordinates in the dataset.
+    feature_func : callable, optional
+        Optional function to extract data based on `dc_query`. Defaults to None.
+    field : str, optional
+        Name of the class field. Defaults to None.
+    zonal_stats : str, optional
+        Zonal statistics method. Defaults to None.
+    time_field : str, optional
+        Name of the column containing timestamp data in the input gdf. Defaults to None.
+    time_delta : timedelta, optional
+        Time delta used to match a data point with all the scenes falling between
+        `time_stamp - time_delta` and `time_stamp + time_delta`. Defaults to None.
 
 
     Returns
@@ -445,25 +480,39 @@ def _get_training_data_for_shp(
     # mulitprocessing for parallization
     if "dask_chunks" in dc_query.keys():
         dc_query.pop("dask_chunks", None)
-    
+
     # set up query based on polygon
     geom = geometry.Geometry(geom=gdf.iloc[index].geometry, crs=gdf.crs)
     q = {"geopolygon": geom}
-
     # merge polygon query with user supplied query params
     dc_query.update(q)
+
+    # Update time range if a time window is specified
+    if time_delta is not None:
+        timestamp = gdf.loc[index][time_field]
+        start_time = timestamp - time_delta
+        end_time = timestamp + time_delta
+        timestamp = {"time": (start_time, end_time)}
+        # merge time query with user supplied query params
+        dc_query.update(timestamp)
 
     # Use input feature function
     data = feature_func(dc_query)
 
-    # create polygon mask
-    mask = xr_rasterize(gdf.iloc[[index]], data)
-    data = data.where(mask)
+    # if no data is present then return
+    if len(data) == 0:
+        return
+
+    if gdf.iloc[[index]].geometry.geom_type.values != "Point":
+        # If the geometry type is a polygon extract all pixels
+        # create polygon mask
+        mask = xr_rasterize(gdf.iloc[[index]], data)
+        data = data.where(mask)
 
     # Check that feature_func has removed time
     if "time" in data.dims:
         t = data.dims["time"]
-        if t > 1:
+        if t > 1 and time_delta is not None:
             raise ValueError(
                 "After running the feature_func, the dataset still has "
                 + str(t)
@@ -506,8 +555,16 @@ def _get_training_data_for_shp(
 
 
 def _get_training_data_parallel(
-    gdf, dc_query, ncpus, return_coords, feature_func=None, field=None, zonal_stats=None
-):
+    gdf: gpd.GeoDataFrame,
+    dc_query: str,
+    ncpus: int,
+    return_coords: bool,
+    feature_func: Optional[Callable] = None,
+    field: Optional[str] = None,
+    zonal_stats: Optional[str] = None,
+    time_field: Optional[str] = None,
+    time_delta: Optional[int] = None,
+) -> Tuple[List[str], List[Any]]:
     """
     Function passing the '_get_training_data_for_shp' function
     to a mulitprocessing.Pool.
@@ -553,6 +610,8 @@ def _get_training_data_parallel(
                     feature_func,
                     field,
                     zonal_stats,
+                    time_field,
+                    time_delta,
                 ],
                 callback=update,
             )
@@ -565,20 +624,22 @@ def _get_training_data_parallel(
 
 
 def collect_training_data(
-    gdf,
-    dc_query,
-    ncpus=1,
-    return_coords=False,
-    feature_func=None,
-    field=None,
-    zonal_stats=None,
-    clean=True,
-    fail_threshold=0.02,
-    fail_ratio=0.5,
-    max_retries=3,
-):
+    gdf: gpd.GeoDataFrame,
+    dc_query: dict,
+    ncpus: int = 1,
+    return_coords: bool = False,
+    feature_func: callable = None,
+    field: str = None,
+    zonal_stats: str = None,
+    clean: bool = True,
+    fail_threshold: float = 0.02,
+    fail_ratio: float = 0.5,
+    max_retries: int = 3,
+    time_field: str = None,
+    time_delta: timedelta = None,
+) -> Tuple[List[np.ndarray], List[str]]:
     """
-    This function provides methods for gathering training data from the ODC over 
+    This function provides methods for gathering training data from the ODC over
     geometries stored within a geopandas geodataframe. The function will return a
     'model_input' array containing stacked training data arrays with all NaNs & Infs removed.
     In the instance where ncpus > 1, a parallel version of the function will be run
@@ -612,7 +673,6 @@ def collect_training_data(
                 ds = dc.load(**query)
                 ds = ds.mean('time')
                 return ds
-
     field : str
         Name of the column in the gdf that contains the class labels
     zonal_stats : string, optional
@@ -637,29 +697,35 @@ def collect_training_data(
     max_retries: int, default 3
         Maximum number of times to retry collecting samples. This number is invoked
         if the 'fail_threshold' is not reached.
+    time_field: str
+        The name of the attribute in the input dataframe containing capture timestamp
+    time_delta: time_delta
+        The size of the window used as timestamp +/- time_delta.
+        This is used to allow matching a single field data point with multiple scenes
 
     Returns
     --------
     Two lists, a list of numpy.arrays containing classes and extracted data for
     each pixel or polygon, and another containing the data variable names.
+
     """
 
     # check the dtype of the class field
-    if gdf[field].dtype != np.int:
+    if gdf[field].dtype != int:
         raise ValueError(
             'The "field" column of the input vector must contain integer dtypes'
         )
 
     # check for feature_func
     if feature_func is None:
-         raise ValueError(
+        raise ValueError(
             "Please supply a feature layer function through the "
-            +"parameter 'feature_func'"
+            + "parameter 'feature_func'"
         )
 
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
-    
+
     # add unique id to gdf to help with indexing failed rows
     # during multiprocessing
     # if zonal_stats is not None:
@@ -689,6 +755,8 @@ def collect_training_data(
                 feature_func,
                 field,
                 zonal_stats,
+                time_field,
+                time_delta,
             )
             i += 1
 
@@ -702,6 +770,8 @@ def collect_training_data(
             feature_func=feature_func,
             field=field,
             zonal_stats=zonal_stats,
+            time_field=time_field,
+            time_delta=time_delta,
         )
 
     # column names are appended during each iteration
@@ -718,7 +788,9 @@ def collect_training_data(
         i = 1
         while i <= max_retries:
             # Find % of fails (null values) in data. Use Pandas for simplicity
-            df = pd.DataFrame(data=model_input[:, 0:-1], index=model_input[:, -1])
+            df = pd.DataFrame(
+                data=model_input[:, 0:-1], index=model_input[:, -1]
+            )
             # how many nan values per id?
             num_nans = df.isnull().sum(axis=1)
             num_nans = num_nans.groupby(num_nans.index).sum()
@@ -743,7 +815,9 @@ def collect_training_data(
 
                 fail_ids = list(fail_ids.index)
                 # keep only the ids in model_input object that didn't fail
-                model_input = model_input[~np.isin(model_input[:, -1], fail_ids)]
+                model_input = model_input[
+                    ~np.isin(model_input[:, -1], fail_ids)
+                ]
 
                 # index out the fail_ids from the original gdf
                 gdf_rerun = gdf.loc[gdf["id"].isin(fail_ids)]
@@ -752,7 +826,10 @@ def collect_training_data(
                 time.sleep(5)  # sleep for 5s to rest api
 
                 # recollect failed rows
-                column_names_again, results_again = _get_training_data_parallel(
+                (
+                    column_names_again,
+                    results_again,
+                ) = _get_training_data_parallel(
                     gdf=gdf_rerun,
                     dc_query=dc_query,
                     ncpus=ncpus,
@@ -760,6 +837,8 @@ def collect_training_data(
                     feature_func=feature_func,
                     field=field,
                     zonal_stats=zonal_stats,
+                    time_field=time_field,
+                    time_delta=time_delta,
                 )
 
                 # Stack the extracted training data for each feature into a single array
@@ -814,7 +893,6 @@ class KMeans_tree(ClusterMixin):
     """
 
     def __init__(self, n_levels=2, n_clusters=3, **kwargs):
-
         assert n_levels >= 1
 
         self.base_model = KMeans(n_clusters=3, **kwargs)
@@ -823,7 +901,9 @@ class KMeans_tree(ClusterMixin):
         # make child models
         if n_levels > 1:
             self.branches = [
-                KMeans_tree(n_levels=n_levels - 1, n_clusters=n_clusters, **kwargs)
+                KMeans_tree(
+                    n_levels=n_levels - 1, n_clusters=n_clusters, **kwargs
+                )
                 for _ in range(n_clusters)
             ]
 
@@ -845,7 +925,9 @@ class KMeans_tree(ClusterMixin):
             observations are assigned equal weight (default: None)
         """
 
-        self.labels_ = self.base_model.fit(X, sample_weight=sample_weight).labels_
+        self.labels_ = self.base_model.fit(
+            X, sample_weight=sample_weight
+        ).labels_
 
         if self.n_levels > 1:
             labels_old = np.copy(self.labels_)
@@ -944,7 +1026,9 @@ def spatial_clusters(
         Index of the cluster each sample belongs to.
     """
     if method not in ["Hierarchical", "KMeans", "GMM"]:
-        raise ValueError("method must be one of: 'Hierarchical','KMeans' or 'GMM'")
+        raise ValueError(
+            "Method must be one of: 'Hierarchical','KMeans' or 'GMM'"
+        )
 
     if (method in ["GMM", "KMeans"]) & (n_groups is None):
         raise ValueError(
@@ -952,7 +1036,9 @@ def spatial_clusters(
         )
 
     if (method == "Hierarchical") & (max_distance is None):
-        raise ValueError("The 'Hierarchical' method requires setting max_distance")
+        raise ValueError(
+            "The 'Hierarchical' method requires setting max_distance"
+        )
 
     if method == "Hierarchical":
         cluster_label = AgglomerativeClustering(
@@ -963,12 +1049,14 @@ def spatial_clusters(
         ).fit_predict(coordinates)
 
     if method == "KMeans":
-        cluster_label = KMeans(n_clusters=n_groups, **kwargs).fit_predict(coordinates)
-
-    if method == "GMM":
-        cluster_label = GaussianMixture(n_components=n_groups, **kwargs).fit_predict(
+        cluster_label = KMeans(n_clusters=n_groups, **kwargs).fit_predict(
             coordinates
         )
+
+    if method == "GMM":
+        cluster_label = GaussianMixture(
+            n_components=n_groups, **kwargs
+        ).fit_predict(coordinates)
     if verbose:
         print("n clusters = " + str(len(np.unique(cluster_label))))
 
@@ -1298,7 +1386,6 @@ class _BaseSpatialCrossValidator(BaseCrossValidator, metaclass=ABCMeta):
         max_distance=None,
         n_splits=None,
     ):
-
         self.n_groups = n_groups
         self.coordinates = coordinates
         self.method = method
@@ -1522,8 +1609,12 @@ class _SpatialShuffleSplit(_BaseSpatialCrossValidator):
                 # pylint: disable=stop-iteration-return
                 train_clusters, test_clusters = next(shuffle)
                 # pylint: enable=stop-iteration-return
-                train_points = np.where(np.isin(labels, cluster_ids[train_clusters]))[0]
-                test_points = np.where(np.isin(labels, cluster_ids[test_clusters]))[0]
+                train_points = np.where(
+                    np.isin(labels, cluster_ids[train_clusters])
+                )[0]
+                test_points = np.where(
+                    np.isin(labels, cluster_ids[test_clusters])
+                )[0]
                 # The proportion of data points assigned to each group should
                 # be close the proportion of clusters assigned to each group.
                 balance.append(
@@ -1663,7 +1754,9 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
         if self.balance:
             cluster_sizes = [np.isin(labels, i).sum() for i in cluster_ids]
             try:
-                split_points = _partition_by_sum(cluster_sizes, parts=self.n_splits)
+                split_points = _partition_by_sum(
+                    cluster_sizes, parts=self.n_splits
+                )
                 folds = np.split(np.arange(cluster_ids.size), split_points)
             except ValueError:
                 warnings.warn(
@@ -1673,9 +1766,18 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
                     "the number of clusters may help.",
                     UserWarning,
                 )
-                folds = [i for _, i in KFold(n_splits=self.n_splits).split(cluster_ids)]
+                folds = [
+                    i
+                    for _, i in KFold(n_splits=self.n_splits).split(
+                        cluster_ids
+                    )
+                ]
         else:
-            folds = [i for _, i in KFold(n_splits=self.n_splits).split(cluster_ids)]
+            folds = [
+                i for _, i in KFold(n_splits=self.n_splits).split(cluster_ids)
+            ]
         for test_clusters in folds:
-            test_points = np.where(np.isin(labels, cluster_ids[test_clusters]))[0]
+            test_points = np.where(
+                np.isin(labels, cluster_ids[test_clusters])
+            )[0]
             yield test_points

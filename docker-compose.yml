@@ -2,7 +2,7 @@ version: "3.6"
 
 services:
   postgres:
-    image: postgres:11.5-alpine
+    image: postgres:13-alpine
     ports:
       - "5434:5432"
     environment:
@@ -14,7 +14,7 @@ services:
     restart: always
 
   sandbox:
-     image: geoscienceaustralia/sandbox:latest
+     image: 538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable
      environment:
        - DB_HOSTNAME=postgres
        - DB_USERNAME=postgres
@@ -24,23 +24,11 @@ services:
        - AWS_ACCESS_KEY_ID=fake_id
        - AWS_SECRET_ACCESS_KEY=fake_key
        - AWS_NO_SIGN_REQUEST=YES
+       - GDAL_HTTP_MAX_RETRY=3
      depends_on:
         - postgres
      entrypoint: bash -c 'sleep infinity'
+     user: ${CURRENT_UID}
      volumes:
-       - .:/dea-notebooks
-
-  index:
-     image: opendatacube/datacube-index:latest
-     environment:
-        - DB_HOSTNAME=postgres
-        - DB_USERNAME=postgres
-        - DB_PASSWORD=opendatacubepassword
-        - DB_DATABASE=postgres
-        - DB_PORT=5432
-        - AWS_DEFAULT_REGION=ap-southeast-2
-     volumes:
-        - ./Tests/setup_test_datacube.sh:/usr/local/bin/setup_test_datacube.sh
-     depends_on:
-        - postgres
-     entrypoint: bash -c 'sleep infinity'
+       - ${GITHUB_WORKSPACE}/dea-notebooks:/home/jovyan/dea-notebooks
+       - ${GITHUB_WORKSPACE}/tide_models:/var/share/tide_models

@@ -1,6 +1,7 @@
 '''
-Description: Functions for easily defining widgets for Digital Earth 
-Australia notebooks. These functions are directly modified from 
+Functions for defining widgets for interactive Digital Earth Australia notebooks. 
+
+These functions are directly modified from 
 originals developed by Digital Earth Africa: 
 https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/blob/main/Tools/deafrica_tools/app/widgetconstructors.py
 
@@ -16,9 +17,9 @@ the `open-data-cube` tag (you can view previously asked questions here:
 https://gis.stackexchange.com/questions/tagged/open-data-cube). 
 
 If you would like to report an issue with this script, you can file one 
-on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: January 2022
+Last modified: June 2022
 '''
 
 import ipyleaflet as leaflet

@@ -1,24 +1,22 @@
 # -*- coding: utf-8 -*-
 # Land_cover_plotting.py
 """
-Description: This file contains a set of python functions for plotting 
-Digital Earth Australia Land Cover data.
-License: The code in this notebook is licensed under the Apache License, 
-Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
-Australia data is licensed under the Creative Commons by Attribution 4.0 
+Plotting and animating Digital Earth Australia Land Cover data.
+
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
+
 Contact: If you need assistance, please post a question on the Open Data
-Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack 
-Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) 
-using the `open-data-cube` tag (you can view previously asked questions 
-here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
-If you would like to report an issue with this script, file one on 
-Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
-Functions included:
-    get_layer_name
-    lc_colourmap
-    plot_land_cover
-    lc_animation
+Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
+using the `open-data-cube` tag (you can view previously asked questions
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
+
+If you would like to report an issue with this script, you can file one
+on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+
 Last modified: January 2022
 """
 
@@ -273,12 +271,21 @@ def get_layer_name(measurement, da):
 
 def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
     """
-    Adds a new colorbar with appropriate land cover colours and labels
+    Adds a new colorbar with appropriate land cover colours and labels.
+
+    For DEA Land Cover Level 4 data, this function must be used with a double plot. 
+    The 'ax' should be on the left side of the figure, and the colour bar will added 
+    on the right hand side.
     
-    measurement = land cover measurement to use for colour map and lables
+    Parameters
+    ----------
+    fig : matplotlib figure
+        Figure to add colourbar to
+    ax : matplotlib ax
+        Matplotlib figure ax to add colorbar to.
+    measurement : str
+        Land cover measurement to use for colour map and labels. 
     
-    for level 4, must be used with a double plot, ax should be the left side canvas
-    the colour bar will go over thr right hand side.
     """
     # Create new axis object for colorbar
     # parameters for add_axes are [left, bottom, width, height], in
@@ -336,6 +343,7 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     """
     Returns colour map and normalisation for the provided DEA Land Cover
     measurement, for use in plotting with Matplotlib library
+    
     Parameters
     ----------
     colour_scheme : string
@@ -347,6 +355,7 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     colour_bar : bool, optional
         Controls if colour bar labels are returned as a list for 
         plotting a colour bar. Default: False.
+        
     Returns
     ---------
     cmap : matplotlib colormap
@@ -413,7 +422,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         all time slices are plotted.
     measurement : string, optional
         Name of the DEA land cover classification to be plotted. Passed to 
-        lc_colourmap to specify which colour scheme will ve used. If non 
+        lc_colourmap to specify which colour scheme will be used. If non 
         provided, reads data array name from `da` to determine.
     """
     # get measurement name
@@ -434,16 +443,24 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     scale = out_width / width
 
     if year:
+        #plotting protocall if 'year' variable is passed
         year_string = f"{year}-01-01"
         data = data.sel(time=year_string, method="nearest")
-
-    # plot all dates for the provided measurement
-    if len(data.dims) < 3:
+        
         fig, ax = plt.subplots()
         fig.set_size_inches(width * scale, height * scale)
         make_colorbar(fig, ax, measurement)
         im = ax.imshow(data, cmap=cmap, norm=norm, interpolation="nearest")
+
+    
+    elif len(data.time) == 1:
+        #plotting protocall if only one timestep is passed and not a year variable
+        fig, ax = plt.subplots()
+        fig.set_size_inches(width * scale, height * scale)
+        make_colorbar(fig, ax, measurement)
+        im = ax.imshow(data.isel(time=0), cmap=cmap, norm=norm, interpolation="nearest")
     else:
+        #plotting protocall if multible time steps are passed to plot
         if cols > len(data.time):
             cols = len(data.time)
         rows = int((len(data.time) + cols-1)/cols)
@@ -477,8 +494,9 @@ def lc_animation(
     Creates an animation of DEA Landcover though time beside 
     corresponding stacked plots of the landcover classes. Saves the
     animation to a file and displays the animation in notebook.
-    Inputs
-    -------
+    
+    Parameters
+    ----------
     da : xarray.DataArray
         An xarray.DataArray containing a multi-date stack of 
         observations of a single landcover level.
@@ -489,7 +507,7 @@ def lc_animation(
         Name of the DEA land cover classification to be plotted. Passed to 
         lc_colourmap to specify which colour scheme will ve used. If non 
         provided, reads data array name from `da` to determine.
-    Stacked_plot: boolean, optional
+    stacked_plot: boolean, optional
         Determines if a stacked plot showing the percentage of area
         taken up by each class in each time slice is added to the
         animation. Default: False.
@@ -500,7 +518,7 @@ def lc_animation(
     animation_interval : int , optional
         How quickly the frames of the animations should be re-drawn. 
         Default: 500.
-    Width_pixels : int, optional
+    width_pixels : int, optional
         How wide in pixles the animation plot should be. Default: 10.
     dpi : int, optional
         Stands for 'Dots Per Inch'. Passed to the fuction that saves the
@@ -513,9 +531,10 @@ def lc_animation(
     label_ax : boolean, optional
         Determines if animation plot should have tick marks and numbers
         on axes. Also removes white space around plot. default: True
+        
     Returns
-    ---------
-    A .gif file animation.
+    -------
+    A GIF (.gif) animation file.
     """
 
     def calc_class_ratio(da):

@@ -1,7 +1,6 @@
 ## dea_temporal.py
 '''
-Description: This file contains a set of python functions for conducting
-temporal (time-domain) analyses on Digital Earth Australia.
+Conducting temporal (time-domain) analyses on Digital Earth Australia.
 
 License: The code in this notebook is licensed under the Apache License,
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
@@ -15,21 +14,9 @@ using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, file one on
-Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
-
-Functions included:
-    allNaN_arg
-    fast_completion
-    smooth
-    phenology statistics
-    xr_phenology
-    temporal_statistics
-    time_buffer
-    calculate_vector_stat
-    calculate_sad
-    calculate_stsad
+GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
     
-Last modified: September 2021    
+Last modified: February 2023
 '''
 
 import sys
@@ -125,7 +112,7 @@ def _vsos(da, pos, method_sos="first"):
     # find where the first order slope is postive
     pos_green_deriv = green_deriv.where(green_deriv > 0)
     # positive slopes on greening side
-    pos_greenup = greenup.where(~xr.ufuncs.isnan(pos_green_deriv))
+    pos_greenup = greenup.where(~np.isnan(pos_green_deriv))
     # find the median
     median = pos_greenup.median("time")
     # distance of values from median
@@ -137,7 +124,7 @@ def _vsos(da, pos, method_sos="first"):
 
     if method_sos == "median":
         # find index (argmin) where distance is smallest absolute value
-        idx = allNaN_arg(xr.ufuncs.fabs(distance), "time", "min").astype("int16")
+        idx = allNaN_arg(np.fabs(distance), "time", "min").astype("int16")
 
     return pos_greenup.isel(time=idx)
 
@@ -167,7 +154,7 @@ def _veos(da, pos, method_eos="last"):
     # find the first order slopes
     senesce_deriv = senesce.differentiate("time")
     # find where the fst order slope is negative
-    neg_senesce_deriv = senesce_deriv.where(~xr.ufuncs.isnan(senesce_deriv < 0))
+    neg_senesce_deriv = senesce_deriv.where(~np.isnan(senesce_deriv < 0))
     # negative slopes on senescing side
     neg_senesce = senesce.where(neg_senesce_deriv)
     # find medians
@@ -181,7 +168,7 @@ def _veos(da, pos, method_eos="last"):
 
     if method_eos == "median":
         # index where median occurs
-        idx = allNaN_arg(xr.ufuncs.fabs(distance), "time", "min").astype("int16")
+        idx = allNaN_arg(np.fabs(distance), "time", "min").astype("int16")
 
     return neg_senesce.isel(time=idx)
 
@@ -246,7 +233,7 @@ def xr_phenology(
     xarray.DataArray containing a timeseries of a
     vegetation index like NDVI.
 
-    last modified June 2020
+    Last modified February 2023
 
     Parameters
     ----------
@@ -259,17 +246,17 @@ def xr_phenology(
         due to inter-dependencies between metrics.
         Options include:
 
-        * `SOS` = DOY of start of season
-        * `POS` = DOY of peak of season
-        * `EOS` = DOY of end of season
-        * `vSOS` = Value at start of season
-        * `vPOS` = Value at peak of season
-        * `vEOS` = Value at end of season
-        * `Trough` = Minimum value of season
-        * `LOS` = Length of season (DOY)
-        * `AOS` = Amplitude of season (in value units)
-        * `ROG` = Rate of greening
-        * `ROS` = Rate of senescence
+        * ``'SOS'``: DOY of start of season
+        * ``'POS'``: DOY of peak of season
+        * ``'EOS'``: DOY of end of season
+        * ``'vSOS'``: Value at start of season
+        * ``'vPOS'``: Value at peak of season
+        * ``'vEOS'``: Value at end of season
+        * ``'Trough'``: Minimum value of season
+        * ``'LOS'``: Length of season (DOY)
+        * ``'AOS'``: Amplitude of season (in value units)
+        * ``'ROG'``: Rate of greening
+        * ``'ROS'``: Rate of senescence
 
     method_sos : str
         If 'first' then vSOS is estimated as the first positive
@@ -411,29 +398,28 @@ def temporal_statistics(da, stats):
     This function uses the hdstats temporal library:
     https://github.com/daleroberts/hdstats/blob/master/hdstats/ts.pyx
 
-    last modified June 2020
+    Last modified June 2020
 
     Parameters
     ----------
     da :  xarray.DataArray
         DataArray should contain a 3D time series.
     stats : list
-        list of temporal statistics to calculate.
-        Options include:
+        List of temporal statistics to calculate. Options include:
 
-        * 'discordance' =
-        * 'f_std' = std of discrete fourier transform coefficients, returns
-            three layers: f_std_n1, f_std_n2, f_std_n3
-        * 'f_mean' = mean of discrete fourier transform coefficients, returns
-            three layers: f_mean_n1, f_mean_n2, f_mean_n3
-        * 'f_median' = median of discrete fourier transform coefficients, returns
-            three layers: f_median_n1, f_median_n2, f_median_n3
-        * 'mean_change' = mean of discrete difference along time dimension
-        * 'median_change' = median of discrete difference along time dimension
-        * 'abs_change' = mean of absolute discrete difference along time dimension
-        * 'complexity' =
-        * 'central_diff' =
-        * 'num_peaks' : The number of peaks in the timeseries, defined with a local
+        * ``'discordance'``: TODO
+        * ``'f_std'``: std of discrete fourier transform coefficients, returns 
+        three layers: f_std_n1, f_std_n2, f_std_n3
+        * ``'f_mean'``: mean of discrete fourier transform coefficients, returns 
+        three layers: f_mean_n1, f_mean_n2, f_mean_n3
+        * ``'f_median'``: median of discrete fourier transform coefficients, returns 
+        three layers: f_median_n1, f_median_n2, f_median_n3
+        * ``'mean_change'``: mean of discrete difference along time dimension
+        * ``'median_change'``: median of discrete difference along time dimension
+        * ``'abs_change'``: mean of absolute discrete difference along time dimension
+        * ``'complexity'``: TODO
+        * ``'central_diff'``: TODO
+        * ``'num_peaks'``: The number of peaks in the timeseries, defined with a local
             window of size 10.  NOTE: This statistic is very slow
 
     Returns
