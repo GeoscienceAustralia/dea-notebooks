@@ -16,19 +16,23 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
     
-Last modified: February 2023
+Last modified: May 2024
 '''
 
 import sys
 import dask
+import warnings
 import numpy as np
 import xarray as xr
 import pandas as pd
 import hdstats
 import scipy.signal
 from scipy.signal import wiener
+from scipy.stats import t
 from packaging import version
+
 from datacube.utils.geometry import assign_crs
+
 
 def allNaN_arg(da, dim, stat):
     """
@@ -711,6 +715,9 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
     Datasets can be provided in any order, but note that the regression slope and intercept will be calculated
     for y with respect to x.
 
+    NOTE: This function is deprecated and will be retired in a future
+    release. Please use `xr_regression` instead."
+
     Parameters
     ----------
     x, y : xarray DataArray
@@ -729,6 +736,13 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
         regression between the two datasets along their aligned first dimension.
 
     """
+    warnings.warn(
+        "This function is deprecated and will be retired in a future "
+        "release. Please use `xr_regression` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
     # 1. Ensure that the data are properly alinged to each other.
     x, y = xr.align(x, y)
 
@@ -775,6 +789,114 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
     pval = xr.DataArray(pval, dims=cor.dims, coords=cor.coords)
 
     return LinregressResult(cov, cor, slope, intercept, pval, stderr)
+
+
+def xr_regression(x, y, lag_x=0, lag_y=0, dim="time", alternative="two-sided"):
+    """
+    Takes two xr.Datarrays of any dimensions (input data could be a 1D
+    time series, or for example, have three dimensions e.g. time, lat,
+    lon), and returns covariance, correlation, coefficient of
+    determination, regression slope, intercept, p-value and standard
+    error, and number of valid observations (n) between the two datasets
+    along their aligned first dimension.
+
+    Datasets can be provided in any order, but note that the regression
+    slope and intercept will be calculated for y with respect to x.
+
+    Inspired by:
+    https://hrishichandanpurkar.blogspot.com/2017/09/vectorized-functions-for-correlation.html
+
+    Parameters
+    ----------
+    x, y : xarray DataArray
+        Two xarray DataArrays with any number of dimensions, both
+        sharing the same first dimension
+    lag_x, lag_y : int, optional
+        Optional integers giving lag values to assign to either of the
+        data, with lagx shifting x, and lagy shifting y with the
+        specified lag amount.
+    dim : str, optional
+        An optional string giving the name of the dimension on which to
+        align (and optionally lag) datasets. The default is 'time'.
+    alternative : string, optional
+        Defines the alternative hypothesis. Default is 'two-sided'.
+        The following options are available:
+
+        * 'two-sided': slope of the regression line is nonzero
+        * 'less': slope of the regression line is less than zero
+        * 'greater':  slope of the regression line is greater than zero
+
+    Returns
+    -------
+    regression_ds : xarray.Dataset
+        A dataset comparing the two input datasets along their aligned
+        dimension, containing variables including covariance, correlation,
+        coefficient of determination, regression slope, intercept,
+        p-value and standard error, and number of valid observations (n). 
+
+    """
+
+    # Shift x and y data if lags are specified
+    if lag_x != 0:
+        # If x lags y by 1, x must be shifted 1 step backwards. But as
+        # the 'zero-th' value is nonexistant, xarray assigns it as
+        # invalid (nan). Hence it needs to be dropped
+        x = x.shift(**{dim: -lag_x}).dropna(dim=dim)
+
+        # Next re-align the two datasets so that y adjusts to the
+        # changed coordinates of x
+        x, y = xr.align(x, y)
+
+    if lag_y != 0:
+        y = y.shift(**{dim: -lag_y}).dropna(dim=dim)
+
+    # Ensure that the data are properly aligned to each other.
+    x, y = xr.align(x, y)
+
+    # Compute data length, mean and standard deviation along dim
+    n = y.notnull().sum(dim=dim)
+    xmean = x.mean(dim=dim)
+    ymean = y.mean(dim=dim)
+    xstd = x.std(dim=dim)
+    ystd = y.std(dim=dim)
+
+    # Compute covariance, correlation and coefficient of determination
+    cov = ((x - xmean) * (y - ymean)).sum(dim=dim) / (n)
+    cor = cov / (xstd * ystd)
+    r2 = cor**2
+
+    # Compute regression slope and intercept
+    slope = cov / (xstd**2)
+    intercept = ymean - xmean * slope
+
+    # Compute t-statistics and standard error
+    tstats = cor * np.sqrt(n - 2) / np.sqrt(1 - cor**2)
+    stderr = slope / tstats
+
+    # Calculate p-values for different alternative hypotheses
+    if alternative == "two-sided":
+        pval = t.sf(np.abs(tstats), n - 2) * 2
+    elif alternative == "greater":
+        pval = t.sf(tstats, n - 2)
+    elif alternative == "less":
+        pval = t.cdf(np.abs(tstats), n - 2)
+
+    # Wrap output as xarray and combine into single dataset
+    pval = xr.DataArray(pval, dims=cor.dims, coords=cor.coords)
+    regression_ds = xr.merge(
+        [
+            cov.rename("cov"),
+            cor.rename("cor"),
+            r2.rename("r2"),
+            slope.rename("slope"),
+            intercept.rename("intercept"),
+            pval.rename("pvalue"),
+            stderr.rename("stderr"),
+            n.rename("n"),
+        ]
+    )
+
+    return regression_ds
 
 
 def calculate_sad(vec):
