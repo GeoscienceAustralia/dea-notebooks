@@ -921,14 +921,14 @@ def xr_regression(x, y, lag_x=0, lag_y=0, dim="time", alternative="two-sided"):
     # Combine into single dataset
     regression_ds = xr.merge(
         [
-            cov.rename("cov"),
-            cor.rename("cor"),
-            r2.rename("r2"),
-            slope.rename("slope"),
-            intercept.rename("intercept"),
-            pval.rename("pvalue"),
-            stderr.rename("stderr"),
-            n.rename("n"),
+            cov.rename("cov").astype(np.float32),
+            cor.rename("cor").astype(np.float32),
+            r2.rename("r2").astype(np.float32),
+            slope.rename("slope").astype(np.float32),
+            intercept.rename("intercept").astype(np.float32),
+            pval.rename("pvalue").astype(np.float32),
+            stderr.rename("stderr").astype(np.float32),
+            n.rename("n").astype(np.int16),
         ]
     )
 
