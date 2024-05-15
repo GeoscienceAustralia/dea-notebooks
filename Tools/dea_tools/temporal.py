@@ -844,8 +844,9 @@ def xr_regression(x, y, lag_x=0, lag_y=0, dim="time", alternative="two-sided"):
 
     def _pvalue(tstats, n, alternative):
         """
-        Function for lazily calculating p-values.
-        (without this, dask computation occurs too early)
+        Function for calculating p-values.
+        Can be made lazy by wrapping in `dask.delayed` to
+        avoid dask computation occuring too early.
         """
         if alternative == "two-sided":
             pval = t.sf(np.abs(tstats), n - 2) * 2
