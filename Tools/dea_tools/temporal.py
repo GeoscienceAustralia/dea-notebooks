@@ -800,12 +800,11 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
 
 def xr_regression(x, y, lag_x=0, lag_y=0, dim="time", alternative="two-sided"):
     """
-    Takes two xr.Datarrays of any dimensions (input data could be a 1D
-    time series, or for example, have three dimensions e.g. time, lat,
-    lon), and returns covariance, correlation, coefficient of
-    determination, regression slope, intercept, p-value and standard
-    error, and number of valid observations (n) between the two datasets
-    along their aligned first dimension.
+    Takes two multidimensional ``xr.Datarrays`` (e.g. a one-dimensional timeseries, 
+    or data with three dimensions e.g. time, lat, lon), and returns covariance, 
+    correlation, coefficient of determination, regression slope, intercept, 
+    p-value and standard error, and number of valid observations (n) between the
+    two datasets along their aligned first dimension.
 
     Datasets can be provided in any order, but note that the regression
     slope and intercept will be calculated for y with respect to x.
