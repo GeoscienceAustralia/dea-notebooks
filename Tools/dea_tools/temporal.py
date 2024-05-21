@@ -843,12 +843,11 @@ def xr_regression(
     outliers_y=None,
 ):
     """
-    Takes two xr.Datarrays of any dimensions (input data could be a 1D
-    time series, or for example, have three dimensions e.g. time, lat,
-    lon), and returns covariance, correlation, coefficient of
-    determination, regression slope, intercept, p-value and standard
-    error, and number of valid observations (n) between the two datasets
-    along their aligned first dimension.
+    Takes two multidimensional ``xr.Datarrays`` (e.g. a one-dimensional timeseries, 
+    or data with three dimensions e.g. time, lat, lon), and returns covariance, 
+    correlation, coefficient of determination, regression slope, intercept, 
+    p-value and standard error, and number of valid observations (n) between the
+    two datasets along their aligned first dimension.
 
     Datasets can be provided in any order, but note that the regression
     slope and intercept will be calculated for y with respect to x.
@@ -892,8 +891,9 @@ def xr_regression(
 
     def _pvalue(tstats, n, alternative):
         """
-        Function for lazily calculating p-values.
-        (without this, dask computation occurs too early)
+        Function for calculating p-values.
+        Can be made lazy by wrapping in `dask.delayed` to
+        avoid dask computation occuring too early.
         """
         if alternative == "two-sided":
             pval = t.sf(np.abs(tstats), n - 2) * 2
