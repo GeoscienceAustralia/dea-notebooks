@@ -807,9 +807,12 @@ def mad_outliers(da, dim="time", threshold=3.5):
     ----------
     da : xarray.DataArray)
         The input data array with dimensions time, x, y.
+    dim : str, optional
+        An optional string giving the name of the dimension on which to
+        apply the MAD calculation. The default is 'time'.
     threshold : float)
-        The number of MADs away from the median to consider a point an
-        outlier.
+        The number of MADs away from the median to consider an
+        observation an outlier.
 
     Returns
     -------
