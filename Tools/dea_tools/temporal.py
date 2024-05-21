@@ -798,7 +798,50 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
     return LinregressResult(cov, cor, slope, intercept, pval, stderr)
 
 
-def xr_regression(x, y, lag_x=0, lag_y=0, dim="time", alternative="two-sided"):
+def mad_outliers(da, dim="time", threshold=3.5):
+    """
+    Identify outliers along an xarray dimension using Median Absolute
+    Deviation (MAD).
+
+    Parameters
+    ----------
+    da : xarray.DataArray)
+        The input data array with dimensions time, x, y.
+    threshold : float)
+        The number of MADs away from the median to consider a point an
+        outlier.
+
+    Returns
+    -------
+    xarray.DataArray:
+        A boolean array with the same dimensions as input data, where
+        True indicates an outlier.
+    """
+    # Calculate the median along the time dimension
+    median = da.median(dim=dim)
+
+    # Calculate the absolute deviations from the median
+    abs_deviation = np.abs(da - median)
+
+    # Calculate MAD (median of absolute deviations)
+    mad = abs_deviation.median(dim=dim)
+
+    # Deviations greater than (threshold * MAD) are considered outliers
+    outliers = abs_deviation > (threshold * mad)
+
+    return outliers
+
+
+def xr_regression(
+    x,
+    y,
+    dim="time",
+    alternative="two-sided",
+    lag_x=0,
+    lag_y=0,
+    outliers_x=None,
+    outliers_y=None,
+):
     """
     Takes two xr.Datarrays of any dimensions (input data could be a 1D
     time series, or for example, have three dimensions e.g. time, lat,
@@ -818,20 +861,24 @@ def xr_regression(x, y, lag_x=0, lag_y=0, dim="time", alternative="two-sided"):
     x, y : xarray DataArray
         Two xarray DataArrays with any number of dimensions, both
         sharing the same first dimension
-    lag_x, lag_y : int, optional
-        Optional integers giving lag values to assign to either of the
-        data, with lagx shifting x, and lagy shifting y with the
-        specified lag amount.
     dim : str, optional
         An optional string giving the name of the dimension on which to
         align (and optionally lag) datasets. The default is 'time'.
     alternative : string, optional
         Defines the alternative hypothesis. Default is 'two-sided'.
         The following options are available:
-
         * 'two-sided': slope of the regression line is nonzero
         * 'less': slope of the regression line is less than zero
         * 'greater':  slope of the regression line is greater than zero
+    lag_x, lag_y : int, optional
+        Optional integers giving lag values to assign to either of the
+        data, with lagx shifting x, and lagy shifting y with the
+        specified lag amount.
+    outliers_x, outliers_y : bool or float, optional
+        Whether to mask out outliers in each input array prior to
+        regression calculation using MAD outlier detection. If True,
+        use a default threshold of 3.5 MAD to identify outliers. Custom
+        thresholds can be provided as a float.
 
     Returns
     -------
@@ -874,6 +921,17 @@ def xr_regression(x, y, lag_x=0, lag_y=0, dim="time", alternative="two-sided"):
     # Ensure that the data are properly aligned to each other.
     x, y = xr.align(x, y)
 
+    # Apply optional outlier masking to x and y variable
+    if outliers_y is not None:
+        mad_thresh_y = 3.5 if outliers_y is True else outliers_y
+        y_outliers = mad_outliers(y, dim=dim, threshold=mad_thresh_y)
+        y = y.where(~y_outliers)
+
+    if outliers_x is not None:
+        mad_thresh_x = 3.5 if outliers_x is True else outliers_x
+        x_outliers = mad_outliers(x, dim=dim, threshold=mad_thresh_x)
+        x = x.where(~x_outliers)
+
     # Compute data length, mean and standard deviation along dim
     n = y.notnull().sum(dim=dim)
     xmean = x.mean(dim=dim)
@@ -910,7 +968,7 @@ def xr_regression(x, y, lag_x=0, lag_y=0, dim="time", alternative="two-sided"):
             dims=cor.dims,
             coords=cor.coords,
         ).chunk(cor.chunksizes)
-    
+
     else:
         pval = xr.DataArray(
             _pvalue(tstats, n, alternative),
