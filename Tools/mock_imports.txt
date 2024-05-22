@@ -1,5 +1,5 @@
 # Mock Imports
-# All Python libraries used in the DEA Notebooks and DEA Tools must be added here; otherwise, pages that depend on the library may not display on the Knowledge Hub.
+# Whenever you add a new Python module dependency to the DEA Tools, you'll need to add it to this list; otherwise, the relevant DEA Tools page won't display on the Knowledge Hub.
 
 aiohttp
 boto3
