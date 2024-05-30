@@ -840,17 +840,16 @@ def xr_regression(
     y,
     dim="time",
     alternative="two-sided",
-    lag_x=0,
-    lag_y=0,
     outliers_x=None,
     outliers_y=None,
 ):
     """
-    Takes two multidimensional ``xr.Datarrays`` (e.g. a one-dimensional timeseries, 
-    or data with three dimensions e.g. time, lat, lon), and returns covariance, 
-    correlation, coefficient of determination, regression slope, intercept, 
-    p-value and standard error, and number of valid observations (n) between the
-    two datasets along their aligned first dimension.
+    Takes two multidimensional ``xr.Datarrays`` (e.g. a one-dimensional
+    timeseries, or data with three dimensions e.g. time, lat, lon), and
+    returns covariance, correlation, coefficient of determination,
+    regression slope, intercept, p-value and standard error, and number
+    of valid observations (n) between the two datasets along their
+    aligned first dimension.
 
     Datasets can be provided in any order, but note that the regression
     slope and intercept will be calculated for y with respect to x.
@@ -864,18 +863,14 @@ def xr_regression(
         Two xarray DataArrays with any number of dimensions, both
         sharing the same first dimension
     dim : str, optional
-        An optional string giving the name of the dimension on which to
-        align (and optionally lag) datasets. The default is 'time'.
+        An optional string giving the name of the dimension along which
+        to compare datasets. The default is 'time'.
     alternative : string, optional
         Defines the alternative hypothesis. Default is 'two-sided'.
         The following options are available:
         * 'two-sided': slope of the regression line is nonzero
         * 'less': slope of the regression line is less than zero
         * 'greater':  slope of the regression line is greater than zero
-    lag_x, lag_y : int, optional
-        Optional integers giving lag values to assign to either of the
-        data, with lagx shifting x, and lagy shifting y with the
-        specified lag amount.
     outliers_x, outliers_y : bool or float, optional
         Whether to mask out outliers in each input array prior to
         regression calculation using MAD outlier detection. If True,
@@ -906,23 +901,6 @@ def xr_regression(
             pval = t.cdf(np.abs(tstats), n - 2)
 
         return pval
-
-    # Shift x and y data if lags are specified
-    if lag_x != 0:
-        # If x lags y by 1, x must be shifted 1 step backwards. But as
-        # the 'zero-th' value is nonexistant, xarray assigns it as
-        # invalid (nan). Hence it needs to be dropped
-        x = x.shift(**{dim: -lag_x}).dropna(dim=dim)
-
-        # Next re-align the two datasets so that y adjusts to the
-        # changed coordinates of x
-        x, y = xr.align(x, y)
-
-    if lag_y != 0:
-        y = y.shift(**{dim: -lag_y}).dropna(dim=dim)
-
-    # Ensure that the data are properly aligned to each other.
-    x, y = xr.align(x, y)
 
     # Apply optional outlier masking to x and y variable
     if outliers_y is not None:
