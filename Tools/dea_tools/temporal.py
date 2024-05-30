@@ -845,12 +845,12 @@ def xr_regression(
 ):
     """
     Compare two multi-dimensional ``xr.Datarrays`` and calculate linear
-    least-squares regression along a dimension, returning slope, 
+    least-squares regression along a dimension, returning slope,
     intercept, p-value, standard error, covariance, correlation, and
     valid observation counts (n).
-    
-    Input arrays can have any number of dimensions, for example: a 
-    one-dimensional time series (dims: time), or three-dimensional data 
+
+    Input arrays can have any number of dimensions, for example: a
+    one-dimensional time series (dims: time), or three-dimensional data
     (dims: time, lat, lon). Regressions will be calculated for y with
     respect to x.
 
@@ -903,6 +903,15 @@ def xr_regression(
             pval = t.cdf(np.abs(tstats), n - 2)
 
         return pval
+
+    # Assert that "dim" is in both datasets
+    assert dim in y.dims, f"Array `y` does not contain dimension '{dim}'."
+    assert dim in x.dims, f"Array `x` does not contain dimension '{dim}'."
+
+    # Assert that both arrays have the same length along "dim"
+    assert len(x[dim]) == len(
+        y[dim]
+    ), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
 
     # Apply optional outlier masking to x and y variable
     if outliers_y is not None:
