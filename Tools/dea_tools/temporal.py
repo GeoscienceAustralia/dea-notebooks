@@ -844,24 +844,26 @@ def xr_regression(
     outliers_y=None,
 ):
     """
-    Takes two multidimensional ``xr.Datarrays`` (e.g. a one-dimensional
-    timeseries, or data with three dimensions e.g. time, lat, lon), and
-    returns covariance, correlation, coefficient of determination,
-    regression slope, intercept, p-value and standard error, and number
-    of valid observations (n) between the two datasets along their
-    aligned first dimension.
+    Compare two multi-dimensional ``xr.Datarrays`` and calculate linear
+    least-squares regression along a dimension, returning slope, 
+    intercept, p-value, standard error, covariance, correlation, and
+    valid observation counts (n).
+    
+    Input arrays can have any number of dimensions, for example: a 
+    one-dimensional time series (dims: time), or three-dimensional data 
+    (dims: time, lat, lon). Regressions will be calculated for y with
+    respect to x.
 
-    Datasets can be provided in any order, but note that the regression
-    slope and intercept will be calculated for y with respect to x.
-
-    Inspired by:
+    Results should be equivelent to one-dimensional regression performed
+    using `scipy.stats.linregress`. Implementation inspired by:
     https://hrishichandanpurkar.blogspot.com/2017/09/vectorized-functions-for-correlation.html
 
     Parameters
     ----------
     x, y : xarray DataArray
-        Two xarray DataArrays with any number of dimensions, both
-        sharing the same first dimension
+        Two xarray.DataArrays with any number of dimensions. Both arrays
+        should have the same length along the `dim` dimension. Regression
+        slope and intercept will be calculated for y with respect to x.
     dim : str, optional
         An optional string giving the name of the dimension along which
         to compare datasets. The default is 'time'.
