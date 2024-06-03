@@ -5,10 +5,10 @@ A recipe book of simple code examples demonstrating how to perform common geospa
 
 .. toctree::
    :maxdepth: 1
-   :caption: How to guides
 
    Analyse_multiple_polygons.ipynb
    Animated_timeseries.ipynb
+   ARD_overpass_predictor.ipynb
    Calculating_band_indices.ipynb
    Contour_extraction.ipynb
    Detecting_seasonality.ipynb

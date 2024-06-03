@@ -61,6 +61,7 @@ REQUIRED = [
     'rasterio',
     'rasterstats',
     'requests',
+    'rioxarray',
     'scikit-image',
     'scikit-learn',
     'scipy',

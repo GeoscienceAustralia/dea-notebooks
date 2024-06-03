@@ -8,7 +8,13 @@ import geopandas as gpd
 import datacube
 from datacube.utils.masking import mask_invalid_data
 
-from dea_tools.spatial import subpixel_contours, xr_vectorize, xr_rasterize
+from dea_tools.spatial import (
+    subpixel_contours,
+    xr_vectorize,
+    xr_rasterize,
+    xr_interpolate,
+)
+from dea_tools.validation import eval_metrics
 
 
 @pytest.fixture(
@@ -92,6 +98,19 @@ def categorical_da(request):
         da = da.odc.reproject(crs, resampling="nearest")
 
     return da
+
+
+# Test set of points covering the extent of `dem_da`
+@pytest.fixture()
+def points_gdf():
+    return gpd.GeoDataFrame(
+        data={"z": [400, 800, 900, 1100, 1200, 1500]},
+        geometry=gpd.points_from_xy(
+            x=[149.06, 149.06, 149.10, 149.16, 149.20, 149.20],
+            y=[-35.36, -35.22, -35.29, -35.29, -35.36, -35.22],
+            crs="EPSG:4326",
+        ),
+    )
 
 
 @pytest.mark.parametrize(
@@ -323,3 +342,96 @@ def test_subpixel_contours_dim(satellite_da):
 
 #     # Verify that no error is raised if we provide the correct CRS
 #     subpixel_contours(dem_da.drop_vars("spatial_ref"), z_values=700, crs="EPSG:4326")
+
+
+@pytest.mark.parametrize(
+    "method",
+    ["linear", "cubic", "nearest", "rbf", "idw"],
+)
+def test_xr_interpolate(dem_da, points_gdf, method):
+    # Run interpolation and verify that pixel grids are the same and
+    # output contains data
+    interpolated_ds = xr_interpolate(
+        dem_da,
+        gdf=points_gdf,
+        method=method,
+        k=5,
+    )
+    assert interpolated_ds.odc.geobox == dem_da.odc.geobox
+    assert "z" in interpolated_ds.data_vars
+    assert interpolated_ds["z"].notnull().sum() > 0
+
+    # Sample interpolated values at each point, and verify that
+    # interpolated z values match our input z values
+    xs = xr.DataArray(points_gdf.to_crs(dem_da.odc.crs).geometry.x, dims="z")
+    ys = xr.DataArray(points_gdf.to_crs(dem_da.odc.crs).geometry.y, dims="z")
+    sampled = interpolated_ds["z"].interp(x=xs, y=ys, method="nearest")
+    val_stats = eval_metrics(points_gdf.z, sampled)
+    assert val_stats.Correlation > 0.9
+    assert val_stats.MAE < 10
+
+    # Verify that a factor above 1 still returns expected results
+    interpolated_ds_factor10 = xr_interpolate(
+        dem_da,
+        gdf=points_gdf,
+        method=method,
+        k=5,
+        factor=10,
+    )
+    assert interpolated_ds_factor10.odc.geobox == dem_da.odc.geobox
+    assert "z" in interpolated_ds_factor10.data_vars
+    assert interpolated_ds_factor10["z"].notnull().sum() > 0
+
+    # Verify that multiple columns can be processed, and that output
+    # includes only numeric vars
+    points_gdf["num_var"] = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    points_gdf["obj_var"] = ["a", "b", "c", "d", "e", "f"]
+    interpolated_ds_cols = xr_interpolate(
+        dem_da,
+        gdf=points_gdf,
+        method=method,
+        k=5,
+    )
+    assert "z" in interpolated_ds_cols.data_vars
+    assert "num_var" in interpolated_ds_cols.data_vars
+    assert "obj_var" not in interpolated_ds_cols.data_vars
+
+    # Verify that specific columns can be selected
+    interpolated_ds_cols2 = xr_interpolate(
+        dem_da,
+        gdf=points_gdf,
+        columns=["num_var"],
+        method=method,
+        k=5,
+    )
+    assert "z" not in interpolated_ds_cols2.data_vars
+    assert "num_var" in interpolated_ds_cols2.data_vars
+
+    # Verify that error is raised if no numeric columns exist
+    with pytest.raises(ValueError):
+        xr_interpolate(
+            dem_da,
+            gdf=points_gdf,
+            columns=["obj_var"],
+            method=method,
+            k=5,
+        )
+
+    # Verify that warning is raised if `gdf` doesn't overlap with `ds`
+    with pytest.warns():
+        xr_interpolate(
+            dem_da,
+            gdf=points_gdf.set_crs("EPSG:3577", allow_override=True),
+            method=method,
+            k=5,
+        )
+
+    # If IDW method, verify that k will fail if greater than points
+    if method == "idw":
+        with pytest.raises(ValueError):
+            xr_interpolate(
+                dem_da,
+                gdf=points_gdf,
+                method=method,
+                k=10,
+            )

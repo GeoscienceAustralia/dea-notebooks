@@ -17,6 +17,8 @@ Scientific papers
 
 - Bishop-Taylor, R., Sagar, S., Lymburner, L., Alam, I. and Sixsmith, J., 2019. Sub-pixel waterline extraction: Characterising accuracy and sensitivity to indices and spectra. Remote Sensing, 11(24), p.2984. https://www.mdpi.com/2072-4292/11/24/2984
 
+- Chatzopoulos-Vouzoglanis, K., Reinke, K.J., Soto‐Berelov, M., Jones, S.D., 2024. Are fire intensity and burn severity associated? Advancing our understanding of FRP and NBR metrics from Himawari-8/9 and Sentinel-2, International Journal of Applied Earth Observation and Geoinformation, Volume 127, 2024, 103673, ISSN 1569-8432. https://doi.org/10.1016/j.jag.2024.103673
+
 - Chen, Y., Guerschman, J., Shendryk, Y., Henry, D., Harrison, M.T., 2021. Estimating Pasture Biomass Using Sentinel-2 Imagery and Machine Learning. Remote Sens. 2021, Vol. 13, Page 603 13, 603. https://doi.org/10.3390/RS13040603
 
 - Choo, J., Cherukuru, N., Lehmann, E., Paget, M., Mujahid, A., Martin, P. and Müller, M., 2022. Spatial and temporal dynamics of suspended sediment concentrations in coastal waters of the South China Sea, off Sarawak, Borneo: ocean colour remote sensing observations and analysis. Biogeosciences, 19(24), pp.5837-5857.
@@ -25,9 +27,13 @@ Scientific papers
 
 - Dunn, B., Ai, E., Alger, M.J., Fanson, B., Fickas, K.C., Krause, C.E., Lymburner, L., Nanson, R., Papas, P., Ronan, M., Thomas, R.F., 2023. Wetlands Insight Tool: Characterising the Surface Water and Vegetation Cover Dynamics of Individual Wetlands Using Multidecadal Landsat Satellite Data. Wetlands 43, 37. https://doi.org/10.1007/s13157-023-01682-7
 
-- Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806.
+- Dunn, B., Lymburner, L., Newey, V., Hicks, A. and Carey, H., 2019. Developing a Tool for Wetland Characterization Using Fractional Cover, Tasseled Cap Wetness And Water Observations From Space. IGARSS 2019 - 2019 IEEE International Geoscience and Remote Sensing Symposium, 2019, pp. 6095-6097. https://doi.org/10.1109/IGARSS.2019.8897806
+
+- Gale, M.G., Cary, G.J., van Dijk, A.I.J.M., Yebra, M., 2023. Untangling fuel, weather and management effects on fire severity: Insights from large-sample LiDAR remote sensing analysis of conditions preceding the 2019-20 Australian wildfires. Journal of Environmental Management, Volume 348, p.119474, ISSN 0301-4797. https://doi.org/10.1016/j.jenvman.2023.119474
 
 - Krause, C.E., Newey, V., Alger, M.J. and Lymburner, L., 2021. Mapping and monitoring the multi-decadal dynamics of Australia’s open waterbodies using Landsat. Remote Sensing, 13(8), p.1437.
+
+- Malan, N., Roughan, M., Hemming, M. et al. Quantifying coastal freshwater extremes during unprecedented rainfall using long timeseries multi-platform salinity observations. Nat Commun 15, 424 (2024). https://doi.org/10.1038/s41467-023-44398-2
 
 - Nanson, R., Bishop-Taylor, R., Sagar, S., Lymburner, L., (2022). Geomorphic insights into Australia's coastal change using a national dataset derived from the multi-decadal Landsat archive. Estuarine, Coastal and Shelf Science, 265, p.107712. Available: https://doi.org/10.1016/j.ecss.2021.107712
 
@@ -55,6 +61,8 @@ Conferences
 
 Courses and training
 --------------------
+- University of New England, 2023. `GISC436 : Remote Sensing and Image analysis <https://www.une.edu.au/study/units/remote-sensing-and-image-analysis-gisc436/>`_
+- Swinburne University of Technology, Space Technology and Industry Institute, 2023. `Earth Observation and Data Analysis Short Course <https://www.swinburne.edu.au/events/2023/10/earth-observation-data-analysis-short-course/>`_
 - Australian National University, Centre for Water and Landscape Dynamics `(WALD) <http://wald.anu.edu.au/>`_ under contract for `Geoscience Australia <https://www.ga.gov.au/>`_, 2022.  `Digital Earth Australia for Geospatial Analysts <https://anu-wald.github.io/dea_course/about/>`_. Materials available under Apache 2.0 Licence `here <https://github.com/ANU-WALD/dea_course>`_ and link to github repository: https://github.com/ANU-WALD/dea_training 
 - Flinders University, 2021, 2022. Remote Sensing for All Disciplines. Undergrad and postgrad course.
 - University of Newcastle, 2021. Advanced Remote Sensing Data and Applications. Graduate Certificate in Spatial Science.

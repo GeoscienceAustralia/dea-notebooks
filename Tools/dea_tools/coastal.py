@@ -14,9 +14,9 @@ the `open-data-cube` tag (you can view previously asked questions here:
 https://gis.stackexchange.com/questions/tagged/open-data-cube). 
 
 If you would like to report an issue with this script, you can file one 
-on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: September 2023
+Last modified: November 2023
 
 """
 
@@ -166,7 +166,7 @@ def get_coastlines(
 
     For a full description of the DEA Coastlines dataset, refer to the
     official Geoscience Australia product description:
-    https://cmi.ga.gov.au/data-products/dea/581/dea-coastlines
+    /data/product/dea-coastlines
 
     Parameters
     ----------
@@ -713,6 +713,84 @@ def model_tides(
     return tide_df
 
 
+def _pixel_tides_resample(
+    tides_lowres,
+    ds,
+    resample_method="bilinear",
+    dask_chunks="auto",
+    dask_compute=True,
+):
+    """
+    Resamples low resolution tides modelled by `pixel_tides` into the
+    geobox (e.g. spatial resolution and extent) of the original higher
+    resolution satellite dataset.
+
+    Parameters:
+    -----------
+    tides_lowres : xarray.DataArray
+        The low resolution tide modelling data array to be resampled.
+    ds : xarray.Dataset
+        The dataset whose geobox will be used as the template for the
+        resampling operation. This is typically the same satellite
+        dataset originally passed to `pixel_tides`.
+    resample_method : string, optional
+        The resampling method to use. Defaults to "bilinear"; valid
+        options include "nearest", "cubic", "min", "max", "average" etc.
+    dask_chunks : str or tuple, optional
+        Can be used to configure custom Dask chunking for the final
+        resampling step. The default of "auto" will automatically set
+        x/y chunks to match those in `ds` if they exist, otherwise will
+        set x/y chunks that cover the entire extent of the dataset.
+        For custom chunks, provide a tuple in the form `(y, x)`, e.g.
+        `(2048, 2048)`.
+    dask_compute : bool, optional
+        Whether to compute results of the resampling step using Dask.
+        If False, this will return `tides_highres` as a Dask array.
+
+    Returns:
+    --------
+    tides_highres, tides_lowres : tuple of xr.DataArrays
+        In addition to `tides_lowres` (see above), a high resolution
+        array of tide heights will be generated matching the
+        exact spatial resolution and extent of `ds`.
+    """
+    # Determine spatial dimensions
+    y_dim, x_dim = ds.odc.spatial_dims
+    
+    # Convert array to Dask, using no chunking along y and x dims,
+    # and a single chunk for each timestep/quantile and tide model
+    tides_lowres_dask = tides_lowres.chunk(
+        {d: None if d in [y_dim, x_dim] else 1 for d in tides_lowres.dims}
+    )
+
+    # Automatically set Dask chunks for reprojection if set to "auto".
+    # This will either use x/y chunks if they exist in `ds`, else
+    # will cover the entire x and y dims) so we don't end up with
+    # hundreds of tiny x and y chunks due to the small size of
+    # `tides_lowres` (possible odc.geo bug?)
+    if dask_chunks == "auto":
+        if ds.chunks is not None:
+            if (y_dim in ds.chunks) & (x_dim in ds.chunks):
+                dask_chunks = (ds.chunks[y_dim], ds.chunks[x_dim])
+            else:
+                dask_chunks = ds.odc.geobox.shape
+        else:
+            dask_chunks = ds.odc.geobox.shape
+
+    # Reproject into the GeoBox of `ds` using odc.geo and Dask
+    tides_highres = tides_lowres_dask.odc.reproject(
+        how=ds.odc.geobox,
+        chunks=dask_chunks,
+        resampling=resample_method,
+    ).rename("tide_m")
+
+    # Optionally process and load into memory with Dask
+    if dask_compute:
+        tides_highres.load()
+
+    return tides_highres, tides_lowres
+
+
 def pixel_tides(
     ds,
     times=None,
@@ -986,34 +1064,9 @@ def pixel_tides(
     # Reproject into original high resolution grid
     if resample:
         print("Reprojecting tides into original array")
-        # Convert array to Dask, using no chunking along y and x dims,
-        # and a single chunk for each timestep/quantile and tide model
-        tides_lowres_dask = tides_lowres.chunk(
-            {d: None if d in [y_dim, x_dim] else 1 for d in tides_lowres.dims}
+        tides_highres, tides_lowres = _pixel_tides_resample(
+            tides_lowres, ds, resample_method, dask_chunks, dask_compute
         )
-
-        # Automatically set Dask chunks for reprojection if set to "auto".
-        # This will either use x/y chunks if they exist in `ds`, else
-        # will cover the entire x and y dims) so we don't end up with
-        # hundreds of tiny x and y chunks due to the small size of
-        # `tides_lowres` (possible odc.geo bug?)
-        if dask_chunks == "auto":
-            if (y_dim in ds.chunks) & (x_dim in ds.chunks):
-                dask_chunks = (ds.chunks[y_dim], ds.chunks[x_dim])
-            else:
-                dask_chunks = ds.odc.geobox.shape
-
-        # Reproject into the GeoBox of `ds` using odc.geo and Dask
-        tides_highres = tides_lowres_dask.odc.reproject(
-            how=ds.odc.geobox,
-            chunks=dask_chunks,
-            resampling=resample_method,
-        ).rename("tide_m")
-
-        # Optionally process and load into memory with Dask
-        if dask_compute:
-            tides_highres.load()
-
         return tides_highres, tides_lowres
 
     else:
