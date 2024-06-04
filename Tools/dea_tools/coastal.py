@@ -608,7 +608,6 @@ def model_tides(
         "FES2014",
         "TPXO9-atlas-v5",
         "TPXO8-atlas",
-        "TPXO8-atlas-v1",
         "EOT20",
         "HAMTIDE11",
         "GOT4.10",
