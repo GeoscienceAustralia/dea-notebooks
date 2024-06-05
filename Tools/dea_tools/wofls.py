@@ -78,7 +78,7 @@ def woffles_usgs_c2(c2, dsm, dsm_no_data=-1000, ignore_dsm_no_data=False):
             dsm,
             c2.rename({"nbart_blue": "blue"}),
             no_data=dsm_no_data,
-            ignore_dsm_no_data=ignore_dsm_no_data
+            #ignore_dsm_no_data=ignore_dsm_no_data
         )
 
     _fix_nodata_to_single_value(water)
