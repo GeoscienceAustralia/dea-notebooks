@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: March 2024
+Last modified: June 2024
 
 """
 
@@ -565,6 +565,104 @@ def subpixel_contours(
         contours_gdf.to_file(filename=output_path)
 
     return contours_gdf
+
+
+def idw(input_z, input_x, input_y, output_x, output_y, k=10, epsilon=1e-12):
+    """
+    Perform Inverse Distance Weighting (IDW) interpolation.
+
+    This function performs fast IDW interpolation by creating a KDTree
+    from the input coordinates then uses it to find the `k` nearest
+    neighbors for each output point. Weights are calculated based on the
+    inverse distance to each neighbor, and used to compute the
+    interpolated values.
+
+    Parameters
+    ----------
+    input_z : array-like
+        Array of values at the input points.
+    input_x : array-like
+        Array of x-coordinates of the input points.
+    input_y : array-like
+        Array of y-coordinates of the input points.
+    output_x : array-like
+        Array of x-coordinates where the interpolation is to be computed.
+    output_y : array-like
+        Array of y-coordinates where the interpolation is to be computed.
+    k : int, optional
+        Number of nearest neighbors to use for interpolation (default is
+        10). `k=1` is equivalent to "nearest" neighbour interpolation.
+    epsilon : float, optional
+        Small value added to distances to prevent division by zero
+        errors in the case that output coordinates are identical to
+        input coordinates (default is 1e-12).
+
+    Returns
+    -------
+    interp_1d : numpy.ndarray
+        Interpolated values at the output coordinates, returned as an
+        array of the same length as `output_x` and `output_y`.
+
+    Examples
+    --------
+    >>> input_z = [1, 2, 3, 4, 5]
+    >>> input_x = [0, 1, 2, 3, 4]
+    >>> input_y = [0, 1, 2, 3, 4]
+    >>> output_x = [0.5, 1.5, 2.5]
+    >>> output_y = [0.5, 1.5, 2.5]
+    >>> idw(input_z, input_x, input_y, output_x, output_y, k=2)
+    array([1.5, 2.5, 3.5])
+
+    """
+
+    # Convert to numpy arrays
+    input_x = np.atleast_1d(input_x)
+    input_y = np.atleast_1d(input_y)
+    input_z = np.atleast_1d(input_z)
+    output_x = np.atleast_1d(output_x)
+    output_y = np.atleast_1d(output_y)
+
+    # Verify input and outputs have matching lengths
+    if len(input_z) != len(input_x) != len(input_y):
+        raise ValueError(
+            f"All of `input_z`, `input_x` and `input_y` must be the same length."
+        )
+    if len(output_x) != len(output_y):
+        raise ValueError(f"Both `output_x` and `output_y` must be the same length.")
+
+    # Verify k is smaller than total number of points, and non-zero
+    if k > len(input_z):
+        raise ValueError(
+            f"The requested number of nearest neighbours (`k={k}`) "
+            f"is smaller than the total number of points ({len(input_z)})."
+        )
+    elif k == 0:
+        raise ValueError(
+            f"Interpolation based on `k=0` nearest neighbours is not supported."
+        )
+
+    # Create KDTree to efficiently find nearest neighbours
+    points_xy = np.vstack([input_x, input_y]).T
+    tree = KDTree(points_xy)
+
+    # IWD interpolation
+    grid_stacked = np.column_stack((output_x, output_y))
+    distances, indices = tree.query(grid_stacked, k=k)
+
+    # Add small epsilon to distances to prevent division by zero errors
+    # if output coordinates are the same as input coordinates
+    distances = np.maximum(distances, epsilon)
+
+    # Calculate weights based on distance to k nearest neighbours.
+    # If k == 1, then return the nearest value unweighted.
+    if k > 1:
+        weights = 1 / distances
+        weights = weights / weights.sum(axis=1).reshape(-1, 1)
+        interp_1d = (weights * input_z[indices]).sum(axis=1)
+    else:
+        interp_1d = input_z[indices]
+
+    return interp_1d
 
 
 def xr_interpolate(
