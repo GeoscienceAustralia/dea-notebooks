@@ -677,8 +677,8 @@ def test_pixel_tides_ensemble(satellite_ds):
     max_vals = modelled_tides_ds.sel(tide_model=["FES2014", "HAMTIDE11"]).max(
         "tide_model"
     )
-    assert (modelled_tides_ds.sel(tide_model=["ensemble"]) >= min_vals).all()
-    assert (modelled_tides_ds.sel(tide_model=["ensemble"]) <= max_vals).all()
+    assert (modelled_tides_ds.sel(tide_model="ensemble") >= min_vals).all().item()
+    assert (modelled_tides_ds.sel(tide_model="ensemble") <= max_vals).all().item()
 
     # Model tides using `pixel_tides` and custom ensemble funcs
     ensemble_funcs = {
