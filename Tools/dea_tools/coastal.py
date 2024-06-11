@@ -601,10 +601,9 @@ def model_tides(
     """
     Compute tides at multiple points and times using tidal harmonics.
 
-    This function supports any tidal model supported by
-    `pyTMD`, including the FES2014 Finite Element Solution
-    tide model, and the TPXO8-atlas and TPXO9-atlas-v5
-    TOPEX/POSEIDON global tide models.
+    This function supports any tidal model supported by `pyTMD`,
+    includingthe FES2014 Finite Element Solution model, TPXO8-atlas and
+    TPXO9-atlas-v5 TOPEX/POSEIDON models, EOT20, GOT4.10c and HAMTIDE.
 
     This function requires access to tide model data files.
     These should be placed in a folder with subfolders matching
@@ -672,7 +671,7 @@ def model_tides(
         Input coordinate reference system for x and y coordinates.
         Defaults to "EPSG:4326" (WGS84; degrees latitude, longitude).
     method : string, optional
-        Method used to interpolate tidal contsituents
+        Method used to interpolate tidal constituents
         from model files. Options include:
         - "spline": scipy bivariate spline interpolation (default)
         - "bilinear": quick bilinear interpolation
@@ -719,9 +718,10 @@ def model_tides(
         columns), or wide format (with a column for each tide model).
         Defaults to "long".
     ensemble_models : list, optional
-        An optional list of models to use as inputs if "ensemble" tide
-        modelling is requested. Defaults to ["FES2014", "TPXO9-atlas-v5",
-        "EOT20", "HAMTIDE11", "GOT4.10", "FES2012", "TPXO8-atlas-v1"].
+        An optional list of models used to generate the ensemble tide
+        model if "ensemble" tide modelling is requested. Defaults to 
+        ["FES2014", "TPXO9-atlas-v5", "EOT20", "HAMTIDE11", "GOT4.10",
+        "FES2012", "TPXO8-atlas-v1"].
     **ensemble_kwargs :
         Keyword arguments used to customise the generation of optional
         ensemble tide models if "ensemble" modelling are requested.
