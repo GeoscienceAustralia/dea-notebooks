@@ -599,9 +599,11 @@ def model_tides(
     """
     Compute tides at multiple points and times using tidal harmonics.
 
-    This function supports any tidal model supported by `pyTMD`,
-    includingthe FES2014 Finite Element Solution model, TPXO8-atlas and
-    TPXO9-atlas-v5 TOPEX/POSEIDON models, EOT20, GOT4.10c and HAMTIDE.
+    This function supports all tidal models supported by `pyTMD`,
+    including FES Finite Element Solution models, TPXO TOPEX/POSEIDON
+    models, EOT Empirical Ocean Tide models, GOT Global Ocean Tide
+    models, and HAMTIDE Hamburg direct data Assimilation Methods for
+    Tides models.
 
     This function requires access to tide model data files.
     These should be placed in a folder with subfolders matching
