@@ -335,6 +335,24 @@ def test_model_tides_ensemble():
     assert modelled_tides_df.index.names == ["time", "x", "y"]
     assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
     assert set(modelled_tides_df.tide_model) == set(models)
+    assert np.allclose(
+        modelled_tides_df.tide_m,
+        [
+            -2.819,
+            -1.850,
+            -0.215,
+            0.037,
+            -2.623,
+            -1.803,
+            0.073,
+            -0.069,
+            -2.721,
+            -1.826,
+            -0.071,
+            -0.0158,
+        ],
+        rtol=0.02,
+    )
 
     # One-to-one mode
     modelled_tides_df = model_tides(
@@ -659,12 +677,15 @@ def test_pixel_tides_ensemble(satellite_ds):
 
     assert modelled_tides_ds.tide_model == "ensemble"
 
-    # Model tides using `pixel_tides` and multiple models including ensemble
+    # Model tides using `pixel_tides` and multiple models including
+    # ensemble and custom IDW params
     models = ["FES2014", "HAMTIDE11", "ensemble"]
     modelled_tides_ds, _ = pixel_tides(
         satellite_ds,
         model=models,
         ensemble_models=ENSEMBLE_MODELS,
+        k=10, 
+        max_dist=20000,
     )
 
     assert "tide_model" in modelled_tides_ds.dims

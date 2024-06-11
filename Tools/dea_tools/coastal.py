@@ -420,9 +420,9 @@ def _ensemble_model(
     ensemble_models,
     ensemble_func=None,
     ensemble_top_n=3,
-    idw_k=10,
     ranking_points="https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/derivative/dea_intertidal/supplementary/tide_correlations_2017-2019.geojson",
     ranking_valid_perc=0.02,
+    **idw_kwargs,
 ):
     """
     Combine multiple tide models into a single locally optimised
@@ -469,9 +469,6 @@ def _ensemble_model(
     ensemble_top_n : int, optional
         If `ensemble_func` is None, this sets the number of top models
         to include in the mean ensemble calculation. Defaults to 3.
-    idw_k : int, optional
-        Number of nearest neighbors to interpolate model ranks using
-        Inverse Weighted Interpolation. Defaults to 10.
     ranking_points : str, optional
         Path to the GeoJSON file containing model ranking points. This
         dataset should include columns containing rankings for each tide
@@ -481,6 +478,12 @@ def _ensemble_model(
         Minimum percentage of valid data required to include a model
         rank point in the analysis, as defined in a column named
         "valid_perc". Defaults to 0.02.
+    **idw_kwargs
+        Optional keyword arguments to pass to the `idw` function used
+        for interpolation. Useful values include `k` (number of nearest
+        neighbours to use in interpolation), `max_dist` (maximum
+        distance to nearest neighbours), and `k_min` (minimum number of
+        neighbours required after `max_dist` is applied).
 
     Returns
     -------
@@ -499,28 +502,25 @@ def _ensemble_model(
     model_ranks_gdf = (
         gpd.read_file(ranking_points)
         .to_crs(crs)
-        .query(f"valid_perc > {ranking_valid_perc}").dropna()[
-            model_ranking_cols + ["geometry"]
-        ]
+        .query(f"valid_perc > {ranking_valid_perc}")
+        .dropna()[model_ranking_cols + ["geometry"]]
     )
 
     # Use points to interpolate model rankings into requested x and y
-    print(f"Interpolating model rankings using IDW (k={idw_k}) interpolation")
+    id_kwargs_str = "" if idw_kwargs == {} else idw_kwargs
+    print(f"Interpolating model rankings using IDW interpolation {id_kwargs_str}")
     ensemble_ranks_df = (
-        # Select subset of rank columns
-        model_ranks_gdf[model_ranking_cols]
-        # For each rank column, interpolate to new points using IDW and
-        # assign x and y coordinates as new columns
-        .apply(
-            lambda z: idw(
-                input_z=z,
+        # Run IDW interpolation on subset of ranking columns
+        pd.DataFrame(
+            idw(
+                input_z=model_ranks_gdf[model_ranking_cols],
                 input_x=model_ranks_gdf.geometry.x,
                 input_y=model_ranks_gdf.geometry.y,
                 output_x=x,
                 output_y=y,
-                k=idw_k,
+                **idw_kwargs,
             ),
-            axis=0,
+            columns=model_ranking_cols,
         )
         .assign(x=x, y=y)
         # Drop any duplicates then melt columns into long format
