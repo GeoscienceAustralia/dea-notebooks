@@ -424,11 +424,11 @@ def test_model_tides_ensemble():
 
     # Wide mode, custom functions
     ensemble_funcs = {
-        "ensemble-best": lambda x: x["rank"] == 2,
-        "ensemble-worst": lambda x: x["rank"] == 1,
+        "ensemble-best": lambda x: x["rank"] == 1,
+        "ensemble-worst": lambda x: x["rank"] == 2,
         "ensemble-mean-top2": lambda x: x["rank"].isin([1, 2]),
-        "ensemble-mean-weighted": lambda x: x["rank"],
-        "ensemble-mean": lambda x: x["rank"] >= 0,
+        "ensemble-mean-weighted": lambda x: 3 - x["rank"],
+        "ensemble-mean": lambda x: x["rank"] <= 2,
     }
     modelled_tides_df = model_tides(
         x=x,
@@ -693,11 +693,11 @@ def test_pixel_tides_ensemble(satellite_ds):
 
     # Model tides using `pixel_tides` and custom ensemble funcs
     ensemble_funcs = {
-        "ensemble-best": lambda x: x["rank"] == 2,
-        "ensemble-worst": lambda x: x["rank"] == 1,
+        "ensemble-best": lambda x: x["rank"] == 1,
+        "ensemble-worst": lambda x: x["rank"] == 2,
         "ensemble-mean-top2": lambda x: x["rank"].isin([1, 2]),
-        "ensemble-mean-weighted": lambda x: x["rank"],
-        "ensemble-mean": lambda x: x["rank"] >= 0,
+        "ensemble-mean-weighted": lambda x: 3 - x["rank"],
+        "ensemble-mean": lambda x: x["rank"] <= 2,
     }
     modelled_tides_ds, _ = pixel_tides(
         satellite_ds,

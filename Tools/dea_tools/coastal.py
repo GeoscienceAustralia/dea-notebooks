@@ -420,7 +420,7 @@ def _ensemble_model(
     ensemble_models,
     ensemble_func=None,
     ensemble_top_n=3,
-    ranking_points="https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/derivative/dea_intertidal/supplementary/tide_correlations_2017-2019.geojson",
+    ranking_points="https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/derivative/dea_intertidal/supplementary/rankings_ensemble_2017-2019.geojson",
     ranking_valid_perc=0.02,
     **idw_kwargs,
 ):
@@ -465,7 +465,7 @@ def _ensemble_model(
         calculations can also be provided. Dictionary keys are used
         to name output ensemble models; functions should take a column
         named "rank" and convert it to a weighting, e.g.:
-        `ensemble_func = {"ensemble-custom": lambda x: x["rank"] >= 4}`
+        `ensemble_func = {"ensemble-custom": lambda x: x["rank"] <= 3}`
     ensemble_top_n : int, optional
         If `ensemble_func` is None, this sets the number of top models
         to include in the mean ensemble calculation. Defaults to 3.
@@ -473,7 +473,7 @@ def _ensemble_model(
         Path to the GeoJSON file containing model ranking points. This
         dataset should include columns containing rankings for each tide
         model, named with the prefix "rank_". e.g. "rank_FES2014".
-        High values should represent high rankings.
+        Low values should represent high rankings (e.g. 1 = top ranked).
     ranking_valid_perc : float, optional
         Minimum percentage of valid data required to include a model
         rank point in the analysis, as defined in a column named
@@ -536,10 +536,8 @@ def _ensemble_model(
 
     # If no custom ensemble funcs are provided, use a default ensemble
     # calculation that takes the mean of the top N tide models
-    # TODO: Update ranks to place best at 1, not 7
     if ensemble_func is None:
-        rank_thresh = len(ensemble_models) - ensemble_top_n
-        ensemble_func = {"ensemble": lambda x: x["rank"] > rank_thresh}
+        ensemble_func = {"ensemble": lambda x: x["rank"] <= ensemble_top_n}
 
     # Create output list to hold computed ensemble model outputs
     ensemble_list = []
