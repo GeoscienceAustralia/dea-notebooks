@@ -727,7 +727,7 @@ def model_tides(
         ensemble tide models if "ensemble" modelling are requested.
         These are passed to the underlying `_ensemble_model` function.
         Useful parameters include `ranking_points` (path to model
-        rankings data), `idw_k` (for controlling how model rankings are
+        rankings data), `k` (for controlling how model rankings are
         interpolated), and `ensemble_top_n` (how many top models to use
         in the ensemble calculation).
 
