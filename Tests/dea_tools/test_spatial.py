@@ -386,7 +386,7 @@ def test_idw():
     assert np.allclose(out, [2.5, 2.5, 2.5, 2.5])
     
     # Four neighbours; power function p=2
-    out = idw(input_z, input_x, input_y, output_x, output_y, k=4, p=0)
+    out = idw(input_z, input_x, input_y, output_x, output_y, k=4, p=2)
     assert np.allclose(out, [1.83, 2.17, 2.83, 3.17], rtol=0.01)
 
     # Different units, nearest neighbour case
