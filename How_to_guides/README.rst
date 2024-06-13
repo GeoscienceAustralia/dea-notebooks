@@ -21,6 +21,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Generating_geomedian_composites.ipynb
    Image_segmentation.ipynb
    Imagery_on_web_map.ipynb
+   Interpolation.ipynb
    Land_cover_animated_plots.ipynb
    Land_cover_change_mapping.ipynb
    Land_cover_pixel_drill.ipynb
