@@ -380,6 +380,14 @@ def test_idw():
     # Four neighbours; max distance of 2, k_min of 4 (should return NaN)
     out = idw(input_z, input_x, input_y, output_x, output_y, k=4, max_dist=2, k_min=4)
     assert np.isnan(out).all()
+    
+    # Four neighbours; power function p=0
+    out = idw(input_z, input_x, input_y, output_x, output_y, k=4, p=0)
+    assert np.allclose(out, [2.5, 2.5, 2.5, 2.5])
+    
+    # Four neighbours; power function p=2
+    out = idw(input_z, input_x, input_y, output_x, output_y, k=4, p=0)
+    assert np.allclose(out, [1.83, 2.17, 2.83, 3.17], rtol=0.01)
 
     # Different units, nearest neighbour case
     input_z = [10, 20, 30, 40]
