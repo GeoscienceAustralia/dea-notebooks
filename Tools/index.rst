@@ -28,6 +28,7 @@ Core modules
    dea_tools.spatial
    dea_tools.temporal
    dea_tools.waterbodies
+   dea_tools.wetlands
    dea_tools.validation
    
 Apps and widgets
