@@ -573,6 +573,7 @@ def idw(
     input_y,
     output_x,
     output_y,
+    p=1,
     k=10,
     max_dist=None,
     k_min=1,
@@ -584,8 +585,8 @@ def idw(
     This function performs fast IDW interpolation by creating a KDTree
     from the input coordinates then uses it to find the `k` nearest
     neighbors for each output point. Weights are calculated based on the
-    inverse distance to each neighbor, and used to compute the
-    interpolated values.
+    inverse distance to each neighbor, with weights descreasing with
+    increasing distance.
 
     Code inspired by: https://github.com/DahnJ/REM-xarray
 
@@ -603,6 +604,11 @@ def idw(
         Array of x-coordinates where the interpolation is to be computed.
     output_y : array-like
         Array of y-coordinates where the interpolation is to be computed.
+    p : int or float, optional
+        Power function parameter defining how rapidly weightings should
+        decrease as distance increases. Higher values of `p` will cause
+        weights for distant points to decrease rapidly, resulting in
+        nearby points having more influence on predictions. Defaults to 1.
     k : int, optional
         Number of nearest neighbors to use for interpolation. `k=1` is
         equivalent to "nearest" neighbour interpolation. Defaults to 10.
@@ -688,7 +694,7 @@ def idw(
         distances[distances > max_dist] = np.nan
 
     # Calculate weights based on distance to k nearest neighbours.
-    weights = 1 / distances
+    weights = 1 / np.power(distances, p)
     weights = weights / np.nansum(weights, axis=1).reshape(-1, 1)
 
     # 1D case: Compute weighted sum of input_z values for each output point
