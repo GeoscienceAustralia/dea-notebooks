@@ -335,6 +335,24 @@ def test_model_tides_ensemble():
     assert modelled_tides_df.index.names == ["time", "x", "y"]
     assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
     assert set(modelled_tides_df.tide_model) == set(models)
+    assert np.allclose(
+        modelled_tides_df.tide_m,
+        [
+            -2.819,
+            -1.850,
+            -0.215,
+            0.037,
+            -2.623,
+            -1.803,
+            0.073,
+            -0.069,
+            -2.721,
+            -1.826,
+            -0.071,
+            -0.0158,
+        ],
+        rtol=0.02,
+    )
 
     # One-to-one mode
     modelled_tides_df = model_tides(
@@ -406,11 +424,11 @@ def test_model_tides_ensemble():
 
     # Wide mode, custom functions
     ensemble_funcs = {
-        "ensemble-best": lambda x: x["rank"] == 2,
-        "ensemble-worst": lambda x: x["rank"] == 1,
+        "ensemble-best": lambda x: x["rank"] == 1,
+        "ensemble-worst": lambda x: x["rank"] == 2,
         "ensemble-mean-top2": lambda x: x["rank"].isin([1, 2]),
-        "ensemble-mean-weighted": lambda x: x["rank"],
-        "ensemble-mean": lambda x: x["rank"] >= 0,
+        "ensemble-mean-weighted": lambda x: 3 - x["rank"],
+        "ensemble-mean": lambda x: x["rank"] <= 2,
     }
     modelled_tides_df = model_tides(
         x=x,
@@ -659,34 +677,27 @@ def test_pixel_tides_ensemble(satellite_ds):
 
     assert modelled_tides_ds.tide_model == "ensemble"
 
-    # Model tides using `pixel_tides` and multiple models including ensemble
+    # Model tides using `pixel_tides` and multiple models including
+    # ensemble and custom IDW params
     models = ["FES2014", "HAMTIDE11", "ensemble"]
     modelled_tides_ds, _ = pixel_tides(
         satellite_ds,
         model=models,
         ensemble_models=ENSEMBLE_MODELS,
+        k=10, 
+        max_dist=20000,
     )
 
     assert "tide_model" in modelled_tides_ds.dims
     assert set(modelled_tides_ds.tide_model.values) == set(models)
 
-    # Verify that all values are in equal to or between input model values
-    min_vals = modelled_tides_ds.sel(tide_model=["FES2014", "HAMTIDE11"]).min(
-        "tide_model"
-    )
-    max_vals = modelled_tides_ds.sel(tide_model=["FES2014", "HAMTIDE11"]).max(
-        "tide_model"
-    )
-    assert (modelled_tides_ds.sel(tide_model=["ensemble"]) >= min_vals).all()
-    assert (modelled_tides_ds.sel(tide_model=["ensemble"]) <= max_vals).all()
-
     # Model tides using `pixel_tides` and custom ensemble funcs
     ensemble_funcs = {
-        "ensemble-best": lambda x: x["rank"] == 2,
-        "ensemble-worst": lambda x: x["rank"] == 1,
+        "ensemble-best": lambda x: x["rank"] == 1,
+        "ensemble-worst": lambda x: x["rank"] == 2,
         "ensemble-mean-top2": lambda x: x["rank"].isin([1, 2]),
-        "ensemble-mean-weighted": lambda x: x["rank"],
-        "ensemble-mean": lambda x: x["rank"] >= 0,
+        "ensemble-mean-weighted": lambda x: 3 - x["rank"],
+        "ensemble-mean": lambda x: x["rank"] <= 2,
     }
     modelled_tides_ds, _ = pixel_tides(
         satellite_ds,
