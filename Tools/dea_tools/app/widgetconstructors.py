@@ -274,7 +274,7 @@ def create_dea_wms_layer(product, date, **params):
     ----------
     product : string
         The Digital Earth Australia product to load
-        (e.g. 'ga_ls8c_nbart_gm_cyear_3')
+        (e.g. 'ga_ls8cls9c_gm_cyear_3')
     date : string (yyyy-mm-dd format)
         The date to load the product for
         
