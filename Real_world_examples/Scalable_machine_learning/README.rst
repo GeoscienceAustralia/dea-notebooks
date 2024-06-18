@@ -142,7 +142,6 @@ To begin working through the notebooks in this ``Scalable Supervised Machine Lea
 
 .. toctree::
    :maxdepth: 1
-   :caption: Scalable Supervised Machine Learning on the Open Data Cube
 
    1_Extract_training_data.ipynb
    2_Inspect_training_data.ipynb
@@ -169,4 +168,4 @@ questions
 `here <https://gis.stackexchange.com/questions/tagged/open-data-cube>`__).
 If you would like to report an issue with this notebook, you can file
 one on
-`Github <https://github.com/GeoscienceAustralia/dea-notebooks/>`__.
+`GitHub <https://github.com/GeoscienceAustralia/dea-notebooks/>`__.

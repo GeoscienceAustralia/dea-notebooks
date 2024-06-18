@@ -14,9 +14,9 @@ using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
 
 If you would like to report an issue with this script, file one on 
-Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
+GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: August 2023
+Last modified: June 2024
 
 """
 
@@ -36,6 +36,7 @@ import multiprocessing as mp
 from odc.geo.geom import Geometry
 from odc.geo.crs import CRS
 from scipy import ndimage as nd
+from scipy.spatial import cKDTree as KDTree
 from skimage.measure import label
 from rasterstats import zonal_stats
 from skimage.measure import find_contours
@@ -566,6 +567,342 @@ def subpixel_contours(
     return contours_gdf
 
 
+def idw(
+    input_z,
+    input_x,
+    input_y,
+    output_x,
+    output_y,
+    p=1,
+    k=10,
+    max_dist=None,
+    k_min=1,
+    epsilon=1e-12,
+):
+    """
+    Perform Inverse Distance Weighting (IDW) interpolation.
+
+    This function performs fast IDW interpolation by creating a KDTree
+    from the input coordinates then uses it to find the `k` nearest
+    neighbors for each output point. Weights are calculated based on the
+    inverse distance to each neighbor, with weights descreasing with
+    increasing distance.
+
+    Code inspired by: https://github.com/DahnJ/REM-xarray
+
+    Parameters
+    ----------
+    input_z : array-like
+        Array of values at the input points. This can be either a
+        1-dimensional array, or a 2-dimensional array where each column
+        (axis=1) represents a different set of values to be interpolated.
+    input_x : array-like
+        Array of x-coordinates of the input points.
+    input_y : array-like
+        Array of y-coordinates of the input points.
+    output_x : array-like
+        Array of x-coordinates where the interpolation is to be computed.
+    output_y : array-like
+        Array of y-coordinates where the interpolation is to be computed.
+    p : int or float, optional
+        Power function parameter defining how rapidly weightings should
+        decrease as distance increases. Higher values of `p` will cause
+        weights for distant points to decrease rapidly, resulting in
+        nearby points having more influence on predictions. Defaults to 1.
+    k : int, optional
+        Number of nearest neighbors to use for interpolation. `k=1` is
+        equivalent to "nearest" neighbour interpolation. Defaults to 10.
+    max_dist : int or float, optional
+        Restrict neighbouring points to less than this distance.
+        By default, no distance limit is applied.
+    k_min : int, optional
+        If `max_dist` is provided, some points may end up with less than
+        `k` nearest neighbours, potentially producing less reliable
+        interpolations. Set `k_min` to set any points with less than
+        `k_min` neighbours to NaN. Defaults to 1.
+    epsilon : float, optional
+        Small value added to distances to prevent division by zero
+        errors in the case that output coordinates are identical to
+        input coordinates. Defaults to 1e-12.
+
+    Returns
+    -------
+    interp_values : numpy.ndarray
+        Interpolated values at the output coordinates. If `input_z` is
+        1-dimensional, `interp_values` will also be 1-dimensional. If
+        `input_z` is 2-dimensional, `interp_values` will have the same
+        number of rows as `input_z`, with each column (axis=1)
+        representing interpolated values for one set of input data.
+
+    Examples
+    --------
+    >>> input_z = [1, 2, 3, 4, 5]
+    >>> input_x = [0, 1, 2, 3, 4]
+    >>> input_y = [0, 1, 2, 3, 4]
+    >>> output_x = [0.5, 1.5, 2.5]
+    >>> output_y = [0.5, 1.5, 2.5]
+    >>> idw(input_z, input_x, input_y, output_x, output_y, k=2)
+    array([1.5, 2.5, 3.5])
+
+    """
+
+    # Convert to numpy arrays
+    input_x = np.atleast_1d(input_x)
+    input_y = np.atleast_1d(input_y)
+    input_z = np.atleast_1d(input_z)
+    output_x = np.atleast_1d(output_x)
+    output_y = np.atleast_1d(output_y)
+
+    # Verify input and outputs have matching lengths
+    if not (input_z.shape[0] == len(input_x) == len(input_y)):
+        raise ValueError(
+            f"All of `input_z`, `input_x` and `input_y` must be the same length."
+        )
+    if not (len(output_x) == len(output_y)):
+        raise ValueError(f"Both `output_x` and `output_y` must be the same length.")
+
+    # Verify k is smaller than total number of points, and non-zero
+    if k > input_z.shape[0]:
+        raise ValueError(
+            f"The requested number of nearest neighbours (`k={k}`) "
+            f"is smaller than the total number of points ({input_z.shape[0]})."
+        )
+    elif k == 0:
+        raise ValueError(
+            f"Interpolation based on `k=0` nearest neighbours is not valid."
+        )
+
+    # Create KDTree to efficiently find nearest neighbours
+    points_xy = np.column_stack((input_y, input_x))
+    tree = KDTree(points_xy)
+
+    # Determine nearest neighbours and distances to each
+    grid_stacked = np.column_stack((output_y, output_x))
+    distances, indices = tree.query(grid_stacked, k=k, workers=-1)
+
+    # If k == 1, add an additional axis for consistency
+    if k == 1:
+        distances = distances[..., np.newaxis]
+        indices = indices[..., np.newaxis]
+
+    # Add small epsilon to distances to prevent division by zero errors
+    # if output coordinates are the same as input coordinates
+    distances = np.maximum(distances, epsilon)
+
+    # Set distances above max to NaN if specified
+    if max_dist is not None:
+        distances[distances > max_dist] = np.nan
+
+    # Calculate weights based on distance to k nearest neighbours.
+    weights = 1 / np.power(distances, p)
+    weights = weights / np.nansum(weights, axis=1).reshape(-1, 1)
+
+    # 1D case: Compute weighted sum of input_z values for each output point
+    if input_z.ndim == 1:
+        interp_values = np.nansum(weights * input_z[indices], axis=1)
+
+    # 2D case: Compute weighted sum for each set of input_z values
+    # weights[..., np.newaxis] adds a dimension for broadcasting
+    else:
+        interp_values = np.nansum(
+            weights[..., np.newaxis] * input_z[indices],
+            axis=1,
+        )
+
+    # Set any points with less than `k_min` valid weights to NaN
+    interp_values[np.isfinite(weights).sum(axis=1) < k_min] = np.nan
+
+    return interp_values
+
+
+def xr_interpolate(
+    ds,
+    gdf,
+    columns=None,
+    method="linear",
+    factor=1,
+    k=10,
+    crs=None,
+    **kwargs,
+):
+    """
+    This function takes a geopandas.GeoDataFrame points dataset
+    containing one or more numeric columns, and interpolates these points
+    into the spatial extent of an existing xarray dataset. This can be
+    useful for producing smooth raster surfaces from point data to
+    compare directly against satellite data.
+
+    Supported interpolation methods include "linear", "nearest" and
+    "cubic" (using `scipy.interpolate.griddata`), "rbf" (using
+    `scipy.interpolate.Rbf`), and "idw" (Inverse Distance Weighted
+    interpolation using `k` nearest neighbours). Each numeric column
+    will be returned as a variable in the output xarray.Dataset.
+
+    Last modified: March 2024
+
+    Parameters
+    ----------
+    ds : xarray.DataArray or xarray.Dataset
+        A two-dimensional or multi-dimensional array whose spatial extent
+        will be used to interpolate point data into.
+    gdf : geopandas.GeoDataFrame
+        A dataset of spatial points including at least one numeric column.
+        By default all numeric columns in this dataset will be spatially
+        interpolated into the extent of `ds`; specific columns can be
+        selected using `columns`. An warning will be raised if the points
+        in `gdf` do not overlap with the extent of `ds`.
+    columns : list, optional
+        An optional list of specific columns in gdf` to run the
+        interpolation on. These must all be of numeric data types.
+    method : string, optional
+        The method used to interpolate between point values. This string
+        is either passed to `scipy.interpolate.griddata` (for "linear",
+        "nearest" and "cubic" methods), or used to specify Radial Basis
+        Function interpolation using `scipy.interpolate.Rbf` ("rbf"), or
+        Inverse Distance Weighted interpolation ("idw").
+        Defaults to 'linear'.
+    factor : int, optional
+        An optional integer that can be used to subsample the spatial
+        interpolation extent to obtain faster interpolation times, before
+        up-sampling the array back to the original dimensions of the
+        data as a final step. For example, `factor=10` will interpolate
+        data into a grid that has one tenth of the resolution of `ds`.
+        This will be significantly faster than interpolating at full
+        resolution, but will potentially produce less accurate results.
+    k : int, optional
+        The number of nearest neighbours used to calculate weightings if
+        `method` is "idw". Defaults to 10; setting `k=1` is equivalent to
+        "nearest" interpolation.
+    crs : string or CRS object, optional
+        If `ds`'s coordinate reference system (CRS) cannot be determined,
+        provide a CRS using this parameter (e.g. 'EPSG:3577').
+    **kwargs :
+        Optional keyword arguments to pass to either
+        `scipy.interpolate.griddata` (if `method` is "linear", "nearest"
+        or "cubic"), `scipy.interpolate.Rbf` (is `method` is "rbf"),
+        or `idw` (if method is "idw").
+
+    Returns
+    -------
+    interpolated_ds : xarray.Dataset
+        An xarray.Dataset containing interpolated data with the same X
+        and Y coordinate pixel grid as `ds`, and a data variable for
+        each numeric column in `gdf`.
+    """
+
+    # Add GeoBox and odc.* accessor to array using `odc-geo`, and identify
+    # spatial dimension names from `ds`
+    ds = add_geobox(ds, crs)
+    y_dim, x_dim = ds.odc.spatial_dims
+
+    # Reproject to match input `ds`, and raise warning if there are no overlaps
+    gdf = gdf.to_crs(ds.odc.crs)
+    if not gdf.dissolve().intersects(ds.odc.geobox.extent.geom).item():
+        warnings.warn(
+            "The supplied `gdf` does not overlap spatially with `ds`.", stacklevel=2
+        )
+
+    # Select subset of numeric columns (non-numeric are not supported)
+    numeric_gdf = gdf.select_dtypes("number")
+
+    # Subset further to supplied `columns`
+    try:
+        numeric_gdf = numeric_gdf if columns is None else numeric_gdf[columns]
+    except KeyError:
+        raise ValueError(
+            "One or more of the provided columns either does "
+            "not exist in `gdf`, or is a non-numeric column. "
+            "Only numeric columns are supported by `xr_interpolate`."
+        )
+
+    # Raise a warning if no numeric columns exist after selection
+    if len(numeric_gdf.columns) == 0:
+        raise ValueError(
+            "The provided `gdf` contains no numeric columns to interpolate."
+        )
+
+    # Identify spatial coordinates, and stack to use in interpolation
+    x_coords = gdf.geometry.x
+    y_coords = gdf.geometry.y
+    points_xy = np.column_stack((y_coords, x_coords))
+
+    # Identify x and y coordinates from `ds` to interpolate into.
+    # If `factor` is greater than 1, the coordinates will be subsampled
+    # for faster run-times. If the last x or y value in the subsampled
+    # grid aren't the same as the last x or y values in the original
+    # full resolution grid, add the final full resolution grid value to
+    # ensure data is interpolated up to the very edge of the array
+    if ds[x_dim][::factor][-1].item() == ds[x_dim][-1].item():
+        x_grid_coords = ds[x_dim][::factor].values
+    else:
+        x_grid_coords = ds[x_dim][::factor].values.tolist() + [ds[x_dim][-1].item()]
+
+    if ds[y_dim][::factor][-1].item() == ds[y_dim][-1].item():
+        y_grid_coords = ds[y_dim][::factor].values
+    else:
+        y_grid_coords = ds[y_dim][::factor].values.tolist() + [ds[y_dim][-1].item()]
+
+    # Create grid to interpolate into
+    grid_x, grid_y = np.meshgrid(x_grid_coords, y_grid_coords)
+
+    # Output dict
+    correlation_outputs = {}
+
+    # Run interpolation on values from each numeric column,
+    for col, z_values in numeric_gdf.items():
+        
+        # Apply scipy.interpolate.griddata interpolation methods
+        if method in ("linear", "nearest", "cubic"):
+            # Interpolate x, y and z values
+            interp_2d = scipy.interpolate.griddata(
+                points=points_xy,
+                values=z_values,
+                xi=(grid_y, grid_x),
+                method=method,
+                **kwargs,
+            )
+
+        # Apply Radial Basis Function interpolation
+        elif method == "rbf":
+            # Interpolate x, y and z values
+            rbf = scipy.interpolate.Rbf(y_coords, x_coords, z_values, **kwargs)
+            interp_2d = rbf(grid_y, grid_x)
+
+        # Apply Inverse Distance Weighted interpolation
+        elif method == "idw":
+            # Interpolate x, y and z values
+            interp_1d = idw(
+                input_z=z_values,
+                input_x=x_coords,
+                input_y=y_coords,
+                output_x=grid_x.flatten(),
+                output_y=grid_y.flatten(),
+                k=k,
+                **kwargs,
+            )
+
+            # Reshape to 2D
+            interp_2d = interp_1d.reshape(len(y_grid_coords), len(x_grid_coords))
+
+        # Add 2D interpolated array to output dictionary
+        correlation_outputs[col] = ((y_dim, x_dim), interp_2d)
+
+    # Combine all outputs into a single xr.Dataset
+    interpolated_ds = xr.Dataset(
+        correlation_outputs, coords={y_dim: y_grid_coords, x_dim: x_grid_coords}
+    )
+
+    # If factor is greater than 1, resample the interpolated array to
+    # match the input `ds` array
+    if factor > 1:
+        interpolated_ds = interpolated_ds.interp_like(ds)
+
+    # Ensure CRS is correctly set on output
+    interpolated_ds = interpolated_ds.odc.assign_crs(crs=ds.odc.crs)
+
+    return interpolated_ds
+
+
 def interpolate_2d(
     ds, x_coords, y_coords, z_coords, method="linear", factor=1, verbose=False, **kwargs
 ):
@@ -579,6 +916,9 @@ def interpolate_2d(
     Supported interpolation methods include 'linear', 'nearest' and
     'cubic (using `scipy.interpolate.griddata`), and 'rbf' (using
     `scipy.interpolate.Rbf`).
+
+    NOTE: This function is deprecated and will be retired in a future
+    release. Please use `xr_interpolate` instead."
 
     Last modified: February 2020
 
@@ -623,6 +963,13 @@ def interpolate_2d(
         An xarray DataArray containing with x and y coordinates copied
         from `ds_array`, and Z-values interpolated from the points data.
     """
+
+    warnings.warn(
+        "This function is deprecated and will be retired in a future "
+        "release. Please use `xr_interpolate` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Extract xy and elev points
     points_xy = np.vstack([x_coords, y_coords]).T

@@ -17,7 +17,7 @@ the `open-data-cube` tag (you can view previously asked questions here:
 https://gis.stackexchange.com/questions/tagged/open-data-cube). 
 
 If you would like to report an issue with this script, you can file one 
-on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Last modified: June 2022
 '''
