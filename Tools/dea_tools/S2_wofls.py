@@ -1,6 +1,51 @@
 """
 A combination of .py files from the wofs GitHub repository which are necessary to run the S2 Waterbodies time series notebook. 
 """
+import xarray
+import numpy as np
+import logging
+import gc
+import scipy.ndimage
+
+try:
+    import dask.array
+    dask_array_type = (dask.array.Array,)
+except ImportError:  # pragma: no cover
+    dask_array_type = ()
+    
+
+
+"""
+FROM wofs.boilerplate:
+"""
+
+def simple_numpify(f):
+    """Transform a numpy operation to an xarray DataArray operation
+    Assumes only (y,x) arrays."""
+    def wrapped(xr):
+        return xarray.DataArray(f(xr.data), coords=[xr.y, xr.x])
+        # return xarray.DataArray(f(xr.data), coords=[x[c] for c in list(x.dims) if c in {'y','x'}])
+    wrapped.__name__ = f.__name__
+    return wrapped
+
+"""
+FROM wofs.classifier
+"""
+
+# Josh Sixsmith, refactored by BL.
+
+
+#from wofs import boilerplate
+
+simple_numpify
+
+def classify(images, float64=False):
+    if isinstance(images, dask_array_type):
+        # Apply the classify function on each block in the x and y dimensions
+        # Remove chunks and reduce along the 'band' dimension (axis 0)
+        return dask.array.map_blocks(_classify, images.rechunk({0: -1}), drop_axis=0, dtype='uint8')
+    return _classify(images, float64)
+
 
 """
 FROM wofs.constants:
@@ -54,118 +99,12 @@ SLOPE_THRESHOLD_DEGREES = 12.0
 # If the sun only grazes a hillface, observation unreliable (vegetation shadows etc)
 LOW_SOLAR_INCIDENCE_THRESHOLD_DEGREES = 10
 
-
-"""
-FROM wofs.boilerplate:
-"""
-
-import xarray
-
-
-def simple_numpify(f):
-    """Transform a numpy operation to an xarray DataArray operation
-    Assumes only (y,x) arrays."""
-    def wrapped(xr):
-        return xarray.DataArray(f(xr.data), coords=[xr.y, xr.x])
-        # return xarray.DataArray(f(xr.data), coords=[x[c] for c in list(x.dims) if c in {'y','x'}])
-    wrapped.__name__ = f.__name__
-    return wrapped
-
-"""
-FROM wofs.classifier
-"""
-
-# Josh Sixsmith, refactored by BL.
-import numpy
-import logging
-import gc
-
-try:
-    import dask.array
-    dask_array_type = (dask.array.Array,)
-except ImportError:  # pragma: no cover
-    dask_array_type = ()
-
-#from wofs import boilerplate
-
-simple_numpify
-
-def classify(images, float64=False):
-    if isinstance(images, dask_array_type):
-        # Apply the classify function on each block in the x and y dimensions
-        # Remove chunks and reduce along the 'band' dimension (axis 0)
-        return dask.array.map_blocks(_classify, images.rechunk({0: -1}), drop_axis=0, dtype='uint8')
-    return _classify(images, float64)
-
-"""
-FROM wofs.wofls:
-
-Produce water observation feature layers (i.e. water extent foliation).
-
-These are the WOfS product with temporal extent (i.e. multiple time values).
-Consists of wet/dry estimates and filtering flags,
-with one-to-one correspondence to earth observation layers.
-
-Not to be confused with the wofs summary products,
-which are derived from a condensed mosaic of the wofl archive.
-
-Issues:
-    - previous documentation may be ambiguous or previous implementations may differ
-      (e.g. saturation, bitfield)
-    - Tile edge artifacts concerning cloud buffers and cloud or terrain shadows.
-    - DSM may have different natural resolution to EO source.
-      Should think about what CRS to compute in, and what resampling methods to use.
-      Also, should quantify whether earth's curvature is significant on tile scale.
-    - Yet to profile memory, CPU or IO usage.
-"""
-import numpy as np
-
-#from wofs import classifier, filters
-#from wofs.constants import NO_DATA
-#from wofs.filters import eo_filter, fmask_filter, terrain_filter, c2_filter
-
-def woffles_ard(ard, dsm, dsm_no_data=-1000, ignore_dsm_no_data=False):
-    """Generate a Water Observation Feature Layer from ARD (NBART and FMASK) and surface elevation inputs."""
-    nbar_bands = spectral_bands(ard)
-    water = classify(nbar_bands) \
-        | eo_filter(ard) \
-        | fmask_filter(ard.fmask)
-
-    if dsm is not None:
-        # terrain_filter arbitrarily expects a band named 'blue'
-        water |= terrain_filter(
-            dsm,
-            ard.rename({"nbart_blue": "blue"}),
-            no_data=dsm_no_data,
-            ignore_dsm_no_data=ignore_dsm_no_data
-        )
-
-    _fix_nodata_to_single_value(water)
-
-    assert water.dtype == np.uint8
-
-    return water
-
-def spectral_bands(ds):
-    bands = [
-        "nbart_blue",
-        "nbart_green",
-        "nbart_red",
-        "nbart_nir",
-        "nbart_swir_1",
-        "nbart_swir_2",
-    ]
-    return ds[bands].to_array(dim="band")
-
-
 """
 FROM wofs.filters:
 
 Set individual bitflags needed for wofls.
 """
-import numpy as np
-import scipy.ndimage
-import xarray
+
 
 #from wofs import terrain, constants, boilerplate
 #from wofs.constants import MASKED_CLOUD, MASKED_CLOUD_SHADOW, NO_DATA
@@ -202,4 +141,67 @@ def fmask_filter(fmask):
     masking[fmask == 3] += MASKED_CLOUD_SHADOW
 
     return masking
+
+"""
+FROM wofs.wofls:
+
+Produce water observation feature layers (i.e. water extent foliation).
+
+These are the WOfS product with temporal extent (i.e. multiple time values).
+Consists of wet/dry estimates and filtering flags,
+with one-to-one correspondence to earth observation layers.
+
+Not to be confused with the wofs summary products,
+which are derived from a condensed mosaic of the wofl archive.
+
+Issues:
+    - previous documentation may be ambiguous or previous implementations may differ
+      (e.g. saturation, bitfield)
+    - Tile edge artifacts concerning cloud buffers and cloud or terrain shadows.
+    - DSM may have different natural resolution to EO source.
+      Should think about what CRS to compute in, and what resampling methods to use.
+      Also, should quantify whether earth's curvature is significant on tile scale.
+    - Yet to profile memory, CPU or IO usage.
+"""
+
+#from wofs import classifier, filters
+#from wofs.constants import NO_DATA
+#from wofs.filters import eo_filter, fmask_filter, terrain_filter, c2_filter
+
+def woffles_ard(ard, dsm, dsm_no_data=-1000, ignore_dsm_no_data=False):
+    """Generate a Water Observation Feature Layer from ARD (NBART and FMASK) and surface elevation inputs."""
+    nbar_bands = spectral_bands(ard)
+    water = classify(nbar_bands) \
+        | eo_filter(ard) \
+        | fmask_filter(ard.fmask)
+
+    if dsm is not None:
+        # terrain_filter arbitrarily expects a band named 'blue'
+        water |= terrain_filter(
+            dsm,
+            ard.rename({"nbart_blue": "blue"}),
+            no_data=dsm_no_data,
+            ignore_dsm_no_data=ignore_dsm_no_data
+        )
+
+    _fix_nodata_to_single_value(water)
+
+    assert water.dtype == np.uint8
+
+    return water
+
+def spectral_bands(ds):
+    bands = [
+        "nbart_blue",
+        "nbart_green",
+        "nbart_red",
+        "nbart_nir_1",
+        "nbart_nir_2",
+        "nbart_swir_2",
+        "nbart_swir_3",
+    ]
+    return ds[bands].to_array(dim="band")
+
+
+
 
