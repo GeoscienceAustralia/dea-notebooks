@@ -330,6 +330,13 @@ PQA_CLOUD_BITS = 0x0C00
 PQA_CLOUD_SHADOW_BITS = 0x3000
 PQA_SEA_WATER_BIT = 0x0200
 
+def dilate(array):
+    """Dilation e.g. for cloud and cloud/terrain shadow"""
+    # kernel = [[1] * 7] * 7 # blocky 3-pixel dilation
+    y, x = np.ogrid[-3:4, -3:4]
+    kernel = (x * x) + (y * y) <= 3.5 ** 2  # disk-like 3-pixel radial dilation
+    return scipy.ndimage.binary_dilation(array, structure=kernel)
+
 def terrain_filter(dsm, nbar, no_data=-1000, ignore_dsm_no_data=False):
     """Terrain shadow masking, slope masking, solar incidence angle masking.
 
@@ -400,6 +407,73 @@ From wofs.terrain
 UNKNOWN = -1
 LIT = 255
 SHADED = 0
+def _shade_row(shade_mask, elev_m, sun_alt_deg, pixel_scale_m, no_data, fuzz=0.0):
+    """
+    shade the supplied row of the elevation model
+    """
+
+    # threshold is TAN of sun's altitude
+    tan_sun_alt = math.tan(sun_alt_deg)
+
+    # pure terrain angle shadow
+    shade_mask[0] = LIT
+    shade_mask[1:] = np.where((elev_m[:-1] - elev_m[1:]) / pixel_scale_m < tan_sun_alt, LIT, SHADED)
+
+    # project shadows from tips (light->shadow transition)
+    switch = np.where(shade_mask[:-1] != shade_mask[1:])
+    for i in switch[0]:  # note: could use flatnonzero instead of where; or else switch,=; to avoid [0]. --BL
+        if shade_mask[i] == LIT:
+            # TODO: horizontal fuzz?
+            shadow_level = (elev_m[i] + fuzz) - np.arange(shade_mask.size - i) * (tan_sun_alt * pixel_scale_m)
+            shade_mask[i:][shadow_level > elev_m[i:]] = SHADED
+
+    shade_mask[elev_m == no_data] = UNKNOWN
+
+    return shade_mask
+
+def vector_to_crs(point, vector, original_crs, destination_crs):
+    """
+    Transform a vector (in the tangent space of a particular point) to a new CRS
+
+    Expects point and vector to each be a 2-tuple in the original CRS.
+    Returns a pair of 2-tuples (transformed point and vector).
+    Order of coordinates is specified by the CRS (or the OGR library).
+    """
+    # pylint: disable=zip-builtin-not-iterating
+    # theoretically should use infinitesimal displacement
+    # i.e. jacobian of the transformation
+    # but here just use a finite displatement (for convenience of implementation)
+    original_line = line([point, tuple(map(sum, zip(point, vector)))], crs=original_crs)
+    transformed_line = original_line.to_crs(destination_crs)
+
+    transformed_point, _ = transformed_line.points
+
+    # take difference (i.e. remove origin offset)
+    transformed_vector = tuple(map(lambda x: x[1] - x[0], zip(*transformed_line.points)))
+    return transformed_point, transformed_vector
+
+def solar_vector(point, time, crs):
+    (lon, lat), (dlon, dlat) = vector_to_crs(point, (0, 100),
+                                             original_crs=CRS(crs),
+                                             destination_crs=CRS('EPSG:4326'))
+
+    # azimuth north to east of the vertical direction of the crs
+    vert_az = math.atan2(dlon * math.cos(math.radians(lat)), dlat)
+
+    observer = ephem.Observer()
+    # pylint: disable=assigning-non-slot
+    observer.lat = math.radians(lat)
+    observer.lon = math.radians(lon)
+    observer.date = time
+    sun = ephem.Sun(observer)
+
+    sun_az = sun.az - vert_az
+    x = math.sin(sun_az) * math.cos(sun.alt)
+    y = -math.cos(sun_az) * math.cos(sun.alt)
+    z = math.sin(sun.alt)
+
+    return x, y, z, sun_az, sun.alt
+
 
 def shadows_and_slope(tile, time, no_data=-1000):
     """
@@ -526,6 +600,13 @@ def spectral_bands(ds):
     ]
     return ds[bands].to_array(dim="band")
 
+def _fix_nodata_to_single_value(dataarray):
+    # Force any values with the NODATA bit set, to be the nodata value
+    nodata_set = np.bitwise_and(dataarray.data, NO_DATA) == NO_DATA
+
+    # If we don't specifically set the dtype in the following line,
+    # dask arrays explode to int64s. Make sure it stays a uint8!
+    dataarray.data[nodata_set] = np.array(NO_DATA, dtype="uint8")
 
 
 
