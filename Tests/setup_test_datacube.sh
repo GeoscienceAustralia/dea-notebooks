@@ -35,6 +35,8 @@ s3-to-dc 's3://dea-public-data/derivative/ga_s2ls_intertidal_cyear_3/1-0-0/x080/
 s3-to-dc 's3://dea-public-data/derivative/ga_ls_mangrove_cover_cyear_3/3-0-0/x33/y39/*/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls_mangrove_cover_cyear_3'
 
 # Index GeoMAD
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x35/y51/2020--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x59/y32/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
 s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y39/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
 s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y38/2013--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
 s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y38/2014--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
