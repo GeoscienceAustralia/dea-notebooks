@@ -274,7 +274,7 @@ def display_wit_stack_with_df(
         ["open water", "wet", "green veg", "dry veg", "bare soil"][::-1],
         loc="lower left",
     )
-    handles = legend.legendHandles
+    handles = legend.legend_handles
 
     for i, handle in enumerate(handles):
         handle.set_facecolor(pal[::-1][i])
