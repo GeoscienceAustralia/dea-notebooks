@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: June 2024
+Last modified: July 2024
 
 """
 
@@ -33,8 +33,6 @@ import geopandas as gpd
 import rasterio.features
 import scipy.interpolate
 import multiprocessing as mp
-from odc.geo.geom import Geometry
-from odc.geo.crs import CRS
 from scipy import ndimage as nd
 from scipy.spatial import cKDTree as KDTree
 from skimage.measure import label
@@ -42,9 +40,74 @@ from rasterstats import zonal_stats
 from skimage.measure import find_contours
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderUnavailable, GeocoderServiceError
+from shapely.geometry import (
+    MultiPoint,
+    MultiLineString,
+    LineString,
+    Polygon,
+    MultiPolygon,
+    Point,
+    shape,
+    mapping,
+)
 
 from datacube.utils.cog import write_cog
-from shapely.geometry import LineString, MultiLineString, shape, mapping
+from odc.geo.geom import Geometry
+from odc.geo.crs import CRS
+
+
+def _geom_to_multipoint(geom):
+    """
+    Convert a LineString, MultiLineString, Polygon, MultiPolygon or
+    Point to a MultiPoint geometry.
+    """
+    if isinstance(geom, LineString):
+        points = list(geom.coords)
+    elif isinstance(geom, MultiLineString):
+        points = [point for line in geom.geoms for point in line.coords]
+    elif isinstance(geom, Polygon):
+        points = list(geom.boundary.coords)
+    elif isinstance(geom, MultiPolygon):
+        points = [point for poly in geom.boundary.geoms for point in poly.coords]
+    elif isinstance(geom, Point):
+        points = [geom]
+    elif isinstance(geom, MultiPoint):
+        points = [point for point in geom.geoms]
+
+    return MultiPoint(points)
+
+
+def extract_vertices(gdf, explode=True, ignore_index=True):
+    """
+    Extract vertices from any GeoDataFrame features, returning Point or
+    MultiPoint geometries.
+
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        Input GeoDataFrame containing geometries to be converted.
+    explode : bool, optional
+        By default, MultiPoint geometries will be exploded into individual
+        Points. If False, geometries will be returned as MultiPoints.
+    ignore_index : bool, optional
+        If True and explode=True, the resulting GeoDataFrame will have a
+        new index.
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        Updated GeoDataFrame with geometries converted to Points or
+        MultiPoints.
+    """
+
+    # Convert all input features to MultiPoints
+    gdf["geometry"] = gdf["geometry"].apply(_geom_to_multipoint)
+
+    # Optionally break MultiPoints into individual Points
+    if explode:
+        gdf = gdf.explode(ignore_index=ignore_index)
+
+    return gdf
 
 
 def points_on_line(gdf, index, distance=30):
@@ -850,7 +913,7 @@ def xr_interpolate(
 
     # Run interpolation on values from each numeric column,
     for col, z_values in numeric_gdf.items():
-        
+
         # Apply scipy.interpolate.griddata interpolation methods
         if method in ("linear", "nearest", "cubic"):
             # Interpolate x, y and z values
@@ -1047,6 +1110,13 @@ def contours_to_arrays(gdf, col):
     of each vertex in the input GeoDataFrame.
 
     """
+    
+    warnings.warn(
+        "This function is deprecated and will be retired in a future "
+        "release. Please use `extract_vertices` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     coords_zvals = []
 
