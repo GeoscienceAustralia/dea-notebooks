@@ -2,7 +2,7 @@ name: Test Modified Files
 
 on:
   pull_request:
-    branches: [ changed_files ]
+    branches: [ develop ]
 
 jobs:
   test_files:
