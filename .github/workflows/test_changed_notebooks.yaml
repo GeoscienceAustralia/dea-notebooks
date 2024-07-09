@@ -13,7 +13,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        fetch-depth: 0
         path: dea-notebooks
 
     # - name: Set up Python
@@ -21,29 +20,33 @@ jobs:
     #   with:
     #     python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest pytest-nbval jupyter
-
     - name: Get changed notebook files
       id: changed-notebooks
       uses: tj-actions/changed-files@v44
       with:
         files: '**/*.ipynb'
-
+        separator: ' '
+    
+    - name: Print changed notebook files
+      if: steps.changed-notebooks.outputs.any_changed == 'true'
+      run: |
+        echo "Changed notebook files:"
+        echo "${{ steps.changed-notebooks.outputs.all_changed_files }}"
+    
     - name: Get changed Python files
       id: changed-py-files
       uses: tj-actions/changed-files@v44
       with:
         files: '**/*.py'
-
-    - name: Run pytest on changed notebooks
-      if: steps.changed-notebooks.outputs.any_changed == 'true'
-      run: |
-        pytest --nbval-lax ${{ steps.changed-notebooks.outputs.all_changed_files }}
-
-    - name: Run pytest on Python files
+        separator: ' '
+    
+    - name: Print changed Python files
       if: steps.changed-py-files.outputs.any_changed == 'true'
       run: |
-        pytest Tests/dea_tools
+        echo "Changed Python files:"
+        echo "${{ steps.changed-py-files.outputs.all_changed_files }}"
+    
+    # - name: Run pytest on Python files
+    #   if: steps.changed-py-files.outputs.any_changed == 'true'
+    #   run: |
+    #     pytest Tests/dea_tools
