@@ -19,8 +19,6 @@ on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 Last modified: June 2024
 
 """
-# test
-
 # Import required packages
 import os
 import pyproj
