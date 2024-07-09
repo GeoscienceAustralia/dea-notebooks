@@ -1,0 +1,49 @@
+name: Test Modified Files
+
+on:
+  push:
+    branches: [ changed_files ]
+  pull_request:
+    branches: [ changed_files ]
+
+jobs:
+  test_files:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        path: dea-notebooks
+
+    # - name: Set up Python
+    #   uses: actions/setup-python@v4
+    #   with:
+    #     python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-nbval jupyter
+
+    - name: Get changed notebook files
+      id: changed-notebooks
+      uses: tj-actions/changed-files@v44
+      with:
+        files: '**/*.ipynb'
+
+    - name: Get changed Python files
+      id: changed-py-files
+      uses: tj-actions/changed-files@v44
+      with:
+        files: '**/*.py'
+
+    - name: Run pytest on changed notebooks
+      if: steps.changed-notebooks.outputs.any_changed == 'true'
+      run: |
+        pytest --nbval-lax ${{ steps.changed-notebooks.outputs.all_changed_files }}
+
+    - name: Run pytest on Python files
+      if: steps.changed-py-files.outputs.any_changed == 'true'
+      run: |
+        pytest Tests/dea_tools
