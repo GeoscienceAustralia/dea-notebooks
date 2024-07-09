@@ -25,6 +25,7 @@ jobs:
       uses: tj-actions/changed-files@v44
       with:
         files: '**/*.ipynb'
+        skip_initial_fetch: 'true'
         separator: ' '
     
     - name: Print changed notebook files
@@ -38,6 +39,7 @@ jobs:
       uses: tj-actions/changed-files@v44
       with:
         files: '**/*.py'
+        skip_initial_fetch: 'true'
         separator: ' '
     
     - name: Print changed Python files
