@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        fetch-depth: 25
+        fetch-depth: 100
 
     # - name: Set up Python
     #   uses: actions/setup-python@v4
@@ -25,7 +25,6 @@ jobs:
       uses: tj-actions/changed-files@v44
       with:
         files: '**/*.ipynb'
-        skip_initial_fetch: 'true'
         separator: ' '
     
     - name: Print changed notebook files
@@ -39,7 +38,6 @@ jobs:
       uses: tj-actions/changed-files@v44
       with:
         files: '**/*.py'
-        skip_initial_fetch: 'true'
         separator: ' '
     
     - name: Print changed Python files
