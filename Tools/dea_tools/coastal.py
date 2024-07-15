@@ -16,7 +16,7 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: June 2024
+Last modified: July 2024
 
 """
 
@@ -250,7 +250,6 @@ def _model_tides(
     `pyTMD`.
     """
 
-    import pyTMD.constants
     import pyTMD.eop
     import pyTMD.io
     import pyTMD.time
@@ -280,7 +279,7 @@ def _model_tides(
     timescale = pyTMD.time.timescale().from_datetime(time.flatten())
 
     # Read tidal constants and interpolate to grid points
-    if pytmd_model.format in ("OTIS", "ATLAS", "ESR"):
+    if pytmd_model.format in ("OTIS", "ATLAS", "TMD3"):
         amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
             lon,
             lat,
@@ -614,6 +613,10 @@ def model_tides(
         - {directory}/fes2014/ocean_tide/
         - {directory}/fes2014/load_tide/
 
+    For FES2022 (https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html):
+        - {directory}/fes2022b/ocean_tide/
+        - {directory}/fes2022b/load_tide/
+
     For TPXO8-atlas (https://www.tpxo.net/tpxo-products-and-registration):
         - {directory}/tpxo8_atlas/
 
@@ -648,6 +651,7 @@ def model_tides(
     model : string, optional
         The tide model used to model tides. Options include:
         - "FES2014" (pre-configured on DEA Sandbox)
+        - "FES2022"
         - "TPXO9-atlas-v5"
         - "TPXO8-atlas"
         - "EOT20"
@@ -719,7 +723,7 @@ def model_tides(
         Defaults to "long".
     ensemble_models : list, optional
         An optional list of models used to generate the ensemble tide
-        model if "ensemble" tide modelling is requested. Defaults to 
+        model if "ensemble" tide modelling is requested. Defaults to
         ["FES2014", "TPXO9-atlas-v5", "EOT20", "HAMTIDE11", "GOT4.10",
         "FES2012", "TPXO8-atlas-v1"].
     **ensemble_kwargs :
@@ -781,6 +785,7 @@ def model_tides(
 
     # Verify that all provided models are supported
     valid_models = [
+        "FES2022",
         "FES2014",
         "TPXO9-atlas-v5",
         "EOT20",
@@ -1072,6 +1077,7 @@ def pixel_tides(
         The tide model or a list of models used to model tides, as
         supported by the `pyTMD` Python package. Options include:
         - "FES2014" (default; pre-configured on DEA Sandbox)
+        - "FES2022"
         - "TPXO8-atlas"
         - "TPXO9-atlas-v5"
         - "EOT20"
