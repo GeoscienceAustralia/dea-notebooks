@@ -1,7 +1,7 @@
 Real-world examples
 ===================
 
-More complex case study-based workflows demonstrating how DEA can be used to address real-world problems:
+More complex case study workflows demonstrating how DEA can be used to address real-world problems.
 
 .. toctree::
    :maxdepth: 1
