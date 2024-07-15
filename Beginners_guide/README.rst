@@ -1,7 +1,7 @@
 Beginner's guide
 =================
 
-The Beginners Guide contains introductory notebooks aimed at introducing Jupyter Notebooks, Digital Earth Australia (DEA), and how to load, plot and interact with data from DEA. These notebooks are designed to be worked through in the following order:
+The Beginners Guide contains introductory notebooks aimed at introducing Jupyter Notebooks and how to load, plot, and interact with DEA data. They are designed to be followed in order, as they proceed from basic topics to more advanced topics.
 
 .. toctree::
    :maxdepth: 1
