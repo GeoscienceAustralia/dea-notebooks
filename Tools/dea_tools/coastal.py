@@ -238,6 +238,7 @@ def _model_tides(
     time,
     directory,
     crs,
+    crop,
     method,
     extrapolate,
     cutoff,
@@ -278,6 +279,15 @@ def _model_tides(
     # Convert datetime
     timescale = pyTMD.time.timescale().from_datetime(time.flatten())
 
+    # Calculate bounds for cropping
+    buffer = 1  # one degree on either side
+    bounds = [
+        lon.min() - buffer,
+        lon.max() + buffer,
+        lat.min() - buffer,
+        lat.max() + buffer,
+    ]
+
     # Read tidal constants and interpolate to grid points
     if pytmd_model.format in ("OTIS", "ATLAS", "TMD3"):
         amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
@@ -287,6 +297,8 @@ def _model_tides(
             pytmd_model.model_file,
             pytmd_model.projection,
             type=pytmd_model.type,
+            crop=crop,
+            bounds=bounds,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
@@ -303,6 +315,8 @@ def _model_tides(
             pytmd_model.grid_file,
             pytmd_model.model_file,
             type=pytmd_model.type,
+            crop=crop,
+            bounds=bounds,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
@@ -318,6 +332,8 @@ def _model_tides(
             lon,
             lat,
             pytmd_model.model_file,
+            crop=crop,
+            bounds=bounds,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
@@ -335,6 +351,8 @@ def _model_tides(
             pytmd_model.model_file,
             type=pytmd_model.type,
             version=pytmd_model.version,
+            crop=crop,
+            bounds=bounds,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
@@ -584,6 +602,7 @@ def model_tides(
     model="FES2014",
     directory=None,
     crs="EPSG:4326",
+    crop=True,
     method="spline",
     extrapolate=True,
     cutoff=None,
@@ -674,6 +693,10 @@ def model_tides(
     crs : str, optional
         Input coordinate reference system for x and y coordinates.
         Defaults to "EPSG:4326" (WGS84; degrees latitude, longitude).
+    crop : bool optional
+        Whether to crop tide model constituent files on-the-fly to
+        improve performance. Cropping will be performed based on a
+        1 degree buffer around all input points. Defaults to True.
     method : string, optional
         Method used to interpolate tidal constituents
         from model files. Options include:
@@ -831,6 +854,7 @@ def model_tides(
         _model_tides,
         directory=directory,
         crs=crs,
+        crop=crop,
         method=method,
         extrapolate=extrapolate,
         cutoff=np.inf if cutoff is None else cutoff,
