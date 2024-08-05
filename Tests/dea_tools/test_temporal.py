@@ -21,7 +21,7 @@ def satellite_ds():
         y=(-18.0008 - 0.01, -18.0008 + 0.01),
         time=("2020-01", "2020-02"),
         resolution=(-200, 200),
-        output_crs="EPSG:3577",
+        output_crs="EPSG:3577",  # Added here temporarily until NCI environment is updated to include load hints
         group_by="solar_day",
         skip_broken_datasets=True,
     )
