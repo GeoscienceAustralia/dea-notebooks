@@ -23,6 +23,7 @@ def satellite_ds():
         resolution=(-200, 200),
         output_crs="EPSG:3577",
         group_by="solar_day",
+        skip_broken_datasets=True,
     )
 
     # Mask nodata
