@@ -1,7 +1,7 @@
 DEA Tools Package
 =================
 
-``dea_tools`` is a Python package containing various functions to load, analyse, and output data from Digital Earth Australia.
+``dea_tools`` is an open-source Python package containing functions and algorithms to assist in analysing DEA data.
 
 This package is installed by default in the DEA Sandbox. You can install it to your own environment from `PyPi <https://pypi.org/project/dea-tools/>`_ by running ``pip install dea-tools``. Learn more in the `DEA Tools Readme <https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Tools/>`_.
 
@@ -28,6 +28,7 @@ Core modules
    dea_tools.spatial
    dea_tools.temporal
    dea_tools.waterbodies
+   dea_tools.wetlands
    dea_tools.validation
    
 Apps and widgets

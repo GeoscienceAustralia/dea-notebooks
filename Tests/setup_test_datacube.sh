@@ -20,7 +20,7 @@ for metadata_yaml in $(find ./dea-config/product_metadata -name '*.yaml'); do
 done
 
 # Index products we care about for dea-notebooks
-for prod_def_yaml in $(find ./dea-config/products -name '*.yaml' -regex '.*\(ga_ls7e_nbart_gm_cyear_3\|ga_ls8c_nbart_gm_cyear_3\|ga_ls_fc_3\|ga_ls_wo_3\|ga_ls_wo_fq_cyear_3\|ga_ls_landcover_class_cyear_2\|high_tide_comp_20p\|low_tide_comp_20p\|ga_s2am_ard_3\|ga_s2bm_ard_3\|ga_ls5t_ard_3\|ga_ls7e_ard_3\|ga_ls8c_ard_3\|ga_ls9c_ard_3\|ga_ls_mangrove_cover_cyear_3\|ga_s2ls_intertidal_cyear_3\).*'); do
+for prod_def_yaml in $(find ./dea-config/products -name '*.yaml' -regex '.*\(ga_ls7e_gm_cyear_3\|ga_ls8cls9c_gm_cyear_3\|ga_ls_fc_3\|ga_ls_wo_3\|ga_ls_wo_fq_cyear_3\|ga_ls_landcover_class_cyear_2\|high_tide_comp_20p\|low_tide_comp_20p\|ga_s2am_ard_3\|ga_s2bm_ard_3\|ga_ls5t_ard_3\|ga_ls7e_ard_3\|ga_ls8c_ard_3\|ga_ls9c_ard_3\|ga_ls_mangrove_cover_cyear_3\|ga_s2ls_intertidal_cyear_3\).*'); do
         datacube product add $prod_def_yaml
 done
 
@@ -35,26 +35,28 @@ s3-to-dc 's3://dea-public-data/derivative/ga_s2ls_intertidal_cyear_3/1-0-0/x080/
 s3-to-dc 's3://dea-public-data/derivative/ga_ls_mangrove_cover_cyear_3/3-0-0/x33/y39/*/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls_mangrove_cover_cyear_3'
 
 # Index GeoMAD
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x08/y27/2018--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x08/y27/2019--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x08/y27/2020--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_nbart_gm_cyear_3/3-0-0/x49/y23/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls7e_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_nbart_gm_cyear_3/3-0-0/x49/y24/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls7e_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y23/2013--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y23/2014--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y23/2016--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y23/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2013--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2014--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x49/y24/2016--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x38/y19/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x38/y19/2018--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x38/y19/2016--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x38/y19/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x38/y19/2019--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
-s3-to-dc 's3://dea-public-data/derivative/ga_ls8c_nbart_gm_cyear_3/3-0-0/x38/y19/2020--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8c_nbart_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x35/y51/2020--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x59/y32/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y39/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y38/2013--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y38/2014--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y38/2016--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y38/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y39/2013--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y39/2014--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y39/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x67/y39/2016--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x56/y34/2017--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x56/y34/2018--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x56/y34/2016--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x56/y34/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x56/y34/2019--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x56/y34/2020--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x26/y42/2018--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x26/y42/2019--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls8cls9c_gm_cyear_3/4-0-0/x26/y42/2020--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls8cls9c_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_gm_cyear_3/4-0-0/x67/y38/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls7e_gm_cyear_3'
+s3-to-dc 's3://dea-public-data/derivative/ga_ls7e_gm_cyear_3/4-0-0/x67/y39/2015--P1Y/*.odc-metadata.yaml' --no-sign-request --skip-lineage 'ga_ls7e_gm_cyear_3'
 
 # Index FC
 s3-to-dc 's3://dea-public-data/derivative/ga_ls_fc_3/2-5-0/096/084/1993/10/30/*.json' --no-sign-request --skip-lineage --stac 'ga_ls_fc_3'

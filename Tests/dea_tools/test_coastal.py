@@ -17,6 +17,7 @@ from dea_tools.validation import eval_metrics
 
 GAUGE_X = 122.2183
 GAUGE_Y = -18.0008
+ENSEMBLE_MODELS = ["FES2014", "HAMTIDE11"]  # simplified for tests
 
 
 @pytest.fixture()
@@ -75,6 +76,7 @@ def satellite_ds(request):
         output_crs=crs,
         resolution=res,
         group_by="solar_day",
+        skip_broken_datasets=True,
         dask_chunks={},
     )
 
@@ -301,6 +303,183 @@ def test_model_tides_mode(mode, models, output_format):
             )
 
 
+# Test ensemble modelling functionality
+def test_model_tides_ensemble():
+    # Input params
+    x = [122.14, 144.910368]
+    y = [-17.91, -37.919491]
+    times = pd.date_range("2020", "2021", periods=2)
+
+    # Default, only ensemble requested
+    modelled_tides_df = model_tides(
+        x=x,
+        y=y,
+        time=times,
+        model="ensemble",
+        ensemble_models=ENSEMBLE_MODELS,
+    )
+
+    assert modelled_tides_df.index.names == ["time", "x", "y"]
+    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
+    assert all(modelled_tides_df.tide_model == "ensemble")
+
+    # Default, ensemble + other models requested
+    models = ["FES2014", "HAMTIDE11", "ensemble"]
+    modelled_tides_df = model_tides(
+        x=x,
+        y=y,
+        time=times,
+        model=models,
+        ensemble_models=ENSEMBLE_MODELS,
+    )
+
+    assert modelled_tides_df.index.names == ["time", "x", "y"]
+    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
+    assert set(modelled_tides_df.tide_model) == set(models)
+    assert np.allclose(
+        modelled_tides_df.tide_m,
+        [
+            -2.819,
+            -1.850,
+            -0.215,
+            0.037,
+            -2.623,
+            -1.803,
+            0.073,
+            -0.069,
+            -2.721,
+            -1.826,
+            -0.071,
+            -0.0158,
+        ],
+        rtol=0.02,
+    )
+
+    # One-to-one mode
+    modelled_tides_df = model_tides(
+        x=x,
+        y=y,
+        time=times,
+        model=models,
+        mode="one-to-one",
+        ensemble_models=ENSEMBLE_MODELS,
+    )
+
+    assert modelled_tides_df.index.names == ["time", "x", "y"]
+    assert modelled_tides_df.columns.tolist() == ["tide_model", "tide_m"]
+    assert set(modelled_tides_df.tide_model) == set(models)
+
+    # Wide mode, default
+    modelled_tides_df = model_tides(
+        x=x,
+        y=y,
+        time=times,
+        model=models,
+        output_format="wide",
+        ensemble_models=ENSEMBLE_MODELS,
+    )
+
+    # Check that expected models exist, and that ensemble is approx average
+    # of other two models
+    assert set(modelled_tides_df.columns) == set(models)
+    assert np.allclose(
+        0.5 * (modelled_tides_df.FES2014 + modelled_tides_df.HAMTIDE11),
+        modelled_tides_df.ensemble,
+    )
+
+    # Wide mode, top n == 1
+    modelled_tides_df = model_tides(
+        x=x,
+        y=y,
+        time=times,
+        model=models,
+        output_format="wide",
+        ensemble_top_n=1,
+        ensemble_models=ENSEMBLE_MODELS,
+    )
+
+    # Check that expected models exist, and that ensemble is equal to at
+    # least one of the other models
+    assert set(modelled_tides_df.columns) == set(models)
+    assert all(
+        (modelled_tides_df.FES2014 == modelled_tides_df.ensemble)
+        | (modelled_tides_df.HAMTIDE11 == modelled_tides_df.ensemble)
+    )
+
+    # Check that correct model is the closest at each row
+    closer_model = modelled_tides_df.apply(
+        lambda row: (
+            "FES2014"
+            if abs(row["ensemble"] - row["FES2014"])
+            < abs(row["ensemble"] - row["HAMTIDE11"])
+            else "HAMTIDE11"
+        ),
+        axis=1,
+    ).tolist()
+    assert closer_model == ["FES2014", "HAMTIDE11", "FES2014", "HAMTIDE11"]
+
+    # Check values are expected
+    assert np.allclose(
+        modelled_tides_df.ensemble, [-2.819, 0.0730, -1.850, -0.069], rtol=0.01
+    )
+
+    # Wide mode, custom functions
+    ensemble_funcs = {
+        "ensemble-best": lambda x: x["rank"] == 1,
+        "ensemble-worst": lambda x: x["rank"] == 2,
+        "ensemble-mean-top2": lambda x: x["rank"].isin([1, 2]),
+        "ensemble-mean-weighted": lambda x: 3 - x["rank"],
+        "ensemble-mean": lambda x: x["rank"] <= 2,
+    }
+    modelled_tides_df = model_tides(
+        x=x,
+        y=y,
+        time=times,
+        model=models,
+        output_format="wide",
+        ensemble_func=ensemble_funcs,
+        ensemble_models=ENSEMBLE_MODELS,
+    )
+
+    # Check that expected models exist, and that valid data is produced
+    assert set(modelled_tides_df.columns) == set(
+        [
+            "FES2014",
+            "HAMTIDE11",
+            "ensemble-best",
+            "ensemble-worst",
+            "ensemble-mean-top2",
+            "ensemble-mean-weighted",
+            "ensemble-mean",
+        ]
+    )
+    assert all(modelled_tides_df.notnull())
+
+    # Long mode, custom functions
+    modelled_tides_df = model_tides(
+        x=x,
+        y=y,
+        time=times,
+        model=models,
+        output_format="long",
+        ensemble_func=ensemble_funcs,
+        ensemble_models=ENSEMBLE_MODELS,
+    )
+
+    # Check that expected models exist in "tide_model" column
+    assert set(modelled_tides_df.tide_model) == set(
+        [
+            "FES2014",
+            "HAMTIDE11",
+            "ensemble-best",
+            "ensemble-worst",
+            "ensemble-mean-top2",
+            "ensemble-mean-weighted",
+            "ensemble-mean",
+        ]
+    )
+
+
 # Run tests for default and custom resolutions
 @pytest.mark.parametrize("resolution", [None, "custom"])
 def test_pixel_tides(satellite_ds, measured_tides_ds, resolution):
@@ -486,6 +665,59 @@ def test_pixel_tides_dask(satellite_ds, dask_chunks):
     else:
         output_chunks = tuple([i[0] for i in modelled_tides_ds.chunks[1:]])
         assert output_chunks == dask_chunks
+
+
+# Run test pixel tides and ensemble modelling
+def test_pixel_tides_ensemble(satellite_ds):
+    # Model tides using `pixel_tides` and default ensemble model
+    modelled_tides_ds, _ = pixel_tides(
+        satellite_ds,
+        model="ensemble",
+        ensemble_models=ENSEMBLE_MODELS,
+    )
+
+    assert modelled_tides_ds.tide_model == "ensemble"
+
+    # Model tides using `pixel_tides` and multiple models including
+    # ensemble and custom IDW params
+    models = ["FES2014", "HAMTIDE11", "ensemble"]
+    modelled_tides_ds, _ = pixel_tides(
+        satellite_ds,
+        model=models,
+        ensemble_models=ENSEMBLE_MODELS,
+        k=10, 
+        max_dist=20000,
+    )
+
+    assert "tide_model" in modelled_tides_ds.dims
+    assert set(modelled_tides_ds.tide_model.values) == set(models)
+
+    # Model tides using `pixel_tides` and custom ensemble funcs
+    ensemble_funcs = {
+        "ensemble-best": lambda x: x["rank"] == 1,
+        "ensemble-worst": lambda x: x["rank"] == 2,
+        "ensemble-mean-top2": lambda x: x["rank"].isin([1, 2]),
+        "ensemble-mean-weighted": lambda x: 3 - x["rank"],
+        "ensemble-mean": lambda x: x["rank"] <= 2,
+    }
+    modelled_tides_ds, _ = pixel_tides(
+        satellite_ds,
+        model=models,
+        ensemble_func=ensemble_funcs,
+        ensemble_models=ENSEMBLE_MODELS,
+    )
+
+    assert set(modelled_tides_ds.tide_model.values) == set(
+        [
+            "FES2014",
+            "HAMTIDE11",
+            "ensemble-best",
+            "ensemble-worst",
+            "ensemble-mean-top2",
+            "ensemble-mean-weighted",
+            "ensemble-mean",
+        ]
+    )
 
 
 @pytest.mark.parametrize(
