@@ -8,9 +8,9 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
 
    DEA_Landsat_Surface_Reflectance.ipynb
    DEA_Sentinel2_Surface_Reflectance.ipynb
+   DEA_GeoMAD.ipynb
    DEA_Land_Cover.ipynb
    DEA_Fractional_Cover.ipynb
-   DEA_GeoMAD.ipynb
    DEA_Mangroves.ipynb
    DEA_Wetlands_Insight_Tool.ipynb
    DEA_Water_Observations.ipynb
