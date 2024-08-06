@@ -2,7 +2,7 @@
 
 # DEA Notebooks
 
-[![DOI](https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg)](https://doi.org/10.26186/145234) [![Apache license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![PyPI](https://img.shields.io/pypi/v/dea-tools)](https://pypi.org/project/dea-tools/) [![Notebook testing](https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml/badge.svg?branch=develop)](https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml) [![Discord](https://img.shields.io/discord/1212501566326571070?label=Discord&logo=discord&logoColor=white&color=7289DA)](https://discord.gg/4hhBQVas5U)
+[![DOI](https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg)](https://doi.org/10.26186/145234) [![Apache license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![PyPI](https://img.shields.io/pypi/v/dea-tools)](https://pypi.org/project/dea-tools/) [![Notebook testing](https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml/badge.svg?branch=develop)](https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks.yml) [![Discord](https://img.shields.io/discord/1212501566326571070?label=Discord&logo=discord&logoColor=white&color=7289DA)](https://discord.com/invite/4hhBQVas5U)
 
 <br />
 
