@@ -23,9 +23,8 @@ license](https://creativecommons.org/licenses/by/4.0/).
 Wiki](https://github.com/GeoscienceAustralia/dea-notebooks/wiki).
 
 **Contact** &mdash; For assistance with any of these notebooks and tools,
-please ask a question on our [Open Data Cube Slack
-channel](http://slack.opendatacube.org/) or on the [GIS Stack
-Exchange](https://gis.stackexchange.com/questions/tagged/open-data-cube)
+please ask a question on our [Open Data Cube Discord Chat](https://discord.com/invite/4hhBQVas5U)
+or on the [GIS Stack Exchange](https://gis.stackexchange.com/questions/tagged/open-data-cube)
 using the `open-data-cube` tag. You can also [report an issue on this
 repository](https://github.com/GeoscienceAustralia/dea-notebooks/issues).
 
