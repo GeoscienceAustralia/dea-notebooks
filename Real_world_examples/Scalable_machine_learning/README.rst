@@ -160,7 +160,7 @@ Attribution 4.0 <https://creativecommons.org/licenses/by/4.0/>`__
 license.
 
 **Contact:** If you need assistance, please post a question on the `Open
-Data Cube Slack channel <http://slack.opendatacube.org/>`__ or on the
+Data Cube Discord chat <https://discord.com/invite/4hhBQVas5U>`__ or on the
 `GIS Stack
 Exchange <https://gis.stackexchange.com/questions/ask?tags=open-data-cube>`__
 using the ``open-data-cube`` tag (you can view previously asked
