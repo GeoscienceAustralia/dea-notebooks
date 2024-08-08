@@ -60,7 +60,7 @@ Contact
 -------
 
 If you need assistance, please post a question on the Open Data
-Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
+Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the GIS Stack
 Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
 using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
