@@ -8,7 +8,7 @@ Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
 
 Contact: If you need assistance, post a question on the Open Data Cube 
-Slack channel (http://slack.opendatacube.org/) or the GIS Stack Exchange 
+Discord chat (https://discord.com/invite/4hhBQVas5U) or the GIS Stack Exchange 
 (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using 
 the `open-data-cube` tag (you can view previously asked questions here: 
 https://gis.stackexchange.com/questions/tagged/open-data-cube). 
@@ -16,7 +16,7 @@ https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one 
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: June 2024
+Last modified: July 2024
 
 """
 
@@ -238,6 +238,7 @@ def _model_tides(
     time,
     directory,
     crs,
+    crop,
     method,
     extrapolate,
     cutoff,
@@ -250,7 +251,6 @@ def _model_tides(
     `pyTMD`.
     """
 
-    import pyTMD.constants
     import pyTMD.eop
     import pyTMD.io
     import pyTMD.time
@@ -279,8 +279,17 @@ def _model_tides(
     # Convert datetime
     timescale = pyTMD.time.timescale().from_datetime(time.flatten())
 
+    # Calculate bounds for cropping
+    buffer = 1  # one degree on either side
+    bounds = [
+        lon.min() - buffer,
+        lon.max() + buffer,
+        lat.min() - buffer,
+        lat.max() + buffer,
+    ]
+
     # Read tidal constants and interpolate to grid points
-    if pytmd_model.format in ("OTIS", "ATLAS", "ESR"):
+    if pytmd_model.format in ("OTIS", "ATLAS", "TMD3"):
         amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
             lon,
             lat,
@@ -288,6 +297,8 @@ def _model_tides(
             pytmd_model.model_file,
             pytmd_model.projection,
             type=pytmd_model.type,
+            crop=crop,
+            bounds=bounds,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
@@ -304,6 +315,8 @@ def _model_tides(
             pytmd_model.grid_file,
             pytmd_model.model_file,
             type=pytmd_model.type,
+            crop=crop,
+            bounds=bounds,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
@@ -319,6 +332,8 @@ def _model_tides(
             lon,
             lat,
             pytmd_model.model_file,
+            crop=crop,
+            bounds=bounds,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
@@ -336,6 +351,8 @@ def _model_tides(
             pytmd_model.model_file,
             type=pytmd_model.type,
             version=pytmd_model.version,
+            crop=crop,
+            bounds=bounds,
             method=method,
             extrapolate=extrapolate,
             cutoff=cutoff,
@@ -585,6 +602,7 @@ def model_tides(
     model="FES2014",
     directory=None,
     crs="EPSG:4326",
+    crop=True,
     method="spline",
     extrapolate=True,
     cutoff=None,
@@ -613,6 +631,10 @@ def model_tides(
     For FES2014 (https://www.aviso.altimetry.fr/es/data/products/auxiliary-products/global-tide-fes/description-fes2014.html):
         - {directory}/fes2014/ocean_tide/
         - {directory}/fes2014/load_tide/
+
+    For FES2022 (https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html):
+        - {directory}/fes2022b/ocean_tide/
+        - {directory}/fes2022b/load_tide/
 
     For TPXO8-atlas (https://www.tpxo.net/tpxo-products-and-registration):
         - {directory}/tpxo8_atlas/
@@ -648,6 +670,7 @@ def model_tides(
     model : string, optional
         The tide model used to model tides. Options include:
         - "FES2014" (pre-configured on DEA Sandbox)
+        - "FES2022"
         - "TPXO9-atlas-v5"
         - "TPXO8-atlas"
         - "EOT20"
@@ -670,6 +693,10 @@ def model_tides(
     crs : str, optional
         Input coordinate reference system for x and y coordinates.
         Defaults to "EPSG:4326" (WGS84; degrees latitude, longitude).
+    crop : bool optional
+        Whether to crop tide model constituent files on-the-fly to
+        improve performance. Cropping will be performed based on a
+        1 degree buffer around all input points. Defaults to True.
     method : string, optional
         Method used to interpolate tidal constituents
         from model files. Options include:
@@ -719,7 +746,7 @@ def model_tides(
         Defaults to "long".
     ensemble_models : list, optional
         An optional list of models used to generate the ensemble tide
-        model if "ensemble" tide modelling is requested. Defaults to 
+        model if "ensemble" tide modelling is requested. Defaults to
         ["FES2014", "TPXO9-atlas-v5", "EOT20", "HAMTIDE11", "GOT4.10",
         "FES2012", "TPXO8-atlas-v1"].
     **ensemble_kwargs :
@@ -781,6 +808,7 @@ def model_tides(
 
     # Verify that all provided models are supported
     valid_models = [
+        "FES2022",
         "FES2014",
         "TPXO9-atlas-v5",
         "EOT20",
@@ -826,6 +854,7 @@ def model_tides(
         _model_tides,
         directory=directory,
         crs=crs,
+        crop=crop,
         method=method,
         extrapolate=extrapolate,
         cutoff=np.inf if cutoff is None else cutoff,
@@ -1072,6 +1101,7 @@ def pixel_tides(
         The tide model or a list of models used to model tides, as
         supported by the `pyTMD` Python package. Options include:
         - "FES2014" (default; pre-configured on DEA Sandbox)
+        - "FES2022"
         - "TPXO8-atlas"
         - "TPXO9-atlas-v5"
         - "EOT20"

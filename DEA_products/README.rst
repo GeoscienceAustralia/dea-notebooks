@@ -8,15 +8,16 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
 
    DEA_Landsat_Surface_Reflectance.ipynb
    DEA_Sentinel2_Surface_Reflectance.ipynb
-   DEA_Water_Observations.ipynb
-   DEA_Fractional_Cover.ipynb
-   DEA_Intertidal.ipynb
+   DEA_GeoMAD.ipynb
    DEA_Land_Cover.ipynb
-   DEA_High_and_Low_Tide_Imagery.ipynb
-   DEA_Coastlines.ipynb
-   DEA_Waterbodies.ipynb
-   DEA_Wetlands_Insight_Tool.ipynb
+   DEA_Fractional_Cover.ipynb
    DEA_Mangroves.ipynb
+   DEA_Wetlands_Insight_Tool.ipynb
+   DEA_Water_Observations.ipynb
+   DEA_Waterbodies.ipynb
+   DEA_Coastlines.ipynb
+   DEA_High_and_Low_Tide_Imagery.ipynb
+   DEA_Intertidal.ipynb
 
 Citing DEA Notebooks
 --------------------

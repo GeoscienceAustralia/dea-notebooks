@@ -19,5 +19,5 @@ jobs:
         with:
           token: ${{ secrets.REPO_PAT }}
           repository: GeoscienceAustralia/dea-knowledge-hub
-          event-type: republish-docs
+          event-type: publish-notebooks-to-knowledge-hub
 

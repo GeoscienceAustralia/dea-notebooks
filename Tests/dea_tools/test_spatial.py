@@ -18,6 +18,20 @@ from dea_tools.spatial import (
 from dea_tools.validation import eval_metrics
 
 
+def geobox_test(gbox1, gbox2):
+    """
+    Tests equivalency between two GeoBoxes, allowing for floating
+    point precision differences between coordinates
+    TODO: Remove once `odc-geo` bug is resolved
+    """
+    y_dim, x_dim = gbox1.dims
+    assert np.allclose(gbox1.coords[x_dim].values, gbox2.coords[x_dim].values)
+    assert np.allclose(gbox1.coords[y_dim].values, gbox2.coords[y_dim].values)
+    assert np.allclose(gbox1.resolution.xy, gbox2.resolution.xy)
+    assert gbox1.crs == gbox2.crs
+    assert gbox1.shape == gbox2.shape
+
+
 @pytest.fixture(
     params=[
         None,  # Default WGS84
@@ -66,6 +80,7 @@ def satellite_da(request):
         output_crs=crs,
         resolution=res,
         group_by="solar_day",
+        skip_broken_datasets=True,
     )
 
     # Mask nodata
@@ -346,7 +361,7 @@ def test_idw():
     output_y = [0.0, 0.0, 0.0, 0.0]
     out = idw(input_z, input_x, input_y, output_x, output_y, k=2)
     assert np.allclose(out, [1.5, 2.5, 3.5, 4.5])
-    
+
     # Verify that k > input points gives error
     with pytest.raises(ValueError):
         idw(input_z, input_x, input_y, output_x, output_y, k=6)
@@ -380,11 +395,11 @@ def test_idw():
     # Four neighbours; max distance of 2, k_min of 4 (should return NaN)
     out = idw(input_z, input_x, input_y, output_x, output_y, k=4, max_dist=2, k_min=4)
     assert np.isnan(out).all()
-    
+
     # Four neighbours; power function p=0
     out = idw(input_z, input_x, input_y, output_x, output_y, k=4, p=0)
     assert np.allclose(out, [2.5, 2.5, 2.5, 2.5])
-    
+
     # Four neighbours; power function p=2
     out = idw(input_z, input_x, input_y, output_x, output_y, k=4, p=2)
     assert np.allclose(out, [1.83, 2.17, 2.83, 3.17], rtol=0.01)
@@ -429,7 +444,7 @@ def test_xr_interpolate(dem_da, points_gdf, method):
         method=method,
         k=5,
     )
-    assert interpolated_ds.odc.geobox == dem_da.odc.geobox
+    geobox_test(interpolated_ds.odc.geobox, dem_da.odc.geobox)
     assert "z" in interpolated_ds.data_vars
     assert interpolated_ds["z"].notnull().sum() > 0
 
@@ -450,7 +465,7 @@ def test_xr_interpolate(dem_da, points_gdf, method):
         k=5,
         factor=10,
     )
-    assert interpolated_ds_factor10.odc.geobox == dem_da.odc.geobox
+    geobox_test(interpolated_ds_factor10.odc.geobox, dem_da.odc.geobox)
     assert "z" in interpolated_ds_factor10.data_vars
     assert interpolated_ds_factor10["z"].notnull().sum() > 0
 
