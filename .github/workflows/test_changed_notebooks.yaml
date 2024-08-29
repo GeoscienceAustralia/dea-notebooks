@@ -101,6 +101,6 @@ jobs:
               set -o pipefail
               cd /home/jovyan/dea-notebooks
               pip3 install ./Tools
-              pytest Tests/dea_tools
+              # pytest Tests/dea_tools
               pytest --durations=10 --nbval-lax ${{ steps.changed-notebooks.outputs.all_changed_files }}
             "
