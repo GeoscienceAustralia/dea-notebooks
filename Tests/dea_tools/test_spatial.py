@@ -80,6 +80,7 @@ def satellite_da(request):
         output_crs=crs,
         resolution=res,
         group_by="solar_day",
+        skip_broken_datasets=True,
     )
 
     # Mask nodata

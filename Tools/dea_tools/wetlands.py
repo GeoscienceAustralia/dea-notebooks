@@ -9,7 +9,7 @@ by Attribution 4.0 license
 (https://creativecommons.org/licenses/by/4.0/).
 
 Contact: If you need assistance, please post a question on the Open 
-Data Cube Slack channel (http://slack.opendatacube.org/) or on the 
+Data Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the 
 GIS Stack Exchange 
 (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)using
 the `open-data-cube` tag (you can view previously asked questions
@@ -18,7 +18,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on 
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: July 2023
+Last modified: July 2024
 """
 
 import seaborn as sns
@@ -155,7 +155,7 @@ def normalise_wit(polygon_base_df):
 
     # convert the string to Python datetime format, easy to do display the result in PNG
     polygon_base_df.loc[:, "date"] = pd.to_datetime(
-        polygon_base_df["date"], infer_datetime_format=True
+        polygon_base_df["date"]
     )
 
     polygon_base_df.reset_index(inplace=True)
@@ -216,6 +216,7 @@ def display_wit_stack_with_df(
     png_name="your_file_name",
     width=32,
     height=6,
+    x_axis_labels="years"
 ):
     """
     This functions produces WIT plots. Function displays a stack plot and saves as a png.
@@ -233,6 +234,9 @@ def display_wit_stack_with_df(
      'norm_npv']
      polygon_name : string
      png_name : string
+     x_axis_labels : string with options of "years" or "months" 
+     to set either years or months on the x axis as labels
+     
 
     """
 
@@ -297,10 +301,19 @@ def display_wit_stack_with_df(
         hatch="//",
     )
 
-    # modify the xaxis settings
-    ax.xaxis.set_major_locator(mdates.YearLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-
+    if x_axis_labels=="years":
+        # modify the xaxis settings
+        ax.xaxis.set_major_locator(mdates.YearLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+        
+    if x_axis_labels=="months":
+       # modify the xaxis settings
+        ax.xaxis.set_major_locator(mdates.MonthLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%Y'))
+        # Rotates and right-aligns the x labels so they don't crowd each other.
+        for label in ax.get_xticklabels(which='major'):
+            label.set(rotation=30, horizontalalignment='right')
+        
     x_label_text = "The Fractional Cover algorithm developed by the Joint Remote Sensing Research Program and\n the Water Observations from Space algorithm developed by Geoscience Australia are used in the production of this data"
 
     ax.set_xlabel(x_label_text, style="italic")

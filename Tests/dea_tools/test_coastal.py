@@ -76,6 +76,7 @@ def satellite_ds(request):
         output_crs=crs,
         resolution=res,
         group_by="solar_day",
+        skip_broken_datasets=True,
         dask_chunks={},
     )
 
