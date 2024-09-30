@@ -288,7 +288,7 @@ def predict_xr(
             input_xr.chunks["y"][0]
         )
 
-    def _predict_func(model, input_xr, persist, proba, proba_max, clean, return_input):
+    def _predict_func(model, input_xr, persist, proba, max_proba, clean, return_input):
         x, y, crs = input_xr.x, input_xr.y, input_xr.geobox.crs
 
         input_data = []
@@ -337,7 +337,7 @@ def predict_xr(
             out_proba = model.predict_proba(input_data_flattened)
 
             # convert to %
-            if proba_max == True:
+            if max_proba == True:
                 print("  returning single probability band.")
                 out_proba = da.max(out_proba, axis=1) * 100.0
             else:
@@ -402,12 +402,12 @@ def predict_xr(
         model = ParallelPostFit(model)
         with joblib.parallel_backend("dask"):
             output_xr = _predict_func(
-                model, input_xr, persist, proba, proba_max, clean, return_input
+                model, input_xr, persist, proba, max_proba, clean, return_input
             )
 
     else:
         output_xr = _predict_func(
-            model, input_xr, persist, proba, proba_max, clean, return_input
+            model, input_xr, persist, proba, max_proba, clean, return_input
         ).compute()
 
     return output_xr
