@@ -336,7 +336,7 @@ def predict_xr(
             print("   probabilities...")
             out_proba = model.predict_proba(input_data_flattened)
 
-            # convert to %
+            # return either one band with the max probability, or the whole probability array
             if max_proba == True:
                 print("  returning single probability band.")
                 out_proba = da.max(out_proba, axis=1) * 100.0
@@ -348,12 +348,10 @@ def predict_xr(
             else:
                 print("  returning class probability array.")
                 out_proba = out_proba * 100.0
-                
                 class_names = model.classes_  # Get the unique class names from the fitted classifier
 
-                probabilities_dataset = xr.Dataset()
-
                 # Loop through each class (band)
+                probabilities_dataset = xr.Dataset()
                 for i, class_name in enumerate(class_names):
                     reshaped_band = out_proba[:, i].reshape(len(y), len(x))
                     reshaped_da = xr.DataArray(
