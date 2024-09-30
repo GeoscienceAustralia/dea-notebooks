@@ -340,18 +340,24 @@ def predict_xr(
             if max_proba == True:
                 print("  returning single probability band.")
                 out_proba = da.max(out_proba, axis=1) * 100.0
+                out_proba = out_proba.reshape(len(y), len(x))
+                out_proba = xr.DataArray(
+                    out_proba, coords={"x": x, "y": y}, dims=["y", "x"]
+                )
             else:
                 print("  returning class probability array.")
                 out_proba = out_proba * 100.0
-
+                # Loop through each DataArray in the Dataset
+                for band_name in out_proba.data_vars:
+                    reshaped_band = out_proba[band_name].values.reshape(len(y), len(x))
+                    reshaped_band = xr.DataArray(
+                        reshaped_band, coords={"x": x, "y": y}, dims=["y", "x"]
+                    )
+                    output_xr[out_proba] = reshaped_band
+            
             if clean == True:
                 out_proba = da.where(da.isfinite(out_proba), out_proba, 0)
-
-            out_proba = out_proba.reshape(len(y), len(x))
-
-            out_proba = xr.DataArray(
-                out_proba, coords={"x": x, "y": y}, dims=["y", "x"]
-            )
+            
             output_xr["Probabilities"] = out_proba
 
         if return_input == True:
