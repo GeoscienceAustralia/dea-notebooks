@@ -226,6 +226,7 @@ def predict_xr(
     chunk_size=None,
     persist=False,
     proba=False,
+    max_proba=True,
     clean=False,
     return_input=False,
 ):
@@ -255,6 +256,11 @@ def predict_xr(
         distributed RAM.
     proba : bool
         If True, predict probabilities
+    max_proba : bool
+        If True, the probabilities array will be flattened to contain
+        only the probabiltiy for the "Predictions" class. If False, 
+        the "Probabilities" object will be an array of prediction
+        probaiblities for each classes
     clean : bool
         If True, remove Infs and NaNs from input and output arrays
     return_input : bool
@@ -282,7 +288,7 @@ def predict_xr(
             input_xr.chunks["y"][0]
         )
 
-    def _predict_func(model, input_xr, persist, proba, clean, return_input):
+    def _predict_func(model, input_xr, persist, proba, proba_max, clean, return_input):
         x, y, crs = input_xr.x, input_xr.y, input_xr.geobox.crs
 
         input_data = []
@@ -331,7 +337,12 @@ def predict_xr(
             out_proba = model.predict_proba(input_data_flattened)
 
             # convert to %
-            out_proba = da.max(out_proba, axis=1) * 100.0
+            if proba_max == True:
+                print("  returning single probability band.")
+                out_proba = da.max(out_proba, axis=1) * 100.0
+            else:
+                print("  returning class probability array.")
+                out_proba = out_proba * 100.0
 
             if clean == True:
                 out_proba = da.where(da.isfinite(out_proba), out_proba, 0)
