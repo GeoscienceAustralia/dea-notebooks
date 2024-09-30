@@ -402,12 +402,12 @@ def predict_xr(
         model = ParallelPostFit(model)
         with joblib.parallel_backend("dask"):
             output_xr = _predict_func(
-                model, input_xr, persist, proba, clean, return_input
+                model, input_xr, persist, proba, proba_max, clean, return_input
             )
 
     else:
         output_xr = _predict_func(
-            model, input_xr, persist, proba, clean, return_input
+            model, input_xr, persist, proba, proba_max, clean, return_input
         ).compute()
 
     return output_xr
