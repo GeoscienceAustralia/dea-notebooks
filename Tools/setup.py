@@ -56,7 +56,7 @@ REQUIRED = [
     'pystac-client',
     'planetary-computer',
     'python-dateutil',
-    'pyTMD==2.1.6',    
+    'pyTMD<=2.1.6',    
     'pytz',
     'rasterio',
     'rasterstats',
