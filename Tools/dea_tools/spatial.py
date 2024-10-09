@@ -535,7 +535,7 @@ def subpixel_contours(
 
         contour_arrays = {
             _time_format(i, time_format): _contours_to_multiline(
-                da_i, z_values[0], min_vertices
+                da_i.squeeze(), z_values[0], min_vertices
             )
             for i, da_i in da.groupby(dim)
         }

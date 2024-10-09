@@ -288,120 +288,243 @@ def _model_tides(
         lat.max() + buffer,
     ]
 
-    # Read tidal constants and interpolate to grid points
-    if pytmd_model.format in ("OTIS", "ATLAS", "TMD3"):
-        amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
-            lon,
-            lat,
-            pytmd_model.grid_file,
-            pytmd_model.model_file,
-            pytmd_model.projection,
-            type=pytmd_model.type,
-            crop=crop,
-            bounds=bounds,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            grid=pytmd_model.format,
+    # TEMPORARY HACK to work on both old and new pyTMD
+    try:
+            
+        # Read tidal constants and interpolate to grid points
+        if pytmd_model.format in ("OTIS", "ATLAS", "TMD3"):
+            amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
+                lon,
+                lat,
+                pytmd_model.grid_file,
+                pytmd_model.model_file,
+                pytmd_model.projection,
+                type=pytmd_model.type,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                grid=pytmd_model.format,
+            )
+    
+            # Use delta time at 2000.0 to match TMD outputs
+            deltat = np.zeros((len(timescale)), dtype=np.float64)
+    
+        elif pytmd_model.format == "netcdf":
+            amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
+                lon,
+                lat,
+                pytmd_model.grid_file,
+                pytmd_model.model_file,
+                type=pytmd_model.type,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Use delta time at 2000.0 to match TMD outputs
+            deltat = np.zeros((len(timescale)), dtype=np.float64)
+    
+        elif pytmd_model.format == "GOT":
+            amp, ph, c = pyTMD.io.GOT.extract_constants(
+                lon,
+                lat,
+                pytmd_model.model_file,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Delta time (TT - UT1)
+            deltat = timescale.tt_ut1
+    
+        elif pytmd_model.format == "FES":
+            amp, ph = pyTMD.io.FES.extract_constants(
+                lon,
+                lat,
+                pytmd_model.model_file,
+                type=pytmd_model.type,
+                version=pytmd_model.version,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Available model constituents
+            c = pytmd_model.constituents
+    
+            # Delta time (TT - UT1)
+            deltat = timescale.tt_ut1
+    
+        # Calculate complex phase in radians for Euler's
+        cph = -1j * ph * np.pi / 180.0
+    
+        # Calculate constituent oscillation
+        hc = amp * np.exp(cph)
+    
+        # Determine the number of points and times to process. If in
+        # "one-to-many" mode, these counts are used to repeat our extracted
+        # constituents and timesteps so we can extract tides for all
+        # combinations of our input times and tide modelling points.
+        # If in "one-to-one" mode, we avoid this step by setting counts to 1
+        # (e.g. "repeat 1 times")
+        points_repeat = len(x) if mode == "one-to-many" else 1
+        time_repeat = len(time) if mode == "one-to-many" else 1
+    
+        # If in "one-to-many" mode, repeat constituents to length of time
+        # and number of input coords before passing to `predict_tide_drift`
+        t, hc, deltat = (
+            np.tile(timescale.tide, points_repeat),
+            hc.repeat(time_repeat, axis=0),
+            np.tile(deltat, points_repeat),
         )
-
-        # Use delta time at 2000.0 to match TMD outputs
-        deltat = np.zeros((len(timescale)), dtype=np.float64)
-
-    elif pytmd_model.format == "netcdf":
-        amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
-            lon,
-            lat,
-            pytmd_model.grid_file,
-            pytmd_model.model_file,
-            type=pytmd_model.type,
-            crop=crop,
-            bounds=bounds,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            scale=pytmd_model.scale,
-            compressed=pytmd_model.compressed,
+    
+        # Predict tidal elevations at time and infer minor corrections
+        npts = len(t)
+        tide = np.ma.zeros((npts), fill_value=np.nan)
+        tide.mask = np.any(hc.mask, axis=1)
+    
+        # Predict tides
+        tide.data[:] = pyTMD.predict.drift(
+            t, hc, c, deltat=deltat, corrections=pytmd_model.format
         )
-
-        # Use delta time at 2000.0 to match TMD outputs
-        deltat = np.zeros((len(timescale)), dtype=np.float64)
-
-    elif pytmd_model.format == "GOT":
-        amp, ph, c = pyTMD.io.GOT.extract_constants(
-            lon,
-            lat,
-            pytmd_model.model_file,
-            crop=crop,
-            bounds=bounds,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            scale=pytmd_model.scale,
-            compressed=pytmd_model.compressed,
+        minor = pyTMD.predict.infer_minor(
+            t, hc, c, deltat=deltat, corrections=pytmd_model.format
         )
+        tide.data[:] += minor.data[:]
 
-        # Delta time (TT - UT1)
-        deltat = timescale.tt_ut1
-
-    elif pytmd_model.format == "FES":
-        amp, ph = pyTMD.io.FES.extract_constants(
-            lon,
-            lat,
-            pytmd_model.model_file,
-            type=pytmd_model.type,
-            version=pytmd_model.version,
-            crop=crop,
-            bounds=bounds,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            scale=pytmd_model.scale,
-            compressed=pytmd_model.compressed,
+    except:
+        # Read tidal constants and interpolate to grid points
+        if pytmd_model.format in ("OTIS", "ATLAS-compact", "TMD3"):
+            amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
+                lon,
+                lat,
+                pytmd_model.grid_file,
+                pytmd_model.model_file,
+                pytmd_model.projection,
+                type=pytmd_model.type,
+                grid=pytmd_model.file_format,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+            )
+    
+            # Use delta time at 2000.0 to match TMD outputs
+            deltat = np.zeros((len(timescale)), dtype=np.float64)
+    
+        elif pytmd_model.format in ("ATLAS-netcdf",):
+            amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
+                lon,
+                lat,
+                pytmd_model.grid_file,
+                pytmd_model.model_file,
+                type=pytmd_model.type,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Use delta time at 2000.0 to match TMD outputs
+            deltat = np.zeros((len(timescale)), dtype=np.float64)
+    
+        elif pytmd_model.format in ("GOT-ascii", "GOT-netcdf"):
+            amp, ph, c = pyTMD.io.GOT.extract_constants(
+                lon,
+                lat,
+                pytmd_model.model_file,
+                grid=pytmd_model.type,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Delta time (TT - UT1)
+            deltat = timescale.tt_ut1
+    
+        elif pytmd_model.format in ("FES-ascii", "FES-netcdf"):
+            amp, ph = pyTMD.io.FES.extract_constants(
+                lon,
+                lat,
+                pytmd_model.model_file,
+                type=pytmd_model.type,
+                version=pytmd_model.version,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Available model constituents
+            c = pytmd_model.constituents
+    
+            # Delta time (TT - UT1)
+            deltat = timescale.tt_ut1
+    
+        # Calculate complex phase in radians for Euler's
+        cph = -1j * ph * np.pi / 180.0
+    
+        # Calculate constituent oscillation
+        hc = amp * np.exp(cph)
+    
+        # Determine the number of points and times to process. If in
+        # "one-to-many" mode, these counts are used to repeat our extracted
+        # constituents and timesteps so we can extract tides for all
+        # combinations of our input times and tide modelling points.
+        # If in "one-to-one" mode, we avoid this step by setting counts to 1
+        # (e.g. "repeat 1 times")
+        points_repeat = len(x) if mode == "one-to-many" else 1
+        time_repeat = len(time) if mode == "one-to-many" else 1
+    
+        # If in "one-to-many" mode, repeat constituents to length of time
+        # and number of input coords before passing to `predict_tide_drift`
+        t, hc, deltat = (
+            np.tile(timescale.tide, points_repeat),
+            hc.repeat(time_repeat, axis=0),
+            np.tile(deltat, points_repeat),
         )
-
-        # Available model constituents
-        c = pytmd_model.constituents
-
-        # Delta time (TT - UT1)
-        deltat = timescale.tt_ut1
-
-    # Calculate complex phase in radians for Euler's
-    cph = -1j * ph * np.pi / 180.0
-
-    # Calculate constituent oscillation
-    hc = amp * np.exp(cph)
-
-    # Determine the number of points and times to process. If in
-    # "one-to-many" mode, these counts are used to repeat our extracted
-    # constituents and timesteps so we can extract tides for all
-    # combinations of our input times and tide modelling points.
-    # If in "one-to-one" mode, we avoid this step by setting counts to 1
-    # (e.g. "repeat 1 times")
-    points_repeat = len(x) if mode == "one-to-many" else 1
-    time_repeat = len(time) if mode == "one-to-many" else 1
-
-    # If in "one-to-many" mode, repeat constituents to length of time
-    # and number of input coords before passing to `predict_tide_drift`
-    t, hc, deltat = (
-        np.tile(timescale.tide, points_repeat),
-        hc.repeat(time_repeat, axis=0),
-        np.tile(deltat, points_repeat),
-    )
-
-    # Predict tidal elevations at time and infer minor corrections
-    npts = len(t)
-    tide = np.ma.zeros((npts), fill_value=np.nan)
-    tide.mask = np.any(hc.mask, axis=1)
-
-    # Predict tides
-    tide.data[:] = pyTMD.predict.drift(
-        t, hc, c, deltat=deltat, corrections=pytmd_model.format
-    )
-    minor = pyTMD.predict.infer_minor(
-        t, hc, c, deltat=deltat, corrections=pytmd_model.format
-    )
-    tide.data[:] += minor.data[:]
+    
+        # Predict tidal elevations at time and infer minor corrections
+        npts = len(t)
+        tide = np.ma.zeros((npts), fill_value=np.nan)
+        tide.mask = np.any(hc.mask, axis=1)
+    
+        # Predict tides
+        tide.data[:] = pyTMD.predict.drift(t, hc, c, deltat=deltat, corrections=pytmd_model.corrections)
+        minor = pyTMD.predict.infer_minor(
+            t,
+            hc,
+            c,
+            deltat=deltat,
+            corrections=pytmd_model.corrections,
+            minor=pytmd_model.minor,
+        )
+        tide.data[:] += minor.data[:]
 
     # Replace invalid values with fill value
     tide.data[tide.mask] = tide.fill_value
