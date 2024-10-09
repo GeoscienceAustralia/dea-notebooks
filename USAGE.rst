@@ -17,6 +17,8 @@ Scientific papers
 
 - Bishop-Taylor, R., Sagar, S., Lymburner, L., Alam, I. and Sixsmith, J., 2019. Sub-pixel waterline extraction: Characterising accuracy and sensitivity to indices and spectra. Remote Sensing, 11(24), p.2984. https://www.mdpi.com/2072-4292/11/24/2984
 
+- Burton, C. A.,  Rifai, S. W., Renzullo, L. J. and Van Dijk, A. I. J. M., 2024. Enhancing long-term vegetation monitoring in Australia: a new approach for harmonising the Advanced Very High Resolution Radiometer normalised-difference vegetation (NVDI) with MODIS NDVI, Earth System Science Data, Volume 16, pp. 4839-4416. https://doi.org/10.5194/essd-16-4389-2024
+
 - Chatzopoulos-Vouzoglanis, K., Reinke, K.J., Soto‐Berelov, M., Jones, S.D., 2024. Are fire intensity and burn severity associated? Advancing our understanding of FRP and NBR metrics from Himawari-8/9 and Sentinel-2, International Journal of Applied Earth Observation and Geoinformation, Volume 127, 2024, 103673, ISSN 1569-8432. https://doi.org/10.1016/j.jag.2024.103673
 
 - Chen, Y., Guerschman, J., Shendryk, Y., Henry, D., Harrison, M.T., 2021. Estimating Pasture Biomass Using Sentinel-2 Imagery and Machine Learning. Remote Sens. 2021, Vol. 13, Page 603 13, 603. https://doi.org/10.3390/RS13040603
@@ -62,7 +64,7 @@ Conferences
 Courses and training
 --------------------
 - University of New England, 2023. `GISC436 : Remote Sensing and Image analysis <https://www.une.edu.au/study/units/remote-sensing-and-image-analysis-gisc436/>`_
-- Swinburne University of Technology, Space Technology and Industry Institute, 2023. `Earth Observation and Data Analysis Short Course <https://www.swinburne.edu.au/events/2023/10/earth-observation-data-analysis-short-course/>`_
+- Swinburne University of Technology, Space Technology and Industry Institute, 2023, 2024. `Earth Observation and Data Analysis Short Course 2024 <https://events.humanitix.com/short-course-earth-observation-data-analysis>`_ , `Earth Observation and Data Analysis Short Course 2023 <https://www.swinburne.edu.au/events/2023/10/earth-observation-data-analysis-short-course/>`_
 - Australian National University, Centre for Water and Landscape Dynamics `(WALD) <http://wald.anu.edu.au/>`_ under contract for `Geoscience Australia <https://www.ga.gov.au/>`_, 2022.  `Digital Earth Australia for Geospatial Analysts <https://anu-wald.github.io/dea_course/about/>`_. Materials available under Apache 2.0 Licence `here <https://github.com/ANU-WALD/dea_course>`_ and link to github repository: https://github.com/ANU-WALD/dea_training 
 - Flinders University, 2021, 2022. Remote Sensing for All Disciplines. Undergrad and postgrad course.
 - University of Newcastle, 2021. Advanced Remote Sensing Data and Applications. Graduate Certificate in Spatial Science.

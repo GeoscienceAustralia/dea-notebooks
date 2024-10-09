@@ -1090,7 +1090,6 @@ def _esri_pansharpen(ds, pan_band, band_weights=None):
     ds_pansharpened : xarray.Dataset
         Pansharpened dataset with the same dimensions as the input dataset.
     """
-
     # Create new dataarrays with and without pan band
     da_nopan = ds.drop(pan_band).to_array()
     da_pan = ds[pan_band]
@@ -1157,6 +1156,8 @@ def _hsv_timestep_pansharpen(ds_i, pan_band):
     ds_pansharpened : xarray.Dataset
         Pansharpened dataset with the same dimensions as the input dataset.
     """
+    # Squeeze out any single dimensions
+    ds_i = ds_i.squeeze()
 
     # Convert to an xr.DataArray and move "variable" to end
     da_i = ds_i.to_array().transpose(..., "variable")
@@ -1209,6 +1210,8 @@ def _pca_timestep_pansharpen(ds_i, pan_band, pca_rescaling="histogram"):
     ds_pansharpened : xarray.Dataset
         Pansharpened dataset with the same dimensions as the input dataset.
     """
+    # Squeeze out any single dimensions
+    ds_i = ds_i.squeeze()
 
     # Reshape to 2D by stacking x and y dimensions to prepare it
     # as an input to PCA. Drop NA rows as these are not supported
