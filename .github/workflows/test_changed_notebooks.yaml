@@ -1,0 +1,106 @@
+name: Test Modified Files
+
+on:
+  pull_request:
+    branches: [ develop ]
+
+permissions:
+  id-token: write # Required for OIDC authentication to AWS
+  contents: read
+
+jobs:
+  test_files:
+    runs-on: ubuntu-latest
+
+    # Automatically activate our mamba environment when it's ready
+    defaults:
+      run:
+        shell: bash -l {0}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: dea-notebooks
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::538673716275:role/github-actions-role-readonly
+          aws-region: ap-southeast-2
+          role-duration-seconds: 7200  # 2 hours
+
+      - name: Copy tide modelling files with the AWS CLI
+        run: |
+          aws s3 sync s3://dea-non-public-data/tide_models/tide_models/fes2014 tide_models/fes2014
+          aws s3 sync s3://dea-non-public-data/tide_models/tide_models/hamtide tide_models/hamtide
+
+      - name: Login to Amazon ECR Private
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Pull dea-sandbox image from ECR
+        run: |
+          docker pull 538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::060378307146:role/github-actions-dea-notebooks--sandbox
+          aws-region: ap-southeast-2
+          role-duration-seconds: 7200  # 2 hours
+
+      - name: Get Database Credentials
+        run: |
+          username_password=$(aws ssm get-parameter --name /dea-sandbox-eks/sandbox_reader/db.creds --with-decryption  --query Parameter.Value --output text)
+          echo DATACUBE_DB_URL=postgresql://${username_password}@localhost:5432/odc >> $GITHUB_ENV
+
+      - name: Open Port Forward to RDS
+        run: |
+          npx basti connect \
+            --custom-target-vpc vpc-086904199e505c1f6 \
+            --custom-target-host db-aurora-dea-sandbox-eks-1.cos5zfpkso9m.ap-southeast-2.rds.amazonaws.com \
+            --custom-target-port 5432 \
+            --local-port 5432 &
+          npx wait-on --timeout 120000 --interval 1000 tcp:127.0.0.1:5432
+          echo "PGPORT=5432" >> $GITHUB_ENV
+          echo "PGHOST=localhost" >> $GITHUB_ENV
+
+      - name: Get changed notebook files
+        id: changed-notebooks
+        uses: tj-actions/changed-files@v44
+        with:
+          files: '**/*.ipynb'
+          separator: ' '
+    
+      - name: Print changed notebook files
+        if: steps.changed-notebooks.outputs.any_changed == 'true'
+        run: |
+          echo "Changed notebook files:"
+          echo "${{ steps.changed-notebooks.outputs.all_changed_files }}"
+      
+      - name: Run the Notebook tests
+        if: steps.changed-notebooks.outputs.any_changed == 'true'
+        run: |
+          sudo chown -R 1000:100 ./dea-notebooks
+          cd ./dea-notebooks
+          docker run --rm \
+            --net=host \
+            --env DATACUBE_DB_URL \
+            --env AWS_SESSION_TOKEN \
+            --env AWS_REGION \
+            --env AWS_ACCESS_KEY_ID \
+            --env AWS_SECRET_ACCESS_KEY \
+            --env AWS_SESSION_TOKEN \
+            --volume ${GITHUB_WORKSPACE}/dea-notebooks:/home/jovyan/dea-notebooks \
+            --volume ${GITHUB_WORKSPACE}/tide_models:/var/share/tide_models \
+            --env GDAL_HTTP_MAX_RETRY=3 \
+            --entrypoint /bin/bash \
+            538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable \
+            -c "
+              set -ex
+              set -o pipefail
+              cd /home/jovyan/dea-notebooks
+              pip3 install ./Tools
+              # pytest Tests/dea_tools
+              pytest --durations=10 --nbval-lax ${{ steps.changed-notebooks.outputs.all_changed_files }}
+            "
