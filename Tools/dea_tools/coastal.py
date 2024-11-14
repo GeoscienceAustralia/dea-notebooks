@@ -738,6 +738,10 @@ def model_tides(
     **ensemble_kwargs,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Compute tides at multiple points and times using tidal harmonics.
 
     This function supports all tidal models supported by `pyTMD`,
@@ -887,6 +891,14 @@ def model_tides(
     combination of time and point coordinates.
 
     """
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
     # Set tide modelling files directory. If no custom path is provided,
     # first try global environmental var, then "/var/share/tide_models"
     if directory is None:
@@ -1169,6 +1181,10 @@ def pixel_tides(
     **model_tides_kwargs,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Obtain tide heights for each pixel in a dataset by modelling
     tides into a low-resolution grid surrounding the dataset,
     then (optionally) spatially resample this low-res data back
@@ -1270,6 +1286,14 @@ def pixel_tides(
     """
     import odc.geo.xr
     from odc.geo.geobox import GeoBox
+
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # First test if no time dimension and nothing passed to `times`
     if ("time" not in ds.dims) & (times is None):
@@ -1449,6 +1473,10 @@ def tidal_tag(
     **model_tides_kwargs,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Takes an xarray.Dataset and returns the same dataset with a new
     `tide_m` variable giving the height of the tide at the exact
     moment of each satellite acquisition.
@@ -1500,6 +1528,14 @@ def tidal_tag(
     """
 
     import odc.geo.xr
+
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
@@ -1593,6 +1629,10 @@ def tidal_stats(
     **model_tides_kwargs,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Takes an xarray.Dataset and statistically compares the tides
     modelled for each satellite observation against the full modelled
     tidal range. This comparison can be used to evaluate whether the
@@ -1679,6 +1719,13 @@ def tidal_stats(
                   all available tide heights and time
 
     """
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Model tides for each observation in the supplied xarray object
     ds_tides, tidepost_lon, tidepost_lat = tidal_tag(
@@ -1861,6 +1908,10 @@ def tidal_tag_otps(
     return_tideposts=False,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Takes an xarray.Dataset and returns the same dataset with a new
     `tide_m` variable giving the height of the tide at the exact
     moment of each satellite acquisition.
@@ -1904,6 +1955,13 @@ def tidal_tag_otps(
     location used in the analysis).
 
     """
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Load tide modelling functions from either OTPS for pyfes
     try:
@@ -2002,6 +2060,10 @@ def tidal_stats_otps(
     round_stats=3,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Takes an xarray.Dataset and statistically compares the tides
     modelled for each satellite observation against the full modelled
     tidal range. This comparison can be used to evaluate whether the
@@ -2082,6 +2144,13 @@ def tidal_stats_otps(
                   all available tide heights and time
 
     """
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Load tide modelling functions from either OTPS for pyfes
     try:
