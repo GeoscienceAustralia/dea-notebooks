@@ -1,3 +1,7 @@
+"""
+Digital Earth Australia Wetlands Insight Tool widget, which can be used to draw a polygon around an area of interest to extract a stacked line plot showing open water, wet, green, dry and brown vegetation percentages.
+"""
+
 # Import required packages
 import fiona
 import sys
@@ -47,8 +51,6 @@ import dea_tools.app.widgetconstructors as deawidgets
 from dea_tools.dask import create_local_dask_cluster
 from dea_tools.spatial import reverse_geocode
 from dea_tools.datahandling import xr_pansharpen
-
-
 import dea_tools.wetlands
 from dea_tools.wetlands import generate_low_quality_data_periods
 from dea_tools.wit import WIT_drill
@@ -70,13 +72,13 @@ def create_expanded_button(description, button_style):
     )
 
 class wit_app(HBox):
+    
     def __init__(self, lang=None):
         super().__init__()
 
-        #deafrica_tools.set_lang(lang)
-
-        ##########################################################
+        ######################
         # INITIAL ATTRIBUTES #
+        ######################
 
         self.startdate = "2020-01-01"
         self.enddate = "2020-03-01"
@@ -85,56 +87,64 @@ class wit_app(HBox):
         self.out_csv = "example_WIT.csv"
         self.out_plot = "example_WIT.png"
         self.product_list = [
-            (("None"), "none"),
-            (("ESRI World Imagery"), "esri_world_imagery"),
-            (("Sentinel-2 Geomedian"), "gm_s2_annual"),
-            (("Water Observations from Space"), "wofs_ls_summary_annual"),
+            ("ESRI World Imagery", "none"),
+            ("Open Street Map", "open_street_map"),
         ]
         self.product = self.product_list[0][1]
         self.product_year = "2020-01-01"
         self.target = None
         self.action = None
         self.gdf_drawn = None
+        self.gdf_uploaded = None
 
-        ##########################################################
+        ##################
         # HEADER FOR APP #
+        ##################
 
         # Create the Header widget
-        header_title_text = "Wetlands Insight Tool"
-        instruction_text = "Select parameters and AOI"
+        header_title_text = "<h3>Digital Earth Australia Wetlands Insight Tool</h3>"
+        instruction_text = "Select parameters and draw a polygon on the map to extract a staked line plot for a given area."
         self.header = deawidgets.create_html(
             f"<h3>{header_title_text}</h3><p>{instruction_text}</p>"
         )
         self.header.layout = make_box_layout()
 
-        ##########################################################
+        #####################################
         # HANDLER FUNCTION FOR DRAW CONTROL #
+        #####################################
 
         # Define the action to take once something is drawn on the map
         def update_geojson(target, action, geo_json):
 
+            # Remove previously uploaded data if present
+            self.gdf_uploaded = None
+            fileupload_wetlands._counter = 0
+
+            # Get data from action
             self.action = action
 
+            # Convert data to geopandas
             json_data = json.dumps(geo_json)
             binary_data = json_data.encode()
             io = BytesIO(binary_data)
             io.seek(0)
-
             gdf = gpd.read_file(io)
             gdf.crs = "EPSG:4326"
-            self.gdf_drawn = gdf
-
-            gdf_drawn_epsg6933 = gdf.copy().to_crs("EPSG:6933")
+            
+            # Convert to Albers and compute area
+            gdf_drawn_albers = gdf.copy().to_crs("EPSG:3577")
             m2_per_km2 = 10**6
-            area = gdf_drawn_epsg6933.area.values[0] / m2_per_km2
+            area = gdf_drawn_albers.area.values[0] / m2_per_km2
             polyarea_label = "Total polygon area"
             polyarea_text = f"<p><b>{polyarea_label}</b>: {area:.2f} km<sup>2</sup></p>"
 
-            if area <= 3000:
+            # Test area size
+            if area <= 50000:
                 confirmation_text = (
                     '<p style="color:#33cc33;">' + ("Area falls within recommended limit") + "</p>"
                 )
                 self.header.value = header_title_text + polyarea_text + confirmation_text
+                self.gdf_drawn = gdf
             else:
                 warning_text = (
                     '<p style="color:#ff5050;">'
@@ -142,17 +152,20 @@ class wit_app(HBox):
                     + "</p>"
                 )
                 self.header.value = header_title_text + polyarea_text + warning_text
-
-        ##########################################################
+                self.gdf_drawn = None
+                
+        ###########################
         # WIDGETS FOR APP OUTPUTS #
+        ###########################
 
         self.dask_client = Output(layout=make_box_layout())
         self.progress_bar = Output(layout=make_box_layout())
         self.wit_plot = Output(layout=make_box_layout())
         self.progress_header = deawidgets.create_html("")
 
-        ##########################################################
+        #########################################
         # MAP WIDGET, DRAWING TOOLS, WMS LAYERS #
+        #########################################
 
         # Create drawing tools
         desired_drawtools = ["rectangle", "polygon"]
@@ -163,8 +176,9 @@ class wit_app(HBox):
         self.layers.name = "Map Overlays"
 
         # Create map widget
-        self.m = deawidgets.create_map()
-
+        self.m = deawidgets.create_map(map_center=(-28, 135),
+                                       zoom_level=4,
+                                       basemap=basemaps.Esri.WorldImagery)
         self.m.layout = make_box_layout()
 
         # Add tools to map widget
@@ -174,26 +188,50 @@ class wit_app(HBox):
         # Store current basemap for future use
         self.basemap = self.m.basemap
 
-        ##########################################################
+        ############################
         # WIDGETS FOR APP CONTROLS #
+        ############################
 
         # Create parameter widgets
         startdate_picker = deawidgets.create_datepicker()
+        
         enddate_picker = deawidgets.create_datepicker()
+        
         min_good_data = deawidgets.create_boundedfloattext(self.mingooddata, 0.0, 1.0, 0.05)
+        
         resampling_freq = deawidgets.create_inputtext(self.resamplingfreq, self.resamplingfreq)
+        
         output_csv = deawidgets.create_inputtext(self.out_csv, self.out_csv)
+        
         output_plot = deawidgets.create_inputtext(self.out_plot, self.out_plot)
+        
         deaoverlay_dropdown = deawidgets.create_dropdown(self.product_list, self.product_list[0][1])
+        
         run_button = create_expanded_button(("Run"), "info")
+        fileupload_wetlands = widgets.FileUpload(accept='', multiple=True)
 
-        ##########################################################
+        ####################################
+        # UPDATE FUNCTIONS FOR EACH WIDGET #
+        ####################################
+
+        # Run update functions whenever various widgets are changed.
+        startdate_picker.observe(self.update_startdate, "value")
+        enddate_picker.observe(self.update_enddate, "value")
+        min_good_data.observe(self.update_mingooddata, "value")
+        resampling_freq.observe(self.update_resamplingfreq, "value")
+        output_csv.observe(self.update_outputcsv, "value")
+        output_plot.observe(self.update_outputplot, "value")
+        deaoverlay_dropdown.observe(self.update_deaoverlay, "value")
+        run_button.on_click(self.run_app)
+        draw_control.on_draw(update_geojson)
+        fileupload_wetlands.observe(self.update_fileupload_wetlands, "value")
+        
+        ##################################
         # COLLECTION OF ALL APP CONTROLS #
+        ##################################
 
         parameter_selection = VBox(
             [
-                HTML("<b>" + ("Map Overlay:") + "</b>"),
-                deaoverlay_dropdown,
                 HTML("<b>" + ("Start Date:") + "</b>"),
                 startdate_picker,
                 HTML("<b>" + ("End Date:") + "</b>"),
@@ -206,51 +244,119 @@ class wit_app(HBox):
                 output_csv,
                 HTML("<b>" + ("Output Plot:") + "</b>"),
                 output_plot,
+                HTML(
+                "</br><i><b>Advanced</b></br>Upload a GeoJSON or ESRI "
+                "Shapefile (<5 mb) containing one or more wetland polygons.</i>"),
+            fileupload_wetlands
             ]
         )
+        map_selection = VBox([
+            HTML("<b>" + ("Map Overlay:") + "</b>"),
+                deaoverlay_dropdown,
+        ])
+        
         parameter_selection.layout = make_box_layout()
+        map_selection.layout = make_box_layout()
 
-        ##########################################################
+        ###############################
         # SPECIFICATION OF APP LAYOUT #
+        ###############################
 
         # Create the layout #[rowspan, colspan]
-        grid = GridspecLayout(11, 10, height="1100px", width="auto")
+        grid = GridspecLayout(12, 10, height="1350px", width="auto")
 
         # Controls and Status
-        grid[0, :] = self.header
+        grid[0, :8] = self.header
+        grid[0, 8:] = map_selection
         grid[1:6, 0:2] = parameter_selection
         grid[6, 0:2] = run_button
 
         # Dask and Progress info
-        grid[1, 7:] = self.dask_client
-        grid[2:7, 7:] = self.progress_bar
+        grid[7:8, :] = self.dask_client
+        grid[8:9, :] = self.progress_bar
 
         # Map
-        grid[1:7, 2:7] = self.m
+        grid[1:7, 2:] = self.m
 
         # Plot
-        grid[7:, :] = self.wit_plot
+        grid[9:, :] = self.wit_plot
 
         # Display using HBox children attribute
         self.children = [grid]
 
-        ##########################################################
-        # SPECIFICATION UPDATE FUNCTIONS FOR EACH WIDGET #
-
-        # Run update functions whenever various widgets are changed.
-        startdate_picker.observe(self.update_startdate, "value")
-        enddate_picker.observe(self.update_enddate, "value")
-        min_good_data.observe(self.update_mingooddata, "value")
-        resampling_freq.observe(self.update_resamplingfreq, "value")
-        output_csv.observe(self.update_outputcsv, "value")
-        output_plot.observe(self.update_outputplot, "value")
-        deaoverlay_dropdown.observe(self.update_deaoverlay, "value")
-        run_button.on_click(self.run_app)
-        draw_control.on_draw(update_geojson)
-
-    ##############################################################
+    ######################################
     # DEFINITION OF ALL UPDATE FUNCTIONS #
+    ######################################
 
+    # Set the output csv
+    def update_fileupload_wetlands(self, change):
+
+        # Clear any drawn data if present
+        self.gdf_drawn = None
+    
+        # Temporary compatibility fix for ipywidget > 8.0
+        # TODO: Update code to use new fileupload API documented here:
+        # https://ipywidgets.readthedocs.io/en/latest/user_migration_guides.html#fileupload
+        uploaded_data = {f["name"]: {"content": f.content.tobytes()} for f in change.new}            
+    
+        # Save to file
+        for uploaded_filename in uploaded_data.keys():
+            with open(uploaded_filename, "wb") as output_file:
+                content = uploaded_data[uploaded_filename]["content"]
+                output_file.write(content)
+    
+        with self.status_info:
+    
+            try:            
+    
+                print('Loading vector data...', end='\r')
+                valid_files = [
+                    file for file in uploaded_data.keys()
+                    if file.lower().endswith(('.shp', '.geojson'))
+                ]
+                valid_file = valid_files[0]
+                wetlands_gdf = (gpd.read_file(valid_file).to_crs(
+                    "EPSG:4326").explode(index_parts=True).reset_index(drop=True))
+    
+                # Use ID column if it exists
+                if 'id' in wetlands_gdf:
+                    wetlands_gdf = wetlands_gdf.set_index('id')
+                    print(f"Uploaded '{valid_file}'; automatically labelling "
+                          "wetlands using column 'id'.")
+                else:
+                    print(
+                        f"Uploaded '{valid_file}'; no 'id' column detected, "
+                    )
+    
+                # Create a geodata
+                geodata = GeoData(geo_dataframe=wetlands_gdf,
+                                  style={
+                                      'color': 'black',
+                                      'weight': 3
+                                  })
+    
+                # Add to map
+                xmin, ymin, xmax, ymax = wetlands_gdf.total_bounds
+                self.m.fit_bounds([[ymin, xmin], [ymax, xmax]])
+                self.m.add_layer(geodata)
+    
+                # If completed, add to attribute
+                self.gdf_uploaded = wetlands_gdf
+    
+            except IndexError:
+                print(
+                    "Cannot read uploaded files. Please ensure that data is "
+                    "in either GeoJSON or ESRI Shapefile format.",
+                    end='\r')
+                self.gdf_uploaded = None
+    
+            except fiona.errors.DriverError:
+                print(
+                    "Shapefile is invalid. Please ensure that all shapefile "
+                    "components (e.g. .shp, .shx, .dbf, .prj) are uploaded.",
+                    end='\r')
+                self.gdf_uploaded = None
+                
     # set the start date to the new edited date
     def update_startdate(self, change):
         self.startdate = change.new
@@ -275,6 +381,10 @@ class wit_app(HBox):
     def update_outputplot(self, change):
         self.out_plot = change.new
 
+    # Set mode
+    def update_mode(self, change):
+        self.mode = change.new
+
     # Update product
     def update_deaoverlay(self, change):
 
@@ -282,9 +392,9 @@ class wit_app(HBox):
 
         if self.product == "none":
             self.layers.clear_layers()
-        elif self.product == "esri_world_imagery":
+        elif self.product == "open_street_map":
             self.layers.clear_layers()
-            layer = basemap_to_tiles(basemaps.Esri.WorldImagery)
+            layer = basemap_to_tiles(basemaps.OpenStreetMap.Mapnik)
             self.layers.add_layer(layer)
         else:
             self.layers.clear_layers()
@@ -314,13 +424,15 @@ class wit_app(HBox):
 
         self.progress_header.value = "<h3>" + ("Progress") + "</h3>"
 
+        current_gdf = self.gdf_drawn
+        
         # run wetlands polygon drill
         with self.progress_bar:
             #             with ProgressBar():
             warnings.filterwarnings("ignore")
             try:
                 df = WIT_drill(
-                    gdf=self.gdf_drawn,
+                    gdf=wetlands_gdf,
                     time=(self.startdate, self.enddate),
                     min_gooddata=self.mingooddata,
                     resample_frequency=rsf,
