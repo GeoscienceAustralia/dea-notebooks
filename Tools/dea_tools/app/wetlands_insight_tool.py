@@ -4,6 +4,7 @@ Digital Earth Australia Wetlands Insight Tool widget, which can be used to draw 
 
 # Import required packages
 import fiona
+import os
 import sys
 import datacube
 import warnings
@@ -43,6 +44,7 @@ import datetime
 from skimage import exposure
 from skimage.filters import unsharp_mask
 import seaborn as sns
+from shapely.geometry import box, shape
 
 sys.path.insert(1, "../Tools/")
 from datacube.utils import masking
@@ -73,17 +75,15 @@ def create_expanded_button(description, button_style):
 
 class wit_app(HBox):
     
-    def __init__(self, lang=None):
+    def __init__(self):
         super().__init__()
 
         ######################
         # INITIAL ATTRIBUTES #
         ######################
 
-        self.startdate = "2020-01-01"
-        self.enddate = "2020-03-01"
-        self.mingooddata = 0.0
-        self.resamplingfreq = "1M"
+        self.startdate = "2024-01-01"
+        self.enddate = "2024-03-01"
         self.out_csv = "example_WIT.csv"
         self.out_plot = "example_WIT.png"
         self.product_list = [
@@ -91,11 +91,13 @@ class wit_app(HBox):
             ("Open Street Map", "open_street_map"),
         ]
         self.product = self.product_list[0][1]
-        self.product_year = "2020-01-01"
+        #self.product_year = "2024-01-01"
         self.target = None
         self.action = None
         self.gdf_drawn = None
         self.gdf_uploaded = None
+        self.mingooddata = 0.0
+        self.resamplingfreq = "1M"
 
         ##################
         # HEADER FOR APP #
@@ -162,6 +164,8 @@ class wit_app(HBox):
         self.progress_bar = Output(layout=make_box_layout())
         self.wit_plot = Output(layout=make_box_layout())
         self.progress_header = deawidgets.create_html("")
+        #self.status_info = Output(layout=make_box_layout())
+        #self.wit_plot = Output(layout=make_box_layout())
 
         #########################################
         # MAP WIDGET, DRAWING TOOLS, WMS LAYERS #
@@ -172,8 +176,8 @@ class wit_app(HBox):
         draw_control = deawidgets.create_drawcontrol(desired_drawtools)
 
         # Begin by displaying an empty layer group, and update the group with desired WMS on interaction.
-        self.layers = LayerGroup(layers=())
-        self.layers.name = "Map Overlays"
+        self.map_layers = LayerGroup(layers=())
+        self.map_layers.name = "Map Overlays"
 
         # Create map widget
         self.m = deawidgets.create_map(map_center=(-28, 135),
@@ -183,7 +187,7 @@ class wit_app(HBox):
 
         # Add tools to map widget
         self.m.add_control(draw_control)
-        self.m.add_layer(self.layers)
+        self.m.add_layer(self.map_layers)
 
         # Store current basemap for future use
         self.basemap = self.m.basemap
@@ -290,73 +294,74 @@ class wit_app(HBox):
 
     # Set the output csv
     def update_fileupload_wetlands(self, change):
-
+    
         # Clear any drawn data if present
         self.gdf_drawn = None
-    
+        
         # Temporary compatibility fix for ipywidget > 8.0
         # TODO: Update code to use new fileupload API documented here:
         # https://ipywidgets.readthedocs.io/en/latest/user_migration_guides.html#fileupload
         uploaded_data = {f["name"]: {"content": f.content.tobytes()} for f in change.new}            
-    
+
         # Save to file
         for uploaded_filename in uploaded_data.keys():
             with open(uploaded_filename, "wb") as output_file:
                 content = uploaded_data[uploaded_filename]["content"]
                 output_file.write(content)
-    
+
         with self.status_info:
-    
+
             try:            
-    
+
                 print('Loading vector data...', end='\r')
                 valid_files = [
                     file for file in uploaded_data.keys()
                     if file.lower().endswith(('.shp', '.geojson'))
                 ]
-                valid_file = valid_files[0]
+                valid_file = valid_files#[0]
                 wetlands_gdf = (gpd.read_file(valid_file).to_crs(
                     "EPSG:4326").explode(index_parts=True).reset_index(drop=True))
-    
+
                 # Use ID column if it exists
                 if 'id' in wetlands_gdf:
                     wetlands_gdf = wetlands_gdf.set_index('id')
                     print(f"Uploaded '{valid_file}'; automatically labelling "
-                          "wetlands using column 'id'.")
+                          "transects using column 'id'.")
                 else:
                     print(
                         f"Uploaded '{valid_file}'; no 'id' column detected, "
+                        f"labelling transects from 0 to {len(wetlands_gdf.index) - 1}."
                     )
-    
+
                 # Create a geodata
                 geodata = GeoData(geo_dataframe=wetlands_gdf,
                                   style={
                                       'color': 'black',
                                       'weight': 3
                                   })
-    
+
                 # Add to map
                 xmin, ymin, xmax, ymax = wetlands_gdf.total_bounds
                 self.m.fit_bounds([[ymin, xmin], [ymax, xmax]])
                 self.m.add_layer(geodata)
-    
+
                 # If completed, add to attribute
                 self.gdf_uploaded = wetlands_gdf
-    
+
             except IndexError:
                 print(
                     "Cannot read uploaded files. Please ensure that data is "
                     "in either GeoJSON or ESRI Shapefile format.",
                     end='\r')
                 self.gdf_uploaded = None
-    
+
             except fiona.errors.DriverError:
                 print(
                     "Shapefile is invalid. Please ensure that all shapefile "
                     "components (e.g. .shp, .shx, .dbf, .prj) are uploaded.",
                     end='\r')
                 self.gdf_uploaded = None
-                
+    
     # set the start date to the new edited date
     def update_startdate(self, change):
         self.startdate = change.new
@@ -381,25 +386,21 @@ class wit_app(HBox):
     def update_outputplot(self, change):
         self.out_plot = change.new
 
-    # Set mode
-    def update_mode(self, change):
-        self.mode = change.new
-
     # Update product
     def update_deaoverlay(self, change):
 
         self.product = change.new
 
         if self.product == "none":
-            self.layers.clear_layers()
+            self.map_layers.clear_layers()
         elif self.product == "open_street_map":
-            self.layers.clear_layers()
+            self.map_layers.clear_layers()
             layer = basemap_to_tiles(basemaps.OpenStreetMap.Mapnik)
-            self.layers.add_layer(layer)
+            self.map_layers.add_layer(layer)
         else:
-            self.layers.clear_layers()
+            self.map_layers.clear_layers()
             layer = deawidgets.create_dea_wms_layer(self.product, self.product_year)
-            self.layers.add_layer(layer)
+            self.map_layers.add_layer(layer)
 
     def run_app(self, change):
 
@@ -424,12 +425,24 @@ class wit_app(HBox):
 
         self.progress_header.value = "<h3>" + ("Progress") + "</h3>"
 
-        current_gdf = self.gdf_drawn
-        
         # run wetlands polygon drill
         with self.progress_bar:
             #             with ProgressBar():
             warnings.filterwarnings("ignore")
+
+            # Load polygons from either map or uploaded files
+            if self.gdf_uploaded is not None:
+                wetlands_gdf = self.gdf_uploaded
+                run_text = 'uploaded file'
+            elif self.gdf_drawn is not None:
+                wetlands_gdf = self.gdf_drawn
+                #wetlands_gdf.index = [self.output_name]
+                run_text = 'selected polygon'
+            else:
+                print(f'No transect drawn or uploaded. Please select a transect on the map, or upload a GeoJSON or ESRI Shapefile.',
+                      end='\r')
+                wetlands_gdf = None
+        
             try:
                 df = WIT_drill(
                     gdf=wetlands_gdf,
