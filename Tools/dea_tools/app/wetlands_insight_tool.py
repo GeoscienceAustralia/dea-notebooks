@@ -98,6 +98,7 @@ class wit_app(HBox):
         self.gdf_uploaded = None
         self.mingooddata = 0.0
         self.resamplingfreq = "1M"
+        self.wetlandname = ""
 
         ##################
         # HEADER FOR APP #
@@ -164,7 +165,7 @@ class wit_app(HBox):
         self.progress_bar = Output(layout=make_box_layout())
         self.wit_plot = Output(layout=make_box_layout())
         self.progress_header = deawidgets.create_html("")
-        #self.status_info = Output(layout=make_box_layout())
+        self.status_info = Output(layout=make_box_layout())
         #self.wit_plot = Output(layout=make_box_layout())
 
         #########################################
@@ -187,6 +188,12 @@ class wit_app(HBox):
 
         # Add tools to map widget
         self.m.add_control(draw_control)
+        self.m.add_control(SearchControl(
+        position="topleft",
+        url='https://nominatim.openstreetmap.org/search?format=json&q={s}',
+        zoom=13, # 'Village / Suburb' level zoom
+        marker=Marker(draggable=False)
+        ))
         self.m.add_layer(self.map_layers)
 
         # Store current basemap for future use
@@ -200,10 +207,12 @@ class wit_app(HBox):
         startdate_picker = deawidgets.create_datepicker()
         
         enddate_picker = deawidgets.create_datepicker()
-        
-        min_good_data = deawidgets.create_boundedfloattext(self.mingooddata, 0.0, 1.0, 0.05)
-        
-        resampling_freq = deawidgets.create_inputtext(self.resamplingfreq, self.resamplingfreq)
+
+        wetland_name = widgets.Text(value='', 
+                                    placeholder='Type something', 
+                                    #description='String:', 
+                                    disabled=False
+                                   )
         
         output_csv = deawidgets.create_inputtext(self.out_csv, self.out_csv)
         
@@ -212,7 +221,13 @@ class wit_app(HBox):
         deaoverlay_dropdown = deawidgets.create_dropdown(self.product_list, self.product_list[0][1])
         
         run_button = create_expanded_button(("Run"), "info")
+        
         fileupload_wetlands = widgets.FileUpload(accept='', multiple=True)
+
+        # expandable advanced section 
+        min_good_data = deawidgets.create_boundedfloattext(self.mingooddata, 0.0, 1.0, 0.05)
+        
+        resampling_freq = deawidgets.create_inputtext(self.resamplingfreq, self.resamplingfreq)
 
         ####################################
         # UPDATE FUNCTIONS FOR EACH WIDGET #
@@ -221,6 +236,7 @@ class wit_app(HBox):
         # Run update functions whenever various widgets are changed.
         startdate_picker.observe(self.update_startdate, "value")
         enddate_picker.observe(self.update_enddate, "value")
+        wetland_name.observe(self.update_wetlandname, "value")
         min_good_data.observe(self.update_mingooddata, "value")
         resampling_freq.observe(self.update_resamplingfreq, "value")
         output_csv.observe(self.update_outputcsv, "value")
@@ -240,6 +256,8 @@ class wit_app(HBox):
                 startdate_picker,
                 HTML("<b>" + ("End Date:") + "</b>"),
                 enddate_picker,
+                HTML("<b>" + ("Wetlands name") + "</b>"),
+                wetland_name,
                 HTML("<b>" + ("Minimum Good Data:") + "</b>"),
                 min_good_data,
                 HTML("<b>" + ("Resampling Frequency:") + "</b>"),
@@ -369,6 +387,9 @@ class wit_app(HBox):
     # set the end date to the new edited date
     def update_enddate(self, change):
         self.enddate = change.new
+
+    def update_wetlandname(self, change):
+        self.wetlandname = change.new
 
     # set the min good data
     def update_mingooddata(self, change):
@@ -532,6 +553,10 @@ class wit_app(HBox):
          
             # add a legend and a tight plot box
             #ax.legend(loc="lower left", framealpha=0.6)
+            wetlandname = self.wetlandname
+            #ax.set_title(wetlandname, fontsize='large', pad=20)
+            #ax.text(0.5, 1.02, "Percentage Fractional Cover, Wetness, and Water", 
+        #transform=ax.transAxes, ha='center', fontsize='medium')  # Subtitle
             ax.set_title(("Percentage Fractional Cover, Wetness, and Water"))
             # plt.tight_layout()
             plt.show()
