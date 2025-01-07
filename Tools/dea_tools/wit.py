@@ -60,7 +60,6 @@ def WIT_drill(
         time=time,
         group_by="solar_day",
         dask_chunks={"time":1, "x": 2048, "y": 2048},
-        verbose=verbose,
     )
     
     # Load into memory using Dask
