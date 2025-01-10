@@ -24,7 +24,7 @@ def WIT_drill(
     gdf,
     time,
     min_gooddata=0.85,
-    resample_frequency=None,
+    #resample_frequency=None,
     export_csv=None,
     dask_chunks=None,
     verbose=False,
