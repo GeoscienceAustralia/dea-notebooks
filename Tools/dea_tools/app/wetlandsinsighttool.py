@@ -94,7 +94,7 @@ class wit_app(HBox):
         #self.enddate = "2024-03-01"
         self.wetland_name = "example WIT"
         self.out_csv = "example_WIT.csv"
-        self.out_plot = "example_WIT.png"
+        self.out_plot = False
         self.product_list = [
             ("ESRI World Imagery", "none"),
             ("Open Street Map", "open_street_map"),
@@ -218,7 +218,7 @@ class wit_app(HBox):
         enddate_picker = deawidgets.create_datepicker(value=enddate,)
         wetland_name = deawidgets.create_inputtext(self.wetland_name, self.wetland_name)
         output_csv = deawidgets.create_inputtext(self.out_csv, self.out_csv)
-        output_plot = deawidgets.create_inputtext(self.out_plot, self.out_plot)
+        output_plot = deawidgets.create_checkbox(self.out_plot, 'Figure (.png)')
         deaoverlay_dropdown = deawidgets.create_dropdown(
             self.product_list, self.product_list[0][1]
         )
@@ -613,7 +613,7 @@ class wit_app(HBox):
                 # add a legend and a tight plot box
                 # ax.legend(loc="lower left", framealpha=0.6)
                 plt.title(
-                    f"Percentage of area dominated by WOfS, Wetness, Fractional Cover for\n {self.wetland_name}",
+                    f"Percentage of area dominated by WOfS, Wetness, Fractional Cover for\n {self.wetlandname}",
                     fontsize=16,
                 )
                 # ax.set_title(wetlandname, fontsize='large', pad=20)
@@ -622,7 +622,7 @@ class wit_app(HBox):
 
                 if self.out_plot:
                     # save the figure
-                    fig.savefig(f"{self.out_plot}")
+                    fig.savefig(f"{self.wetlandname}")
 
         else:
             print("No valid polygon to process. Please select or draw a new polygon.")
