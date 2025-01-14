@@ -84,9 +84,14 @@ class wit_app(HBox):
         ######################
         # INITIAL ATTRIBUTES #
         ######################
-
-        self.startdate = "2024-01-01"
-        self.enddate = "2024-03-01"
+        enddate = datetime.datetime.today()
+        startdate = datetime.datetime(
+            year=enddate.year - 1, month=enddate.month, day=enddate.day
+        )
+        self.startdate = startdate.strftime("%Y-%m-%d")
+        self.enddate = enddate.strftime("%Y-%m-%d")
+        #self.startdate = "2024-01-01"
+        #self.enddate = "2024-03-01"
         self.wetland_name = "example WIT"
         self.out_csv = "example_WIT.csv"
         self.out_plot = "example_WIT.png"
@@ -209,8 +214,8 @@ class wit_app(HBox):
         ############################
 
         # Create parameter widgets
-        startdate_picker = deawidgets.create_datepicker()
-        enddate_picker = deawidgets.create_datepicker()
+        startdate_picker = deawidgets.create_datepicker(value=startdate,)
+        enddate_picker = deawidgets.create_datepicker(value=enddate,)
         wetland_name = deawidgets.create_inputtext(self.wetland_name, self.wetland_name)
         output_csv = deawidgets.create_inputtext(self.out_csv, self.out_csv)
         output_plot = deawidgets.create_inputtext(self.out_plot, self.out_plot)
