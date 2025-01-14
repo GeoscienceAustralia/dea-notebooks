@@ -87,6 +87,7 @@ class wit_app(HBox):
 
         self.startdate = "2024-01-01"
         self.enddate = "2024-03-01"
+        self.wetland_name = "example WIT"
         self.out_csv = "example_WIT.csv"
         self.out_plot = "example_WIT.png"
         self.product_list = [
@@ -100,7 +101,7 @@ class wit_app(HBox):
         self.gdf_uploaded = None
         self.mingooddata = 85
         # self.resamplingfreq = None
-        self.wetland_name = "example WIT"
+        self.max_size = False
 
         ##################
         # HEADER FOR APP #
@@ -143,7 +144,15 @@ class wit_app(HBox):
             polyarea_text = f"<b>{polyarea_label}</b>: {area:.2f} km<sup>2</sup>"
 
             # Test area size
-            if area <= 2000:
+            if self.max_size:
+                confirmation_text = (
+                    '<span style="color: #33cc33"> <b>(Overriding maximum size limit; use with caution as may lead to memory issues)</b></span>'
+                )
+                self.header.value = (
+                    header_title_text + polyarea_text + confirmation_text
+                )
+                self.gdf_drawn = gdf
+            elif area <= 2000:
                 confirmation_text = '<span style="color: #33cc33"> <b>(Area to extract falls within recommended limit)</b></span>'
                 self.header.value = (
                     header_title_text + polyarea_text + confirmation_text
@@ -213,6 +222,7 @@ class wit_app(HBox):
 
         # Expandable advanced section
         min_good_data = deawidgets.create_boundedfloattext(self.mingooddata, 0, 100, 5)
+        max_size = deawidgets.create_checkbox(self.max_size, "Enable", layout={"width":"95%"})
         # resampling_freq = deawidgets.create_inputtext(self.resamplingfreq, self.resamplingfreq)
 
         ####################################
@@ -231,14 +241,17 @@ class wit_app(HBox):
         run_button.on_click(self.run_app)
         draw_control.on_draw(update_geojson)
         fileupload_wetlands.observe(self.update_fileupload_wetlands, "value")
+        max_size.observe(self.update_maxsize, "value")
 
         ##################################
         # COLLECTION OF ALL APP CONTROLS #
         ##################################
         expand_box = VBox(
             [
-                HTML("<b>" + ("Minimum Good Data (%):") + "</b>"),
+                HTML("<b>Minimum Good Data (%):</b>"),
                 min_good_data,
+                HTML("</br><b>Override maximum size limit:</b></br> (use with caution; may cause memory issues/crashes)"),
+                max_size,
                 # HTML("<b>" + ("Resampling Frequency:") + "</b>"),
                 # resampling_freq,
             ]
@@ -252,15 +265,15 @@ class wit_app(HBox):
 
         parameter_selection = VBox(
             [
-                HTML("<b>" + ("Start Date:") + "</b>"),
+                HTML("<b>Start Date:</b>"),
                 startdate_picker,
-                HTML("<b>" + ("End Date:") + "</b>"),
+                HTML("<b>End Date:</b>"),
                 enddate_picker,
-                HTML("<b>" + ("Wetland Name:") + "</b>"),
+                HTML("<b>Wetland Name:</b>"),
                 wetland_name,
-                HTML("<b>" + ("Output CSV:") + "</b>"),
+                HTML("<b>Output CSV:</b>"),
                 output_csv,
-                HTML("<b>" + ("Output Plot:") + "</b>"),
+                HTML("<b>Output Plot:</b>"),
                 output_plot,
                 HTML(
                     "</br><i><b>Upload Polygon:</b></br>Upload a GeoJSON or"
@@ -429,6 +442,10 @@ class wit_app(HBox):
     # set the output plot
     def update_outputplot(self, change):
         self.out_plot = change.new
+
+    # override max size limit
+    def update_maxsize(self, change):
+        self.max_size = change.new
 
     # Update product
     def update_deaoverlay(self, change):
