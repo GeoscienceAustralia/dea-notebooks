@@ -430,7 +430,7 @@ class wit_app(HBox):
         self.enddate = change.new
 
     def update_wetlandname(self, change):
-        self.wetlandname = change.new
+        self.wetland_name = change.new
 
     # set the min good data
     def update_mingooddata(self, change):
@@ -613,7 +613,7 @@ class wit_app(HBox):
                 # add a legend and a tight plot box
                 # ax.legend(loc="lower left", framealpha=0.6)
                 plt.title(
-                    f"Percentage of area dominated by WOfS, Wetness, Fractional Cover for\n {self.wetlandname}",
+                    f"Percentage of area dominated by WOfS, Wetness, Fractional Cover for\n {self.wetland_name}",
                     fontsize=16,
                 )
                 # ax.set_title(wetlandname, fontsize='large', pad=20)
@@ -622,7 +622,7 @@ class wit_app(HBox):
 
                 if self.out_plot:
                     # save the figure
-                    fig.savefig(f"{self.wetlandname}")
+                    fig.savefig(f"{self.wetland_name}")
 
         else:
             print("No valid polygon to process. Please select or draw a new polygon.")
