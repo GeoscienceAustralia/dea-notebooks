@@ -23,7 +23,7 @@ client = create_local_dask_cluster(return_client=True)
 def WIT_drill(
     gdf,
     time,
-    min_gooddata=0.85,
+    #min_gooddata=0.85,
     #resample_frequency=None,
     export_csv=None,
     dask_chunks=None,

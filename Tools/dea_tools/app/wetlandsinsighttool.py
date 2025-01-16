@@ -104,7 +104,7 @@ class wit_app(HBox):
         self.action = None
         self.gdf_drawn = None
         self.gdf_uploaded = None
-        self.mingooddata = 85
+        #self.mingooddata = 85
         # self.resamplingfreq = None
         self.max_size = False
 
@@ -226,7 +226,7 @@ class wit_app(HBox):
         fileupload_wetlands = widgets.FileUpload(accept="", multiple=True)
 
         # Expandable advanced section
-        min_good_data = deawidgets.create_boundedfloattext(self.mingooddata, 0, 100, 5)
+        #min_good_data = deawidgets.create_boundedfloattext(self.mingooddata, 0, 100, 5)
         max_size = deawidgets.create_checkbox(self.max_size, "Enable", layout={"width":"95%"})
         # resampling_freq = deawidgets.create_inputtext(self.resamplingfreq, self.resamplingfreq)
 
@@ -240,7 +240,7 @@ class wit_app(HBox):
         wetland_name.observe(self.update_wetlandname, "value")
         output_csv.observe(self.update_outputcsv, "value")
         output_plot.observe(self.update_outputplot, "value")
-        min_good_data.observe(self.update_mingooddata, "value")
+        #min_good_data.observe(self.update_mingooddata, "value")
         # resampling_freq.observe(self.update_resamplingfreq, "value")
         deaoverlay_dropdown.observe(self.update_deaoverlay, "value")
         run_button.on_click(self.run_app)
@@ -253,8 +253,8 @@ class wit_app(HBox):
         ##################################
         expand_box = VBox(
             [
-                HTML("<b>Minimum Good Data (%):</b>"),
-                min_good_data,
+                #HTML("<b>Minimum Good Data (%):</b>"),
+                #min_good_data,
                 HTML("</br><b>Override maximum size limit:</b></br> (use with caution; may cause memory issues/crashes)"),
                 max_size,
                 # HTML("<b>" + ("Resampling Frequency:") + "</b>"),
@@ -433,8 +433,8 @@ class wit_app(HBox):
         self.wetland_name = change.new
 
     # set the min good data
-    def update_mingooddata(self, change):
-        self.mingooddata = change.new
+    #def update_mingooddata(self, change):
+        #self.mingooddata = change.new
 
     # set the resampling frequency
     # def update_resamplingfreq(self, change):
@@ -513,7 +513,7 @@ class wit_app(HBox):
                     df = WIT_drill(
                         gdf=wetlands_gdf,
                         time=(self.startdate, self.enddate),
-                        min_gooddata=self.mingooddata,
+                        #min_gooddata=self.mingooddata,
                         # resample_frequency=rsf,
                         # TCW_threshold=TCW_threshold,
                         export_csv=self.out_csv,
