@@ -255,7 +255,7 @@ class wit_app(HBox):
             [
                 #HTML("<b>Minimum Good Data (%):</b>"),
                 #min_good_data,
-                HTML("</br><b>Override maximum size limit:</b></br> (use with caution; may cause memory issues/crashes)"),
+                HTML("<b>Override maximum size limit:</b></br> (use with caution; may cause memory issues/crashes)"),
                 max_size,
                 # HTML("<b>" + ("Resampling Frequency:") + "</b>"),
                 # resampling_freq,
@@ -498,6 +498,13 @@ class wit_app(HBox):
             elif self.gdf_drawn is not None:
                 wetlands_gdf = self.gdf_drawn
                 # wetlands_gdf.index = [self.output_name]
+                # save the drawn polygon as a geojson in the current directory
+                try:
+                    output_geojson_path = f"{self.wetland_name}_drawn_polygon.geojson"
+                    wetlands_gdf.to_file(output_geojson_path, driver="GeoJSON")
+                    print(f"Drawn polygon saved to: {output_geojson_path}")
+                except Exception as e:
+                    print(f"Error saving drawn polygon: {e}")
                 run_text = "selected polygon"
             else:
                 print(
