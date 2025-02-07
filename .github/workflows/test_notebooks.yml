@@ -32,7 +32,7 @@ jobs:
 
     strategy:
       matrix:
-        tests: ["beginners_guide", "dea_products", "dea_tools", "how_to_guides"]
+        tests: ["beginners_guide", "dea_products", "dea_tools", "how_to_guides", ""]
       fail-fast: false
 
     # Automatically activate our mamba environment when it's ready
