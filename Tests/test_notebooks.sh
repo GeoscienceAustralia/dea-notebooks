@@ -63,7 +63,9 @@ elif [ "$1" = "how_to_guides" ]; then
 
 elif [ "$1" = "real_world_examples" ]; then
     echo "Testing Real_world_examples..."
-    pytest --durations=10 --nbval-lax Real_world_examples/Coastal_erosion.ipynb Real_world_examples/Intertidal_elevation.ipynb
+    pytest --durations=10 --nbval-lax Real_world_examples \
+        --ignore Real_world_examples/Estimate_climate_driver_influence_on_rainfall.ipynb \
+        --ignore Real_world_examples/Mapping_inundation_using_stream_gauges.ipynb
 
 else
     # If an unknown parameter is provided, display a message
