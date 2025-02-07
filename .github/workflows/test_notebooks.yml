@@ -44,7 +44,7 @@ jobs:
           path: dea-notebooks
 
       - name: Set up database access and tests
-        uses: ./.github/actions/test_setup
+        uses: ./dea-notebooks/.github/actions/test_setup
 
       - name: Open Port Forward to RDS
         run: |
