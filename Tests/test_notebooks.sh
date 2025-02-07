@@ -66,7 +66,7 @@ elif [ "$1" = "real_world_examples" ]; then
     pytest --durations=10 --nbval-lax Real_world_examples/Coastal_erosion.ipynb Real_world_examples/Intertidal_elevation.ipynb
 
 else
-    # If an unknown parameter is provided, display a message and list directory contents
+    # If an unknown parameter is provided, display a message
     echo "Unknown parameter: $1"
 
 fi
