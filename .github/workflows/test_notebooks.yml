@@ -39,6 +39,10 @@ jobs:
 
     steps:
 
+      - uses: actions/checkout@v4
+        with:
+          path: dea-notebooks
+
       - name: Set up database access and tests
         uses: ./.github/actions/test_setup
 
