@@ -1,27 +1,36 @@
 
 name: Test DEA Notebooks with RDS Connection
 
+# on:
+#   push:
+#     branches: [ develop, stable, nbtests, testing_tests ]
+#     paths-ignore:
+#       - '**/*.md' # ignore markdown files
+#       - '**/*.rst' # ignore restructured text files
+#       - '.github/**' # ignore anything in .github folder
+#       - '!.github/workflows/test_notebooks.yml' # except test_notebooks.yml
+#   pull_request:
+#     branches: [ develop, stable ]
+#     paths-ignore:
+#       - '**/*.md'
+#       - '**/*.rst'
+#       - '.github/**'
+#       - '!.github/workflows/test_notebooks.yml'
+
 on:
-  push:
-    branches: [ develop, stable, nbtests, testing_tests ]
-    paths-ignore:
-      - '**/*.md' # ignore markdown files
-      - '**/*.rst' # ignore restructured text files
-      - '.github/**' # ignore anything in .github folder
-      - '!.github/workflows/test_notebooks.yml' # except test_notebooks.yml
-  pull_request:
-    branches: [ develop, stable ]
-    paths-ignore:
-      - '**/*.md'
-      - '**/*.rst'
-      - '.github/**'
-      - '!.github/workflows/test_notebooks.yml'
+  schedule:
+    # Runs at 5:25 AM UTC every day
+    - cron: '25 5 * * *'
+  
+  # Optional: Allow manual triggering through GitHub UI
+  workflow_dispatch:
+
 
 permissions:
   id-token: write # Required for OIDC authentication to AWS
   contents: read
 jobs:
-  test-rds:
+  test-notebooks:
     runs-on: ubuntu-latest
 
     # Automatically activate our mamba environment when it's ready
