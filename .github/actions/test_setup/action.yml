@@ -23,7 +23,8 @@ runs:
     - name: Copy tide modelling files with the AWS CLI
       run: |
         aws s3 sync s3://dea-non-public-data/tide_models/tide_models/fes2014 tide_models/fes2014
-        aws s3 sync s3://dea-non-public-data/tide_models/tide_models/hamtide tide_models/hamtide 
+        aws s3 sync s3://dea-non-public-data/tide_models/tide_models/hamtide tide_models/hamtide
+      shell: bash
 
     - name: Login to Amazon ECR Private
       id: login-ecr
@@ -32,6 +33,7 @@ runs:
     - name: Pull dea-sandbox image from ECR
       run: |
         docker pull 538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable
+      shell: bash
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -49,3 +51,4 @@ runs:
         # echo "PGUSERNAME=${PGUSERNAME}" >> $GITHUB_ENV
         # echo "PGPASSWORD=${PGPASSWORD}" >> $GITHUB_ENV
         echo DATACUBE_DB_URL=postgresql://${username_password}@localhost:5432/odc >> $GITHUB_ENV
+      shell: bash
