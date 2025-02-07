@@ -8,4 +8,4 @@ cd ./dea-notebooks
 pip3 install ./Tools
 
 # Test Juputer Notebooks
-pytest --durations=100 --nbval-lax DEA_products
+pytest --durations=100 --nbval-lax Beginners_guide

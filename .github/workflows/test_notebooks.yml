@@ -16,14 +16,12 @@ on:
       - '**/*.rst'
       - '.github/**'
       - '!.github/workflows/test_notebooks.yml'
-
-# on:
-#   schedule:
-#     # Runs at 5:25 AM UTC every day
-#     - cron: '25 5 * * *'
+  schedule:
+    # Runs on the hour at UTC 6-9am every day
+    - cron: '0 6,7,8,9 * * *'
   
-#   # Optional: Allow manual triggering through GitHub UI
-#   workflow_dispatch:
+  # Optional: Allow manual triggering through GitHub UI
+  workflow_dispatch:
 
 permissions:
   id-token: write # Required for OIDC authentication to AWS
