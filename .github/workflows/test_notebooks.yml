@@ -32,7 +32,7 @@ jobs:
 
     strategy:
       matrix:
-        tests: ["test_beginners_guide.sh", "test_dea_products.sh", "test_dea_tools.sh", "test_how_to_guides.sh"]
+        tests: ["beginners_guide", "dea_products", "dea_tools", "how_to_guides"]
       fail-fast: false
 
     # Automatically activate our mamba environment when it's ready
@@ -66,4 +66,4 @@ jobs:
             --env GDAL_HTTP_MAX_RETRY=3 \
             --entrypoint /bin/bash \
             538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable \
-            /home/jovyan/dea-notebooks/Tests/${{ matrix.tests }}
+            /home/jovyan/dea-notebooks/Tests/test_notebooks.sh "${{ matrix.tests }}"
