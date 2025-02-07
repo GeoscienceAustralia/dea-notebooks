@@ -10,8 +10,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: echo "${{ inputs.message }}"
-      shell: bash
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -51,4 +49,17 @@ runs:
         # echo "PGUSERNAME=${PGUSERNAME}" >> $GITHUB_ENV
         # echo "PGPASSWORD=${PGPASSWORD}" >> $GITHUB_ENV
         echo DATACUBE_DB_URL=postgresql://${username_password}@localhost:5432/odc >> $GITHUB_ENV
+      shell: bash
+
+    - name: Open Port Forward to RDS
+      run: |
+        npx basti connect \
+          --custom-target-vpc vpc-086904199e505c1f6 \
+          --custom-target-host db-aurora-dea-sandbox-eks-1.cos5zfpkso9m.ap-southeast-2.rds.amazonaws.com \
+          --custom-target-port 5432 \
+          --local-port 5432 &
+        # Wait until the connection comes up, but, if it doesn't, don't hang forever.
+        npx wait-on --timeout 120000 --interval 1000 tcp:127.0.0.1:5432
+        echo "PGPORT=5432" >> $GITHUB_ENV
+        echo "PGHOST=localhost" >> $GITHUB_ENV
       shell: bash

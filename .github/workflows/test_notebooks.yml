@@ -32,6 +32,11 @@ jobs:
   test-notebooks:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        tests: ["test_beginners_guide.sh", "test_dea_products.sh"]
+      fail-fast: false
+
     # Automatically activate our mamba environment when it's ready
     defaults:
       run:
@@ -45,19 +50,6 @@ jobs:
 
       - name: Set up database access and tests
         uses: ./dea-notebooks/.github/actions/test_setup
-
-      - name: Open Port Forward to RDS
-        run: |
-          npx basti connect \
-            --custom-target-vpc vpc-086904199e505c1f6 \
-            --custom-target-host db-aurora-dea-sandbox-eks-1.cos5zfpkso9m.ap-southeast-2.rds.amazonaws.com \
-            --custom-target-port 5432 \
-            --local-port 5432 &
-          # Wait until the connection comes up, but, if it doesn't, don't hang forever.
-          npx wait-on --timeout 120000 --interval 1000 tcp:127.0.0.1:5432
-          echo "PGPORT=5432" >> $GITHUB_ENV
-          echo "PGHOST=localhost" >> $GITHUB_ENV
-
 
       - name: Run the Notebook tests
         run: |
@@ -76,4 +68,4 @@ jobs:
             --env GDAL_HTTP_MAX_RETRY=3 \
             --entrypoint /bin/bash \
             538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable \
-            /home/jovyan/dea-notebooks/Tests/test_notebooks.sh
+            /home/jovyan/dea-notebooks/Tests/${{ matrix.tests }}
