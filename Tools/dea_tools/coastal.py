@@ -8,15 +8,15 @@ Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
 
 Contact: If you need assistance, post a question on the Open Data Cube 
-Slack channel (http://slack.opendatacube.org/) or the GIS Stack Exchange 
+Discord chat (https://discord.com/invite/4hhBQVas5U) or the GIS Stack Exchange 
 (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using 
 the `open-data-cube` tag (you can view previously asked questions here: 
 https://gis.stackexchange.com/questions/tagged/open-data-cube). 
 
 If you would like to report an issue with this script, you can file one 
-on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: November 2023
+Last modified: July 2024
 
 """
 
@@ -40,6 +40,7 @@ from owslib.wfs import WebFeatureService
 
 from datacube.utils.geometry import CRS
 from dea_tools.datahandling import parallel_apply
+from dea_tools.spatial import idw
 
 # Fix converters for tidal plot
 from pandas.plotting import register_matplotlib_converters
@@ -118,9 +119,11 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
         if mode == "distance":
             start_point = Point(transect_gdf.geometry.coords[0])
             point_df = intersect_points.apply(
-                lambda x: pd.Series({"start": start_point, "end": x})
-                if x.type == "Point"
-                else pd.Series({"start": None, "end": None})
+                lambda x: (
+                    pd.Series({"start": start_point, "end": x})
+                    if x.type == "Point"
+                    else pd.Series({"start": None, "end": None})
+                )
             )
 
         # In width mode, identify transects with multiple intersections, and
@@ -128,9 +131,11 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
         # intersection for the end point when measuring distances
         if mode == "width":
             point_df = intersect_points.apply(
-                lambda x: pd.Series({"start": x.geoms[0], "end": x.geoms[-1]})
-                if x.type == "MultiPoint"
-                else pd.Series({"start": None, "end": None})
+                lambda x: (
+                    pd.Series({"start": x.geoms[0], "end": x.geoms[-1]})
+                    if x.type == "MultiPoint"
+                    else pd.Series({"start": None, "end": None})
+                )
             )
 
         # Calculate distances between valid start and end points
@@ -166,7 +171,7 @@ def get_coastlines(
 
     For a full description of the DEA Coastlines dataset, refer to the
     official Geoscience Australia product description:
-    https://cmi.ga.gov.au/data-products/dea/581/dea-coastlines
+    /data/product/dea-coastlines
 
     Parameters
     ----------
@@ -233,6 +238,7 @@ def _model_tides(
     time,
     directory,
     crs,
+    crop,
     method,
     extrapolate,
     cutoff,
@@ -245,7 +251,6 @@ def _model_tides(
     `pyTMD`.
     """
 
-    import pyTMD.constants
     import pyTMD.eop
     import pyTMD.io
     import pyTMD.time
@@ -274,112 +279,252 @@ def _model_tides(
     # Convert datetime
     timescale = pyTMD.time.timescale().from_datetime(time.flatten())
 
-    # Read tidal constants and interpolate to grid points
-    if pytmd_model.format in ("OTIS", "ATLAS", "ESR"):
-        amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
-            lon,
-            lat,
-            pytmd_model.grid_file,
-            pytmd_model.model_file,
-            pytmd_model.projection,
-            type=pytmd_model.type,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            grid=pytmd_model.format,
+    # Calculate bounds for cropping
+    buffer = 1  # one degree on either side
+    bounds = [
+        lon.min() - buffer,
+        lon.max() + buffer,
+        lat.min() - buffer,
+        lat.max() + buffer,
+    ]
+
+    # TEMPORARY HACK to work on both old and new pyTMD
+    try:
+            
+        # Read tidal constants and interpolate to grid points
+        if pytmd_model.format in ("OTIS", "ATLAS", "TMD3"):
+            amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
+                lon,
+                lat,
+                pytmd_model.grid_file,
+                pytmd_model.model_file,
+                pytmd_model.projection,
+                type=pytmd_model.type,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                grid=pytmd_model.format,
+            )
+    
+            # Use delta time at 2000.0 to match TMD outputs
+            deltat = np.zeros((len(timescale)), dtype=np.float64)
+    
+        elif pytmd_model.format == "netcdf":
+            amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
+                lon,
+                lat,
+                pytmd_model.grid_file,
+                pytmd_model.model_file,
+                type=pytmd_model.type,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Use delta time at 2000.0 to match TMD outputs
+            deltat = np.zeros((len(timescale)), dtype=np.float64)
+    
+        elif pytmd_model.format == "GOT":
+            amp, ph, c = pyTMD.io.GOT.extract_constants(
+                lon,
+                lat,
+                pytmd_model.model_file,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Delta time (TT - UT1)
+            deltat = timescale.tt_ut1
+    
+        elif pytmd_model.format == "FES":
+            amp, ph = pyTMD.io.FES.extract_constants(
+                lon,
+                lat,
+                pytmd_model.model_file,
+                type=pytmd_model.type,
+                version=pytmd_model.version,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Available model constituents
+            c = pytmd_model.constituents
+    
+            # Delta time (TT - UT1)
+            deltat = timescale.tt_ut1
+    
+        # Calculate complex phase in radians for Euler's
+        cph = -1j * ph * np.pi / 180.0
+    
+        # Calculate constituent oscillation
+        hc = amp * np.exp(cph)
+    
+        # Determine the number of points and times to process. If in
+        # "one-to-many" mode, these counts are used to repeat our extracted
+        # constituents and timesteps so we can extract tides for all
+        # combinations of our input times and tide modelling points.
+        # If in "one-to-one" mode, we avoid this step by setting counts to 1
+        # (e.g. "repeat 1 times")
+        points_repeat = len(x) if mode == "one-to-many" else 1
+        time_repeat = len(time) if mode == "one-to-many" else 1
+    
+        # If in "one-to-many" mode, repeat constituents to length of time
+        # and number of input coords before passing to `predict_tide_drift`
+        t, hc, deltat = (
+            np.tile(timescale.tide, points_repeat),
+            hc.repeat(time_repeat, axis=0),
+            np.tile(deltat, points_repeat),
         )
-
-        # Use delta time at 2000.0 to match TMD outputs
-        deltat = np.zeros((len(timescale)), dtype=np.float64)
-
-    elif pytmd_model.format == "netcdf":
-        amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
-            lon,
-            lat,
-            pytmd_model.grid_file,
-            pytmd_model.model_file,
-            type=pytmd_model.type,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            scale=pytmd_model.scale,
-            compressed=pytmd_model.compressed,
+    
+        # Predict tidal elevations at time and infer minor corrections
+        npts = len(t)
+        tide = np.ma.zeros((npts), fill_value=np.nan)
+        tide.mask = np.any(hc.mask, axis=1)
+    
+        # Predict tides
+        tide.data[:] = pyTMD.predict.drift(
+            t, hc, c, deltat=deltat, corrections=pytmd_model.format
         )
-
-        # Use delta time at 2000.0 to match TMD outputs
-        deltat = np.zeros((len(timescale)), dtype=np.float64)
-
-    elif pytmd_model.format == "GOT":
-        amp, ph, c = pyTMD.io.GOT.extract_constants(
-            lon,
-            lat,
-            pytmd_model.model_file,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            scale=pytmd_model.scale,
-            compressed=pytmd_model.compressed,
+        minor = pyTMD.predict.infer_minor(
+            t, hc, c, deltat=deltat, corrections=pytmd_model.format
         )
+        tide.data[:] += minor.data[:]
 
-        # Delta time (TT - UT1)
-        deltat = timescale.tt_ut1
-
-    elif pytmd_model.format == "FES":
-        amp, ph = pyTMD.io.FES.extract_constants(
-            lon,
-            lat,
-            pytmd_model.model_file,
-            type=pytmd_model.type,
-            version=pytmd_model.version,
-            method=method,
-            extrapolate=extrapolate,
-            cutoff=cutoff,
-            scale=pytmd_model.scale,
-            compressed=pytmd_model.compressed,
+    except:
+        # Read tidal constants and interpolate to grid points
+        if pytmd_model.format in ("OTIS", "ATLAS-compact", "TMD3"):
+            amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
+                lon,
+                lat,
+                pytmd_model.grid_file,
+                pytmd_model.model_file,
+                pytmd_model.projection,
+                type=pytmd_model.type,
+                grid=pytmd_model.file_format,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+            )
+    
+            # Use delta time at 2000.0 to match TMD outputs
+            deltat = np.zeros((len(timescale)), dtype=np.float64)
+    
+        elif pytmd_model.format in ("ATLAS-netcdf",):
+            amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
+                lon,
+                lat,
+                pytmd_model.grid_file,
+                pytmd_model.model_file,
+                type=pytmd_model.type,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Use delta time at 2000.0 to match TMD outputs
+            deltat = np.zeros((len(timescale)), dtype=np.float64)
+    
+        elif pytmd_model.format in ("GOT-ascii", "GOT-netcdf"):
+            amp, ph, c = pyTMD.io.GOT.extract_constants(
+                lon,
+                lat,
+                pytmd_model.model_file,
+                grid=pytmd_model.type,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Delta time (TT - UT1)
+            deltat = timescale.tt_ut1
+    
+        elif pytmd_model.format in ("FES-ascii", "FES-netcdf"):
+            amp, ph = pyTMD.io.FES.extract_constants(
+                lon,
+                lat,
+                pytmd_model.model_file,
+                type=pytmd_model.type,
+                version=pytmd_model.version,
+                crop=crop,
+                bounds=bounds,
+                method=method,
+                extrapolate=extrapolate,
+                cutoff=cutoff,
+                scale=pytmd_model.scale,
+                compressed=pytmd_model.compressed,
+            )
+    
+            # Available model constituents
+            c = pytmd_model.constituents
+    
+            # Delta time (TT - UT1)
+            deltat = timescale.tt_ut1
+    
+        # Calculate complex phase in radians for Euler's
+        cph = -1j * ph * np.pi / 180.0
+    
+        # Calculate constituent oscillation
+        hc = amp * np.exp(cph)
+    
+        # Determine the number of points and times to process. If in
+        # "one-to-many" mode, these counts are used to repeat our extracted
+        # constituents and timesteps so we can extract tides for all
+        # combinations of our input times and tide modelling points.
+        # If in "one-to-one" mode, we avoid this step by setting counts to 1
+        # (e.g. "repeat 1 times")
+        points_repeat = len(x) if mode == "one-to-many" else 1
+        time_repeat = len(time) if mode == "one-to-many" else 1
+    
+        # If in "one-to-many" mode, repeat constituents to length of time
+        # and number of input coords before passing to `predict_tide_drift`
+        t, hc, deltat = (
+            np.tile(timescale.tide, points_repeat),
+            hc.repeat(time_repeat, axis=0),
+            np.tile(deltat, points_repeat),
         )
-
-        # Available model constituents
-        c = pytmd_model.constituents
-
-        # Delta time (TT - UT1)
-        deltat = timescale.tt_ut1
-
-    # Calculate complex phase in radians for Euler's
-    cph = -1j * ph * np.pi / 180.0
-
-    # Calculate constituent oscillation
-    hc = amp * np.exp(cph)
-
-    # Determine the number of points and times to process. If in
-    # "one-to-many" mode, these counts are used to repeat our extracted
-    # constituents and timesteps so we can extract tides for all
-    # combinations of our input times and tide modelling points.
-    # If in "one-to-one" mode, we avoid this step by setting counts to 1
-    # (e.g. "repeat 1 times")
-    points_repeat = len(x) if mode == "one-to-many" else 1
-    time_repeat = len(time) if mode == "one-to-many" else 1
-
-    # If in "one-to-many" mode, repeat constituents to length of time
-    # and number of input coords before passing to `predict_tide_drift`
-    t, hc, deltat = (
-        np.tile(timescale.tide, points_repeat),
-        hc.repeat(time_repeat, axis=0),
-        np.tile(deltat, points_repeat),
-    )
-
-    # Predict tidal elevations at time and infer minor corrections
-    npts = len(t)
-    tide = np.ma.zeros((npts), fill_value=np.nan)
-    tide.mask = np.any(hc.mask, axis=1)
-
-    # Predict tides
-    tide.data[:] = pyTMD.predict.drift(
-        t, hc, c, deltat=deltat, corrections=pytmd_model.format
-    )
-    minor = pyTMD.predict.infer_minor(
-        t, hc, c, deltat=deltat, corrections=pytmd_model.format
-    )
-    tide.data[:] += minor.data[:]
+    
+        # Predict tidal elevations at time and infer minor corrections
+        npts = len(t)
+        tide = np.ma.zeros((npts), fill_value=np.nan)
+        tide.mask = np.any(hc.mask, axis=1)
+    
+        # Predict tides
+        tide.data[:] = pyTMD.predict.drift(t, hc, c, deltat=deltat, corrections=pytmd_model.corrections)
+        minor = pyTMD.predict.infer_minor(
+            t,
+            hc,
+            c,
+            deltat=deltat,
+            corrections=pytmd_model.corrections,
+            minor=pytmd_model.minor,
+        )
+        tide.data[:] += minor.data[:]
 
     # Replace invalid values with fill value
     tide.data[tide.mask] = tide.fill_value
@@ -407,6 +552,172 @@ def _model_tides(
     return tide_df
 
 
+def _ensemble_model(
+    x,
+    y,
+    crs,
+    tide_df,
+    ensemble_models,
+    ensemble_func=None,
+    ensemble_top_n=3,
+    ranking_points="https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/derivative/dea_intertidal/supplementary/rankings_ensemble_2017-2019.geojson",
+    ranking_valid_perc=0.02,
+    **idw_kwargs,
+):
+    """
+    Combine multiple tide models into a single locally optimised
+    ensemble tide model using external model ranking data (e.g.
+    satellite altimetry or NDWI-tide correlations along the coastline)
+    to inform the selection of the best local models.
+
+    This function performs the following steps:
+    1. Loads model ranking points from a GeoJSON file, filters them
+       based on the valid data percentage, and retains relevant columns
+    2. Interpolates the model rankings into the requested x and y
+       coordinates using Inverse Weighted Interpolation (IDW)
+    3. Uses rankings to combine multiple tide models into a single
+       optimised ensemble model (by default, by taking the mean of the
+       top 3 ranked models)
+    4. Returns a DataFrame with the combined ensemble model predictions
+
+    Parameters
+    ----------
+    x : array-like
+        Array of x-coordinates where the ensemble model predictions are
+        required.
+    y : array-like
+        Array of y-coordinates where the ensemble model predictions are
+        required.
+    crs : string
+        Input coordinate reference system for x and y coordinates. Used
+        to ensure that interpolations are performed in the correct CRS.
+    tide_df : pandas.DataFrame
+        DataFrame containing tide model predictions with columns
+        `["time", "x", "y", "tide_m", "tide_model"]`.
+    ensemble_models : list
+        A list of models to include in the ensemble modelling process.
+        All values must exist as columns with the prefix "rank_" in
+        `ranking_points`.
+    ensemble_func : dict, optional
+        By default, a simple ensemble model will be calculated by taking
+        the mean of the `ensemble_top_n` tide models at each location.
+        However, a dictionary containing more complex ensemble
+        calculations can also be provided. Dictionary keys are used
+        to name output ensemble models; functions should take a column
+        named "rank" and convert it to a weighting, e.g.:
+        `ensemble_func = {"ensemble-custom": lambda x: x["rank"] <= 3}`
+    ensemble_top_n : int, optional
+        If `ensemble_func` is None, this sets the number of top models
+        to include in the mean ensemble calculation. Defaults to 3.
+    ranking_points : str, optional
+        Path to the GeoJSON file containing model ranking points. This
+        dataset should include columns containing rankings for each tide
+        model, named with the prefix "rank_". e.g. "rank_FES2014".
+        Low values should represent high rankings (e.g. 1 = top ranked).
+    ranking_valid_perc : float, optional
+        Minimum percentage of valid data required to include a model
+        rank point in the analysis, as defined in a column named
+        "valid_perc". Defaults to 0.02.
+    **idw_kwargs
+        Optional keyword arguments to pass to the `idw` function used
+        for interpolation. Useful values include `k` (number of nearest
+        neighbours to use in interpolation), `max_dist` (maximum
+        distance to nearest neighbours), and `k_min` (minimum number of
+        neighbours required after `max_dist` is applied).
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame containing the ensemble model predictions, matching
+        the format of the input `tide_df` (e.g. columns `["time", "x",
+        "y", "tide_m", "tide_model"]`. By default the 'tide_model'
+        column will be labeled "ensemble" for the combined model
+        predictions (but if a custom dictionary of ensemble functions is
+        provided via `ensemble_func`, each ensemble will be named using
+        the provided dictionary keys).
+    """
+
+    # Load model ranks points and reproject to same CRS as x and y
+    model_ranking_cols = [f"rank_{m}" for m in ensemble_models]
+    model_ranks_gdf = (
+        gpd.read_file(ranking_points)
+        .to_crs(crs)
+        .query(f"valid_perc > {ranking_valid_perc}")
+        .dropna()[model_ranking_cols + ["geometry"]]
+    )
+
+    # Use points to interpolate model rankings into requested x and y
+    id_kwargs_str = "" if idw_kwargs == {} else idw_kwargs
+    print(f"Interpolating model rankings using IDW interpolation {id_kwargs_str}")
+    ensemble_ranks_df = (
+        # Run IDW interpolation on subset of ranking columns
+        pd.DataFrame(
+            idw(
+                input_z=model_ranks_gdf[model_ranking_cols],
+                input_x=model_ranks_gdf.geometry.x,
+                input_y=model_ranks_gdf.geometry.y,
+                output_x=x,
+                output_y=y,
+                **idw_kwargs,
+            ),
+            columns=model_ranking_cols,
+        )
+        .assign(x=x, y=y)
+        # Drop any duplicates then melt columns into long format
+        .drop_duplicates()
+        .melt(id_vars=["x", "y"], var_name="tide_model", value_name="rank")
+        # Remore "rank_" prefix to get plain model names
+        .replace({"^rank_": ""}, regex=True)
+        # Set index columns and rank across groups
+        .set_index(["tide_model", "x", "y"])
+        .groupby(["x", "y"])
+        .rank()
+    )
+
+    # If no custom ensemble funcs are provided, use a default ensemble
+    # calculation that takes the mean of the top N tide models
+    if ensemble_func is None:
+        ensemble_func = {"ensemble": lambda x: x["rank"] <= ensemble_top_n}
+
+    # Create output list to hold computed ensemble model outputs
+    ensemble_list = []
+
+    # Loop through all provided ensemble generation functions
+    for ensemble_n, ensemble_f in ensemble_func.items():
+
+        print(f"Combining models into single {ensemble_n} model")
+
+        # Join ranks to input tide data, compute weightings and group
+        grouped = (
+            # Add tide model as an index so we can join with model ranks
+            tide_df.set_index("tide_model", append=True).join(ensemble_ranks_df)
+            # Add temp columns containing weightings and weighted values
+            .assign(
+                weights=ensemble_f,  # use custom func to compute weights
+                weighted=lambda i: i.tide_m * i.weights,
+            )
+            # Groupby is specified in a weird order here as this seems
+            # to be the easiest way to preserve correct index sorting
+            .groupby(["x", "y", "time"])
+        )
+
+        # Use weightings to combine multiple models into single ensemble
+        ensemble_df = (
+            # Calculate weighted mean and convert back to dataframe
+            grouped.weighted.sum()
+            .div(grouped.weights.sum())
+            .to_frame("tide_m")
+            # Label ensemble model and ensure indexes are in expected order
+            .assign(tide_model=ensemble_n)
+            .reorder_levels(["time", "x", "y"], axis=0)
+        )
+
+        ensemble_list.append(ensemble_df)
+
+    # Combine all ensemble models and return as a single dataframe
+    return pd.concat(ensemble_list)
+
+
 def model_tides(
     x,
     y,
@@ -414,6 +725,7 @@ def model_tides(
     model="FES2014",
     directory=None,
     crs="EPSG:4326",
+    crop=True,
     method="spline",
     extrapolate=True,
     cutoff=None,
@@ -422,15 +734,21 @@ def model_tides(
     parallel_splits=5,
     output_units="m",
     output_format="long",
-    epsg=None,
+    ensemble_models=None,
+    **ensemble_kwargs,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Compute tides at multiple points and times using tidal harmonics.
 
-    This function supports any tidal model supported by
-    `pyTMD`, including the FES2014 Finite Element Solution
-    tide model, and the TPXO8-atlas and TPXO9-atlas-v5
-    TOPEX/POSEIDON global tide models.
+    This function supports all tidal models supported by `pyTMD`,
+    including FES Finite Element Solution models, TPXO TOPEX/POSEIDON
+    models, EOT Empirical Ocean Tide models, GOT Global Ocean Tide
+    models, and HAMTIDE Hamburg direct data Assimilation Methods for
+    Tides models.
 
     This function requires access to tide model data files.
     These should be placed in a folder with subfolders matching
@@ -440,6 +758,10 @@ def model_tides(
     For FES2014 (https://www.aviso.altimetry.fr/es/data/products/auxiliary-products/global-tide-fes/description-fes2014.html):
         - {directory}/fes2014/ocean_tide/
         - {directory}/fes2014/load_tide/
+
+    For FES2022 (https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/global-tide-fes.html):
+        - {directory}/fes2022b/ocean_tide/
+        - {directory}/fes2022b/load_tide/
 
     For TPXO8-atlas (https://www.tpxo.net/tpxo-products-and-registration):
         - {directory}/tpxo8_atlas/
@@ -474,12 +796,15 @@ def model_tides(
         model tides in UTC time.
     model : string, optional
         The tide model used to model tides. Options include:
-        - "FES2014" (only pre-configured option on DEA Sandbox)
+        - "FES2014" (pre-configured on DEA Sandbox)
+        - "FES2022"
         - "TPXO9-atlas-v5"
         - "TPXO8-atlas"
         - "EOT20"
         - "HAMTIDE11"
         - "GOT4.10"
+        - "ensemble" (advanced ensemble tide model functionality;
+          combining multiple models based on external model rankings)
     directory : string, optional
         The directory containing tide model data files. If no path is
         provided, this will default to the environment variable
@@ -495,8 +820,12 @@ def model_tides(
     crs : str, optional
         Input coordinate reference system for x and y coordinates.
         Defaults to "EPSG:4326" (WGS84; degrees latitude, longitude).
+    crop : bool optional
+        Whether to crop tide model constituent files on-the-fly to
+        improve performance. Cropping will be performed based on a
+        1 degree buffer around all input points. Defaults to True.
     method : string, optional
-        Method used to interpolate tidal contsituents
+        Method used to interpolate tidal constituents
         from model files. Options include:
         - "spline": scipy bivariate spline interpolation (default)
         - "bilinear": quick bilinear interpolation
@@ -542,8 +871,19 @@ def model_tides(
         results stacked vertically along "tide_model" and "tide_m"
         columns), or wide format (with a column for each tide model).
         Defaults to "long".
-    epsg : int, DEPRECATED
-        Deprecated; use "crs" instead.
+    ensemble_models : list, optional
+        An optional list of models used to generate the ensemble tide
+        model if "ensemble" tide modelling is requested. Defaults to
+        ["FES2014", "TPXO9-atlas-v5", "EOT20", "HAMTIDE11", "GOT4.10",
+        "FES2012", "TPXO8-atlas-v1"].
+    **ensemble_kwargs :
+        Keyword arguments used to customise the generation of optional
+        ensemble tide models if "ensemble" modelling are requested.
+        These are passed to the underlying `_ensemble_model` function.
+        Useful parameters include `ranking_points` (path to model
+        rankings data), `k` (for controlling how model rankings are
+        interpolated), and `ensemble_top_n` (how many top models to use
+        in the ensemble calculation).
 
     Returns
     -------
@@ -551,15 +891,13 @@ def model_tides(
     combination of time and point coordinates.
 
     """
-
-    # Deprecate `epsg` param
-    if epsg is not None:
-        warn(
-            "The `epsg` parameter is deprecated; please use `crs` to "
-            "provide CRS information in the form 'EPSG:XXXX'",
-            DeprecationWarning,
-            stacklevel=2,
-        )
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Set tide modelling files directory. If no custom path is provided,
     # first try global environmental var, then "/var/share/tide_models"
@@ -579,7 +917,7 @@ def model_tides(
         time = time.to_datetime64()
 
     # Turn inputs into arrays for consistent handling
-    model = np.atleast_1d(model)
+    models_requested = np.atleast_1d(model)
     x = np.atleast_1d(x)
     y = np.atleast_1d(y)
     time = np.atleast_1d(time)
@@ -603,22 +941,47 @@ def model_tides(
             "you intended to model multiple timesteps at each point."
         )
 
-    # Verify that all provided models are in list of supported models
+    # Verify that all provided models are supported
     valid_models = [
+        "FES2022",
         "FES2014",
         "TPXO9-atlas-v5",
-        "TPXO8-atlas",
         "EOT20",
         "HAMTIDE11",
         "GOT4.10",
-        "FES2012",  # Requires custom tide model definition file
+        "TPXO8-atlas",
         "TPXO8-atlas-v1",  # Requires custom tide model definition file
+        "FES2012",  # Requires custom tide model definition file
+        "ensemble",  # Advanced ensemble model functionality
     ]
-    if not all(m in valid_models for m in model):
+    if not all(m in valid_models for m in models_requested):
         raise ValueError(
-            f"One or more of the models requested {model} is not valid. "
-            f"The following models are currently supported: {valid_models}"
+            f"One or more of the models requested {models_requested} is "
+            f"not valid. The following models are currently supported: "
+            f"{valid_models}"
         )
+
+    # If ensemble modelling is requested, use a custom list of models
+    # for subsequent processing
+    if "ensemble" in models_requested:
+        print("Running ensemble tide modelling")
+        models_to_process = (
+            ensemble_models
+            if ensemble_models is not None
+            else [
+                "FES2014",
+                "TPXO9-atlas-v5",
+                "EOT20",
+                "HAMTIDE11",
+                "GOT4.10",
+                "FES2012",
+                "TPXO8-atlas-v1",
+            ]
+        )
+
+    # Otherwise, models to process are the same as those requested
+    else:
+        models_to_process = models_requested
 
     # Update tide modelling func to add default keyword arguments that
     # are used for every iteration during parallel processing
@@ -626,6 +989,7 @@ def model_tides(
         _model_tides,
         directory=directory,
         crs=crs,
+        crop=crop,
         method=method,
         extrapolate=extrapolate,
         cutoff=np.inf if cutoff is None else cutoff,
@@ -637,12 +1001,12 @@ def model_tides(
     parallel_splits = min(parallel_splits, len(x))
 
     # Parallelise if either multiple models or multiple splits requested
-    if parallel & ((len(model) > 1) | (parallel_splits > 1)):
+    if parallel & ((len(models_to_process) > 1) | (parallel_splits > 1)):
         from concurrent.futures import ProcessPoolExecutor
         from tqdm import tqdm
 
         with ProcessPoolExecutor() as executor:
-            print(f"Modelling tides using {', '.join(model)} in parallel")
+            print(f"Modelling tides using {', '.join(models_to_process)} in parallel")
 
             # Optionally split lon/lat points into `splits_n` chunks
             # that will be applied in parallel
@@ -659,7 +1023,7 @@ def model_tides(
                 model_iters, x_iters, y_iters = zip(
                     *[
                         (m, x_split[i], y_split[i])
-                        for m in model
+                        for m in models_to_process
                         for i in range(parallel_splits)
                     ]
                 )
@@ -669,7 +1033,7 @@ def model_tides(
                 model_iters, x_iters, y_iters, time_iters = zip(
                     *[
                         (m, x_split[i], y_split[i], time_split[i])
-                        for m in model
+                        for m in models_to_process
                         for i in range(parallel_splits)
                     ]
                 )
@@ -686,13 +1050,26 @@ def model_tides(
     else:
         model_outputs = []
 
-        for model_i in model:
+        for model_i in models_to_process:
             print(f"Modelling tides using {model_i}")
             tide_df = iter_func(model_i, x, y, time)
             model_outputs.append(tide_df)
 
     # Combine outputs into a single dataframe
     tide_df = pd.concat(model_outputs, axis=0)
+
+    # Optionally compute ensemble model and add to dataframe
+    if "ensemble" in models_requested:
+        ensemble_df = _ensemble_model(
+            x, y, crs, tide_df, models_to_process, **ensemble_kwargs
+        )
+
+        # Update requested models with any custom ensemble models, then
+        # filter the dataframe to keep only models originally requested
+        models_requested = np.union1d(models_requested, ensemble_df.tide_model.unique())
+        tide_df = pd.concat([tide_df, ensemble_df]).query(
+            "tide_model in @models_requested"
+        )
 
     # Optionally convert to a wide format dataframe with a tide model in
     # each dataframe column
@@ -755,7 +1132,7 @@ def _pixel_tides_resample(
     """
     # Determine spatial dimensions
     y_dim, x_dim = ds.odc.spatial_dims
-    
+
     # Convert array to Dask, using no chunking along y and x dims,
     # and a single chunk for each timestep/quantile and tide model
     tides_lowres_dask = tides_lowres.chunk(
@@ -768,8 +1145,11 @@ def _pixel_tides_resample(
     # hundreds of tiny x and y chunks due to the small size of
     # `tides_lowres` (possible odc.geo bug?)
     if dask_chunks == "auto":
-        if (y_dim in ds.chunks) & (x_dim in ds.chunks):
-            dask_chunks = (ds.chunks[y_dim], ds.chunks[x_dim])
+        if ds.chunks is not None:
+            if (y_dim in ds.chunks) & (x_dim in ds.chunks):
+                dask_chunks = (ds.chunks[y_dim], ds.chunks[x_dim])
+            else:
+                dask_chunks = ds.odc.geobox.shape
         else:
             dask_chunks = ds.odc.geobox.shape
 
@@ -801,6 +1181,10 @@ def pixel_tides(
     **model_tides_kwargs,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Obtain tide heights for each pixel in a dataset by modelling
     tides into a low-resolution grid surrounding the dataset,
     then (optionally) spatially resample this low-res data back
@@ -856,6 +1240,7 @@ def pixel_tides(
         The tide model or a list of models used to model tides, as
         supported by the `pyTMD` Python package. Options include:
         - "FES2014" (default; pre-configured on DEA Sandbox)
+        - "FES2022"
         - "TPXO8-atlas"
         - "TPXO9-atlas-v5"
         - "EOT20"
@@ -901,6 +1286,14 @@ def pixel_tides(
     """
     import odc.geo.xr
     from odc.geo.geobox import GeoBox
+
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # First test if no time dimension and nothing passed to `times`
     if ("time" not in ds.dims) & (times is None):
@@ -1080,6 +1473,10 @@ def tidal_tag(
     **model_tides_kwargs,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Takes an xarray.Dataset and returns the same dataset with a new
     `tide_m` variable giving the height of the tide at the exact
     moment of each satellite acquisition.
@@ -1131,6 +1528,14 @@ def tidal_tag(
     """
 
     import odc.geo.xr
+
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
@@ -1224,6 +1629,10 @@ def tidal_stats(
     **model_tides_kwargs,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Takes an xarray.Dataset and statistically compares the tides
     modelled for each satellite observation against the full modelled
     tidal range. This comparison can be used to evaluate whether the
@@ -1310,6 +1719,13 @@ def tidal_stats(
                   all available tide heights and time
 
     """
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Model tides for each observation in the supplied xarray object
     ds_tides, tidepost_lon, tidepost_lat = tidal_tag(
@@ -1492,6 +1908,10 @@ def tidal_tag_otps(
     return_tideposts=False,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Takes an xarray.Dataset and returns the same dataset with a new
     `tide_m` variable giving the height of the tide at the exact
     moment of each satellite acquisition.
@@ -1535,6 +1955,13 @@ def tidal_tag_otps(
     location used in the analysis).
 
     """
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Load tide modelling functions from either OTPS for pyfes
     try:
@@ -1633,6 +2060,10 @@ def tidal_stats_otps(
     round_stats=3,
 ):
     """
+    DEPRECATED: This function has been moved to the `eo-tides` Python package,
+    and will be retired in a future release. Please migrate your code to use
+    `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/
+
     Takes an xarray.Dataset and statistically compares the tides
     modelled for each satellite observation against the full modelled
     tidal range. This comparison can be used to evaluate whether the
@@ -1713,6 +2144,13 @@ def tidal_stats_otps(
                   all available tide heights and time
 
     """
+    warnings.warn(
+        "This function has been moved to the `eo-tides` Python package, "
+        "and will be retired in a future release. Please migrate your code "
+        "to use `eo-tides` instead: https://geoscienceaustralia.github.io/eo-tides/migration/",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Load tide modelling functions from either OTPS for pyfes
     try:
