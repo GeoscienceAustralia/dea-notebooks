@@ -13,7 +13,7 @@ cd ./dea-notebooks
 pip3 install ./Tools
 
 # Run the requested tests based on the parameter passed to the script
-if [ "$#" -eq 0 ]; then
+if [ -z "$1" ]; then
     # No parameter provided, run all tests
     echo "No parameter provided. Running default tests..."
     
