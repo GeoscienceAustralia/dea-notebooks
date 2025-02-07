@@ -32,7 +32,7 @@ jobs:
 
     strategy:
       matrix:
-        tests: ["test_beginners_guide.sh", "test_dea_products.sh", "Tests/test_dea_tools.sh", "Tests/test_dea_how_to_guides.sh"]
+        tests: ["test_beginners_guide.sh", "test_dea_products.sh", "test_dea_tools.sh", "test_how_to_guides.sh"]
       fail-fast: false
 
     # Automatically activate our mamba environment when it's ready
