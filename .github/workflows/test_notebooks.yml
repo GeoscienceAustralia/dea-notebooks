@@ -51,7 +51,7 @@ jobs:
       - name: Set up database access and tests
         uses: ./dea-notebooks/.github/actions/test_setup
 
-      - name: Run the Notebook tests
+      - name: Run DEA Notebooks tests
         run: |
           sudo chown -R 1000:100 ./dea-notebooks
           cd ./dea-notebooks
