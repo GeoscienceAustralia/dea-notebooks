@@ -1,0 +1,70 @@
+
+name: Test changed files on pull request
+
+on:
+  pull_request:
+    branches: [ develop ]
+
+permissions:
+  id-token: write # Required for OIDC authentication to AWS
+  contents: read
+
+jobs:
+  test-notebooks:
+    runs-on: ubuntu-latest
+
+    # # Automatically activate our mamba environment when it's ready
+    # defaults:
+    #   run:
+    #     shell: bash -l {0}
+
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          path: dea-notebooks
+
+      - name: Set up database access and tests
+        uses: ./dea-notebooks/.github/actions/test_setup
+        with:
+          image: stable
+
+      - name: Get changed notebook files
+        id: changed-notebooks
+        uses: tj-actions/changed-files@v45
+        with:
+          files: '**/*.ipynb'
+          separator: ' '
+
+      - name: Print changed notebook files
+        if: steps.changed-notebooks.outputs.any_changed == 'true'
+        run: |
+          echo "Changed notebook files:"
+          echo "${{ steps.changed-notebooks.outputs.all_changed_files }}"
+      
+      - name: Run tests against changed notebooks only
+        if: steps.changed-notebooks.outputs.any_changed == 'true'
+        run: |
+          sudo chown -R 1000:100 ./dea-notebooks
+          cd ./dea-notebooks
+          docker run --rm \
+            --net=host \
+            --env DATACUBE_DB_URL \
+            --env AWS_SESSION_TOKEN \
+            --env AWS_REGION \
+            --env AWS_ACCESS_KEY_ID \
+            --env AWS_SECRET_ACCESS_KEY \
+            --env AWS_SESSION_TOKEN \
+            --volume ${GITHUB_WORKSPACE}/dea-notebooks:/home/jovyan/dea-notebooks \
+            --volume ${GITHUB_WORKSPACE}/tide_models:/var/share/tide_models \
+            --env GDAL_HTTP_MAX_RETRY=3 \
+            --entrypoint /bin/bash \
+            538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable \
+            -c "
+              set -ex
+              set -o pipefail
+              cd /home/jovyan/dea-notebooks
+              pip3 install ./Tools
+              # pytest Tests/dea_tools
+              pytest --durations=20 --nbval-lax ${{ steps.changed-notebooks.outputs.all_changed_files }}
+            "

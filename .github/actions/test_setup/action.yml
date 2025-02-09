@@ -2,10 +2,10 @@ name: "Setup tests"
 description: "Set up database access and tests"
 
 inputs:
-  message:
-    description: "Message to print"
+  image:
+    description: "Sandbox image to test against"
     required: true
-    default: "Hello from my custom action!"
+    default: "stable"
 
 runs:
   using: "composite"
@@ -30,7 +30,7 @@ runs:
 
     - name: Pull dea-sandbox image from ECR
       run: |
-        docker pull 538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable
+        docker pull 538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:${{ inputs.image }}
       shell: bash
 
     - name: Configure AWS credentials
