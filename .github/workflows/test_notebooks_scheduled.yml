@@ -23,23 +23,22 @@ jobs:
     runs-on: ubuntu-latest
 
     # Test DEA Notebooks sections against both stable and latest Sandbox image
-  strategy:
-    # Prevent the entire matrix from failing if one combination fails
-    fail-fast: false
-    
-    matrix:
-      image: [
-        "latest",
-        "stable"
-      ]
-      tests: [
-        "dea_tools",
-        "beginners_guide", 
-        "dea_products",
-        "how_to_guides",
-        "real_world_examples",
-        "scalable_machine_learning"
-      ]
+    strategy:
+      
+      matrix:
+        image: [
+          "latest",
+          "stable"
+        ]
+        tests: [
+          "dea_tools",
+          "beginners_guide", 
+          "dea_products",
+          "how_to_guides",
+          "real_world_examples",
+          "scalable_machine_learning"
+        ]
+      fail-fast: false
 
     steps:
 
