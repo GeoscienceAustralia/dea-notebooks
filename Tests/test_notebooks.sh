@@ -68,7 +68,7 @@ elif [ "$1" = "real_world_examples" ]; then
 
 else
     # If an unknown parameter is provided, pass in entirely
-    echo "Passing in custom notebooks: $1"
+    echo "Testing custom notebooks: $1"
     pytest --durations=20 --nbval-lax $1
 
 fi
