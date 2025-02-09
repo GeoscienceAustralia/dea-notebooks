@@ -67,7 +67,8 @@ elif [ "$1" = "real_world_examples" ]; then
         --ignore Real_world_examples/Mapping_inundation_using_stream_gauges.ipynb
 
 else
-    # If an unknown parameter is provided, display a message
-    echo "Unknown parameter: $1"
+    # If an unknown parameter is provided, pass in entirely
+    echo "Passing in custom notebooks: $1"
+    pytest --durations=20 --nbval-lax $1
 
 fi
