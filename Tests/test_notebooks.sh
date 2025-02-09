@@ -63,8 +63,13 @@ elif [ "$1" = "how_to_guides" ]; then
 elif [ "$1" = "real_world_examples" ]; then
     echo "Testing Real_world_examples..."
     pytest --durations=20 --nbval-lax Real_world_examples \
+        --ignore Real_world_examples/Scalable_machine_learning \
         --ignore Real_world_examples/Estimate_climate_driver_influence_on_rainfall.ipynb \
         --ignore Real_world_examples/Mapping_inundation_using_stream_gauges.ipynb
+
+elif [ "$1" = "scalable_machine_learning" ]; then
+    echo "Testing Scalable_machine_learning..."
+    pytest --durations=20 --nbval-lax Real_world_examples/Scalable_machine_learning
 
 else
     # If an unknown parameter is provided, pass in entirely

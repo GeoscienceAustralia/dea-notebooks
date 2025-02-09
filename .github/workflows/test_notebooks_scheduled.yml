@@ -23,11 +23,23 @@ jobs:
     runs-on: ubuntu-latest
 
     # Test DEA Notebooks sections against both stable and latest Sandbox image
-    strategy:
-      matrix:
-        tests: ["dea_tools", "beginners_guide", "dea_products", "how_to_guides", "real_world_examples"]
-        image: ["latest", "stable"]
-      fail-fast: false
+  strategy:
+    # Prevent the entire matrix from failing if one combination fails
+    fail-fast: false
+    
+    matrix:
+      image: [
+        "latest",
+        "stable"
+      ]
+      tests: [
+        "dea_tools",
+        "beginners_guide", 
+        "dea_products",
+        "how_to_guides",
+        "real_world_examples",
+        "scalable_machine_learning"
+      ]
 
     steps:
 
@@ -40,7 +52,7 @@ jobs:
         with:
           image: ${{ matrix.image }}
 
-      - name: Run DEA Notebooks tests
+      - name: Run tests against each DEA Notebooks section
         run: |
           sudo chown -R 1000:100 ./dea-notebooks
           cd ./dea-notebooks
