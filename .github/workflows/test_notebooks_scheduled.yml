@@ -24,11 +24,6 @@ jobs:
         image: ["latest", "stable"]
       fail-fast: false
 
-    # # Automatically activate our mamba environment when it's ready
-    # defaults:
-    #   run:
-    #     shell: bash -l {0}
-
     steps:
 
       - uses: actions/checkout@v4

@@ -13,21 +13,11 @@ jobs:
   test-notebooks:
     runs-on: ubuntu-latest
 
-    # # Automatically activate our mamba environment when it's ready
-    # defaults:
-    #   run:
-    #     shell: bash -l {0}
-
     steps:
 
       - uses: actions/checkout@v4
         with:
           path: dea-notebooks
-
-      - name: Set up database access and tests
-        uses: ./dea-notebooks/.github/actions/test_setup
-        with:
-          image: stable
 
       - name: Get changed notebook files
         id: changed-notebooks
@@ -41,7 +31,13 @@ jobs:
         run: |
           echo "Changed notebook files:"
           echo "${{ steps.changed-notebooks.outputs.all_changed_files }}"
-      
+
+      - name: Set up database access and tests
+        if: steps.changed-notebooks.outputs.any_changed == 'true'
+        uses: ./dea-notebooks/.github/actions/test_setup
+        with:
+          image: stable
+
       - name: Run tests against changed notebooks only
         if: steps.changed-notebooks.outputs.any_changed == 'true'
         run: |
