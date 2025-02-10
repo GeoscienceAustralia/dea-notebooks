@@ -56,4 +56,5 @@ jobs:
             --env GDAL_HTTP_MAX_RETRY=10 \
             --entrypoint /bin/bash \
             538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable \
+            /home/jovyan/dea-notebooks/Tests/test_notebooks.sh dea_tools \; \
             /home/jovyan/dea-notebooks/Tests/test_notebooks.sh "${{ steps.changed-notebooks.outputs.all_changed_files }}"
