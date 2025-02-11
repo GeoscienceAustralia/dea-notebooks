@@ -3,10 +3,6 @@ name: Test entire repo against DEA Sandbox images
 
 on:
 
-  # TO REMOVE
-  pull_request:
-    branches: [ develop ]
-
   # Run on the hour 
   schedule:
     - cron: '0 * * * *'
