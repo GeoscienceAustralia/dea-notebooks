@@ -5,7 +5,7 @@ on:
 
   # Run on the hour 
   schedule:
-    - cron: '0 * * * *'
+    - cron: "0 10 * * 0,3"
   
   # Optional: Allow manual triggering through GitHub UI
   workflow_dispatch:
@@ -22,18 +22,16 @@ jobs:
     strategy:
       
       matrix:
-        image: [
-          "latest",
-          "stable"
-        ]
-        tests: [
-          "dea_tools",
-          "beginners_guide", 
-          "dea_products",
-          "how_to_guides",
-          "real_world_examples",
-          "scalable_machine_learning"
-        ]
+        image: 
+          - "latest"
+          - "stable"
+        tests:
+          - "dea_tools"
+          - "beginners_guide"
+          - "dea_products"
+          - "how_to_guides"
+          - "real_world_examples"
+          - "scalable_machine_learning"
       fail-fast: false
 
     steps:
