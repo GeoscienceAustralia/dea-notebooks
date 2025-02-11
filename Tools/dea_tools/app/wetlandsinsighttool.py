@@ -55,7 +55,7 @@ from dea_tools.spatial import reverse_geocode
 from dea_tools.datahandling import xr_pansharpen
 import dea_tools.wetlands
 from dea_tools.wetlands import generate_low_quality_data_periods
-from dea_tools.wit import WIT_drill
+from dea_tools.wit import WIT_drill, spatial_wit
 
 
 def make_box_layout():
@@ -90,8 +90,6 @@ class wit_app(HBox):
         )
         self.startdate = startdate.strftime("%Y-%m-%d")
         self.enddate = enddate.strftime("%Y-%m-%d")
-        #self.startdate = "2024-01-01"
-        #self.enddate = "2024-03-01"
         self.wetland_name = "example WIT"
         self.out_csv = "example_WIT.csv"
         self.out_plot = False
@@ -107,6 +105,7 @@ class wit_app(HBox):
         #self.mingooddata = 85
         # self.resamplingfreq = None
         self.max_size = False
+        self.spatial_wit = False
 
         ##################
         # HEADER FOR APP #
@@ -224,6 +223,7 @@ class wit_app(HBox):
         )
         run_button = create_expanded_button("Run", "info")
         fileupload_wetlands = widgets.FileUpload(accept="", multiple=True)
+        output_spatial_wit = deawidgets.create_checkbox(self.spatial_wit, 'Animation (.gif)')
 
         # Expandable advanced section
         #min_good_data = deawidgets.create_boundedfloattext(self.mingooddata, 0, 100, 5)
@@ -247,6 +247,7 @@ class wit_app(HBox):
         draw_control.on_draw(update_geojson)
         fileupload_wetlands.observe(self.update_fileupload_wetlands, "value")
         max_size.observe(self.update_maxsize, "value")
+        output_spatial_wit.observe(self.update_outputspatialwit, "value")
 
         ##################################
         # COLLECTION OF ALL APP CONTROLS #
@@ -257,6 +258,8 @@ class wit_app(HBox):
                 #min_good_data,
                 HTML("<b>Override maximum size limit:</b></br> (use with caution; may cause memory issues/crashes)"),
                 max_size,
+                HTML("<b>Spatial WIT animation:<b/>"),
+                output_spatial_wit,
                 # HTML("<b>" + ("Resampling Frequency:") + "</b>"),
                 # resampling_freq,
             ]
@@ -429,6 +432,7 @@ class wit_app(HBox):
     def update_enddate(self, change):
         self.enddate = change.new
 
+    # set the wetland name
     def update_wetlandname(self, change):
         self.wetland_name = change.new
 
@@ -451,6 +455,10 @@ class wit_app(HBox):
     # override max size limit
     def update_maxsize(self, change):
         self.max_size = change.new
+
+    # select to output spatial WIT
+    def update_outputspatialwit(self, change):
+        self.spatial_wit = change.new
 
     # Update product
     def update_deaoverlay(self, change):
@@ -517,7 +525,7 @@ class wit_app(HBox):
 
             if wetlands_gdf is not None:
                 try:
-                    df = WIT_drill(
+                    ds_wit, df = WIT_drill(
                         gdf=wetlands_gdf,
                         time=(self.startdate, self.enddate),
                         #min_gooddata=self.mingooddata,
@@ -633,3 +641,18 @@ class wit_app(HBox):
 
         else:
             print("No valid polygon to process. Please select or draw a new polygon.")
+
+        #produce spatial with animation if checkbox is selected 
+        if self.spatial_wit and ds_wit is not None:
+          #  with self.spatial_wit:
+
+            try:
+                spatial = spatial_wit(ds_wit)
+                print("Animation complete")
+            except AttributeError:
+                print("No polygon selected")
+    
+        else:
+            print(
+                "No valid polygon to process. Please select or draw a new polygon."
+            )
