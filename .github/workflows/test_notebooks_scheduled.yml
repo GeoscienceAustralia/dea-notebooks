@@ -1,0 +1,65 @@
+
+name: Test entire repo against DEA Sandbox images
+
+on:
+
+  # Run on the hour 
+  schedule:
+    - cron: "0 10 * * 0,3"
+  
+  # Optional: Allow manual triggering through GitHub UI
+  workflow_dispatch:
+
+permissions:
+  id-token: write # Required for OIDC authentication to AWS
+  contents: read
+
+jobs:
+  test-notebooks:
+    runs-on: ubuntu-latest
+
+    # Test DEA Notebooks sections against both stable and latest Sandbox image
+    strategy:
+      
+      matrix:
+        image: 
+          - "latest"
+          - "stable"
+        tests:
+          - "dea_tools"
+          - "beginners_guide"
+          - "dea_products"
+          - "how_to_guides"
+          - "real_world_examples"
+          - "scalable_machine_learning"
+      fail-fast: false
+
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          path: dea-notebooks
+
+      - name: Set up database access and tests
+        uses: ./dea-notebooks/.github/actions/test_setup
+        with:
+          image: ${{ matrix.image }}
+
+      - name: Run tests against each DEA Notebooks section
+        run: |
+          sudo chown -R 1000:100 ./dea-notebooks
+          cd ./dea-notebooks
+          docker run --rm \
+            --net=host \
+            --env DATACUBE_DB_URL \
+            --env AWS_SESSION_TOKEN \
+            --env AWS_REGION \
+            --env AWS_ACCESS_KEY_ID \
+            --env AWS_SECRET_ACCESS_KEY \
+            --env AWS_SESSION_TOKEN \
+            --volume ${GITHUB_WORKSPACE}/dea-notebooks:/home/jovyan/dea-notebooks \
+            --volume ${GITHUB_WORKSPACE}/tide_models:/var/share/tide_models \
+            --env GDAL_HTTP_MAX_RETRY=10 \
+            --entrypoint /bin/bash \
+            538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:${{ matrix.image }} \
+            /home/jovyan/dea-notebooks/Tests/test_notebooks.sh "${{ matrix.tests }}"
