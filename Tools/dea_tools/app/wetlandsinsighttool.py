@@ -550,7 +550,7 @@ class wit_app(HBox):
 
         # save the csv
         if df is not None and self.out_csv:
-            df.to_csv(self.out_csv, index_label="Datetime")
+            df.to_csv(self.out_csv, index=False)#, index_label="date", index=False)
 
         else:
             print("No valid polygon to process. Please select or draw a new polygon.") 
@@ -624,6 +624,8 @@ class wit_app(HBox):
                 x_label_text = "The Fractional Cover algorithm developed by the Joint Remote Sensing Research Program and\n the Water Observations from Space algorithm developed by Geoscience Australia are used in the production of this data"
 
                 ax.set_xlabel(x_label_text, style="italic")
+
+                ax.set_ylabel("Percentage of wetland (%)")
 
                 # add a legend and a tight plot box
                 # ax.legend(loc="lower left", framealpha=0.6)
