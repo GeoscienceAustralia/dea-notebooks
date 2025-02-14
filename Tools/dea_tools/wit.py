@@ -226,7 +226,7 @@ def spatial_wit(ds):
     cmap = mcolors.ListedColormap([color_dict[i] for i in range(9)], name='fc_class_cmap')
     bounds = list(color_dict.keys()) + [len(color_dict)]  # Bounds for each color
     norm = mcolors.BoundaryNorm(bounds, cmap.N)
-
+    
     # here we are making a brand new band called wetland that combines all the fc classes with the water and wet classes
     # i.e. water == 10, wet == 9, all other areas retain original fc class
     wetland = ds['fc_class'].where((ds['water'] == 0) | ds['water'].isnull(), 10)
@@ -239,8 +239,6 @@ def spatial_wit(ds):
         "bare soil", "bare soil mix", "bare soil and green veg", "green veg mix",
         "green veg", "wet", "water"
     ]
-    
-    #time_step = ds['wetland'].isel(time=1)
     
     # Define the colormap with your custom colors
     cmap = mcolors.ListedColormap([
@@ -259,25 +257,15 @@ def spatial_wit(ds):
     
     # Create a BoundedNorm to ensure correct mapping of data to the colormap
     norm = mcolors.Normalize(vmin=0, vmax=10)
-    
-    # Plot the data using imshow with the custom colormap
-    #fig, ax = plt.subplots(figsize=(10, 10))
-    #cax = ax.imshow(time_step, cmap=cmap)
-    
-    # Show the plot
-    #plt.show()
 
-    # code to save a timestep as a geotiff
-    #wetland_date = ds['wetland'].isel(time=0)  
-    #wetland_date.rio.write_crs("EPSG:3577", inplace=True)
-    #date_str = str(wetland_date.time.values)[:10]  # extract date string
-    #wetland_date.rio.to_raster(f"wetland_{date_str}.tif")
+    # create a directory to save the frames
+    os.makedirs("deawetlands_outputs", exist_ok=True)
     
     # if you want to save them all 
     for t in ds.time:
         wetland_time_step = ds['wetland'].sel(time=t)
         date_str = str(t.values)[:10]  # Extract date as string
-        wetland_time_step.rio.to_raster(f"wetland_{date_str}.tif")
+        wetland_time_step.rio.to_raster(f"deawetlands_outputs/wetland_{date_str}.tif")
 
     # to make one big plot
 
@@ -304,12 +292,9 @@ def spatial_wit(ds):
         axes[row_idx, col_idx].set_title(f'{time_date_str}')
     
     plt.tight_layout()
-    plt.savefig('wetland_time_steps.png', dpi=300)  
+    plt.savefig(f'deawetlands_outputs/wetland_time_steps.png', dpi=300)  
 
     # make a gif
-
-    # create a directory to save the frames
-    os.makedirs('frames', exist_ok=True)
     
     # loop through each time step, creating and saving a frame
     num_time_steps = ds.sizes['time']
@@ -326,24 +311,22 @@ def spatial_wit(ds):
         cax = ax.imshow(time_step, cmap=cmap, norm=norm, interpolation='none')
         ax.set_title(f'Time: {time_date_str}')
         
-        frame_path = f'frames/frame_{t:03d}.png'
+        frame_path = f'deawetlands_outputs/wetland_{time_date_str}.png'
         plt.savefig(frame_path)
         frames.append(frame_path)
-        plt.close(fig)  
-    
-    # make the gif
+        plt.close(fig) 
+        
+    #make the gif
     with imageio.get_writer('wetland_animation.gif', mode='I', duration=0.7, loop=0) as writer:
         for frame_path in frames:
             image = imageio.imread(frame_path)
             writer.append_data(image)
     
-    print("GIF saved as 'wetland_animation.gif'")
+    # print("GIF saved as 'wetland_animation.gif'")
     
     # clean up
-    # for frame_path in frames:
-    #     os.remove(frame_path)
-    shutil.rmtree('frames')
+    #for frame_path in frames:
+    #    os.remove(frame_path)
+    #shutil.rmtree("frames")
 
-    return 'wetland_animation.gif'
-    
-    
+    return "wetland_animation.gif"

@@ -646,15 +646,16 @@ class wit_app(HBox):
 
         #produce spatial with animation if checkbox is selected 
         if self.spatial_wit and ds_wit is not None:
-          #  with self.spatial_wit:
-
+    
             try:
-                spatial = spatial_wit(ds_wit)
+                ds = spatial_wit(ds_wit)
                 print("Animation complete")
             except AttributeError:
                 print("No polygon selected")
-    
+
+
         else:
             print(
                 "No valid polygon to process. Please select or draw a new polygon."
             )
+    
