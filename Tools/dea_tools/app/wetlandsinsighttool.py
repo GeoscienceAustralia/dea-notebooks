@@ -285,7 +285,7 @@ class wit_app(HBox):
                 output_plot,
                 HTML(
                     "</br><i><b>Upload Polygon:</b></br>Upload a GeoJSON or"
-                    "Shapefile (<5 mb) containing one or more wetland polygons.</i>"
+                    " Shapefile (<5 mb) containing a wetland polygon.</i>"
                 ),
                 fileupload_wetlands,
                 HTML("</br>"),

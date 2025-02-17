@@ -270,8 +270,9 @@ def spatial_wit(ds):
     # to make one big plot
 
     num_time_steps = ds.sizes['time']
-    
-    num_columns = 20 # change this depending on timesteps
+
+    num_columns = min(num_time_steps, 20)
+
     num_rows = (num_time_steps + num_columns - 1) // num_columns  # Calculate the number of rows
     
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(num_columns * 3, num_rows * 5))
@@ -280,6 +281,11 @@ def spatial_wit(ds):
         axes = axes.reshape(1, num_columns)
     elif num_columns == 1:
         axes = axes.reshape(num_rows, 1)
+
+    # Hide any unused axes
+    for i in range(num_rows * num_columns):
+        if i >= num_time_steps:
+            fig.delaxes(axes.flatten()[i])
     
     for t in range(num_time_steps):
         time_step = ds['wetland'].isel(time=t)
@@ -317,7 +323,8 @@ def spatial_wit(ds):
         plt.close(fig) 
         
     #make the gif
-    with imageio.get_writer('wetland_animation.gif', mode='I', duration=0.7, loop=0) as writer:
+    output_path = f'deawetlands_outputs/wetland_animation.gif'
+    with imageio.get_writer(output_path, mode='I', duration=0.7, loop=0) as writer:
         for frame_path in frames:
             image = imageio.imread(frame_path)
             writer.append_data(image)
@@ -329,4 +336,4 @@ def spatial_wit(ds):
     #    os.remove(frame_path)
     #shutil.rmtree("frames")
 
-    return "wetland_animation.gif"
+    return output_path
