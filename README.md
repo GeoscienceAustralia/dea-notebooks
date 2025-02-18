@@ -87,7 +87,7 @@ The **National Computational Infrastructure** is a supercomputer environment ava
 
 To get started, see these articles in the wiki.
 
-* [Getting started with Git]([https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Git-workflow](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Getting-started-with-Git))
+* [Getting started with Git](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Getting-started-with-Git)
 * [Create a DEA Notebook](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook)
 * [Edit a DEA Notebook](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook)
 * [Contributing and reviewing DEA Notebooks](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Contributing-and-reviewing-DEA-Notebooks)
