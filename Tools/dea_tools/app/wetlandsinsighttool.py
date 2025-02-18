@@ -648,7 +648,7 @@ class wit_app(HBox):
         if self.spatial_wit and ds_wit is not None:
     
             try:
-                ds = spatial_wit(ds_wit)
+                ds = spatial_wit(ds=ds_wit, name=self.wetland_name)
                 print("Animation complete")
             except AttributeError:
                 print("No polygon selected")

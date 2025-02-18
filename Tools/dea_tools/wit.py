@@ -188,7 +188,7 @@ def classify_pixel(pv, npv, bs):
         return 7  # pv_mix
     return -1 
 
-def spatial_wit(ds):
+def spatial_wit(ds, name):
 
     ds = ds.dropna(dim='time', how='all')
 
@@ -298,7 +298,8 @@ def spatial_wit(ds):
         axes[row_idx, col_idx].set_title(f'{time_date_str}')
     
     plt.tight_layout()
-    plt.savefig(f'deawetlands_outputs/wetland_time_steps.png', dpi=300)  
+    name = name.replace(" ", "_")
+    plt.savefig(f'deawetlands_outputs/{name}_wetland_time_steps.png', dpi=300)  
 
     # make a gif
     
@@ -317,13 +318,13 @@ def spatial_wit(ds):
         cax = ax.imshow(time_step, cmap=cmap, norm=norm, interpolation='none')
         ax.set_title(f'Time: {time_date_str}')
         
-        frame_path = f'deawetlands_outputs/wetland_{time_date_str}.png'
+        frame_path = f'deawetlands_outputs/{name}_wetland_{time_date_str}.png'
         plt.savefig(frame_path)
         frames.append(frame_path)
         plt.close(fig) 
         
     #make the gif
-    output_path = f'deawetlands_outputs/wetland_animation.gif'
+    output_path = f'deawetlands_outputs/{name}_wetland_animation.gif'
     with imageio.get_writer(output_path, mode='I', duration=0.7, loop=0) as writer:
         for frame_path in frames:
             image = imageio.imread(frame_path)
