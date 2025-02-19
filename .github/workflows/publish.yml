@@ -16,10 +16,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v2
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'  # Pin to <3.12 for compatibility with pip==22.0.4
+          python-version: '3.11'  # Specify a stable Python version
       
       - name: Get history and tags for SCM versioning
         run: |
