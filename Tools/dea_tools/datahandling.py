@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: Feb 2024
+Last modified: February 2025
 """
 
 import datetime
@@ -112,7 +112,7 @@ def load_ard(
 ):
     """
     Load multiple Geoscience Australia Landsat or Sentinel 2
-    Collection 3 products (e.g. Landsat 5, 7, 8, 9; Sentinel 2A and 2B),
+    Analysis Ready Data products (e.g. Landsat 5, 7, 8, 9; Sentinel 2A, 2B, 2C),
     optionally apply pixel quality/cloud masking and contiguity masks,
     and drop time steps that contain greater than a minimum proportion
     of good quality (e.g. non-cloudy or shadowed) pixels.
@@ -126,13 +126,14 @@ def load_ard(
     And Sentinel-2 products:
         * ga_s2am_ard_3
         * ga_s2bm_ard_3
+        * ga_s2cm_ard_3
 
     Cloud masking can be performed using the Fmask (Function of Mask)
     cloud mask for Landsat and Sentinel-2, and the s2cloudless
     (Sentinel Hub cloud detector for Sentinel-2 imagery) cloud mask for
     Sentinel-2.
 
-    Last modified: June 2023
+    Last modified: February 2025
 
     Parameters
     ----------
@@ -142,7 +143,8 @@ def load_ard(
     products : list
         A list of product names to load. Valid options are
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3', 'ga_ls9c_ard_3']
-        for Landsat, ['ga_s2am_ard_3', 'ga_s2bm_ard_3'] for Sentinel 2.
+        for Landsat, ['ga_s2am_ard_3', 'ga_s2bm_ard_3', 'ga_s2cm_ard_3']
+        for Sentinel 2.
     cloud_mask : string, optional
         The cloud mask used by the function. This is used for both
         masking out poor quality pixels (e.g. clouds) if
@@ -256,29 +258,43 @@ def load_ard(
     # Setup #
     #########
 
+    # Convert products to a list if it is passed as a string
+    products = [products] if isinstance(products, str) else products
+    
+    # Valid Landsat products
+    valid_ls = ["ga_ls5t_ard_3", "ga_ls7e_ard_3", "ga_ls8c_ard_3", "ga_ls9c_ard_3"]
+    valid_s2 = ["ga_s2am_ard_3", "ga_s2bm_ard_3", "ga_s2cm_ard_3"]
+    
     # Verify that products were provided
     if not products:
         raise ValueError(
-            "Please provide a list of product names to load data from. "
-            "Valid options are: ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', "
-            "'ga_ls8c_ard_3', 'ga_ls9c_ard_3'] for Landsat, and "
-            "['ga_s2am_ard_3', 'ga_s2bm_ard_3'] for Sentinel 2."
+            f"Please provide a list of Landsat or Sentinel-2 Analysis Ready Data "
+            f"product names to load data from. Valid options are: "
+            f"{valid_ls + valid_s2}."
         )
-
+    
     # Determine whether products are all Landsat, all S2, or mixed
-    elif all(["ls" in product for product in products]):
+    elif all([product in valid_ls for product in products]):
         product_type = "ls"
-    elif all(["s2" in product for product in products]):
+    elif all([product in valid_s2 for product in products]):
         product_type = "s2"
-    else:
+    elif all([product in valid_s2 + valid_ls for product in products]):
         product_type = "mixed"
-
+    
         warnings.warn(
             "You have selected a combination of Landsat and Sentinel-2 "
             "products. This can produce unexpected results as these "
             "products use the same names for different spectral bands "
             "(e.g. Landsat and Sentinel-2's 'nbart_swir_2'); use with "
             "caution."
+        )
+    else:
+        # If an invalid product is passed, raise error
+        invalid_products = [product for product in products if product not in valid_s2 + valid_ls]
+        raise ValueError(
+            f"The `load_ard` function only supports Landsat and "
+            f"Sentinel-2 Analysis Ready Data products; {invalid_products} is not supported. "
+            f"Valid options are: {valid_ls + valid_s2}."
         )
 
     # Set contiguity band depending on `mask_contiguity`;
