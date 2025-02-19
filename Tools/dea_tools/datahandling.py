@@ -112,7 +112,7 @@ def load_ard(
 ):
     """
     Load multiple Geoscience Australia Landsat or Sentinel 2
-    Analysis Ready Data products (e.g. Landsat 5, 7, 8, 9; Sentinel 2A, 2B, 2C),
+    Collection 3  Analysis Ready Data products (e.g. Landsat 5, 7, 8, 9; Sentinel 2A, 2B, 2C),
     optionally apply pixel quality/cloud masking and contiguity masks,
     and drop time steps that contain greater than a minimum proportion
     of good quality (e.g. non-cloudy or shadowed) pixels.
@@ -260,11 +260,11 @@ def load_ard(
 
     # Convert products to a list if it is passed as a string
     products = [products] if isinstance(products, str) else products
-    
+
     # Valid Landsat products
     valid_ls = ["ga_ls5t_ard_3", "ga_ls7e_ard_3", "ga_ls8c_ard_3", "ga_ls9c_ard_3"]
     valid_s2 = ["ga_s2am_ard_3", "ga_s2bm_ard_3", "ga_s2cm_ard_3"]
-    
+
     # Verify that products were provided
     if not products:
         raise ValueError(
@@ -272,7 +272,7 @@ def load_ard(
             f"product names to load data from. Valid options are: "
             f"{valid_ls + valid_s2}."
         )
-    
+
     # Determine whether products are all Landsat, all S2, or mixed
     elif all([product in valid_ls for product in products]):
         product_type = "ls"
@@ -280,7 +280,7 @@ def load_ard(
         product_type = "s2"
     elif all([product in valid_s2 + valid_ls for product in products]):
         product_type = "mixed"
-    
+
         warnings.warn(
             "You have selected a combination of Landsat and Sentinel-2 "
             "products. This can produce unexpected results as these "
@@ -290,7 +290,9 @@ def load_ard(
         )
     else:
         # If an invalid product is passed, raise error
-        invalid_products = [product for product in products if product not in valid_s2 + valid_ls]
+        invalid_products = [
+            product for product in products if product not in valid_s2 + valid_ls
+        ]
         raise ValueError(
             f"The `load_ard` function only supports Landsat and "
             f"Sentinel-2 Analysis Ready Data products; {invalid_products} is not supported. "
