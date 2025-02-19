@@ -158,8 +158,6 @@ def WIT_drill(
     polygon_base_df = dea_tools.wetlands.normalise_wit(polygon_base_df)
 
     if export_csv:
-        if verbose:
-            print("exporting csv: " + export_csv)
         polygon_base_df = polygon_base_df.drop("index", axis=1)
         polygon_base_df.to_csv(export_csv, index_label ="date")
 

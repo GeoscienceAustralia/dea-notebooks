@@ -91,7 +91,7 @@ class wit_app(HBox):
         self.startdate = startdate.strftime("%Y-%m-%d")
         self.enddate = enddate.strftime("%Y-%m-%d")
         self.wetland_name = "example WIT"
-        self.out_csv = "example_WIT.csv"
+        #self.out_csv = "example_WIT.csv"
         self.out_plot = False
         self.product_list = [
             ("ESRI World Imagery", "none"),
@@ -216,7 +216,7 @@ class wit_app(HBox):
         startdate_picker = deawidgets.create_datepicker(value=startdate,)
         enddate_picker = deawidgets.create_datepicker(value=enddate,)
         wetland_name = deawidgets.create_inputtext(self.wetland_name, self.wetland_name)
-        output_csv = deawidgets.create_inputtext(self.out_csv, self.out_csv)
+        #output_csv = deawidgets.create_inputtext(self.out_csv, self.out_csv)
         output_plot = deawidgets.create_checkbox(self.out_plot, 'Figure (.png)')
         deaoverlay_dropdown = deawidgets.create_dropdown(
             self.product_list, self.product_list[0][1]
@@ -238,7 +238,7 @@ class wit_app(HBox):
         startdate_picker.observe(self.update_startdate, "value")
         enddate_picker.observe(self.update_enddate, "value")
         wetland_name.observe(self.update_wetlandname, "value")
-        output_csv.observe(self.update_outputcsv, "value")
+        #output_csv.observe(self.update_outputcsv, "value")
         output_plot.observe(self.update_outputplot, "value")
         #min_good_data.observe(self.update_mingooddata, "value")
         # resampling_freq.observe(self.update_resamplingfreq, "value")
@@ -279,8 +279,8 @@ class wit_app(HBox):
                 enddate_picker,
                 HTML("<b>Wetland Name:</b>"),
                 wetland_name,
-                HTML("<b>Output CSV:</b>"),
-                output_csv,
+                #HTML("<b>Output CSV:</b>"),
+                #output_csv,
                 HTML("<b>Output Plot:</b>"),
                 output_plot,
                 HTML(
@@ -445,8 +445,8 @@ class wit_app(HBox):
     #    self.resamplingfreq = change.new
 
     # set the output csv
-    def update_outputcsv(self, change):
-        self.out_csv = change.new
+    #def update_outputcsv(self, change):
+        #self.out_csv = change.new
 
     # set the output plot
     def update_outputplot(self, change):
@@ -523,6 +523,11 @@ class wit_app(HBox):
 
             df = None
 
+            if not self.wetland_name.endswith('.csv'):
+                output_csv = self.wetland_name + '.csv'
+            else:
+                output_csv = self.wetland_name
+            
             if wetlands_gdf is not None:
                 try:
                     ds_wit, df = WIT_drill(
@@ -531,7 +536,7 @@ class wit_app(HBox):
                         #min_gooddata=self.mingooddata,
                         # resample_frequency=rsf,
                         # TCW_threshold=TCW_threshold,
-                        export_csv=self.out_csv,
+                        export_csv=output_csv,
                         dask_chunks=dask_chunks,
                         verbose=False,
                         verbose_progress=True,
@@ -549,8 +554,8 @@ class wit_app(HBox):
         client.shutdown()
 
         # save the csv
-        if df is not None and self.out_csv:
-            df.to_csv(self.out_csv, index=False)#, index_label="date", index=False)
+        if df is not None and self.wetland_name:
+            df.to_csv(output_csv, index=False) 
 
         else:
             print("No valid polygon to process. Please select or draw a new polygon.") 
