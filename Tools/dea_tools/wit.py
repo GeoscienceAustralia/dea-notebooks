@@ -1,17 +1,44 @@
+# wit_app.py
+"""
+This module is for processing DEA wetlands data, including Spatial WIT.
+
+License: The code in this notebook is licensed under the Apache 
+License,Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). 
+Digital Earth Australia data is licensed under the Creative Commons 
+by Attribution 4.0 license 
+(https://creativecommons.org/licenses/by/4.0/).
+
+Contact: If you need assistance, please post a question on the Open 
+Data Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the 
+GIS Stack Exchange 
+(https://gis.stackexchange.com/questions/ask?tags=open-data-cube)using
+the `open-data-cube` tag (you can view previously asked questions
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+
+If you would like to report an issue with this script, file one on 
+GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
+
+Last modified: March 2025
+
+"""
+
+# Import required packages
+
+
+
+import os
 import datetime
-import geopandas as gpd
 import itertools
 import numpy as np
-import pandas as pd
 import xarray as xr
+import pandas as pd
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import os
 import imageio
 import shutil
 
 import datacube
-
 import sys
 
 sys.path.insert(1, "../Tools/")
@@ -20,7 +47,6 @@ import dea_tools.datahandling
 from dea_tools.spatial import xr_rasterize
 from dea_tools.dask import create_local_dask_cluster
 import dea_tools.wetlands
-import dea_tools.wit
 
 # Create local dask cluster to improve data load time
 client = create_local_dask_cluster(return_client=True)
@@ -28,8 +54,6 @@ client = create_local_dask_cluster(return_client=True)
 def WIT_drill(
     gdf,
     time,
-    #min_gooddata=0.85,
-    #resample_frequency=None,
     export_csv=None,
     dask_chunks=None,
     verbose=False,
@@ -40,9 +64,8 @@ def WIT_drill(
     if isinstance(gdf, datacube.utils.geometry._base.Geometry):
         gdf = gpd.GeoDataFrame({"col1": ["name"], "geometry": gdf.geom}, crs=gdf.crs)
     geom = datacube.utils.geometry.Geometry(geom=gdf.iloc[0].geometry, crs=gdf.crs)
-    #query = {"geopolygon": geom, "time": time}
 
-    dc = datacube.Datacube(app="DEA_Wetlands_Insight_Tool")
+    dc = datacube.Datacube(app="WIT_drill")
 
     if verbose_progress:
         print("Loading Landsat data")
@@ -69,10 +92,6 @@ def WIT_drill(
     
     # Load into memory using Dask
     ds_ls.load()
-
-    # create polygon mask
-    poly_mask = xr_rasterize(gdf.iloc[[0]], ds_ls)
-    ds_ls = ds_ls.where(poly_mask)
         
     ds_wo = dc.load(
     "ga_ls_wo_3", resampling="nearest", group_by="solar_day", like=ds_ls, dask_chunks={"time":1, "x": 2048, "y": 2048}
@@ -141,7 +160,6 @@ def WIT_drill(
     # Masking again
     ds_wit = xr.Dataset(output_rast).where(mask)
 
-
     # Calculate percentage missing
     pc_missing = (~mask).where(poly_raster).mean(dim=["x", "y"])
     
@@ -186,7 +204,7 @@ def classify_pixel(pv, npv, bs):
         return 7  # pv_mix
     return -1 
 
-def spatial_wit(ds, name):
+def spatial_wit(ds, wetland_name):
 
     ds = ds.dropna(dim='time', how='all')
 
@@ -258,12 +276,14 @@ def spatial_wit(ds, name):
 
     # create a directory to save the frames
     os.makedirs("deawetlands_outputs", exist_ok=True)
+
+    wetland_name = wetland_name.replace(" ", "_")
     
     # if you want to save them all 
     for t in ds.time:
         wetland_time_step = ds['wetland'].sel(time=t)
         date_str = str(t.values)[:10]  # Extract date as string
-        wetland_time_step.rio.to_raster(f"deawetlands_outputs/wetland_{date_str}.tif")
+        wetland_time_step.rio.to_raster(f"deawetlands_outputs/{wetland_name}_{date_str}.tif")
 
     # to make one big plot
 
@@ -296,8 +316,7 @@ def spatial_wit(ds, name):
         axes[row_idx, col_idx].set_title(f'{time_date_str}')
     
     plt.tight_layout()
-    name = name.replace(" ", "_")
-    plt.savefig(f'deawetlands_outputs/{name}_wetland_time_steps.png', dpi=300)  
+    plt.savefig(f'deawetlands_outputs/{wetland_name}_time_steps.png', dpi=300)  
 
     # make a gif
     
@@ -316,13 +335,13 @@ def spatial_wit(ds, name):
         cax = ax.imshow(time_step, cmap=cmap, norm=norm, interpolation='none')
         ax.set_title(f'Time: {time_date_str}')
         
-        frame_path = f'deawetlands_outputs/{name}_wetland_{time_date_str}.png'
+        frame_path = f'deawetlands_outputs/{wetland_name}_{time_date_str}.png'
         plt.savefig(frame_path)
         frames.append(frame_path)
         plt.close(fig) 
         
     #make the gif
-    output_path = f'deawetlands_outputs/{name}_wetland_animation.gif'
+    output_path = f'deawetlands_outputs/{wetland_name}_animation.gif'
     with imageio.get_writer(output_path, mode='I', duration=0.7, loop=0) as writer:
         for frame_path in frames:
             image = imageio.imread(frame_path)
