@@ -75,6 +75,17 @@ lc_colours = {
                              2: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
                              255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
 
+    # working copy:
+    # 'lifeform_veg_cat_l4a': {2: (14, 121, 18, 255, "Woody Vegetation"),
+    #                          3: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
+    #                          20: (14, 121, 18, 255, "Woody Vegetation"),
+    #                          21: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
+    #                          38: (14, 121, 18, 255, "Woody Vegetation"),
+    #                          56: (14, 121, 18, 255, "Woody Vegetation"),
+    #                          255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
+
+
+
     'canopyco_veg_cat_l4d': {10: (14,  121, 18,  255, "> 65 % cover"),
                              12: (45,  141, 47,  255, "40 to 65 % cover"),
                              13: (80,  160, 82,  255, "15 to 40 % cover"),
@@ -247,6 +258,13 @@ lc_colours = {
                                 104: (133, 202, 253, 255, 'Water: (Water) Non-perennial (1 to 3 months)'),
                                 255: (255, 255, 255, 255, "No Data")},
 }
+
+lc_colours_mapping = {
+        'lifeform_veg_cat_l4a': {1: [2, 20, 38, 56],
+                             2: [3, 21, 39, 57],
+                             255: [255]},
+}
+
 
 
 def get_layer_name(measurement, da):
@@ -427,9 +445,12 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     """
     # get measurement name
     measurement = get_layer_name(measurement, data)
+    print(f"measurement:{measurement}")
+    print(f"data: {data}")
 
     # get colour map, normalisation
     try:
+        print("running lc_colormap")
         cmap, norm = lc_colourmap(measurement)
     except AssertionError:
 
@@ -440,6 +461,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
                        '(measurement = "full_classification")')
 
     height, width = data.geobox.shape
+    print(f"geobox height, width:{height} {width}")
     scale = out_width / width
 
     if year:
@@ -448,9 +470,14 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         data = data.sel(time=year_string, method="nearest")
         
         fig, ax = plt.subplots()
+        print("matplotlib line 1 test")
         fig.set_size_inches(width * scale, height * scale)
+        print("before colorbar")
         make_colorbar(fig, ax, measurement)
-        im = ax.imshow(data, cmap=cmap, norm=norm, interpolation="nearest")
+        print("is the issue imshow?")
+        print(f"cmap: {cmap}")
+        print(f"norm: {norm}")
+        im = ax.imshow(data.values, cmap=cmap) #, cmap=cmap, norm=norm, interpolation="nearest"
 
     
     elif len(data.time) == 1:
