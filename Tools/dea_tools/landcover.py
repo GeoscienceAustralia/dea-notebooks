@@ -71,17 +71,18 @@ lc_colours = {
                                  220: (77, 159, 220, 255, "Changed to Water"),
                                  0: (255, 255, 255, 255, "No Change")},
 
-    'lifeform_veg_cat_l4a': {1: (14, 121, 18, 255, "Woody Vegetation"),
-                             2: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
-                             255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
+     'lifeform_veg_cat_l4a': {1: (14, 121, 18, 255, "Woody Vegetation"),
+                              2: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
+                              255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
 
-    # working copy:
-    # 'lifeform_veg_cat_l4a': {2: (14, 121, 18, 255, "Woody Vegetation"),
-    #                          3: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
+
+    # 'lifeform_veg_cat_l4a': {#2: (14, 121, 18, 255, "Woody Vegetation"),
+    #                          #3: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
     #                          20: (14, 121, 18, 255, "Woody Vegetation"),
     #                          21: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
     #                          38: (14, 121, 18, 255, "Woody Vegetation"),
     #                          56: (14, 121, 18, 255, "Woody Vegetation"),
+    #     99: (77, 159, 220, 255, 'Water: (Water)'),
     #                          255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
 
 
@@ -151,7 +152,7 @@ lc_colours = {
                35: (170, 212, 113, 255, 'Natural Terrestrial Vegetated: Herbaceous Sparse (4 to 15 %)'),
                36: (186, 226, 146, 255, 'Natural Terrestrial Vegetated: Herbaceous Scattered (1 to 4 %)'),
                37: (86, 236, 231, 255, 'Cultivated Aquatic Vegetated:'),
-               # 38: (61, 170, 140, 255, 'Cultivated Aquatic Vegetated: Woody'),
+               38: (61, 170, 140, 255, 'Cultivated Aquatic Vegetated: Woody'),
                39: (82, 231, 172, 255, 'Cultivated Aquatic Vegetated: Herbaceous'),
                40: (43, 210, 203, 255, 'Cultivated Aquatic Vegetated: Closed (> 65 %)'),
                41: (73, 222, 216, 255, 'Cultivated Aquatic Vegetated: Open (40 to 65 %)'),
@@ -305,6 +306,7 @@ def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
         Land cover measurement to use for colour map and labels. 
     
     """
+
     # Create new axis object for colorbar
     # parameters for add_axes are [left, bottom, width, height], in
     # fractions of total plot
@@ -316,12 +318,12 @@ def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
         orient = 'vertical'
         
             # get level 4 colour bar colour map ect
-        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap('level4_colourbar_labels',
+        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap_colourbar('level4_colourbar_labels',
                                                          colour_bar=True)
     elif measurement == 'level4' and animation == False:
         
         # get level 4 colour bar colour map ect
-        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap('level4_colourbar_labels',
+        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap_colourbar('level4_colourbar_labels',
                                                          colour_bar=True)
         #move plot over to make room for colourbar
         fig.subplots_adjust(right=0.825)
@@ -345,7 +347,7 @@ def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
             orient = 'vertical'
             
         # get measurement colour bar colour map ect
-        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap(measurement,
+        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap_colourbar(measurement,
                                                          colour_bar=True)
 
     img = ax.imshow([cb_ticks], cmap=cb_cmap, norm=cb_norm)
@@ -356,6 +358,41 @@ def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
     cb.set_ticklabels(cb_labels)
 
 
+def descriptors_colours(lc_colours, descriptor):
+
+    if descriptor == 'lifeform_veg_cat_l4a':
+        print(f'descriptor {descriptor}')
+        colours_dict = lc_colours['level4']
+
+        woody_values = []
+        for key, value in colours_dict.items(): 
+            if 'Woody' in value[4]:
+                woody_values.append(key)
+        print(woody_values)
+
+        herb_values = []
+        for key, value in colours_dict.items(): 
+            if 'Herbaceous' in value[4]:
+                herb_values.append(key)
+        print(herb_values)
+
+        #make all white (Default)
+        for key in colours_dict:
+           colours_dict[key] = (255, 255, 255, 255, "No Data /\n Not vegetated")
+
+        for key in woody_values:
+            colours_dict[key] = (14, 121, 18, 255, "Woody Vegetation")
+
+        for key in herb_values:
+            colours_dict[key] =  (172, 188, 45, 255, "Herbaceous\n Vegetation")
+        
+        sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
+        # for key, value in sorted_colours_dict.items():
+        #     print(f"{key}: {value}")
+        
+        return sorted_colours_dict
+  
+    
 
 def lc_colourmap(colour_scheme, colour_bar=False):
     """
@@ -399,9 +436,103 @@ def lc_colourmap(colour_scheme, colour_bar=False):
 #     ('The dataset provided does not have a valid '
 #     'name. Please specify which DEA Landcover measurement is being plotted '
 #     'by providing the name using the "measurement" variable. For example (measurement = "full_classification")')
+    
+    # Get colour definitions
+    lc_colour_scheme = lc_colours[colour_scheme] 
 
+    if colour_scheme == 'lifeform_veg_cat_l4a':
+        lc_colour_scheme=descriptors_colours(lc_colours, colour_scheme)
+        print('lc_colour_scheme')
+
+    #  default white (RGB: [1, 1, 1])
+    default_colour = np.array([1, 1, 1])
+    
+    # Create colour map
+    colour_arr = []
+    for key, value in lc_colour_scheme.items():
+        colour_arr.append(np.array(value[:-2]) / 255)
+
+    cmap = mcolours.ListedColormap(colour_arr)
+    bounds = list(lc_colour_scheme)
+
+    if colour_bar == True:
+        if colour_scheme == 'level4':
+            # Set colour labels to shortened level 4 list
+            lc_colour_scheme = lc_colours['level4_colourbar_labels']
+        cb_ticks = list(lc_colour_scheme)
+        #print(f'CB_TICKS {cb_ticks}')
+        cb_labels = []
+        for x in cb_ticks:
+            cb_labels.append(lc_colour_scheme[x][4])
+
+    bounds.append(bounds[-1]+1)
+    norm = mcolours.BoundaryNorm(np.array(bounds), cmap.N)
+
+    if colour_bar == False:
+        return (cmap, norm)
+    else:
+        return (cmap, norm, cb_labels, cb_ticks)
+
+
+
+def lc_colourmap_colourbar(colour_scheme, colour_bar=False):
+    """
+    Returns colour map and normalisation for the provided DEA Land Cover
+    measurement, for use in plotting with Matplotlib library
+    
+    Parameters
+    ----------
+    colour_scheme : string
+        Name of land cover colour scheme to use
+        Valid options: 'level3', 'level4', 'lifeform_veg_cat_l4a', 
+        'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
+        'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 
+        'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'.
+    colour_bar : bool, optional
+        Controls if colour bar labels are returned as a list for 
+        plotting a colour bar. Default: False.
+        
+    Returns
+    ---------
+    cmap : matplotlib colormap
+        Matplotlib colormap containing the colour scheme for the
+        specified DEA Land Cover measurement.
+    norm : matplotlib colormap index
+        Matplotlib colormap index based on the discrete intervals of the
+        classes in the specified DEA Land Cover measurement. Ensures the
+        colormap maps the colours to the class numbers correctly.
+    cblables : array
+        A two dimentional array containing the numerical class values
+        (first dim) and string labels (second dim) of the classes found
+        in the chosen DEA Land Cover measurement.
+    """
+
+
+    colour_scheme = colour_scheme.lower()
+    # Ensure a valid colour scheme was requested
+#     try:
+    assert (colour_scheme in lc_colours.keys(
+    )), f'colour scheme must be one of [{lc_colours.keys()}] (got "{colour_scheme}")'
+
+#     ('The dataset provided does not have a valid '
+#     'name. Please specify which DEA Landcover measurement is being plotted '
+#     'by providing the name using the "measurement" variable. For example (measurement = "full_classification")')
+        
     # Get colour definitions
     lc_colour_scheme = lc_colours[colour_scheme]  
+
+    #reduce dictonary if duplicate labels (this is needed for descriptors, won't change anything in level3 or level4)
+    lc_colour_scheme_new = {}
+    seen_classes = set()
+    for key, (col_value_1, col_value_2, col_value_3, col_value_4, col_label) in lc_colour_scheme.items():
+        if col_label not in seen_classes:
+            lc_colour_scheme_new[key] = (col_value_1, col_value_2, col_value_3, col_value_4, col_label)
+            seen_classes.add(col_label)
+
+    # rename colour schem dictionary back to orginal name
+    lc_colour_scheme = lc_colour_scheme_new
+
+    
 
     # Create colour map
     colour_arr = []
@@ -430,6 +561,7 @@ def lc_colourmap(colour_scheme, colour_bar=False):
         return (cmap, norm, cb_labels, cb_ticks)
 
 
+
 def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     """
     Plot a single land cover measurement with appropriate colour scheme.
@@ -447,8 +579,8 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     """
     # get measurement name
     measurement = get_layer_name(measurement, data)
-    print(f"measurement:{measurement}")
-    print(f"data: {data}")
+    #print(f"measurement:{measurement}")
+    #print(f"data: {data}")
 
     # get colour map, normalisation
     try:
@@ -463,7 +595,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
                        '(measurement = "full_classification")')
 
     height, width = data.geobox.shape
-    print(f"geobox height, width:{height} {width}")
+    #print(f"geobox height, width:{height} {width}")
     scale = out_width / width
 
     if year:
@@ -477,8 +609,8 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         print("before colorbar")
         make_colorbar(fig, ax, measurement)
         print("is the issue imshow?")
-        print(f"cmap: {cmap}")
-        print(f"norm: {norm}")
+        #print(f"cmap: {cmap}")
+        #print(f"norm: {norm}")
         im = ax.imshow(data.values, cmap=cmap) #, cmap=cmap, norm=norm, interpolation="nearest"
 
     
