@@ -468,9 +468,9 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     # Get colour definitions
     lc_colour_scheme = lc_colours[colour_scheme] 
 
-    if colour_scheme == 'lifeform_veg_cat_l4a':
-        lc_colour_scheme=descriptors_colours(lc_colours, colour_scheme)
-        print('lc_colour_scheme')
+    if colour_scheme in lc_colours_mapping:
+        lc_colour_scheme=descriptors_colours(lc_colours,lc_colours_mapping, colour_scheme)
+        print('lc_colours_mapping')
     
     # Create colour map
     colour_arr = []
