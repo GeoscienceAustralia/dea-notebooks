@@ -403,17 +403,6 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     # Get colour definitions
     lc_colour_scheme = lc_colours[colour_scheme]  
 
-    #reduce dictonary if duplicate labels (this is needed for descriptors, won't change anything in level3 or level4)
-    lc_colour_scheme_new = {}
-    seen_classes = set()
-    for key, (col_value_1, col_value_2, col_value_3, col_value_4, col_label) in lc_colour_scheme.items():
-        if col_label not in seen_classes:
-            lc_colour_scheme_new[key] = (col_value_1, col_value_2, col_value_3, col_value_4, col_label)
-            seen_classes.add(col_label)
-
-    # rename colour schem dictionary back to orginal name
-    lc_colour_scheme = lc_colour_scheme_new
-
     # Create colour map
     colour_arr = []
     for key, value in lc_colour_scheme.items():
