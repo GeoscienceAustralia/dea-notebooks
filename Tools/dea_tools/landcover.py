@@ -364,40 +364,62 @@ def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
     cb.set_ticklabels(cb_labels)
 
 
-def descriptors_colours(lc_colours, descriptor):
+# def descriptors_colours(lc_colours, descriptor):
 
-    if descriptor == 'lifeform_veg_cat_l4a':
-        print(f'descriptor {descriptor}')
-        colours_dict = lc_colours['level4']
+#     if descriptor == 'lifeform_veg_cat_l4a':
+#         print(f'descriptor {descriptor}')
+#         colours_dict = lc_colours['level4']
 
-        woody_values = []
-        for key, value in colours_dict.items(): 
-            if 'Woody' in value[4]:
-                woody_values.append(key)
-        print(woody_values)
+#         woody_values = []
+#         for key, value in colours_dict.items(): 
+#             if 'Woody' in value[4]:
+#                 woody_values.append(key)
+#         print(woody_values)
 
-        herb_values = []
-        for key, value in colours_dict.items(): 
-            if 'Herbaceous' in value[4]:
-                herb_values.append(key)
-        print(herb_values)
+#         herb_values = []
+#         for key, value in colours_dict.items(): 
+#             if 'Herbaceous' in value[4]:
+#                 herb_values.append(key)
+#         print(herb_values)
 
-        #make all white (Default)
-        for key in colours_dict:
-           colours_dict[key] = (255, 255, 255, 255, "No Data /\n Not vegetated")
+#         #make all white (Default)
+#         for key in colours_dict:
+#            colours_dict[key] = (255, 255, 255, 255, "No Data /\n Not vegetated")
 
-        for key in woody_values:
-            colours_dict[key] = (14, 121, 18, 255, "Woody Vegetation")
+#         for key in woody_values:
+#             colours_dict[key] = (14, 121, 18, 255, "Woody Vegetation")
 
-        for key in herb_values:
-            colours_dict[key] =  (172, 188, 45, 255, "Herbaceous\n Vegetation")
+#         for key in herb_values:
+#             colours_dict[key] =  (172, 188, 45, 255, "Herbaceous\n Vegetation")
         
-        sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
-        # for key, value in sorted_colours_dict.items():
-        #     print(f"{key}: {value}")
+#         sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
+#         # for key, value in sorted_colours_dict.items():
+#         #     print(f"{key}: {value}")
         
-        return sorted_colours_dict
+#         return sorted_colours_dict
   
+
+
+def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
+
+    level4_colours = lc_colours['level4']
+    descriptor_dict = lc_colours_mapping[descriptor]
+
+    colours_dict = level4_colours
+    for key in colours_dict:
+       colours_dict[key] = (255, 255, 255, 255, "No Data")
+
+    for class_keyword, colour_n_label in descriptor_dict.items():
+        
+        for class_value, lvl4_scheme in level4_colours.items(): 
+            label_lvl4 = lvl4_scheme[4]
+            
+            if class_keyword in label_lvl4:
+                colours_dict[class_value] = colour_n_label
+
+    sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
+
+    return sorted_colours_dict
     
 
 def lc_colourmap(colour_scheme, colour_bar=False):
