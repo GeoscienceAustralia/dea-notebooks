@@ -76,6 +76,15 @@ lc_colours = {
                               255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
 
 
+    # 'lifeform_veg_cat_l4a': {#2: (14, 121, 18, 255, "Woody Vegetation"),
+    #                          #3: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
+    #                          20: (14, 121, 18, 255, "Woody Vegetation"),
+    #                          21: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
+    #                          38: (14, 121, 18, 255, "Woody Vegetation"),
+    #                          56: (14, 121, 18, 255, "Woody Vegetation"),
+    #     99: (77, 159, 220, 255, 'Water: (Water)'),
+    #                          255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
+
 
 
     'canopyco_veg_cat_l4d': {10: (14,  121, 18,  255, "> 65 % cover"),
@@ -270,8 +279,10 @@ lc_colours_mapping = {
         'baregrad_phy_cat_l4d_au': {'Sparsely vegetated': (255, 230, 140, 255, 'Sparsely vegetated\n (< 20% bare)'),
                                    'Very sparesely': (250, 210, 110, 255, 'Very sparsely\n vegetated (20 to 60% bare)'),
                                    'Bare areas': (243, 171, 105, 255, 'Bare areas,\n unvegetated (> 60% bare)')},
-        'level4': {} #full_classification and level_4 should map to this
+
 }
+
+
 
 
 def get_layer_name(measurement, da):
@@ -405,7 +416,7 @@ def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
     level4_colours = lc_colours['level4']
     descriptor_dict = lc_colours_mapping[descriptor]
 
-    colours_dict = level4_colours
+    colours_dict = level4_colours.copy()
     for key in colours_dict:
        colours_dict[key] = (255, 255, 255, 255, "No Data")
 
@@ -420,7 +431,8 @@ def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
     sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
 
     return sorted_colours_dict
-    
+            
+
 
 def lc_colourmap(colour_scheme, colour_bar=False):
     """
@@ -636,7 +648,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         print("is the issue imshow?")
         #print(f"cmap: {cmap}")
         #print(f"norm: {norm}")
-        im = ax.imshow(data.values, cmap=cmap, norm=norm, interpolation="nearest") #, cmap=cmap, norm=norm, interpolation="nearest"
+        im = ax.imshow(data.values, cmap=cmap, norm=norm, interpolation="nearest")
 
     
     elif len(data.time) == 1:
