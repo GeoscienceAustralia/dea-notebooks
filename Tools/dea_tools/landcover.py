@@ -611,7 +611,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         print("is the issue imshow?")
         #print(f"cmap: {cmap}")
         #print(f"norm: {norm}")
-        im = ax.imshow(data.values, cmap=cmap) #, cmap=cmap, norm=norm, interpolation="nearest"
+        im = ax.imshow(data.values, cmap=cmap, norm=norm, interpolation="nearest") #, cmap=cmap, norm=norm, interpolation="nearest"
 
     
     elif len(data.time) == 1:
