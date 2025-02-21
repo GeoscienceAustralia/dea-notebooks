@@ -76,15 +76,6 @@ lc_colours = {
                               255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
 
 
-    # 'lifeform_veg_cat_l4a': {#2: (14, 121, 18, 255, "Woody Vegetation"),
-    #                          #3: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
-    #                          20: (14, 121, 18, 255, "Woody Vegetation"),
-    #                          21: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
-    #                          38: (14, 121, 18, 255, "Woody Vegetation"),
-    #                          56: (14, 121, 18, 255, "Woody Vegetation"),
-    #     99: (77, 159, 220, 255, 'Water: (Water)'),
-    #                          255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
-
 
 
     'canopyco_veg_cat_l4d': {10: (14,  121, 18,  255, "> 65 % cover"),
@@ -261,11 +252,26 @@ lc_colours = {
 }
 
 lc_colours_mapping = {
-        'lifeform_veg_cat_l4a': {1: [2, 20, 38, 56],
-                             2: [3, 21, 39, 57],
-                             255: [255]},
+        'lifeform_veg_cat_l4a': {'Woody': (14, 121,18, 255, 'Woody Vegetation'),
+                                'Herbaceous': (172, 188, 45, 255, 'Herbaceous\n Vegetation')},
+        'canopyco_veg_cat_l4d': {'> 65 %': (45,  141, 47,  255,),
+                                '40 to 65 %': (80,  160, 82,  255,),
+                                '15 to 40 %': (117, 180, 118, 255,),
+                                '4 to 15 %': (154, 199, 156, 255,),
+                                '1 to 4 %': (255, 255, 255, 255,)},
+        'watersea_veg_cat_l4a_au': {'Water': ((77, 159, 220, 255, 'Water')},
+        'waterstt_wat_cat_l4a': {'> 3 months': (25,  173, 109, 255, '> 3 months'),
+                                '< 3 months': (176, 218, 201, 255, '< 3 months')},
+        'inttidal_wat_cat_l4a': {'Intertidal': (77, 159, 220, 255, 'Intertidal')},
+        'waterper_wat_cat_l4d_au': {'> 9 months': (27,  85,  186, 255, '> 9 months'),
+                                   '7 to 9 months': (52,  121, 201, 255, '7 to 9 months'),
+                                   '4 to 6 months': (79,  157, 217, 255, '4 to 6 months'),
+                                   '1 to 3 months': (113, 202, 253, 255, '1 to 3 months')},
+        'baregrad_phy_cat_l4d_au': {'Sparsely vegetated': (255, 230, 140, 255, 'Sparsely vegetated\n (< 20% bare)'),
+                                   'Very sparesely': (250, 210, 110, 255, 'Very sparsely\n vegetated (20 to 60% bare)'),
+                                   'Bare areas': (243, 171, 105, 255, 'Bare areas,\n unvegetated (> 60% bare)')},
+        'level4': {} #full_classification and level_4 should map to this
 }
-
 
 
 def get_layer_name(measurement, da):
@@ -443,9 +449,6 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     if colour_scheme == 'lifeform_veg_cat_l4a':
         lc_colour_scheme=descriptors_colours(lc_colours, colour_scheme)
         print('lc_colour_scheme')
-
-    #  default white (RGB: [1, 1, 1])
-    default_colour = np.array([1, 1, 1])
     
     # Create colour map
     colour_arr = []
