@@ -259,7 +259,7 @@ lc_colours_mapping = {
                                 '15 to 40 %': (117, 180, 118, 255,),
                                 '4 to 15 %': (154, 199, 156, 255,),
                                 '1 to 4 %': (255, 255, 255, 255,)},
-        'watersea_veg_cat_l4a_au': {'Water': ((77, 159, 220, 255, 'Water')},
+        'watersea_veg_cat_l4a_au': {'Water': (77, 159, 220, 255, 'Water')},
         'waterstt_wat_cat_l4a': {'> 3 months': (25,  173, 109, 255, '> 3 months'),
                                 '< 3 months': (176, 218, 201, 255, '< 3 months')},
         'inttidal_wat_cat_l4a': {'Intertidal': (77, 159, 220, 255, 'Intertidal')},
