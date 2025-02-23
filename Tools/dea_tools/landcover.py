@@ -390,6 +390,9 @@ def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
     sorted_colours_dict : dict
         Sorted dictionary with class values as keys and colour tuples as values.
     """
+    # Extract the level 3 colour scheme from the lc_colours dictionary
+    level3_colours = lc_colours['level3']
+    
     # Extract the level 4 colour scheme from the lc_colours dictionary
     level4_colours = lc_colours['level4']
 
