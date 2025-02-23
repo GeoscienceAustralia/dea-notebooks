@@ -364,51 +364,44 @@ def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
     cb.set_ticklabels(cb_labels)
 
 
-# def descriptors_colours(lc_colours, descriptor):
-
-#     if descriptor == 'lifeform_veg_cat_l4a':
-#         print(f'descriptor {descriptor}')
-#         colours_dict = lc_colours['level4']
-
-#         woody_values = []
-#         for key, value in colours_dict.items(): 
-#             if 'Woody' in value[4]:
-#                 woody_values.append(key)
-#         print(woody_values)
-
-#         herb_values = []
-#         for key, value in colours_dict.items(): 
-#             if 'Herbaceous' in value[4]:
-#                 herb_values.append(key)
-#         print(herb_values)
-
-#         #make all white (Default)
-#         for key in colours_dict:
-#            colours_dict[key] = (255, 255, 255, 255, "No Data /\n Not vegetated")
-
-#         for key in woody_values:
-#             colours_dict[key] = (14, 121, 18, 255, "Woody Vegetation")
-
-#         for key in herb_values:
-#             colours_dict[key] =  (172, 188, 45, 255, "Herbaceous\n Vegetation")
-        
-#         sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
-#         # for key, value in sorted_colours_dict.items():
-#         #     print(f"{key}: {value}")
-        
-#         return sorted_colours_dict
-  
 
 
 def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
+    """
+    Generates a sorted dictionary of colours based on a given descriptor.
 
+    This function takes in a dictionary of Land Cover classes, a mapping of descriptors to colours, 
+    and a specific descriptor. It returns a dictionary where the keys are sorted and the values are 
+    the corresponding colours and labels from the descriptor mapping.
+    
+    Parameters
+    ----------
+    lc_colours : dict
+        Dictionary containing colour schemes for all Land Cover classes. 
+        
+    lc_colours_mapping : dict
+        Dictionary mapping descriptors (e.g., lifeform) to their corresponding colours and labels.
+        
+    descriptor : str
+        The descriptor to be used for mapping colours.
+
+    Returns
+    -------
+    sorted_colours_dict : dict
+        Sorted dictionary with class values as keys and colour tuples as values.
+    """
+    # Extract the level 4 colour scheme from the lc_colours dictionary
     level4_colours = lc_colours['level4']
+
+    # Get the descriptor dictionary from the lc_colours_mapping
     descriptor_dict = lc_colours_mapping[descriptor]
 
+    # Initialize the colours dictionary with "No Data" values
     colours_dict = level4_colours.copy()
     for key in colours_dict:
        colours_dict[key] = (255, 255, 255, 255, "No Data")
 
+    # Update the colours dictionary with the descriptor-specific colours
     for class_keyword, colour_n_label in descriptor_dict.items():
         
         for class_value, lvl4_scheme in level4_colours.items(): 
@@ -416,7 +409,8 @@ def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
             
             if class_keyword in label_lvl4:
                 colours_dict[class_value] = colour_n_label
-
+                
+    # Sort the colours dictionary by keys
     sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
 
     return sorted_colours_dict
@@ -471,7 +465,6 @@ def lc_colourmap(colour_scheme, colour_bar=False):
 
     if colour_scheme in lc_colours_mapping:
         lc_colour_scheme=descriptors_colours(lc_colours,lc_colours_mapping, colour_scheme)
-        print('lc_colours_mapping')
     
     # Create colour map
     colour_arr = []
@@ -610,7 +603,6 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
 
     # get colour map, normalisation
     try:
-        print("running lc_colormap")
         cmap, norm = lc_colourmap(measurement)
     except AssertionError:
 
