@@ -460,14 +460,6 @@ def lc_colourmap(colour_scheme, colour_bar=False):
 
 
     colour_scheme = colour_scheme.lower()
-    # Ensure a valid colour scheme was requested
-#     try:
-    assert (colour_scheme in lc_colours.keys(
-    )), f'colour scheme must be one of [{lc_colours.keys()}] (got "{colour_scheme}")'
-
-#     ('The dataset provided does not have a valid '
-#     'name. Please specify which DEA Landcover measurement is being plotted '
-#     'by providing the name using the "measurement" variable. For example (measurement = "full_classification")')
 
     # if a descriptor colour scheme is required, use the descriptors_colours function
     if colour_scheme in lc_colours_mapping:
@@ -475,8 +467,11 @@ def lc_colourmap(colour_scheme, colour_bar=False):
 
     else: # standard colours scheme
         lc_colour_scheme = lc_colours[colour_scheme] 
-        
-    
+        # Ensure a valid colour scheme was requested
+        assert (colour_scheme in lc_colours.keys(
+                )), f'colour scheme must be one of [{lc_colours.keys()}] (got "{colour_scheme}")'
+
+
     # Create colour map
     colour_arr = []
     for key, value in lc_colour_scheme.items():  
@@ -555,18 +550,6 @@ def lc_colourmap_colourbar(colour_scheme, colour_bar=False):
     # Get colour definitions
     lc_colour_scheme = lc_colours[colour_scheme]  
 
-    #reduce dictonary if duplicate labels (this is needed for descriptors, won't change anything in level3 or level4)
-    lc_colour_scheme_new = {}
-    seen_classes = set()
-    for key, (col_value_1, col_value_2, col_value_3, col_value_4, col_label) in lc_colour_scheme.items():
-        if col_label not in seen_classes:
-            lc_colour_scheme_new[key] = (col_value_1, col_value_2, col_value_3, col_value_4, col_label)
-            seen_classes.add(col_label)
-
-    # rename colour schem dictionary back to orginal name
-    lc_colour_scheme = lc_colour_scheme_new
-
-
     # Create colour map
     colour_arr = []
     for key, value in lc_colour_scheme.items():
@@ -622,7 +605,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
                        f'DataArray name {measurement}. Please specify which '
                        'DEA Landcover measurement is being plotted by providing'
                        'the name using the "measurement" variable For example'
-                       '(measurement = "full_classification")')
+                       '(measurement = "level4")')
 
     height, width = data.geobox.shape
     scale = out_width / width
