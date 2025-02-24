@@ -42,7 +42,8 @@ lc_colours = {
                220: (77, 159, 220, 255, "Water"),
                255: (255, 255, 255, 255, "No Data")},
 
-    'level3_change_colour_scheme': {111112: (14, 121, 18, 255, "CTV -> NTV"),
+    'level3_change_colour_scheme': {0: (255, 255, 255, 255, "No Change"),
+                                    111112: (14, 121, 18, 255, "CTV -> NTV"),
                                     111215: (218, 92, 105, 255, "CTV -> AS"),
                                     111216: (243, 171, 105, 255, "CTV -> BS"),
                                     111220: (77, 159, 220, 255, "CTV -> Water"),
@@ -61,7 +62,7 @@ lc_colours = {
                                     216220: (77, 159, 220, 255, "BS -> Water"),
                                     220112: (14, 121, 18, 255, "Water -> NTV"),
                                     220216: (243, 171, 105, 255, "Water -> BS"),
-                                    0: (255, 255, 255, 255, "No Change")},
+                                    },
 
     'level3_change_colour_bar': {111: (172, 188, 45, 255, "Changed to Cultivated\n Terrestrial Vegetation"),
                                  112: (14, 121, 18, 255, "Changed to Natural\n Terrestrial Vegetation"),
