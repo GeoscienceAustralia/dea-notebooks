@@ -213,7 +213,12 @@ lc_colours = {
                255: (255, 255, 255, 255, "No Data")
                },
 
-    'level4_colourbar_labels': {14: (228, 224, 52, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Closed (> 65 %)'),
+    'level4_colourbar_labels': {9: (197, 168, 71, 255, 'Cultivated Terrestrial Vegetated: Woody Closed (> 65 %)'),
+                                10: (205, 181, 75, 255, 'Cultivated Terrestrial Vegetated: Woody Open (40 to 65 %)'),
+                                11: (213, 193, 79, 255, 'Cultivated Terrestrial Vegetated: Woody Open (15 to 40 %)'),
+                                12: (228, 210, 108, 255, 'Cultivated Terrestrial Vegetated: Woody Sparse (4 to 15 %)'),
+                                13: (242, 227, 138, 255, 'Cultivated Terrestrial Vegetated: Woody Scattered (1 to 4 %)'),
+                                14: (228, 224, 52, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Closed (> 65 %)'),
                                 15: (235, 232, 84, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Open (40 to 65 %)'),
                                 16: (242, 240, 127, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Open (15 to 40 %)'),
                                 17: (249, 247, 174, 255, 'Cultivated Terrestrial Vegetated: Herbaceous Sparse (4 to 15 %)'),
@@ -616,9 +621,12 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     scale = out_width / width
 
     if year:
-        #plotting protocall if 'year' variable is passed
-        year_string = f"{year}-01-01"
-        data = data.sel(time=year_string, method="nearest")
+        #plotting protocol if 'year' variable is passed
+        if int(year) not in pd.to_datetime(data.time.values).year: # check if year selecte is in the datacube
+            raise ValueError(f'Year {year} is not in the data array.')
+        
+        year_string = f"{year}-07-01" # LC collection 3 dates are in July
+        data = data.sel(time=year_string, method='nearest')
         
         fig, ax = plt.subplots()
         fig.set_size_inches(width * scale, height * scale)
@@ -627,7 +635,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
 
     
     elif len(data.time) == 1:
-        #plotting protocall if only one timestep is passed and not a year variable
+        #plotting protocol if only one timestep is passed and not a year variable
         fig, ax = plt.subplots()
         fig.set_size_inches(width * scale, height * scale)
         make_colorbar(fig, ax, measurement)
