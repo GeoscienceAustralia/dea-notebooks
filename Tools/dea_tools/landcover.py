@@ -599,8 +599,6 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     """
     # get measurement name
     measurement = get_layer_name(measurement, data)
-    #print(f"measurement:{measurement}")
-    #print(f"data: {data}")
 
     # get colour map, normalisation
     try:
@@ -614,7 +612,6 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
                        '(measurement = "full_classification")')
 
     height, width = data.geobox.shape
-    #print(f"geobox height, width:{height} {width}")
     scale = out_width / width
 
     if year:
@@ -623,13 +620,8 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         data = data.sel(time=year_string, method="nearest")
         
         fig, ax = plt.subplots()
-        print("matplotlib line 1 test")
         fig.set_size_inches(width * scale, height * scale)
-        print("before colorbar")
         make_colorbar(fig, ax, measurement)
-        print("is the issue imshow?")
-        #print(f"cmap: {cmap}")
-        #print(f"norm: {norm}")
         im = ax.imshow(data.values, cmap=cmap, norm=norm, interpolation="nearest")
 
     
