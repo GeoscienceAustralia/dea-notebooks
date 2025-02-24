@@ -105,7 +105,8 @@ lc_colours = {
                                 15: (243, 171, 105, 255, "Bare areas,\n unvegetated (> 60% bare)"),
                                 255: (255, 255, 255, 255, "No data /\n Not bare")},
 
-    'level4': {1: (151, 187, 26, 255, 'Cultivated Terrestrial\n Vegetated:'),
+    'level4': {
+               1: (151, 187, 26, 255, 'Cultivated Terrestrial\n Vegetated:'),
                2: (151, 187, 26, 255, 'Cultivated Terrestrial\n Vegetated: Woody'),
                3: (209, 224, 51, 255, 'Cultivated Terrestrial\n Vegetated: Herbaceous'),
                4: (197, 168, 71, 255, 'Cultivated Terrestrial\n Vegetated: Closed\n (> 65 %)'),
@@ -252,7 +253,8 @@ lc_colours = {
                                 102: (52, 121, 201, 255, 'Water: (Water) Non-perennial (7 to 9 months)'),
                                 103: (79, 157, 217, 255, 'Water: (Water) Non-perennial (4 to 6 months)'),
                                 104: (133, 202, 253, 255, 'Water: (Water) Non-perennial (1 to 3 months)'),
-                                255: (255, 255, 255, 255, "No Data")},
+                                255: (255, 255, 255, 255, "No Data")
+                               },
 }
 
 lc_colours_mapping = {
@@ -397,18 +399,19 @@ def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
         Sorted dictionary with class values as keys and colour tuples as values.
     """
     
-    # Extract the level 4 colour scheme from the lc_colours dictionary
+    # get the level 4 colour scheme from the lc_colours dictionary
     level4_colours = lc_colours['level4']
 
-    # Get the descriptor dictionary from the lc_colours_mapping
+    # get the descriptor dictionary from the lc_colours_mapping
     descriptor_dict = lc_colours_mapping[descriptor]
 
-    # Initialize the colours dictionary with "No Data" values
+    # create a new colours dictionary with all level 4 values set to white colour
+    # based on the descriptor, the values of interest will be filled with the pre-defined colours (all the rest will stay white)
     colours_dict = level4_colours.copy()
     for key in colours_dict:
        colours_dict[key] = (255, 255, 255, 255, "No Data")
 
-    # Update the colours dictionary with the descriptor-specific colours
+    # update the colours dictionary with the descriptor-specific colours
     for class_keyword, colour_n_label in descriptor_dict.items():
         
         for class_value, lvl4_scheme in level4_colours.items(): 
@@ -417,12 +420,11 @@ def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
             if class_keyword in label_lvl4:
                 colours_dict[class_value] = colour_n_label
                 
-    # Sort the colours dictionary by keys
+    # sort the colours dictionary by keys
     sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
 
     return sorted_colours_dict
-            
-
+               
 
 def lc_colourmap(colour_scheme, colour_bar=False):
     """
@@ -466,21 +468,23 @@ def lc_colourmap(colour_scheme, colour_bar=False):
 #     ('The dataset provided does not have a valid '
 #     'name. Please specify which DEA Landcover measurement is being plotted '
 #     'by providing the name using the "measurement" variable. For example (measurement = "full_classification")')
-    
-    # Get colour definitions
-    lc_colour_scheme = lc_colours[colour_scheme] 
 
+    # if a descriptor colour scheme is required, use the descriptors_colours function
     if colour_scheme in lc_colours_mapping:
         lc_colour_scheme=descriptors_colours(lc_colours,lc_colours_mapping, colour_scheme)
+
+    else: # standard colours scheme
+        lc_colour_scheme = lc_colours[colour_scheme] 
+        
     
     # Create colour map
     colour_arr = []
-    for key, value in lc_colour_scheme.items():
+    for key, value in lc_colour_scheme.items():  
         colour_arr.append(np.array(value[:-2]) / 255)
-
+        
     cmap = mcolours.ListedColormap(colour_arr)
     bounds = list(lc_colour_scheme)
-
+    
     if colour_bar == True:
         if colour_scheme == 'level4':
             # Set colour labels to shortened level 4 list
@@ -492,6 +496,10 @@ def lc_colourmap(colour_scheme, colour_bar=False):
             cb_labels.append(lc_colour_scheme[x][4])
 
     bounds.append(bounds[-1]+1)
+
+    # shift all back by 0.5 to make sure level4 values are within bounds and not mathcing exactly one bound
+    bounds = [i-0.5 for i in bounds] 
+    
     norm = mcolours.BoundaryNorm(np.array(bounds), cmap.N)
 
     if colour_bar == False:
@@ -558,7 +566,6 @@ def lc_colourmap_colourbar(colour_scheme, colour_bar=False):
     # rename colour schem dictionary back to orginal name
     lc_colour_scheme = lc_colour_scheme_new
 
-    
 
     # Create colour map
     colour_arr = []
@@ -641,7 +648,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         make_colorbar(fig, ax, measurement)
         im = ax.imshow(data.isel(time=0), cmap=cmap, norm=norm, interpolation="nearest")
     else:
-        #plotting protocall if multible time steps are passed to plot
+        #plotting protocol if multible time steps are passed to plot
         if cols > len(data.time):
             cols = len(data.time)
         rows = int((len(data.time) + cols-1)/cols)
