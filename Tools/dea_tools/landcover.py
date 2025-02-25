@@ -730,15 +730,13 @@ def lc_animation(
         # the following code uses the descriptors_colours function to get the colours scheme and then the values of the descriptor of interest
         if measurement in lc_colours_mapping:
             lc_colour_scheme=descriptors_colours(lc_colours,lc_colours_mapping, measurement)
-            #remove all no_data values, keep only classes related to descriptor of interest
-            filtered_lc_colour_scheme = {key: value for key, value in lc_colour_scheme.items() if value[4] != "No Data"}
             # sort based on first RGB colour, so stack plot will show same colours next to each other
-            filtered_lc_colour_scheme= dict(sorted(filtered_lc_colour_scheme.items(), key=lambda item: item[1][0]))
+            lc_colour_scheme= dict(sorted(lc_colour_scheme.items(), key=lambda item: item[1][0]))
             # create list of values
-            all_classes_descriptor = list(filtered_lc_colour_scheme.keys())
+            all_classes_descriptor = list(lc_colour_scheme.keys())
             # out of all possible classes of that descriptor, keep only the ones actually in the data array
             list_classes = [i for i in all_classes_descriptor if i in list_classes] # the order of all_classes_descriptor and list_classes is important: the correct sorting order is the one of all_classes_descriptor
-
+            
         # create empty dataframe & dictionary
         ratio_table = pd.DataFrame(data=None, columns=list_classes)
         date_line = {}
