@@ -493,7 +493,7 @@ def lc_colourmap(colour_scheme, colour_bar=False):
     bounds.append(bounds[-1]+1)
 
     # shift all back by 0.5 to make sure level4 values are within bounds and not mathcing exactly one bound
-    bounds = [i-0.5 for i in bounds] 
+    bounds = [i-0.5 for i in bounds]
     
     norm = mcolours.BoundaryNorm(np.array(bounds), cmap.N)
 
@@ -660,7 +660,8 @@ def lc_animation(
         width_pixels=10,
         dpi=150,
         font_size=15,
-        label_ax=True):
+        label_ax=True,
+):
     """
     Creates an animation of DEA Landcover though time beside 
     corresponding stacked plots of the landcover classes. Saves the
@@ -702,6 +703,7 @@ def lc_animation(
     label_ax : boolean, optional
         Determines if animation plot should have tick marks and numbers
         on axes. Also removes white space around plot. default: True
+
         
     Returns
     -------
@@ -715,6 +717,7 @@ def lc_animation(
         Parameters
         ----------
         da : xarray.DataArray with time dimension
+        measurement: string with name of descriptor/measurement
         Returns
         -------
         Pandas Dataframe : containing class percentages per year
@@ -727,7 +730,7 @@ def lc_animation(
         # the following code uses the descriptors_colours function to get the colours scheme and then the values of the descriptor of interest
         if measurement in lc_colours_mapping:
             lc_colour_scheme=descriptors_colours(lc_colours,lc_colours_mapping, measurement)
-            #remove no_data values, keep only classes related to descriptor of interest
+            #remove all no_data values, keep only classes related to descriptor of interest
             filtered_lc_colour_scheme = {key: value for key, value in lc_colour_scheme.items() if value[4] != "No Data"}
             # sort based on first RGB colour, so stack plot will show same colours next to each other
             filtered_lc_colour_scheme= dict(sorted(filtered_lc_colour_scheme.items(), key=lambda item: item[1][0]))
