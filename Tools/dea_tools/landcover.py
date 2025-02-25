@@ -708,7 +708,7 @@ def lc_animation(
     A GIF (.gif) animation file.
     """
 
-    def calc_class_ratio(da):
+    def calc_class_ratio(da, measurement):
         """
         Creates a table listing year by year what percentage of the
         total area is taken up by each class.
@@ -722,6 +722,19 @@ def lc_animation(
 
         # list all class codes in dataset
         list_classes = (np.unique(da, return_counts=False)).tolist()
+        
+        # if a descriptor colour scheme is required, list_classes need to be chnaged to contain only classes of that descriptor
+        # the following code uses the descriptors_colours function to get the colours scheme and then the values of the descriptor of interest
+        if measurement in lc_colours_mapping:
+            lc_colour_scheme=descriptors_colours(lc_colours,lc_colours_mapping, measurement)
+            #remove no_data values, keep only classes related to descriptor of interest
+            filtered_lc_colour_scheme = {key: value for key, value in lc_colour_scheme.items() if value[4] != "No Data"}
+            # sort based on first RGB colour, so stack plot will show same colours next to each other
+            filtered_lc_colour_scheme= dict(sorted(filtered_lc_colour_scheme.items(), key=lambda item: item[1][0]))
+            # create list of values
+            all_classes_descriptor = list(filtered_lc_colour_scheme.keys())
+            # out of all possible classes of that descriptor, keep only the ones actually in the data array
+            list_classes = [i for i in all_classes_descriptor if i in list_classes] # the order of all_classes_descriptor and list_classes is important: the correct sorting order is the one of all_classes_descriptor
 
         # create empty dataframe & dictionary
         ratio_table = pd.DataFrame(data=None, columns=list_classes)
@@ -743,7 +756,6 @@ def lc_animation(
 
             # add each year's counts to dataframe
             ratio_table.loc[date] = date_line
-
         return ratio_table
 
     def rgb_to_hex(r, g, b):
@@ -753,6 +765,7 @@ def lc_animation(
         return hex
 
     measurement = get_layer_name(measurement, da)
+    print()
 
     # Add gif to end of filename
     file_name = file_name + ".gif"
@@ -767,7 +780,7 @@ def lc_animation(
                    f'DataArray name {measurement}. Please specify which '
                    'DEA Landcover measurement is being plotted by providing '
                    'the name using the "measurement" variable For example '
-                   '(measurement = "full_classification")')
+                   '(measurement = "level4")')
     
     # Prepare variables needed
     # Get info on dataset dimensions
@@ -797,14 +810,16 @@ def lc_animation(
 
     if stacked_plot == True:
         
-
-
         # Create table for stacked plot
-        stacked_plot_table = calc_class_ratio(da)
+        stacked_plot_table = calc_class_ratio(da, measurement)
 
         # Build colour list of hex vals for stacked plot
         hex_colour_list = []
-        colour_def = lc_colours[measurement]
+
+        if measurement in lc_colours_mapping: # if descriptor
+            colour_def=descriptors_colours(lc_colours,lc_colours_mapping, measurement)
+        else:  # if level 3 or 4
+            colour_def = lc_colours[measurement]
 
         # Custom error message to help if user puts incorrect measurement name
         for val in list(stacked_plot_table):
