@@ -742,7 +742,7 @@ def lc_animation(
         date_line = {}
 
         # count all pixels, should be consistent
-        total_pix = int(np.sum(da.isel(time=1)))
+        total_pix = da.isel(time=1).size
 
         # iterate through each year in dataset
         for i in range(0, len(da.time)):
@@ -766,7 +766,6 @@ def lc_animation(
         return hex
 
     measurement = get_layer_name(measurement, da)
-    print()
 
     # Add gif to end of filename
     file_name = file_name + ".gif"
