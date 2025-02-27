@@ -11,7 +11,6 @@ Include a brief description of the changes being proposed, and why they are nece
 
 If this is a notebook, then have you: 
 - [ ] Checked the structure of the notebook follows our [DEA-notebooks template](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/NotebookTemplate)
-- [ ] Tested the notebook on the [DEA Sandbox](https://knowledge.dea.ga.gov.au/guides/setup/Sandbox)
 - [ ] Removed any unused Python packages from `Load packages`
 - [ ] Removed any unused/empty code cells
 - [ ] Removed any guidance cells (e.g. `General advice`)
