@@ -75,6 +75,7 @@ sat_params = {
         "products": [
             "ga_s2am_ard_3",
             "ga_s2bm_ard_3",
+            "ga_s2cm_ard_3",
         ],
         "styles": {
             "True colour": ("simple_rgb", ["nbart_red", "nbart_green", "nbart_blue"]),
@@ -88,6 +89,7 @@ sat_params = {
         "products": [
             "ga_s2am_ard_3",
             "ga_s2bm_ard_3",
+            "ga_s2cm_ard_3",
             "ga_ls5t_ard_3",
             "ga_ls7e_ard_3",
             "ga_ls8c_ard_3",
