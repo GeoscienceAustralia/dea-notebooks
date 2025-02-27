@@ -104,10 +104,10 @@ def WIT_drill(
     Returns
     -------
     ds_wit : xarray.Dataset
+        An xarray dataset containing values for each cover class (open water, wet, pv, npv, bs). 
             
-
     polygon_base_df : pandas.DataFrame
-        A DataFrame containing the normalised timeseries of relative fractions of each cover class (Open water, wet, PV, NPV, BS).
+        A DataFrame containing the normalised timeseries of relative fractions of each cover class (open water, wet, pv, npv, bs).
             
     """
 
@@ -287,17 +287,17 @@ def classify_pixel(pv, npv, bs):
     Parameters
     ----------
     pv : array
-        Array containing values for the photosynthetic vegetation class.
+        Array containing values for the photosynthetic (green) vegetation class.
     npv : array
-        Array containing values for the non-photosynthetic vegetation class.
+        Array containing values for the non-photosynthetic (dry) vegetation class.
     bs : array
         Array containing values for the base soil class.
     
     Returns
     -------
-    Integer values respond to FC class
+    integer
+        Integer values to assign each of the fractional cover classes (https://knowledge.dea.ga.gov.au/data/product/dea-fractional-cover-landsat/). 
         
-    
     """
     if pv > 2 / 3:
         return 8  # pv
@@ -329,7 +329,7 @@ def spatial_wit(ds, wetland_name):
     Parameters
     ----------
     ds : xarray.Dataset
-        
+        An xarray dataset containing values for each cover class (open water, wet, pv, npv, bs). 
 
     wetland_name : string
         Value to be used when naming the output files.
@@ -363,7 +363,7 @@ def spatial_wit(ds, wetland_name):
     # Add the new classification band to the dataset
     ds["fc_class"] = fc_class
 
-    # Make a new band called wetland that combines all the FC classes with the water and wet classes
+    # Make a new band called wetland that combines all the fractional cover classes with the water and wet classes
     # i.e. water == 10, wet == 9, all other areas retain original FC class
     wetland = ds["fc_class"].where((ds["water"] == 0) | ds["water"].isnull(),
                                    10)
@@ -373,15 +373,15 @@ def spatial_wit(ds, wetland_name):
 
     # Define labels for each class
     class_labels = [
-        "dry veg",
-        "dry veg and bare mix",
-        "dry mix",
-        "dry veg and green veg",
-        "bare soil",
-        "bare soil mix",
-        "bare soil and green veg",
-        "green veg mix",
-        "green veg",
+        "dry veg",  # ng
+        "dry veg and bare mix",  # ng_bs
+        "dry mix",  #ng_mix
+        "dry veg and green veg",  # ng_pv
+        "bare soil",  # bs
+        "bare soil mix",  # bs_mix
+        "bare soil and green veg",  # bs_pv
+        "green veg mix",  # pv_mix
+        "green veg",  # pv
         "wet",
         "water",
     ]
@@ -419,16 +419,20 @@ def spatial_wit(ds, wetland_name):
             f"deawetlands_outputs/{wetland_name}_{date_str}.tif")
 
     # Make one big plot
+    
     num_time_steps = ds.sizes["time"]
 
+    # Set the number of columns as the number of time steps if less than 10
     num_columns = min(num_time_steps, 10)
+
+    # Calculate the number of rows
     num_rows = (num_time_steps + num_columns -
-                1) // num_columns  # Calculate the number of rows
+                1) // num_columns  
 
     fig, axes = plt.subplots(num_rows,
                              num_columns,
                              figsize=(num_columns * 3, num_rows * 5))
-
+    
     if num_rows == 1:
         axes = axes.reshape(1, num_columns)
     elif num_columns == 1:
@@ -488,7 +492,7 @@ def spatial_wit(ds, wetland_name):
             image = imageio.imread(frame_path)
             writer.append_data(image)
 
-    print("GIF saved as 'wetland_animation.gif'")
+    #print("GIF saved as 'wetland_animation.gif'")
 
     # clean up
     # for frame_path in frames:
