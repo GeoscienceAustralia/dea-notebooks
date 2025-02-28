@@ -260,13 +260,13 @@ lc_colours = {
 lc_colours_mapping = {
         'lifeform_veg_cat_l4a': {'Woody': (14, 121,18, 255, 'Woody Vegetation'),
                                 'Herbaceous': (172, 188, 45, 255, 'Herbaceous\n Vegetation')},
-        'canopyco_veg_cat_l4d': {'> 65 %': (45,  141, 47,  255, '> 65 % cover'),
-                                '40 to 65 %': (80,  160, 82,  255, '40 to 65 % cover'),
-                                '15 to 40 %': (117, 180, 118, 255, '15 to 40 % cover'),
-                                '4 to 15 %': (154, 199, 156, 255, '4 to 15 % cover'),
-                                '1 to 4 %': (255, 255, 255, 255, '1 to 4 % cover')},
-        'watersea_veg_cat_l4a_au': {'(semi-) permenant': (25, 173, 109, 255, '> 3 months'),
-                                   '(temporary or seasonal)': (25, 173, 109, 255, '< 3 months')},
+        'canopyco_veg_cat_l4d': {'> 65 %': (14,  121, 18,  255, '> 65 % cover'),
+                                '40 to 65 %': (45,  141, 47,  255, '40 to 65 % cover'),
+                                '15 to 40 %': (80,  160, 82,  255, '15 to 40 % cover'),
+                                '4 to 15 %': (117, 180, 118, 255, '4 to 15 % cover'),
+                                '1 to 4 %': (154, 199, 156, 255, '1 to 4 % cover')},
+        'watersea_veg_cat_l4a_au': {'(semi-) permenant': (25,  173, 109, 255, '> 3 months'),
+                                   '(temporary or seasonal)': (176, 218, 201, 255, '< 3 months')},
         'waterstt_wat_cat_l4a': {'Water: (Water)': (77, 159, 220, 255, 'Water')},
         'inttidal_wat_cat_l4a': {'Tidal area': (77, 159, 220, 255, 'Water: (Water) Tidal area')},
         'waterper_wat_cat_l4d_au': {'> 9 months': (27,  85,  186, 255, '> 9 months'),
@@ -278,6 +278,9 @@ lc_colours_mapping = {
                                    'Bare areas': (243, 171, 105, 255, 'Bare areas,\n unvegetated (> 60% bare)')},
 
 }
+
+
+
 
 
 
