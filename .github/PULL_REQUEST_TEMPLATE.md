@@ -1,4 +1,4 @@
-⭐ This is a template you can follow to help construct a good pull request!
+<!--- ⭐ This is a template you can follow to help construct a good pull request! --->
 
 ### Proposed changes
 Include a brief description of the changes being proposed, and why they are necessary.
@@ -6,8 +6,8 @@ Include a brief description of the changes being proposed, and why they are nece
 ### Closes issues (optional)
 - Closes Issue #000
 
-### Checklist 
-(Replace `[ ]` with `[x]` to check off)
+### Checklist
+<!--- (Replace `[ ]` with `[x]` to check off) --->
 
 If this is a notebook, then have you: 
 - [ ] Checked the structure of the notebook follows our [DEA-notebooks template](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/NotebookTemplate)
@@ -23,5 +23,9 @@ If this is a notebook, then have you:
 
 ![sandbox_spellchecker](https://github.com/GeoscienceAustralia/dea-notebooks/assets/17680388/c5e5848b-fd54-4eb5-aae9-29838761f2af)
 
-
-⭐ Did you get stuck? This might help: https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook
+<!--- 
+⭐ Did you get stuck? These might help: 
+- https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Getting-started-with-Git
+- https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook
+- https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook
+--->
