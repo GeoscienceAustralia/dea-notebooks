@@ -257,6 +257,8 @@ lc_colours = {
                                },
 }
 
+# dictionary needed to generate colour schemes of descriptors from the level 4 colour scheme. The structure is as follow:
+# long_descriptor_name[string]: {keyword_for_finding_classes_in_level4_colourscheme[string] : (RGB_colourscheme[4 integers], label_of_descriptor[string])}
 lc_colours_mapping = {
         'lifeform_veg_cat_l4a': {'Woody': (14, 121,18, 255, 'Woody Vegetation'),
                                 'Herbaceous': (172, 188, 45, 255, 'Herbaceous\n Vegetation')},
