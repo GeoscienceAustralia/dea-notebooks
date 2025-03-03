@@ -1,3 +1,6 @@
+ci:
+  skip: [check-duplicate-ipynb] 
+
 repos:
   - repo: local
     hooks:
