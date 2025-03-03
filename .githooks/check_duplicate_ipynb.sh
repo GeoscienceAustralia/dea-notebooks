@@ -1,29 +1,29 @@
 #!/bin/bash
 
-echo "Checking for duplicate .ipynb filenames in the incoming push..."
+echo "Checking for duplicate .ipynb filenames..."
 
-# Get the list of changed files in the push
-while read oldrev newrev refname; do
-    # Get all added/modified .ipynb files
-    files=$(git diff --name-only --diff-filter=A "$oldrev" "$newrev" | grep '\.ipynb$' || true)
+# Get all existing and staged .ipynb files
+all_files=$(git ls-files | grep '\.ipynb$' || true)
+staged_files=$(git diff --cached --name-only --diff-filter=A | grep '\.ipynb$' || true)
 
-    if [[ -z "$files" ]]; then
-        continue  # No new .ipynb files, skip checking
-    fi
+# Combine them to ensure we check for duplicates globally
+combined_files=$(echo -e "$all_files\n$staged_files" | sort -u)
 
-    # Extract just the filenames (ignore paths)
-    filenames=$(basename -a $files)
+if [[ -z "$combined_files" ]]; then
+    exit 0  # No .ipynb files found, allow commit
+fi
 
-    # Check for duplicates
-    duplicates=$(echo "$filenames" | sort | uniq -d)
+# Extract only filenames (ignore paths)
+filenames=$(basename -a $combined_files)
 
-    if [[ -n "$duplicates" ]]; then
-        echo "Duplicate .ipynb filenames detected in the push:"
-        echo "$duplicates"
-        echo "Push rejected! Ensure unique .ipynb filenames."
-        exit 1  # Reject the push
-    fi
-done
+# Check for duplicates
+duplicates=$(echo "$filenames" | sort | uniq -d)
 
-exit 0  # Allow push if no duplicates
+if [[ -n "$duplicates" ]]; then
+    echo "Duplicate .ipynb filenames detected in repository and staged changes:"
+    echo "$duplicates"
+    echo "Commit rejected! Ensure unique .ipynb filenames."
+    exit 1  # Prevent commit
+fi
 
+exit 0  # Allow commit
