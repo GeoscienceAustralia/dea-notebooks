@@ -24,12 +24,20 @@ jobs:
         with:
           path: dea-notebooks
 
+      # Detects changed Jupyter Notebooks, excluding interactive notebooks
       - name: Get changed notebook files
         id: changed-notebooks
         uses: tj-actions/changed-files@v45
         with:
-          files: '**/*.ipynb'
           separator: ' '
+          files: '**/*.ipynb'
+          files_ignore: |
+            - Real_world_examples/Scalable_machine_learning
+            - Real_world_examples/Estimate_climate_driver_influence_on_rainfall.ipynb
+            - Real_world_examples/Mapping_inundation_using_stream_gauges.ipynb
+            - How_to_guides/Land_cover_pixel_drill.ipynb
+            - How_to_guides/External_data_ERA5_Climate.ipynb
+            - How_to_guides/Imagery_on_web_map.ipynb
 
       - name: Print changed notebook files
         if: steps.changed-notebooks.outputs.any_changed == 'true'
