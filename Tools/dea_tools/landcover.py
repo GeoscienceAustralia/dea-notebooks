@@ -34,11 +34,11 @@ from matplotlib.animation import FuncAnimation
 
 # Define colour schemes for each land cover measurement
 lc_colours = {
-    'level3': {111: (172, 188, 45, 255, "Cultivated Terrestrial\n Vegetation"),
-               112: (14, 121, 18, 255, "Natural Terrestrial\n Vegetation"),
-               124: (30, 191, 121, 255, "Natural Aquatic\n Vegetation"),
-               215: (218, 92, 105, 255, "Artificial Surface"),
-               216: (243, 171, 105, 255, "Natural Bare\n Surface"),
+    'level3': {111: (172, 188, 45, 255, "Cultivated\nTerrestrial\nVegetation"),
+               112: (14, 121, 18, 255, "Natural\nTerrestrial\nVegetation"),
+               124: (30, 191, 121, 255, "Natural\nAquatic\nVegetation"),
+               215: (218, 92, 105, 255, "Artificial\nSurface"),
+               216: (243, 171, 105, 255, "Natural\nBare\nSurface"),
                220: (77, 159, 220, 255, "Water"),
                255: (255, 255, 255, 255, "No Data")},
 
@@ -72,38 +72,38 @@ lc_colours = {
                                  220: (77, 159, 220, 255, "Changed to Water"),
                                  0: (255, 255, 255, 255, "No Change")},
 
-     'lifeform_veg_cat_l4a': {1: (14, 121, 18, 255, "Woody Vegetation"),
-                              2: (172, 188, 45, 255, "Herbaceous\n Vegetation"),
-                              255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
+     'lifeform_veg_cat_l4a': {1: (14, 121, 18, 255, "Woody\nVegetation"),
+                              2: (172, 188, 45, 255, "Herbaceous\nVegetation"),
+                              255: (255, 255, 255, 255, "No Data/\nNot vegetated")},
 
 
-    'canopyco_veg_cat_l4d': {10: (14,  121, 18,  255, "> 65 % cover"),
-                             12: (45,  141, 47,  255, "40 to 65 % cover"),
-                             13: (80,  160, 82,  255, "15 to 40 % cover"),
-                             15: (117, 180, 118, 255, "4 to 15 % cover"),
-                             16: (154, 199, 156, 255, "1 to 4 % cover"),
+    'canopyco_veg_cat_l4d': {10: (14,  121, 18,  255, "> 65 % \ncover"),
+                             12: (45,  141, 47,  255, "40 to 65 % \ncover"),
+                             13: (80,  160, 82,  255, "15 to 40 % \ncover"),
+                             15: (117, 180, 118, 255, "4 to 15 % \ncover"),
+                             16: (154, 199, 156, 255, "1 to 4 % \ncover"),
                              255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
 
     'waterstt_wat_cat_l4a': {1: (77, 159, 220, 255, "Water"),
-                             255: (255, 255, 255, 255, "No Data /\n Not water")},
+                             255: (255, 255, 255, 255, "No Data /\nNot water")},
 
     'watersea_veg_cat_l4a_au': {1: (25,  173, 109, 255, "> 3 months"),
                                 2: (176, 218, 201, 255, "< 3 months"),
-                                255: (255, 255, 255, 255, "No data /\n Not aquatic vegetation")},
+                                255: (255, 255, 255, 255, "No data/\nNot aquatic\nvegetation")},
 
     'inttidal_wat_cat_l4a': {3: (77, 159, 220, 255, "Intertidal"),
                              255: (255, 255, 255, 255, "No data /\n Not intertidal")},
 
-    'waterper_wat_cat_l4d_au': {1: (27,  85,  186, 255, "> 9 months"),
-                                7: (52,  121, 201, 255, "7 to 9 months"),
-                                8: (79,  157, 217, 255, "4 to 6 months"),
-                                9: (113, 202, 253, 255, "1 to 3 months"),
-                                255: (255, 255, 255, 255, "No data /\n Not water")},
+    'waterper_wat_cat_l4d_au': {1: (27,  85,  186, 255, "> 9\nmonths"),
+                                7: (52,  121, 201, 255, "7 to 9\nmonths"),
+                                8: (79,  157, 217, 255, "4 to 6\nmonths"),
+                                9: (113, 202, 253, 255, "1 to 3\nmonths"),
+                                255: (255, 255, 255, 255, "No data/\nNot water")},
 
-    'baregrad_phy_cat_l4d_au': {10: (255, 230, 140, 255, "Sparsely vegetated\n (< 20% bare)"),
-                                12: (250, 210, 110, 255, "Very sparsely\n vegetated (20 to 60% bare)"),
-                                15: (243, 171, 105, 255, "Bare areas,\n unvegetated (> 60% bare)"),
-                                255: (255, 255, 255, 255, "No data /\n Not bare")},
+    'baregrad_phy_cat_l4d_au': {10: (255, 230, 140, 255, "Sparsely\nvegetated\n(<20% bare)"),
+                                12: (250, 210, 110, 255, "Very sparsely\nvegetated\n(20 to 60% bare)"),
+                                15: (243, 171, 105, 255, "Bare areas,\nunvegetated\n(>60% bare)"),
+                                255: (255, 255, 255, 255, "No data/\nNot bare")},
 
     'level4': {
                1: (151, 187, 26, 255, 'Cultivated Terrestrial\n Vegetated:'),
@@ -307,7 +307,7 @@ def get_layer_name(measurement, da):
     return measurement
 
 
-def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
+def make_colorbar(fig, ax, measurement, labelsize=10, horizontal=False, animation=False):
     """
     Adds a new colorbar with appropriate land cover colours and labels.
 
@@ -323,6 +323,8 @@ def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
         Matplotlib figure ax to add colorbar to.
     measurement : str
         Land cover measurement to use for colour map and labels. 
+    labelsize : int
+        size of labels of colourbar
     
     """
 
@@ -372,10 +374,9 @@ def make_colorbar(fig, ax, measurement, horizontal=False, animation=False):
     img = ax.imshow([cb_ticks], cmap=cb_cmap, norm=cb_norm)
     cb = fig.colorbar(img, cax=cax, orientation=orient)
 
-    cb.ax.tick_params(labelsize=12)
+    cb.ax.tick_params(labelsize=labelsize)
     cb.set_ticks(cb_ticks + np.diff(cb_ticks, append=cb_ticks[-1]+1) / 2)
     cb.set_ticklabels(cb_labels)
-
 
 
 
@@ -429,7 +430,7 @@ def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
     sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
 
     return sorted_colours_dict
-               
+
 
 def lc_colourmap(colour_scheme, colour_bar=False):
     """
@@ -551,7 +552,7 @@ def lc_colourmap_colourbar(colour_scheme, colour_bar=False):
 #     ('The dataset provided does not have a valid '
 #     'name. Please specify which DEA Landcover measurement is being plotted '
 #     'by providing the name using the "measurement" variable. For example (measurement = "full_classification")')
-        
+
     # Get colour definitions
     lc_colour_scheme = lc_colours[colour_scheme]  
 
@@ -842,6 +843,9 @@ def lc_animation(
         fig.set_size_inches(width * scale * 2, height * scale, forward=True)
         fig.set_constrained_layout_pads(
             w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
+        ax1.tick_params(axis='both', which='major', labelsize=font_size)
+        ax2.tick_params(axis='both', which='major', labelsize=font_size)
+        ax1.yaxis.get_offset_text().set_fontsize(font_size)
 
         # This function is called at regular intervals with changing i
         # values for each frame
@@ -861,12 +865,15 @@ def lc_animation(
             date = clipped_table.index
 
             ax2.stackplot(date, data.values(), colors=hex_colour_list)
-            ax2.tick_params(axis="x", labelrotation=-45)
+            ax2.tick_params(axis="x", labelrotation=-90)
             ax2.margins(x=0, y=0)
 
             # Add annotation text
             ax1.annotate(annotation_text[i], **annotation_defaults)
             ax2.annotate(annotation_text[i], **annotation_defaults)
+
+            ax1.yaxis.get_offset_text().set_fontsize(font_size)
+
 
         # anim_fargs contains all the values we send to our
         # _update_frames function.
@@ -899,12 +906,15 @@ def lc_animation(
                                 height * scale, forward=True)
             fig.set_constrained_layout_pads(
                 w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
-
+            ax1.tick_params(axis='both', which='major', labelsize=font_size)
+            ax2.tick_params(axis='both', which='major', labelsize=font_size)
+            ax1.yaxis.get_offset_text().set_fontsize(font_size)
+            
             # make colour bar
             # provide left hand canvas to colour bar fuction which is where the image will go
             # colourbar will plot on right side beside it
 
-            make_colorbar(fig, ax1, measurement, animation=True)
+            make_colorbar(fig, ax1, measurement, labelsize=font_size, animation=True)
 
             # turn off lines for second plot so it's not ontop of colourbar
             ax2.set_axis_off()
@@ -914,13 +924,16 @@ def lc_animation(
 
             # Define & set up figure
             fig, ax1 = plt.subplots(1, 1, dpi=dpi)
-            fig.set_size_inches(width * scale, height * scale, forward=True)
+            fig.set_size_inches(width * scale * 1.3, height * scale, forward=True)
+            ax1.tick_params(axis='both', which='major', labelsize=font_size)
+            ax1.yaxis.get_offset_text().set_fontsize(font_size)
+            
             if(not label_ax):
                 fig.subplots_adjust(left=0, bottom=0, right=1,
                                     top=1, wspace=None, hspace=None)
             # Add colourbar here
             if colour_bar:
-                make_colorbar(fig, ax1, measurement)
+                make_colorbar(fig, ax1, measurement, labelsize=font_size)
 
 
         # This function is called at regular intervals with changing i
@@ -936,6 +949,7 @@ def lc_animation(
 
             # Add annotation text
             ax1.annotate(annotation_text[i], **annotation_defaults)
+            ax1.yaxis.get_offset_text().set_fontsize(font_size)
 
         # anim_fargs contains all the values we send to our
         # _update_frames function.
