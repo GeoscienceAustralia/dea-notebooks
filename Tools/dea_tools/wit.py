@@ -337,6 +337,7 @@ def spatial_wit(ds, wetland_name):
     Returns
     -------
     output_path : 
+        File path where the GIF animation will be saved.
 
 
     """
@@ -429,9 +430,9 @@ def spatial_wit(ds, wetland_name):
     num_rows = (num_time_steps + num_columns -
                 1) // num_columns  
 
-    fig, axes = plt.subplots(num_rows,
-                             num_columns,
-                             figsize=(num_columns * 3, num_rows * 5))
+    time_step = ds['wetland'].isel(time=0)
+    height, width = time_step.shape
+    fig, axes = plt.subplots(num_rows, num_columns, figsize=(8 * num_columns * width / height,8 * num_rows))
     
     if num_rows == 1:
         axes = axes.reshape(1, num_columns)
@@ -451,12 +452,13 @@ def spatial_wit(ds, wetland_name):
         time_date_str = time_date.strftime("%d-%m-%Y")
         row_idx = t // num_columns
         col_idx = t % num_columns
-        wetland_plot = time_step.plot.imshow(
+        time_step.plot.imshow(
             cmap=cmap,
             norm=norm,
             ax=axes[row_idx, col_idx],  # Assign subplot
             add_colorbar=False  # Avoid multiple colorbars
         )
+        axes[row_idx, col_idx].set_aspect('auto')  # keep aspect 
         axes[row_idx, col_idx].set_title(f"{time_date_str}")
 
     plt.tight_layout()
@@ -469,17 +471,25 @@ def spatial_wit(ds, wetland_name):
     frames = []
 
     for t in range(num_time_steps):
-        fig, ax = plt.subplots(figsize=(6, 6))  # adjust size as needed
-        time_step = ds["wetland"].isel(time=t)
-
+        time_step = ds['wetland'].isel(time=t)
+        height, width = time_step.shape
+        fig, ax = plt.subplots(figsize=(8, 8 * height / width))  # dynamic aspect ratio 
+        
         time_ns = ds["time"].isel(time=t).values.item()
         time_date = pd.to_datetime(time_ns, unit="ns")
         time_date_str = time_date.strftime("%d-%m-%Y")
 
-        cax = ax.imshow(time_step, cmap=cmap, norm=norm, interpolation='none')
-        ax.set_title(f'Time: {time_date_str}')
-
+        time_step.plot.imshow(
+            cmap=cmap,
+            norm=norm,
+            ax=ax,
+            add_colorbar=False,  # Avoid multiple colorbars
+            # interpolation='none'
+        )
+        ax.set_aspect('auto')  # keep aspect 
+        plt.title(f'Time:{time_date_str}')
         frame_path = f"deawetlands_outputs/{wetland_name}_{time_date_str}.png"
+        
         plt.savefig(frame_path)
         frames.append(frame_path)
         plt.close(fig)
