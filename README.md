@@ -2,8 +2,8 @@
 
 # DEA Notebooks
 
-[![DOI](https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg)](https://doi.org/10.26186/145234) [![Apache license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![PyPI](https://img.shields.io/pypi/v/dea-tools)](https://pypi.org/project/dea-tools/) [![Notebook testing](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/dea-notebooks/test_notebooks_scheduled.yml?logo=github&label=Integration%20tests
-)](https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks_scheduled.yml) [![Discord](https://img.shields.io/discord/1212501566326571070?label=Discord&logo=discord&logoColor=white&color=7289DA)](https://discord.com/invite/4hhBQVas5U)
+[![DOI](https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg)](https://doi.org/10.26186/145234) [![Apache license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![PyPI](https://img.shields.io/pypi/v/dea-tools)](https://pypi.org/project/dea-tools/) [![Notebook testing](https://img.shields.io/github/actions/workflow/status/GeoscienceAustralia/dea-notebooks/test_notebooks_entirerepo.yml?logo=github&label=Integration%20tests
+)](https://github.com/GeoscienceAustralia/dea-notebooks/actions/workflows/test_notebooks_entirerepo.yml) [![Discord](https://img.shields.io/discord/1212501566326571070?label=Discord&logo=discord&logoColor=white&color=7289DA)](https://discord.com/invite/4hhBQVas5U)
 
 <br />
 
@@ -87,11 +87,13 @@ The **National Computational Infrastructure** is a supercomputer environment ava
 
 To get started, see these articles in the wiki.
 
-* [Git workflow](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Git-workflow)
+* [Getting started with Git](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Getting-started-with-Git)
 * [Create a DEA Notebook](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Create-a-DEA-Notebook)
 * [Edit a DEA Notebook](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Edit-a-DEA-Notebook)
+* [Contributing and reviewing DEA Notebooks](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Contributing-and-reviewing-DEA-Notebooks)
+* [Edit the DEA Tools documentation](https://github.com/GeoscienceAustralia/dea-notebooks/wiki/Edit-the-DEA-Tools-documentation)
 
-We would also appreciate it if you could add your a citation to our
+We would also appreciate it if you could add your work as a citation to our
 [USAGE](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst)
 page.
 

@@ -1,16 +1,17 @@
 
+name: Test entire repo against DEA Sandbox image
 
-name: Scheduled test of entire repo against DEA Sandbox images
+# This workflow tests the entire repository against DEA Sandbox "stable" image 
+# when Python code changes (i.e. DEA Tools changes) are proposed to the develop branch
 
-# This workflow tests the entire repository against DEA Sandbox "stable" and
-# "latest" images on a regular schedule (twice weekly)
-
-on:
-  # Run on schedule: Every Sunday and Wednesday at 10:00 UTC
-  # This is intended to catch problems that may occur even without code changes
-  # (e.g. changes to the DEA Sandbox images)
-  schedule:
-    - cron: "0 10 * * 0,3"
+on:  
+  # Run whenever a pull request to the develop branch modifies Python files
+  # in DEA Tools. This catches potential issues early before changes are merged
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - '**/*.py'
   
   # Allow manual triggering through the GitHub UI
   # Useful for on-demand testing or troubleshooting
@@ -24,12 +25,11 @@ jobs:
   test-notebooks:
     runs-on: ubuntu-latest
 
-    # Test DEA Notebooks sections against both stable and latest Sandbox image
+    # Test DEA Notebooks sections against stable Sandbox image
     strategy:
       
       matrix:
         image: 
-          - "latest"
           - "stable"
         tests:
           - "dea_tools"
