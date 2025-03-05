@@ -105,7 +105,6 @@ def WIT_drill(
     -------
     ds_wit : xarray.Dataset
         An xarray dataset containing values for each cover class (open water, wet, pv, npv, bs). 
-            
     polygon_base_df : pandas.DataFrame
         A DataFrame containing the normalised timeseries of relative fractions of each cover class (open water, wet, pv, npv, bs).
             
@@ -486,11 +485,16 @@ def spatial_wit(ds, wetland_name):
             add_colorbar=False,  # Avoid multiple colorbars
             # interpolation='none'
         )
-        ax.set_aspect('auto')  # keep aspect 
+        ax.set_aspect('auto')  # keep aspect
         plt.title(f'Time:{time_date_str}')
+
+        # Rotates and right-aligns the x labels so they don't crowd each other.
+        for label in ax.get_xticklabels(which='major'):
+            label.set(rotation=30, horizontalalignment='right')
+            
+        # Save the frame
         frame_path = f"deawetlands_outputs/{wetland_name}_{time_date_str}.png"
-        
-        plt.savefig(frame_path)
+        plt.savefig(frame_path, bbox_inches='tight')
         frames.append(frame_path)
         plt.close(fig)
 
