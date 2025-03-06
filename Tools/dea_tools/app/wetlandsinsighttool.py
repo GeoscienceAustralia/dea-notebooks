@@ -1,5 +1,6 @@
 """
-Digital Earth Australia Wetlands Insight Tool widget, which can be used to interactively extract a stacked line plot using the wetlands insight tool on a wetland polygon.
+Digital Earth Australia Wetlands Insight Tool widget, which can be used to interactively 
+extract a stacked line plot using the wetlands insight tool on a wetland polygon.
 """
 
 # Import required packages
@@ -38,7 +39,8 @@ from io import BytesIO
 import ipywidgets as widgets
 import datetime
 import seaborn as sns
-#from shapely.geometry import box, shape
+
+# from shapely.geometry import box, shape
 import matplotlib.dates as mdates
 
 sys.path.insert(1, "../Tools/")
@@ -65,7 +67,7 @@ def create_expanded_button(description, button_style):
         layout=Layout(width="auto", height="auto"),
     )
 
-    
+
 class wit_app(HBox):
 
     def __init__(self):
@@ -74,7 +76,7 @@ class wit_app(HBox):
         ######################
         # INITIAL ATTRIBUTES #
         ######################
-        
+
         enddate = datetime.datetime.today()
         startdate = datetime.datetime(
             year=enddate.year - 1, month=enddate.month, day=enddate.day
@@ -82,7 +84,7 @@ class wit_app(HBox):
         self.startdate = startdate.strftime("%Y-%m-%d")
         self.enddate = enddate.strftime("%Y-%m-%d")
         self.wetland_name = "example WIT"
-        #self.out_csv = "example_WIT.csv"
+        # self.out_csv = "example_WIT.csv"
         self.out_plot = False
         self.product_list = [
             ("ESRI World Imagery", "none"),
@@ -93,8 +95,8 @@ class wit_app(HBox):
         self.action = None
         self.gdf_drawn = None
         self.gdf_uploaded = None
-        #self.mingooddata = 85
-        #self.resamplingfreq = "1M"
+        # self.mingooddata = 85
+        # self.resamplingfreq = "1M"
         self.max_size = False
         self.spatial_wit = False
 
@@ -106,7 +108,8 @@ class wit_app(HBox):
         header_title_text = "<h3>Digital Earth Australia Wetlands Insight Tool </h3>"
         instruction_text = "Select parameters and draw a polygon on the map to extract a stacked line plot for a given area. Alternatively, <b>upload a shapefile or a GeoJSON</b> to extract a stacked line plot for your wetland of interest polygon."
         self.header = deawidgets.create_html(
-            f"{header_title_text}<p>{instruction_text}</p>")
+            f"{header_title_text}<p>{instruction_text}</p>"
+        )
         self.header.layout = make_box_layout()
 
         #####################################
@@ -140,9 +143,7 @@ class wit_app(HBox):
 
             # Test area size
             if self.max_size:
-                confirmation_text = (
-                    '<span style="color: #33cc33"> <b>(Overriding maximum size limit; use with caution as may lead to memory issues)</b></span>'
-                )
+                confirmation_text = '<span style="color: #33cc33"> <b>(Overriding maximum size limit; use with caution as may lead to memory issues)</b></span>'
                 self.header.value = (
                     header_title_text + polyarea_text + confirmation_text
                 )
@@ -161,7 +162,7 @@ class wit_app(HBox):
         ###########################
         # WIDGETS FOR APP OUTPUTS #
         ###########################
-        
+
         self.dask_client = Output(layout=make_box_layout())
         self.progress_bar = Output(layout=make_box_layout())
         self.wit_plot = Output(layout=make_box_layout())
@@ -205,22 +206,30 @@ class wit_app(HBox):
         ############################
 
         # Create parameter widgets
-        startdate_picker = deawidgets.create_datepicker(value=startdate,)
-        enddate_picker = deawidgets.create_datepicker(value=enddate,)
+        startdate_picker = deawidgets.create_datepicker(
+            value=startdate,
+        )
+        enddate_picker = deawidgets.create_datepicker(
+            value=enddate,
+        )
         wetland_name = deawidgets.create_inputtext(self.wetland_name, self.wetland_name)
-        #output_csv = deawidgets.create_inputtext(self.out_csv, self.out_csv)
-        output_plot = deawidgets.create_checkbox(self.out_plot, 'Figure (.png)')
+        # output_csv = deawidgets.create_inputtext(self.out_csv, self.out_csv)
+        output_plot = deawidgets.create_checkbox(self.out_plot, "Figure (.png)")
         deaoverlay_dropdown = deawidgets.create_dropdown(
             self.product_list, self.product_list[0][1]
         )
         run_button = create_expanded_button("Run", "info")
         fileupload_wetlands = widgets.FileUpload(accept="", multiple=True)
-        
+
         # Expandable advanced section
-        max_size = deawidgets.create_checkbox(self.max_size, "Enable", layout={"width":"95%"})
-        output_spatial_wit = deawidgets.create_checkbox(self.spatial_wit, 'Animation (.gif)')
-        #min_good_data = deawidgets.create_boundedfloattext(self.mingooddata, 0, 100, 5)
-        #resampling_freq = deawidgets.create_inputtext(self.resamplingfreq, self.resamplingfreq)
+        max_size = deawidgets.create_checkbox(
+            self.max_size, "Enable", layout={"width": "95%"}
+        )
+        output_spatial_wit = deawidgets.create_checkbox(
+            self.spatial_wit, "Animation (.gif)"
+        )
+        # min_good_data = deawidgets.create_boundedfloattext(self.mingooddata, 0, 100, 5)
+        # resampling_freq = deawidgets.create_inputtext(self.resamplingfreq, self.resamplingfreq)
 
         ####################################
         # UPDATE FUNCTIONS FOR EACH WIDGET #
@@ -230,7 +239,7 @@ class wit_app(HBox):
         startdate_picker.observe(self.update_startdate, "value")
         enddate_picker.observe(self.update_enddate, "value")
         wetland_name.observe(self.update_wetlandname, "value")
-        #output_csv.observe(self.update_outputcsv, "value")
+        # output_csv.observe(self.update_outputcsv, "value")
         output_plot.observe(self.update_outputplot, "value")
         deaoverlay_dropdown.observe(self.update_deaoverlay, "value")
         run_button.on_click(self.run_app)
@@ -238,20 +247,22 @@ class wit_app(HBox):
         fileupload_wetlands.observe(self.update_fileupload_wetlands, "value")
         max_size.observe(self.update_maxsize, "value")
         output_spatial_wit.observe(self.update_outputspatialwit, "value")
-        #min_good_data.observe(self.update_mingooddata, "value")
-        #resampling_freq.observe(self.update_resamplingfreq, "value")
+        # min_good_data.observe(self.update_mingooddata, "value")
+        # resampling_freq.observe(self.update_resamplingfreq, "value")
 
         ##################################
         # COLLECTION OF ALL APP CONTROLS #
         ##################################
         expand_box = VBox(
             [
-                HTML("<b>Override maximum size limit:</b></br> (use with caution; may cause memory issues/crashes)"),
+                HTML(
+                    "<b>Override maximum size limit:</b></br> (use with caution; may cause memory issues/crashes)"
+                ),
                 max_size,
                 HTML("<b>Spatial WIT animation:<b/>"),
                 output_spatial_wit,
-                #HTML("<b>Minimum Good Data (%):</b>"),
-                #min_good_data,
+                # HTML("<b>Minimum Good Data (%):</b>"),
+                # min_good_data,
                 # HTML("<b>" + ("Resampling Frequency:") + "</b>"),
                 # resampling_freq,
             ]
@@ -271,8 +282,8 @@ class wit_app(HBox):
                 enddate_picker,
                 HTML("<b>Wetland Name:</b>"),
                 wetland_name,
-                #HTML("<b>Output CSV:</b>"),
-                #output_csv,
+                # HTML("<b>Output CSV:</b>"),
+                # output_csv,
                 HTML("<b>Output Plot:</b>"),
                 output_plot,
                 HTML(
@@ -381,9 +392,7 @@ class wit_app(HBox):
                 # Use ID column if it exists
                 if "id" in wetlands_gdf:
                     wetlands_gdf = wetlands_gdf.set_index("id")
-                    print(
-                        f"Uploaded '{valid_file}'; automatically labelling "
-                    )
+                    print(f"Uploaded '{valid_file}'; automatically labelling ")
                 else:
                     print(f"Uploaded '{valid_file}'; no 'id' column detected.")
 
@@ -429,8 +438,8 @@ class wit_app(HBox):
         self.wetland_name = change.new
 
     # Set the output csv
-    #def update_outputcsv(self, change):
-        #self.out_csv = change.new
+    # def update_outputcsv(self, change):
+    # self.out_csv = change.new
 
     # Set the output plot
     def update_outputplot(self, change):
@@ -445,8 +454,8 @@ class wit_app(HBox):
         self.spatial_wit = change.new
 
     # Set the min good data
-    #def update_mingooddata(self, change):
-        #self.mingooddata = change.new
+    # def update_mingooddata(self, change):
+    # self.mingooddata = change.new
 
     # Set the resampling frequency
     # def update_resamplingfreq(self, change):
@@ -478,13 +487,13 @@ class wit_app(HBox):
 
         # Set any defaults
         dask_chunks = dict(x=1000, y=1000, time=1)
-        #TCW_threshold = -0.035
-        
+        # TCW_threshold = -0.035
+
         # check resampling freq
-        #if self.resamplingfreq == "None":
-            #rsf = None
-        #else:
-            #rsf = self.resamplingfreq
+        # if self.resamplingfreq == "None":
+        # rsf = None
+        # else:
+        # rsf = self.resamplingfreq
 
         self.progress_header.value = "<h3>" + ("Progress") + "</h3>"
 
@@ -498,7 +507,7 @@ class wit_app(HBox):
                 run_text = "uploaded file"
             elif self.gdf_drawn is not None:
                 wetlands_gdf = self.gdf_drawn
-                
+
                 # save the drawn polygon as a geojson in the current directory
                 try:
                     output_geojson_path = f"{self.wetland_name}_drawn_polygon.geojson"
@@ -517,19 +526,19 @@ class wit_app(HBox):
             # Run wetlands polygon drill
             df = None
 
-            if not self.wetland_name.endswith('.csv'):
-                output_csv = self.wetland_name + '.csv'
+            if not self.wetland_name.endswith(".csv"):
+                output_csv = self.wetland_name + ".csv"
             else:
                 output_csv = self.wetland_name
-            
+
             if wetlands_gdf is not None:
                 try:
                     ds_wit, df = WIT_drill(
                         gdf=wetlands_gdf,
                         time=(self.startdate, self.enddate),
-                        #min_gooddata=self.mingooddata,
-                        #resample_frequency=rsf,
-                        #TCW_threshold=TCW_threshold,
+                        # min_gooddata=self.mingooddata,
+                        # resample_frequency=rsf,
+                        # TCW_threshold=TCW_threshold,
                         export_csv=output_csv,
                         dask_chunks=dask_chunks,
                         verbose=False,
@@ -549,10 +558,10 @@ class wit_app(HBox):
 
         # save the csv
         if df is not None and self.wetland_name:
-            df.to_csv(output_csv, index=False) 
+            df.to_csv(output_csv, index=False)
 
         else:
-            print("No valid polygon to process. Please select or draw a new polygon.") 
+            print("No valid polygon to process. Please select or draw a new polygon.")
             df = None
 
         # ---Plotting------------------------------
@@ -613,14 +622,14 @@ class wit_app(HBox):
                     alpha=0.5,
                     hatch="//",
                 )
-                
+
                 ax.xaxis.set_major_locator(mdates.MonthLocator())
-                ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%Y'))
-                
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b-%Y"))
+
                 # Rotates and right-aligns the x labels so they don't crowd each other.
-                for label in ax.get_xticklabels(which='major'):
-                    label.set(rotation=30, horizontalalignment='right')
-                    
+                for label in ax.get_xticklabels(which="major"):
+                    label.set(rotation=30, horizontalalignment="right")
+
                 x_label_text = "The Fractional Cover algorithm developed by the Joint Remote Sensing Research Program and\n the Water Observations from Space algorithm developed by Geoscience Australia are used in the production of this data"
 
                 ax.set_xlabel(x_label_text, style="italic")
@@ -641,9 +650,9 @@ class wit_app(HBox):
         else:
             print("No valid polygon to process. Please select or draw a new polygon.")
 
-        # Export spatial WIT animation if checkbox is selected 
+        # Export spatial WIT animation if checkbox is selected
         if self.spatial_wit and ds_wit is not None:
-    
+
             try:
                 ds = spatial_wit(ds=ds_wit, wetland_name=self.wetland_name)
                 print("Animation complete")
@@ -651,7 +660,4 @@ class wit_app(HBox):
                 print("No polygon selected")
 
         else:
-            print(
-                "No valid polygon to process. Please select or draw a new polygon."
-            )
-    
+            print("No valid polygon to process. Please select or draw a new polygon.")
