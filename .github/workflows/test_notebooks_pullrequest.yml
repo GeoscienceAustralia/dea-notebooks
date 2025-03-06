@@ -30,9 +30,10 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           separator: ' '
-          files: '**/*.ipynb'
-          files_ignore: 'How_to_guides/Imagery_on_web_map.ipynb'
-
+          files: '**/*.ipynb'          
+          files_ignore: |
+            How_to_guides/Imagery_on_web_map.ipynb
+            How_to_guides/External_data_ERA5_Climate.ipynb
       - name: Print changed notebook files
         if: steps.changed-notebooks.outputs.any_changed == 'true'
         run: |
