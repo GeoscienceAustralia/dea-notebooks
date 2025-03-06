@@ -17,13 +17,13 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: January 2022
+Last modified: March 2025
 """
 
 import numpy as np
 import pandas as pd
-import ast
-import sys
+# import ast
+# import sys
 
 from IPython.display import Image
 
@@ -31,6 +31,8 @@ import matplotlib.pyplot as plt
 from matplotlib import colors as mcolours
 from matplotlib import patheffects
 from matplotlib.animation import FuncAnimation
+
+
 
 # Define colour schemes for each land cover measurement
 lc_colours = {
@@ -71,39 +73,6 @@ lc_colours = {
                                  216: (243, 171, 105, 255, "Changed to Natural\n Bare Surface"),
                                  220: (77, 159, 220, 255, "Changed to Water"),
                                  0: (255, 255, 255, 255, "No Change")},
-
-     'lifeform_veg_cat_l4a': {1: (14, 121, 18, 255, "Woody\nVegetation"),
-                              2: (172, 188, 45, 255, "Herbaceous\nVegetation"),
-                              255: (255, 255, 255, 255, "No Data/\nNot vegetated")},
-
-
-    'canopyco_veg_cat_l4d': {10: (14,  121, 18,  255, "> 65 % \ncover"),
-                             12: (45,  141, 47,  255, "40 to 65 % \ncover"),
-                             13: (80,  160, 82,  255, "15 to 40 % \ncover"),
-                             15: (117, 180, 118, 255, "4 to 15 % \ncover"),
-                             16: (154, 199, 156, 255, "1 to 4 % \ncover"),
-                             255: (255, 255, 255, 255, "No Data /\n Not vegetated")},
-
-    'waterstt_wat_cat_l4a': {1: (77, 159, 220, 255, "Water"),
-                             255: (255, 255, 255, 255, "No Data /\nNot water")},
-
-    'watersea_veg_cat_l4a_au': {1: (25,  173, 109, 255, "> 3 months"),
-                                2: (176, 218, 201, 255, "< 3 months"),
-                                255: (255, 255, 255, 255, "No data/\nNot aquatic\nvegetation")},
-
-    'inttidal_wat_cat_l4a': {3: (77, 159, 220, 255, "Intertidal"),
-                             255: (255, 255, 255, 255, "No data /\n Not intertidal")},
-
-    'waterper_wat_cat_l4d_au': {1: (27,  85,  186, 255, "> 9\nmonths"),
-                                7: (52,  121, 201, 255, "7 to 9\nmonths"),
-                                8: (79,  157, 217, 255, "4 to 6\nmonths"),
-                                9: (113, 202, 253, 255, "1 to 3\nmonths"),
-                                255: (255, 255, 255, 255, "No data/\nNot water")},
-
-    'baregrad_phy_cat_l4d_au': {10: (255, 230, 140, 255, "Sparsely\nvegetated\n(<20% bare)"),
-                                12: (250, 210, 110, 255, "Very sparsely\nvegetated\n(20 to 60% bare)"),
-                                15: (243, 171, 105, 255, "Bare areas,\nunvegetated\n(>60% bare)"),
-                                255: (255, 255, 255, 255, "No data/\nNot bare")},
 
     'level4': {
                1: (151, 187, 26, 255, 'Cultivated Terrestrial\n Vegetated:'),
@@ -257,38 +226,35 @@ lc_colours = {
                                },
 }
 
+
+
 # dictionary needed to generate colour schemes of descriptors from the level 4 colour scheme. The structure is as follow:
 # long_descriptor_name[string]: {keyword_for_finding_classes_in_level4_colourscheme[string] : (RGB_colourscheme[4 integers], label_of_descriptor[string])}
 lc_colours_mapping = {
-        'lifeform_veg_cat_l4a': {'Woody': (14, 121,18, 255, 'Woody Vegetation'),
-                                'Herbaceous': (172, 188, 45, 255, 'Herbaceous\n Vegetation')},
-        'canopyco_veg_cat_l4d': {'> 65 %': (14,  121, 18,  255, '> 65 % cover'),
-                                '40 to 65 %': (45,  141, 47,  255, '40 to 65 % cover'),
-                                '15 to 40 %': (80,  160, 82,  255, '15 to 40 % cover'),
-                                '4 to 15 %': (117, 180, 118, 255, '4 to 15 % cover'),
-                                '1 to 4 %': (154, 199, 156, 255, '1 to 4 % cover')},
+        'lifeform_veg_cat_l4a': {'Woody': (14, 121,18, 255, 'Woody\nVegetation'),
+                                'Herbaceous': (172, 188, 45, 255, 'Herbaceous\nVegetation')},
+        'canopyco_veg_cat_l4d': {'> 65 %': (14,  121, 18,  255, '> 65 %\ncover'),
+                                '40 to 65 %': (45,  141, 47,  255, '40 to 65 %\ncover'),
+                                '15 to 40 %': (80,  160, 82,  255, '15 to 40 %\ncover'),
+                                '4 to 15 %': (117, 180, 118, 255, '4 to 15 %\ncover'),
+                                '1 to 4 %': (154, 199, 156, 255, '1 to 4 %\ncover')},
         'watersea_veg_cat_l4a_au': {'(semi-) permenant': (25,  173, 109, 255, '> 3 months'),
                                    '(temporary or seasonal)': (176, 218, 201, 255, '< 3 months')},
         'waterstt_wat_cat_l4a': {'Water: (Water)': (77, 159, 220, 255, 'Water')},
-        'inttidal_wat_cat_l4a': {'Tidal area': (77, 159, 220, 255, 'Water: (Water) Tidal area')},
-        'waterper_wat_cat_l4d_au': {'> 9 months': (27,  85,  186, 255, '> 9 months'),
-                                   '7 to 9 months': (52,  121, 201, 255, '7 to 9 months'),
-                                   '4 to 6 months': (79,  157, 217, 255, '4 to 6 months'),
-                                   '1 to 3 months': (113, 202, 253, 255, '1 to 3 months')},
-        'baregrad_phy_cat_l4d_au': {'Sparsely vegetated': (255, 230, 140, 255, 'Sparsely vegetated\n (< 20% bare)'),
-                                   'Very sparesely': (250, 210, 110, 255, 'Very sparsely\n vegetated (20 to 60% bare)'),
-                                   'Bare areas': (243, 171, 105, 255, 'Bare areas,\n unvegetated (> 60% bare)')},
+        'inttidal_wat_cat_l4a': {'Tidal area': (77, 159, 220, 255, 'Tidal area')},
+        'waterper_wat_cat_l4d_au': {'> 9 months': (27,  85,  186, 255, '> 9\nmonths'),
+                                   '7 to 9 months': (52,  121, 201, 255, '7 to 9\nmonths'),
+                                   '4 to 6 months': (79,  157, 217, 255, '4 to 6\nmonths'),
+                                   '1 to 3 months': (113, 202, 253, 255, '1 to 3\nmonths')},
+        'baregrad_phy_cat_l4d_au': {'Sparsely vegetated': (255, 230, 140, 255, 'Sparsely\nvegetated\n(< 20% bare)'),
+                                   'Very sparesely': (250, 210, 110, 255, 'Very sparsely\nvegetated\n(20 to 60% bare)'),
+                                   'Bare areas': (243, 171, 105, 255, 'Bare areas,\nunvegetated\n(> 60% bare)')},
 
 }
 
 
 
-
-
-
-
-def get_layer_name(measurement, da):
-    aliases = {
+aliases = {
         'lifeform': 'lifeform_veg_cat_l4a',
         'vegetation_cover': 'canopyco_veg_cat_l4d',
         'water_seasonality': 'watersea_veg_cat_l4a_au',
@@ -300,98 +266,35 @@ def get_layer_name(measurement, da):
         'level_4': 'level4'
     }
 
+
+
+def _get_layer_name(measurement,  da, aliases=aliases):
+    """
+    Returns detailed name of descriptor given the short alias
+    """
+
     # Use provided measurement if able
     measurement = measurement.lower() if measurement else da.name
     measurement = aliases[measurement] if measurement in aliases.keys(
     ) else measurement
+    
     return measurement
 
 
-def make_colorbar(fig, ax, measurement, labelsize=10, horizontal=False, animation=False):
-    """
-    Adds a new colorbar with appropriate land cover colours and labels.
 
-    For DEA Land Cover Level 4 data, this function must be used with a double plot. 
-    The 'ax' should be on the left side of the figure, and the colour bar will added 
-    on the right hand side.
-    
-    Parameters
-    ----------
-    fig : matplotlib figure
-        Figure to add colourbar to
-    ax : matplotlib ax
-        Matplotlib figure ax to add colorbar to.
-    measurement : str
-        Land cover measurement to use for colour map and labels. 
-    labelsize : int
-        size of labels of colourbar
-    
-    """
-
-    # Create new axis object for colorbar
-    # parameters for add_axes are [left, bottom, width, height], in
-    # fractions of total plot
-    
-    if measurement == 'level4' and animation == True:
-        
-        # special spacing settings for level 4
-        cax = fig.add_axes([0.62, 0.10, 0.02, 0.80])
-        orient = 'vertical'
-        
-            # get level 4 colour bar colour map ect
-        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap_colourbar('level4_colourbar_labels',
-                                                         colour_bar=True)
-    elif measurement == 'level4' and animation == False:
-        
-        # get level 4 colour bar colour map ect
-        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap_colourbar('level4_colourbar_labels',
-                                                         colour_bar=True)
-        #move plot over to make room for colourbar
-        fig.subplots_adjust(right=0.825)
-
-        # Settings for axis positions
-        cax = fig.add_axes([0.84, 0.15, 0.02, 0.70])
-        orient = 'vertical'
-        
-    else:
-        #for all other measurements 
-
-        #move plot over to make room for colourbar
-        fig.subplots_adjust(right=0.825)
-
-        # Settings for different axis positions
-        if horizontal:
-            cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
-            orient = 'horizontal'
-        else:
-            cax = fig.add_axes([0.84, 0.15, 0.02, 0.70])
-            orient = 'vertical'
-            
-        # get measurement colour bar colour map ect
-        cb_cmap, cb_norm, cb_labels, cb_ticks = lc_colourmap_colourbar(measurement,
-                                                         colour_bar=True)
-
-    img = ax.imshow([cb_ticks], cmap=cb_cmap, norm=cb_norm)
-    cb = fig.colorbar(img, cax=cax, orientation=orient)
-
-    cb.ax.tick_params(labelsize=labelsize)
-    cb.set_ticks(cb_ticks + np.diff(cb_ticks, append=cb_ticks[-1]+1) / 2)
-    cb.set_ticklabels(cb_labels)
-
-
-
-def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
+def _descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
     """
     Generates a sorted dictionary of colours based on a given descriptor.
 
     This function takes in a dictionary of Land Cover classes, a mapping of descriptors to colours, 
-    and a specific descriptor. It returns a dictionary where the keys are sorted and the values are 
-    the corresponding colours and labels from the descriptor mapping.
+    and a specific descriptor. It returns a dictionary where the keys (i.e., classes values) are sorted 
+    and the values are the corresponding colours and labels from the descriptor mapping.
     
     Parameters
     ----------
     lc_colours : dict
-        Dictionary containing colour schemes for all Land Cover classes. 
+        Dictionary containing colour schemes for all Land Cover classes, 
+        including Level 4 scheme (needed in this function). 
         
     lc_colours_mapping : dict
         Dictionary mapping descriptors (e.g., lifeform) to their corresponding colours and labels.
@@ -412,43 +315,87 @@ def descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
     descriptor_dict = lc_colours_mapping[descriptor]
 
     # create a new colours dictionary with all level 4 values set to white colour
-    # based on the descriptor, the values of interest will be filled with the pre-defined colours (all the rest will stay white)
+    # this dictionary is the foundation of the output returned at the end
     colours_dict = level4_colours.copy()
     for key in colours_dict:
-       colours_dict[key] = (255, 255, 255, 255, "No Data")
+       colours_dict[key] = (255, 255, 255, 255, "No Data/\nOther\nClasses")
 
-    # update the colours dictionary with the descriptor-specific colours
-    for class_keyword, colour_n_label in descriptor_dict.items():
+    # based on the descriptor, update the colours dictionary with the descriptor-specific colours
+    # (all the rest will stay white)
+    for class_keyword, colour_n_label in descriptor_dict.items(): # iterate over descriptors mapping keys
         
-        for class_value, lvl4_scheme in level4_colours.items(): 
-            label_lvl4 = lvl4_scheme[4]
+        for class_value, lvl4_scheme in level4_colours.items(): # iterate over Level 4 colour scheme
+            # get the label of current Level 4 class colour
+            label_lvl4 = lvl4_scheme[4] 
             
-            if class_keyword in label_lvl4:
-                colours_dict[class_value] = colour_n_label
+            if class_keyword in label_lvl4:  # check if the current Level 4 class colour contains the current descriptor mapping key
+                # replace white colour with RGB indicated by the descriptor mapping dictionary
+                colours_dict[class_value] = colour_n_label 
                 
-    # sort the colours dictionary by keys
+    # sort the colours dictionary by keys (i.e., the values of classes)
     sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
 
     return sorted_colours_dict
 
 
-def lc_colourmap(colour_scheme, colour_bar=False):
+
+def get_colour_scheme(measurement):
     """
-    Returns colour map and normalisation for the provided DEA Land Cover
-    measurement, for use in plotting with Matplotlib library
+    Gets colour scheme dictionary given the measurement of interest
+    """
     
-    Parameters
-    ----------
-    colour_scheme : string
-        Name of land cover colour scheme to use
-        Valid options: 'level3', 'level4', 'lifeform_veg_cat_l4a', 
-        'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
-        'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 
-        'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'.
-    colour_bar : bool, optional
-        Controls if colour bar labels are returned as a list for 
-        plotting a colour bar. Default: False.
+    # ensure a valid colour scheme was requested
+    assert (
+        (measurement in lc_colours.keys())   # either in main colour scheme dictionary 
+        or (measurement in lc_colours_mapping.keys())  # or in mapping dictionary for descriptors  
+        or (measurement in aliases.keys()) # or short aliases of descriptors
+        ), f'colour scheme must be one of {lc_colours.keys()} {lc_colours_mapping.keys()} {aliases.keys()} (got "{measurement}")'
+
+    # if a descriptor colour scheme is required, use the _descriptors_colours function
+    if measurement in lc_colours_mapping:
+        colour_scheme=_descriptors_colours(lc_colours,lc_colours_mapping, measurement)
         
+    else: # else, use standard colours scheme
+        colour_scheme = lc_colours[measurement] 
+
+    return colour_scheme
+
+
+
+def _reduce_colour_scheme(colour_scheme):
+    """
+    Takes a colour scheme dictionary and returns the dictionary without duplicate values. 
+    This also replaces classes values with subsequent integers, useful for placing ticks of colourbar on the side
+    """
+
+    # foundation of the output dictionary
+    reduced_scheme = {} 
+
+    # empty list to be filled with names of classes added to the output dictionary
+    classes_added = [] 
+
+    new_key = 2 # key 1 was added earlier and corresponds with "no data"
+    
+    for key, value in colour_scheme.items():
+        # get string with class name
+        class_name = value[4] 
+    
+        if (class_name not in classes_added): # check if already added in list
+            classes_added.append(class_name)
+
+            # assign the colour scheme and label to a new key in reduced_scheme
+            reduced_scheme[new_key] = value 
+            # increase value of new_key for next iteration
+            new_key += 1 
+            
+    return reduced_scheme
+
+
+
+def lc_colourmap(colour_scheme):
+    """
+    Takes a colour scheme dictionary and returns colormap for matplotlib
+    
     Returns
     ---------
     cmap : matplotlib colormap
@@ -458,135 +405,144 @@ def lc_colourmap(colour_scheme, colour_bar=False):
         Matplotlib colormap index based on the discrete intervals of the
         classes in the specified DEA Land Cover measurement. Ensures the
         colormap maps the colours to the class numbers correctly.
-    cblables : array
-        A two dimentional array containing the numerical class values
-        (first dim) and string labels (second dim) of the classes found
-        in the chosen DEA Land Cover measurement.
     """
-
-
-    colour_scheme = colour_scheme.lower()
-
-    # if a descriptor colour scheme is required, use the descriptors_colours function
-    if colour_scheme in lc_colours_mapping:
-        lc_colour_scheme=descriptors_colours(lc_colours,lc_colours_mapping, colour_scheme)
-
-    else: # standard colours scheme
-        lc_colour_scheme = lc_colours[colour_scheme] 
-        # Ensure a valid colour scheme was requested
-        assert (colour_scheme in lc_colours.keys(
-                )), f'colour scheme must be one of [{lc_colours.keys()}] (got "{colour_scheme}")'
-
-
-    # Create colour map
-    colour_arr = []
-    for key, value in lc_colour_scheme.items():  
-        colour_arr.append(np.array(value[:-2]) / 255)
-        
-    cmap = mcolours.ListedColormap(colour_arr)
-    bounds = list(lc_colour_scheme)
     
-    if colour_bar == True:
-        if colour_scheme == 'level4':
-            # Set colour labels to shortened level 4 list
-            lc_colour_scheme = lc_colours['level4_colourbar_labels']
-        cb_ticks = list(lc_colour_scheme)
-        #print(f'CB_TICKS {cb_ticks}')
-        cb_labels = []
-        for x in cb_ticks:
-            cb_labels.append(lc_colour_scheme[x][4])
+    colour_arr = [] # empty list to be populated with colours
+    for key, value in colour_scheme.items():  
+        colour_arr.append(np.array(value[:-2]) / 255) # add colour to list
 
+    # create a colour map from the list of colours
+    cmap = mcolours.ListedColormap(colour_arr) 
+
+    # create boundaries of colours by using the exact class values and adding a larger value at the end
+    bounds = list(colour_scheme)
     bounds.append(bounds[-1]+1)
 
-    # shift all back by 0.5 to make sure level4 values are within bounds and not mathcing exactly one bound
+    # shift all boundaries back by 0.5 to make sure level4 values are within bounds
+    # this is a robust method to make sure each value is within a colour bin
     bounds = [i-0.5 for i in bounds]
-    
+
+    # normalisation for colourmap
     norm = mcolours.BoundaryNorm(np.array(bounds), cmap.N)
+    
+    return (cmap, norm)
 
-    if colour_bar == False:
-        return (cmap, norm)
-    else:
-        return (cmap, norm, cb_labels, cb_ticks)
+    
 
-
-
-def lc_colourmap_colourbar(colour_scheme, colour_bar=False):
+def _legend_colourmap(colour_scheme):
     """
-    Returns colour map and normalisation for the provided DEA Land Cover
-    measurement, for use in plotting with Matplotlib library
+    Returns colour map and normalisation specifcially for the colourbar 
+    of the provided DEA Land Cover measurement, for use in plotting with Matplotlib library
+
+    Parameters
+    ----------
+    colour_scheme : dictionary with colour scheme  
+    
+    Returns
+    ---------
+    cb_cmap : matplotlib colormap
+        Matplotlib colormap containing the colour scheme for the
+        specified DEA Land Cover measurement.
+    cb_norm : matplotlib colormap index
+        Matplotlib colormap index based on the discrete intervals of the
+        classes in the specified DEA Land Cover measurement. Ensures the
+        colormap maps the colours to the class numbers correctly. 
+    cb_labels : list
+        string labels of the classes found
+        in the chosen DEA Land Cover measurement.
+    cb_ticks : list
+        position of ticks in colour bar
+        
+    """
+    
+    # delete duplicates to create colour bar (this effectively applies only with descriptors), 
+    # and fix values for correct colourbar label positioning
+    colour_scheme = _reduce_colour_scheme(colour_scheme) 
+
+    cb_cmap, cb_norm = lc_colourmap(colour_scheme)
+
+    cb_ticks = list(colour_scheme)
+    cb_labels = []
+    for x in cb_ticks:
+        cb_labels.append(colour_scheme[x][4])
+        
+    return (cb_cmap, cb_norm, cb_labels, cb_ticks)
+    
+
+
+def make_colourbar(fig, ax, measurement,  labelsize=10, horizontal=False, animation=False): # in practice, horizontal arg in never used, currently
+    """
+    Adds a new colorbar with appropriate land cover colours and labels.
+
+    For DEA Land Cover Level 4 data, this function must be used with a double plot. 
+    The 'ax' should be on the left side of the figure, and the colour bar will added 
+    on the right hand side.
     
     Parameters
     ----------
-    colour_scheme : string
-        Name of land cover colour scheme to use
-        Valid options: 'level3', 'level4', 'lifeform_veg_cat_l4a', 
-        'canopyco_veg_cat_l4d', 'watersea_veg_cat_l4a_au',
-        'waterstt_wat_cat_l4a', 'inttidal_wat_cat_l4a', 
-        'waterper_wat_cat_l4d_au', 'baregrad_phy_cat_l4d_au'.
-    colour_bar : bool, optional
-        Controls if colour bar labels are returned as a list for 
-        plotting a colour bar. Default: False.
-        
+    fig : matplotlib figure
+        Figure to add colourbar to
+    ax : matplotlib ax
+        Matplotlib figure ax to add colorbar to.
+    measurement : string
+        name of layer or descriptor of interest
+    labelsize : int
+        size of labels of colourbar
+
     Returns
-    ---------
-    cmap : matplotlib colormap
-        Matplotlib colormap containing the colour scheme for the
-        specified DEA Land Cover measurement.
-    norm : matplotlib colormap index
-        Matplotlib colormap index based on the discrete intervals of the
-        classes in the specified DEA Land Cover measurement. Ensures the
-        colormap maps the colours to the class numbers correctly.
-    cblables : array
-        A two dimentional array containing the numerical class values
-        (first dim) and string labels (second dim) of the classes found
-        in the chosen DEA Land Cover measurement.
+    ----------
+    matplotlib colorbar in its own colour axis
     """
 
+    if measurement == 'level4':
+        colour_scheme = lc_colours['level4_colourbar_labels']  # use shorten labels dictionary
+        
+        if animation == True:
+            # special spacing settings for level 4
+            cax = fig.add_axes([0.62, 0.05, 0.02, 0.90]) # parameters for add_axes are [left, bottom, width, height], in fractions of total plot
+            orient = 'vertical'
+            # get level 4 colour bar colour map ect
+            cb_cmap, cb_norm, cb_labels, cb_ticks = _legend_colourmap(colour_scheme)
+            
+        elif animation == False:
+            #move plot over to make room for colourbar
+            fig.subplots_adjust(right=0.825)
+            # Settings for axis positions
+            cax = fig.add_axes([0.84, 0.145, 0.02, 0.70])
+            orient = 'vertical'
+            # get level 4 colour bar colour map ect
+            cb_cmap, cb_norm, cb_labels, cb_ticks = _legend_colourmap(colour_scheme)
+        
+    else: #for all other measurements 
+        colour_scheme = get_colour_scheme(measurement) # use standard colour scheme
+        
+        #move plot over to make room for colourbar
+        fig.subplots_adjust(right=0.825)
 
-    colour_scheme = colour_scheme.lower()
-    # Ensure a valid colour scheme was requested
-#     try:
-    assert (colour_scheme in lc_colours.keys(
-    )), f'colour scheme must be one of [{lc_colours.keys()}] (got "{colour_scheme}")'
+        # settings for different axis positions
+        if horizontal:
+            cax = fig.add_axes([0.02, 0.05, 0.90, 0.03])
+            orient = 'horizontal'
+        else:
+            cax = fig.add_axes([0.84, 0.145, 0.02, 0.70])
+            orient = 'vertical'
+            
+        # get measurement colour bar colour map ect
+        cb_cmap, cb_norm, cb_labels, cb_ticks = _legend_colourmap(colour_scheme)
 
-#     ('The dataset provided does not have a valid '
-#     'name. Please specify which DEA Landcover measurement is being plotted '
-#     'by providing the name using the "measurement" variable. For example (measurement = "full_classification")')
+    img = ax.imshow([cb_ticks], cmap=cb_cmap, norm=cb_norm)
+    cb = fig.colorbar(img, cax=cax, orientation=orient)
 
-    # Get colour definitions
-    lc_colour_scheme = lc_colours[colour_scheme]  
-
-    # Create colour map
-    colour_arr = []
-    for key, value in lc_colour_scheme.items():
-        colour_arr.append(np.array(value[:-2]) / 255)
-
-    cmap = mcolours.ListedColormap(colour_arr)
-    bounds = list(lc_colour_scheme)
-
-    if colour_bar == True:
-        if colour_scheme == 'level4':
-            # Set colour labels to shortened level 4 list
-            lc_colour_scheme = lc_colours['level4_colourbar_labels']
-        cb_ticks = list(lc_colour_scheme)
-        #print(f'CB_TICKS {cb_ticks}')
-        cb_labels = []
-        for x in cb_ticks:
-            cb_labels.append(lc_colour_scheme[x][4])
-
-    bounds.append(bounds[-1]+1)
-    norm = mcolours.BoundaryNorm(np.array(bounds), cmap.N)
-
-    if colour_bar == False:
-        return (cmap, norm)
-    else:
-        return (cmap, norm, cb_labels, cb_ticks)
+    cb.ax.tick_params(labelsize=labelsize)
+    cb.set_ticks(cb_ticks)
+    cb.set_ticklabels(cb_labels)
 
 
 
-def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
+def plot_land_cover(data, labelsize=10, year=None, measurement=None, out_width=15, cols=4,):
     """
     Plot a single land cover measurement with appropriate colour scheme.
+    
     Parameters
     ----------
     data : xarray.DataArray
@@ -596,22 +552,25 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         all time slices are plotted.
     measurement : string, optional
         Name of the DEA land cover classification to be plotted. Passed to 
-        lc_colourmap to specify which colour scheme will be used. If non 
+        _legend_colourmap to specify which colour scheme will be used. If non 
         provided, reads data array name from `da` to determine.
+    out_width : integer, optional
+        It controls the size of the output
+    cols: integer, optional
+        Sets number of columns if multiple time steps are visualised
+
+    Returns
+    ---------
+    Matplotlib image
+        
     """
+
     # get measurement name
-    measurement = get_layer_name(measurement, data)
+    measurement = _get_layer_name(measurement, data)
 
-    # get colour map, normalisation
-    try:
-        cmap, norm = lc_colourmap(measurement)
-    except AssertionError:
+    colour_scheme = get_colour_scheme(measurement)
 
-        raise KeyError('Could not automatically determine colour scheme from'
-                       f'DataArray name {measurement}. Please specify which '
-                       'DEA Landcover measurement is being plotted by providing'
-                       'the name using the "measurement" variable For example'
-                       '(measurement = "level4")')
+    cmap, norm = lc_colourmap(colour_scheme)
 
     height, width = data.geobox.shape
     scale = out_width / width
@@ -626,16 +585,16 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         
         fig, ax = plt.subplots()
         fig.set_size_inches(width * scale, height * scale)
-        make_colorbar(fig, ax, measurement)
+        make_colourbar(fig, ax, measurement, labelsize) 
         im = ax.imshow(data.values, cmap=cmap, norm=norm, interpolation="nearest")
 
-    
     elif len(data.time) == 1:
         #plotting protocol if only one timestep is passed and not a year variable
         fig, ax = plt.subplots()
         fig.set_size_inches(width * scale, height * scale)
-        make_colorbar(fig, ax, measurement)
+        make_colourbar(fig, ax, measurement, labelsize)
         im = ax.imshow(data.isel(time=0), cmap=cmap, norm=norm, interpolation="nearest")
+        
     else:
         #plotting protocol if multible time steps are passed to plot
         if cols > len(data.time):
@@ -646,7 +605,7 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
         fig.set_size_inches(
             width * scale, (height * scale / cols) * (len(data.time) / cols))
 
-        make_colorbar(fig, ax.flat[0], measurement)
+        make_colourbar(fig, ax.flat[0], measurement, labelsize)
 
         for a, b in enumerate(ax.flat):
             if a < data.shape[0]:
@@ -656,67 +615,8 @@ def plot_land_cover(data, year=None, measurement=None, out_width=15, cols=4,):
     return im
 
 
-def lc_animation(
-        da,
-        file_name="default_animation",
-        measurement=None,
-        stacked_plot=False,
-        colour_bar=False,
-        animation_interval=500,
-        width_pixels=10,
-        dpi=150,
-        font_size=15,
-        label_ax=True,
-):
-    """
-    Creates an animation of DEA Landcover though time beside 
-    corresponding stacked plots of the landcover classes. Saves the
-    animation to a file and displays the animation in notebook.
-    
-    Parameters
-    ----------
-    da : xarray.DataArray
-        An xarray.DataArray containing a multi-date stack of 
-        observations of a single landcover level.
-    file_name: string, optional.
-        string used to create filename for saved animation file.
-        Default: "default_animation" code adds .gif suffix.
-    measurement : string, optional
-        Name of the DEA land cover classification to be plotted. Passed to 
-        lc_colourmap to specify which colour scheme will ve used. If non 
-        provided, reads data array name from `da` to determine.
-    stacked_plot: boolean, optional
-        Determines if a stacked plot showing the percentage of area
-        taken up by each class in each time slice is added to the
-        animation. Default: False.
-    colour_bar : boolean, Optional
-        Determines if a colour bar is generated for the stand alone 
-        animation. This is NOT recommended for use with level 4 data. 
-        Does not work with stacked plot. Default: False.
-    animation_interval : int , optional
-        How quickly the frames of the animations should be re-drawn. 
-        Default: 500.
-    width_pixels : int, optional
-        How wide in pixles the animation plot should be. Default: 10.
-    dpi : int, optional
-        Stands for 'Dots Per Inch'. Passed to the fuction that saves the
-        animation and determines the resolution. A higher number will
-        produce a higher resolution image but a larger file size and
-        slower processing. Default: 150.
-    font_size : int, optional. 
-        Controls the size of the text which indicates the year
-        displayed. Default: 15.
-    label_ax : boolean, optional
-        Determines if animation plot should have tick marks and numbers
-        on axes. Also removes white space around plot. default: True
 
-        
-    Returns
-    -------
-    A GIF (.gif) animation file.
-    """
-
-    def calc_class_ratio(da, measurement):
+def _calc_class_ratio(da, measurement):
         """
         Creates a table listing year by year what percentage of the
         total area is taken up by each class.
@@ -724,6 +624,7 @@ def lc_animation(
         ----------
         da : xarray.DataArray with time dimension
         measurement: string with name of descriptor/measurement
+        
         Returns
         -------
         Pandas Dataframe : containing class percentages per year
@@ -733,11 +634,11 @@ def lc_animation(
         list_classes = (np.unique(da, return_counts=False)).tolist()
         
         # if a descriptor colour scheme is required, list_classes need to be chnaged to contain only classes of that descriptor
-        # the following code uses the descriptors_colours function to get the colours scheme and then the values of the descriptor of interest
+        # the following code uses the _descriptors_colours function to get the colours scheme and then the values of the descriptor of interest
         if measurement in lc_colours_mapping:
-            lc_colour_scheme=descriptors_colours(lc_colours,lc_colours_mapping, measurement)
-            # sort based on first RGB colour, so stack plot will show same colours next to each other
-            lc_colour_scheme= dict(sorted(lc_colour_scheme.items(), key=lambda item: item[1][0]))
+            lc_colour_scheme=_descriptors_colours(lc_colours,lc_colours_mapping, measurement)
+            # sort based on RGB colour, so stack plot will show same colours next to each other
+            lc_colour_scheme= dict(sorted(lc_colour_scheme.items(), key=lambda item: item[1][0:3]))
             # create list of values
             all_classes_descriptor = list(lc_colour_scheme.keys())
             # out of all possible classes of that descriptor, keep only the ones actually in the data array
@@ -763,39 +664,92 @@ def lc_animation(
 
             # add each year's counts to dataframe
             ratio_table.loc[date] = date_line
+            
         return ratio_table
 
-    def rgb_to_hex(r, g, b):
-        hex = "#%x%x%x" % (r, g, b)
-        if len(hex) < 7:
-            hex = "#0" + hex[1:]
-        return hex
 
-    measurement = get_layer_name(measurement, da)
 
+def lc_animation(
+        da,
+        file_name="default_animation",
+        measurement=None,
+        stacked_plot=False,
+        colour_bar=False,
+        animation_interval=500,
+        width_pixels=10,
+        dpi=150,
+        font_size=15,
+        label_size = 15,
+        label_ax=True,
+):
+    """
+    Creates an animation of DEA Landcover though time beside 
+    corresponding stacked plots of the landcover classes. Saves the
+    animation to a file and displays the animation in notebook.
+    
+    Parameters
+    ----------
+    da : xarray.DataArray
+        An xarray.DataArray containing a multi-date stack of 
+        observations of a single landcover level.
+    file_name: string, optional.
+        string used to create filename for saved animation file.
+        Default: "default_animation" code adds .gif suffix.
+    measurement : string, optional
+        Name of the DEA land cover classification to be plotted. Passed to 
+        _legend_colourmap to specify which colour scheme will be used. If non 
+        provided, reads data array name from `da` to determine.
+    stacked_plot: boolean, optional
+        Determines if a stacked plot showing the percentage of area
+        taken up by each class in each time slice is added to the
+        animation. Default: False.
+    colour_bar : boolean, Optional
+        Determines if a colour bar is generated for the stand alone 
+        animation. This is NOT recommended for use with level 4 data. 
+        Does not work with stacked plot. Default: False.
+    animation_interval : int , optional
+        How quickly the frames of the animations should be re-drawn. 
+        Default: 500.
+    width_pixels : int, optional
+        How wide in pixles the animation plot should be. Default: 10.
+    dpi : int, optional
+        Stands for 'Dots Per Inch'. Passed to the fuction that saves the
+        animation and determines the resolution. A higher number will
+        produce a higher resolution image but a larger file size and
+        slower processing. Default: 150.
+    font_size : int, optional. 
+        Controls the size of the text on the axes and colour bar. Default: 15.
+    label_size : int, optional. 
+        Controls the size of the text which indicates the year
+        displayed. Default: 15.
+    label_ax : boolean, optional
+        Determines if animation plot should have tick marks and numbers
+        on axes. Also removes white space around plot. default: True
+
+        
+    Returns
+    -------
+    A GIF (.gif) animation file.
+    """
     # Add gif to end of filename
     file_name = file_name + ".gif"
-
-        # Create colour map and normalisation for specified lc measurement
-    try:
-        layer_cmap, layer_norm, cb_labels, cb_ticks = lc_colourmap(
-            measurement, colour_bar=True)
-    except AssertionError:
-
-        raise KeyError(f'Could not automatically determine colour scheme from '
-                   f'DataArray name {measurement}. Please specify which '
-                   'DEA Landcover measurement is being plotted by providing '
-                   'the name using the "measurement" variable For example '
-                   '(measurement = "level4")')
     
-    # Prepare variables needed
-    # Get info on dataset dimensions
+    # get long name of measurement/variable
+    measurement = _get_layer_name(measurement, da)
+
+    # get colour scheme
+    colour_scheme = get_colour_scheme(measurement)
+
+    # Create colour map and normalisation for specified lc measurement
+    layer_cmap, layer_norm = lc_colourmap(colour_scheme)
+
+    # Get info on dataset dimensions and define size of output
     height, width = da.geobox.shape
     scale = width_pixels / width
     left, bottom, right, top = da.geobox.extent.boundingbox
     extent = [left, right, bottom, top]
 
-    outline = [patheffects.withStroke(linewidth=2.5, foreground="black")]
+    # settings for the label showed on top of the images
     annotation_defaults = {
         "xy": (1, 1),
         "xycoords": "axes fraction",
@@ -803,96 +757,54 @@ def lc_animation(
         "textcoords": "offset points",
         "horizontalalignment": "right",
         "verticalalignment": "top",
-        "fontsize": font_size,
+        "fontsize": label_size, 
         "color": "white",
-        "path_effects": outline,
+        "path_effects": [patheffects.withStroke(linewidth=1, 
+                                                foreground="black")],
     }
 
+    
     # Get information needed to display the year in the top corner
     times_list = da.time.dt.strftime("%Y").values
     text_list = [False] * len(times_list)
     annotation_list = ["\n".join([str(i) for i in (a, b) if i])
                        for a, b in zip(times_list, text_list)]
 
-    if stacked_plot == True:
+
+    if stacked_plot == True: # if need to add stacked line plot on the right
         
         # Create table for stacked plot
-        stacked_plot_table = calc_class_ratio(da, measurement)
+        stacked_plot_table = _calc_class_ratio(da, measurement)
 
         # Build colour list of hex vals for stacked plot
+        def _rgb_to_hex(r, g, b):
+            hex = "#%x%x%x" % (r, g, b)
+            if len(hex) < 7:
+                hex = "#0" + hex[1:]
+            return hex
+
         hex_colour_list = []
-
-        if measurement in lc_colours_mapping: # if descriptor
-            colour_def=descriptors_colours(lc_colours,lc_colours_mapping, measurement)
-        else:  # if level 3 or 4
-            colour_def = lc_colours[measurement]
-
-        # Custom error message to help if user puts incorrect measurement name
         for val in list(stacked_plot_table):
-            try:
-                r, g, b = colour_def[val][0:3]
-            except KeyError:
-                raise KeyError(
-                    "class number not found in colour definition. "
-                    "Ensure measurement name provided matches the dataset being used")
-            hex_val = rgb_to_hex(r, g, b)
+            r, g, b = colour_scheme[val][0:3]
+            hex_val = _rgb_to_hex(r, g, b)
             hex_colour_list.append(hex_val)
 
-        # Define & set up figure
+        # Define & set up figure (two axes: the LC array and the stacked line plot)
         fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
         fig.set_size_inches(width * scale * 2, height * scale, forward=True)
-        fig.set_constrained_layout_pads(
-            w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
+        fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
+
+        # set the size of the ticks labels using font_size
         ax1.tick_params(axis='both', which='major', labelsize=font_size)
         ax2.tick_params(axis='both', which='major', labelsize=font_size)
-        ax1.yaxis.get_offset_text().set_fontsize(font_size)
 
-        # This function is called at regular intervals with changing i
-        # values for each frame
-        def _update_frames(i, ax1, ax2, extent, annotation_text,
-                           annotation_defaults, cmap, norm):
-            # Clear previous frame to optimise render speed and plot imagery
-            ax1.clear()
-            ax2.clear()
+        # define list of axes to use in anim_fargs and, in turn, in _update_frames
+        axes = [ax1,ax2]
+ 
 
-            ax1.imshow(da[i, ...], cmap=cmap, norm=norm,
-                       extent=extent, interpolation="nearest")
-            if(not label_ax):
-                ax1.set_axis_off()
-
-            clipped_table = stacked_plot_table.iloc[: int(i + 1)]
-            data = clipped_table.to_dict(orient="list")
-            date = clipped_table.index
-
-            ax2.stackplot(date, data.values(), colors=hex_colour_list)
-            ax2.tick_params(axis="x", labelrotation=-90)
-            ax2.margins(x=0, y=0)
-
-            # Add annotation text
-            ax1.annotate(annotation_text[i], **annotation_defaults)
-            ax2.annotate(annotation_text[i], **annotation_defaults)
-
-            ax1.yaxis.get_offset_text().set_fontsize(font_size)
-
-
-        # anim_fargs contains all the values we send to our
-        # _update_frames function.
-        # Note the layer_cmap and layer_norm which were calculated
-        # earlier being passed through
-        anim_fargs = (
-            ax1,
-            ax2,  # axis to plot into
-            [left, right, bottom, top],  # imshow extent
-            annotation_list,
-            annotation_defaults,
-            layer_cmap,
-            layer_norm,
-        )
-
-    else:  # stacked_plot = False
+    else:  # i.e., stacked_plot == False
 
         # if plotting level 4 with colourbar
-
         if measurement == 'level4' and colour_bar == True:
 
             # specific setting to fit level 4 colour bar beside the plot
@@ -902,69 +814,106 @@ def lc_animation(
             # Define & set up figure, two subplots so colour bar fits :)
             fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi,
                                            constrained_layout=True, gridspec_kw={'width_ratios': [3, 1]})
-            fig.set_size_inches(width * scale * 2,
-                                height * scale, forward=True)
-            fig.set_constrained_layout_pads(
-                w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
-            ax1.tick_params(axis='both', which='major', labelsize=font_size)
-            ax2.tick_params(axis='both', which='major', labelsize=font_size)
-            ax1.yaxis.get_offset_text().set_fontsize(font_size)
-            
+            fig.set_size_inches(width * scale * 2, height * scale, forward=True)
+            fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
+
             # make colour bar
             # provide left hand canvas to colour bar fuction which is where the image will go
             # colourbar will plot on right side beside it
-
-            make_colorbar(fig, ax1, measurement, labelsize=font_size, animation=True)
+            make_colourbar(fig, ax1, measurement, labelsize=font_size, animation=True)
 
             # turn off lines for second plot so it's not ontop of colourbar
             ax2.set_axis_off()
 
         # plotting any other measurement with or with-out colour bar or level 4 without
         else:
-
             # Define & set up figure
             fig, ax1 = plt.subplots(1, 1, dpi=dpi)
-            fig.set_size_inches(width * scale * 1.3, height * scale, forward=True)
-            ax1.tick_params(axis='both', which='major', labelsize=font_size)
-            ax1.yaxis.get_offset_text().set_fontsize(font_size)
+            fig.set_size_inches(width * scale, height * scale, forward=True)
             
             if(not label_ax):
                 fig.subplots_adjust(left=0, bottom=0, right=1,
                                     top=1, wspace=None, hspace=None)
-            # Add colourbar here
+            # make colourbar if required
             if colour_bar:
-                make_colorbar(fig, ax1, measurement, labelsize=font_size)
+                make_colourbar(fig, ax1, measurement, labelsize=font_size)
 
+        # set the size of the ticks labels using font_size
+        ax1.tick_params(axis='both', which='major', labelsize=font_size)
+            
+        # define list of axes to use in anim_fargs and, in turn, in _update_frames
+        axes = [ax1]
 
-        # This function is called at regular intervals with changing i
-        # values for each frame
-        def _update_frames(i, ax1, extent, annotation_text,
-                           annotation_defaults, cmap, norm):
-            # Clear previous frame to optimise render speed and plot imagery
-            ax1.clear()
-            ax1.imshow(da[i, ...], cmap=cmap, norm=norm,
-                       extent=extent, interpolation="nearest")
-            if(not label_ax):
-                ax1.set_axis_off()
+        
 
+    #################################################################
+    #### This function is called at the end at regular intervals ####
+    #### with changing i values for each frame                   ####
+    #################################################################
+    def _update_frames(i, axes, extent, annotation_text,
+                       annotation_defaults, cmap, norm):
+
+        ax1 = axes[0] # at least one axis is always present
+        
+        # Clear previous frame to optimise render speed and plot imagery
+        ax1.clear()
+        
+        # Add annotation text
+        ax1.annotate(annotation_text[i], **annotation_defaults)
+
+        # Generate image
+        ax1.imshow(da[i, ...], cmap=cmap, norm=norm,
+                   extent=extent, interpolation="nearest")
+
+        # set size of 1e6 using font_size
+        ax1.yaxis.get_offset_text().set_fontsize(font_size)
+        ax1.xaxis.get_offset_text().set_fontsize(font_size)
+        
+        # if asked that axes have no labels, remove them
+        if(not label_ax): 
+            ax1.set_axis_off()
+
+        try: # this will fail and be skipped if a second axes (i.e. stacked line plot) does not exist
+            ax2 = axes[1]  
+            ax2.clear()
+
+            # get the classes ratio up to the current time step i
+            clipped_table = stacked_plot_table.iloc[: int(i + 1)]
+            data = clipped_table.to_dict(orient="list")
+            date = clipped_table.index
+    
+            # add stacked line plot to axes 2
+            ax2.stackplot(date, data.values(), colors=hex_colour_list)
+            ax2.tick_params(axis="x", labelrotation=-90)
+            ax2.margins(x=0, y=0)
+    
             # Add annotation text
-            ax1.annotate(annotation_text[i], **annotation_defaults)
-            ax1.yaxis.get_offset_text().set_fontsize(font_size)
+            ax2.annotate(annotation_text[i], **annotation_defaults)
 
-        # anim_fargs contains all the values we send to our
-        # _update_frames function.
-        # Note the layer_cmap and layer_norm which were calculated
-        # earlier being passed through
-        anim_fargs = (
-            ax1,
-            [left, right, bottom, top],  # imshow extent
-            annotation_list,
-            annotation_defaults,
-            layer_cmap,
-            layer_norm,
+            # set size of 1e6 using font_size
+            ax2.yaxis.get_offset_text().set_fontsize(font_size)
+            ax2.xaxis.get_offset_text().set_fontsize(font_size)
+            
+        except:
+            pass
+    #################################################################
+    #################################################################
+
+
+    
+    # anim_fargs contains all the values we send to our
+    # _update_frames function.
+    anim_fargs = (
+        axes, 
+        [left, right, bottom, top],  # imshow extent
+        annotation_list,
+        annotation_defaults,
+        layer_cmap,
+        layer_norm,
         )
 
-    # Animate
+    
+    # create animation
     anim = FuncAnimation(
         fig=fig,
         func=_update_frames,
@@ -974,6 +923,9 @@ def lc_animation(
         repeat=False,
     )
 
+    # save animation
     anim.save(file_name, writer="pillow", dpi=dpi)
+    
     plt.close()
+
     return Image(filename=file_name)
