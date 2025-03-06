@@ -697,7 +697,7 @@ def lc_animation(
         Default: "default_animation" code adds .gif suffix.
     measurement : string, optional
         Name of the DEA land cover classification to be plotted. Passed to 
-        _legend_colourmap to specify which colour scheme will ve used. If non 
+        _legend_colourmap to specify which colour scheme will be used. If non 
         provided, reads data array name from `da` to determine.
     stacked_plot: boolean, optional
         Determines if a stacked plot showing the percentage of area
