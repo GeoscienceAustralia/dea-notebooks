@@ -31,13 +31,7 @@ jobs:
         with:
           separator: ' '
           files: '**/*.ipynb'
-          files_ignore: |
-            - **/Scalable_machine_learning/
-            - **/Estimate_climate_driver_influence_on_rainfall.ipynb
-            - **/Mapping_inundation_using_stream_gauges.ipynb
-            - **/Land_cover_pixel_drill.ipynb
-            - **/External_data_ERA5_Climate.ipynb
-            - **/Imagery_on_web_map.ipynb
+          files_ignore: 'How_to_guides/Imagery_on_web_map.ipynb'
 
       - name: Print changed notebook files
         if: steps.changed-notebooks.outputs.any_changed == 'true'
