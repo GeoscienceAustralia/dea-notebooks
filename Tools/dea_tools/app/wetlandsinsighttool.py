@@ -227,7 +227,6 @@ class wit_app(HBox):
             self.spatial_wit, "Animation (.gif)"
         )
 
-
         ####################################
         # UPDATE FUNCTIONS FOR EACH WIDGET #
         ####################################

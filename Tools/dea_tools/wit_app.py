@@ -3,7 +3,7 @@
 This module is for processing DEA wetlands data, including Spatial WIT.
 
 License: The code in this notebook is licensed under the Apache 
-License,Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). 
+License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). 
 Digital Earth Australia data is licensed under the Creative Commons 
 by Attribution 4.0 license 
 (https://creativecommons.org/licenses/by/4.0/).
@@ -180,13 +180,13 @@ def WIT_drill(
         inplace=False,
     )
 
-    # Divide Fractional Cover by 100 to keep them in [0,1]. Keeps data types the same in 
+    # Divide Fractional Cover by 100 to keep them in [0,1]. Keeps data types the same in
     # the output raster
     bs = ds_fc.bs / 100
     pv = ds_fc.pv / 100
     npv = ds_fc.npv / 100
 
-    # Generate the WIT raster bands by creating an empty dataset called `output_rast` and 
+    # Generate the WIT raster bands by creating an empty dataset called `output_rast` and
     # populate with values from input datasets
     rast_names = ["pv", "npv", "bs", "wet", "water"]
     output_rast = {n: xr.zeros_like(bs) for n in rast_names}
@@ -201,7 +201,7 @@ def WIT_drill(
     poly_raster = xr_rasterize(gdf, pv) > 0
 
     # Mask includes No data, Non contiguous data, Cloud shadow, Cloud, and water.
-    # See https://knowledge.dea.ga.gov.au/notebooks/DEA_products/DEA_Water_Observations/#Understanding-WOs-bit-flags 
+    # See https://knowledge.dea.ga.gov.au/notebooks/DEA_products/DEA_Water_Observations/#Understanding-WOs-bit-flags
     # for more detail.
     mask = (ds_wo.water & 0b01100011) == 0
     mask &= poly_raster
@@ -298,10 +298,10 @@ def classify_pixel(pv, npv, bs):
 
 def spatial_wit(ds, wetland_name):
     """
-    Takes Wetlands Insight Tool classifications and represents them in a spatial way. The 
-    same caveats for those classifications apply (see Dunn et al., 2023 and DEA 
-    Wetlands Insight Tool notebook). The water and wet classes are binary and the 
-    vegetation fractional cover classes are percentages per pixel, with the spatial 
+    Takes Wetlands Insight Tool classifications and represents them in a spatial way. The
+    same caveats for those classifications apply (see Dunn et al., 2023 and DEA
+    Wetlands Insight Tool notebook). The water and wet classes are binary and the
+    vegetation fractional cover classes are percentages per pixel, with the spatial
     representation scaled accordingly.
 
     Last modified: March 2025
@@ -324,7 +324,7 @@ def spatial_wit(ds, wetland_name):
     # Remove time steps where all values are missing (i.e. NaNs)
     ds = ds.dropna(dim="time", how="all")
 
-    # Calculate the sum of the fractional cover values for pv, npv and bs then normalise 
+    # Calculate the sum of the fractional cover values for pv, npv and bs then normalise
     # the values for each class
     fraction_sum = ds["pv"] + ds["npv"] + ds["bs"]
     ds["pv"] = ds["pv"] / fraction_sum
@@ -345,7 +345,7 @@ def spatial_wit(ds, wetland_name):
     # Add the new classification band to the dataset
     ds["fc_class"] = fc_class
 
-    # Make a new band called wetland that combines all the fractional cover classes 
+    # Make a new band called wetland that combines all the fractional cover classes
     # with the water and wet classes
     # i.e. water == 10, wet == 9, all other areas retain original FC class
     wetland = ds["fc_class"].where((ds["water"] == 0) | ds["water"].isnull(), 10)
