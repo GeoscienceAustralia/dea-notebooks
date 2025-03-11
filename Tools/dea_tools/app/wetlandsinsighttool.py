@@ -95,8 +95,6 @@ class wit_app(HBox):
         self.action = None
         self.gdf_drawn = None
         self.gdf_uploaded = None
-        # self.mingooddata = 85
-        # self.resamplingfreq = "1M"
         self.max_size = False
         self.spatial_wit = False
 
@@ -228,8 +226,7 @@ class wit_app(HBox):
         output_spatial_wit = deawidgets.create_checkbox(
             self.spatial_wit, "Animation (.gif)"
         )
-        # min_good_data = deawidgets.create_boundedfloattext(self.mingooddata, 0, 100, 5)
-        # resampling_freq = deawidgets.create_inputtext(self.resamplingfreq, self.resamplingfreq)
+
 
         ####################################
         # UPDATE FUNCTIONS FOR EACH WIDGET #
@@ -247,8 +244,6 @@ class wit_app(HBox):
         fileupload_wetlands.observe(self.update_fileupload_wetlands, "value")
         max_size.observe(self.update_maxsize, "value")
         output_spatial_wit.observe(self.update_outputspatialwit, "value")
-        # min_good_data.observe(self.update_mingooddata, "value")
-        # resampling_freq.observe(self.update_resamplingfreq, "value")
 
         ##################################
         # COLLECTION OF ALL APP CONTROLS #
@@ -261,10 +256,6 @@ class wit_app(HBox):
                 max_size,
                 HTML("<b>Spatial WIT animation:<b/>"),
                 output_spatial_wit,
-                # HTML("<b>Minimum Good Data (%):</b>"),
-                # min_good_data,
-                # HTML("<b>" + ("Resampling Frequency:") + "</b>"),
-                # resampling_freq,
             ]
         )
 
@@ -453,14 +444,6 @@ class wit_app(HBox):
     def update_outputspatialwit(self, change):
         self.spatial_wit = change.new
 
-    # Set the min good data
-    # def update_mingooddata(self, change):
-    # self.mingooddata = change.new
-
-    # Set the resampling frequency
-    # def update_resamplingfreq(self, change):
-    #    self.resamplingfreq = change.new
-
     # Update product
     def update_deaoverlay(self, change):
 
@@ -487,13 +470,6 @@ class wit_app(HBox):
 
         # Set any defaults
         dask_chunks = dict(x=1000, y=1000, time=1)
-        # TCW_threshold = -0.035
-
-        # check resampling freq
-        # if self.resamplingfreq == "None":
-        # rsf = None
-        # else:
-        # rsf = self.resamplingfreq
 
         self.progress_header.value = "<h3>" + ("Progress") + "</h3>"
 
@@ -536,9 +512,6 @@ class wit_app(HBox):
                     ds_wit, df = WIT_drill(
                         gdf=wetlands_gdf,
                         time=(self.startdate, self.enddate),
-                        # min_gooddata=self.mingooddata,
-                        # resample_frequency=rsf,
-                        # TCW_threshold=TCW_threshold,
                         export_csv=output_csv,
                         dask_chunks=dask_chunks,
                         verbose=False,

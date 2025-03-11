@@ -53,9 +53,6 @@ client = create_local_dask_cluster(return_client=True)
 def WIT_drill(
     gdf,
     time,
-    # min_gooddata=0.85,
-    # TCW_threshold=-0.035,
-    # resample_frequency=None,
     export_csv=None,
     dask_chunks=None,
     verbose=False,
@@ -81,21 +78,6 @@ def WIT_drill(
     time : tuple
         A tuple containing the time range over which to run the WIT.
         e.g. ("2014-01-01", "2015-01-01")
-    min_gooddata : float, optional
-        A number between 0 and 1 (e.g 0.8) indicating the minimum percentage
-        of good quality pixels required for a satellite observation to be loaded
-        and therefore included in the WIT plot. This number should, at a minimum,
-        be set to 0.80 to limit biases in the result if not resampling the time-series.
-        If resampling the data using the parameter `resample_frequency`, then
-        setting this number to 0 (or a low float number) is acceptable.
-    TCW_threshold : integer, optional
-        The tasseled cap wetness threshold, beyond which a pixel will be
-        considered 'wet'. Default set to -0.035.
-    resample_frequency : string
-        Option for resampling time-series of input datasets. This option is useful
-        for either smoothing the WIT plot, or because the area of analysis is larger
-        than a scene width and therefore requires composites. Options include any
-        str accepted by `xarray.resample(time=)`. The resampling method used is .max()
     export_csv : string, optional
         To save the returned pandas dataframe as a .csv file, pass a location string (e.g.
         'output/results.csv')
