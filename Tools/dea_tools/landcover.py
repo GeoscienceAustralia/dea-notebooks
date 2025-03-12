@@ -555,7 +555,9 @@ def plot_land_cover(data, labelsize=10, year=None, measurement=None, out_width=1
         _legend_colourmap to specify which colour scheme will be used. If non 
         provided, reads data array name from `da` to determine.
     out_width : integer, optional
-        It controls the size of the output
+        Specifies the desired width of the output plot in inches. 
+        The height of the plot is scaled accordingly to maintain the 
+        correct aspect ratio of the data
     cols: integer, optional
         Sets number of columns if multiple time steps are visualised
 
@@ -676,7 +678,7 @@ def lc_animation(
         stacked_plot=False,
         colour_bar=False,
         animation_interval=500,
-        width_pixels=10,
+        out_width=20,
         dpi=150,
         font_size=15,
         label_size = 15,
@@ -710,8 +712,10 @@ def lc_animation(
     animation_interval : int , optional
         How quickly the frames of the animations should be re-drawn. 
         Default: 500.
-    width_pixels : int, optional
-        How wide in pixles the animation plot should be. Default: 10.
+    out_width : integer, optional
+        Specifies the desired width of the output plot in inches. 
+        The height of the plot is scaled accordingly to maintain the 
+        correct aspect ratio of the data 
     dpi : int, optional
         Stands for 'Dots Per Inch'. Passed to the fuction that saves the
         animation and determines the resolution. A higher number will
@@ -745,7 +749,7 @@ def lc_animation(
 
     # Get info on dataset dimensions and define size of output
     height, width = da.geobox.shape
-    scale = width_pixels / width
+    scale = out_width / width
     left, bottom, right, top = da.geobox.extent.boundingbox
     extent = [left, right, bottom, top]
 
@@ -791,7 +795,7 @@ def lc_animation(
 
         # Define & set up figure (two axes: the LC array and the stacked line plot)
         fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
-        fig.set_size_inches(width * scale * 2, height * scale, forward=True)
+        fig.set_size_inches(width * scale, height * scale / 2, forward=True)
         fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
 
         # set the size of the ticks labels using font_size
@@ -814,7 +818,7 @@ def lc_animation(
             # Define & set up figure, two subplots so colour bar fits :)
             fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi,
                                            constrained_layout=True, gridspec_kw={'width_ratios': [3, 1]})
-            fig.set_size_inches(width * scale * 2, height * scale, forward=True)
+            fig.set_size_inches(width * scale, height * scale / 2, forward=True)
             fig.set_constrained_layout_pads(w_pad=0.2, h_pad=0.2, hspace=0, wspace=0)
 
             # make colour bar
