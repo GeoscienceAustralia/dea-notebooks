@@ -25,13 +25,13 @@ transforms:
 
 products:
 
-    s2a_ard_granule_simple:
+    ga_s2am_ard_3_simple:
         recipe:
-            product: s2a_ard_granule
+            product: ga_s2am_ard_3
 
     s2a_nbart_rgb:
         recipe:
-            product: s2a_ard_granule
+            product: ga_s2am_ard_3
             measurements: [nbart_blue, nbart_green, nbart_red]
 
     s2a_nbart_rgb_renamed:
@@ -42,7 +42,7 @@ products:
                 green: nbart_green
                 red: nbart_red
             input:
-                product: s2a_ard_granule
+                product: ga_s2am_ard_3
                 measurements: [nbart_blue, nbart_green, nbart_red]
 
     s2a_nbart_rgb_nodata_masked:
@@ -59,17 +59,17 @@ products:
                     formula: nbart_red
                     dtype: float32
             input:
-                product: s2a_ard_granule
+                product: ga_s2am_ard_3
                 measurements: [nbart_blue, nbart_green, nbart_red]
 
     s2a_nbart_rgb_and_fmask:
         recipe:
-            product: s2a_ard_granule
+            product: ga_s2am_ard_3
             measurements: [nbart_blue, nbart_green, nbart_red, fmask]
 
     s2a_nbart_rgb_and_fmask_native:
         recipe:
-            product: s2a_ard_granule
+            product: ga_s2am_ard_3
             like: fmask
             measurements: [nbart_blue, nbart_green, nbart_red, fmask]
             resampling:
@@ -79,7 +79,7 @@ products:
     s2a_nbart_rgb_and_fmask_albers:
         recipe:
             &s2a_albers_recipe
-            product: s2a_ard_granule
+            product: ga_s2am_ard_3
             measurements: [nbart_blue, nbart_green, nbart_red, fmask]
             output_crs: EPSG:3577
             resolution: [-20, 20]
@@ -94,7 +94,7 @@ products:
             flags:
                 fmask: valid
             input:
-                product: s2a_ard_granule
+                product: ga_s2am_ard_3
                 measurements: [fmask]
 
     s2a_cloud_free_nbart_rgb_albers:
@@ -126,7 +126,7 @@ products:
                     flags:
                         fmask: valid
                     input:
-                        product: s2a_ard_granule
+                        product: ga_s2am_ard_3
                         measurements: [nbart_blue, nbart_green, nbart_red, fmask]
                         like: fmask
                         resampling: average
@@ -145,13 +145,13 @@ products:
                     formula: (nbart_nir_1 - nbart_red) / (nbart_nir_1 + nbart_red)
                     dtype: float32
             input:
-                product: s2a_ard_granule
+                product: ga_s2am_ard_3
                 measurements: [nbart_red, nbart_nir_1]
                 
     s2a_optical_albers:
         recipe:
             &s2a_optical_albers_recipe
-            product: s2a_ard_granule
+            product: ga_s2am_ard_3
             measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir_1, nbart_swir_2, nbart_swir_3]
             output_crs: EPSG:3577
             resolution: [-20, 20]
@@ -160,7 +160,7 @@ products:
     s2a_optical_and_fmask_albers:
         recipe:
             &s2a_optical_and_fmask_albers_recipe
-            product: s2a_ard_granule
+            product: ga_s2am_ard_3
             measurements: [nbart_blue, nbart_green, nbart_red, nbart_nir_1, nbart_swir_2, nbart_swir_3, fmask]
             output_crs: EPSG:3577
             resolution: [-20, 20]
@@ -219,7 +219,7 @@ products:
     s2_nbart_rgb:
         recipe:
             collate:
-              - product: s2a_ard_granule
+              - product: ga_s2am_ard_3
                 measurements: [nbart_blue, nbart_green, nbart_red]
-              - product: s2b_ard_granule
+              - product: ga_s2bm_ard_3
                 measurements: [nbart_blue, nbart_green, nbart_red]

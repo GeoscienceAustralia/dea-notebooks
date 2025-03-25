@@ -1,0 +1,79 @@
+# YAML 1.2
+---
+abstract: "The Digital Earth Australia notebooks and tools repository ('DEA notebooks') hosts Jupyter Notebooks, Python scripts and workflows for analysing Digital Earth Australia (DEA) satellite data and derived products. The repository is intended to provide a guide to getting started with DEA, and to showcase the wide range of geospatial analyses that can be achieved using DEA data and open-source software including Open Data Cube and xarray."
+authors: 
+  -
+    affiliation: "Geoscience Australia"
+    family-names: Krause
+    given-names: Claire
+    orcid: "https://orcid.org/0000-0002-6794-196X"
+  -
+    affiliation: "Geoscience Australia"
+    family-names: Dunn
+    given-names: Bex
+    orcid: "https://orcid.org/0000-0001-7747-8246"
+  -
+    affiliation: "Geoscience Australia"
+    family-names: "Bishop-Taylor"
+    given-names: Robbi
+    orcid: "https://orcid.org/0000-0002-1533-2599"
+  -
+    affiliation: FrontierSI
+    family-names: Adams
+    given-names: Caitlin
+  -
+    affiliation: "Geoscience Australia"
+    family-names: Burton
+    given-names: Chad
+  -
+    affiliation: "Geoscience Australia"
+    family-names: Alger
+    given-names: Matthew
+    orcid: "https://orcid.org/0000-0001-5110-8845"
+  -
+    affiliation: "Geoscience Australia"
+    family-names: Chua
+    given-names: Sean
+    orcid: "https://orcid.org/0000-0002-8462-3170"
+  -
+    family-names: Phillips
+    given-names: Claire
+  -
+    affiliation: "Geoscience Australia"
+    family-names: Newey
+    given-names: Vanessa
+    orcid: "https://orcid.org/0000-0003-3705-5665"
+  -
+    family-names: Kouzoubov
+    given-names: Kirill
+  -
+    affiliation: "Geoscience Australia"
+    family-names: Leith
+    given-names: Alex
+  -
+    affiliation: "Geoscience Australia"
+    family-names: Ayers
+    given-names: Damien
+  -
+    affiliation: FrontierSI
+    family-names: Hicks
+    given-names: Andrew
+  -
+    family-names: "DEA Notebooks contributors"
+    given-names: 
+cff-version: "1.1.0"
+date-released: 2021-03-30
+doi: "10.26186/145234"
+keywords: 
+  - "Digital Earth Australia"
+  - "Open Data Cube"
+  - "Jupyter notebooks"
+  - Xarray
+  - Python
+  - "Remote sensing"
+  - "Earth observation"
+license: "Apache-2.0"
+message: "If you use any of the notebooks, code or tools in this repository in your work, please reference them using the following citation:"
+repository-code: "https://github.com/GeoscienceAustralia/dea-notebooks/"
+title: "Digital Earth Australia notebooks and tools repository"
+version: "1.0.0"

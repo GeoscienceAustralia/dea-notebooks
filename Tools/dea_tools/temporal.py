@@ -1,7 +1,6 @@
 ## dea_temporal.py
-'''
-Description: This file contains a set of python functions for conducting
-temporal (time-domain) analyses on Digital Earth Australia.
+"""
+Conducting temporal (time-domain) analyses on Digital Earth Australia.
 
 License: The code in this notebook is licensed under the Apache License,
 Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
@@ -9,38 +8,31 @@ Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
 
 Contact: If you need assistance, please post a question on the Open Data
-Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
+Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the GIS Stack
 Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
 using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, file one on
-Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
-
-Functions included:
-    allNaN_arg
-    fast_completion
-    smooth
-    phenology statistics
-    xr_phenology
-    temporal_statistics
-    time_buffer
-    calculate_vector_stat
+GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
     
-'''
+Last modified: May 2024
+"""
 
 import sys
 import dask
+import dask.array as da
+import hdstats
+import warnings
 import numpy as np
 import xarray as xr
 import pandas as pd
-import hdstats
 import scipy.signal
 from scipy.signal import wiener
+from scipy.stats import t
 from packaging import version
-from datacube.utils.geometry import assign_crs
 
-sys.path.append("../Scripts")
+from datacube.utils.geometry import assign_crs
 
 
 def allNaN_arg(da, dim, stat):
@@ -49,16 +41,17 @@ def allNaN_arg(da, dim, stat):
     all-NaN slices. Fills all-NaN locations with an
     float and then masks the offending cells.
 
-    Params
-    ------
-    xarr : xarray.DataArray
-    dim : str, 
-            Dimension over which to calculate argmax, argmin e.g. 'time'
-    stat : str,
+    Parameters
+    ----------
+    da : xarray.DataArray
+    dim : str
+        Dimension over which to calculate argmax, argmin e.g. 'time'
+    stat : str
         The statistic to calculte, either 'min' for argmin()
         or 'max' for .argmax()
+
     Returns
-    ------
+    -------
     xarray.DataArray
     """
     # generate a mask where entire axis along dimension is NaN
@@ -73,57 +66,6 @@ def allNaN_arg(da, dim, stat):
         y = da.fillna(float(da.max() + 1))
         y = y.argmin(dim=dim, skipna=True).where(~mask)
         return y
-
-
-def fast_completion(da):
-    """
-    gap-fill a timeseries
-    """
-    if len(da.shape) == 1:
-        raise Exception("'fast_completion' does not currently operate on 1D timeseries")
-    # complete the timeseries (remove NaNs)
-    # grab coords etc
-    x, y, time, attrs = da.x, da.y, da.time, da.attrs
-
-    # reshape to satisfy function
-    da = da.transpose("y", "x", "time").values
-    
-    mask = np.isnan(da)
-    idx = np.where(~mask, np.arange(mask.shape[-1]), 0)
-    np.maximum.accumulate(idx, axis=-1, out=idx)
-    i, j = np.meshgrid(np.arange(idx.shape[0]),
-                       np.arange(idx.shape[1]),
-                       indexing="ij")
-    dat = da[i[:, :, np.newaxis], j[:, :, np.newaxis], idx]
-    if np.isnan(np.sum(dat[:, :, 0])):
-        fill = np.nanmean(dat, axis=-1)
-        for t in range(dat.shape[-1]):
-            mask = np.isnan(dat[:, :, t])
-            if mask.any():
-                dat[mask, t] = fill[mask]
-            else:
-                break
-                
-    #stack back into dataarray
-    dat = xr.DataArray(
-                dat,
-                attrs=attrs,
-                coords={
-                    "x": x,
-                    "y": y,
-                    "time": time
-                },
-                dims=["y", "x", "time"],
-            )
-    
-    return dat
-
-def smooth(da, k=3):
-    if len(da.shape) == 1:
-        raise Exception("'Smooth' does not currently operate on 1D timeseries")
-    da = da.transpose("y", "x", "time")
-    func = lambda arr, k: wiener(da, (1, 1, k))
-    return xr.apply_ufunc(func, da, k, dask='allowed')
 
 
 def _vpos(da):
@@ -154,13 +96,13 @@ def _aos(vpos, trough):
     return vpos - trough
 
 
-def _vsos(da, pos, method_sos="median"):
+def _vsos(da, pos, method_sos="first"):
     """
     vSOS = Value at the start of season
     Params
     -----
     da : xarray.DataArray
-    method_sos : str, 
+    method_sos : str,
         If 'first' then vSOS is estimated
         as the first positive slope on the
         greening side of the curve. If 'median',
@@ -175,7 +117,7 @@ def _vsos(da, pos, method_sos="median"):
     # find where the first order slope is postive
     pos_green_deriv = green_deriv.where(green_deriv > 0)
     # positive slopes on greening side
-    pos_greenup = greenup.where(pos_green_deriv)
+    pos_greenup = greenup.where(~np.isnan(pos_green_deriv))
     # find the median
     median = pos_greenup.median("time")
     # distance of values from median
@@ -187,8 +129,7 @@ def _vsos(da, pos, method_sos="median"):
 
     if method_sos == "median":
         # find index (argmin) where distance is smallest absolute value
-        idx = allNaN_arg(xr.ufuncs.fabs(distance), "time",
-                         "min").astype("int16")
+        idx = allNaN_arg(np.fabs(distance), "time", "min").astype("int16")
 
     return pos_greenup.isel(time=idx)
 
@@ -200,9 +141,9 @@ def _sos(vsos):
     return vsos.time.dt.dayofyear
 
 
-def _veos(da, pos, method_eos="median"):
+def _veos(da, pos, method_eos="last"):
     """
-    vEOS = Value at the start of season
+    vEOS = Value at the end of season
     Params
     -----
     method_eos : str
@@ -210,15 +151,15 @@ def _veos(da, pos, method_eos="median"):
         as the last negative slope on the
         senescing side of the curve. If 'median',
         then vEOS is estimated as the 'median' value
-        of the negative slopes on the senescing 
+        of the negative slopes on the senescing
         side of the curve.
     """
     # select timesteps before peak of season (AKA greening)
     senesce = da.where(da.time > pos.time)
     # find the first order slopes
     senesce_deriv = senesce.differentiate("time")
-    # find where the fst order slope is postive
-    neg_senesce_deriv = senesce_deriv.where(senesce_deriv < 0)
+    # find where the fst order slope is negative
+    neg_senesce_deriv = senesce_deriv.where(~np.isnan(senesce_deriv < 0))
     # negative slopes on senescing side
     neg_senesce = senesce.where(neg_senesce_deriv)
     # find medians
@@ -232,8 +173,7 @@ def _veos(da, pos, method_eos="median"):
 
     if method_eos == "median":
         # index where median occurs
-        idx = allNaN_arg(xr.ufuncs.fabs(distance), "time",
-                         "min").astype("int16")
+        idx = allNaN_arg(np.fabs(distance), "time", "min").astype("int16")
 
     return neg_senesce.isel(time=idx)
 
@@ -254,8 +194,7 @@ def _los(da, eos, sos):
     los = xr.where(
         los >= 0,
         los,
-        da.time.dt.dayofyear.values[-1] +
-        (eos.where(los < 0) - sos.where(los < 0)),
+        da.time.dt.dayofyear.values[-1] + (eos.where(los < 0) - sos.where(los < 0)),
     )
 
     return los
@@ -290,18 +229,16 @@ def xr_phenology(
         "ROG",
         "ROS",
     ],
-    method_sos="median",
-    method_eos="median",
-    complete='fast_complete',
-    smoothing=None,
-    show_progress=True,
+    method_sos="first",
+    method_eos="last",
+    verbose=True,
 ):
     """
     Obtain land surface phenology metrics from an
-    xarray.DataArray containing a timeseries of a 
+    xarray.DataArray containing a timeseries of a
     vegetation index like NDVI.
 
-    last modified June 2020
+    Last modified February 2023
 
     Parameters
     ----------
@@ -313,19 +250,21 @@ def xr_phenology(
         the metrics returned, all statistics are calculated
         due to inter-dependencies between metrics.
         Options include:
-            SOS = DOY of start of season
-            POS = DOY of peak of season
-            EOS = DOY of end of season
-            vSOS = Value at start of season
-            vPOS = Value at peak of season
-            vEOS = Value at end of season
-            Trough = Minimum value of season
-            LOS = Length of season (DOY)
-            AOS = Amplitude of season (in value units)
-            ROG = Rate of greening
-            ROS = Rate of senescence
-    method_sos : str 
-        If 'first' then vSOS is estimated as the first positive 
+
+        * ``'SOS'``: DOY of start of season
+        * ``'POS'``: DOY of peak of season
+        * ``'EOS'``: DOY of end of season
+        * ``'vSOS'``: Value at start of season
+        * ``'vPOS'``: Value at peak of season
+        * ``'vEOS'``: Value at end of season
+        * ``'Trough'``: Minimum value of season
+        * ``'LOS'``: Length of season (DOY)
+        * ``'AOS'``: Amplitude of season (in value units)
+        * ``'ROG'``: Rate of greening
+        * ``'ROS'``: Rate of senescence
+
+    method_sos : str
+        If 'first' then vSOS is estimated as the first positive
         slope on the greening side of the curve. If 'median',
         then vSOS is estimated as the median value of the postive
         slopes on the greening side of the curve.
@@ -334,29 +273,22 @@ def xr_phenology(
         on the senescing side of the curve. If 'median', then vEOS is
         estimated as the 'median' value of the negative slopes on the
         senescing side of the curve.
-    complete : str
-        If 'fast_complete', the timeseries will be completed (gap filled) using
-        fast_completion(), if 'linear', time series with be completed using 
-        da.interpolate_na(method='linear')
-    smoothing : str
-        If 'wiener', the timeseries will be smoothed using the
-        scipy.signal.wiener filter with a window size of 3.  If 'rolling_mean', 
-        then timeseries is smoothed using a rolling mean with a window size of 3.
-        If set to 'linear', will be smoothed using da.resample(time='1W').interpolate('linear')
 
-    Outputs
+    Returns
     -------
-        xarray.Dataset containing variables for the selected 
-        phenology statistics 
+    xarray.Dataset
+        Dataset containing variables for the selected
+        phenology statistics
 
     """
     # Check inputs before running calculations
     if dask.is_dask_collection(da):
-        if version.parse(xr.__version__) < version.parse('0.16.0'):
+        if version.parse(xr.__version__) < version.parse("0.16.0"):
             raise TypeError(
-                "Dask arrays are not currently supported by this function, " +
-                "run da.compute() before passing dataArray.")
-        stats_dtype={
+                "Dask arrays are not currently supported by this function, "
+                + "run da.compute() before passing dataArray."
+            )
+        stats_dtype = {
             "SOS": np.int16,
             "POS": np.int16,
             "EOS": np.int16,
@@ -369,30 +301,32 @@ def xr_phenology(
             "ROG": np.float32,
             "ROS": np.float32,
         }
-        da_template = da.isel(time=0).drop('time')
+        da_template = da.isel(time=0).drop("time")
         template = xr.Dataset(
-            {var_name: da_template.astype(var_dtype) for var_name, var_dtype in stats_dtype.items() if var_name in stats}
+            {
+                var_name: da_template.astype(var_dtype)
+                for var_name, var_dtype in stats_dtype.items()
+                if var_name in stats
+            }
         )
-        da_all_time = da.chunk({'time':-1})
-        
+        da_all_time = da.chunk({"time": -1})
+
         lazy_phenology = da_all_time.map_blocks(
             xr_phenology,
             kwargs=dict(
                 stats=stats,
                 method_sos=method_sos,
                 method_eos=method_eos,
-                complete=complete,
-                smoothing=smoothing,
             ),
-            template=xr.Dataset(template)
+            template=xr.Dataset(template),
         )
-        
+
         try:
             crs = da.geobox.crs
             lazy_phenology = assign_crs(lazy_phenology, str(crs))
         except:
             pass
-        
+
         return lazy_phenology
 
     if method_sos not in ("median", "first"):
@@ -403,56 +337,20 @@ def xr_phenology(
 
     # If stats supplied is not a list, convert to list.
     stats = stats if isinstance(stats, list) else [stats]
-    
-    #try to grab the crs info
+
+    # try to grab the crs info
     try:
         crs = da.geobox.crs
     except:
         pass
-    
-    # complete timeseries
-    if complete is not None:
-        
-        if complete=='fast_complete':
-            
-            if len(da.shape) == 1:
-                print("fast_complete does not operate on 1D timeseries, using 'linear' instead")
-                da = da.interpolate_na(dim='time', method='linear')
-                
-            else:
-                print("Completing using fast_complete...")
-                da = fast_completion(da)
-            
-        if complete=='linear':
-            print("Completing using linear interp...")
-            da = da.interpolate_na(dim='time', method='linear')
 
-    if smoothing is not None:
-        
-        if smoothing == "wiener":
-            if len(da.shape) == 1:
-                print("wiener method does not operate on 1D timeseries, using 'rolling_mean' instead")
-                da = da.rolling(time=3, min_periods=1).mean()
-            
-            else:
-                print("   Smoothing with wiener filter...")
-                da = smooth(da)
-            
-        if smoothing == "rolling_mean":
-            print("   Smoothing with rolling mean...")
-            da = da.rolling(time=3, min_periods=1).mean()
-            
-        if smoothing == 'linear':
-            print("    Smoothing using linear interpolation...")
-            da = da.resample(time='1W').interpolate('linear')
-            
-            
     # remove any remaining all-NaN pixels
     mask = da.isnull().all("time")
     da = da.where(~mask, other=0)
 
     # calculate the statistics
-    print("      Phenology...")
+    if verbose:
+        print("      Phenology...")
     vpos = _vpos(da)
     pos = _pos(da)
     trough = _trough(da)
@@ -485,51 +383,56 @@ def xr_phenology(
 
     # add the other stats to the dataset
     for stat in stats[1:]:
-        print("         " + stat)
+        if verbose:
+            print("         " + stat)
         stats_keep = stats_dict.get(stat)
         ds[stat] = stats_dict[stat]
-    
+
     try:
         ds = assign_crs(ds, str(crs))
     except:
         pass
 
-    return ds.drop('time')
+    return ds.drop("time")
 
 
 def temporal_statistics(da, stats):
     """
-    Obtain generic temporal statistics using the hdstats temporal library:
+    Calculate various generic summary statistics on any timeseries.
+
+    This function uses the hdstats temporal library:
     https://github.com/daleroberts/hdstats/blob/master/hdstats/ts.pyx
-    
-    last modified June 2020
-    
+
+    Last modified June 2020
+
     Parameters
     ----------
     da :  xarray.DataArray
         DataArray should contain a 3D time series.
     stats : list
-        list of temporal statistics to calculate.
-        Options include:
-            'discordance' = 
-            'f_std' = std of discrete fourier transform coefficients, returns
-                      three layers: f_std_n1, f_std_n2, f_std_n3
-            'f_mean' = mean of discrete fourier transform coefficients, returns
-                       three layers: f_mean_n1, f_mean_n2, f_mean_n3
-            'f_median' = median of discrete fourier transform coefficients, returns
-                         three layers: f_median_n1, f_median_n2, f_median_n3
-            'mean_change' = mean of discrete difference along time dimension
-            'median_change' = median of discrete difference along time dimension
-            'abs_change' = mean of absolute discrete difference along time dimension
-            'complexity' = 
-            'central_diff' = 
-            'num_peaks' : The number of peaks in the timeseries, defined with a local
-                          window of size 10.  NOTE: This statistic is very slow
-    Outputs
+        List of temporal statistics to calculate. Options include:
+
+        * ``'discordance'``: TODO
+        * ``'f_std'``: std of discrete fourier transform coefficients, returns
+        three layers: f_std_n1, f_std_n2, f_std_n3
+        * ``'f_mean'``: mean of discrete fourier transform coefficients, returns
+        three layers: f_mean_n1, f_mean_n2, f_mean_n3
+        * ``'f_median'``: median of discrete fourier transform coefficients, returns
+        three layers: f_median_n1, f_median_n2, f_median_n3
+        * ``'mean_change'``: mean of discrete difference along time dimension
+        * ``'median_change'``: median of discrete difference along time dimension
+        * ``'abs_change'``: mean of absolute discrete difference along time dimension
+        * ``'complexity'``: TODO
+        * ``'central_diff'``: TODO
+        * ``'num_peaks'``: The number of peaks in the timeseries, defined with a local
+            window of size 10.  NOTE: This statistic is very slow
+
+    Returns
     -------
-        xarray.Dataset containing variables for the selected 
+    xarray.Dataset
+        Dataset containing variables for the selected
         temporal statistics
-        
+
     """
 
     # if dask arrays then map the blocks
@@ -567,7 +470,7 @@ def temporal_statistics(da, stats):
                 else:
                     template[stat] = xr.zeros_like(arr)
         try:
-            template = template.drop('spatial_ref')
+            template = template.drop("spatial_ref")
         except:
             pass
 
@@ -578,7 +481,7 @@ def temporal_statistics(da, stats):
         lazy_ds = da_all_time.map_blocks(
             temporal_statistics, kwargs={"stats": stats}, template=template
         )
-        
+
         try:
             crs = da.geobox.crs
             lazy_ds = assign_crs(lazy_ds, str(crs))
@@ -589,17 +492,13 @@ def temporal_statistics(da, stats):
 
     # If stats supplied is not a list, convert to list.
     stats = stats if isinstance(stats, list) else [stats]
-    
+
     # grab all the attributes of the xarray
     x, y, time, attrs = da.x, da.y, da.time, da.attrs
 
     # deal with any all-NaN pixels by filling with 0's
     mask = da.isnull().all("time")
     da = da.where(~mask, other=0)
-
-    # complete timeseries
-    print("Completing...")
-    da = fast_completion(da)
 
     # ensure dim order is correct for functions
     da = da.transpose("y", "x", "time").values
@@ -684,10 +583,9 @@ def temporal_statistics(da, stats):
     return ds
 
 
-def time_buffer(input_date, buffer='30 days', output_format='%Y-%m-%d'):
-
+def time_buffer(input_date, buffer="30 days", output_format="%Y-%m-%d"):
     """
-    Create a buffer of a given duration (e.g. days) around a time query. 
+    Create a buffer of a given duration (e.g. days) around a time query.
     Output is a string in the correct format for a datacube query.
 
     Parameters
@@ -695,36 +593,40 @@ def time_buffer(input_date, buffer='30 days', output_format='%Y-%m-%d'):
     input_date : str, yyyy-mm-dd
         Time to buffer
     buffer : str, optional
-        Default is '30 days', can be any string supported by the 
-        `pandas.Timedelta` function 
+        Default is '30 days', can be any string supported by the
+        `pandas.Timedelta` function
     output_format : str, optional
         Optional string giving the `strftime` format used to convert
-        buffered times to strings; defaults to '%Y-%m-%d' 
+        buffered times to strings; defaults to '%Y-%m-%d'
         (e.g. '2017-12-02')
-            
+
     Returns
     -------
     early_buffer, late_buffer : str
         A tuple of strings to pass to the datacube query function
-        e.g. `('2017-12-02', '2018-01-31')` for input 
-        `input_date='2018-01-01'` and `buffer='30 days'`  
+        e.g. `('2017-12-02', '2018-01-31')` for input
+        `input_date='2018-01-01'` and `buffer='30 days'`
     """
     # Use assertions to check we have the correct function input
-    assert isinstance(input_date, str), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
-    assert isinstance(buffer, str), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
-    
+    assert isinstance(
+        input_date, str
+    ), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
+    assert isinstance(
+        buffer, str
+    ), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
+
     # Convert inputs to pandas format
     buffer = pd.Timedelta(buffer)
     input_date = pd.to_datetime(input_date)
-    
+
     # Apply buffer
     early_buffer = input_date - buffer
     late_buffer = input_date + buffer
-    
+
     # Convert back to string using strftime
     early_buffer = early_buffer.strftime(output_format)
     late_buffer = late_buffer.strftime(output_format)
-    
+
     return early_buffer, late_buffer
 
 
@@ -738,7 +640,7 @@ def calculate_vector_stat(
     window="hann",
 ):
     """Calculates a vector statistic over a rolling window.
-    
+
     Parameters
     ----------
     vec : d-dimensional np.ndarray
@@ -758,7 +660,7 @@ def calculate_vector_stat(
         also want to use 'boxcar'. Any scipy window
         function is allowed (see documentation for scipy.signal.get_window
         for more information).
-        
+
     Returns
     -------
     (d / step)-dimensional np.ndarray
@@ -800,11 +702,14 @@ class LinregressResult:
         self.intercept = intercept
         self.pval = pval
         self.stderr = stderr
-    
+
     def __repr__(self):
-        return 'LinregressResult({})'.format(
-            ', '.join('{}={}'.format(k, getattr(self, k))
-                      for k in dir(self) if not k.startswith('_'))
+        return "LinregressResult({})".format(
+            ", ".join(
+                "{}={}".format(k, getattr(self, k))
+                for k in dir(self)
+                if not k.startswith("_")
+            )
         )
 
 
@@ -816,6 +721,9 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
 
     Datasets can be provided in any order, but note that the regression slope and intercept will be calculated
     for y with respect to x.
+
+    NOTE: This function is deprecated and will be retired in a future
+    release. Please use `xr_regression` instead."
 
     Parameters
     ----------
@@ -835,6 +743,13 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
         regression between the two datasets along their aligned first dimension.
 
     """
+    warnings.warn(
+        "This function is deprecated and will be retired in a future "
+        "release. Please use `xr_regression` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
     # 1. Ensure that the data are properly alinged to each other.
     x, y = xr.align(x, y)
 
@@ -867,12 +782,12 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
     cor = cov / (xstd * ystd)
 
     # 6. Compute regression slope and intercept:
-    slope = cov / (xstd ** 2)
+    slope = cov / (xstd**2)
     intercept = ymean - xmean * slope
 
     # 7. Compute P-value and standard error
     # Compute t-statistics
-    tstats = cor * np.sqrt(n - 2) / np.sqrt(1 - cor ** 2)
+    tstats = cor * np.sqrt(n - 2) / np.sqrt(1 - cor**2)
     stderr = slope / tstats
 
     from scipy.stats import t
@@ -881,3 +796,245 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
     pval = xr.DataArray(pval, dims=cor.dims, coords=cor.coords)
 
     return LinregressResult(cov, cor, slope, intercept, pval, stderr)
+
+
+def mad_outliers(da, dim="time", threshold=3.5):
+    """
+    Identify outliers along an xarray dimension using Median Absolute
+    Deviation (MAD).
+
+    Parameters
+    ----------
+    da : xarray.DataArray)
+        The input data array with dimensions time, x, y.
+    dim : str, optional
+        An optional string giving the name of the dimension on which to
+        apply the MAD calculation. The default is 'time'.
+    threshold : float)
+        The number of MADs away from the median to consider an
+        observation an outlier.
+
+    Returns
+    -------
+    xarray.DataArray:
+        A boolean array with the same dimensions as input data, where
+        True indicates an outlier.
+    """
+    # Calculate the median along the time dimension
+    median = da.median(dim=dim)
+
+    # Calculate the absolute deviations from the median
+    abs_deviation = np.abs(da - median)
+
+    # Calculate MAD (median of absolute deviations)
+    mad = abs_deviation.median(dim=dim)
+
+    # Deviations greater than (threshold * MAD) are considered outliers
+    outliers = abs_deviation > (threshold * mad)
+
+    return outliers
+
+
+def xr_regression(
+    x,
+    y,
+    dim="time",
+    alternative="two-sided",
+    outliers_x=None,
+    outliers_y=None,
+):
+    """
+    Compare two multi-dimensional ``xr.Datarrays`` and calculate linear
+    least-squares regression along a dimension, returning slope,
+    intercept, p-value, standard error, covariance, correlation, and
+    valid observation counts (n).
+
+    Input arrays can have any number of dimensions, for example: a
+    one-dimensional time series (dims: time), or three-dimensional data
+    (dims: time, lat, lon). Regressions will be calculated for y with
+    respect to x.
+
+    Results should be equivelent to one-dimensional regression performed
+    using `scipy.stats.linregress`. Implementation inspired by:
+    https://hrishichandanpurkar.blogspot.com/2017/09/vectorized-functions-for-correlation.html
+
+    Parameters
+    ----------
+    x, y : xarray DataArray
+        Two xarray.DataArrays with any number of dimensions. Both arrays
+        should have the same length along the `dim` dimension. Regression
+        slope and intercept will be calculated for y with respect to x.
+    dim : str, optional
+        An optional string giving the name of the dimension along which
+        to compare datasets. The default is 'time'.
+    alternative : string, optional
+        Defines the alternative hypothesis. Default is 'two-sided'.
+        The following options are available:
+        * 'two-sided': slope of the regression line is nonzero
+        * 'less': slope of the regression line is less than zero
+        * 'greater':  slope of the regression line is greater than zero
+    outliers_x, outliers_y : bool or float, optional
+        Whether to mask out outliers in each input array prior to
+        regression calculation using MAD outlier detection. If True,
+        use a default threshold of 3.5 MAD to identify outliers. Custom
+        thresholds can be provided as a float.
+
+    Returns
+    -------
+    regression_ds : xarray.Dataset
+        A dataset comparing the two input datasets along their aligned
+        dimension, containing variables including covariance, correlation,
+        coefficient of determination, regression slope, intercept,
+        p-value and standard error, and number of valid observations (n).
+
+    """
+
+    def _pvalue(tstats, n, alternative):
+        """
+        Function for calculating p-values.
+        Can be made lazy by wrapping in `dask.delayed` to
+        avoid dask computation occuring too early.
+        """
+        if alternative == "two-sided":
+            pval = t.sf(np.abs(tstats), n - 2) * 2
+        elif alternative == "greater":
+            pval = t.sf(tstats, n - 2)
+        elif alternative == "less":
+            pval = t.cdf(np.abs(tstats), n - 2)
+
+        return pval
+
+    # Assert that "dim" is in both datasets
+    assert dim in y.dims, f"Array `y` does not contain dimension '{dim}'."
+    assert dim in x.dims, f"Array `x` does not contain dimension '{dim}'."
+
+    # Assert that both arrays have the same length along "dim"
+    assert len(x[dim]) == len(
+        y[dim]
+    ), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
+
+    # Apply optional outlier masking to x and y variable
+    if outliers_y is not None:
+        mad_thresh_y = 3.5 if outliers_y is True else outliers_y
+        y_outliers = mad_outliers(y, dim=dim, threshold=mad_thresh_y)
+        y = y.where(~y_outliers)
+
+    if outliers_x is not None:
+        mad_thresh_x = 3.5 if outliers_x is True else outliers_x
+        x_outliers = mad_outliers(x, dim=dim, threshold=mad_thresh_x)
+        x = x.where(~x_outliers)
+
+    # Compute data length, mean and standard deviation along dim
+    n = y.notnull().sum(dim=dim)
+    xmean = x.mean(dim=dim)
+    ymean = y.mean(dim=dim)
+    xstd = x.std(dim=dim)
+    ystd = y.std(dim=dim)
+
+    # Compute covariance, correlation and coefficient of determination
+    cov = ((x - xmean) * (y - ymean)).sum(dim=dim) / (n)
+    cor = cov / (xstd * ystd)
+    r2 = cor**2
+
+    # Compute regression slope and intercept
+    slope = cov / (xstd**2)
+    intercept = ymean - xmean * slope
+
+    # Compute t-statistics and standard error
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        tstats = cor * np.sqrt(n - 2) / np.sqrt(1 - cor**2)
+    stderr = slope / tstats
+
+    # Calculate p-values for different alternative hypotheses.
+    # If data is dask, then delay computation of p-value
+    if dask.is_dask_collection(cor):
+
+        _pvalue_lazy = dask.delayed(_pvalue)
+        pval = xr.DataArray(
+            da.from_delayed(
+                _pvalue_lazy(tstats, n, alternative),
+                shape=cor.shape,
+                dtype=cor.dtype,
+            ),
+            dims=cor.dims,
+            coords=cor.coords,
+        ).chunk(cor.chunksizes)
+
+    else:
+        pval = xr.DataArray(
+            _pvalue(tstats, n, alternative),
+            dims=cor.dims,
+            coords=cor.coords,
+        )
+
+    # Combine into single dataset
+    regression_ds = xr.merge(
+        [
+            cov.rename("cov").astype(np.float32),
+            cor.rename("cor").astype(np.float32),
+            r2.rename("r2").astype(np.float32),
+            slope.rename("slope").astype(np.float32),
+            intercept.rename("intercept").astype(np.float32),
+            pval.rename("pvalue").astype(np.float32),
+            stderr.rename("stderr").astype(np.float32),
+            n.rename("n").astype(np.int16),
+        ]
+    )
+
+    return regression_ds
+
+
+def calculate_sad(vec):
+    """Calculates the surface area duration curve for a given vector of heights.
+
+    Parameters
+    ----------
+    vec : d-dimensional np.ndarray
+        Vector of heights over time.
+
+    Returns
+    -------
+    d-dimensional np.ndarray
+        Surface area duration curve vector over the same time scale.
+    """
+    return np.sort(vec)[::-1]
+
+
+def calculate_stsad(vec, window_size=365, step=10, progress=None, window="hann"):
+    """Calculates the short-time surface area duration curve for a given vector of heights.
+
+    Parameters
+    ----------
+    vec : d-dimensional np.ndarray
+        Vector of heights over time.
+    window_size : int
+        Sliding window size (default 365).
+    step : int
+        Step size (default 10).
+    progress : iterator -> iterator
+        Optional progress decorator, e.g. tqdm.notebook.tqdm. Default None.
+    window : str
+        What kind of window function to use. Default 'hann', but you might
+        also want to use 'boxcar'. Any scipy window
+        function is allowed (see documentation for scipy.signal.get_window
+        for more information).
+
+    Returns
+    -------
+    (d / step)-dimensional np.ndarray
+        y values (the time axis)
+    t-dimensional np.ndarray
+        x values (the statistic axis)
+    (d / step) x t-dimensional np.ndarray
+        The short-time surface area duration curve array.
+    """
+    return calculate_vector_stat(
+        vec,
+        calculate_sad,
+        window_size=window_size,
+        step=step,
+        target_dim=window_size,
+        progress=progress,
+        window=window,
+    )

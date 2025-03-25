@@ -7,17 +7,18 @@ import io
 import os
 import sys
 from shutil import rmtree
+from pathlib import Path
 
 from setuptools import find_packages, setup, Command
+import setuptools_scm
 
 # Package meta-data.
 NAME = 'dea-tools'
 DESCRIPTION = 'Functions and algorithms for analysing Digital Earth Australia data.'
 URL = 'https://github.com/GeoscienceAustralia/dea-notebooks'
-EMAIL = 'dea@ga.gov.au'
+EMAIL = 'earth.observation@ga.gov.au'
 AUTHOR = 'Geoscience Australia'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.1.0'
 
 # Where are we?
 IS_SANDBOX = os.getenv('JUPYTER_IMAGE', default='').startswith('geoscienceaustralia/sandbox')
@@ -27,45 +28,54 @@ IS_DEA = IS_NCI or IS_SANDBOX
 # What packages are required for this module to be executed?
 # These are all on the Sandbox/NCI so shouldn't need installing on those platforms.
 REQUIRED = [
-    # bom
-    'ciso8601',
-    'pytz',
-    'requests',
-    'lxml',
-    # classification
-    'numpy',
-    'xarray',
-    'geopandas',
-    'datacube',
-    'tqdm',
-    'dask',
-    'rasterio',
-    'scikit-learn',
-    # coastal
-    'matplotlib',
-    'pandas',
-    'scipy',
-    # 'otps',  # Hard to install, but available on Sandbox and NCI
-    # datahandling
-    'GDAL',
-    'odc-ui',
-    'numexpr',
-    # plotting
-    'folium',
-    'pyproj',
+    'aiohttp',
+    'boto3', 
+    'botocore',
     'branca',
-    'shapely',
-    'scikit-image',
-    # climate
-    'python-dateutil',
-    # waterbodies
+    'ciso8601',
+    'dask',
+    'dask-ml',
+    'datacube',
+    'datacube-ows',
+    'Fiona',
+    'folium',
+    'geopandas',
+    'geopy',
+    'hdstats',
+    'joblib',
+    'lxml',
+    'matplotlib',
+    'numpy',
+    'odc-geo',
+    'odc-stac',
+    'odc-ui',
     'OWSLib',
+    'packaging',
+    'pandas',
+    'pyproj',
+    'pystac-client',
+    'planetary-computer',
+    'python-dateutil',
+    'pyTMD!=2.1.7',    
+    'pytz',
+    'rasterio',
+    'rasterstats',
+    'requests',
+    'rioxarray',
+    'scikit-image',
+    'scikit-learn',
+    'scipy',
+    'setuptools',
+    'Shapely',
+    'tqdm',
+    'xarray',
 ]
 
 # What packages are optional?
 EXTRAS = {
-    'jupyter': ['IPython', 'ipywidgets', 'ipyleaflet'],
-    'boto': ['boto3'],
+    'jupyter': ['ipython', 'ipywidgets', 'ipyleaflet'],
+    'dask_gateway': ['dask_gateway'],
+    'otps': ['otps'],  # tidal model, hard to install; available on Sandbox/NCI
 }
 
 # The rest you shouldn't have to touch too much :)
@@ -83,16 +93,7 @@ try:
 except FileNotFoundError:
     long_description = DESCRIPTION
 
-# Load the package's __version__.py module as a dictionary.
-about = {}
-if not VERSION:
-    project_slug = NAME.lower().replace("-", "_").replace(" ", "_")
-    with open(os.path.join(here, project_slug, '__version__.py')) as f:
-        exec(f.read(), about)
-else:
-    about['__version__'] = VERSION
-
-
+    
 class UploadCommand(Command):
     """Support setup.py upload."""
 
@@ -129,14 +130,12 @@ class UploadCommand(Command):
 
         sys.exit()
 
-
 # Where the magic happens:
 setup(
     name=NAME,
-    version=about['__version__'],
     description=DESCRIPTION,
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/x-rst',
     author=AUTHOR,
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
@@ -146,6 +145,11 @@ setup(
     # entry_points={
     #     'console_scripts': ['mycli=mymodule:cli'],
     # },
+    use_scm_version = {
+        "root": '..',
+        "relative_to": __file__,
+        "local_scheme": "no-local-version",
+        },
     install_requires=REQUIRED if not IS_DEA else [],
     extras_require=EXTRAS if not IS_DEA else {k: [] for k in EXTRAS},
     include_package_data=True,
@@ -156,7 +160,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering :: GIS'
+        'Topic :: Scientific/Engineering :: GIS',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',

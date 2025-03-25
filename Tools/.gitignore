@@ -2,3 +2,6 @@ build/*
 *.egg-info/*
 dist/*
 *.pyc
+
+# setuptools_scm/versioning hacks
+dea_tools/__version__.py
