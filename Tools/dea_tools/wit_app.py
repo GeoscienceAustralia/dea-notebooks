@@ -34,6 +34,7 @@ import numpy as np
 import os
 import pandas as pd
 import shutil
+import warnings
 import xarray as xr
 
 import datacube
@@ -103,7 +104,7 @@ def WIT_drill(
     dc = datacube.Datacube(app="WIT_drill")
 
     # load landsat 5,7,8 data
-    # warnings.filterwarnings("ignore")
+    warnings.filterwarnings("ignore")
 
     # load wetland polygon and specify the coordinate reference system of the polygon
     if isinstance(gdf, datacube.utils.geometry._base.Geometry):
@@ -447,7 +448,7 @@ def spatial_wit(ds, wetland_name):
         axes[row_idx, col_idx].set_title(f"{time_date_str}")
 
     plt.tight_layout()
-    plt.savefig(f"deawetlands_outputs/{wetland_name}_time_steps.png", dpi=300)
+    plt.savefig(f"{wetland_name}_time_steps.png", dpi=72)
 
     # Make a gif
 
@@ -485,7 +486,7 @@ def spatial_wit(ds, wetland_name):
         plt.close(fig)
 
     # make the gif
-    output_path = f"deawetlands_outputs/{wetland_name}_animation.gif"
+    output_path = f"{wetland_name}_animation.gif"
     with imageio.get_writer(output_path, mode="I", duration=0.7, loop=0) as writer:
         for frame_path in frames:
             image = imageio.imread(frame_path)

@@ -610,7 +610,7 @@ class wit_app(HBox):
 
                 # add a title
                 plt.title(
-                    f"Percentage of area dominated by WOfS, Wetness, Fractional Cover for\n {self.wetland_name}",
+                    f"Percentage of area dominated by WOs, Wetness, Fractional Cover for\n {self.wetland_name}",
                     fontsize=16,
                 )
                 plt.show()
