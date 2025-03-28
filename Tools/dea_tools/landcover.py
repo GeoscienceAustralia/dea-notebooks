@@ -758,7 +758,7 @@ def plot_land_cover(
     labelsize=10,
     year=None,
     measurement=None,
-    out_width=15,
+    width_pixels=500,
     cols=4,
 ):
     """
@@ -775,10 +775,11 @@ def plot_land_cover(
         Name of the DEA land cover classification to be plotted. Passed to 
         _legend_colourmap to specify which colour scheme will be used. If non 
         provided, reads data array name from `da` to determine.
-    out_width : integer, optional
-        Specifies the desired width of the output plot in inches. 
-        The height of the plot is scaled accordingly to maintain the 
-        correct aspect ratio of the data
+    width_pixels : int, optional
+        An integer defining the output width in pixels for the 
+        resulting animation. The height of the animation is set 
+        automatically based on the dimensions/ratio of the input 
+        xarray dataset. Defaults to 500 pixels wide.   
     cols: integer, optional
         Sets number of columns if multiple time steps are visualised
 
@@ -796,7 +797,7 @@ def plot_land_cover(
     cmap, norm = lc_colourmap(colour_scheme)
 
     height, width = data.geobox.shape
-    scale = out_width / width
+    scale =  width_pixels / width
 
     if year:
         #plotting protocol if 'year' variable is passed
@@ -809,7 +810,7 @@ def plot_land_cover(
         data = data.sel(time=year_string, method='nearest')
 
         fig, ax = plt.subplots()
-        fig.set_size_inches(width * scale, height * scale)
+        fig.set_size_inches(width * scale / 72, height * scale / 72)
         make_colourbar(fig, ax, measurement, labelsize)
         im = ax.imshow(data.values,
                        cmap=cmap,
@@ -819,7 +820,7 @@ def plot_land_cover(
     elif len(data.time) == 1:
         #plotting protocol if only one timestep is passed and not a year variable
         fig, ax = plt.subplots()
-        fig.set_size_inches(width * scale, height * scale)
+        fig.set_size_inches(width * scale / 72, height * scale / 72)
         make_colourbar(fig, ax, measurement, labelsize)
         im = ax.imshow(data.isel(time=0),
                        cmap=cmap,
@@ -833,8 +834,8 @@ def plot_land_cover(
         rows = int((len(data.time) + cols - 1) / cols)
 
         fig, ax = plt.subplots(nrows=rows, ncols=cols)
-        fig.set_size_inches(width * scale,
-                            (height * scale / cols) * (len(data.time) / cols))
+        fig.set_size_inches(width * scale / 72,
+                            (height * scale / 72 / cols) * (len(data.time) / cols))
 
         make_colourbar(fig, ax.flat[0], measurement, labelsize)
 
@@ -911,7 +912,7 @@ def lc_animation(
     stacked_plot=False,
     colour_bar=False,
     animation_interval=500,
-    out_width=20,
+    width_pixels=500,
     dpi=150,
     font_size=15,
     label_size=15,
@@ -945,10 +946,11 @@ def lc_animation(
     animation_interval : int , optional
         How quickly the frames of the animations should be re-drawn. 
         Default: 500.
-    out_width : integer, optional
-        Specifies the desired width of the output plot in inches. 
-        The height of the plot is scaled accordingly to maintain the 
-        correct aspect ratio of the data 
+    width_pixels : int, optional
+        An integer defining the output width in pixels for the 
+        resulting animation. The height of the animation is set 
+        automatically based on the dimensions/ratio of the input 
+        xarray dataset. Defaults to 500 pixels wide. 
     dpi : int, optional
         Stands for 'Dots Per Inch'. Passed to the fuction that saves the
         animation and determines the resolution. A higher number will
@@ -982,7 +984,7 @@ def lc_animation(
 
     # Get info on dataset dimensions and define size of output
     height, width = da.geobox.shape
-    scale = out_width / width
+    scale = width_pixels / width
     left, bottom, right, top = da.geobox.extent.boundingbox
     extent = [left, right, bottom, top]
 
@@ -1037,7 +1039,7 @@ def lc_animation(
 
         # Define & set up figure (two axes: the LC array and the stacked line plot)
         fig, (ax1, ax2) = plt.subplots(1, 2, dpi=dpi, constrained_layout=True)
-        fig.set_size_inches(width * scale, height * scale / 2, forward=True)
+        fig.set_size_inches(width * scale / 72, height * scale / 72 / 2, forward=True)
         fig.set_constrained_layout_pads(w_pad=0.2,
                                         h_pad=0.2,
                                         hspace=0,
@@ -1065,7 +1067,7 @@ def lc_animation(
                                            dpi=dpi,
                                            constrained_layout=True,
                                            gridspec_kw={'width_ratios': [3, 1]})
-            fig.set_size_inches(width * scale, height * scale / 2, forward=True)
+            fig.set_size_inches(width * scale / 72, height * scale / 72 / 2, forward=True)
             fig.set_constrained_layout_pads(w_pad=0.2,
                                             h_pad=0.2,
                                             hspace=0,
@@ -1087,7 +1089,7 @@ def lc_animation(
         else:
             # Define & set up figure
             fig, ax1 = plt.subplots(1, 1, dpi=dpi)
-            fig.set_size_inches(width * scale, height * scale, forward=True)
+            fig.set_size_inches(width * scale / 72, height * scale / 72, forward=True)
 
             if (not label_ax):
                 fig.subplots_adjust(left=0,
