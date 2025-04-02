@@ -1,0 +1,71 @@
+
+name: Test changed files on pull request
+
+# This workflow selectively tests only Jupyter notebooks that were modified in a pull request to the develop branch.
+# It provides targeted testing to verify that changes to specific notebooks don't introduce problems.
+
+on:
+  # Run whenever a pull request is made or updated against the develop branch
+  # This catches potential issues early before changes are merged
+  pull_request:
+    branches: [ develop ]
+
+permissions:
+  id-token: write # Required for OIDC authentication to AWS
+  contents: read
+
+jobs:
+  test-notebooks:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          path: dea-notebooks
+
+      # Detects changed Jupyter Notebooks, excluding interactive notebooks
+      - name: Get changed notebook files
+        id: changed-notebooks
+        uses: tj-actions/changed-files@v45
+        with:
+          separator: ' '
+          files: '**/*.ipynb'
+          files_ignore: |
+            Real_world_examples/Scalable_machine_learning/
+            Real_world_examples/Estimate_climate_driver_influence_on_rainfall.ipynb
+            Real_world_examples/Mapping_inundation_using_stream_gauges.ipynb
+            How_to_guides/Land_cover_pixel_drill.ipynb
+            How_to_guides/Imagery_on_web_map.ipynb
+            How_to_guides/External_data_ERA5_Climate.ipynb
+      - name: Print changed notebook files
+        if: steps.changed-notebooks.outputs.any_changed == 'true'
+        run: |
+          echo "Changed notebook files:"
+          echo "${{ steps.changed-notebooks.outputs.all_changed_files }}"
+
+      - name: Set up database access and tests
+        if: steps.changed-notebooks.outputs.any_changed == 'true'
+        uses: ./dea-notebooks/.github/actions/test_setup
+        with:
+          image: stable
+
+      - name: Test changed Jupyter notebooks only
+        if: steps.changed-notebooks.outputs.any_changed == 'true'
+        run: |
+          sudo chown -R 1000:100 ./dea-notebooks
+          cd ./dea-notebooks
+          docker run --rm \
+            --net=host \
+            --env DATACUBE_DB_URL \
+            --env AWS_SESSION_TOKEN \
+            --env AWS_REGION \
+            --env AWS_ACCESS_KEY_ID \
+            --env AWS_SECRET_ACCESS_KEY \
+            --env AWS_SESSION_TOKEN \
+            --volume ${GITHUB_WORKSPACE}/dea-notebooks:/home/jovyan/dea-notebooks \
+            --volume ${GITHUB_WORKSPACE}/tide_models:/var/share/tide_models \
+            --env GDAL_HTTP_MAX_RETRY=10 \
+            --entrypoint /bin/bash \
+            538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:stable \
+            /home/jovyan/dea-notebooks/Tests/test_notebooks.sh "${{ steps.changed-notebooks.outputs.all_changed_files }}"

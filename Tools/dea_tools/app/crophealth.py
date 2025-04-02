@@ -7,7 +7,7 @@ Available functions:
     load_crophealth_data
     run_crophelath_app
 
-Last modified: August 2023
+Last modified: February 2025
 '''
 
 # Load modules
@@ -41,10 +41,10 @@ def load_crophealth_data():
     """
     Loads Sentinel-2 analysis-ready data (ARD) product for the crop health
     case-study area. The ARD product is provided for the last year.
-    Last modified: January 2020
+    Last modified: February 2025
 
     outputs
-    ds - data set containing combined, masked data from Sentinel-2a and -2b.
+    ds - data set containing combined, masked data from Sentinel-2a, -2b and -2c.
     Masked values are set to 'nan'
     """
     
@@ -67,7 +67,7 @@ def load_crophealth_data():
     time = (start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
 
     # Construct the data cube query
-    products = ["ga_s2am_ard_3", "ga_s2bm_ard_3"]
+    products = ["ga_s2am_ard_3", "ga_s2bm_ard_3", "ga_s2cm_ard_3"]
     
     query = {
         'x': longitude,
@@ -105,7 +105,7 @@ def run_crophealth_app(ds):
     Last modified: January 2020
     
     inputs
-    ds - data set containing combined, masked data from Sentinel-2a and -2b.
+    ds - data set containing combined, masked data from Sentinel-2a, -2b and -2c.
     Must also have an attribute containing the NDVI value for each pixel
     """
     

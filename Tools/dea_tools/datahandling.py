@@ -1,4 +1,4 @@
-## dea_datahandling.py
+# dea_datahandling.py
 """
 Loading and manipulating Digital Earth Australia products and data
 using the Open Data Cube and xarray.
@@ -9,38 +9,38 @@ Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
 
 Contact: If you need assistance, please post a question on the Open Data
-Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
+Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the GIS Stack
 Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
 using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, you can file one
-on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: June 2023
+Last modified: February 2025
 """
+
+import datetime
 
 # Import required packages
 import os
-import zipfile
-import datetime
-import requests
 import warnings
-import odc.algo
-import dask
+import zipfile
+import requests
+from collections import Counter
+
+import rioxarray
 import numpy as np
 import pandas as pd
-import dask.array as da
 import xarray as xr
-import skimage.transform
 import sklearn.decomposition
-from skimage.exposure import match_histograms
-from skimage.color import rgb2hsv, hsv2rgb
-from random import randint
-from collections import Counter
-from odc.algo import mask_cleanup
-from datacube.utils import masking
 from scipy.ndimage import binary_dilation
+from skimage.color import hsv2rgb, rgb2hsv
+from skimage.exposure import match_histograms
+
+import odc.geo.xr
+import odc.algo
+from odc.algo import mask_cleanup
 from datacube.utils.dates import normalise_dt
 
 
@@ -98,7 +98,7 @@ def _common_bands(dc, products):
 def load_ard(
     dc,
     products=None,
-    cloud_mask='fmask',
+    cloud_mask="fmask",
     min_gooddata=0.00,
     mask_pixel_quality=True,
     mask_filters=None,
@@ -110,12 +110,11 @@ def load_ard(
     predicate=None,
     **kwargs,
 ):
-
     """
     Load multiple Geoscience Australia Landsat or Sentinel 2
-    Collection 3 products (e.g. Landsat 5, 7, 8, 9; Sentinel 2A and 2B),
-    optionally apply pixel quality/cloud masking and contiguity masks, 
-    and drop time steps that contain greater than a minimum proportion 
+    Collection 3  Analysis Ready Data products (e.g. Landsat 5, 7, 8, 9; Sentinel 2A, 2B, 2C),
+    optionally apply pixel quality/cloud masking and contiguity masks,
+    and drop time steps that contain greater than a minimum proportion
     of good quality (e.g. non-cloudy or shadowed) pixels.
 
     The function supports loading the following Landsat products:
@@ -127,13 +126,14 @@ def load_ard(
     And Sentinel-2 products:
         * ga_s2am_ard_3
         * ga_s2bm_ard_3
-        
+        * ga_s2cm_ard_3
+
     Cloud masking can be performed using the Fmask (Function of Mask)
-    cloud mask for Landsat and Sentinel-2, and the s2cloudless 
-    (Sentinel Hub cloud detector for Sentinel-2 imagery) cloud mask for 
+    cloud mask for Landsat and Sentinel-2, and the s2cloudless
+    (Sentinel Hub cloud detector for Sentinel-2 imagery) cloud mask for
     Sentinel-2.
 
-    Last modified: June 2023
+    Last modified: February 2025
 
     Parameters
     ----------
@@ -143,30 +143,31 @@ def load_ard(
     products : list
         A list of product names to load. Valid options are
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3', 'ga_ls9c_ard_3']
-        for Landsat, ['ga_s2am_ard_3', 'ga_s2bm_ard_3'] for Sentinel 2.
+        for Landsat, ['ga_s2am_ard_3', 'ga_s2bm_ard_3', 'ga_s2cm_ard_3']
+        for Sentinel 2.
     cloud_mask : string, optional
-        The cloud mask used by the function. This is used for both 
+        The cloud mask used by the function. This is used for both
         masking out poor quality pixels (e.g. clouds) if
-        ``mask_pixel_quality=True``, and for calculating the 
+        ``mask_pixel_quality=True``, and for calculating the
         ``min_gooddata`` percentage when dropping cloudy or low quality
         satellite observations. Two cloud masks are supported:
             * 'fmask': (default; available for Landsat, Sentinel-2)
             * 's2cloudless' (Sentinel-2 only)
     min_gooddata : float, optional
-        The minimum percentage of good quality pixels required for a 
+        The minimum percentage of good quality pixels required for a
         satellite observation to be loaded. Defaults to 0.00 which will
         return all observations regardless of pixel quality (set to e.g.
         0.99 to return only observations with more than 99% good quality
         pixels).
     mask_pixel_quality : str or bool, optional
-        Whether to mask out poor quality (e.g. cloudy) pixels by setting 
-        them as nodata. Depending on the choice of cloud mask, the 
-        function will identify good quality pixels using the categories 
+        Whether to mask out poor quality (e.g. cloudy) pixels by setting
+        them as nodata. Depending on the choice of cloud mask, the
+        function will identify good quality pixels using the categories
         passed to the ``fmask_categories`` or ``s2cloudless_categories``
-        params. Set to False to turn off pixel quality masking completely. 
-        Poor quality pixels will be set to NaN (and convert all data to 
-        `float32`) if  ``dtype='auto'``, or be set to the data's native 
-        nodata value (usually -999) if ``dtype='native'`` (see 'dtype' 
+        params. Set to False to turn off pixel quality masking completely.
+        Poor quality pixels will be set to NaN (and convert all data to
+        `float32`) if  ``dtype='auto'``, or be set to the data's native
+        nodata value (usually -999) if ``dtype='native'`` (see 'dtype'
         below for more details).
     mask_filters : iterable of tuples, optional
         Iterable tuples of morphological operations - ("<operation>", <radius>)
@@ -257,21 +258,27 @@ def load_ard(
     # Setup #
     #########
 
+    # Convert products to a list if it is passed as a string
+    products = [products] if isinstance(products, str) else products
+
+    # Valid Landsat products
+    valid_ls = ["ga_ls5t_ard_3", "ga_ls7e_ard_3", "ga_ls8c_ard_3", "ga_ls9c_ard_3"]
+    valid_s2 = ["ga_s2am_ard_3", "ga_s2bm_ard_3", "ga_s2cm_ard_3"]
+
     # Verify that products were provided
     if not products:
         raise ValueError(
-            "Please provide a list of product names to load data from. "
-            "Valid options are: ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', "
-            "'ga_ls8c_ard_3', 'ga_ls9c_ard_3'] for Landsat, and "
-            "['ga_s2am_ard_3', 'ga_s2bm_ard_3'] for Sentinel 2."
+            f"Please provide a list of Landsat or Sentinel-2 Analysis Ready Data "
+            f"product names to load data from. Valid options are: "
+            f"{valid_ls + valid_s2}."
         )
 
     # Determine whether products are all Landsat, all S2, or mixed
-    elif all(["ls" in product for product in products]):
+    elif all([product in valid_ls for product in products]):
         product_type = "ls"
-    elif all(["s2" in product for product in products]):
+    elif all([product in valid_s2 for product in products]):
         product_type = "s2"
-    else:
+    elif all([product in valid_s2 + valid_ls for product in products]):
         product_type = "mixed"
 
         warnings.warn(
@@ -280,6 +287,16 @@ def load_ard(
             "products use the same names for different spectral bands "
             "(e.g. Landsat and Sentinel-2's 'nbart_swir_2'); use with "
             "caution."
+        )
+    else:
+        # If an invalid product is passed, raise error
+        invalid_products = [
+            product for product in products if product not in valid_s2 + valid_ls
+        ]
+        raise ValueError(
+            f"The `load_ard` function only supports Landsat and "
+            f"Sentinel-2 Analysis Ready Data products; {invalid_products} is not supported. "
+            f"Valid options are: {valid_ls + valid_s2}."
         )
 
     # Set contiguity band depending on `mask_contiguity`;
@@ -292,7 +309,6 @@ def load_ard(
         contiguity_band = "oa_nbar_contiguity"
 
     else:
-
         raise ValueError(
             f"Unsupported value '{mask_contiguity}' passed to "
             "`mask_contiguity`. Please provide either 'nbart', 'nbar', "
@@ -300,7 +316,7 @@ def load_ard(
         )
 
     # Set pixel quality (PQ) band depending on `cloud_mask`
-    if cloud_mask == 'fmask': 
+    if cloud_mask == "fmask":
         pq_band = "oa_fmask"
         pq_categories = fmask_categories
 
@@ -310,14 +326,12 @@ def load_ard(
 
         # Raise error if s2cloudless is requested for Landsat products
         if product_type in ["ls", "mixed"]:
-
             raise ValueError(
                 "The 's2cloudless' cloud mask is not available for "
                 "Landsat products. Please set `mask_pixel_quality` to "
                 "'fmask' or False."
             )
     else:
-
         raise ValueError(
             f"Unsupported value '{cloud_mask}' passed to "
             "`cloud_mask`. Please provide either 'fmask', "
@@ -326,10 +340,10 @@ def load_ard(
 
     # To ensure that the categorical PQ/contiguity masking bands are
     # loaded using nearest neighbour resampling, we need to add these to
-    # the resampling kwarg if it exists and is not "nearest". 
-    # This only applies if a string resampling method is supplied; 
+    # the resampling kwarg if it exists and is not "nearest".
+    # This only applies if a string resampling method is supplied;
     # if a resampling dictionary (e.g. `resampling={'*': 'bilinear',
-    # 'oa_fmask': 'mode'}` is passed instead we assume the user wants 
+    # 'oa_fmask': 'mode'}` is passed instead we assume the user wants
     # to select custom resampling methods for each of their bands.
     resampling = kwargs.get("resampling", None)
 
@@ -356,13 +370,11 @@ def load_ard(
     # Deal with "load all" case: pick a set of bands that are common
     # across requested products
     if measurements is None:
-
         measurements = _common_bands(dc, products)
 
     # Deal with edge case where user supplies alias for PQ/contiguity
     # by stripping PQ/contiguity masks of their "oa_" prefix
     else:
-
         contiguity_band = (
             contiguity_band.replace("oa_", "")
             if contiguity_band.replace("oa_", "") in measurements
@@ -412,7 +424,6 @@ def load_ard(
     # Get list of datasets for each product
     print("Finding datasets")
     for product in products:
-
         # Obtain list of datasets for product
         print(
             f"    {product} (ignoring SLC-off observations)"
@@ -465,7 +476,6 @@ def load_ard(
     # by using the default `min_gooddata = 0`, we can skip this step
     # completely to save processing time
     if min_gooddata > 0.0:
-
         # Compute good data for each observation as % of total pixels
         print(f"Counting good quality pixels for each time step using {cloud_mask}")
         data_perc = pq_mask.sum(axis=[1, 2], dtype="int32") / (
@@ -503,7 +513,7 @@ def load_ard(
     ###############
 
     # Create a combined mask to hold both pixel quality and contiguity.
-    # This is more efficient than creating multiple dask tasks for 
+    # This is more efficient than creating multiple dask tasks for
     # similar masking operations.
     mask = None
 
@@ -604,14 +614,12 @@ def mostcommon_crs(dc, product, query):
 
     # If CRSs are returned
     if len(crs_list) > 0:
-
         # Identify most common CRS
         crs_counts = Counter(crs_list)
         crs_mostcommon = crs_counts.most_common(1)[0][0]
 
         # Warn user if multiple CRSs are encountered
         if len(crs_counts.keys()) > 1:
-
             warnings.warn(
                 f"Multiple UTM zones {list(crs_counts.keys())} "
                 f"were returned for this query. Defaulting to "
@@ -622,7 +630,6 @@ def mostcommon_crs(dc, product, query):
         return crs_mostcommon
 
     else:
-
         raise ValueError(
             f"No CRS was returned as no data was found for "
             f"the supplied product ({product}) and query. "
@@ -895,17 +902,22 @@ def nearest(
     target = array[dim].dtype.type(target)
     is_before_closer = abs(target - da_before[dim]) < abs(target - da_after[dim])
     nearest_array = xr.where(is_before_closer, da_before, da_after, keep_attrs=True)
-    nearest_array[dim] = xr.where(is_before_closer, da_before[dim], da_after[dim], keep_attrs=True)
+    nearest_array[dim] = xr.where(
+        is_before_closer, da_before[dim], da_after[dim], keep_attrs=True
+    )
 
     if index_name is not None:
         nearest_array[index_name] = xr.where(
-            is_before_closer, da_before[index_name], da_after[index_name], keep_attrs=True
+            is_before_closer,
+            da_before[index_name],
+            da_after[index_name],
+            keep_attrs=True,
         )
 
     return nearest_array
 
 
-def parallel_apply(ds, dim, func, *args, **kwargs):
+def parallel_apply(ds, dim, func, use_threads=False, *args, **kwargs):
     """
     Applies a custom function in parallel along the dimension of an
     xarray.Dataset or xarray.DataArray.
@@ -929,6 +941,11 @@ def parallel_apply(ds, dim, func, *args, **kwargs):
         The function that will be applied in parallel to each array
         along dimension `dim`. The first argument passed to this
         function should be the array along `dim`.
+    use_threads : bool, optional
+        Whether to use threads instead of processes for parallelisation.
+        Defaults to False, which means it'll use multi-processing.
+        In brief, the difference between threads and processes is that threads
+        share memory, while processes have separate memory.
     *args :
         Any number of arguments that will be passed to `func`.
     **kwargs :
@@ -941,13 +958,19 @@ def parallel_apply(ds, dim, func, *args, **kwargs):
         along the input `dim` dimension.
     """
 
-    from concurrent.futures import ProcessPoolExecutor
-    from tqdm import tqdm
-    from itertools import repeat
+    from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
     from functools import partial
+    from itertools import repeat
 
-    with ProcessPoolExecutor() as executor:
-        
+    from tqdm import tqdm
+
+    # Use threads or processes
+    if use_threads:
+        Executor = ThreadPoolExecutor
+    else:
+        Executor = ProcessPoolExecutor
+
+    with Executor as executor:
         # Update func to add kwargs
         func = partial(func, **kwargs)
 
@@ -1085,7 +1108,6 @@ def _esri_pansharpen(ds, pan_band, band_weights=None):
     ds_pansharpened : xarray.Dataset
         Pansharpened dataset with the same dimensions as the input dataset.
     """
-
     # Create new dataarrays with and without pan band
     da_nopan = ds.drop(pan_band).to_array()
     da_pan = ds[pan_band]
@@ -1152,6 +1174,8 @@ def _hsv_timestep_pansharpen(ds_i, pan_band):
     ds_pansharpened : xarray.Dataset
         Pansharpened dataset with the same dimensions as the input dataset.
     """
+    # Squeeze out any single dimensions
+    ds_i = ds_i.squeeze()
 
     # Convert to an xr.DataArray and move "variable" to end
     da_i = ds_i.to_array().transpose(..., "variable")
@@ -1204,6 +1228,8 @@ def _pca_timestep_pansharpen(ds_i, pan_band, pca_rescaling="histogram"):
     ds_pansharpened : xarray.Dataset
         Pansharpened dataset with the same dimensions as the input dataset.
     """
+    # Squeeze out any single dimensions
+    ds_i = ds_i.squeeze()
 
     # Reshape to 2D by stacking x and y dimensions to prepare it
     # as an input to PCA. Drop NA rows as these are not supported
@@ -1251,7 +1277,6 @@ def xr_pansharpen(
     band_weights={"nbart_red": 0.4, "nbart_green": 0.4, "nbart_blue": 0.2},
     pca_rescaling="histogram",
 ):
-
     """
     Apply pan-sharpening to multispectral satellite data with one
     or more timesteps. The following pansharpening transforms are
@@ -1368,14 +1393,11 @@ def xr_pansharpen(
     # Otherwise, apply PCA or HSV pansharpening to each
     # timestep in the `xr.Dataset` using `.apply`
     elif transform in ("pca", "hsv"):
-
         extra_params = {"pca_rescaling": pca_rescaling} if transform == "pca" else {}
 
         # Apply pansharpening to all timesteps in data in parallel
         if ("time" in ds.dims) and parallelise:
-            print(
-                f"Applying {transform.upper()} pansharpening in parallel"
-            )
+            print(f"Applying {transform.upper()} pansharpening in parallel")
             ds_pansharpened = parallel_apply(
                 ds,
                 "time",
@@ -1414,3 +1436,91 @@ def xr_pansharpen(
     return ds_pansharpened.astype(
         ds.to_array().dtype if output_dtype is None else output_dtype
     )
+
+
+def load_reproject(
+    path,
+    how,
+    resolution="auto",
+    tight=False,
+    resampling="nearest",
+    chunks={"x": 2048, "y": 2048},
+    bands=None,
+    masked=True,
+    reproject_kwds=None,
+    **kwargs,
+):
+    """
+    Load and reproject part of a raster dataset into a given GeoBox or
+    custom CRS/resolution.
+
+    Parameters
+    ----------
+    path : str
+        Path to the raster dataset to be loaded and reprojected.
+    how : GeoBox, str or int
+        How to reproject the raster. Can be a GeoBox or a CRS (e.g.
+        "ESPG:XXXX" string or integer).
+    resolution : str or int, optional
+        The resolution to reproject the raster dataset into if `how` is
+        a CRS, by default "auto". Supports:
+            - "same" use exactly the same resolution as the input raster
+            - "fit" use center pixel to determine required scale change
+            - "auto" uses the same resolution on the output if CRS units
+             are the same between source and destination; otherwise "fit"
+            - Else, a specific resolution in the units of the output crs
+    tight : bool, optional
+         By default output pixel grid is adjusted to align pixel edges
+         to X/Y axis, suppling tight=True produces an unaligned geobox.
+    resampling : str, optional
+        Resampling method to use when reprojecting data, by default
+        "nearest", supports all standard GDAL options ("average",
+        "bilinear", "min", "max", "cubic" etc).
+    chunks : dict, optional
+        The size of the Dask chunks to load the data with, by default
+        {"x": 2048, "y": 2048}.
+    bands : str or list, optional
+        Bands to optionally filter to when loading data.
+    masked : bool, optional
+        Whether to mask the data by its nodata value, by default True.
+    reproject_kwds : dict, optional
+        Additional keyword arguments to pass to the `.odc.reproject()`
+        method, by default None.
+    **kwargs : dict
+        Additional keyword arguments to be passed to the
+        `rioxarray.open_rasterio` function.
+
+    Returns
+    -------
+    xarray.Dataset
+        The reprojected raster dataset.
+    """
+    # Use empty kwds if not provided
+    reproject_kwds = {} if reproject_kwds is None else reproject_kwds
+
+    # Load data with rasterio
+    da = rioxarray.open_rasterio(
+        filename=path,
+        masked=masked,
+        chunks=chunks,
+        **kwargs,
+    )
+
+    # Optionally filter to bands
+    if bands is not None:
+        da = da.sel(band=bands)
+
+    # Reproject into GeoBox
+    da = da.odc.reproject(
+        how=how,
+        resolution=resolution,
+        tight=tight,
+        resampling=resampling,
+        dst_nodata=np.NaN if masked else None,
+        **reproject_kwds,
+    )
+
+    # Squeeze if only one band
+    da = da.squeeze()
+
+    return da

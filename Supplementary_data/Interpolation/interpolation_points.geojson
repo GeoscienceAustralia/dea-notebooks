@@ -1,0 +1,24 @@
+{
+"type": "FeatureCollection",
+"name": "interpolation_points",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "z": 1 }, "geometry": { "type": "Point", "coordinates": [ 149.041358543960143, -35.381110059879738 ] } },
+{ "type": "Feature", "properties": { "z": 2 }, "geometry": { "type": "Point", "coordinates": [ 149.050043769856671, -35.376996005507706 ] } },
+{ "type": "Feature", "properties": { "z": 3 }, "geometry": { "type": "Point", "coordinates": [ 149.069699807411894, -35.371053482525888 ] } },
+{ "type": "Feature", "properties": { "z": 4 }, "geometry": { "type": "Point", "coordinates": [ 149.077470799003521, -35.363739608086725 ] } },
+{ "type": "Feature", "properties": { "z": 5 }, "geometry": { "type": "Point", "coordinates": [ 149.081584853375546, -35.345454921988825 ] } },
+{ "type": "Feature", "properties": { "z": 6 }, "geometry": { "type": "Point", "coordinates": [ 149.087070259204921, -35.3125424870126 ] } },
+{ "type": "Feature", "properties": { "z": 7 }, "geometry": { "type": "Point", "coordinates": [ 149.092098547881847, -35.286029692170644 ] } },
+{ "type": "Feature", "properties": { "z": 8 }, "geometry": { "type": "Point", "coordinates": [ 149.098041070863644, -35.268659240377637 ] } },
+{ "type": "Feature", "properties": { "z": 9 }, "geometry": { "type": "Point", "coordinates": [ 149.108554765369945, -35.256317077261549 ] } },
+{ "type": "Feature", "properties": { "z": 10 }, "geometry": { "type": "Point", "coordinates": [ 149.129582154382547, -35.251288788584631 ] } },
+{ "type": "Feature", "properties": { "z": 11 }, "geometry": { "type": "Point", "coordinates": [ 149.148781074785319, -35.252660140041975 ] } },
+{ "type": "Feature", "properties": { "z": 12 }, "geometry": { "type": "Point", "coordinates": [ 149.162494589358772, -35.259516897328687 ] } },
+{ "type": "Feature", "properties": { "z": 13 }, "geometry": { "type": "Point", "coordinates": [ 149.180779275456672, -35.257688428718893 ] } },
+{ "type": "Feature", "properties": { "z": 14 }, "geometry": { "type": "Point", "coordinates": [ 149.190378735658072, -35.247174734212599 ] } },
+{ "type": "Feature", "properties": { "z": 15 }, "geometry": { "type": "Point", "coordinates": [ 149.198149727249671, -35.226147345200012 ] } },
+{ "type": "Feature", "properties": { "z": 16 }, "geometry": { "type": "Point", "coordinates": [ 149.213691710432897, -35.211976713474137 ] } },
+{ "type": "Feature", "properties": { "z": 17 }, "geometry": { "type": "Point", "coordinates": [ 149.229233693616095, -35.20374860473008 ] } }
+]
+}
