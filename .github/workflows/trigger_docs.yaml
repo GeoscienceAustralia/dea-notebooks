@@ -17,7 +17,7 @@ jobs:
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v1
         with:
-          token: ${{ secrets.REPO_PAT }}
+          token: ${{ secrets.REPO_PAT }} # A Personal Access Token with the 'public_repo' scope that is stored as a secret here: https://github.com/GeoscienceAustralia/dea-notebooks/settings/secrets/actions
           repository: GeoscienceAustralia/dea-knowledge-hub
           event-type: publish-notebooks-to-knowledge-hub
 
