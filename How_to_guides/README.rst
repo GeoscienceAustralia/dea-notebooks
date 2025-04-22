@@ -11,6 +11,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    ARD_overpass_predictor.ipynb
    Calculating_band_indices.ipynb
    Contour_extraction.ipynb
+   Continental_scale_animations.ipynb
    Detecting_seasonality.ipynb
    Downloading_data_with_STAC.ipynb
    Exporting_GeoTIFFs.ipynb
