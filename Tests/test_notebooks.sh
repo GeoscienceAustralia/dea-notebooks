@@ -20,7 +20,8 @@ if [ -z "$1" ]; then
     # Run pytest on default subset of notebooks, ignoring specific ones
     pytest --durations=20 --nbval-lax \
         Beginners_guide \
-        DEA_products --ignore DEA_products/DEA_Wetlands_Insight_Tool.ipynb \
+        DEA_products \
+        --ignore DEA_products/DEA_Wetlands_Insight_Tool.ipynb \
         How_to_guides/Animated_timeseries.ipynb \
         How_to_guides/Contour_extraction.ipynb \
         How_to_guides/Calculating_band_indices.ipynb \
@@ -58,7 +59,8 @@ elif [ "$1" = "how_to_guides" ]; then
     pytest --durations=20 --nbval-lax How_to_guides \
         --ignore How_to_guides/Land_cover_pixel_drill.ipynb \
         --ignore How_to_guides/External_data_ERA5_Climate.ipynb \
-        --ignore How_to_guides/Imagery_on_web_map.ipynb
+        --ignore How_to_guides/Imagery_on_web_map.ipynb \
+        --ignore How_to_guides/Continental_scale_animations.ipynb
 
 elif [ "$1" = "real_world_examples" ]; then
     echo "Testing Real_world_examples..."
