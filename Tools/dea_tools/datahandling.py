@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: February 2025
+Last modified: April 2025
 """
 
 import datetime
@@ -93,6 +93,16 @@ def _common_bands(dc, products):
         else:
             common = common.intersection(set(p.measurements))
     return [band for band in bands if band in common]
+
+
+def _contiguity_fuser(dst: np.ndarray, src: np.ndarray) -> None:
+    """
+    Ensure contiguity data is properly combined by replacing
+    pixels in `dst` that are either 0 (non-contiguous) or 255
+    (nodata) with the corresponding value from `src`, propogating
+    1 (valid contiguous data) if it exists.
+    """
+    np.copyto(dst, src, where=np.isin(dst, (255, 0)))
 
 
 def load_ard(
@@ -389,6 +399,12 @@ def load_ard(
             else pq_band
         )
 
+    # Use custom fuse function to ensure contiguity is combined correctly
+    # when grouping data by solar day. Without this, contiguity data from
+    # neighbouring images is pasted semi-randomly over each other,
+    # producing artefacts in the output.
+    kwargs["fuse_func"] = {contiguity_band: _contiguity_fuser}
+
     # If `measurements` are specified but do not include PQ or
     # contiguity variables, add these to `measurements`
     if pq_band not in measurements:
@@ -413,7 +429,7 @@ def load_ard(
     # If predicate is specified, use this function to filter the list
     # of datasets prior to load
     if verbose:
-       if predicate:
+        if predicate:
             print(
                 "The 'predicate' parameter will be deprecated in future "
                 "versions of this function as this functionality has now "
@@ -426,7 +442,7 @@ def load_ard(
     dataset_list = []
 
     # Get list of datasets for each product
-    if verbose:    
+    if verbose:
         print("Finding datasets")
     for product in products:
         # Obtain list of datasets for product
@@ -494,7 +510,7 @@ def load_ard(
         total_obs = len(ds.time)
         ds = ds.sel(time=keep)
         pq_mask = pq_mask.sel(time=keep)
-        
+
         if verbose:
             print(
                 f"Filtering to {len(ds.time)} out of {total_obs} "
@@ -505,8 +521,10 @@ def load_ard(
     # Morphological filtering on cloud masks
     if (mask_filters is not None) & (mask_pixel_quality != False):
         if verbose:
-            print(f"Applying morphological filters to pixel quality mask: {mask_filters}")
-        
+            print(
+                f"Applying morphological filters to pixel quality mask: {mask_filters}"
+            )
+
         pq_mask = ~mask_cleanup(~pq_mask, mask_filters=mask_filters)
 
         warnings.warn(
@@ -531,14 +549,14 @@ def load_ard(
     if mask_pixel_quality:
         if verbose:
             print(f"Applying {cloud_mask} pixel quality/cloud mask")
-        
+
         mask = pq_mask
 
     # Add contiguity mask to combined mask
     if mask_contiguity:
         if verbose:
             print(f"Applying contiguity mask ({contiguity_band})")
-        
+
         cont_mask = ds[contiguity_band] == 1
 
         # If mask already has data if mask_pixel_quality == True,
