@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: February 2025
+Last modified: April 2025
 """
 
 import datetime
@@ -95,6 +95,16 @@ def _common_bands(dc, products):
     return [band for band in bands if band in common]
 
 
+def _contiguity_fuser(dst: np.ndarray, src: np.ndarray) -> None:
+    """
+    Ensure contiguity data is properly combined by replacing
+    pixels in `dst` that are either 0 (non-contiguous) or 255
+    (nodata) with the corresponding value from `src`, propogating
+    1 (valid contiguous data) if it exists.
+    """
+    np.copyto(dst, src, where=np.isin(dst, (255, 0)))
+
+
 def load_ard(
     dc,
     products=None,
@@ -108,6 +118,7 @@ def load_ard(
     ls7_slc_off=True,
     dtype="auto",
     predicate=None,
+    verbose=True,
     **kwargs,
 ):
     """
@@ -228,6 +239,8 @@ def load_ard(
         from `dc.find_datasets`), and return a boolean. For example,
         a predicate function could be used to return True for only
         datasets acquired in January: `dataset.time.begin.month == 1`
+     verbose : bool, optional
+        If True, print progress statements during loading
     **kwargs :
         A set of keyword arguments to `dc.load` that define the
         spatiotemporal query and load parameters used to extract data.
@@ -386,6 +399,12 @@ def load_ard(
             else pq_band
         )
 
+    # Use custom fuse function to ensure contiguity is combined correctly
+    # when grouping data by solar day. Without this, contiguity data from
+    # neighbouring images is pasted semi-randomly over each other,
+    # producing artefacts in the output.
+    kwargs["fuse_func"] = {contiguity_band: _contiguity_fuser}
+
     # If `measurements` are specified but do not include PQ or
     # contiguity variables, add these to `measurements`
     if pq_band not in measurements:
@@ -409,27 +428,30 @@ def load_ard(
 
     # If predicate is specified, use this function to filter the list
     # of datasets prior to load
-    if predicate:
-        print(
-            "The 'predicate' parameter will be deprecated in future "
-            "versions of this function as this functionality has now "
-            "been added to Datacube itself. Please use "
-            "`dataset_predicate=...` instead."
-        )
-        query["dataset_predicate"] = predicate
+    if verbose:
+        if predicate:
+            print(
+                "The 'predicate' parameter will be deprecated in future "
+                "versions of this function as this functionality has now "
+                "been added to Datacube itself. Please use "
+                "`dataset_predicate=...` instead."
+            )
+            query["dataset_predicate"] = predicate
 
     # Extract list of datasets for each product using query params
     dataset_list = []
 
     # Get list of datasets for each product
-    print("Finding datasets")
+    if verbose:
+        print("Finding datasets")
     for product in products:
         # Obtain list of datasets for product
-        print(
-            f"    {product} (ignoring SLC-off observations)"
-            if not ls7_slc_off and product == "ga_ls7e_ard_3"
-            else f"    {product}"
-        )
+        if verbose:
+            print(
+                f"    {product} (ignoring SLC-off observations)"
+                if not ls7_slc_off and product == "ga_ls7e_ard_3"
+                else f"    {product}"
+            )
         datasets = dc.find_datasets(product=product, **query)
 
         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
@@ -477,7 +499,8 @@ def load_ard(
     # completely to save processing time
     if min_gooddata > 0.0:
         # Compute good data for each observation as % of total pixels
-        print(f"Counting good quality pixels for each time step using {cloud_mask}")
+        if verbose:
+            print(f"Counting good quality pixels for each time step using {cloud_mask}")
         data_perc = pq_mask.sum(axis=[1, 2], dtype="int32") / (
             pq_mask.shape[1] * pq_mask.shape[2]
         )
@@ -488,15 +511,20 @@ def load_ard(
         ds = ds.sel(time=keep)
         pq_mask = pq_mask.sel(time=keep)
 
-        print(
-            f"Filtering to {len(ds.time)} out of {total_obs} "
-            f"time steps with at least {min_gooddata:.1%} "
-            f"good quality pixels"
-        )
+        if verbose:
+            print(
+                f"Filtering to {len(ds.time)} out of {total_obs} "
+                f"time steps with at least {min_gooddata:.1%} "
+                f"good quality pixels"
+            )
 
     # Morphological filtering on cloud masks
     if (mask_filters is not None) & (mask_pixel_quality != False):
-        print(f"Applying morphological filters to pixel quality mask: {mask_filters}")
+        if verbose:
+            print(
+                f"Applying morphological filters to pixel quality mask: {mask_filters}"
+            )
+
         pq_mask = ~mask_cleanup(~pq_mask, mask_filters=mask_filters)
 
         warnings.warn(
@@ -519,12 +547,16 @@ def load_ard(
 
     # Add pixel quality mask to combined mask
     if mask_pixel_quality:
-        print(f"Applying {cloud_mask} pixel quality/cloud mask")
+        if verbose:
+            print(f"Applying {cloud_mask} pixel quality/cloud mask")
+
         mask = pq_mask
 
     # Add contiguity mask to combined mask
     if mask_contiguity:
-        print(f"Applying contiguity mask ({contiguity_band})")
+        if verbose:
+            print(f"Applying contiguity mask ({contiguity_band})")
+
         cont_mask = ds[contiguity_band] == 1
 
         # If mask already has data if mask_pixel_quality == True,
@@ -567,10 +599,12 @@ def load_ard(
     # If user supplied `dask_chunks`, return data as a dask array
     # without actually loading it into memory
     if dask_chunks is not None:
-        print(f"Returning {len(ds.time)} time steps as a dask array")
+        if verbose:
+            print(f"Returning {len(ds.time)} time steps as a dask array")
         return ds
     else:
-        print(f"Loading {len(ds.time)} time steps")
+        if verbose:
+            print(f"Loading {len(ds.time)} time steps")
         return ds.compute()
 
 
