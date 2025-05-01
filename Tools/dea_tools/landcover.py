@@ -195,7 +195,7 @@ lc_colours = {
              'Natural Aquatic Vegetated: Woody Closed (> 65 %)'),
         64: (
             25, 173, 109, 255,
-            'Natural Aquatic Vegetated: Woody Closed (> 65 %) Water > 3 months (semi-) permenant'
+            'Natural Aquatic Vegetated: Woody Closed (> 65 %) Water > 3 months (semi-) permanent'
         ),
         65: (
             25, 173, 109, 255,
@@ -205,7 +205,7 @@ lc_colours = {
              'Natural Aquatic Vegetated: Woody Open (40 to 65 %)'),
         67: (
             53, 184, 132, 255,
-            'Natural Aquatic Vegetated: Woody Open (40 to 65 %) Water > 3 months (semi-) permenant'
+            'Natural Aquatic Vegetated: Woody Open (40 to 65 %) Water > 3 months (semi-) permanent'
         ),
         68: (
             53, 184, 132, 255,
@@ -215,7 +215,7 @@ lc_colours = {
              'Natural Aquatic Vegetated: Woody Open (15 to 40 %)'),
         70: (
             93, 195, 155, 255,
-            'Natural Aquatic Vegetated: Woody Open (15 to 40 %) Water > 3 months (semi-) permenant'
+            'Natural Aquatic Vegetated: Woody Open (15 to 40 %) Water > 3 months (semi-) permanent'
         ),
         71: (
             93, 195, 155, 255,
@@ -225,7 +225,7 @@ lc_colours = {
              'Natural Aquatic Vegetated: Woody Sparse (4 to 15 %)'),
         73: (
             135, 206, 178, 255,
-            'Natural Aquatic Vegetated: Woody Sparse (4 to 15 %) Water > 3 months (semi-) permenant'
+            'Natural Aquatic Vegetated: Woody Sparse (4 to 15 %) Water > 3 months (semi-) permanent'
         ),
         74: (
             135, 206, 178, 255,
@@ -235,7 +235,7 @@ lc_colours = {
              'Natural Aquatic Vegetated: Woody Scattered (1 to 4 %)'),
         76: (
             176, 218, 201, 255,
-            'Natural Aquatic Vegetated: Woody Scattered (1 to 4 %) Water > 3 months (semi-) permenant'
+            'Natural Aquatic Vegetated: Woody Scattered (1 to 4 %) Water > 3 months (semi-) permanent'
         ),
         77: (
             176, 218, 201, 255,
@@ -245,7 +245,7 @@ lc_colours = {
              'Natural Aquatic Vegetated: Herbaceous Closed (> 65 %)'),
         79: (
             39, 204, 139, 255,
-            'Natural Aquatic Vegetated: Herbaceous Closed (> 65 %) Water > 3 months (semi-) permenant'
+            'Natural Aquatic Vegetated: Herbaceous Closed (> 65 %) Water > 3 months (semi-) permanent'
         ),
         80: (
             39, 204, 139, 255,
@@ -255,7 +255,7 @@ lc_colours = {
              'Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %)'),
         82: (
             66, 216, 159, 255,
-            'Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %) Water > 3 months (semi-) permenant'
+            'Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %) Water > 3 months (semi-) permanent'
         ),
         83: (
             66, 216, 159, 255,
@@ -265,7 +265,7 @@ lc_colours = {
              'Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %)'),
         85: (
             99, 227, 180, 255,
-            'Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %) Water > 3 months (semi-) permenant'
+            'Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %) Water > 3 months (semi-) permanent'
         ),
         86: (
             99, 227, 180, 255,
@@ -275,7 +275,7 @@ lc_colours = {
              'Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %)'),
         88: (
             135, 239, 201, 255,
-            'Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %) Water > 3 months (semi-) permenant'
+            'Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %) Water > 3 months (semi-) permanent'
         ),
         89: (
             135, 239, 201, 255,
@@ -285,7 +285,7 @@ lc_colours = {
              'Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %)'),
         91: (
             171, 250, 221, 255,
-            'Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %) Water > 3 months (semi-) permenant'
+            'Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %) Water > 3 months (semi-) permanent'
         ),
         92: (
             171, 250, 221, 255,
@@ -402,7 +402,7 @@ lc_colours_mapping = {
         '1 to 4 %': (154, 199, 156, 255, '1 to 4 %\ncover')
     },
     'watersea_veg_cat_l4a_au': {
-        '(semi-) permenant': (25, 173, 109, 255, '> 3 months'),
+        '(semi-) permanent': (25, 173, 109, 255, '> 3 months'),
         '(temporary or seasonal)': (176, 218, 201, 255, '< 3 months')
     },
     'waterstt_wat_cat_l4a': {
@@ -713,7 +713,7 @@ def make_colourbar(fig,
                 [0.62, 0.05, 0.02, 0.90]
             )  # parameters for add_axes are [left, bottom, width, height], in fractions of total plot
             orient = 'vertical'
-            # get level 4 colour bar colour map ect
+            # get level 4 colour bar colour map
             cb_cmap, cb_norm, cb_labels, cb_ticks = _legend_colourmap(
                 colour_scheme)
 
@@ -723,7 +723,7 @@ def make_colourbar(fig,
             # Settings for axis positions
             cax = fig.add_axes([0.84, 0.145, 0.02, 0.70])
             orient = 'vertical'
-            # get level 4 colour bar colour map ect
+            # get level 4 colour bar colour map
             cb_cmap, cb_norm, cb_labels, cb_ticks = _legend_colourmap(
                 colour_scheme)
 
@@ -742,7 +742,7 @@ def make_colourbar(fig,
             cax = fig.add_axes([0.84, 0.145, 0.02, 0.70])
             orient = 'vertical'
 
-        # get measurement colour bar colour map ect
+        # get measurement colour bar colour map
         cb_cmap, cb_norm, cb_labels, cb_ticks = _legend_colourmap(colour_scheme)
 
     img = ax.imshow([cb_ticks], cmap=cb_cmap, norm=cb_norm)
@@ -803,7 +803,7 @@ def plot_land_cover(
         #plotting protocol if 'year' variable is passed
         if int(year) not in pd.to_datetime(
                 data.time.values
-        ).year:  # check if year selecte is in the datacube
+        ).year:  # check if year selected is in the datacube
             raise ValueError(f'Year {year} is not in the data array.')
 
         year_string = f"{year}-07-01"  # LC collection 3 dates are in July
@@ -818,7 +818,7 @@ def plot_land_cover(
                        interpolation="nearest")
 
     elif len(data.time) == 1:
-        #plotting protocol if only one timestep is passed and not a year variable
+        #plotting protocol if only one time step is passed and not a year variable
         fig, ax = plt.subplots()
         fig.set_size_inches(width * scale / 72, height * scale / 72)
         make_colourbar(fig, ax, measurement, labelsize)
@@ -828,7 +828,7 @@ def plot_land_cover(
                        interpolation="nearest")
 
     else:
-        #plotting protocol if multible time steps are passed to plot
+        #plotting protocol if multiple time steps are passed to plot
         if cols > len(data.time):
             cols = len(data.time)
         rows = int((len(data.time) + cols - 1) / cols)
@@ -866,7 +866,7 @@ def _calc_class_ratio(da, measurement):
     # list all class codes in dataset
     list_classes = (np.unique(da, return_counts=False)).tolist()
 
-    # if a descriptor colour scheme is required, list_classes need to be chnaged to contain only classes of that descriptor
+    # if a descriptor colour scheme is required, list_classes need to be changed to contain only classes of that descriptor
     # the following code uses the _descriptors_colours function to get the colours scheme and then the values of the descriptor of interest
     if measurement in lc_colours_mapping:
         lc_colour_scheme = _descriptors_colours(lc_colours, lc_colours_mapping,
@@ -1074,7 +1074,7 @@ def lc_animation(
                                             wspace=0)
 
             # make colour bar
-            # provide left hand canvas to colour bar fuction which is where the image will go
+            # provide left hand canvas to colour bar function which is where the image will go
             # colourbar will plot on right side beside it
             make_colourbar(fig,
                            ax1,
@@ -1082,7 +1082,7 @@ def lc_animation(
                            labelsize=font_size,
                            animation=True)
 
-            # turn off lines for second plot so it's not ontop of colourbar
+            # turn off lines for second plot so it's not on top of colourbar
             ax2.set_axis_off()
 
         # plotting any other measurement with or with-out colour bar or level 4 without
