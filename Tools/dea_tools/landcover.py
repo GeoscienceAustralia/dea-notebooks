@@ -17,13 +17,11 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: March 2025
+Last modified: May 2025
 """
 
 import numpy as np
 import pandas as pd
-# import ast
-# import sys
 
 from IPython.display import Image
 
@@ -442,19 +440,21 @@ aliases = {
 
 def get_label(lc_value, level, lc_dictionary=lc_colours):
     """
-    returns the name of the LC class given it's value
+    Returns the name of the Land Cover class given its value.
 
     Parameters
-    -----------
+    ---------
     lc_value : int
-        value of a landcover class
+        Value of a landcover class.
     level : str
-        either 'level3' or 'level4'
-    lc_dictionary : dict
-        dictionary with colour scheme
-
+        Either 'level3' or 'level4'.
+    lc_dictionary : dict, optional
+        A dictionary specifying color schemes.  
+        Defaults to a nested dictionary with keys `level3` and `level4`, 
+        each mapping to their respective sub-dictionaries.
+        
     Returns
-    ----------
+    ---------
     a string indicating the name of the land cover class
     """
 
@@ -492,7 +492,7 @@ def _descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
     and the values are the corresponding colours and labels from the descriptor mapping.
     
     Parameters
-    ----------
+    ---------
     lc_colours : dict
         Dictionary containing colour schemes for all Land Cover classes, 
         including Level 4 scheme (needed in this function). 
@@ -504,7 +504,7 @@ def _descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
         The descriptor to be used for mapping colours.
 
     Returns
-    -------
+    ---------
     sorted_colours_dict : dict
         Sorted dictionary with class values as keys and colour tuples as values.
     """
@@ -545,7 +545,25 @@ def _descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
 
 def get_colour_scheme(measurement):
     """
-    Gets colour scheme dictionary given the measurement of interest
+    Retrieves a colour scheme dictionary for a specified measurement.
+
+    This function determines the appropriate colour scheme based on a given 
+    measurement name. If the measurement refers to a descriptor,
+    the colour scheme is built from the descriptor definitions. 
+    Otherwise, a standard predefined colour scheme is returned.
+
+    Parameters
+    ---------
+    measurement : str
+        The name of the measurement or descriptor for which the colour 
+        scheme is requested. Must match a key in `lc_colours`, 
+        `lc_colours_mapping`, or `aliases`.
+
+    Returns
+    ---------
+    colour_scheme : dict
+        Dictionary containing the colour scheme associated with the 
+        specified measurement or descriptor.
     """
 
     # ensure a valid colour scheme was requested
@@ -599,7 +617,7 @@ def _reduce_colour_scheme(colour_scheme):
 
 def lc_colourmap(colour_scheme):
     """
-    Takes a colour scheme dictionary and returns colormap for matplotlib
+    Takes a colour scheme dictionary and returns colormap for matplotlib.
     
     Returns
     ---------
@@ -635,7 +653,7 @@ def lc_colourmap(colour_scheme):
 
 def _legend_colourmap(colour_scheme):
     """
-    Returns colour map and normalisation specifcially for the colourbar 
+    Returns colour map and normalisation specifically for the colourbar 
     of the provided DEA Land Cover measurement, for use in plotting with Matplotlib library
 
     Parameters
@@ -679,9 +697,9 @@ def make_colourbar(fig,
                    labelsize=10,
                    horizontal=False,
                    animation=False
-                  ):  # in practice, horizontal arg in never used, currently
+                  ):  
     """
-    Adds a new colorbar with appropriate land cover colours and labels.
+    Adds a new colourbar with appropriate Land Cover colours and labels.
 
     For DEA Land Cover Level 4 data, this function must be used with a double plot. 
     The 'ax' should be on the left side of the figure, and the colour bar will added 
@@ -694,13 +712,17 @@ def make_colourbar(fig,
     ax : matplotlib ax
         Matplotlib figure ax to add colorbar to.
     measurement : string
-        name of layer or descriptor of interest
-    labelsize : int
-        size of labels of colourbar
+        Name of the layer or descriptor of interest.
+    labelsize : int, optional
+        Size of labels in the colourbar.
+    horizontal : bool, optional
+        If True, displays the colourbar horizontally; otherwise, uses vertical orientation.
+    animation : bool, optional
+        If True, adjusts layout and axis size for animation display.
 
     Returns
     ----------
-    matplotlib colorbar in its own colour axis
+    Matplotlib colorbar in its own colour axis
     """
 
     if measurement == 'level4':
@@ -765,9 +787,11 @@ def plot_land_cover(
     Plot a single land cover measurement with appropriate colour scheme.
     
     Parameters
-    ----------
+    ---------
     data : xarray.DataArray
         A dataArray containing a DEA Land Cover classification.
+    labelsize : int, optional
+        Font size for the labels on the colourbar.
     year : int, optional
         Can be used to select to plot a specific year. If not provided,
         all time slices are plotted.
@@ -781,11 +805,11 @@ def plot_land_cover(
         automatically based on the dimensions/ratio of the input 
         xarray dataset. Defaults to 500 pixels wide.   
     cols: integer, optional
-        Sets number of columns if multiple time steps are visualised
+        Sets number of columns if multiple time steps are visualised.
 
     Returns
     ---------
-    Matplotlib image
+    Matplotlib image.
         
     """
 
@@ -854,12 +878,12 @@ def _calc_class_ratio(da, measurement):
         Creates a table listing year by year what percentage of the
         total area is taken up by each class.
         Parameters
-        ----------
+        ---------
         da : xarray.DataArray with time dimension
         measurement: string with name of descriptor/measurement
         
         Returns
-        -------
+        ---------
         Pandas Dataframe : containing class percentages per year
         """
 
@@ -924,7 +948,7 @@ def lc_animation(
     animation to a file and displays the animation in notebook.
     
     Parameters
-    ----------
+    ---------
     da : xarray.DataArray
         An xarray.DataArray containing a multi-date stack of 
         observations of a single landcover level.
@@ -939,7 +963,7 @@ def lc_animation(
         Determines if a stacked plot showing the percentage of area
         taken up by each class in each time slice is added to the
         animation. Default: False.
-    colour_bar : boolean, Optional
+    colour_bar : boolean, optional
         Determines if a colour bar is generated for the stand alone 
         animation. This is NOT recommended for use with level 4 data. 
         Does not work with stacked plot. Default: False.
@@ -956,20 +980,21 @@ def lc_animation(
         animation and determines the resolution. A higher number will
         produce a higher resolution image but a larger file size and
         slower processing. Default: 150.
-    font_size : int, optional. 
+    font_size : int, optional
         Controls the size of the text on the axes and colour bar. Default: 15.
     label_size : int, optional. 
         Controls the size of the text which indicates the year
         displayed. Default: 15.
     label_ax : boolean, optional
         Determines if animation plot should have tick marks and numbers
-        on axes. Also removes white space around plot. default: True
+        on axes. Also removes white space around plot. Default: True
 
         
     Returns
-    -------
+    ---------
     A GIF (.gif) animation file.
     """
+    
     # Add gif to end of filename
     file_name = file_name + ".gif"
 
