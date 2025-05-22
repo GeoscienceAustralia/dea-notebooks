@@ -11,8 +11,6 @@ If you have used material from this repository, please reference them using this
 Scientific papers
 -----------------
 
-- Ochungo, P., Sagna, N., Neema, V., Akintayo, A., Athie, A., Kabiru, A., Ndiaye, A., Michaut, E., Merlo, S. and Lane, P., 2025. Shoreline dynamics and cultural heritage sites in Kenya, Tanzania, and Senegal: integrating remote sensing and archaeological knowledge. Journal of Maps, 21(1), p.2487454.
-
 - Abhik, S., Hope, P., Hendon, H.H., Hutley, L.B., Johnson, S., Drosdowsky, W. and Brown, J., 2021. The Influence of 2015-16 El Niño On the Record-Breaking Mangrove Dieback Along Northern Australia Coast. Scientific Reports, Preprint. https://doi.org/10.21203/rs.3.rs-650667/v1
 
 - Bishop-Taylor, R., Nanson, R., Sagar, S., Lymburner, L., 2021. Mapping Australia's dynamic coastline at mean sea level using three decades of Landsat imagery. Remote Sensing of Environment, 267, 112734. https://doi.org/10.1016/j.rse.2021.112734
@@ -40,6 +38,8 @@ Scientific papers
 - Malan, N., Roughan, M., Hemming, M. et al. Quantifying coastal freshwater extremes during unprecedented rainfall using long timeseries multi-platform salinity observations. Nat Commun 15, 424 (2024). https://doi.org/10.1038/s41467-023-44398-2
 
 - Nanson, R., Bishop-Taylor, R., Sagar, S., Lymburner, L., (2022). Geomorphic insights into Australia's coastal change using a national dataset derived from the multi-decadal Landsat archive. Estuarine, Coastal and Shelf Science, 265, p.107712. Available: https://doi.org/10.1016/j.ecss.2021.107712
+
+- Ochungo, P., Sagna, N., Neema, V., Akintayo, A., Athie, A., Kabiru, A., Ndiaye, A., Michaut, E., Merlo, S. and Lane, P., 2025. Shoreline dynamics and cultural heritage sites in Kenya, Tanzania, and Senegal: integrating remote sensing and archaeological knowledge. Journal of Maps, 21(1), p.2487454.
 
 - Pucino, N., Kennedy, D.M., Young, M. and Ierodiaconou, D., 2022. Assessing the accuracy of Sentinel-2 instantaneous subpixel shorelines using synchronous UAV ground truth surveys. Remote Sensing of Environment, 282, p.113293.
 
