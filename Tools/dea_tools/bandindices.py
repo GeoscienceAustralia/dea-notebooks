@@ -256,16 +256,31 @@ def calculate_indices(ds,
                   'TCW': lambda ds: (0.0315 * ds.blue + 0.2021 * ds.green +
                                      0.3102 * ds.red + 0.1594 * ds.nir +
                                     -0.6806 * ds.swir1 + -0.6109 * ds.swir2),
+                  
+                  # Tasseled Cap Wetness for Landsat 8 and 9
+                  'TCW_ls8ls9': lambda ds: (0.1511 * ds.blue + 0.1973 * ds.green +
+                                     0.3283 * ds.red + 0.3407 * ds.nir +
+                                    -0.7117 * ds.swir1 + -0.4559 * ds.swir2),
+
 
                   # Tasseled Cap Greeness, Crist 1985
                   'TCG': lambda ds: (-0.1603 * ds.blue + -0.2819 * ds.green +
                                      -0.4934 * ds.red + 0.7940 * ds.nir +
                                      -0.0002 * ds.swir1 + -0.1446 * ds.swir2),
+                  
+                  'TCG_ls8ls9': lambda ds: (-0.2941 * ds.blue + -0.2430 * ds.green +
+                                     -0.5424 * ds.red + 0.7276 * ds.nir +
+                                     0.0713 * ds.swir1 + -0.1608 * ds.swir2),
+                  
 
                   # Tasseled Cap Brightness, Crist 1985
                   'TCB': lambda ds: (0.2043 * ds.blue + 0.4158 * ds.green +
                                      0.5524 * ds.red + 0.5741 * ds.nir +
                                      0.3124 * ds.swir1 + -0.2303 * ds.swir2),
+                  
+                  'TCB_ls8ls9': lambda ds: (0.3029 * ds.blue + 0.2786 * ds.green +
+                                     0.4733 * ds.red + 0.5599 * ds.nir +
+                                     0.5080 * ds.swir1 + 0.1872 * ds.swir2),
                   
                   # Tasseled Cap Transformations with Sentinel-2 coefficients 
                   # after Nedkov 2017 using Gram-Schmidt orthogonalization (GSO)
