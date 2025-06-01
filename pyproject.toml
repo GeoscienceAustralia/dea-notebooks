@@ -31,7 +31,7 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     "aiohttp>=3.5.0",
     "cartopy>=0.22.0",
-    "ciso8601>=2.2.0",
+    # "ciso8601>=2.2.0",  # blocks Python 3.13 installation on Windows
     "dask>=2023.1.0",
     "dask-ml>=2021.10.17",
     "eo-tides>=0.7.4",
