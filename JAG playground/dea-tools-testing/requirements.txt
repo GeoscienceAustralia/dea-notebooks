@@ -1,0 +1,9 @@
+
+# note this is not a legit requirements.txt yet, this is just a working list of packages that need to be installed.
+# make sure you are in the right venv and use uv pip install
+
+jupyter
+ipykernel
+"git+https://github.com/GeoscienceAustralia/dea-notebooks.git@update_packaging"
+odc-stac
+pystac-client
