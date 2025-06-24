@@ -8,10 +8,12 @@ inputs:
     default: "stable"
   pull_image_optional:
     description: "Pull the image from ecr"
+    type: boolean
     required: false
     default: true
   copy_tidal_model:
     description: "Copy tidal model file from s3 bucket"
+    type: boolean
     required: false
     default: true
 
