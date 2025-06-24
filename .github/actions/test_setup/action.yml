@@ -9,11 +9,11 @@ inputs:
   pull_image_optional:
     description: "Pull the image from ecr"
     required: false
-    default: true
+    default: "true"
   copy_tidal_model:
     description: "Copy tidal model file from s3 bucket"
     required: false
-    default: true
+    default: "true"
 
 runs:
   using: "composite"
