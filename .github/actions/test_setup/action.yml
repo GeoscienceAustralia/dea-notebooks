@@ -30,19 +30,19 @@ runs:
         role-duration-seconds: 7200  # 2 hours
 
     - name: Copy tide modelling files with the AWS CLI
-      if: $${{ inputs.copy_tidal_model}}
+      if: $${{ inputs.copy_tidal_model }}
       run: |
-        aws s3 sync s3://dea-non-public-data/tide_models/tide_models/fes2014 tide_models/fes2014
-        aws s3 sync s3://dea-non-public-data/tide_models/tide_models/hamtide tide_models/hamtide
+        aws s3 sync s3://dea-non-public-data/tide_models/tide_models/fes2014 tide_models/fes2014 > /dev/null
+        aws s3 sync s3://dea-non-public-data/tide_models/tide_models/hamtide tide_models/hamtide > /dev/null
       shell: bash
 
     - name: Login to Amazon ECR Private
       id: login-ecr
-      if: $${{ inputs.pull_image_optional}}
+      if: $${{ inputs.pull_image_optional }}
       uses: aws-actions/amazon-ecr-login@v2
 
     - name: Pull dea-sandbox image from ECR
-      if: $${{ inputs.pull_image_optional}}
+      if: $${{ inputs.pull_image_optional }}
       run: |
         docker pull 538673716275.dkr.ecr.ap-southeast-2.amazonaws.com/geoscienceaustralia/sandbox:${{ inputs.image }}
       shell: bash
