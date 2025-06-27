@@ -260,7 +260,7 @@ def predict_xr(
         If True, the probabilities array will be flattened to contain
         only the probabiltiy for the "Predictions" class. If False, 
         the "Probabilities" object will be an array of prediction
-        probablities for each classes
+        probablities for each class
     clean : bool
         If True, remove Infs and NaNs from input and output arrays
     return_input : bool
@@ -332,22 +332,23 @@ def predict_xr(
         )
 
         output_xr = output_xr.to_dataset(name="Predictions")
-
+        
         if proba == True:
             print("   probabilities...")
             out_proba = model.predict_proba(input_data_flattened)
 
             # return either one band with the max probability, or the whole probability array
             if max_proba == True:
-                print("  returning single probability band.")
+                print("   returning single probability band")
                 out_proba = da.max(out_proba, axis=1) * 100.0
                 out_proba = out_proba.reshape(len(y), len(x))
+                
                 out_proba = xr.DataArray(
                     out_proba, coords={"x": x, "y": y}, dims=["y", "x"]
                 )
                 output_xr["Probabilities"] = out_proba
             else:
-                print("  returning class probability array.")
+                print("   returning class probability array")
                 out_proba = out_proba * 100.0
                 class_names = model.classes_  # Get the unique class names from the fitted classifier
 
