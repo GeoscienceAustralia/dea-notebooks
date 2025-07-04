@@ -1,0 +1,1809 @@
+1: cd /g/data1a/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working
+0: cd /g/data1a/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+pbsdsh: task 0x00000000 exit status 32
+Shape file is /g/data/r78/rjd547/Ramsar_Wetlands/ExplodedRAMSAR.shp
+system argument received is 2
+chunk size is 5
+There are 54 generated chunks
+Running for polygon IDs in the range 5 to 10
+processing polygon Cobourg_Peninsula-Cobourg_Peninsula-NT-5
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+run tasselled cap transform
+load wofls
+load fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 51 filtered ls7 timesteps
+Loading ls8
+    Loading 85 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+Unexpected error: <class 'ValueError'>
+pbsdsh: task 0x00000000 exit status 32
+
+======================================================================================
+                  Resource Usage on 2019-03-15 11:12:27:
+   Job Id:             6800661.r-man2
+   Project:            r78
+   Exit Status:        0
+   Service Units:      48.27
+   NCPUs Requested:    64                     NCPUs Used: 64              
+                                           CPU Time Used: 14:25:33                                   
+   Memory Requested:   6.0TB                 Memory Used: 26.43GB         
+   Walltime requested: 24:00:00            Walltime Used: 00:45:15        
+   JobFS requested:    1.56TB                 JobFS used: 0B              
+======================================================================================

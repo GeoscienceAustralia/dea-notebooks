@@ -1,0 +1,2298 @@
+ERROR: No valid executable to run! ret=0 errno=17
+pbsdsh: task 0x00000000 exit status 1
+0: cd /g/data1a/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/For_CK
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 4
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 69 to 92
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 5
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 92 to 115
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 6
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 115 to 138
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 7
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 138 to 161
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 8
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 161 to 184
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 9
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 184 to 207
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 10
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 207 to 230
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 11
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 230 to 253
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 12
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 253 to 276
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 13
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 276 to 299
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 14
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 299 to 322
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 15
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 322 to 345
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 16
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 345 to 368
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 17
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 368 to 391
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 18
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 391 to 414
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 19
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 414 to 437
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 20
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 437 to 460
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 21
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 460 to 483
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 22
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 483 to 506
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 23
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 506 to 529
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 24
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 529 to 552
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 25
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 552 to 575
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 26
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 575 to 598
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 27
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 598 to 621
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 28
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 621 to 644
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 29
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 644 to 667
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 30
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 667 to 690
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 31
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 690 to 713
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 32
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 713 to 736
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 33
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 736 to 759
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 34
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 759 to 782
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 35
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 782 to 805
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 36
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 805 to 828
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 37
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 828 to 851
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 38
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 851 to 874
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 39
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 874 to 897
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 40
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 897 to 920
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 41
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 920 to 943
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 42
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 943 to 966
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 43
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 966 to 989
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 44
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 989 to 1012
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 45
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1012 to 1035
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 46
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1035 to 1058
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 47
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1058 to 1081
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 48
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1081 to 1104
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 49
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1104 to 1127
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 50
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1127 to 1150
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 51
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1150 to 1173
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 52
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1173 to 1196
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 53
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1196 to 1219
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 54
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1219 to 1242
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 55
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1242 to 1265
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 56
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1265 to 1288
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 57
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1288 to 1311
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 58
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1311 to 1334
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 59
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1334 to 1357
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 60
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1357 to 1380
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 61
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1380 to 1403
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 62
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1403 to 1426
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 63
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1426 to 1449
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 64
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1449 to 1472
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 65
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1472 to 1495
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 66
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1495 to 1518
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 67
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1518 to 1541
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 68
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1541 to 1564
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 69
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1564 to 1587
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 70
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 1587 to 1610
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 3
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 46 to 69
+processing polygon 294
+Loading ls5
+    Loading 558 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 113 filtered ls7 timesteps
+Loading ls8
+    Loading 187 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 558 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 113 filtered ls7 timesteps
+Loading ls8
+    Loading 187 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 294
+wrote output data to file /g/data/r78/rjd547/CK_val/294.csv
+processing polygon 296
+Loading ls5
+    Loading 292 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 292 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 296
+wrote output data to file /g/data/r78/rjd547/CK_val/296.csv
+processing polygon 297
+Loading ls5
+    Loading 292 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 292 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 297
+wrote output data to file /g/data/r78/rjd547/CK_val/297.csv
+processing polygon 299
+Loading ls5
+    Loading 293 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 293 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 299
+wrote output data to file /g/data/r78/rjd547/CK_val/299.csv
+processing polygon 307
+Loading ls5
+    Loading 207 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 207 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 307
+wrote output data to file /g/data/r78/rjd547/CK_val/307.csv
+processing polygon 314
+Loading ls5
+    Loading 275 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 53 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 275 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 53 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 314
+wrote output data to file /g/data/r78/rjd547/CK_val/314.csv
+processing polygon 315
+Loading ls5
+    Loading 275 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 275 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 315
+wrote output data to file /g/data/r78/rjd547/CK_val/315.csv
+processing polygon 316
+Loading ls5
+    Loading 280 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 91 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 280 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 91 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 316
+wrote output data to file /g/data/r78/rjd547/CK_val/316.csv
+processing polygon 322
+Loading ls5
+    Loading 272 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 55 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 272 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 55 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 322
+wrote output data to file /g/data/r78/rjd547/CK_val/322.csv
+processing polygon 329
+Loading ls5
+    Loading 272 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 272 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 329
+wrote output data to file /g/data/r78/rjd547/CK_val/329.csv
+processing polygon 330
+Loading ls5
+    Loading 270 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 55 filtered ls7 timesteps
+Loading ls8
+    Loading 91 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 270 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 55 filtered ls7 timesteps
+Loading ls8
+    Loading 91 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 330
+wrote output data to file /g/data/r78/rjd547/CK_val/330.csv
+processing polygon 331
+Loading ls5
+    Loading 296 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 296 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 331
+wrote output data to file /g/data/r78/rjd547/CK_val/331.csv
+processing polygon 332
+Loading ls5
+    Loading 290 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 86 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 290 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 86 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 332
+wrote output data to file /g/data/r78/rjd547/CK_val/332.csv
+processing polygon 333
+Loading ls5
+    Loading 291 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 88 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 291 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 88 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 333
+wrote output data to file /g/data/r78/rjd547/CK_val/333.csv
+processing polygon 334
+Loading ls5
+    Loading 292 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 83 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 292 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 83 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 334
+wrote output data to file /g/data/r78/rjd547/CK_val/334.csv
+processing polygon 346
+Loading ls5
+    Loading 278 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 91 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 278 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 91 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 346
+wrote output data to file /g/data/r78/rjd547/CK_val/346.csv
+processing polygon 350
+Loading ls5
+    Loading 280 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 280 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 350
+wrote output data to file /g/data/r78/rjd547/CK_val/350.csv
+processing polygon 354
+Loading ls5
+    Loading 276 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 276 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 354
+wrote output data to file /g/data/r78/rjd547/CK_val/354.csv
+processing polygon 374
+Loading ls5
+    Loading 276 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 276 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 374
+wrote output data to file /g/data/r78/rjd547/CK_val/374.csv
+processing polygon 379
+Loading ls5
+    Loading 268 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 53 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 268 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 53 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 379
+wrote output data to file /g/data/r78/rjd547/CK_val/379.csv
+processing polygon 385
+Loading ls5
+    Loading 286 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 54 filtered ls7 timesteps
+Loading ls8
+    Loading 97 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 286 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 54 filtered ls7 timesteps
+Loading ls8
+    Loading 97 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 385
+wrote output data to file /g/data/r78/rjd547/CK_val/385.csv
+processing polygon 392
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 87 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 87 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 392
+wrote output data to file /g/data/r78/rjd547/CK_val/392.csv
+processing polygon 393
+Loading ls5
+    Loading 281 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 88 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 281 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 88 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 393
+wrote output data to file /g/data/r78/rjd547/CK_val/393.csv
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 2
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 23 to 46
+processing polygon 179
+Loading ls5
+    Loading 278 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 60 filtered ls7 timesteps
+Loading ls8
+    Loading 96 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 278 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 60 filtered ls7 timesteps
+Loading ls8
+    Loading 96 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 179
+wrote output data to file /g/data/r78/rjd547/CK_val/179.csv
+processing polygon 180
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 180
+wrote output data to file /g/data/r78/rjd547/CK_val/180.csv
+processing polygon 181
+Loading ls5
+    Loading 277 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 91 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 277 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 91 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 181
+wrote output data to file /g/data/r78/rjd547/CK_val/181.csv
+processing polygon 182
+Loading ls5
+    Loading 579 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 113 filtered ls7 timesteps
+Loading ls8
+    Loading 194 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 579 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 113 filtered ls7 timesteps
+Loading ls8
+    Loading 194 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 182
+wrote output data to file /g/data/r78/rjd547/CK_val/182.csv
+processing polygon 183
+Loading ls5
+    Loading 576 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 116 filtered ls7 timesteps
+Loading ls8
+    Loading 196 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 576 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 116 filtered ls7 timesteps
+Loading ls8
+    Loading 196 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 183
+wrote output data to file /g/data/r78/rjd547/CK_val/183.csv
+processing polygon 191
+Loading ls5
+    Loading 271 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 271 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 191
+wrote output data to file /g/data/r78/rjd547/CK_val/191.csv
+processing polygon 192
+Loading ls5
+    Loading 277 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 277 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 192
+wrote output data to file /g/data/r78/rjd547/CK_val/192.csv
+processing polygon 193
+Loading ls5
+    Loading 278 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 278 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 193
+wrote output data to file /g/data/r78/rjd547/CK_val/193.csv
+processing polygon 194
+Loading ls5
+    Loading 276 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 276 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 194
+wrote output data to file /g/data/r78/rjd547/CK_val/194.csv
+processing polygon 199
+Loading ls5
+    Loading 271 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 271 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 199
+wrote output data to file /g/data/r78/rjd547/CK_val/199.csv
+processing polygon 210
+Loading ls5
+    Loading 240 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 52 filtered ls7 timesteps
+Loading ls8
+    Loading 86 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 240 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 52 filtered ls7 timesteps
+Loading ls8
+    Loading 86 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 210
+wrote output data to file /g/data/r78/rjd547/CK_val/210.csv
+processing polygon 216
+Loading ls5
+    Loading 271 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 55 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 271 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 55 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 216
+wrote output data to file /g/data/r78/rjd547/CK_val/216.csv
+processing polygon 233
+Loading ls5
+    Loading 282 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 60 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 282 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 60 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 233
+wrote output data to file /g/data/r78/rjd547/CK_val/233.csv
+processing polygon 236
+Loading ls5
+    Loading 459 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 85 filtered ls7 timesteps
+Loading ls8
+    Loading 190 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 459 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 85 filtered ls7 timesteps
+Loading ls8
+    Loading 190 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 236
+wrote output data to file /g/data/r78/rjd547/CK_val/236.csv
+processing polygon 237
+Loading ls5
+    Loading 446 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 85 filtered ls7 timesteps
+Loading ls8
+    Loading 189 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 446 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 85 filtered ls7 timesteps
+Loading ls8
+    Loading 189 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 237
+wrote output data to file /g/data/r78/rjd547/CK_val/237.csv
+processing polygon 238
+Loading ls5
+    Loading 286 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 286 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 238
+wrote output data to file /g/data/r78/rjd547/CK_val/238.csv
+processing polygon 239
+Loading ls5
+    Loading 288 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 89 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 288 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 89 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 239
+wrote output data to file /g/data/r78/rjd547/CK_val/239.csv
+processing polygon 244
+Loading ls5
+    Loading 543 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 117 filtered ls7 timesteps
+Loading ls8
+    Loading 199 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 543 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 117 filtered ls7 timesteps
+Loading ls8
+    Loading 199 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 244
+wrote output data to file /g/data/r78/rjd547/CK_val/244.csv
+processing polygon 248
+Loading ls5
+    Loading 586 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 116 filtered ls7 timesteps
+Loading ls8
+    Loading 194 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 586 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 116 filtered ls7 timesteps
+Loading ls8
+    Loading 194 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 248
+wrote output data to file /g/data/r78/rjd547/CK_val/248.csv
+processing polygon 254
+Loading ls5
+    Loading 592 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 122 filtered ls7 timesteps
+Loading ls8
+    Loading 196 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 592 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 122 filtered ls7 timesteps
+Loading ls8
+    Loading 196 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 254
+wrote output data to file /g/data/r78/rjd547/CK_val/254.csv
+processing polygon 272
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 60 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 274 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 60 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 272
+wrote output data to file /g/data/r78/rjd547/CK_val/272.csv
+processing polygon 290
+Loading ls5
+    Loading 285 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 97 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 285 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 97 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 290
+wrote output data to file /g/data/r78/rjd547/CK_val/290.csv
+processing polygon 293
+Loading ls5
+    Loading 572 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 116 filtered ls7 timesteps
+Loading ls8
+    Loading 194 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 572 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 116 filtered ls7 timesteps
+Loading ls8
+    Loading 194 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 293
+wrote output data to file /g/data/r78/rjd547/CK_val/293.csv
+Shape file is /g/data/r78/rjd547/shapefiles/additional_full_storage_gwydir_b.shp
+system argument received is 1
+chunk size is 23
+There are 3 generated chunks
+Running for polygon IDs in the range 0 to 23
+processing polygon 5
+Loading ls5
+    Loading 279 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 98 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 279 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 98 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 5
+wrote output data to file /g/data/r78/rjd547/CK_val/5.csv
+processing polygon 6
+Loading ls5
+    Loading 276 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 276 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 6
+wrote output data to file /g/data/r78/rjd547/CK_val/6.csv
+processing polygon 12
+Loading ls5
+    Loading 268 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 268 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 12
+wrote output data to file /g/data/r78/rjd547/CK_val/12.csv
+processing polygon 20
+Loading ls5
+    Loading 286 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 97 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 286 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 97 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 20
+wrote output data to file /g/data/r78/rjd547/CK_val/20.csv
+processing polygon 21
+Loading ls5
+    Loading 322 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 61 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 322 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 61 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 21
+wrote output data to file /g/data/r78/rjd547/CK_val/21.csv
+processing polygon 22
+Loading ls5
+    Loading 308 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 308 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 22
+wrote output data to file /g/data/r78/rjd547/CK_val/22.csv
+processing polygon 29
+Loading ls5
+    Loading 288 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 288 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 59 filtered ls7 timesteps
+Loading ls8
+    Loading 95 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 29
+wrote output data to file /g/data/r78/rjd547/CK_val/29.csv
+processing polygon 38
+Loading ls5
+    Loading 260 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 53 filtered ls7 timesteps
+Loading ls8
+    Loading 87 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 260 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 53 filtered ls7 timesteps
+Loading ls8
+    Loading 87 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 38
+wrote output data to file /g/data/r78/rjd547/CK_val/38.csv
+processing polygon 47
+Loading ls5
+    Loading 282 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 89 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 282 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 89 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 47
+wrote output data to file /g/data/r78/rjd547/CK_val/47.csv
+processing polygon 50
+Loading ls5
+    Loading 239 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 53 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 239 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 53 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 50
+wrote output data to file /g/data/r78/rjd547/CK_val/50.csv
+processing polygon 64
+Loading ls5
+    Loading 275 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 52 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 275 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 52 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 64
+wrote output data to file /g/data/r78/rjd547/CK_val/64.csv
+processing polygon 76
+Loading ls5
+    Loading 275 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 275 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 76
+wrote output data to file /g/data/r78/rjd547/CK_val/76.csv
+processing polygon 87
+Loading ls5
+    Loading 576 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 113 filtered ls7 timesteps
+Loading ls8
+    Loading 191 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 576 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 113 filtered ls7 timesteps
+Loading ls8
+    Loading 191 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 87
+wrote output data to file /g/data/r78/rjd547/CK_val/87.csv
+processing polygon 98
+Loading ls5
+    Loading 573 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 113 filtered ls7 timesteps
+Loading ls8
+    Loading 187 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 573 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 113 filtered ls7 timesteps
+Loading ls8
+    Loading 187 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 98
+wrote output data to file /g/data/r78/rjd547/CK_val/98.csv
+processing polygon 100
+Loading ls5
+    Loading 375 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 79 filtered ls7 timesteps
+Loading ls8
+    Loading 194 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 375 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 79 filtered ls7 timesteps
+Loading ls8
+    Loading 194 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 100
+wrote output data to file /g/data/r78/rjd547/CK_val/100.csv
+processing polygon 105
+Loading ls5
+    Loading 287 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 287 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 105
+wrote output data to file /g/data/r78/rjd547/CK_val/105.csv
+processing polygon 106
+Loading ls5
+    Loading 284 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 89 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 284 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 56 filtered ls7 timesteps
+Loading ls8
+    Loading 89 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 106
+wrote output data to file /g/data/r78/rjd547/CK_val/106.csv
+processing polygon 112
+Loading ls5
+    Loading 292 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 292 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 90 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 112
+wrote output data to file /g/data/r78/rjd547/CK_val/112.csv
+processing polygon 115
+Loading ls5
+    Loading 279 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 279 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 92 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 115
+wrote output data to file /g/data/r78/rjd547/CK_val/115.csv
+processing polygon 122
+Loading ls5
+    Loading 275 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 275 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 94 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 122
+wrote output data to file /g/data/r78/rjd547/CK_val/122.csv
+processing polygon 124
+Loading ls5
+    Loading 280 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 89 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 280 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 57 filtered ls7 timesteps
+Loading ls8
+    Loading 89 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 124
+wrote output data to file /g/data/r78/rjd547/CK_val/124.csv
+processing polygon 163
+Loading ls5
+    Loading 233 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 53 filtered ls7 timesteps
+Loading ls8
+    Loading 97 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 233 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 53 filtered ls7 timesteps
+Loading ls8
+    Loading 97 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 163
+wrote output data to file /g/data/r78/rjd547/CK_val/163.csv
+processing polygon 175
+Loading ls5
+    Loading 273 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+running tasselled cap transform
+ran tasselled cap transform
+loading wofls
+wet, sea and shadowed wofls acquired
+loading fractional cover data
+Loading ls5
+    Loading 273 filtered ls5 timesteps
+Loading ls7
+    Ignoring SLC-off observations for ls7
+    Loading 58 filtered ls7 timesteps
+Loading ls8
+    Loading 93 filtered ls8 timesteps
+Combining and sorting ls5, ls7, ls8 data
+    Replacing invalid -999 values with NaN (data will be coerced to float64)
+loaded fractional cover data
+calculating dominant fraction for each Fractional Cover pixel
+plot created for 175
+wrote output data to file /g/data/r78/rjd547/CK_val/175.csv
+
+======================================================================================
+                  Resource Usage on 2019-05-31 13:17:26:
+   Job Id:             9216381.r-man2
+   Project:            r78
+   Exit Status:        0
+   Service Units:      51.84
+   NCPUs Requested:    28                     NCPUs Used: 28              
+                                           CPU Time Used: 03:16:47                                   
+   Memory Requested:   1.0TB                 Memory Used: 10.74GB         
+   Walltime requested: 06:00:00            Walltime Used: 01:28:52        
+   JobFS requested:    400.0GB                JobFS used: 0B              
+======================================================================================

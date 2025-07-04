@@ -1,0 +1,15 @@
+0: cd /g/data1a/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2
+1: cd /g/data1a/r78/rjd547/jupyter_notebooks/dea-notebooks/05_Temporal_analysis/raijinify_wetland_working/LRA_v2
+
+======================================================================================
+                  Resource Usage on 2019-06-18 12:17:23:
+   Job Id:             9679402.r-man2
+   Project:            r78
+   Exit Status:        271 (Linux Signal 15 SIGTERM Termination)
+   Service Units:      3.34
+   NCPUs Requested:    64                     NCPUs Used: 64              
+                                           CPU Time Used: 00:00:19                                   
+   Memory Requested:   6.0TB                 Memory Used: 29.68MB         
+   Walltime requested: 24:00:00            Walltime Used: 00:03:08        
+   JobFS requested:    1.76TB                 JobFS used: 0B              
+======================================================================================
