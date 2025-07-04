@@ -263,7 +263,7 @@ def calculate_indices(ds,
                                     -0.0045 * ds.swir1 + -0.6511 * ds.swir2),
                   
                   # Tasseled Cap Wetness for Landsat 8 and 9
-                  'TCW_ls8ls9': lambda ds: (0.1511 * ds.blue + 0.1973 * ds.green +
+                  'TCW_ls8': lambda ds: (0.1511 * ds.blue + 0.1973 * ds.green +
                                      0.3283 * ds.red + 0.3407 * ds.nir +
                                     -0.7117 * ds.swir1 + -0.4559 * ds.swir2),
                   
@@ -289,7 +289,7 @@ def calculate_indices(ds,
                                     0.2388 * ds.swir1 + -0.6800 * ds.swir2),
                   
                   # Tasseled Cap Greeness for Landsat 8 and 9
-                  'TCG_ls8ls9': lambda ds: (-0.2941 * ds.blue + -0.2430 * ds.green +
+                  'TCG_ls8': lambda ds: (-0.2941 * ds.blue + -0.2430 * ds.green +
                                      -0.5424 * ds.red + 0.7276 * ds.nir +
                                      0.0713 * ds.swir1 + -0.1608 * ds.swir2),
                   
@@ -314,7 +314,7 @@ def calculate_indices(ds,
                                     0.5350 * ds.swir1 + 0.2140 * ds.swir2),
                   
                   # Tasseled Cap Brightness for Landsat 8 and 9
-                  'TCB_ls8ls9': lambda ds: (0.3029 * ds.blue + 0.2786 * ds.green +
+                  'TCB_ls8': lambda ds: (0.3029 * ds.blue + 0.2786 * ds.green +
                                      0.4733 * ds.red + 0.5599 * ds.nir +
                                      0.5080 * ds.swir1 + 0.1872 * ds.swir2),
                   
