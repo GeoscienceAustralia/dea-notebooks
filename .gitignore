@@ -6,6 +6,4 @@
 *.xml
 __pycache__
 Tools/gen
-dist
-.coverage
-uv.lock
+*/local_data/
