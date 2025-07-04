@@ -266,6 +266,11 @@ def calculate_indices(
                                      0.3102 * ds.red + 0.1594 * ds.nir +
                                     -0.6806 * ds.swir1 + -0.6109 * ds.swir2),
                   
+                  # Tasseled Cap Wetness from Roberts, Dun and Mueller 2018
+                  'TCW_DEA': lambda ds: (0.5702 * ds.blue + 0.1584 * ds.green +
+                                     0.2627 * ds.red + -0.3959 * ds.nir +
+                                    -0.0045 * ds.swir1 + -0.6511 * ds.swir2),
+                  
                   # Tasseled Cap Wetness for Landsat 8 and 9
                   'TCW_ls8ls9': lambda ds: (0.1511 * ds.blue + 0.1973 * ds.green +
                                      0.3283 * ds.red + 0.3407 * ds.nir +
@@ -287,6 +292,11 @@ def calculate_indices(
                                      -0.4934 * ds.red + 0.7940 * ds.nir +
                                      -0.0002 * ds.swir1 + -0.1446 * ds.swir2),
                   
+                  # Tasseled Cap Greenness from Roberts, Dun and Mueller 2018
+                  'TCG_DEA': lambda ds: (0.1987 * ds.blue + -0.2826 * ds.green +
+                                     -0.2724 * ds.red + 0.5357 * ds.nir +
+                                    0.2388 * ds.swir1 + -0.6800 * ds.swir2),
+                  
                   # Tasseled Cap Greeness for Landsat 8 and 9
                   'TCG_ls8ls9': lambda ds: (-0.2941 * ds.blue + -0.2430 * ds.green +
                                      -0.5424 * ds.red + 0.7276 * ds.nir +
@@ -306,6 +316,11 @@ def calculate_indices(
                   'TCB': lambda ds: (0.2043 * ds.blue + 0.4158 * ds.green +
                                      0.5524 * ds.red + 0.5741 * ds.nir +
                                      0.3124 * ds.swir1 + -0.2303 * ds.swir2),
+                  
+                  # Tasseled Cap Brightness from Roberts, Dun and Mueller 2018
+                  'TCB_DEA': lambda ds: (0.3567 * ds.blue + 0.3567 * ds.green +
+                                     0.3567 * ds.red + 0.5350 * ds.nir +
+                                    0.5350 * ds.swir1 + 0.2140 * ds.swir2),
                   
                   # Tasseled Cap Brightness for Landsat 8 and 9
                   'TCB_ls8ls9': lambda ds: (0.3029 * ds.blue + 0.2786 * ds.green +

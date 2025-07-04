@@ -1,9 +1,0 @@
-Usage: pbsdsh [-c copies][-s][-v][-o] -- program [args...]
-       pbsdsh [-n node_index][-s][-v][-o] -- program [args...]
-       pbsdsh --version
-Where -c copies =  run a copy of "program" on the first "copies" nodes,
-      -n node_index = run a copy of "program" on the "node_index"-th node,
-      -s = forces synchronous execution,
-      -v = forces verbose output.
-      -o = no obits are waited for.
-bash: line 1: :::: command not found
