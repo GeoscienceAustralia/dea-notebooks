@@ -6,4 +6,4 @@
 *.xml
 __pycache__
 Tools/gen
-*/local_data/
+*/local_data/*
