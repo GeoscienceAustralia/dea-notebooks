@@ -82,8 +82,6 @@ stac = [
 ]
 jupyter = [
     "jupyter>=1.0.0",
-    "ipython>=8.0.0",
-    "ipywidgets>=8.0.0",
     "ipyleaflet>=0.17.0",
 ]
 dask_gateway = [
