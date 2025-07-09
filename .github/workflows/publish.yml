@@ -35,7 +35,7 @@ jobs:
           version: "0.7.5"
           enable-cache: "true"
 
-      # Setup Python environment and install dea-tools with uv
+      # Setup Python environment with uv
       - name: Setup Python environment and install dea-tools
         run: |
           uv sync
