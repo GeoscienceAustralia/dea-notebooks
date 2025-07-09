@@ -42,12 +42,17 @@ To install with additonal STAC-loading dependencies:
 pip install dea-tools[stac]
 ```
 
+To install with additonal Jupyter-related dependencies:
+```console
+pip install dea-tools[jupyter]
+```
+
 To install with other packages used in DEA Notebooks examples:
 ```console
 pip install dea-tools[jupyter,dask_gateway,hdstats,notebooks]
 ```
 
-Or to install with *all* optional dependencies:
+You can also install `dea-tools` with *all* optional dependencies. **Note:** some of these dependencies are difficult to install. If you encounter issues, you may need to try the [Conda](#with-conda) instructions below.
 ```console
 pip install dea-tools[all]
 ```
