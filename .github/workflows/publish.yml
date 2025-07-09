@@ -27,7 +27,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # Pin to <3.12 for compatibility with pip==22.0.4
+          python-version: '3.10'  # Pin to <3.12 for compatibility with pip==22.0.4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v2
