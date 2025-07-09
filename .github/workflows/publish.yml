@@ -37,9 +37,7 @@ jobs:
 
       # Setup Python environment with uv
       - name: Setup Python environment and install dea-tools
-        run: |
-          uv sync
-        shell: bash
+        run: uv sync
 
       # Package will be built using version automatically
       # generated from Git by `hatchling-vcs`
