@@ -208,6 +208,8 @@ DEP001 = [
     "pyfes",               # to fix with eo-tides refactor
     "intertidal",          # to fix with Sandbox upgrade
     "osgeo",               # ignore due to confusion with gdal package
+    "ipywidgets",          # covered by jupyter metapackage
+    "IPython",             # covered by jupyter metapackage  
 ]
 # Project should not contain unused dependencies
 DEP002 = [
@@ -218,6 +220,7 @@ DEP002 = [
     "planetary_computer",  # included for STAC support
     "eo-tides",            # to fix with eo-tides refactor
     "odc-ui",              # ignore `odc.ui` not being recognised as `odc-ui`
+    "numba",               # required to enforce minimum version of llvmlite
 ]
 # Project should not use transitive dependencies
 DEP003 = [
