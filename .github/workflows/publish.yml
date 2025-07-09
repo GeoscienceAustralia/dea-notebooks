@@ -35,10 +35,10 @@ jobs:
           version: "0.7.5"
           enable-cache: "true"
 
-      # Install dea-tools and all required dependencies with uv
-      - name: Install Python dependencies with uv
+      # Setup Python environment and install dea-tools with uv
+      - name: Setup Python environment and install dea-tools
         run: |
-          uv sync --all-extras
+          uv sync
         shell: bash
 
       # Package will be built using version automatically
