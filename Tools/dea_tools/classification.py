@@ -51,7 +51,7 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.model_selection import BaseCrossValidator
 
-from datacube.utils.geometry import assign_crs
+from odc.geo.xr import assign_crs
 from datacube.utils import geometry
 from dea_tools.spatial import xr_rasterize
 
@@ -260,7 +260,7 @@ def predict_xr(
         If True, the probabilities array will be flattened to contain
         only the probabiltiy for the "Predictions" class. If False, 
         the "Probabilities" object will be an array of prediction
-        probaiblities for each classes
+        probablities for each class
     clean : bool
         If True, remove Infs and NaNs from input and output arrays
     return_input : bool
@@ -289,7 +289,8 @@ def predict_xr(
         )
 
     def _predict_func(model, input_xr, persist, proba, max_proba, clean, return_input):
-        x, y, crs = input_xr.x, input_xr.y, input_xr.geobox.crs
+        
+        x, y, crs = input_xr.x, input_xr.y, input_xr.odc.geobox.crs
 
         input_data = []
 
@@ -331,22 +332,23 @@ def predict_xr(
         )
 
         output_xr = output_xr.to_dataset(name="Predictions")
-
+        
         if proba == True:
             print("   probabilities...")
             out_proba = model.predict_proba(input_data_flattened)
 
             # return either one band with the max probability, or the whole probability array
             if max_proba == True:
-                print("  returning single probability band.")
+                print("   returning single probability band")
                 out_proba = da.max(out_proba, axis=1) * 100.0
                 out_proba = out_proba.reshape(len(y), len(x))
+                
                 out_proba = xr.DataArray(
                     out_proba, coords={"x": x, "y": y}, dims=["y", "x"]
                 )
                 output_xr["Probabilities"] = out_proba
             else:
-                print("  returning class probability array.")
+                print("   returning class probability array")
                 out_proba = out_proba * 100.0
                 class_names = model.classes_  # Get the unique class names from the fitted classifier
 
