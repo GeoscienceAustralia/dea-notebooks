@@ -67,7 +67,7 @@ pip install dea-tools
 
 ### Working on DEA Sandbox or NCI
 
-To work with this module on the DEA Sandbox or National Computational Infrastructure environments without installing it, you can add the `Tools` directory to the system path from within the `dea-notebooks` repository:
+To work with this module on the DEA Sandbox or National Computational Infrastructure environments without installing it, you can add the `Tools` directory to the system path from within your `dea-notebooks` directory:
 
 ```python
 import sys
@@ -75,7 +75,7 @@ sys.path.insert(1, "../Tools/")
 import dea_tools.datahandling  # or some other submodule
 ```
 
-Alternatively, you can also do a local installation of `dea-tools`. To do this on the DEA Sandbox, run `pip` from the terminal:
+Alternatively, you can also do a local installation of `dea-tools`. To do this on the DEA Sandbox, run `pip` from the terminal from within your `dea-notebooks` directory:
 
 ```bash
 pip install -e .
