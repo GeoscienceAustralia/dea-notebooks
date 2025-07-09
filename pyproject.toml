@@ -77,7 +77,7 @@ datacube = [
     # "datacube-ows>=1.8.30",  # has unwanted psycopg2 dependency
 ]
 stac = [
-    "odc-stac>=0.3.0",
+    "odc-stac[botocore]>=0.3.0",
     "pystac-client>=0.8.3",
     "planetary_computer>=1.0.0",
 ]
@@ -221,6 +221,8 @@ DEP002 = [
 # Project should not use transitive dependencies
 DEP003 = [
     "pyTMD",               # to fix with eo-tides refactor
+    "ipywidgets",          # covered by jupyter metapackage
+    "IPython",             # covered by jupyter metapackage  
 ]
 
 # To run code cov:

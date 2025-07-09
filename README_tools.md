@@ -15,7 +15,6 @@ The package is organised into the following modules:
 * `dea_tools.landcover`: Tools for accessing and visualising DEA Land Cover data
 * `dea_tools.coastal`: Coastal and intertidal analysis tools (e.g. tidal tagging, coastal change time series)
 * `dea_tools.bom`: Accessing Bureau of Meteorology water data (e.g. gauge and discharge data)
-* `dea_tools.climate`: Tools for working with gridded climate data (e.g. ERA5)
 * `dea_tools.waterbodies`: Accessing and analysing DEA Waterbodies data (e.g. loading waterbody time series)
 * `dea_tools.maps`: Tools for interactive mapping (e.g. folium and ipyleaflet maps)
 * `dea_tools.validation`: Tools for generating validation statistics (e.g. RMSE, R2, correlations)
@@ -62,6 +61,8 @@ wget -O conda-environment.yml https://raw.githubusercontent.com/opendatacube/dat
 
 mamba env create -f conda-environment.yml
 conda activate cubeenv
+
+pip install dea-tools
 ```
 
 ### Working on DEA Sandbox or NCI
@@ -70,19 +71,19 @@ To work with this module on the DEA Sandbox or National Computational Infrastruc
 
 ```python
 import sys
-sys.path.insert(1, '../Tools/')
+sys.path.insert(1, "../Tools/")
 import dea_tools.datahandling  # or some other submodule
 ```
 
-You can also `pip install` the module directly from the local `Tools` directory. To do this on the DEA Sandbox, run `pip` from the terminal:
+Alternatively, you can also do a local installation of `dea-tools`. To do this on the DEA Sandbox, run `pip` from the terminal:
 
 ```bash
-pip install -e Tools/
+pip install -e .
 ```
 
 ## Importing functions in Python
 
-To use functions from `dea-tools`, import them using:
+One `dea-tools` is installed, you can import functions using:
 
 ```python
 from dea_tools.datahandling import load_ard
