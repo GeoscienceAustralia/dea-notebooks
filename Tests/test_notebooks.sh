@@ -10,7 +10,7 @@ set -o pipefail
 cd ./dea-notebooks
 
 # Install the DEA Tools Python package
-pip3 install ./Tools
+pip3 install .
 
 # Run the requested tests based on the parameter passed to the script
 if [ -z "$1" ]; then

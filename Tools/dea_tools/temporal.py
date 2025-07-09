@@ -22,7 +22,6 @@ Last modified: May 2024
 import sys
 import dask
 import dask.array as da
-import hdstats
 import warnings
 import numpy as np
 import xarray as xr
@@ -434,8 +433,13 @@ def temporal_statistics(da, stats):
         temporal statistics
 
     """
+    # Attempt to import hdstats and raise an error if not available
+    try:
+        import hdstats
+    except ImportError:
+        raise ImportError("`hdstats` is required for `temporal_statistics`. Please install the `[hdstats]` dependency.")
 
-    # if dask arrays then map the blocks
+    # If dask arrays then map the blocks
     if dask.is_dask_collection(da):
         if version.parse(xr.__version__) < version.parse("0.16.0"):
             raise TypeError(
