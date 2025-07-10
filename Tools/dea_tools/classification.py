@@ -53,7 +53,7 @@ from sklearn.model_selection import BaseCrossValidator
 
 from odc.geo.xr import assign_crs
 from odc.geo.geom import Geometry
-from dea_tools.spatial import xr_rasterize
+from .spatial import xr_rasterize
 
 
 def sklearn_flatten(input_xr):

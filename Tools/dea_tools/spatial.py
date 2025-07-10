@@ -25,7 +25,6 @@ import dask
 import fiona
 import warnings
 import collections
-import odc.geo.xr
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -51,7 +50,7 @@ from shapely.geometry import (
     mapping,
 )
 
-from datacube.utils.cog import write_cog
+import odc.geo.xr
 from odc.geo.geom import Geometry
 from odc.geo.crs import CRS
 

@@ -39,8 +39,8 @@ from shapely.geometry import box, shape
 from owslib.wfs import WebFeatureService
 
 from odc.geo.crs import CRS
-from dea_tools.datahandling import parallel_apply
-from dea_tools.spatial import idw
+from .datahandling import parallel_apply
+from .spatial import idw
 
 # Fix converters for tidal plot
 from pandas.plotting import register_matplotlib_converters

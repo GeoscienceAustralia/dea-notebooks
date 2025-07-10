@@ -46,10 +46,19 @@ from skimage.filters import unsharp_mask
 
 from datacube.utils import masking
 from datacube.utils.geometry import Geometry
-import dea_tools.app.widgetconstructors as deawidgets
-from dea_tools.dask import create_local_dask_cluster
-from dea_tools.spatial import reverse_geocode
-from dea_tools.datahandling import xr_pansharpen
+from .widgetconstructors import (
+    create_html,
+    create_drawcontrol,
+    create_map,
+    create_datepicker,
+    create_inputtext,
+    create_checkbox,
+    create_dropdown,
+    create_dea_wms_layer,
+)
+from ..dask import create_local_dask_cluster
+from ..spatial import reverse_geocode
+from ..datahandling import xr_pansharpen
 
 
 # WMS params and satellite style bands
@@ -121,7 +130,7 @@ def update_map_layers(self):
     style = sat_params[self.dealayer]["styles"][self.style][0]
 
     # Add DEA layers over the top of the basemap
-    dea_layer = deawidgets.create_dea_wms_layer(self.dealayer, self.date, styles=style)
+    dea_layer = create_dea_wms_layer(self.dealayer, self.date, styles=style)
     self.map_layers.add_layer(dea_layer)
 
 
@@ -389,7 +398,7 @@ class imageexport_app(HBox):
             "rectangle to select an area of imagery to "
             "export as a high-resolution image file.</p>"
         )
-        self.header = deawidgets.create_html(f"{header_title_text}{instruction_text}")
+        self.header = create_html(f"{header_title_text}{instruction_text}")
         self.header.layout = make_box_layout()
 
         #####################################
@@ -474,14 +483,14 @@ class imageexport_app(HBox):
 
         # Create drawing tools
         desired_drawtools = ["rectangle"]
-        draw_control = deawidgets.create_drawcontrol(desired_drawtools)
+        draw_control = create_drawcontrol(desired_drawtools)
 
         # Begin by displaying an empty layer group, and update the group with desired WMS on interaction.
         self.map_layers = LayerGroup(layers=())
         self.map_layers.name = "Map Overlays"
 
         # Create map widget
-        self.m = deawidgets.create_map(map_center=(-28, 135), zoom_level=4)
+        self.m = create_map(map_center=(-28, 135), zoom_level=4)
         self.m.layout = make_box_layout()
 
         # Add tools to map widget
@@ -502,17 +511,17 @@ class imageexport_app(HBox):
         ############################
 
         # Create parameter widgets
-        dropdown_basemap = deawidgets.create_dropdown(
+        dropdown_basemap = create_dropdown(
             self.basemap_list, self.basemap_list[0][1]
         )
-        dropdown_dealayer = deawidgets.create_dropdown(
+        dropdown_dealayer = create_dropdown(
             self.dealayer_list, self.dealayer_list[0][1]
         )
-        dropdown_output = deawidgets.create_dropdown(
+        dropdown_output = create_dropdown(
             self.output_list, self.output_list[0][1]
         )
-        date_picker = deawidgets.create_datepicker(value=date)
-        dropdown_styles = deawidgets.create_dropdown(
+        date_picker = create_datepicker(value=date)
+        dropdown_styles = create_dropdown(
             self.styles_list, self.styles_list[0]
         )
         slider_abs = widgets.IntRangeSlider(
@@ -531,7 +540,7 @@ class imageexport_app(HBox):
             description="",
             layout={"width": "100%", "margin": "0px", "padding": "0px"},
         )
-        checkbox_pansharpen = deawidgets.create_checkbox(
+        checkbox_pansharpen = create_checkbox(
             self.pansharpen, "Pansharpen Landsat"
         )
         slider_power = widgets.FloatSlider(
@@ -542,7 +551,7 @@ class imageexport_app(HBox):
             description="",
             layout={"width": "85%"},
         )
-        checkbox_unsharp_mask = deawidgets.create_checkbox(
+        checkbox_unsharp_mask = create_checkbox(
             self.unsharp_mask, "Enable", layout={"width": "100%"}
         )
         text_unsharp_mask_radius = widgets.FloatText(
@@ -567,7 +576,7 @@ class imageexport_app(HBox):
                 "display": "none",
             },
         )
-        checkbox_max_size = deawidgets.create_checkbox(self.max_size, "Enable")
+        checkbox_max_size = create_checkbox(self.max_size, "Enable")
         text_dpi = widgets.IntText(
             value=0, description="", step=50, layout={"width": "85%"}
         )

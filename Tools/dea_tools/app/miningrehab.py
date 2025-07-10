@@ -27,9 +27,8 @@ from datacube.utils import masking
 
 # Load utility functions
 import sys
-sys.path.insert(1, '../Tools/')
-from dea_tools.datahandling import wofs_fuser
-from dea_tools.spatial import transform_geojson_wgs_to_epsg
+from ..datahandling import wofs_fuser
+from ..spatial import transform_geojson_wgs_to_epsg
 
 
 def load_miningrehab_data():
