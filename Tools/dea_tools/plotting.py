@@ -39,7 +39,7 @@ from tqdm.auto import tqdm
 
 import odc.geo.xr
 from odc.ui import image_aspect
-from dea_tools.spatial import add_geobox
+from .spatial import add_geobox
 
 
 def rgb(ds,

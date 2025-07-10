@@ -37,8 +37,17 @@ import geopandas as gpd
 from io import BytesIO
 import ipywidgets as widgets
 
-import dea_tools.app.widgetconstructors as deawidgets
-from dea_tools.coastal import get_coastlines, transect_distances
+from .widgetconstructors import (
+    create_html,
+    create_drawcontrol,
+    create_map,
+    create_datepicker,
+    create_inputtext,
+    create_checkbox,
+    create_dropdown,
+    create_dea_wms_layer,
+)
+from ..coastal import get_coastlines, transect_distances
 
 
 WMS_ADDRESS = "https://geoserver.dea.ga.gov.au/geoserver/wms"
@@ -93,7 +102,7 @@ class transect_app(HBox):
         # Create the Header widget
         header_title_text = "<h3>Digital Earth Australia Coastlines shoreline transect extraction</h3>"
         instruction_text = "Select parameters and draw a transect on the map to extract shoreline data. <b>In distance mode</b>, draw a transect line starting from land that crosses multiple shorelines. <br><b>In width mode</b>, draw a transect line that intersects shorelines at least twice. Alternatively, <b>upload an vector file</b> to extract shoreline data for multiple existing transects."
-        self.header = deawidgets.create_html(
+        self.header = create_html(
             f"{header_title_text}<p>{instruction_text}</p>")
         self.header.layout = make_box_layout()
 
@@ -149,7 +158,7 @@ class transect_app(HBox):
 
         # Create drawing tools
         desired_drawtools = ['polyline']
-        draw_control = deawidgets.create_drawcontrol(desired_drawtools)
+        draw_control = create_drawcontrol(desired_drawtools)
 
         # Load DEACoastLines WMS
         deacl_url = WMS_ADDRESS
@@ -166,7 +175,7 @@ class transect_app(HBox):
         self.map_layers.name = 'Map Overlays'
 
         # Create map widget
-        self.m = deawidgets.create_map(map_center=(-28, 135),
+        self.m = create_map(map_center=(-28, 135),
                                        zoom_level=4,
                                        basemap=basemaps.Esri.WorldImagery)
         self.m.layout = make_box_layout()
@@ -183,15 +192,15 @@ class transect_app(HBox):
         ############################
 
         # Create parameter widgets
-        text_output_name = deawidgets.create_inputtext(self.output_name,
+        text_output_name = create_inputtext(self.output_name,
                                                        self.output_name)
-        checkbox_csv = deawidgets.create_checkbox(self.export_csv,
+        checkbox_csv = create_checkbox(self.export_csv,
                                                   'Distance table (.csv)')
-        checkbox_plot = deawidgets.create_checkbox(self.export_plot,
+        checkbox_plot = create_checkbox(self.export_plot,
                                                    'Figure (.png)')
-        deaoverlay_dropdown = deawidgets.create_dropdown(
+        deaoverlay_dropdown = create_dropdown(
             self.product_list, self.product_list[0][1])
-        mode_dropdown = deawidgets.create_dropdown(self.mode_list,
+        mode_dropdown = create_dropdown(self.mode_list,
                                                    self.mode_list[0][1])
         run_button = create_expanded_button("Extract shoreline data", "info")
         fileupload_transects = widgets.FileUpload(accept='', multiple=True)

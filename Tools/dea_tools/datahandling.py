@@ -41,7 +41,6 @@ from skimage.exposure import match_histograms
 import odc.geo.xr
 import odc.algo
 from odc.algo import mask_cleanup
-from datacube.utils.dates import normalise_dt
 
 
 def _dc_query_only(**kw):
@@ -266,6 +265,15 @@ def load_ard(
     For loading non-satellite data products (e.g. DEA Water Observations),
     use `dc.load` instead.
     """
+    # Attempt to import datacube and raise an error if not available
+    try:
+        from datacube.utils.dates import normalise_dt
+    except ImportError as e:
+        raise ImportError(
+            "`datacube` is required for `load_ard`. "
+            "Please install DEA Tools with the `[datacube]` extra, e.g.: "
+            "`pip install dea-tools[datacube]`"
+        ) from e
 
     #########
     # Setup #

@@ -31,10 +31,9 @@ import geopandas as gpd
 
 # Load utility functions
 import sys
-sys.path.insert(1, '../Tools/')
-from dea_tools.datahandling import load_ard
-from dea_tools.spatial import transform_geojson_wgs_to_epsg
-from dea_tools.bandindices import calculate_indices
+from ..datahandling import load_ard
+from ..spatial import transform_geojson_wgs_to_epsg
+from ..bandindices import calculate_indices
 
 
 def load_crophealth_data():

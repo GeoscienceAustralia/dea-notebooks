@@ -47,9 +47,18 @@ from skimage.filters import unsharp_mask
 from datacube.utils import masking
 from datacube.utils.geometry import Geometry
 from datacube.utils.masking import mask_invalid_data
-import dea_tools.app.widgetconstructors as deawidgets
-from dea_tools.dask import create_local_dask_cluster
-from dea_tools.spatial import reverse_geocode
+from .widgetconstructors import (
+    create_html,
+    create_drawcontrol,
+    create_map,
+    create_datepicker,
+    create_inputtext,
+    create_checkbox,
+    create_dropdown,
+    create_dea_wms_layer,
+)
+from ..dask import create_local_dask_cluster
+from ..spatial import reverse_geocode
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -404,7 +413,7 @@ class animation_app(HBox):
             "select an area export as a satellite imagery time-series "
             "animation.</p>"
         )
-        self.header = deawidgets.create_html(f"{header_title_text}{instruction_text}")
+        self.header = create_html(f"{header_title_text}{instruction_text}")
         self.header.layout = make_box_layout()
 
         #####################################
@@ -488,14 +497,14 @@ class animation_app(HBox):
 
         # Create drawing tools
         desired_drawtools = ["rectangle"]
-        draw_control = deawidgets.create_drawcontrol(desired_drawtools)
+        draw_control = create_drawcontrol(desired_drawtools)
 
         # Begin by displaying an empty layer group, and update the group with desired WMS on interaction.
         self.map_layers = LayerGroup(layers=())
         self.map_layers.name = "Map Overlays"
 
         # Create map widget
-        self.m = deawidgets.create_map(map_center=(-33.96, 151.20), zoom_level=13)
+        self.m = create_map(map_center=(-33.96, 151.20), zoom_level=13)
         self.m.layout = make_box_layout()
 
         # Add tools to map widget
@@ -516,22 +525,22 @@ class animation_app(HBox):
         ############################
 
         # Create parameter widgets
-        dropdown_basemap = deawidgets.create_dropdown(
+        dropdown_basemap = create_dropdown(
             self.basemap_list, self.basemap_list[0][1]
         )
-        dropdown_dealayer = deawidgets.create_dropdown(
+        dropdown_dealayer = create_dropdown(
             self.dealayer_list, self.dealayer_list[0][1]
         )
-        dropdown_output = deawidgets.create_dropdown(
+        dropdown_output = create_dropdown(
             self.output_list, self.output_list[0][1]
         )
-        date_picker_start = deawidgets.create_datepicker(
+        date_picker_start = create_datepicker(
             value=start_date,
         )
-        date_picker_end = deawidgets.create_datepicker(
+        date_picker_end = create_datepicker(
             value=end_date,
         )
-        dropdown_styles = deawidgets.create_dropdown(
+        dropdown_styles = create_dropdown(
             self.styles_list, self.styles_list[0]
         )
         slider_percentile = widgets.FloatRangeSlider(
@@ -553,7 +562,7 @@ class animation_app(HBox):
             layout={"width": "85%"},
         )
 
-        checkbox_rolling_median = deawidgets.create_checkbox(
+        checkbox_rolling_median = create_checkbox(
             self.rolling_median,
             "Apply rolling median to produce smooth, cloud-free animations",
             layout={"width": "85%"},
@@ -582,13 +591,13 @@ class animation_app(HBox):
         text_width = widgets.IntText(
             value=900, description="", step=50, layout={"width": "95%"}
         )
-        dropdown_resampling = deawidgets.create_dropdown(
+        dropdown_resampling = create_dropdown(
             self.resample_list,
             self.resample_freq,
             description="",
             layout={"width": "95%"},
         )
-        checkbox_cloud_mask = deawidgets.create_checkbox(
+        checkbox_cloud_mask = create_checkbox(
             self.cloud_mask, "Mask out cloudy pixels", layout={"width": "95%"}
         )
         slider_power = widgets.FloatSlider(
@@ -599,7 +608,7 @@ class animation_app(HBox):
             description="",
             layout={"width": "95%"},
         )
-        checkbox_unsharp_mask = deawidgets.create_checkbox(
+        checkbox_unsharp_mask = create_checkbox(
             self.unsharp_mask, "Enable", layout={"width": "95%"}
         )
         text_unsharp_mask_radius = widgets.FloatText(
@@ -624,10 +633,10 @@ class animation_app(HBox):
                 "display": "none",
             },
         )
-        checkbox_deacoastlines = deawidgets.create_checkbox(
+        checkbox_deacoastlines = create_checkbox(
             self.deacoastlines, "Add DEA Coastlines overlay", layout={"width": "95%"}
         )
-        checkbox_max_size = deawidgets.create_checkbox(
+        checkbox_max_size = create_checkbox(
             self.max_size, "Enable", layout={"width": "95%"}
         )
         expand_box = widgets.VBox(

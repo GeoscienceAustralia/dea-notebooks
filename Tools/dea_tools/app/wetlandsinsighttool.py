@@ -43,11 +43,18 @@ import seaborn as sns
 # from shapely.geometry import box, shape
 import matplotlib.dates as mdates
 
-sys.path.insert(1, "../Tools/")
-import dea_tools.app.widgetconstructors as deawidgets
-from dea_tools.dask import create_local_dask_cluster
-from dea_tools.wetlands import generate_low_quality_data_periods
-from dea_tools.wit_app import WIT_drill, spatial_wit
+from .widgetconstructors import (
+    create_html,
+    create_drawcontrol,
+    create_map,
+    create_datepicker,
+    create_inputtext,
+    create_checkbox,
+    create_dropdown,
+)
+from ..dask import create_local_dask_cluster
+from ..wetlands import generate_low_quality_data_periods
+from ..wit_app import WIT_drill, spatial_wit
 
 
 def make_box_layout():
@@ -105,7 +112,7 @@ class wit_app(HBox):
         # Create the Header widget
         header_title_text = "<h3>Digital Earth Australia Wetlands Insight Tool </h3>"
         instruction_text = "Select parameters and draw a polygon on the map to extract a stacked line plot for a given area. Alternatively, <b>upload a shapefile or a GeoJSON</b> to extract a stacked line plot for your wetland of interest polygon."
-        self.header = deawidgets.create_html(
+        self.header = create_html(
             f"{header_title_text}<p>{instruction_text}</p>"
         )
         self.header.layout = make_box_layout()
@@ -164,7 +171,7 @@ class wit_app(HBox):
         self.dask_client = Output(layout=make_box_layout())
         self.progress_bar = Output(layout=make_box_layout())
         self.wit_plot = Output(layout=make_box_layout())
-        self.progress_header = deawidgets.create_html("")
+        self.progress_header = create_html("")
 
         #########################################
         # MAP WIDGET, DRAWING TOOLS, WMS LAYERS #
@@ -172,14 +179,14 @@ class wit_app(HBox):
 
         # Create drawing tools
         desired_drawtools = ["rectangle", "polygon"]
-        draw_control = deawidgets.create_drawcontrol(desired_drawtools)
+        draw_control = create_drawcontrol(desired_drawtools)
 
         # Begin by displaying an empty layer group, and update the group with desired WMS on interaction.
         self.map_layers = LayerGroup(layers=())
         self.map_layers.name = "Map Overlays"
 
         # Create map widget
-        self.m = deawidgets.create_map(
+        self.m = create_map(
             map_center=(-28, 135), zoom_level=4, basemap=basemaps.Esri.WorldImagery
         )
         self.m.layout = make_box_layout()
@@ -204,26 +211,26 @@ class wit_app(HBox):
         ############################
 
         # Create parameter widgets
-        startdate_picker = deawidgets.create_datepicker(
+        startdate_picker = create_datepicker(
             value=startdate,
         )
-        enddate_picker = deawidgets.create_datepicker(
+        enddate_picker = create_datepicker(
             value=enddate,
         )
-        wetland_name = deawidgets.create_inputtext(self.wetland_name, self.wetland_name)
-        # output_csv = deawidgets.create_inputtext(self.out_csv, self.out_csv)
-        output_plot = deawidgets.create_checkbox(self.out_plot, "Figure (.png)")
-        deaoverlay_dropdown = deawidgets.create_dropdown(
+        wetland_name = create_inputtext(self.wetland_name, self.wetland_name)
+        # output_csv = create_inputtext(self.out_csv, self.out_csv)
+        output_plot = create_checkbox(self.out_plot, "Figure (.png)")
+        deaoverlay_dropdown = create_dropdown(
             self.product_list, self.product_list[0][1]
         )
         run_button = create_expanded_button("Run", "info")
         fileupload_wetlands = widgets.FileUpload(accept="", multiple=True)
 
         # Expandable advanced section
-        max_size = deawidgets.create_checkbox(
+        max_size = create_checkbox(
             self.max_size, "Enable", layout={"width": "95%"}
         )
-        output_spatial_wit = deawidgets.create_checkbox(
+        output_spatial_wit = create_checkbox(
             self.spatial_wit, "Animation (.gif)"
         )
 

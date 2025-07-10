@@ -31,7 +31,8 @@ from scipy.signal import wiener
 from scipy.stats import t
 from packaging import version
 
-from datacube.utils.geometry import assign_crs
+import odc.geo.xr
+from odc.geo.xr import assign_crs
 
 
 def allNaN_arg(da, dim, stat):
@@ -321,7 +322,7 @@ def xr_phenology(
         )
 
         try:
-            crs = da.geobox.crs
+            crs = da.odc.geobox.crs
             lazy_phenology = assign_crs(lazy_phenology, str(crs))
         except:
             pass
@@ -436,8 +437,12 @@ def temporal_statistics(da, stats):
     # Attempt to import hdstats and raise an error if not available
     try:
         import hdstats
-    except ImportError:
-        raise ImportError("`hdstats` is required for `temporal_statistics`. Please install the `[hdstats]` dependency.")
+    except ImportError as e:
+        raise ImportError(
+            "`hdstats` is required for `temporal_statistics`. "
+            "Please install DEA Tools with the `[hdstats]` extra, e.g.: "
+            "`pip install dea-tools[hdstats]`"
+        ) from e
 
     # If dask arrays then map the blocks
     if dask.is_dask_collection(da):
@@ -487,7 +492,7 @@ def temporal_statistics(da, stats):
         )
 
         try:
-            crs = da.geobox.crs
+            crs = da.odc.geobox.crs
             lazy_ds = assign_crs(lazy_ds, str(crs))
         except:
             pass
@@ -579,7 +584,7 @@ def temporal_statistics(da, stats):
 
     # try to add back the geobox
     try:
-        crs = da.geobox.crs
+        crs = da.odc.geobox.crs
         ds = assign_crs(ds, str(crs))
     except:
         pass

@@ -25,7 +25,6 @@ import dask
 import fiona
 import warnings
 import collections
-import odc.geo.xr
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -51,7 +50,7 @@ from shapely.geometry import (
     mapping,
 )
 
-from datacube.utils.cog import write_cog
+import odc.geo.xr
 from odc.geo.geom import Geometry
 from odc.geo.crs import CRS
 
@@ -353,7 +352,7 @@ def xr_rasterize(
     if output_path is not None:
         if verbose:
             print(f"Exporting raster data to {output_path}")
-        write_cog(da_rasterized, output_path, overwrite=True)
+        da_rasterized.odc.write_cog(output_path, overwrite=True)
 
     return da_rasterized
 
@@ -1437,8 +1436,16 @@ def sun_angles(dc, query):
         'sun_azimuth' variables.
     """
 
-    from datacube.api.query import query_group_by
-    from datacube.model.utils import xr_apply
+    # Attempt to import datacube and raise an error if not available
+    try:
+        from datacube.api.query import query_group_by
+        from datacube.model.utils import xr_apply
+    except ImportError as e:
+        raise ImportError(
+            "`datacube` is required for `sun_angles`. "
+            "Please install DEA Tools with the `[datacube]` extra, e.g.: "
+            "`pip install dea-tools[datacube]`"
+        ) from e
 
     # Identify satellite datasets and group outputs using the
     # same approach used to group satellite imagery (i.e. solar day)

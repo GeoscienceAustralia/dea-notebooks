@@ -37,15 +37,13 @@ import shutil
 import warnings
 import xarray as xr
 
-import datacube
 import sys
 
-sys.path.insert(1, "../Tools/")
-import dea_tools.bandindices
-import dea_tools.datahandling
-from dea_tools.spatial import xr_rasterize
-from dea_tools.dask import create_local_dask_cluster
-import dea_tools.wetlands
+from .bandindices import calculate_indices
+from .datahandling import load_ard
+from .spatial import xr_rasterize
+from .dask import create_local_dask_cluster
+from .wetlands import normalise_wit
 
 # Create local dask cluster to improve data load time
 client = create_local_dask_cluster(return_client=True)
@@ -99,6 +97,15 @@ def WIT_drill(
         class (open water, wet, pv, npv, bs).
 
     """
+    # Attempt to import datacube and raise an error if not available
+    try:
+        import datacube
+    except ImportError as e:
+        raise ImportError(
+            "`datacube` is required for `WIT_drill`. "
+            "Please install DEA Tools with the `[datacube]` extra, e.g.: "
+            "`pip install dea-tools[datacube]`"
+        ) from e
 
     # Connect to the datacube
     dc = datacube.Datacube(app="WIT_drill")
@@ -120,7 +127,7 @@ def WIT_drill(
         print("Loading Landsat data")
 
     # Load Landsat 5, 7 and 8 data. Not including Landsat 7 SLC off period (31-05-2003 to 06-04-2022)
-    ds_ls = dea_tools.datahandling.load_ard(
+    ds_ls = load_ard(
         dc,
         products=["ga_ls8c_ard_3", "ga_ls7e_ard_3", "ga_ls5t_ard_3"],
         ls7_slc_off=False,
@@ -172,7 +179,7 @@ def WIT_drill(
     ds_wo = ds_wo.sel(time=[t for t in ds_wo.time.values if t not in missing])
 
     # Calculate Tasseled Cap Wetness from the Landsat data
-    tcw = dea_tools.bandindices.calculate_indices(
+    tcw = calculate_indices(
         ds_ls,
         index="TCW",
         collection="ga_ls_3",
@@ -245,7 +252,7 @@ def WIT_drill(
     for band in rast_names:
         polygon_base_df[band] = ds_wit[band].mean(dim=["x", "y"])
 
-    polygon_base_df = dea_tools.wetlands.normalise_wit(polygon_base_df)
+    polygon_base_df = normalise_wit(polygon_base_df)
 
     # Create WIT comma-separated values (CSV) output file
     if export_csv:

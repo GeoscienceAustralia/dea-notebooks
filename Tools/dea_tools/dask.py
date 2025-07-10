@@ -20,13 +20,10 @@ Last modified: June 2022
 
 '''
 
-
 from importlib.util import find_spec
 import os
 import dask
 from aiohttp import ClientConnectionError
-from datacube.utils.dask import start_local_dask
-from datacube.utils.rio import configure_s3_access
 
 _HAVE_PROXY = bool(find_spec('jupyter_server_proxy'))
 _IS_AWS = ('AWS_ACCESS_KEY_ID' in os.environ or
@@ -60,6 +57,16 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True, return_clien
         object.
 
     """
+    # Attempt to import datacube and raise an error if not available
+    try:
+        from datacube.utils.dask import start_local_dask
+        from datacube.utils.rio import configure_s3_access
+    except ImportError as e:
+        raise ImportError(
+            "`datacube` is required for `create_local_dask_cluster`. "
+            "Please install DEA Tools with the `[datacube]` extra, e.g.: "
+            "`pip install dea-tools[datacube]`"
+    ) from e    
 
     if _HAVE_PROXY:
         # Configure dashboard link to go over proxy
@@ -85,49 +92,53 @@ def create_local_dask_cluster(spare_mem='3Gb', display_client=True, return_clien
         return client
    
 
-try:
-    from dask_gateway import Gateway
+def create_dask_gateway_cluster(profile='r5_L', workers=2):
+    """
+    Create a cluster in our internal dask cluster.
 
-    def create_dask_gateway_cluster(profile='r5_L', workers=2):
-        """
-        Create a cluster in our internal dask cluster.
+    Parameters
+    ----------
+    profile : str
+        Possible values are:
+            - r5_L (2 cores, 15GB memory)
+            - r5_XL (4 cores, 31GB memory)
+            - r5_2XL (8 cores, 63GB memory)
+            - r5_4XL (16 cores, 127GB memory)
 
-        Parameters
-        ----------
-        profile : str
-            Possible values are:
-                - r5_L (2 cores, 15GB memory)
-                - r5_XL (4 cores, 31GB memory)
-                - r5_2XL (8 cores, 63GB memory)
-                - r5_4XL (16 cores, 127GB memory)
+    workers : int
+        Number of workers in the cluster.
+    """
 
-        workers : int
-            Number of workers in the cluster.
-        """
-        try:
-            gateway = Gateway()
-            
-            # Close any existing clusters
-            cluster_names = gateway.list_clusters()
-            if len(cluster_names) > 0:
-                print("Cluster(s) still running:", cluster_names)
-                for n in cluster_names:
-                    cluster = gateway.connect(n.name)
-                    cluster.shutdown()            
-            
-            options = gateway.cluster_options()
-            options['profile'] = profile
+    # Attempt to import dask_gateway and raise an error if not available
+    try:
+        from dask_gateway import Gateway
+    except ImportError as e:
+        raise ImportError(
+            "`dask_gateway` is required for `create_dask_gateway_cluster`. "
+            "Please install DEA Tools with the `[dask_gateway]` extra, e.g.: "
+            "`pip install dea-tools[dask_gateway]`"
+        ) from e
+    
+    try:
+        gateway = Gateway()
+        
+        # Close any existing clusters
+        cluster_names = gateway.list_clusters()
+        if len(cluster_names) > 0:
+            print("Cluster(s) still running:", cluster_names)
+            for n in cluster_names:
+                cluster = gateway.connect(n.name)
+                cluster.shutdown()            
+        
+        options = gateway.cluster_options()
+        options['profile'] = profile
 
-            # limit username to alphanumeric characters
-            # kubernetes pods won't launch if labels contain anything other than [a-Z, -, _]
-            options['jupyterhub_user'] = ''.join(c if c.isalnum() else '-' for c in os.getenv('JUPYTERHUB_USER'))
+        # limit username to alphanumeric characters
+        # kubernetes pods won't launch if labels contain anything other than [a-Z, -, _]
+        options['jupyterhub_user'] = ''.join(c if c.isalnum() else '-' for c in os.getenv('JUPYTERHUB_USER'))
 
-            cluster = gateway.new_cluster(options)
-            cluster.scale(workers)
-            return cluster
-        except ClientConnectionError:
-            raise ConnectionError("access to dask gateway cluster unauthorized")
-
-except ImportError:
-    def create_dask_gateway_cluster(*args, **kwargs):
-        raise NotImplementedError
+        cluster = gateway.new_cluster(options)
+        cluster.scale(workers)
+        return cluster
+    except ClientConnectionError:
+        raise ConnectionError("access to dask gateway cluster unauthorized")
