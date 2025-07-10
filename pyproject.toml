@@ -32,7 +32,7 @@ dependencies = [
     "aiohttp>=3.5.0",
     # "ciso8601>=2.2.0",  # blocks Python 3.13 installation on Windows
     "dask>=2023.1.0",
-    "dask-ml>=2021.10.17",
+    "dask-ml>=2023.3.24",
     # "eo-tides>=0.7.4",  # requires notebook updates
     "fiona>=1.10.0",
     "folium>=0.16.0",
@@ -42,6 +42,7 @@ dependencies = [
     "joblib>=1.0.0",
     "lxml>=5.0.0",
     "matplotlib>=3.8.0",
+    "numba>=0.57.0",
     "numpy>=1.26.0",
     "odc-algo>=1.0.0",
     "odc-geo[tiff]>=0.4.7",
@@ -207,6 +208,8 @@ DEP001 = [
     "pyfes",               # to fix with eo-tides refactor
     "intertidal",          # to fix with Sandbox upgrade
     "osgeo",               # ignore due to confusion with gdal package
+    "ipywidgets",          # covered by jupyter metapackage
+    "IPython",             # covered by jupyter metapackage  
 ]
 # Project should not contain unused dependencies
 DEP002 = [
@@ -217,6 +220,7 @@ DEP002 = [
     "planetary_computer",  # included for STAC support
     "eo-tides",            # to fix with eo-tides refactor
     "odc-ui",              # ignore `odc.ui` not being recognised as `odc-ui`
+    "numba",               # required to enforce minimum version of llvmlite
 ]
 # Project should not use transitive dependencies
 DEP003 = [
