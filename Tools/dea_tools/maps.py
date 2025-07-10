@@ -1,25 +1,45 @@
+## maps.py
+'''
+Tools for generating interactive maps with folium and ipyleaflet.
+
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
+license (https://creativecommons.org/licenses/by/4.0/).
+
+Contact: If you need assistance, please post a question on the Open Data
+Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the GIS Stack
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
+using the `open-data-cube` tag (you can view previously asked questions
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
+
+If you would like to report an issue with this script, you can file one on
+GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+
+Last modified: July 2025
+'''
+
 import numpy
 
 import folium
 import folium.plugins        
 
-from odc.ui import mk_data_uri, zoom_from_bbox
-from odc.ui._images import xr_bounds
-
 
 # Attempt to import datacube and raise an error if not available
 try:
-    from datacube.testutils.geom import epsg4326
     from datacube_ows.styles.api import apply_ows_style_cfg, xarray_image_as_png
+    from odc.ui import mk_data_uri, zoom_from_bbox
+    from odc.ui._images import xr_bounds
 except ImportError as e:
     raise ImportError(
-        "`datacube` and `datacube_ows` are required to use this module. "
+        "`datacube_ows` and `odc.ui` are required to use this module. "
         "Please install DEA Tools with the `[datacube]` extra, e.g.: "
         "`pip install dea-tools[datacube]`"
     ) from e
 
 # ipyleaflet is listed as an optional dependency for the dea-tools package
 # so instead of trying to import it here, we do that as needed
+
 
 # default fallback OWS style configuration
 RGB_CFG = {
@@ -120,7 +140,7 @@ def apply_ows_style(data, ows_style_config=None):
     # inspired by odc.ui.mk_image_overlay
     # and https://datacube-ows.readthedocs.io/en/latest/styling_howto.html
 
-    # get rid of the time dimension
+    # Get rid of the time dimension
     if "time" in data.dims:
         assert data.time.shape[0] == 1, "multiple observations not supported yet"
         data = data.isel(time=0)
@@ -164,7 +184,7 @@ def ipyleaflet_add_controls(im, enable_fullscreen=True, enable_layers_control=Fa
 
 
 def bounding_box(data):
-    return data.extent.to_crs(epsg4326).boundingbox
+    return data.extent.to_crs("EPSG:4326").boundingbox
     
 
 def folium_map(data,

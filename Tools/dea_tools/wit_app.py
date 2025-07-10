@@ -37,7 +37,6 @@ import shutil
 import warnings
 import xarray as xr
 
-import datacube
 import sys
 
 from .bandindices import calculate_indices
@@ -98,6 +97,15 @@ def WIT_drill(
         class (open water, wet, pv, npv, bs).
 
     """
+    # Attempt to import datacube and raise an error if not available
+    try:
+        import datacube
+    except ImportError as e:
+        raise ImportError(
+            "`datacube` is required for `WIT_drill`. "
+            "Please install DEA Tools with the `[datacube]` extra, e.g.: "
+            "`pip install dea-tools[datacube]`"
+        ) from e
 
     # Connect to the datacube
     dc = datacube.Datacube(app="WIT_drill")
