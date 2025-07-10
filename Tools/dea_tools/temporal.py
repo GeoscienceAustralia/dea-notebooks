@@ -31,7 +31,8 @@ from scipy.signal import wiener
 from scipy.stats import t
 from packaging import version
 
-from datacube.utils.geometry import assign_crs
+import odc.geo.xr
+from odc.geo.xr import assign_crs
 
 
 def allNaN_arg(da, dim, stat):
@@ -321,7 +322,7 @@ def xr_phenology(
         )
 
         try:
-            crs = da.geobox.crs
+            crs = da.odc.geobox.crs
             lazy_phenology = assign_crs(lazy_phenology, str(crs))
         except:
             pass
@@ -491,7 +492,7 @@ def temporal_statistics(da, stats):
         )
 
         try:
-            crs = da.geobox.crs
+            crs = da.odc.geobox.crs
             lazy_ds = assign_crs(lazy_ds, str(crs))
         except:
             pass
@@ -583,7 +584,7 @@ def temporal_statistics(da, stats):
 
     # try to add back the geobox
     try:
-        crs = da.geobox.crs
+        crs = da.odc.geobox.crs
         ds = assign_crs(ds, str(crs))
     except:
         pass

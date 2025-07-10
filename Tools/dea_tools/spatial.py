@@ -1436,8 +1436,16 @@ def sun_angles(dc, query):
         'sun_azimuth' variables.
     """
 
-    from datacube.api.query import query_group_by
-    from datacube.model.utils import xr_apply
+    # Attempt to import datacube and raise an error if not available
+    try:
+        from datacube.api.query import query_group_by
+        from datacube.model.utils import xr_apply
+    except ImportError as e:
+        raise ImportError(
+            "`datacube` is required for `sun_angles`. "
+            "Please install DEA Tools with the `[datacube]` extra, e.g.: "
+            "`pip install dea-tools[datacube]`"
+        ) from e
 
     # Identify satellite datasets and group outputs using the
     # same approach used to group satellite imagery (i.e. solar day)
