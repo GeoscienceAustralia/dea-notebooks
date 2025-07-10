@@ -5,8 +5,18 @@ import folium.plugins
 
 from odc.ui import mk_data_uri, zoom_from_bbox
 from odc.ui._images import xr_bounds
-from datacube.testutils.geom import epsg4326
-from datacube_ows.styles.api import apply_ows_style_cfg, xarray_image_as_png
+
+
+# Attempt to import datacube and raise an error if not available
+try:
+    from datacube.testutils.geom import epsg4326
+    from datacube_ows.styles.api import apply_ows_style_cfg, xarray_image_as_png
+except ImportError as e:
+    raise ImportError(
+        "`datacube` and `datacube_ows` are required to use this module. "
+        "Please install DEA Tools with the `[datacube]` extra, e.g.: "
+        "`pip install dea-tools[datacube]`"
+    ) from e
 
 # ipyleaflet is listed as an optional dependency for the dea-tools package
 # so instead of trying to import it here, we do that as needed

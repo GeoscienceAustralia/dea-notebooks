@@ -436,8 +436,12 @@ def temporal_statistics(da, stats):
     # Attempt to import hdstats and raise an error if not available
     try:
         import hdstats
-    except ImportError:
-        raise ImportError("`hdstats` is required for `temporal_statistics`. Please install the `[hdstats]` dependency.")
+    except ImportError as e:
+        raise ImportError(
+            "`hdstats` is required for `temporal_statistics`. "
+            "Please install DEA Tools with the `[hdstats]` extra, e.g.: "
+            "`pip install dea-tools[hdstats]`"
+        ) from e
 
     # If dask arrays then map the blocks
     if dask.is_dask_collection(da):

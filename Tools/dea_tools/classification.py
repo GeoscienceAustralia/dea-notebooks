@@ -52,7 +52,7 @@ from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.model_selection import BaseCrossValidator
 
 from odc.geo.xr import assign_crs
-from datacube.utils import geometry
+from odc.geo.geom import Geometry
 from dea_tools.spatial import xr_rasterize
 
 
@@ -507,7 +507,7 @@ def _get_training_data_for_shp(
         dc_query.pop("dask_chunks", None)
 
     # set up query based on polygon
-    geom = geometry.Geometry(geom=gdf.iloc[index].geometry, crs=gdf.crs)
+    geom = Geometry(geom=gdf.iloc[index].geometry, crs=gdf.crs)
     q = {"geopolygon": geom}
     # merge polygon query with user supplied query params
     dc_query.update(q)

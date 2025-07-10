@@ -38,7 +38,7 @@ from functools import partial
 from shapely.geometry import box, shape
 from owslib.wfs import WebFeatureService
 
-from datacube.utils.geometry import CRS
+from odc.geo.crs import CRS
 from dea_tools.datahandling import parallel_apply
 from dea_tools.spatial import idw
 

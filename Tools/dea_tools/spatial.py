@@ -353,7 +353,7 @@ def xr_rasterize(
     if output_path is not None:
         if verbose:
             print(f"Exporting raster data to {output_path}")
-        write_cog(da_rasterized, output_path, overwrite=True)
+        da_rasterized.odc.write_cog(output_path, overwrite=True)
 
     return da_rasterized
 
