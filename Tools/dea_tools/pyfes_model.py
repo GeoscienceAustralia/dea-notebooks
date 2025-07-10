@@ -12,13 +12,14 @@ While not as flexible in terms of model choice as the `pyTMD` approach proposed
 in
 [DEAfrica](https://github.com/GeoscienceAustralia/dea-coastlines/blob/deafrica/deafrica_coastlines/raster.py),
 the `aviso-fes` proved to be dramatically faster.
-""" 
+"""
 
 from os import environ
 from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+
 
 def initialise_handler():
     """Initialise Aviso FES Handler from INI file.
@@ -27,13 +28,14 @@ def initialise_handler():
     variable.
     """
     from pyfes import Handler
-    
+
     ini_path = Path(environ.get("FES2014_OCEAN_INI", "."))
     if not ini_path.exists() or not ini_path.is_file():
         raise ValueError("FES2014_OCEAN_INI environment variable must be set")
     short_tide = Handler("ocean", "io", str(ini_path))
     print(f"Initialised FES2014 from {ini_path}")
     return short_tide
+
 
 def predict_tide(timepoints):
     """Compute tide heights using the pyfes handler.
@@ -49,7 +51,7 @@ def predict_tide(timepoints):
     of the tidal spectrum.
     """
     from pyfes import Handler
-    
+
     lons, lats, times = tuple(np.array(timepoints).T)
     # aviso-fes requires naive UTC times in microseconds
     times_us = times.astype("datetime64[us]")

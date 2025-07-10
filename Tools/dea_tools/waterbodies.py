@@ -2,18 +2,18 @@
 """
 Loading and processing DEA Waterbodies data.
 
-License: The code in this notebook is licensed under the Apache License, 
-Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
-Australia data is licensed under the Creative Commons by Attribution 4.0 
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open Data 
-Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the GIS Stack 
-Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) 
-using the `open-data-cube` tag (you can view previously asked questions 
-here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+Contact: If you need assistance, please post a question on the Open Data
+Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the GIS Stack
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
+using the `open-data-cube` tag (you can view previously asked questions
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, file one on 
+If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
 Last modified: March 2024
@@ -26,19 +26,17 @@ from owslib.etree import etree
 import pandas as pd
 
 WFS_ADDRESS = "https://geoserver.dea.ga.gov.au/geoserver/wfs"
-LAYER_SELECT = {
-    "v2" : "DigitalEarthAustraliaWaterbodies_v2",
-    "v3" : "DigitalEarthAustraliaWaterbodies_v3"
-}
+LAYER_SELECT = {"v2": "DigitalEarthAustraliaWaterbodies_v2", "v3": "DigitalEarthAustraliaWaterbodies_v3"}
+
 
 def get_waterbody(geohash: str, version: str = "v3") -> gpd.GeoDataFrame:
     """Gets a waterbody polygon and metadata by geohash.
-    
+
     Parameters
     ----------
     geohash : str
         The geohash/UID for a waterbody in DEA Waterbodies.
-    
+
     Returns
     -------
     gpd.GeoDataFrame
@@ -58,14 +56,14 @@ def get_waterbody(geohash: str, version: str = "v3") -> gpd.GeoDataFrame:
 
 def get_waterbodies(bbox: tuple, crs="EPSG:4326", version: str = "v3") -> gpd.GeoDataFrame:
     """Gets the polygons and metadata for multiple waterbodies by bbox.
-    
+
     Parameters
     ----------
     bbox : (xmin, ymin, xmax, ymax)
         Bounding box.
     crs : str
         Optional CRS for the bounding box.
-    
+
     Returns
     -------
     gpd.GeoDataFrame
@@ -83,14 +81,14 @@ def get_waterbodies(bbox: tuple, crs="EPSG:4326", version: str = "v3") -> gpd.Ge
 
 def get_geohashes(bbox: tuple = None, crs: str = "EPSG:4326", version: str = "v3") -> [str]:
     """Gets all waterbody geohashes.
-    
+
     Parameters
     ----------
     bbox : (xmin, ymin, xmax, ymax)
         Optional bounding box.
     crs : str
         Optional CRS for the bounding box.
-    
+
     Returns
     -------
     [str]
@@ -111,14 +109,14 @@ def get_geohashes(bbox: tuple = None, crs: str = "EPSG:4326", version: str = "v3
 
 def get_time_series(geohash: str = None, waterbody: pd.Series = None, version: str = "v3") -> pd.DataFrame:
     """Gets the time series for a waterbody. Specify either a GeoDataFrame row or a geohash.
-    
+
     Parameters
     ----------
     geohash : str
         The geohash/UID for a waterbody in DEA Waterbodies.
     waterbody : pd.Series
         One row of a GeoDataFrame representing a waterbody.
-    
+
     Returns
     -------
     pd.DataFrame

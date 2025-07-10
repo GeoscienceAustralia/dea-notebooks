@@ -311,9 +311,7 @@ def load_ard(
         )
     else:
         # If an invalid product is passed, raise error
-        invalid_products = [
-            product for product in products if product not in valid_s2 + valid_ls
-        ]
+        invalid_products = [product for product in products if product not in valid_s2 + valid_ls]
         raise ValueError(
             f"The `load_ard` function only supports Landsat and "
             f"Sentinel-2 Analysis Ready Data products; {invalid_products} is not supported. "
@@ -401,11 +399,7 @@ def load_ard(
             if contiguity_band.replace("oa_", "") in measurements
             else contiguity_band
         )
-        pq_band = (
-            pq_band.replace("oa_", "")
-            if pq_band.replace("oa_", "") in measurements
-            else pq_band
-        )
+        pq_band = pq_band.replace("oa_", "") if pq_band.replace("oa_", "") in measurements else pq_band
 
     # Use custom fuse function to ensure contiguity is combined correctly
     # when grouping data by solar day. Without this, contiguity data from
@@ -422,9 +416,7 @@ def load_ard(
 
     # Get list of data and mask bands so that we can later exclude
     # mask bands from being masked themselves
-    data_bands = [
-        band for band in measurements if band not in (pq_band, contiguity_band)
-    ]
+    data_bands = [band for band in measurements if band not in (pq_band, contiguity_band)]
     mask_bands = [band for band in measurements if band not in data_bands]
 
     #################
@@ -464,11 +456,7 @@ def load_ard(
 
         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
         if not ls7_slc_off and product == "ga_ls7e_ard_3":
-            datasets = [
-                i
-                for i in datasets
-                if normalise_dt(i.time.begin) < datetime.datetime(2003, 5, 31)
-            ]
+            datasets = [i for i in datasets if normalise_dt(i.time.begin) < datetime.datetime(2003, 5, 31)]
 
         # Add any returned datasets to list
         dataset_list.extend(datasets)
@@ -509,9 +497,7 @@ def load_ard(
         # Compute good data for each observation as % of total pixels
         if verbose:
             print(f"Counting good quality pixels for each time step using {cloud_mask}")
-        data_perc = pq_mask.sum(axis=[1, 2], dtype="int32") / (
-            pq_mask.shape[1] * pq_mask.shape[2]
-        )
+        data_perc = pq_mask.sum(axis=[1, 2], dtype="int32") / (pq_mask.shape[1] * pq_mask.shape[2])
         keep = (data_perc >= min_gooddata).persist()
 
         # Filter by `min_gooddata` to drop low quality observations
@@ -529,9 +515,7 @@ def load_ard(
     # Morphological filtering on cloud masks
     if (mask_filters is not None) & (mask_pixel_quality != False):
         if verbose:
-            print(
-                f"Applying morphological filters to pixel quality mask: {mask_filters}"
-            )
+            print(f"Applying morphological filters to pixel quality mask: {mask_filters}")
 
         pq_mask = ~mask_cleanup(~pq_mask, mask_filters=mask_filters)
 
@@ -724,10 +708,7 @@ def download_unzip(url, output_dir=None, remove_zip=True):
     # Extract into output_dir
     with zipfile.ZipFile(zip_name, "r") as zip_ref:
         zip_ref.extractall(output_dir)
-        print(
-            f"Unzipping output files to: "
-            f"{output_dir if output_dir else os.getcwd()}"
-        )
+        print(f"Unzipping output files to: {output_dir if output_dir else os.getcwd()}")
 
     # Optionally cleanup
     if remove_zip:
@@ -787,9 +768,7 @@ def dilate(array, dilation=10, invert=True):
     if invert:
         array = ~array
 
-    return ~binary_dilation(
-        array.astype(bool), structure=kernel.reshape((1,) + kernel.shape)
-    )
+    return ~binary_dilation(array.astype(bool), structure=kernel.reshape((1,) + kernel.shape))
 
 
 def paths_to_datetimeindex(paths, string_slice=(0, 10)):
@@ -888,9 +867,7 @@ def last(array: xr.DataArray, dim: str, index_name: str = None) -> xr.DataArray:
     return reduced
 
 
-def nearest(
-    array: xr.DataArray, dim: str, target, index_name: str = None
-) -> xr.DataArray:
+def nearest(array: xr.DataArray, dim: str, target, index_name: str = None) -> xr.DataArray:
     """
     Finds the nearest values to a target label along the given
     dimension, for all other dimensions.
@@ -944,9 +921,7 @@ def nearest(
     target = array[dim].dtype.type(target)
     is_before_closer = abs(target - da_before[dim]) < abs(target - da_after[dim])
     nearest_array = xr.where(is_before_closer, da_before, da_after, keep_attrs=True)
-    nearest_array[dim] = xr.where(
-        is_before_closer, da_before[dim], da_after[dim], keep_attrs=True
-    )
+    nearest_array[dim] = xr.where(is_before_closer, da_before[dim], da_after[dim], keep_attrs=True)
 
     if index_name is not None:
         nearest_array[index_name] = xr.where(
@@ -1276,12 +1251,7 @@ def _pca_timestep_pansharpen(ds_i, pan_band, pca_rescaling="histogram"):
     # Reshape to 2D by stacking x and y dimensions to prepare it
     # as an input to PCA. Drop NA rows as these are not supported
     # by `pca.fit_transform`.
-    da_2d = (
-        ds_i.to_array()
-        .stack(pixel=("y", "x"))
-        .transpose("pixel", "variable")
-        .dropna(dim="pixel")
-    )
+    da_2d = ds_i.to_array().stack(pixel=("y", "x")).transpose("pixel", "variable").dropna(dim="pixel")
 
     # Create new dataarrays with and without pan band
     da_2d_nopan = da_2d.drop(pan_band, dim="variable")
@@ -1423,9 +1393,7 @@ def xr_pansharpen(
     # entire `xr.Dataset` in one go (with optional weights for Brovey, ESRI)
     if transform in ("brovey", "esri", "simple mean"):
         print(f"Applying {transform.capitalize()} pansharpening")
-        extra_params = (
-            {"band_weights": band_weights} if transform in ("brovey", "esri") else {}
-        )
+        extra_params = {"band_weights": band_weights} if transform in ("brovey", "esri") else {}
         ds_pansharpened = transform_dict[transform](
             ds,
             pan_band=pan_band,
@@ -1460,14 +1428,11 @@ def xr_pansharpen(
         # Otherwise, apply func directly if only one timestep
         else:
             print(f"Applying {transform.upper()} pansharpening")
-            ds_pansharpened = transform_dict[transform](
-                ds, pan_band=pan_band, **extra_params
-            )
+            ds_pansharpened = transform_dict[transform](ds, pan_band=pan_band, **extra_params)
 
     else:
         raise ValueError(
-            f"Unsupported value '{transform}' passed to `method`. Please "
-            f"provide one of {list(transform_dict.keys())}."
+            f"Unsupported value '{transform}' passed to `method`. Please provide one of {list(transform_dict.keys())}."
         )
 
     # Optionally insert pan band back into dataset
@@ -1475,9 +1440,7 @@ def xr_pansharpen(
         ds_pansharpened[pan_band] = ds[pan_band]
 
     # Return data in original or requested dtype
-    return ds_pansharpened.astype(
-        ds.to_array().dtype if output_dtype is None else output_dtype
-    )
+    return ds_pansharpened.astype(ds.to_array().dtype if output_dtype is None else output_dtype)
 
 
 def load_reproject(

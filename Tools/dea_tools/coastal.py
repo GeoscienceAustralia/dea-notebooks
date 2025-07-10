@@ -2,18 +2,18 @@
 """
 Coastal analysis and tide modelling tools.
 
-License: The code in this notebook is licensed under the Apache License, 
-Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
-Australia data is licensed under the Creative Commons by Attribution 4.0 
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, post a question on the Open Data Cube 
-Discord chat (https://discord.com/invite/4hhBQVas5U) or the GIS Stack Exchange 
-(https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using 
-the `open-data-cube` tag (you can view previously asked questions here: 
-https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+Contact: If you need assistance, post a question on the Open Data Cube
+Discord chat (https://discord.com/invite/4hhBQVas5U) or the GIS Stack Exchange
+(https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using
+the `open-data-cube` tag (you can view previously asked questions here:
+https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, you can file one 
+If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Last modified: July 2024
@@ -109,9 +109,7 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
         """
 
         # Identify intersections between transects and lines
-        intersect_points = lines_gdf.apply(
-            lambda x: x.geometry.intersection(transect_gdf.geometry), axis=1
-        )
+        intersect_points = lines_gdf.apply(lambda x: x.geometry.intersection(transect_gdf.geometry), axis=1)
 
         # In distance mode, identify transects with one intersection only,
         # and use this as the end point and the start of the transect as the
@@ -139,9 +137,7 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
             )
 
         # Calculate distances between valid start and end points
-        distance_df = point_df.apply(
-            lambda x: x.start.distance(x.end) if x.start else None, axis=1
-        )
+        distance_df = point_df.apply(lambda x: x.start.distance(x.end) if x.start else None, axis=1)
 
         return distance_df
 
@@ -150,21 +146,15 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
         warnings.filterwarnings("ignore", category=ShapelyDeprecationWarning)
 
         # Assert that both datasets use the same CRS
-        assert transects_gdf.crs == lines_gdf.crs, (
-            "Please ensure both " "input datasets use the same CRS."
-        )
+        assert transects_gdf.crs == lines_gdf.crs, "Please ensure both input datasets use the same CRS."
 
         # Run distance calculations
-        distance_df = transects_gdf.apply(
-            lambda x: _intersect_dist(x, lines_gdf), axis=1
-        )
+        distance_df = transects_gdf.apply(lambda x: _intersect_dist(x, lines_gdf), axis=1)
 
         return pd.DataFrame(distance_df)
 
 
-def get_coastlines(
-    bbox: tuple, crs="EPSG:4326", layer="shorelines_annual", drop_wms=True
-) -> gpd.GeoDataFrame:
+def get_coastlines(bbox: tuple, crs="EPSG:4326", layer="shorelines_annual", drop_wms=True) -> gpd.GeoDataFrame:
     """
     Load DEA Coastlines annual shorelines or rates of change points data
     for a provided bounding box using WFS.
@@ -224,9 +214,7 @@ def get_coastlines(
 
     # Optionally drop WMS-specific columns
     if drop_wms:
-        coastlines_gdf = coastlines_gdf.loc[
-            :, ~coastlines_gdf.columns.str.contains("wms_")
-        ]
+        coastlines_gdf = coastlines_gdf.loc[:, ~coastlines_gdf.columns.str.contains("wms_")]
 
     return coastlines_gdf
 
@@ -262,15 +250,11 @@ def _model_tides(
     # Get parameters for tide model; use custom definition file for
     # FES2012 (leave this as an undocumented feature for now)
     if model == "FES2012":
-        pytmd_model = pyTMD.io.model(directory).from_file(
-            directory / "model_FES2012.def"
-        )
+        pytmd_model = pyTMD.io.model(directory).from_file(directory / "model_FES2012.def")
     elif model == "TPXO8-atlas-v1":
         pytmd_model = pyTMD.io.model(directory).from_file(directory / "model_TPXO8.def")
     else:
-        pytmd_model = pyTMD.io.model(
-            directory, format="netcdf", compressed=False
-        ).elevation(model)
+        pytmd_model = pyTMD.io.model(directory, format="netcdf", compressed=False).elevation(model)
 
     # Convert x, y to latitude/longitude
     transformer = pyproj.Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
@@ -290,7 +274,6 @@ def _model_tides(
 
     # TEMPORARY HACK to work on both old and new pyTMD
     try:
-            
         # Read tidal constants and interpolate to grid points
         if pytmd_model.format in ("OTIS", "ATLAS", "TMD3"):
             amp, ph, D, c = pyTMD.io.OTIS.extract_constants(
@@ -307,10 +290,10 @@ def _model_tides(
                 cutoff=cutoff,
                 grid=pytmd_model.format,
             )
-    
+
             # Use delta time at 2000.0 to match TMD outputs
             deltat = np.zeros((len(timescale)), dtype=np.float64)
-    
+
         elif pytmd_model.format == "netcdf":
             amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
                 lon,
@@ -326,10 +309,10 @@ def _model_tides(
                 scale=pytmd_model.scale,
                 compressed=pytmd_model.compressed,
             )
-    
+
             # Use delta time at 2000.0 to match TMD outputs
             deltat = np.zeros((len(timescale)), dtype=np.float64)
-    
+
         elif pytmd_model.format == "GOT":
             amp, ph, c = pyTMD.io.GOT.extract_constants(
                 lon,
@@ -343,10 +326,10 @@ def _model_tides(
                 scale=pytmd_model.scale,
                 compressed=pytmd_model.compressed,
             )
-    
+
             # Delta time (TT - UT1)
             deltat = timescale.tt_ut1
-    
+
         elif pytmd_model.format == "FES":
             amp, ph = pyTMD.io.FES.extract_constants(
                 lon,
@@ -362,19 +345,19 @@ def _model_tides(
                 scale=pytmd_model.scale,
                 compressed=pytmd_model.compressed,
             )
-    
+
             # Available model constituents
             c = pytmd_model.constituents
-    
+
             # Delta time (TT - UT1)
             deltat = timescale.tt_ut1
-    
+
         # Calculate complex phase in radians for Euler's
         cph = -1j * ph * np.pi / 180.0
-    
+
         # Calculate constituent oscillation
         hc = amp * np.exp(cph)
-    
+
         # Determine the number of points and times to process. If in
         # "one-to-many" mode, these counts are used to repeat our extracted
         # constituents and timesteps so we can extract tides for all
@@ -383,7 +366,7 @@ def _model_tides(
         # (e.g. "repeat 1 times")
         points_repeat = len(x) if mode == "one-to-many" else 1
         time_repeat = len(time) if mode == "one-to-many" else 1
-    
+
         # If in "one-to-many" mode, repeat constituents to length of time
         # and number of input coords before passing to `predict_tide_drift`
         t, hc, deltat = (
@@ -391,19 +374,15 @@ def _model_tides(
             hc.repeat(time_repeat, axis=0),
             np.tile(deltat, points_repeat),
         )
-    
+
         # Predict tidal elevations at time and infer minor corrections
         npts = len(t)
         tide = np.ma.zeros((npts), fill_value=np.nan)
         tide.mask = np.any(hc.mask, axis=1)
-    
+
         # Predict tides
-        tide.data[:] = pyTMD.predict.drift(
-            t, hc, c, deltat=deltat, corrections=pytmd_model.format
-        )
-        minor = pyTMD.predict.infer_minor(
-            t, hc, c, deltat=deltat, corrections=pytmd_model.format
-        )
+        tide.data[:] = pyTMD.predict.drift(t, hc, c, deltat=deltat, corrections=pytmd_model.format)
+        minor = pyTMD.predict.infer_minor(t, hc, c, deltat=deltat, corrections=pytmd_model.format)
         tide.data[:] += minor.data[:]
 
     except:
@@ -423,10 +402,10 @@ def _model_tides(
                 extrapolate=extrapolate,
                 cutoff=cutoff,
             )
-    
+
             # Use delta time at 2000.0 to match TMD outputs
             deltat = np.zeros((len(timescale)), dtype=np.float64)
-    
+
         elif pytmd_model.format in ("ATLAS-netcdf",):
             amp, ph, D, c = pyTMD.io.ATLAS.extract_constants(
                 lon,
@@ -442,10 +421,10 @@ def _model_tides(
                 scale=pytmd_model.scale,
                 compressed=pytmd_model.compressed,
             )
-    
+
             # Use delta time at 2000.0 to match TMD outputs
             deltat = np.zeros((len(timescale)), dtype=np.float64)
-    
+
         elif pytmd_model.format in ("GOT-ascii", "GOT-netcdf"):
             amp, ph, c = pyTMD.io.GOT.extract_constants(
                 lon,
@@ -460,10 +439,10 @@ def _model_tides(
                 scale=pytmd_model.scale,
                 compressed=pytmd_model.compressed,
             )
-    
+
             # Delta time (TT - UT1)
             deltat = timescale.tt_ut1
-    
+
         elif pytmd_model.format in ("FES-ascii", "FES-netcdf"):
             amp, ph = pyTMD.io.FES.extract_constants(
                 lon,
@@ -479,19 +458,19 @@ def _model_tides(
                 scale=pytmd_model.scale,
                 compressed=pytmd_model.compressed,
             )
-    
+
             # Available model constituents
             c = pytmd_model.constituents
-    
+
             # Delta time (TT - UT1)
             deltat = timescale.tt_ut1
-    
+
         # Calculate complex phase in radians for Euler's
         cph = -1j * ph * np.pi / 180.0
-    
+
         # Calculate constituent oscillation
         hc = amp * np.exp(cph)
-    
+
         # Determine the number of points and times to process. If in
         # "one-to-many" mode, these counts are used to repeat our extracted
         # constituents and timesteps so we can extract tides for all
@@ -500,7 +479,7 @@ def _model_tides(
         # (e.g. "repeat 1 times")
         points_repeat = len(x) if mode == "one-to-many" else 1
         time_repeat = len(time) if mode == "one-to-many" else 1
-    
+
         # If in "one-to-many" mode, repeat constituents to length of time
         # and number of input coords before passing to `predict_tide_drift`
         t, hc, deltat = (
@@ -508,12 +487,12 @@ def _model_tides(
             hc.repeat(time_repeat, axis=0),
             np.tile(deltat, points_repeat),
         )
-    
+
         # Predict tidal elevations at time and infer minor corrections
         npts = len(t)
         tide = np.ma.zeros((npts), fill_value=np.nan)
         tide.mask = np.any(hc.mask, axis=1)
-    
+
         # Predict tides
         tide.data[:] = pyTMD.predict.drift(t, hc, c, deltat=deltat, corrections=pytmd_model.corrections)
         minor = pyTMD.predict.infer_minor(
@@ -531,15 +510,13 @@ def _model_tides(
 
     # Convert data to pandas.DataFrame, and set index to our input
     # time/x/y values
-    tide_df = pd.DataFrame(
-        {
-            "time": np.tile(time, points_repeat),
-            "x": np.repeat(x, time_repeat),
-            "y": np.repeat(y, time_repeat),
-            "tide_model": model,
-            "tide_m": tide,
-        }
-    ).set_index(["time", "x", "y"])
+    tide_df = pd.DataFrame({
+        "time": np.tile(time, points_repeat),
+        "x": np.repeat(x, time_repeat),
+        "y": np.repeat(y, time_repeat),
+        "tide_model": model,
+        "tide_m": tide,
+    }).set_index(["time", "x", "y"])
 
     # Optionally convert outputs to integer units (can save memory)
     if output_units == "m":
@@ -684,13 +661,13 @@ def _ensemble_model(
 
     # Loop through all provided ensemble generation functions
     for ensemble_n, ensemble_f in ensemble_func.items():
-
         print(f"Combining models into single {ensemble_n} model")
 
         # Join ranks to input tide data, compute weightings and group
         grouped = (
             # Add tide model as an index so we can join with model ranks
-            tide_df.set_index("tide_model", append=True).join(ensemble_ranks_df)
+            tide_df.set_index("tide_model", append=True)
+            .join(ensemble_ranks_df)
             # Add temp columns containing weightings and weighted values
             .assign(
                 weights=ensemble_f,  # use custom func to compute weights
@@ -1020,23 +997,17 @@ def model_tides(
             # parallel iterations. In "one-to-one" mode, split up
             # timesteps into smaller parallel chunks too.
             if mode == "one-to-many":
-                model_iters, x_iters, y_iters = zip(
-                    *[
-                        (m, x_split[i], y_split[i])
-                        for m in models_to_process
-                        for i in range(parallel_splits)
-                    ]
-                )
+                model_iters, x_iters, y_iters = zip(*[
+                    (m, x_split[i], y_split[i]) for m in models_to_process for i in range(parallel_splits)
+                ])
                 time_iters = [time] * len(model_iters)
             elif mode == "one-to-one":
                 time_split = np.array_split(time, parallel_splits)
-                model_iters, x_iters, y_iters, time_iters = zip(
-                    *[
-                        (m, x_split[i], y_split[i], time_split[i])
-                        for m in models_to_process
-                        for i in range(parallel_splits)
-                    ]
-                )
+                model_iters, x_iters, y_iters, time_iters = zip(*[
+                    (m, x_split[i], y_split[i], time_split[i])
+                    for m in models_to_process
+                    for i in range(parallel_splits)
+                ])
 
             # Apply func in parallel, iterating through each input param
             model_outputs = list(
@@ -1060,16 +1031,12 @@ def model_tides(
 
     # Optionally compute ensemble model and add to dataframe
     if "ensemble" in models_requested:
-        ensemble_df = _ensemble_model(
-            x, y, crs, tide_df, models_to_process, **ensemble_kwargs
-        )
+        ensemble_df = _ensemble_model(x, y, crs, tide_df, models_to_process, **ensemble_kwargs)
 
         # Update requested models with any custom ensemble models, then
         # filter the dataframe to keep only models originally requested
         models_requested = np.union1d(models_requested, ensemble_df.tide_model.unique())
-        tide_df = pd.concat([tide_df, ensemble_df]).query(
-            "tide_model in @models_requested"
-        )
+        tide_df = pd.concat([tide_df, ensemble_df]).query("tide_model in @models_requested")
 
     # Optionally convert to a wide format dataframe with a tide model in
     # each dataframe column
@@ -1081,9 +1048,7 @@ def model_tides(
         # If in 'one-to-one' mode, reindex using our input time/x/y
         # values to ensure the output is sorted the same as our inputs
         if mode == "one-to-one":
-            output_indices = pd.MultiIndex.from_arrays(
-                [time, x, y], names=["time", "x", "y"]
-            )
+            output_indices = pd.MultiIndex.from_arrays([time, x, y], names=["time", "x", "y"])
             tide_df = tide_df.reindex(output_indices)
 
     return tide_df
@@ -1135,9 +1100,7 @@ def _pixel_tides_resample(
 
     # Convert array to Dask, using no chunking along y and x dims,
     # and a single chunk for each timestep/quantile and tide model
-    tides_lowres_dask = tides_lowres.chunk(
-        {d: None if d in [y_dim, x_dim] else 1 for d in tides_lowres.dims}
-    )
+    tides_lowres_dask = tides_lowres.chunk({d: None if d in [y_dim, x_dim] else 1 for d in tides_lowres.dims})
 
     # Automatically set Dask chunks for reprojection if set to "auto".
     # This will either use x/y chunks if they exist in `ds`, else
@@ -1395,14 +1358,9 @@ def pixel_tides(
 
     # Create a new reduced resolution tide modelling grid after
     # first buffering the grid
-    print(
-        f"Creating reduced resolution {resolution} x {resolution} "
-        f"{crs_units} tide modelling array"
-    )
+    print(f"Creating reduced resolution {resolution} x {resolution} {crs_units} tide modelling array")
     buffered_geobox = ds.odc.geobox.buffered(buffer)
-    rescaled_geobox = GeoBox.from_bbox(
-        bbox=buffered_geobox.boundingbox, resolution=resolution
-    )
+    rescaled_geobox = GeoBox.from_bbox(bbox=buffered_geobox.boundingbox, resolution=resolution)
     rescaled_ds = odc.geo.xr.xr_zeros(rescaled_geobox)
 
     # Flatten grid to 1D, then add time dimension
@@ -1439,9 +1397,7 @@ def pixel_tides(
     # float64 (memory intensive)
     if calculate_quantiles is not None:
         print("Computing tide quantiles")
-        tides_lowres = tides_lowres.quantile(q=calculate_quantiles, dim="time").astype(
-            tides_lowres.dtype
-        )
+        tides_lowres = tides_lowres.quantile(q=calculate_quantiles, dim="time").astype(tides_lowres.dtype)
 
     # If only one tidal model exists, squeeze out "tide_model" dim
     if len(tides_lowres.tide_model) == 1:
@@ -1541,16 +1497,10 @@ def tidal_tag(
     # dataset centroid
     if not tidepost_lat or not tidepost_lon:
         tidepost_lon, tidepost_lat = ds.odc.geobox.geographic_extent.centroid.coords[0]
-        print(
-            f"Setting tide modelling location from dataset centroid: "
-            f"{tidepost_lon:.2f}, {tidepost_lat:.2f}"
-        )
+        print(f"Setting tide modelling location from dataset centroid: {tidepost_lon:.2f}, {tidepost_lat:.2f}")
 
     else:
-        print(
-            f"Using user-supplied tide modelling location: "
-            f"{tidepost_lon:.2f}, {tidepost_lat:.2f}"
-        )
+        print(f"Using user-supplied tide modelling location: {tidepost_lon:.2f}, {tidepost_lat:.2f}")
 
     # Use tidal model to compute tide heights for each observation:
     # model = (
@@ -1595,10 +1545,7 @@ def tidal_tag(
         # Compare tides computed for each timestep. If the previous tide
         # was higher than the current tide, the tide is 'ebbing'. If the
         # previous tide was lower, the tide is 'flowing'
-        tidal_phase = [
-            "Ebb" if i else "Flow"
-            for i in tide_pre_df.tide_m.values > tide_df.tide_m.values
-        ]
+        tidal_phase = ["Ebb" if i else "Flow" for i in tide_pre_df.tide_m.values > tide_df.tide_m.values]
 
         # Assign tide phase to the dataset as a new variable
         ds["ebb_flow"] = xr.DataArray(tidal_phase, coords=[ds.time])
@@ -1775,18 +1722,12 @@ def tidal_stats(
 
     # Extract x (time in decimal years) and y (distance) values
     all_times = all_tides_df.index.get_level_values("time")
-    all_x = (
-        all_times.year + ((all_times.dayofyear - 1) / 365) + ((all_times.hour - 1) / 24)
-    )
+    all_x = all_times.year + ((all_times.dayofyear - 1) / 365) + ((all_times.hour - 1) / 24)
     all_y = all_tides_df.tide_m.values.astype(np.float32)
     time_period = all_x.max() - all_x.min()
 
     # Extract x (time in decimal years) and y (distance) values
-    obs_x = (
-        ds_tides.time.dt.year
-        + ((ds_tides.time.dt.dayofyear - 1) / 365)
-        + ((ds_tides.time.dt.hour - 1) / 24)
-    )
+    obs_x = ds_tides.time.dt.year + ((ds_tides.time.dt.dayofyear - 1) / 365) + ((ds_tides.time.dt.hour - 1) / 24)
     obs_y = ds_tides.tide_m.values.astype(np.float32)
 
     # Compute linear regression
@@ -1803,10 +1744,7 @@ def tidal_stats(
 
         if linear_reg:
             if obs_linreg.pvalue > 0.05:
-                print(
-                    f"Observed tides show no significant trends "
-                    f"over the ~{time_period:.0f} year period."
-                )
+                print(f"Observed tides show no significant trends over the ~{time_period:.0f} year period.")
             else:
                 obs_slope_desc = "decrease" if obs_linreg.slope < 0 else "increase"
                 print(
@@ -1818,10 +1756,7 @@ def tidal_stats(
                 )
 
             if all_linreg.pvalue > 0.05:
-                print(
-                    f"All tides show no significant trends "
-                    f"over the ~{time_period:.0f} year period."
-                )
+                print(f"All tides show no significant trends over the ~{time_period:.0f} year period.")
             else:
                 all_slope_desc = "decrease" if all_linreg.slope < 0 else "increase"
                 print(
@@ -1836,9 +1771,7 @@ def tidal_stats(
         # Create plot and add all time and observed tide data
         fig, ax = plt.subplots(figsize=(10, 5))
         all_tides_df.reset_index(["x", "y"]).tide_m.plot(ax=ax, alpha=0.4)
-        ds_tides.tide_m.plot.line(
-            ax=ax, marker="o", linewidth=0.0, color="black", markersize=2
-        )
+        ds_tides.tide_m.plot.line(ax=ax, marker="o", linewidth=0.0, color="black", markersize=2)
 
         # Add horizontal lines for spread/offsets
         ax.axhline(obs_min, color="black", linestyle=":", linewidth=1)
@@ -1887,14 +1820,12 @@ def tidal_stats(
     }
 
     if linear_reg:
-        output_stats.update(
-            {
-                "observed_slope": obs_linreg.slope,
-                "all_slope": all_linreg.slope,
-                "observed_pval": obs_linreg.pvalue,
-                "all_pval": all_linreg.pvalue,
-            }
-        )
+        output_stats.update({
+            "observed_slope": obs_linreg.slope,
+            "all_slope": all_linreg.slope,
+            "observed_pval": obs_linreg.pvalue,
+            "all_pval": all_linreg.pvalue,
+        })
 
     return pd.Series(output_stats).round(round_stats)
 
@@ -1973,19 +1904,11 @@ def tidal_tag_otps(
     # If custom tide modelling locations are not provided, use the
     # dataset centroid
     if not tidepost_lat or not tidepost_lon:
-        tidepost_lon, tidepost_lat = ds.extent.centroid.to_crs(
-            crs=CRS("EPSG:4326")
-        ).coords[0]
-        print(
-            f"Setting tide modelling location from dataset centroid: "
-            f"{tidepost_lon:.2f}, {tidepost_lat:.2f}"
-        )
+        tidepost_lon, tidepost_lat = ds.extent.centroid.to_crs(crs=CRS("EPSG:4326")).coords[0]
+        print(f"Setting tide modelling location from dataset centroid: {tidepost_lon:.2f}, {tidepost_lat:.2f}")
 
     else:
-        print(
-            f"Using user-supplied tide modelling location: "
-            f"{tidepost_lon:.2f}, {tidepost_lat:.2f}"
-        )
+        print(f"Using user-supplied tide modelling location: {tidepost_lon:.2f}, {tidepost_lat:.2f}")
 
     # Use the tidal model to compute tide heights for each observation:
     print(f"Modelling tides using OTPS and the TPXO8 tidal model")
@@ -2010,17 +1933,14 @@ def tidal_tag_otps(
             print("Modelling tidal phase (e.g. ebb or flow)")
             pre_times = ds.time - pd.Timedelta("15 min")
             pre_datetimes = pre_times.data.astype("M8[s]").astype("O").tolist()
-            pre_timepoints = [
-                TimePoint(tidepost_lon, tidepost_lat, dt) for dt in pre_datetimes
-            ]
+            pre_timepoints = [TimePoint(tidepost_lon, tidepost_lat, dt) for dt in pre_datetimes]
             pre_predictedtides = predict_tide(pre_timepoints)
 
             # Compare tides computed for each timestep. If the previous tide
             # was higher than the current tide, the tide is 'ebbing'. If the
             # previous tide was lower, the tide is 'flowing'
             tidal_phase = [
-                "Ebb" if pre.tide_m > obs.tide_m else "Flow"
-                for pre, obs in zip(pre_predictedtides, obs_predictedtides)
+                "Ebb" if pre.tide_m > obs.tide_m else "Flow" for pre, obs in zip(pre_predictedtides, obs_predictedtides)
             ]
 
             # Assign tide phase to the dataset as a new variable
@@ -2197,20 +2117,12 @@ def tidal_stats_otps(
     high_tide_offset = abs(all_max - obs_max) / all_range
 
     # Extract x (time in decimal years) and y (distance) values
-    all_x = (
-        all_timerange.year
-        + ((all_timerange.dayofyear - 1) / 365)
-        + ((all_timerange.hour - 1) / 24)
-    )
+    all_x = all_timerange.year + ((all_timerange.dayofyear - 1) / 365) + ((all_timerange.hour - 1) / 24)
     all_y = all_tideheights
     time_period = all_x.max() - all_x.min()
 
     # Extract x (time in decimal years) and y (distance) values
-    obs_x = (
-        ds_tides.time.dt.year
-        + ((ds_tides.time.dt.dayofyear - 1) / 365)
-        + ((ds_tides.time.dt.hour - 1) / 24)
-    )
+    obs_x = ds_tides.time.dt.year + ((ds_tides.time.dt.dayofyear - 1) / 365) + ((ds_tides.time.dt.hour - 1) / 24)
     obs_y = ds_tides.tide_m.values.astype(np.float32)
 
     # Compute linear regression
@@ -2228,10 +2140,7 @@ def tidal_stats_otps(
         if linear_reg:
             # Plain english
             if obs_linreg.pvalue > 0.05:
-                print(
-                    f"Observed tides show no significant trends "
-                    f"over the ~{time_period:.0f} year period."
-                )
+                print(f"Observed tides show no significant trends over the ~{time_period:.0f} year period.")
             else:
                 obs_slope_desc = "decrease" if obs_linreg.slope < 0 else "increase"
                 print(
@@ -2243,10 +2152,7 @@ def tidal_stats_otps(
                 )
 
             if all_linreg.pvalue > 0.05:
-                print(
-                    f"All tides show no significant trends "
-                    f"over the ~{time_period:.0f} year period."
-                )
+                print(f"All tides show no significant trends over the ~{time_period:.0f} year period.")
             else:
                 all_slope_desc = "decrease" if all_linreg.slope < 0 else "increase"
                 print(
@@ -2261,9 +2167,7 @@ def tidal_stats_otps(
         # Create plot and add all time and observed tide data
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.plot(all_timerange, all_tideheights, alpha=0.4)
-        ds_tides.tide_m.plot.line(
-            ax=ax, marker="o", linewidth=0.0, color="black", markersize=2
-        )
+        ds_tides.tide_m.plot.line(ax=ax, marker="o", linewidth=0.0, color="black", markersize=2)
 
         # Add horizontal lines for spread/offsets
         ax.axhline(obs_min, color="black", linestyle=":", linewidth=1)
@@ -2312,14 +2216,12 @@ def tidal_stats_otps(
     }
 
     if linear_reg:
-        output_stats.update(
-            {
-                "observed_slope": obs_linreg.slope,
-                "all_slope": all_linreg.slope,
-                "observed_pval": obs_linreg.pvalue,
-                "all_pval": all_linreg.pvalue,
-            }
-        )
+        output_stats.update({
+            "observed_slope": obs_linreg.slope,
+            "all_slope": all_linreg.slope,
+            "observed_pval": obs_linreg.pvalue,
+            "all_pval": all_linreg.pvalue,
+        })
 
     return pd.Series(output_stats).round(round_stats)
 
@@ -2371,9 +2273,9 @@ def glint_angle(solar_azimuth, solar_zenith, view_azimuth, view_zenith):
 
     # Calculate sunglint angle
     phi = solar_azimuth_rad - view_azimuth_rad
-    glint_angle = np.cos(view_zenith_rad) * np.cos(solar_zenith_rad) - np.sin(
-        view_zenith_rad
-    ) * np.sin(solar_zenith_rad) * np.cos(phi)
+    glint_angle = np.cos(view_zenith_rad) * np.cos(solar_zenith_rad) - np.sin(view_zenith_rad) * np.sin(
+        solar_zenith_rad
+    ) * np.cos(phi)
 
     # Convert to degrees
     glint_array = np.degrees(np.arccos(glint_angle))

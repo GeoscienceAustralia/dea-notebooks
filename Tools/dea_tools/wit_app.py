@@ -2,20 +2,20 @@
 """
 This module is for processing DEA wetlands data, including Spatial WIT.
 
-License: The code in this notebook is licensed under the Apache 
-License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). 
-Digital Earth Australia data is licensed under the Creative Commons 
-by Attribution 4.0 license 
+License: The code in this notebook is licensed under the Apache
+License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+Digital Earth Australia data is licensed under the Creative Commons
+by Attribution 4.0 license
 (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open 
-Data Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the 
-GIS Stack Exchange 
+Contact: If you need assistance, please post a question on the Open
+Data Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the
+GIS Stack Exchange
 (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)using
 the `open-data-cube` tag (you can view previously asked questions
-here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, file one on 
+If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
 Last modified: March 2025
@@ -119,9 +119,7 @@ def WIT_drill(
     gpgon = datacube.utils.geometry.Geometry(gdf.geometry[0], crs=gdf.crs)
 
     # Define which spectral bands are being used in the analysis
-    bands = [
-        f"nbart_{band}" for band in ("blue", "green", "red", "nir", "swir_1", "swir_2")
-    ]
+    bands = [f"nbart_{band}" for band in ("blue", "green", "red", "nir", "swir_1", "swir_2")]
 
     if verbose_progress:
         print("Loading Landsat data")
@@ -168,9 +166,7 @@ def WIT_drill(
 
     # Locate and remove any observations which aren't in all three datasets
     missing = set()
-    for t1, t2 in itertools.product(
-        [ds_fc.time.values, ds_wo.time.values, ds_ls.time.values], repeat=2
-    ):
+    for t1, t2 in itertools.product([ds_fc.time.values, ds_wo.time.values, ds_ls.time.values], repeat=2):
         missing_ = set(t1) - set(t2)
         missing |= missing_
 
@@ -377,21 +373,19 @@ def spatial_wit(ds, wetland_name):
     ]
 
     # Define the colormap with your custom colors
-    cmap = mcolors.ListedColormap(
-        [
-            "#F1E8C9",  # ng
-            "#C0AB86",  # ng_bs
-            "#D6D2A7",  # ng_mix
-            "#BCD495",  # ng_pv
-            "#93724C",  # bs
-            "#9C895D",  # bs_mix
-            "#8F9C5C",  # bs_pv
-            "#9DBD74",  # pv_mix
-            "#8CC46B",  # pv
-            "#6ce6f8",  # wet
-            "#676dca",  # water
-        ]
-    )
+    cmap = mcolors.ListedColormap([
+        "#F1E8C9",  # ng
+        "#C0AB86",  # ng_bs
+        "#D6D2A7",  # ng_mix
+        "#BCD495",  # ng_pv
+        "#93724C",  # bs
+        "#9C895D",  # bs_mix
+        "#8F9C5C",  # bs_pv
+        "#9DBD74",  # pv_mix
+        "#8CC46B",  # pv
+        "#6ce6f8",  # wet
+        "#676dca",  # water
+    ])
 
     # Create a BoundedNorm to ensure correct mapping of data to the colormap
     norm = mcolors.Normalize(vmin=0, vmax=10)
@@ -407,9 +401,7 @@ def spatial_wit(ds, wetland_name):
     for t in ds.time:
         wetland_time_step = ds["wetland"].sel(time=t)
         date_str = str(t.values)[:10]  # Extract date as string
-        wetland_time_step.rio.to_raster(
-            f"deawetlands_outputs/{wetland_name}_{date_str}.tif"
-        )
+        wetland_time_step.rio.to_raster(f"deawetlands_outputs/{wetland_name}_{date_str}.tif")
 
     # Make one big plot
 
@@ -423,9 +415,7 @@ def spatial_wit(ds, wetland_name):
 
     time_step = ds["wetland"].isel(time=0)
     height, width = time_step.shape
-    fig, axes = plt.subplots(
-        num_rows, num_columns, figsize=(8 * num_columns * width / height, 8 * num_rows)
-    )
+    fig, axes = plt.subplots(num_rows, num_columns, figsize=(8 * num_columns * width / height, 8 * num_rows))
 
     if num_rows == 1:
         axes = axes.reshape(1, num_columns)

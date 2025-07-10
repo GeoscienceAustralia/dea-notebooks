@@ -258,7 +258,7 @@ def predict_xr(
         If True, predict probabilities
     max_proba : bool
         If True, the probabilities array will be flattened to contain
-        only the probabiltiy for the "Predictions" class. If False, 
+        only the probabiltiy for the "Predictions" class. If False,
         the "Probabilities" object will be an array of prediction
         probablities for each class
     clean : bool
@@ -284,12 +284,9 @@ def predict_xr(
 
     # set chunk size if not supplied
     if chunk_size is None:
-        chunk_size = int(input_xr.chunks["x"][0]) * int(
-            input_xr.chunks["y"][0]
-        )
+        chunk_size = int(input_xr.chunks["x"][0]) * int(input_xr.chunks["y"][0])
 
     def _predict_func(model, input_xr, persist, proba, max_proba, clean, return_input):
-        
         x, y, crs = input_xr.x, input_xr.y, input_xr.odc.geobox.crs
 
         input_data = []
@@ -307,9 +304,7 @@ def predict_xr(
         input_data_flattened = da.array(input_data_flattened).transpose()
 
         if clean == True:
-            input_data_flattened = da.where(
-                da.isfinite(input_data_flattened), input_data_flattened, 0
-            )
+            input_data_flattened = da.where(da.isfinite(input_data_flattened), input_data_flattened, 0)
 
         if (proba == True) & (persist == True):
             # persisting data so we don't require loading all the data twice
@@ -327,12 +322,10 @@ def predict_xr(
         out_class = out_class.reshape(len(y), len(x))
 
         # stack back into xarray
-        output_xr = xr.DataArray(
-            out_class, coords={"x": x, "y": y}, dims=["y", "x"]
-        )
+        output_xr = xr.DataArray(out_class, coords={"x": x, "y": y}, dims=["y", "x"])
 
         output_xr = output_xr.to_dataset(name="Predictions")
-        
+
         if proba == True:
             print("   probabilities...")
             out_proba = model.predict_proba(input_data_flattened)
@@ -342,10 +335,8 @@ def predict_xr(
                 print("   returning single probability band")
                 out_proba = da.max(out_proba, axis=1) * 100.0
                 out_proba = out_proba.reshape(len(y), len(x))
-                
-                out_proba = xr.DataArray(
-                    out_proba, coords={"x": x, "y": y}, dims=["y", "x"]
-                )
+
+                out_proba = xr.DataArray(out_proba, coords={"x": x, "y": y}, dims=["y", "x"])
                 output_xr["Probabilities"] = out_proba
             else:
                 print("   returning class probability array")
@@ -356,17 +347,14 @@ def predict_xr(
                 probabilities_dataset = xr.Dataset()
                 for i, class_name in enumerate(class_names):
                     reshaped_band = out_proba[:, i].reshape(len(y), len(x))
-                    reshaped_da = xr.DataArray(
-                        reshaped_band, coords={"x": x, "y": y}, dims=["y", "x"]
-                    )
+                    reshaped_da = xr.DataArray(reshaped_band, coords={"x": x, "y": y}, dims=["y", "x"])
                     probabilities_dataset[f"prob_{class_name}"] = reshaped_da
 
                 # merge in the probabilities
                 output_xr = xr.merge([output_xr, probabilities_dataset])
-            
+
             if clean == True:
                 out_proba = da.where(da.isfinite(out_proba), out_proba, 0)
-            
 
         if return_input == True:
             print("   input features...")
@@ -380,9 +368,7 @@ def predict_xr(
             if len(input_data_flattened.shape[1:]):
                 output_px_shape = input_data_flattened.shape[1:]
 
-            output_features = input_data_flattened.reshape(
-                (len(stacked.z), *output_px_shape)
-            )
+            output_features = input_data_flattened.reshape((len(stacked.z), *output_px_shape))
 
             # set the stacked coordinate to match the input
             output_features = xr.DataArray(
@@ -390,24 +376,17 @@ def predict_xr(
                 coords={"z": stacked["z"]},
                 dims=[
                     "z",
-                    *[
-                        "output_dim_" + str(idx)
-                        for idx in range(len(output_px_shape))
-                    ],
+                    *["output_dim_" + str(idx) for idx in range(len(output_px_shape))],
                 ],
             ).unstack()
 
             # convert to dataset and rename arrays
             output_features = output_features.to_dataset(dim="output_dim_0")
             data_vars = list(input_xr.data_vars)
-            output_features = output_features.rename(
-                {i: j for i, j in zip(output_features.data_vars, data_vars)}
-            )
+            output_features = output_features.rename({i: j for i, j in zip(output_features.data_vars, data_vars)})
 
             # merge with predictions
-            output_xr = xr.merge(
-                [output_xr, output_features], compat="override"
-            )
+            output_xr = xr.merge([output_xr, output_features], compat="override")
 
         return assign_crs(output_xr, str(crs))
 
@@ -415,14 +394,10 @@ def predict_xr(
         # convert model to dask predict
         model = ParallelPostFit(model)
         with joblib.parallel_backend("dask"):
-            output_xr = _predict_func(
-                model, input_xr, persist, proba, max_proba, clean, return_input
-            )
+            output_xr = _predict_func(model, input_xr, persist, proba, max_proba, clean, return_input)
 
     else:
-        output_xr = _predict_func(
-            model, input_xr, persist, proba, max_proba, clean, return_input
-        ).compute()
+        output_xr = _predict_func(model, input_xr, persist, proba, max_proba, clean, return_input).compute()
 
     return output_xr
 
@@ -570,9 +545,7 @@ def _get_training_data_for_shp(
 
     else:
         raise Exception(
-            zonal_stats
-            + " is not one of the supported"
-            + " reduce functions ('mean','median','max','min')"
+            zonal_stats + " is not one of the supported" + " reduce functions ('mean','median','max','min')"
         )
 
     out_arrs.append(stacked)
@@ -605,8 +578,7 @@ def _get_training_data_parallel(
 
     if zx is not None:
         raise ValueError(
-            "You have a Dask Client running, which prevents \n"
-            "this function from multiprocessing. Close the client."
+            "You have a Dask Client running, which prevents \nthis function from multiprocessing. Close the client."
         )
 
     # instantiate lists that can be shared across processes
@@ -737,16 +709,11 @@ def collect_training_data(
 
     # check the dtype of the class field
     if gdf[field].dtype != int:
-        raise ValueError(
-            'The "field" column of the input vector must contain integer dtypes'
-        )
+        raise ValueError('The "field" column of the input vector must contain integer dtypes')
 
     # check for feature_func
     if feature_func is None:
-        raise ValueError(
-            "Please supply a feature layer function through the "
-            + "parameter 'feature_func'"
-        )
+        raise ValueError("Please supply a feature layer function through the " + "parameter 'feature_func'")
 
     if zonal_stats is not None:
         print("Taking zonal statistic: " + zonal_stats)
@@ -813,9 +780,7 @@ def collect_training_data(
         i = 1
         while i <= max_retries:
             # Find % of fails (null values) in data. Use Pandas for simplicity
-            df = pd.DataFrame(
-                data=model_input[:, 0:-1], index=model_input[:, -1]
-            )
+            df = pd.DataFrame(data=model_input[:, 0:-1], index=model_input[:, -1])
             # how many nan values per id?
             num_nans = df.isnull().sum(axis=1)
             num_nans = num_nans.groupby(num_nans.index).sum()
@@ -827,22 +792,14 @@ def collect_training_data(
             fail_ids = perc_fail[perc_fail > fail_ratio]
             fail_rate = len(fail_ids) / len(gdf)
 
-            print(
-                "Percentage of possible fails after run "
-                + str(i)
-                + " = "
-                + str(round(fail_rate * 100, 2))
-                + " %"
-            )
+            print("Percentage of possible fails after run " + str(i) + " = " + str(round(fail_rate * 100, 2)) + " %")
 
             if fail_rate > fail_threshold:
                 print("Recollecting samples that failed")
 
                 fail_ids = list(fail_ids.index)
                 # keep only the ids in model_input object that didn't fail
-                model_input = model_input[
-                    ~np.isin(model_input[:, -1], fail_ids)
-                ]
+                model_input = model_input[~np.isin(model_input[:, -1], fail_ids)]
 
                 # index out the fail_ids from the original gdf
                 gdf_rerun = gdf.loc[gdf["id"].isin(fail_ids)]
@@ -926,10 +883,7 @@ class KMeans_tree(ClusterMixin):
         # make child models
         if n_levels > 1:
             self.branches = [
-                KMeans_tree(
-                    n_levels=n_levels - 1, n_clusters=n_clusters, **kwargs
-                )
-                for _ in range(n_clusters)
+                KMeans_tree(n_levels=n_levels - 1, n_clusters=n_clusters, **kwargs) for _ in range(n_clusters)
             ]
 
     def fit(self, X, y=None, sample_weight=None):
@@ -950,9 +904,7 @@ class KMeans_tree(ClusterMixin):
             observations are assigned equal weight (default: None)
         """
 
-        self.labels_ = self.base_model.fit(
-            X, sample_weight=sample_weight
-        ).labels_
+        self.labels_ = self.base_model.fit(X, sample_weight=sample_weight).labels_
 
         if self.n_levels > 1:
             labels_old = np.copy(self.labels_)
@@ -963,11 +915,7 @@ class KMeans_tree(ClusterMixin):
                 # fit child models on their corresponding partition of the training set
                 self.branches[clu].fit(
                     X[labels_old == clu],
-                    sample_weight=(
-                        sample_weight[labels_old == clu]
-                        if sample_weight is not None
-                        else None
-                    ),
+                    sample_weight=(sample_weight[labels_old == clu] if sample_weight is not None else None),
                 )
                 self.labels_[labels_old == clu] += self.branches[clu].labels_
 
@@ -1003,24 +951,13 @@ class KMeans_tree(ClusterMixin):
             for clu in range(self.n_clusters):
                 result[rescpy == clu] += self.branches[clu].predict(
                     X[rescpy == clu],
-                    sample_weight=(
-                        sample_weight[rescpy == clu]
-                        if sample_weight is not None
-                        else None
-                    ),
+                    sample_weight=(sample_weight[rescpy == clu] if sample_weight is not None else None),
                 )
 
         return result
 
 
-def spatial_clusters(
-    coordinates,
-    method="Hierarchical",
-    max_distance=None,
-    n_groups=None,
-    verbose=False,
-    **kwargs
-):
+def spatial_clusters(coordinates, method="Hierarchical", max_distance=None, n_groups=None, verbose=False, **kwargs):
     """
     Create spatial groups on coorindate data using either KMeans clustering
     or a Gaussian Mixture model
@@ -1051,37 +988,24 @@ def spatial_clusters(
         Index of the cluster each sample belongs to.
     """
     if method not in ["Hierarchical", "KMeans", "GMM"]:
-        raise ValueError(
-            "Method must be one of: 'Hierarchical','KMeans' or 'GMM'"
-        )
+        raise ValueError("Method must be one of: 'Hierarchical','KMeans' or 'GMM'")
 
     if (method in ["GMM", "KMeans"]) & (n_groups is None):
-        raise ValueError(
-            "The 'GMM' and 'KMeans' methods requires explicitly setting 'n_groups'"
-        )
+        raise ValueError("The 'GMM' and 'KMeans' methods requires explicitly setting 'n_groups'")
 
     if (method == "Hierarchical") & (max_distance is None):
-        raise ValueError(
-            "The 'Hierarchical' method requires setting max_distance"
-        )
+        raise ValueError("The 'Hierarchical' method requires setting max_distance")
 
     if method == "Hierarchical":
         cluster_label = AgglomerativeClustering(
-            n_clusters=None,
-            linkage="complete",
-            distance_threshold=max_distance,
-            **kwargs
+            n_clusters=None, linkage="complete", distance_threshold=max_distance, **kwargs
         ).fit_predict(coordinates)
 
     if method == "KMeans":
-        cluster_label = KMeans(n_clusters=n_groups, **kwargs).fit_predict(
-            coordinates
-        )
+        cluster_label = KMeans(n_clusters=n_groups, **kwargs).fit_predict(coordinates)
 
     if method == "GMM":
-        cluster_label = GaussianMixture(
-            n_components=n_groups, **kwargs
-        ).fit_predict(coordinates)
+        cluster_label = GaussianMixture(n_components=n_groups, **kwargs).fit_predict(coordinates)
     if verbose:
         print("n clusters = " + str(len(np.unique(cluster_label))))
 
@@ -1099,7 +1023,7 @@ def SKCV(
     max_distance=None,
     train_size=None,
     random_state=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Generate spatial k-fold cross validation indices using coordinate data.
@@ -1183,7 +1107,7 @@ def SKCV(
             n_splits=n_splits,
             random_state=random_state,
             balance=balance,
-            **kwargs
+            **kwargs,
         )
 
     if kfold_method == "SpatialKFold":
@@ -1196,7 +1120,7 @@ def SKCV(
             n_splits=n_splits,
             random_state=random_state,
             balance=balance,
-            **kwargs
+            **kwargs,
         )
 
     return splitter
@@ -1215,7 +1139,7 @@ def spatial_train_test_split(
     max_distance=None,
     train_size=None,
     random_state=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Split arrays into random train and test subsets. Similar to
@@ -1305,14 +1229,12 @@ def spatial_train_test_split(
             n_splits=1 if n_splits is None else n_splits,
             random_state=random_state,
             balance=balance,
-            **kwargs
+            **kwargs,
         )
 
     if kfold_method == "SpatialKFold":
         if n_splits is None:
-            raise ValueError(
-                "n_splits parameter requires an integer value, eg. 'n_splits=5'"
-            )
+            raise ValueError("n_splits parameter requires an integer value, eg. 'n_splits=5'")
         if (test_size is not None) or (train_size is not None):
             warnings.warn(
                 "With the 'SpatialKFold' method, controlling the test/train ratio "
@@ -1327,7 +1249,7 @@ def spatial_train_test_split(
             n_splits=n_splits,
             random_state=random_state,
             balance=balance,
-            **kwargs
+            **kwargs,
         )
 
     lst = []
@@ -1363,11 +1285,7 @@ def _partition_by_sum(array, parts):
     """
     array = np.atleast_1d(array).ravel()
     if parts > array.size:
-        raise ValueError(
-            "Cannot partition an array of size {} into {} parts of equal sum.".format(
-                array.size, parts
-            )
-        )
+        raise ValueError("Cannot partition an array of size {} into {} parts of equal sum.".format(array.size, parts))
     cumulative_sum = array.cumsum()
     # Ideally, we want each part to have the same number of points (total /
     # parts).
@@ -1378,10 +1296,7 @@ def _partition_by_sum(array, parts):
     # Check for repeated split points, which indicates that there is no way to
     # split the array.
     if np.unique(indices).size != indices.size:
-        raise ValueError(
-            "Could not find partition points to split the array into {} parts "
-            "of equal sum.".format(parts)
-        )
+        raise ValueError("Could not find partition points to split the array into {} parts of equal sum.".format(parts))
     return indices
 
 
@@ -1439,11 +1354,7 @@ class _BaseSpatialCrossValidator(BaseCrossValidator, metaclass=ABCMeta):
             The testing set indices for that split.
         """
         if X.shape[1] != 2:
-            raise ValueError(
-                "X (the coordinate data) must have exactly 2 columns ({} given).".format(
-                    X.shape[1]
-                )
-            )
+            raise ValueError("X (the coordinate data) must have exactly 2 columns ({} given).".format(X.shape[1]))
         for train, test in super().split(X, y, groups):
             yield train, test
 
@@ -1566,7 +1477,7 @@ class _SpatialShuffleSplit(_BaseSpatialCrossValidator):
         train_size=None,
         random_state=None,
         balance=10,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             n_groups=n_groups,
@@ -1574,12 +1485,10 @@ class _SpatialShuffleSplit(_BaseSpatialCrossValidator):
             method=method,
             max_distance=max_distance,
             n_splits=n_splits,
-            **kwargs
+            **kwargs,
         )
         if balance < 1:
-            raise ValueError(
-                "The *balance* argument must be >= 1. To disable balance, use 1."
-            )
+            raise ValueError("The *balance* argument must be >= 1. To disable balance, use 1.")
         self.test_size = test_size
         self.train_size = train_size
         self.random_state = random_state
@@ -1612,7 +1521,7 @@ class _SpatialShuffleSplit(_BaseSpatialCrossValidator):
             coordinates=self.coordinates,
             method=self.method,
             max_distance=self.max_distance,
-            **self.kwargs
+            **self.kwargs,
         )
 
         cluster_ids = np.unique(labels)
@@ -1634,20 +1543,11 @@ class _SpatialShuffleSplit(_BaseSpatialCrossValidator):
                 # pylint: disable=stop-iteration-return
                 train_clusters, test_clusters = next(shuffle)
                 # pylint: enable=stop-iteration-return
-                train_points = np.where(
-                    np.isin(labels, cluster_ids[train_clusters])
-                )[0]
-                test_points = np.where(
-                    np.isin(labels, cluster_ids[test_clusters])
-                )[0]
+                train_points = np.where(np.isin(labels, cluster_ids[train_clusters]))[0]
+                test_points = np.where(np.isin(labels, cluster_ids[test_clusters]))[0]
                 # The proportion of data points assigned to each group should
                 # be close the proportion of clusters assigned to each group.
-                balance.append(
-                    abs(
-                        train_points.size / test_points.size
-                        - train_clusters.size / test_clusters.size
-                    )
-                )
+                balance.append(abs(train_points.size / test_points.size - train_clusters.size / test_clusters.size))
                 test_sets.append(test_points)
             best = np.argmin(balance)
             yield test_sets[best]
@@ -1717,7 +1617,7 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
         shuffle=True,
         random_state=None,
         balance=True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             n_groups=n_groups,
@@ -1725,15 +1625,11 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
             method=method,
             max_distance=max_distance,
             n_splits=n_splits,
-            **kwargs
+            **kwargs,
         )
 
         if n_splits < 2:
-            raise ValueError(
-                "Number of splits must be >=2 for clusterKFold. Given {}.".format(
-                    n_splits
-                )
-            )
+            raise ValueError("Number of splits must be >=2 for clusterKFold. Given {}.".format(n_splits))
         self.test_size = test_size
         self.shuffle = shuffle
         self.random_state = random_state
@@ -1764,7 +1660,7 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
             coordinates=self.coordinates,
             method=self.method,
             max_distance=self.max_distance,
-            **self.kwargs
+            **self.kwargs,
         )
 
         cluster_ids = np.unique(labels)
@@ -1779,9 +1675,7 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
         if self.balance:
             cluster_sizes = [np.isin(labels, i).sum() for i in cluster_ids]
             try:
-                split_points = _partition_by_sum(
-                    cluster_sizes, parts=self.n_splits
-                )
+                split_points = _partition_by_sum(cluster_sizes, parts=self.n_splits)
                 folds = np.split(np.arange(cluster_ids.size), split_points)
             except ValueError:
                 warnings.warn(
@@ -1791,18 +1685,9 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
                     "the number of clusters may help.",
                     UserWarning,
                 )
-                folds = [
-                    i
-                    for _, i in KFold(n_splits=self.n_splits).split(
-                        cluster_ids
-                    )
-                ]
+                folds = [i for _, i in KFold(n_splits=self.n_splits).split(cluster_ids)]
         else:
-            folds = [
-                i for _, i in KFold(n_splits=self.n_splits).split(cluster_ids)
-            ]
+            folds = [i for _, i in KFold(n_splits=self.n_splits).split(cluster_ids)]
         for test_clusters in folds:
-            test_points = np.where(
-                np.isin(labels, cluster_ids[test_clusters])
-            )[0]
+            test_points = np.where(np.isin(labels, cluster_ids[test_clusters]))[0]
             yield test_points

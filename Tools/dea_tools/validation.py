@@ -78,13 +78,11 @@ def eval_metrics(x, y, round=3, all_regress=False):
 
     # Additional regression params
     if all_regress:
-        stats_dict.update(
-            {
-                "Regression p-value": lin_reg.pvalue,
-                "Regression intercept": lin_reg.intercept,
-                "Regression standard error": lin_reg.stderr,
-            }
-        )
+        stats_dict.update({
+            "Regression p-value": lin_reg.pvalue,
+            "Regression intercept": lin_reg.intercept,
+            "Regression standard error": lin_reg.stderr,
+        })
 
     # Return as
     return pd.Series(stats_dict).round(round)
