@@ -160,8 +160,8 @@ def load_ard(
         ``mask_pixel_quality=True``, and for calculating the
         ``min_gooddata`` percentage when dropping cloudy or low quality
         satellite observations. Two cloud masks are supported:
-            * 'fmask': (default; available for Landsat, Sentinel-2)
-            * 's2cloudless' (Sentinel-2 only)
+            * ``'fmask'`` (default; available for Landsat, Sentinel-2)
+            * ``'s2cloudless'`` (Sentinel-2 only)
     min_gooddata : float, optional
         The minimum percentage of good quality pixels required for a
         satellite observation to be loaded. Defaults to 0.00 which will
@@ -176,7 +176,7 @@ def load_ard(
         params. Set to False to turn off pixel quality masking completely.
         Poor quality pixels will be set to NaN (and convert all data to
         `float32`) if  ``dtype='auto'``, or be set to the data's native
-        nodata value (usually -999) if ``dtype='native'`` (see 'dtype'
+        nodata value (usually -999) if ``dtype='native'`` (see ``dtype``
         below for more details).
     mask_filters : iterable of tuples, optional
         Iterable tuples of morphological operations - ("<operation>", <radius>)
@@ -184,11 +184,9 @@ def load_ard(
         operation: string; one of these morphological operations:
             * ``'dilation'`` = Expands poor quality pixels/clouds outwards
             * ``'erosion'``  = Shrinks poor quality pixels/clouds inwards
-            * ``'closing'``  = Remove small holes in clouds by expanding
-                               then shrinking poor quality pixels
-            * ``'opening'``  = Remove small or narrow clouds by shrinking
-                               then expanding poor quality pixels
-        radius: int
+            * ``'closing'``  = Remove small holes in clouds by expanding then shrinking poor quality pixels
+            * ``'opening'``  = Remove small or narrow clouds by shrinking then expanding poor quality pixels
+        radius: int,
         e.g. ``mask_filters=[('erosion', 5), ("opening", 2), ("dilation", 2)]``
     mask_contiguity : str or bool, optional
         Whether to mask out pixels that are missing data in any band
@@ -199,12 +197,12 @@ def load_ard(
             * ``mask_contiguity='nbart'`` (or ``mask_contiguity=True``)
         If loading NBAR data, specify:
             * ``mask_contiguity='nbar'``
-        Non-contiguous pixels will be set to NaN if `dtype='auto'`, or
-        set to the data's native nodata value if `dtype='native'` (see
+        Non-contiguous pixels will be set to NaN if ``dtype='auto'``, or
+        set to the data's native nodata value if ``dtype='native'`` (see
         'dtype' below).
     fmask_categories : list, optional
         A list of Fmask cloud mask categories to consider as good
-        quality pixels when calculating `min_gooddata` and when masking
+        quality pixels when calculating ``min_gooddata`` and when masking
         data by pixel quality if ``mask_pixel_quality=True``.
         The default is ``['valid', 'snow', 'water']``; all other Fmask
         categories ('cloud', 'shadow', 'nodata') will be treated as low
@@ -212,9 +210,9 @@ def load_ard(
         'shadow', 'snow', and 'water'.
     s2cloudless_categories : list, optional
         A list of s2cloudless cloud mask categories to consider as good
-        quality pixels when calculating `min_gooddata` and when masking
+        quality pixels when calculating ``min_gooddata`` and when masking
         data by pixel quality if ``mask_pixel_quality=True``. The default
-        is `['valid']`; all other s2cloudless categories ('cloud',
+        is ``['valid']``; all other s2cloudless categories ('cloud',
         'nodata') will be treated as low quality pixels. Choose from:
         'nodata', 'valid', or 'cloud'.
     ls7_slc_off : bool, optional
@@ -230,11 +228,11 @@ def load_ard(
         in its native dtype, nodata and masked pixels will be returned
         with the data's native nodata value (typically -999), not NaN.
     predicate : function, optional
-        DEPRECATED: Please use `dataset_predicate` instead.
+        DEPRECATED: Please use ``dataset_predicate`` instead.
         An optional function that can be passed in to restrict the datasets that
         are loaded. A predicate function should take a
-        `datacube.model.Dataset` object as an input (i.e. as returned
-        from `dc.find_datasets`), and return a boolean. For example,
+        ``datacube.model.Dataset`` object as an input (i.e. as returned
+        from ``dc.find_datasets``), and return a boolean. For example,
         a predicate function could be used to return True for only
         datasets acquired in January: `dataset.time.begin.month == 1`
      verbose : bool, optional
@@ -243,11 +241,11 @@ def load_ard(
         A set of keyword arguments to `dc.load` that define the
         spatiotemporal query and load parameters used to extract data.
         Keyword arguments can either be listed directly in the
-        `load_ard` call like any other parameter (e.g.
-        `measurements=['nbart_red']`), or by passing in a query kwarg
-        dictionary (e.g. `**query`). Keywords can include `measurements`,
-        `x`, `y`, `time`, `resolution`, `resampling`, `group_by`, `crs`;
-        see the `dc.load` documentation for all possible options:
+        ``load_ard`` call like any other parameter (e.g.
+        ``measurements=['nbart_red']``), or by passing in a query kwarg
+        dictionary (e.g. ``**query``). Keywords can include ``measurements``,
+        ``x``, ``y``, ``time``, ``resolution``, ``resampling``, ``group_by``, ``crs``;
+        see the ``dc.load`` documentation for all possible options:
         https://datacube-core.readthedocs.io/en/latest/api/indexed-data/generate/datacube.Datacube.load.html
 
     Returns
@@ -869,9 +867,8 @@ def nearest(array: xr.DataArray, dim: str, target, index_name: str = None) -> xr
     Finds the nearest values to a target label along the given
     dimension, for all other dimensions.
 
-    E.g. For a DataArray with dimensions ('time', 'x', 'y')
-
-        nearest_array = nearest(array, 'time', '2017-03-12')
+    E.g. For a DataArray with dimensions ('time', 'x', 'y'):
+    ``nearest_array = nearest(array, 'time', '2017-03-12')``
 
     will return an array with the dimensions ('x', 'y'), with non-null
     values found closest for each (x, y) pixel to that location along
@@ -1278,11 +1275,11 @@ def xr_pansharpen(
     or more timesteps. The following pansharpening transforms are
     currently supported:
 
-        - Brovey ("brovey"), with optional band weighting
-        - ESRI ("esri"), with optional band weighting
-        - Simple mean ("simple mean")
-        - PCA ("pca")
-        - HSV ("hsv"), similar to IHS
+    - Brovey ("brovey"), with optional band weighting
+    - ESRI ("esri"), with optional band weighting
+    - Simple mean ("simple mean")
+    - PCA ("pca")
+    - HSV ("hsv"), similar to IHS
 
     Note: Pan-sharpening transforms do not necessarily maintain
     the spectral integrity of the input satellite data, and may
@@ -1310,11 +1307,11 @@ def xr_pansharpen(
         Defaults to False.
     output_dtype : string or numpy.dtype, optional
         The dtype used for the output values. Defaults to the input
-        dtype of the multispectral bands in `ds`.
+        dtype of the multispectral bands in ``ds``.
     parallelise: bool, optional
         Whether to parallelise transformations across multiple cores.
         Used for PCA and HSV transforms that are applied to each
-        timestep in `ds` individually; defaults to False.
+        timestep in ``ds`` individually; defaults to False.
     band_weights : dict, optional
         Used for the Brovey and ESRI transforms. Mapping of band
         names to weights to be applied to each band when calculating
@@ -1324,7 +1321,7 @@ def xr_pansharpen(
         ``{"nbart_red": 0.4, "nbart_green": 0.4, "nbart_blue": 0.2}``.
         The default accounts for Landsat 8 and 9's pan band only
         partially overlapping with the blue band; this may not be
-        suitable for all applications. Setting `band_weights=None`
+        suitable for all applications. Setting ``band_weights=None``
         will use a simple unweighted sum (for the Brovey transform)
         or unweighted mean (for the ESRI transform).
     pca_rescaling : str, optional
@@ -1453,11 +1450,10 @@ def load_reproject(
     resolution : str or int, optional
         The resolution to reproject the raster dataset into if `how` is
         a CRS, by default "auto". Supports:
-            - "same" use exactly the same resolution as the input raster
-            - "fit" use center pixel to determine required scale change
-            - "auto" uses the same resolution on the output if CRS units
-             are the same between source and destination; otherwise "fit"
-            - Else, a specific resolution in the units of the output crs
+        - "same" use exactly the same resolution as the input raster
+        - "fit" use center pixel to determine required scale change
+        - "auto" uses the same resolution on the output if CRS units are the same between source and destination; otherwise "fit"
+        - Else, a specific resolution in the units of the output crs
     tight : bool, optional
          By default output pixel grid is adjusted to align pixel edges
          to X/Y axis, suppling tight=True produces an unaligned geobox.
