@@ -1,6 +1,6 @@
-# dea-tools Python package
+# DEA Tools Python package
 
-The `dea-tools` Python package provides a collection of functions and algorithms for geospatial analysis using Open Data Cube, Xarray, and Digital Earth Australia.
+`dea_tools`` is an open-source Python package providing functions and algorithms for geospatial analysis using Open Data Cube, Xarray, and Digital Earth Australia.
 It includes utilities for loading data, plotting, spatial and temporal analysis, and applying machine learning to satellite data.
 
 The package is organised into the following modules:
@@ -13,7 +13,7 @@ The package is organised into the following modules:
 * `dea_tools.classification`: Machine learning utilities (e.g. training and applying models on satellite data)
 * `dea_tools.dask`: Utilities for parallel processing with Dask (e.g. creating scalable Dask clusters)
 * `dea_tools.landcover`: Tools for accessing and visualising DEA Land Cover data
-* `dea_tools.coastal`: Coastal and intertidal analysis tools (e.g. tidal tagging, coastal change time series)
+* `dea_tools.coastal`: Coastal and intertidal analysis tools (e.g. coastal change time series, sunglint mapping)
 * `dea_tools.bom`: Accessing Bureau of Meteorology water data (e.g. gauge and discharge data)
 * `dea_tools.waterbodies`: Accessing and analysing DEA Waterbodies data (e.g. loading waterbody time series)
 * `dea_tools.maps`: Tools for interactive mapping (e.g. folium and ipyleaflet maps)
