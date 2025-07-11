@@ -1,6 +1,6 @@
 # DEA Tools Python package
 
-`dea_tools`` is an open-source Python package providing functions and algorithms for geospatial analysis using Open Data Cube, Xarray, and Digital Earth Australia.
+`dea_tools` is an open-source Python package providing functions and algorithms for geospatial analysis using Open Data Cube, Xarray, and Digital Earth Australia.
 It includes utilities for loading data, plotting, spatial and temporal analysis, and applying machine learning to satellite data.
 
 The package is organised into the following modules:
