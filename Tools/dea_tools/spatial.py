@@ -2,18 +2,18 @@
 """
 Tools for spatially manipulating Digital Earth Australia data.
 
-License: The code in this notebook is licensed under the Apache License, 
-Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
-Australia data is licensed under the Creative Commons by Attribution 4.0 
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open Data 
-Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the GIS Stack 
-Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube) 
-using the `open-data-cube` tag (you can view previously asked questions 
-here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+Contact: If you need assistance, please post a question on the Open Data
+Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the GIS Stack
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
+using the `open-data-cube` tag (you can view previously asked questions
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, file one on 
+If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
 Last modified: July 2024
@@ -21,38 +21,35 @@ Last modified: July 2024
 """
 
 # Import required packages
+import multiprocessing as mp
+import warnings
+
 import dask
 import fiona
-import warnings
-import collections
-import numpy as np
-import pandas as pd
-import xarray as xr
 import geopandas as gpd
+import numpy as np
+import odc.geo.xr
+import pandas as pd
 import rasterio.features
 import scipy.interpolate
-import multiprocessing as mp
-from scipy import ndimage as nd
-from scipy.spatial import cKDTree as KDTree
-from skimage.measure import label
-from rasterstats import zonal_stats
-from skimage.measure import find_contours
+import xarray as xr
+from geopy.exc import GeocoderServiceError, GeocoderUnavailable
 from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderUnavailable, GeocoderServiceError
+from odc.geo.crs import CRS
+from odc.geo.geom import Geometry
+from rasterstats import zonal_stats
+from scipy.spatial import cKDTree as KDTree
 from shapely.geometry import (
-    MultiPoint,
-    MultiLineString,
     LineString,
-    Polygon,
+    MultiLineString,
+    MultiPoint,
     MultiPolygon,
     Point,
-    shape,
+    Polygon,
     mapping,
+    shape,
 )
-
-import odc.geo.xr
-from odc.geo.geom import Geometry
-from odc.geo.crs import CRS
+from skimage.measure import find_contours, label
 
 
 def _geom_to_multipoint(geom):
@@ -71,7 +68,7 @@ def _geom_to_multipoint(geom):
     elif isinstance(geom, Point):
         points = [geom]
     elif isinstance(geom, MultiPoint):
-        points = [point for point in geom.geoms]
+        points = list(geom.geoms)
 
     return MultiPoint(points)
 
@@ -135,19 +132,11 @@ def points_on_line(gdf, index, distance=30):
     line_feature = gdf.loc[[index]].geometry
 
     # If multiple features are returned, take unary union
-    if line_feature.shape[0] > 0:
-        line_feature = line_feature.unary_union
-    else:
-        line_feature = line_feature.iloc[0]
+    line_feature = line_feature.unary_union if line_feature.shape[0] > 0 else line_feature.iloc[0]
 
     # Generate points along line and convert to geopandas.GeoDataFrame
-    points_line = [
-        line_feature.interpolate(i)
-        for i in range(0, int(line_feature.length), distance)
-    ]
-    points_gdf = gpd.GeoDataFrame(geometry=points_line, crs=gdf.crs)
-
-    return points_gdf
+    points_line = [line_feature.interpolate(i) for i in range(0, int(line_feature.length), distance)]
+    return gpd.GeoDataFrame(geometry=points_line, crs=gdf.crs)
 
 
 def add_geobox(ds, crs=None):
@@ -178,7 +167,7 @@ def add_geobox(ds, crs=None):
 
     # Import the odc-geo package to add `.odc.x` attributes
     # to our input xarray object
-    import odc.geo.xr
+    import odc.geo.xr  # noqa
 
     # If a CRS is not found, use custom provided CRS
     if ds.odc.crs is None and crs is not None:
@@ -243,9 +232,7 @@ def xr_vectorize(
     da = add_geobox(da, crs)
 
     # Run the vectorizing function
-    vectors = rasterio.features.shapes(
-        source=da.data.astype(dtype), transform=da.odc.transform, **rasterio_kwargs
-    )
+    vectors = rasterio.features.shapes(source=da.data.astype(dtype), transform=da.odc.transform, **rasterio_kwargs)
 
     # Convert the generator into a list
     vectors = list(vectors)
@@ -259,9 +246,7 @@ def xr_vectorize(
 
     # Create a geopandas dataframe populated with the polygon shapes
     attribute_name = attribute_col if attribute_col is not None else "attribute"
-    gdf = gpd.GeoDataFrame(
-        data={attribute_name: values}, geometry=polygons, crs=da.odc.crs
-    )
+    gdf = gpd.GeoDataFrame(data={attribute_name: values}, geometry=polygons, crs=da.odc.crs)
 
     # If a file path is supplied, export to file
     if output_path is not None:
@@ -328,12 +313,7 @@ def xr_rasterize(
 
     # If an attribute column is specified, rasterise using vector
     # attribute values. Otherwise, rasterise into a boolean array
-    if attribute_col is not None:
-        # Use the geometry and attributes from `gdf` to create an iterable
-        shapes = zip(gdf_reproj.geometry, gdf_reproj[attribute_col])
-    else:
-        # Use geometry directly (will produce a boolean numpy array)
-        shapes = gdf_reproj.geometry
+    shapes = zip(gdf_reproj.geometry, gdf_reproj[attribute_col]) if attribute_col is not None else gdf_reproj.geometry
 
     # Rasterise shapes into a numpy array
     im = rasterio.features.rasterize(
@@ -462,9 +442,7 @@ def subpixel_contours(
         # amount (1e-12) before using it to extract the contour.
         try:
             line_features = [
-                LineString(i[:, [1, 0]])
-                for i in find_contours(da_i.data, z_value)
-                if i.shape[0] >= min_vertices
+                LineString(i[:, [1, 0]]) for i in find_contours(da_i.data, z_value) if i.shape[0] >= min_vertices
             ]
         except KeyError:
             line_features = [
@@ -499,43 +477,31 @@ def subpixel_contours(
     da = add_geobox(da, crs)
 
     # If z_values is supplied is not a list, convert to list:
-    z_values = (
-        z_values
-        if (isinstance(z_values, list) or isinstance(z_values, np.ndarray))
-        else [z_values]
-    )
+    z_values = z_values if isinstance(z_values, (list, np.ndarray)) else [z_values]
 
     # If dask collection, load into memory
     if dask.is_dask_collection(da):
         if verbose:
-            print(f"Loading data into memory using Dask")
+            print("Loading data into memory using Dask")
         da = da.compute()
 
     # Test number of dimensions in supplied data array
     if len(da.shape) == 2:
         if verbose:
-            print(f"Operating in multiple z-value, single array mode")
+            print("Operating in multiple z-value, single array mode")
         dim = "z_value"
-        contour_arrays = {
-            _time_format(i, time_format): _contours_to_multiline(da, i, min_vertices)
-            for i in z_values
-        }
+        contour_arrays = {_time_format(i, time_format): _contours_to_multiline(da, i, min_vertices) for i in z_values}
 
     else:
         # Test if only a single z-value is given when operating in
         # single z-value, multiple arrays mode
         if verbose:
-            print(f"Operating in single z-value, multiple arrays mode")
+            print("Operating in single z-value, multiple arrays mode")
         if len(z_values) > 1:
-            raise ValueError(
-                "Please provide a single z-value when operating "
-                "in single z-value, multiple arrays mode"
-            )
+            raise ValueError("Please provide a single z-value when operating in single z-value, multiple arrays mode")
 
         contour_arrays = {
-            _time_format(i, time_format): _contours_to_multiline(
-                da_i.squeeze(), z_values[0], min_vertices
-            )
+            _time_format(i, time_format): _contours_to_multiline(da_i.squeeze(), z_values[0], min_vertices)
             for i, da_i in da.groupby(dim)
         }
 
@@ -554,22 +520,19 @@ def subpixel_contours(
                     f"than the number of supplied `z_values` "
                     f"({len(z_values)})."
                 )
-            else:
-                raise ValueError(
-                    f"The provided `attribute_df` contains a different "
-                    f"number of rows ({len(attribute_df.index)}) "
-                    f"than the number of arrays along the '{dim}' "
-                    f"dimension ({len(da[dim])})."
-                )
+            raise ValueError(
+                f"The provided `attribute_df` contains a different "
+                f"number of rows ({len(attribute_df.index)}) "
+                f"than the number of arrays along the '{dim}' "
+                f"dimension ({len(da[dim])})."
+            )
 
     # Otherwise, use the contour keys as the only main attributes
     else:
         attribute_df = list(contour_arrays.keys())
 
     # Convert output contours to a geopandas.GeoDataFrame
-    contours_gdf = gpd.GeoDataFrame(
-        data=attribute_df, geometry=list(contour_arrays.values()), crs=da.odc.crs
-    )
+    contours_gdf = gpd.GeoDataFrame(data=attribute_df, geometry=list(contour_arrays.values()), crs=da.odc.crs)
 
     # Define affine and use to convert array coords to geographic coords.
     # We need to add 0.5 x pixel size to the x and y to obtain the centre
@@ -601,7 +564,7 @@ def subpixel_contours(
             "values passed to `z_values` are valid and present "
             "in `da`"
         )
-    elif empty_contours.all() and errors == "ignore":
+    if empty_contours.all() and errors == "ignore":
         if verbose:
             print(
                 "Failed to generate any valid contours; verify that "
@@ -717,11 +680,9 @@ def idw(
 
     # Verify input and outputs have matching lengths
     if not (input_z.shape[0] == len(input_x) == len(input_y)):
-        raise ValueError(
-            f"All of `input_z`, `input_x` and `input_y` must be the same length."
-        )
+        raise ValueError("All of `input_z`, `input_x` and `input_y` must be the same length.")
     if not (len(output_x) == len(output_y)):
-        raise ValueError(f"Both `output_x` and `output_y` must be the same length.")
+        raise ValueError("Both `output_x` and `output_y` must be the same length.")
 
     # Verify k is smaller than total number of points, and non-zero
     if k > input_z.shape[0]:
@@ -729,10 +690,8 @@ def idw(
             f"The requested number of nearest neighbours (`k={k}`) "
             f"is smaller than the total number of points ({input_z.shape[0]})."
         )
-    elif k == 0:
-        raise ValueError(
-            f"Interpolation based on `k=0` nearest neighbours is not valid."
-        )
+    if k == 0:
+        raise ValueError("Interpolation based on `k=0` nearest neighbours is not valid.")
 
     # Create KDTree to efficiently find nearest neighbours
     points_xy = np.column_stack((input_y, input_x))
@@ -860,9 +819,7 @@ def xr_interpolate(
     # Reproject to match input `ds`, and raise warning if there are no overlaps
     gdf = gdf.to_crs(ds.odc.crs)
     if not gdf.dissolve().intersects(ds.odc.geobox.extent.geom).item():
-        warnings.warn(
-            "The supplied `gdf` does not overlap spatially with `ds`.", stacklevel=2
-        )
+        warnings.warn("The supplied `gdf` does not overlap spatially with `ds`.", stacklevel=2)
 
     # Select subset of numeric columns (non-numeric are not supported)
     numeric_gdf = gdf.select_dtypes("number")
@@ -879,9 +836,7 @@ def xr_interpolate(
 
     # Raise a warning if no numeric columns exist after selection
     if len(numeric_gdf.columns) == 0:
-        raise ValueError(
-            "The provided `gdf` contains no numeric columns to interpolate."
-        )
+        raise ValueError("The provided `gdf` contains no numeric columns to interpolate.")
 
     # Identify spatial coordinates, and stack to use in interpolation
     x_coords = gdf.geometry.x
@@ -912,7 +867,6 @@ def xr_interpolate(
 
     # Run interpolation on values from each numeric column,
     for col, z_values in numeric_gdf.items():
-
         # Apply scipy.interpolate.griddata interpolation methods
         if method in ("linear", "nearest", "cubic"):
             # Interpolate x, y and z values
@@ -950,9 +904,7 @@ def xr_interpolate(
         correlation_outputs[col] = ((y_dim, x_dim), interp_2d)
 
     # Combine all outputs into a single xr.Dataset
-    interpolated_ds = xr.Dataset(
-        correlation_outputs, coords={y_dim: y_grid_coords, x_dim: x_grid_coords}
-    )
+    interpolated_ds = xr.Dataset(correlation_outputs, coords={y_dim: y_grid_coords, x_dim: x_grid_coords})
 
     # If factor is greater than 1, resample the interpolated array to
     # match the input `ds` array
@@ -960,14 +912,10 @@ def xr_interpolate(
         interpolated_ds = interpolated_ds.interp_like(ds)
 
     # Ensure CRS is correctly set on output
-    interpolated_ds = interpolated_ds.odc.assign_crs(crs=ds.odc.crs)
-
-    return interpolated_ds
+    return interpolated_ds.odc.assign_crs(crs=ds.odc.crs)
 
 
-def interpolate_2d(
-    ds, x_coords, y_coords, z_coords, method="linear", factor=1, verbose=False, **kwargs
-):
+def interpolate_2d(ds, x_coords, y_coords, z_coords, method="linear", factor=1, verbose=False, **kwargs):
     """
     This function takes points with X, Y and Z coordinates, and
     interpolates Z-values across the extent of an existing xarray
@@ -1027,8 +975,7 @@ def interpolate_2d(
     """
 
     warnings.warn(
-        "This function is deprecated and will be retired in a future "
-        "release. Please use `xr_interpolate` instead.",
+        "This function is deprecated and will be retired in a future release. Please use `xr_interpolate` instead.",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -1073,9 +1020,7 @@ def interpolate_2d(
         interp_2d = rbf(grid_y, grid_x)
 
     # Create xarray dataarray from the data and resample to ds coords
-    interp_2d_da = xr.DataArray(
-        interp_2d, coords=[y_grid_coords, x_grid_coords], dims=["y", "x"]
-    )
+    interp_2d_da = xr.DataArray(interp_2d, coords=[y_grid_coords, x_grid_coords], dims=["y", "x"])
 
     # If factor is greater than 1, resample the interpolated array to
     # match the input `ds` array
@@ -1109,10 +1054,9 @@ def contours_to_arrays(gdf, col):
     of each vertex in the input GeoDataFrame.
 
     """
-    
+
     warnings.warn(
-        "This function is deprecated and will be retired in a future "
-        "release. Please use `extract_vertices` instead.",
+        "This function is deprecated and will be retired in a future release. Please use `extract_vertices` instead.",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -1123,15 +1067,11 @@ def contours_to_arrays(gdf, col):
         val = gdf.iloc[i][col]
 
         try:
-            coords = np.concatenate(
-                [np.vstack(x.coords.xy).T for x in gdf.iloc[i].geometry.geoms]
-            )
+            coords = np.concatenate([np.vstack(x.coords.xy).T for x in gdf.iloc[i].geometry.geoms])
         except:
             coords = np.vstack(gdf.iloc[i].geometry.coords.xy).T
 
-        coords_zvals.append(
-            np.column_stack((coords, np.full(np.shape(coords)[0], fill_value=val)))
-        )
+        coords_zvals.append(np.column_stack((coords, np.full(np.shape(coords)[0], fill_value=val))))
 
     return np.concatenate(coords_zvals)
 
@@ -1169,9 +1109,7 @@ def largest_region(bool_array, **kwargs):
     largest_region_id = ids[np.argmax(counts)]
 
     # Produce a boolean array where 1 == the largest region
-    largest_region = blobs_labels == largest_region_id
-
-    return largest_region
+    return blobs_labels == largest_region_id
 
 
 def transform_geojson_wgs_to_epsg(geojson, EPSG):
@@ -1251,12 +1189,10 @@ def zonal_stats_parallel(shp, raster, statistics, out_shp, ncpus, **kwargs):
             for elem in zones:
                 for stat in statistics:
                     elem["properties"][stat] = d[elem["id"]][stat]
-                output.write(
-                    {
-                        "properties": elem["properties"],
-                        "geometry": mapping(shape(elem["geometry"])),
-                    }
-                )
+                output.write({
+                    "properties": elem["properties"],
+                    "geometry": mapping(shape(elem["geometry"])),
+                })
 
     with fiona.open(shp) as zones:
         jobs = []
@@ -1360,10 +1296,9 @@ def reverse_geocode(coords, site_classes=None, state_classes=None):
             # Return as site, state formatted string
             return f"{site}, {state}"
 
-        else:
-            # If no geocoding result, return N/E/S/W coordinates
-            print("No valid geocoded location; returning coordinates instead")
-            return f"{lat}, {lon}"
+        # If no geocoding result, return N/E/S/W coordinates
+        print("No valid geocoded location; returning coordinates instead")
+        return f"{lat}, {lon}"
 
     except (KeyError, AttributeError, GeocoderUnavailable, GeocoderServiceError):
         # If no geocoding result, return N/E/S/W coordinates
@@ -1408,10 +1343,7 @@ def hillshade(dem, elevation, azimuth, vert_exag=1, dx=30, dy=30):
 
     from matplotlib.colors import LightSource
 
-    hs = LightSource(azdeg=azimuth, altdeg=elevation).hillshade(
-        dem, vert_exag=vert_exag, dx=dx, dy=dy
-    )
-    return hs
+    return LightSource(azdeg=azimuth, altdeg=elevation).hillshade(dem, vert_exag=vert_exag, dx=dx, dy=dy)
 
 
 def sun_angles(dc, query):
@@ -1466,8 +1398,4 @@ def sun_angles(dc, query):
     )
 
     # Combine into new xarray.Dataset
-    sun_angles_ds = xr.merge(
-        [sun_elevation.rename("sun_elevation"), sun_azimuth.rename("sun_azimuth")]
-    )
-
-    return sun_angles_ds
+    return xr.merge([sun_elevation.rename("sun_elevation"), sun_azimuth.rename("sun_azimuth")])

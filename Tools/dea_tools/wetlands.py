@@ -1,31 +1,32 @@
 # wetlands.py
 """
-This module is for processing DEA wetlands data. 
+This module is for processing DEA wetlands data.
 
-License: The code in this notebook is licensed under the Apache 
-License,Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). 
-Digital Earth Australia data is licensed under the Creative Commons 
-by Attribution 4.0 license 
+License: The code in this notebook is licensed under the Apache
+License,Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+Digital Earth Australia data is licensed under the Creative Commons
+by Attribution 4.0 license
 (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open 
-Data Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the 
-GIS Stack Exchange 
+Contact: If you need assistance, please post a question on the Open
+Data Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the
+GIS Stack Exchange
 (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)using
 the `open-data-cube` tag (you can view previously asked questions
-here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, file one on 
+If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
 Last modified: July 2024
 """
 
-import seaborn as sns
 import datetime
+
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 # disable DeprecationWarning for chained assignments in conversion to
 # datetime format
@@ -132,15 +133,11 @@ def normalise_wit(polygon_base_df):
     polygon_base_df = polygon_base_df.dropna(subset=["bs"])
 
     # 1. compute the expected vegetation area total size: 1 - water (%) - wet (%)
-    polygon_base_df.loc[:, "veg_areas"] = (
-        1 - polygon_base_df["water"] - polygon_base_df["wet"]
-    )
+    polygon_base_df.loc[:, "veg_areas"] = 1 - polygon_base_df["water"] - polygon_base_df["wet"]
 
     # 2. normalise the vegetation values based on vegetation size (to handle FC values more than 100 issue)
     # WARNNING: Not touch the water and wet, cause they are pixel classification result
-    polygon_base_df.loc[:, "overall_veg_num"] = (
-        polygon_base_df["pv"] + polygon_base_df["npv"] + polygon_base_df["bs"]
-    )
+    polygon_base_df.loc[:, "overall_veg_num"] = polygon_base_df["pv"] + polygon_base_df["npv"] + polygon_base_df["bs"]
 
     # 3. if the overall_veg_num is 0, no need to normalize veg area
     norm_veg_index = polygon_base_df["overall_veg_num"] != 0
@@ -154,9 +151,7 @@ def normalise_wit(polygon_base_df):
         )
 
     # convert the string to Python datetime format, easy to do display the result in PNG
-    polygon_base_df.loc[:, "date"] = pd.to_datetime(
-        polygon_base_df["date"]
-    )
+    polygon_base_df.loc[:, "date"] = pd.to_datetime(polygon_base_df["date"])
 
     polygon_base_df.reset_index(inplace=True)
 
@@ -200,10 +195,7 @@ def generate_low_quality_data_periods(df):
         # can change to another threshold (like: 100 days) to test dynamic no-data-period display
         if ((df.loc[i + 3, "date"] - df.loc[i, "date"]).days) > 365:
             df.loc[
-                df[
-                    (df["date"] >= df.loc[i, "date"])
-                    & (df["date"] <= df.loc[i + 3, "date"])
-                ].index,
+                df[(df["date"] >= df.loc[i, "date"]) & (df["date"] <= df.loc[i + 3, "date"])].index,
                 "off_value",
             ] = 100
 
@@ -216,7 +208,7 @@ def display_wit_stack_with_df(
     png_name="your_file_name",
     width=32,
     height=6,
-    x_axis_labels="years"
+    x_axis_labels="years",
 ):
     """
     This functions produces WIT plots. Function displays a stack plot and saves as a png.
@@ -234,9 +226,9 @@ def display_wit_stack_with_df(
      'norm_npv']
      polygon_name : string
      png_name : string
-     x_axis_labels : string with options of "years" or "months" 
+     x_axis_labels : string with options of "years" or "months"
      to set either years or months on the x axis as labels
-     
+
 
     """
 
@@ -301,19 +293,19 @@ def display_wit_stack_with_df(
         hatch="//",
     )
 
-    if x_axis_labels=="years":
+    if x_axis_labels == "years":
         # modify the xaxis settings
         ax.xaxis.set_major_locator(mdates.YearLocator())
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
-        
-    if x_axis_labels=="months":
-       # modify the xaxis settings
+
+    if x_axis_labels == "months":
+        # modify the xaxis settings
         ax.xaxis.set_major_locator(mdates.MonthLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%Y'))
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b-%Y"))
         # Rotates and right-aligns the x labels so they don't crowd each other.
-        for label in ax.get_xticklabels(which='major'):
-            label.set(rotation=30, horizontalalignment='right')
-        
+        for label in ax.get_xticklabels(which="major"):
+            label.set(rotation=30, horizontalalignment="right")
+
     x_label_text = "The Fractional Cover algorithm developed by the Joint Remote Sensing Research Program and\n the Water Observations from Space algorithm developed by Geoscience Australia are used in the production of this data"
 
     ax.set_xlabel(x_label_text, style="italic")

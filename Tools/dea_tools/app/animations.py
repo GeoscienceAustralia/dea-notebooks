@@ -1,66 +1,55 @@
 # -*- coding: utf-8 -*-
 """
-Satellite imagery animation widget, which can be used to interactively 
+Satellite imagery animation widget, which can be used to interactively
 produce animations for multiple DEA products.
 """
 
 # Import required packages
-import fiona
-import sys
-import datacube
-import warnings
-import matplotlib.pyplot as plt
-from datacube.utils.geometry import CRS
-from ipyleaflet import (
-    WMSLayer,
-    basemaps,
-    basemap_to_tiles,
-    Map,
-    DrawControl,
-    WidgetControl,
-    SearchControl,
-    Marker,
-    LayerGroup,
-    LayersControl,
-    GeoData,
-)
-from traitlets import Unicode
-from ipywidgets import (
-    GridspecLayout,
-    Button,
-    Layout,
-    HBox,
-    VBox,
-    HTML,
-    Output,
-)
-import json
-import itertools
-import numpy as np
-import geopandas as gpd
-from io import BytesIO
-import ipywidgets as widgets
 import datetime
-from skimage import exposure
-from skimage.filters import unsharp_mask
+import itertools
+import json
+import warnings
+from io import BytesIO
 
-from datacube.utils import masking
+import datacube
+import geopandas as gpd
+import ipywidgets as widgets
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from datacube.utils.geometry import Geometry
 from datacube.utils.masking import mask_invalid_data
-from .widgetconstructors import (
-    create_html,
-    create_drawcontrol,
-    create_map,
-    create_datepicker,
-    create_inputtext,
-    create_checkbox,
-    create_dropdown,
-    create_dea_wms_layer,
+from ipyleaflet import (
+    LayerGroup,
+    Marker,
+    SearchControl,
+    basemap_to_tiles,
+    basemaps,
 )
-from ..dask import create_local_dask_cluster
-from ..spatial import reverse_geocode
+from ipywidgets import (
+    HTML,
+    Button,
+    GridspecLayout,
+    HBox,
+    Layout,
+    Output,
+    VBox,
+)
+from skimage.filters import unsharp_mask
 
-import warnings
+from dea_tools.app.widgetconstructors import (
+    create_checkbox,
+    create_datepicker,
+    create_drawcontrol,
+    create_dropdown,
+    create_html,
+    create_map,
+)
+from dea_tools.coastal import get_coastlines
+from dea_tools.dask import create_local_dask_cluster
+from dea_tools.spatial import reverse_geocode
+
 warnings.filterwarnings("ignore")
 
 # WMS params and satellite style bands
@@ -146,14 +135,12 @@ def update_map_layers(self, update_basemap=False):
     self.query_params = None
 
     if update_basemap:
-
         # Clear all layers and add basemap
         self.map_layers.clear_layers()
         self.map_layers.add_layer(self.basemap)
 
 
 def extract_data(self):
-
     # Connect to datacube database
     dc = datacube.Datacube(app="Exporting satellite images")
 
@@ -175,15 +162,11 @@ def extract_data(self):
     }
 
     # Find matching datasets
-    dss = [
-        dc.find_datasets(product=i, **self.query_params)
-        for i in sat_params[self.dealayer]["products"]
-    ]
+    dss = [dc.find_datasets(product=i, **self.query_params) for i in sat_params[self.dealayer]["products"]]
     dss = list(itertools.chain.from_iterable(dss))
 
     # If data is found
     if len(dss) > 0:
-
         # Get CRS
         crs = str(dss[0].crs)
 
@@ -233,26 +216,21 @@ def extract_data(self):
 
 
 def plot_data(self, fname):
-
     # Data to plot
     to_plot = self.timeseries_ds
 
     # If rolling median specified
     if self.rolling_median:
         with self.status_info:
-            print(
-                f"\nApplying rolling median ({self.rolling_median_window} timesteps window)"
-            )
-        to_plot = to_plot.rolling(
-            time=int(self.rolling_median_window), center=True, min_periods=1
-        ).median()
+            print(f"\nApplying rolling median ({self.rolling_median_window} timesteps window)")
+        to_plot = to_plot.rolling(time=int(self.rolling_median_window), center=True, min_periods=1).median()
 
     # Raise by power to dampen bright features and enhance dark.
     # Raise vmin and vmax by same amount to ensure proper stretch
     if self.power < 1.0:
         with self.status_info:
             print(f"\nApplying power transformation ({self.power})")
-        to_plot = to_plot ** self.power
+        to_plot = to_plot**self.power
 
     # Apply unsharp masking to enhance overall dynamic range,
     # and improve fine scale detail
@@ -266,9 +244,7 @@ def plot_data(self, fname):
 
         funcs_list = [
             rescale_intensity,
-            lambda x: unsharp_mask(
-                x, radius=self.unsharp_mask_radius, amount=self.unsharp_mask_amount
-            ),
+            lambda x: unsharp_mask(x, radius=self.unsharp_mask_radius, amount=self.unsharp_mask_amount),
         ]
     else:
         funcs_list = None
@@ -297,13 +273,6 @@ def plot_data(self, fname):
 
 
 def deacoastlines_overlay(ds):
-
-    import geopandas as gpd
-    import pandas as pd
-    import matplotlib
-    from shapely.geometry import box, Point
-    from dea_tools.coastal import get_coastlines
-
     # Get bounding box of data
     xmin, ymin, xmax, ymax = ds.geobox.geographic_extent.boundingbox
     bounds = [xmin, ymin, xmax, ymax]
@@ -317,8 +286,8 @@ def deacoastlines_overlay(ds):
     deacl_gdf = deacl_gdf.dissolve("year")  # values("year", ascending=True)
 
     # Apply colours
-    norm = matplotlib.colors.Normalize(vmin=0, vmax=len(deacl_gdf.index))
-    cmap = matplotlib.cm.get_cmap("inferno")
+    norm = mpl.colors.Normalize(vmin=0, vmax=len(deacl_gdf.index))
+    cmap = mpl.cm.get_cmap("inferno")
     rgba = cmap(norm(deacl_gdf.reset_index().index))
     deacl_gdf["color"] = list(rgba)
     deacl_gdf["start_time"] = pd.to_datetime(deacl_gdf.index) + pd.DateOffset(months=0)
@@ -326,8 +295,7 @@ def deacoastlines_overlay(ds):
 
     if len(deacl_gdf.index) > 0:
         return deacl_gdf
-    else:
-        return None
+    return None
 
 
 class animation_app(HBox):
@@ -347,15 +315,13 @@ class animation_app(HBox):
 
         # Satellite data
         end_date = datetime.datetime.today()
-        start_date = datetime.datetime(
-            year=end_date.year - 3, month=end_date.month, day=end_date.day
-        )
+        start_date = datetime.datetime(year=end_date.year - 3, month=end_date.month, day=end_date.day)
         self.start_date = start_date.strftime("%Y-%m-%d")
         self.end_date = end_date.strftime("%Y-%m-%d")
         self.dealayer_list = [
             ("Landsat", "Landsat"),
             ("Sentinel-2", "Sentinel-2"),
-            ("Sentinel-2 and Landsat", "Sentinel-2 and Landsat")
+            ("Sentinel-2 and Landsat", "Sentinel-2 and Landsat"),
         ]
         self.dealayer = self.dealayer_list[0][1]
 
@@ -404,9 +370,7 @@ class animation_app(HBox):
         ##################
 
         # Create the Header widget
-        header_title_text = (
-            "<h3>Digital Earth Australia satellite imagery animations</h3>"
-        )
+        header_title_text = "<h3>Digital Earth Australia satellite imagery animations</h3>"
         instruction_text = (
             "<p>Select the desired satellite data, imagery date range "
             "and image style, then zoom in and draw a rectangle to "
@@ -422,7 +386,6 @@ class animation_app(HBox):
 
         # Define the action to take once something is drawn on the map
         def update_geojson(target, action, geo_json):
-
             # Get data from action
             self.action = action
 
@@ -452,12 +415,7 @@ class animation_app(HBox):
                     '<span style="color: #33cc33"> '
                     "<b>(Overriding maximum size limit; use with caution as may lead to memory issues)</b></span>"
                 )
-                self.header.value = (
-                    header_title_text
-                    + instruction_text
-                    + polyarea_text
-                    + confirmation_text
-                )
+                self.header.value = header_title_text + instruction_text + polyarea_text + confirmation_text
                 self.gdf_drawn = gdf
             elif area <= 50000:
                 confirmation_text = (
@@ -465,12 +423,7 @@ class animation_app(HBox):
                     "<b>(Area to extract falls within "
                     "recommended 50000 ha limit)</b></span>"
                 )
-                self.header.value = (
-                    header_title_text
-                    + instruction_text
-                    + polyarea_text
-                    + confirmation_text
-                )
+                self.header.value = header_title_text + instruction_text + polyarea_text + confirmation_text
                 self.gdf_drawn = gdf
             else:
                 warning_text = (
@@ -479,9 +432,7 @@ class animation_app(HBox):
                     "please select an area less than 50000 "
                     "ha)</b></span>"
                 )
-                self.header.value = (
-                    header_title_text + instruction_text + polyarea_text + warning_text
-                )
+                self.header.value = header_title_text + instruction_text + polyarea_text + warning_text
                 self.gdf_drawn = None
 
         ###########################
@@ -509,12 +460,14 @@ class animation_app(HBox):
 
         # Add tools to map widget
         self.m.add_control(draw_control)
-        self.m.add_control(SearchControl(
-        position="topleft",
-        url='https://nominatim.openstreetmap.org/search?format=json&q={s}',
-        zoom=13, # 'Village / Suburb' level zoom
-        marker=Marker(draggable=False)
-        ))
+        self.m.add_control(
+            SearchControl(
+                position="topleft",
+                url="https://nominatim.openstreetmap.org/search?format=json&q={s}",
+                zoom=13,  # 'Village / Suburb' level zoom
+                marker=Marker(draggable=False),
+            )
+        )
         self.m.add_layer(self.map_layers)
 
         # Update all maps to starting defaults
@@ -525,24 +478,16 @@ class animation_app(HBox):
         ############################
 
         # Create parameter widgets
-        dropdown_basemap = create_dropdown(
-            self.basemap_list, self.basemap_list[0][1]
-        )
-        dropdown_dealayer = create_dropdown(
-            self.dealayer_list, self.dealayer_list[0][1]
-        )
-        dropdown_output = create_dropdown(
-            self.output_list, self.output_list[0][1]
-        )
+        dropdown_basemap = create_dropdown(self.basemap_list, self.basemap_list[0][1])
+        dropdown_dealayer = create_dropdown(self.dealayer_list, self.dealayer_list[0][1])
+        dropdown_output = create_dropdown(self.output_list, self.output_list[0][1])
         date_picker_start = create_datepicker(
             value=start_date,
         )
         date_picker_end = create_datepicker(
             value=end_date,
         )
-        dropdown_styles = create_dropdown(
-            self.styles_list, self.styles_list[0]
-        )
+        dropdown_styles = create_dropdown(self.styles_list, self.styles_list[0])
         slider_percentile = widgets.FloatRangeSlider(
             value=[0.01, 0.99],
             min=0,
@@ -580,26 +525,20 @@ class animation_app(HBox):
         )
 
         # Expandable advanced section
-        text_interval = widgets.IntText(
-            value=100, description="", step=50, layout={"width": "95%"}
-        )
+        text_interval = widgets.IntText(value=100, description="", step=50, layout={"width": "95%"})
         text_resolution = widgets.FloatText(
             value=30,
             description="",
             layout={"width": "95%", "margin": "0px", "padding": "0px"},
         )
-        text_width = widgets.IntText(
-            value=900, description="", step=50, layout={"width": "95%"}
-        )
+        text_width = widgets.IntText(value=900, description="", step=50, layout={"width": "95%"})
         dropdown_resampling = create_dropdown(
             self.resample_list,
             self.resample_freq,
             description="",
             layout={"width": "95%"},
         )
-        checkbox_cloud_mask = create_checkbox(
-            self.cloud_mask, "Mask out cloudy pixels", layout={"width": "95%"}
-        )
+        checkbox_cloud_mask = create_checkbox(self.cloud_mask, "Mask out cloudy pixels", layout={"width": "95%"})
         slider_power = widgets.FloatSlider(
             value=1.0,
             min=0.01,
@@ -608,9 +547,7 @@ class animation_app(HBox):
             description="",
             layout={"width": "95%"},
         )
-        checkbox_unsharp_mask = create_checkbox(
-            self.unsharp_mask, "Enable", layout={"width": "95%"}
-        )
+        checkbox_unsharp_mask = create_checkbox(self.unsharp_mask, "Enable", layout={"width": "95%"})
         text_unsharp_mask_radius = widgets.FloatText(
             value=20,
             step=1,
@@ -636,9 +573,7 @@ class animation_app(HBox):
         checkbox_deacoastlines = create_checkbox(
             self.deacoastlines, "Add DEA Coastlines overlay", layout={"width": "95%"}
         )
-        checkbox_max_size = create_checkbox(
-            self.max_size, "Enable", layout={"width": "95%"}
-        )
+        checkbox_max_size = create_checkbox(self.max_size, "Enable", layout={"width": "95%"})
         expand_box = widgets.VBox(
             [
                 HTML("Frame interval (milliseconds):"),
@@ -658,9 +593,7 @@ class animation_app(HBox):
                 checkbox_unsharp_mask,
                 text_unsharp_mask_radius,
                 text_unsharp_mask_amount,
-                HTML(
-                    "</br>Override maximum size limit: (use with caution; may cause memory issues/crashes)"
-                ),
+                HTML("</br>Override maximum size limit: (use with caution; may cause memory issues/crashes)"),
                 checkbox_max_size,
             ],
         )
@@ -689,13 +622,9 @@ class animation_app(HBox):
         dropdown_styles.observe(self.update_styles, "value")
 
         slider_percentile.observe(self.update_slider_percentile, "value")
-        floatslider_max_cloud_cover.observe(
-            self.update_floatslider_max_cloud_cover, "value"
-        )
+        floatslider_max_cloud_cover.observe(self.update_floatslider_max_cloud_cover, "value")
         checkbox_rolling_median.observe(self.update_checkbox_rolling_median, "value")
-        text_rolling_median_window.observe(
-            self.update_text_rolling_median_window, "value"
-        )
+        text_rolling_median_window.observe(self.update_text_rolling_median_window, "value")
         dropdown_output.observe(self.update_output, "value")
         run_button.on_click(self.run_app)
         draw_control.on_draw(update_geojson)
@@ -717,34 +646,30 @@ class animation_app(HBox):
         # COLLECTION OF ALL APP CONTROLS #
         ##################################
 
-        parameter_selection = VBox(
-            [
-                HTML("<b>Start date:</b>"),
-                date_picker_start,
-                HTML("<b>End date:</b>"),
-                date_picker_end,
-                HTML("<b>Satellite imagery:</b>"),
-                dropdown_dealayer,
-                HTML("<b>Style:</b>"),
-                dropdown_styles,
-                HTML("<b>Colour percentile stretch:</b>"),
-                slider_percentile,
-                HTML("<b>Maximum cloud cover (%):</b>"),
-                floatslider_max_cloud_cover,
-                checkbox_rolling_median,
-                text_rolling_median_window,
-                HTML("</br><b>Output file format:</b>"),
-                dropdown_output,
-                HTML("</br>"),
-                expand,
-            ]
-        )
-        map_selection = VBox(
-            [
-                HTML("</br><b>Map overlay:</b>"),
-                dropdown_basemap,
-            ]
-        )
+        parameter_selection = VBox([
+            HTML("<b>Start date:</b>"),
+            date_picker_start,
+            HTML("<b>End date:</b>"),
+            date_picker_end,
+            HTML("<b>Satellite imagery:</b>"),
+            dropdown_dealayer,
+            HTML("<b>Style:</b>"),
+            dropdown_styles,
+            HTML("<b>Colour percentile stretch:</b>"),
+            slider_percentile,
+            HTML("<b>Maximum cloud cover (%):</b>"),
+            floatslider_max_cloud_cover,
+            checkbox_rolling_median,
+            text_rolling_median_window,
+            HTML("</br><b>Output file format:</b>"),
+            dropdown_output,
+            HTML("</br>"),
+            expand,
+        ])
+        map_selection = VBox([
+            HTML("</br><b>Map overlay:</b>"),
+            dropdown_basemap,
+        ])
         parameter_selection.layout = make_box_layout()
         map_selection.layout = make_box_layout()
 
@@ -819,10 +744,10 @@ class animation_app(HBox):
 
         elif change.new == "Sentinel-2":
             self.text_resolution.value = 10
-        
+
         elif change.new == "Sentinel-2 and Landsat":
             self.text_resolution.value = 30
-            
+
         # Clear data load params to trigger data re-load
         update_map_layers(self)
 
@@ -924,16 +849,13 @@ class animation_app(HBox):
         update_map_layers(self)
 
     def run_app(self, change):
-
         # Clear progress bar and output areas before running
         self.status_info.clear_output()
         self.output_plot.clear_output()
 
         # Verify that polygon was drawn
         if self.gdf_drawn is not None:
-
             with self.status_info:
-
                 # Load data and add to attribute
                 if self.timeseries_ds is None:
                     self.timeseries_ds = extract_data(self)
@@ -942,9 +864,7 @@ class animation_app(HBox):
                     print("Using previously loaded data")
 
             if self.timeseries_ds is not None:
-
                 with self.status_info:
-
                     # Create unique file name
                     centre_coords = self.gdf_drawn.geometry[0].centroid.coords[0][::-1]
                     site = reverse_geocode(coords=centre_coords)
@@ -956,9 +876,7 @@ class animation_app(HBox):
                         .lower()
                     )
 
-                    print(
-                        f"\nExporting animation for {site}.\nThis may take several minutes..."
-                    )
+                    print(f"\nExporting animation for {site}.\nThis may take several minutes...")
 
                 ############
                 # Plotting #
@@ -977,6 +895,4 @@ class animation_app(HBox):
 
         else:
             with self.status_info:
-                print(
-                    'Please draw a valid rectangle on the map, then press "Generate animation".'
-                )
+                print('Please draw a valid rectangle on the map, then press "Generate animation".')

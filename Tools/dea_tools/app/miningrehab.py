@@ -1,5 +1,5 @@
 # notebookapp_miningrehab.py
-'''
+"""
 This file contains functions for loading and interacting with data in the
 mining rehabilitation notebook, inside the Real_world_examples folder.
 
@@ -8,27 +8,23 @@ Available functions:
     run_miningrehab_app
 
 Last modified: September 2021
-'''
+"""
 
-# Load modules
-from ipyleaflet import Map, GeoJSON, DrawControl, basemaps
-import datetime as dt
+import warnings
+
 import datacube
 import geopandas as gpd
-import numpy as np
+import ipywidgets as widgets
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import rasterio.features
-import IPython
-from IPython.display import display
-import warnings
-import ipywidgets as widgets
 from datacube.utils import masking
+from ipyleaflet import DrawControl, GeoJSON, Map, basemaps
+from IPython.display import display
 
-# Load utility functions
-import sys
-from ..datahandling import wofs_fuser
-from ..spatial import transform_geojson_wgs_to_epsg
+from dea_tools.datahandling import wofs_fuser
+from dea_tools.spatial import transform_geojson_wgs_to_epsg
 
 
 def load_miningrehab_data():
@@ -41,7 +37,7 @@ def load_miningrehab_data():
     ds - data set containing masked Fractional Cover data from Landsat 8
     Masked values are set to 'nan'
     """
-    
+
     # Suppress warnings
     warnings.filterwarnings("ignore")
 
@@ -65,19 +61,17 @@ def load_miningrehab_data():
     }
 
     print("Loading DEA Fractional Cover")
-    dataset_fc = dc.load(product="ga_ls_fc_3",
-                         group_by='solar_day',
-                         platform='landsat-8',
-                         cloud_cover= (0, 10),
-                         **query)
+    dataset_fc = dc.load(product="ga_ls_fc_3", group_by="solar_day", platform="landsat-8", cloud_cover=(0, 10), **query)
 
     print("Loading DEA Water Observations")
-    dataset_wo = dc.load(product="ga_ls_wo_3",
-                         group_by='solar_day',
-                         platform='landsat-8',
-                         fuse_func=wofs_fuser,
-                         cloud_cover= (0, 10),
-                         like=dataset_fc)
+    dataset_wo = dc.load(
+        product="ga_ls_wo_3",
+        group_by="solar_day",
+        platform="landsat-8",
+        fuse_func=wofs_fuser,
+        cloud_cover=(0, 10),
+        like=dataset_fc,
+    )
 
     # Match the data
     shared_times = np.intersect1d(dataset_fc.time, dataset_wo.time)
@@ -91,7 +85,7 @@ def load_miningrehab_data():
     ds_fc_masked = ds_fc_matched.where(dry_mask.water) / 100
 
     # Resample
-    ds_resampled = ds_fc_masked  #.resample(time="3M").median()
+    ds_resampled = ds_fc_masked  # .resample(time="3M").median()
     ds_resampled.attrs["crs"] = dataset_fc.crs
 
     # Return the data
@@ -108,7 +102,7 @@ def run_miningrehab_app(ds):
     inputs
     ds - data set containing masked Fractional Cover data from Landsat 8
     """
-    
+
     # Suppress warnings
     warnings.filterwarnings("ignore")
 
@@ -215,11 +209,10 @@ def run_miningrehab_app(ds):
 
         # Execute behaviour based on what the user draws
         if geo_json["geometry"]["type"] == "Polygon":
-
             # Convert the drawn geometry to pixel coordinates
             geom_selectedarea = transform_geojson_wgs_to_epsg(
                 geo_json,
-                EPSG=3577  # hard-coded to be same as case-study data
+                EPSG=3577,  # hard-coded to be same as case-study data
             )
 
             # Construct a mask to only select pixels within the drawn polygon
@@ -251,7 +244,7 @@ def run_miningrehab_app(ds):
             )
 
             # Add Fractional cover plots to app
-            masked_ds_mean = masked_ds_mean.drop('spatial_ref')
+            masked_ds_mean = masked_ds_mean.drop("spatial_ref")
             masked_ds_mean.bs.interpolate_na(dim="time", method="nearest").plot.line("-", ax=ax[0])
             masked_ds_mean.pv.interpolate_na(dim="time", method="nearest").plot.line("-", ax=ax[1])
             masked_ds_mean.npv.interpolate_na(dim="time", method="nearest").plot.line("-", ax=ax[2])
@@ -280,10 +273,7 @@ def run_miningrehab_app(ds):
         else:
             info.clear_output(wait=True)
             with info:
-                print(
-                    "Plot status: this drawing tool is not currently "
-                    "supported. Please use the polygon tool."
-                )
+                print("Plot status: this drawing tool is not currently supported. Please use the polygon tool.")
 
     # call to say activate handle_draw function on draw
     studyarea_drawctrl.on_draw(handle_draw)

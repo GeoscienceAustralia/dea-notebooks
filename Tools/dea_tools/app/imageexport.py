@@ -1,65 +1,53 @@
 # -*- coding: utf-8 -*-
 """
-Image export widget, which can be used to interactively select and 
+Image export widget, which can be used to interactively select and
 export satellite imagery from multiple DEA products.
 """
 
 # Import required packages
-import fiona
-import sys
-import datacube
-import warnings
-import matplotlib.pyplot as plt
-from datacube.utils.geometry import CRS
-from ipyleaflet import (
-    WMSLayer,
-    basemaps,
-    basemap_to_tiles,
-    Map,
-    DrawControl,
-    WidgetControl,
-    SearchControl,
-    Marker,
-    LayerGroup,
-    LayersControl,
-    GeoData,
-)
-from traitlets import Unicode
-from ipywidgets import (
-    GridspecLayout,
-    Button,
-    Layout,
-    HBox,
-    VBox,
-    HTML,
-    Output,
-)
-import json
-import itertools
-import numpy as np
-import geopandas as gpd
-from io import BytesIO
-import ipywidgets as widgets
 import datetime
+import itertools
+import json
+from io import BytesIO
+
+import datacube
+import geopandas as gpd
+import ipywidgets as widgets
+import matplotlib.pyplot as plt
+import numpy as np
+from datacube.utils import masking
+from datacube.utils.geometry import Geometry
+from ipyleaflet import (
+    LayerGroup,
+    Marker,
+    SearchControl,
+    basemap_to_tiles,
+    basemaps,
+)
+from ipywidgets import (
+    HTML,
+    Button,
+    GridspecLayout,
+    HBox,
+    Layout,
+    Output,
+    VBox,
+)
 from skimage import exposure
 from skimage.filters import unsharp_mask
 
-from datacube.utils import masking
-from datacube.utils.geometry import Geometry
-from .widgetconstructors import (
-    create_html,
-    create_drawcontrol,
-    create_map,
-    create_datepicker,
-    create_inputtext,
+from dea_tools.app.widgetconstructors import (
     create_checkbox,
-    create_dropdown,
+    create_datepicker,
     create_dea_wms_layer,
+    create_drawcontrol,
+    create_dropdown,
+    create_html,
+    create_map,
 )
-from ..dask import create_local_dask_cluster
-from ..spatial import reverse_geocode
-from ..datahandling import xr_pansharpen
-
+from dea_tools.dask import create_local_dask_cluster
+from dea_tools.datahandling import xr_pansharpen
+from dea_tools.spatial import reverse_geocode
 
 # WMS params and satellite style bands
 sat_params = {
@@ -135,7 +123,6 @@ def update_map_layers(self):
 
 
 def extract_data(self):
-
     # Connect to datacube database
     dc = datacube.Datacube(app="Exporting satellite images")
 
@@ -157,15 +144,11 @@ def extract_data(self):
     }
 
     # Find matching datasets
-    dss = [
-        dc.find_datasets(product=i, **self.query_params)
-        for i in sat_params[self.dealayer]["products"]
-    ]
+    dss = [dc.find_datasets(product=i, **self.query_params) for i in sat_params[self.dealayer]["products"]]
     dss = list(itertools.chain.from_iterable(dss))
 
     # If data is found
     if len(dss) > 0:
-
         # Get CRS
         crs = str(dss[0].crs)
 
@@ -186,15 +169,13 @@ def extract_data(self):
         # Set up load params
         if self.pansharpen and can_pansharpen:
             self.load_params = {
-                "measurements": sat_params[self.dealayer]["styles"][self.style][1]
-                + ["nbart_panchromatic"],
+                "measurements": sat_params[self.dealayer]["styles"][self.style][1] + ["nbart_panchromatic"],
                 "resolution": (-self.resolution, self.resolution),
                 "align": (7.5, 7.5),
                 "output_crs": crs,
             }
 
         else:
-
             # Use resolution if provided, otherwise use default
             if self.resolution:
                 sat_params[self.dealayer]["resolution"] = (
@@ -223,12 +204,9 @@ def extract_data(self):
 
         # Create plain numpy array, optionally after pansharpening
         if self.pansharpen and can_pansharpen:
-
             # Perform Brovey pan-sharpening and return numpy.array
             print(f"Pansharpening {self.sensor} image to 15 m resolution")
-            rgb_array = (
-                xr_pansharpen(ds, transform="brovey").to_array().squeeze("time").values
-            )
+            rgb_array = xr_pansharpen(ds, transform="brovey").to_array().squeeze("time").values
 
         # If pansharpening is requested but not possible, deactivate
         # pansharpening and reset to 30 m resolution
@@ -256,7 +234,6 @@ def extract_data(self):
 
 
 def plot_data(self, fname):
-
     # Data to plot
     to_plot = self.rgb_array
 
@@ -272,13 +249,11 @@ def plot_data(self, fname):
     if self.power < 1.0:
         with self.status_info:
             print(f"\nApplying power transformation ({self.power})")
-        to_plot = to_plot ** self.power
-        vmin, vmax = vmin ** self.power, vmax ** self.power
+        to_plot = to_plot**self.power
+        vmin, vmax = vmin**self.power, vmax**self.power
 
     # Rescale/stretch imagery between vmin and vmax
-    to_plot = exposure.rescale_intensity(
-        to_plot.astype(float), in_range=(vmin, vmax), out_range=(0.0, 1.0)
-    )
+    to_plot = exposure.rescale_intensity(to_plot.astype(float), in_range=(vmin, vmax), out_range=(0.0, 1.0))
 
     # Unsharp mask
     if self.unsharp_mask:
@@ -287,9 +262,7 @@ def plot_data(self, fname):
                 f"\nApplying unsharp masking with {self.unsharp_mask_radius} "
                 f"radius and {self.unsharp_mask_amount} amount"
             )
-        to_plot = unsharp_mask(
-            to_plot, radius=self.unsharp_mask_radius, amount=self.unsharp_mask_amount
-        )
+        to_plot = unsharp_mask(to_plot, radius=self.unsharp_mask_radius, amount=self.unsharp_mask_amount)
 
     # Create figure with aspect ratio of data
     fig = plt.figure(dpi=100)
@@ -308,20 +281,15 @@ def plot_data(self, fname):
 
     # If a min DPI is specified and image is less than DPI
     if (self.dpi > 0) and (to_plot.shape[1] < self.dpi * 10):
-
         # Export figure to file using exact DPI
         with self.status_info:
             print(f"\nExporting image at {self.dpi} DPI")
-        fig.savefig(
-            fname.replace("resolution", f"resolution, {self.dpi} DPI"), dpi=self.dpi
-        )
+        fig.savefig(fname.replace("resolution", f"resolution, {self.dpi} DPI"), dpi=self.dpi)
 
     # If no minumum DPI is specified, export raw array data in native
     # resolution
     else:
-        plt.imsave(
-            fname=fname, arr=np.ascontiguousarray(to_plot), format=self.output_format
-        )
+        plt.imsave(fname=fname, arr=np.ascontiguousarray(to_plot), format=self.output_format)
 
     # Add plot preview below map and finish
     plt.show()
@@ -407,7 +375,6 @@ class imageexport_app(HBox):
 
         # Define the action to take once something is drawn on the map
         def update_geojson(target, action, geo_json):
-
             # Get data from action
             self.action = action
 
@@ -427,7 +394,7 @@ class imageexport_app(HBox):
 
             # Convert to Albers and compute area
             gdf_drawn_albers = gdf.copy().to_crs("EPSG:3577")
-            m2_per_km2 = 10 ** 6
+            m2_per_km2 = 10**6
             area = gdf_drawn_albers.area.values[0] / m2_per_km2
             polyarea_label = "Total area of satellite data to extract"
             polyarea_text = f"<b>{polyarea_label}</b>: {area:.2f} km<sup>2</sup>"
@@ -438,25 +405,13 @@ class imageexport_app(HBox):
                     '<span style="color: #33cc33"> '
                     "<b>(Overriding maximum size limit; use with caution as may lead to memory issues)</b></span>"
                 )
-                self.header.value = (
-                    header_title_text
-                    + instruction_text
-                    + polyarea_text
-                    + confirmation_text
-                )
+                self.header.value = header_title_text + instruction_text + polyarea_text + confirmation_text
                 self.gdf_drawn = gdf
             elif area <= 10000:
                 confirmation_text = (
-                    '<span style="color: #33cc33"> '
-                    "<b>(Area to extract falls within "
-                    "recommended limit)</b></span>"
+                    '<span style="color: #33cc33"> <b>(Area to extract falls within recommended limit)</b></span>'
                 )
-                self.header.value = (
-                    header_title_text
-                    + instruction_text
-                    + polyarea_text
-                    + confirmation_text
-                )
+                self.header.value = header_title_text + instruction_text + polyarea_text + confirmation_text
                 self.gdf_drawn = gdf
             else:
                 warning_text = (
@@ -465,9 +420,7 @@ class imageexport_app(HBox):
                     "please select an area less than 10000 "
                     "km<sup>2)</b></span>"
                 )
-                self.header.value = (
-                    header_title_text + instruction_text + polyarea_text + warning_text
-                )
+                self.header.value = header_title_text + instruction_text + polyarea_text + warning_text
                 self.gdf_drawn = None
 
         ###########################
@@ -495,12 +448,14 @@ class imageexport_app(HBox):
 
         # Add tools to map widget
         self.m.add_control(draw_control)
-        self.m.add_control(SearchControl(
-        position="topleft",
-        url='https://nominatim.openstreetmap.org/search?format=json&q={s}',
-        zoom=13, # 'Village / Suburb' level zoom
-        marker=Marker(draggable=False)
-        ))
+        self.m.add_control(
+            SearchControl(
+                position="topleft",
+                url="https://nominatim.openstreetmap.org/search?format=json&q={s}",
+                zoom=13,  # 'Village / Suburb' level zoom
+                marker=Marker(draggable=False),
+            )
+        )
         self.m.add_layer(self.map_layers)
 
         # Update all maps to starting defaults
@@ -511,19 +466,11 @@ class imageexport_app(HBox):
         ############################
 
         # Create parameter widgets
-        dropdown_basemap = create_dropdown(
-            self.basemap_list, self.basemap_list[0][1]
-        )
-        dropdown_dealayer = create_dropdown(
-            self.dealayer_list, self.dealayer_list[0][1]
-        )
-        dropdown_output = create_dropdown(
-            self.output_list, self.output_list[0][1]
-        )
+        dropdown_basemap = create_dropdown(self.basemap_list, self.basemap_list[0][1])
+        dropdown_dealayer = create_dropdown(self.dealayer_list, self.dealayer_list[0][1])
+        dropdown_output = create_dropdown(self.output_list, self.output_list[0][1])
         date_picker = create_datepicker(value=date)
-        dropdown_styles = create_dropdown(
-            self.styles_list, self.styles_list[0]
-        )
+        dropdown_styles = create_dropdown(self.styles_list, self.styles_list[0])
         slider_abs = widgets.IntRangeSlider(
             value=[50, 3000],
             min=0,
@@ -540,9 +487,7 @@ class imageexport_app(HBox):
             description="",
             layout={"width": "100%", "margin": "0px", "padding": "0px"},
         )
-        checkbox_pansharpen = create_checkbox(
-            self.pansharpen, "Pansharpen Landsat"
-        )
+        checkbox_pansharpen = create_checkbox(self.pansharpen, "Pansharpen Landsat")
         slider_power = widgets.FloatSlider(
             value=1.0,
             min=0.01,
@@ -551,9 +496,7 @@ class imageexport_app(HBox):
             description="",
             layout={"width": "85%"},
         )
-        checkbox_unsharp_mask = create_checkbox(
-            self.unsharp_mask, "Enable", layout={"width": "100%"}
-        )
+        checkbox_unsharp_mask = create_checkbox(self.unsharp_mask, "Enable", layout={"width": "100%"})
         text_unsharp_mask_radius = widgets.FloatText(
             value=20,
             step=1,
@@ -577,12 +520,8 @@ class imageexport_app(HBox):
             },
         )
         checkbox_max_size = create_checkbox(self.max_size, "Enable")
-        text_dpi = widgets.IntText(
-            value=0, description="", step=50, layout={"width": "85%"}
-        )
-        html_dpi = HTML(
-            "</br>Minimum DPI for image export</br>(100 DPI = 1000 pixels wide):"
-        )
+        text_dpi = widgets.IntText(value=0, description="", step=50, layout={"width": "85%"})
+        html_dpi = HTML("</br>Minimum DPI for image export</br>(100 DPI = 1000 pixels wide):")
         expand_box = widgets.VBox(
             [
                 HTML("Resolution (metres):"),
@@ -594,9 +533,7 @@ class imageexport_app(HBox):
                 checkbox_unsharp_mask,
                 text_unsharp_mask_radius,
                 text_unsharp_mask_amount,
-                HTML(
-                    "</br>Override maximum size limit: (use with caution; may cause memory issues/crashes)"
-                ),
+                HTML("</br>Override maximum size limit: (use with caution; may cause memory issues/crashes)"),
                 checkbox_max_size,
                 html_dpi,
                 text_dpi,
@@ -642,28 +579,24 @@ class imageexport_app(HBox):
         # COLLECTION OF ALL APP CONTROLS #
         ##################################
 
-        parameter_selection = VBox(
-            [
-                HTML("<b>Date:</b>"),
-                date_picker,
-                HTML("<b>Satellite imagery:</b>"),
-                dropdown_dealayer,
-                HTML("<b>Style:</b>"),
-                dropdown_styles,
-                HTML("<b>Colour stretch:</b>"),
-                slider_abs,
-                HTML("<b>Output file format:</b>"),
-                dropdown_output,
-                HTML("</br>"),
-                expand,
-            ]
-        )
-        map_selection = VBox(
-            [
-                HTML("</br><b>Map overlay:</b>"),
-                dropdown_basemap,
-            ]
-        )
+        parameter_selection = VBox([
+            HTML("<b>Date:</b>"),
+            date_picker,
+            HTML("<b>Satellite imagery:</b>"),
+            dropdown_dealayer,
+            HTML("<b>Style:</b>"),
+            dropdown_styles,
+            HTML("<b>Colour stretch:</b>"),
+            slider_abs,
+            HTML("<b>Output file format:</b>"),
+            dropdown_output,
+            HTML("</br>"),
+            expand,
+        ])
+        map_selection = VBox([
+            HTML("</br><b>Map overlay:</b>"),
+            dropdown_basemap,
+        ])
         parameter_selection.layout = make_box_layout()
         map_selection.layout = make_box_layout()
 
@@ -766,9 +699,7 @@ class imageexport_app(HBox):
 
         # Update DPI helper text to give output resolution
         self.html_dpi.value = (
-            f"</br>Minimum DPI for image export</br>"
-            f"({change.new} DPI = {change.new * 10} "
-            f"pixels wide):"
+            f"</br>Minimum DPI for image export</br>({change.new} DPI = {change.new * 10} pixels wide):"
         )
 
     # Update resolution
@@ -815,16 +746,13 @@ class imageexport_app(HBox):
         self.output_format = change.new
 
     def run_app(self, change):
-
         # Clear progress bar and output areas before running
         self.status_info.clear_output()
         self.output_plot.clear_output()
 
         # Verify that polygon was drawn
         if self.gdf_drawn is not None:
-
             with self.status_info:
-
                 # Load data and add to attribute
                 if self.rgb_array is None:
                     self.rgb_array = extract_data(self)
@@ -832,9 +760,7 @@ class imageexport_app(HBox):
                     print("Using previously loaded data")
 
             if self.rgb_array is not None:
-
                 with self.status_info:
-
                     # Create unique file name
                     centre_coords = self.gdf_drawn.geometry[0].centroid.coords[0][::-1]
                     site = reverse_geocode(coords=centre_coords)
@@ -845,16 +771,9 @@ class imageexport_app(HBox):
 
                     # Remove spaces and commas if requested
                     if self.standardise_name:
-                        fname = (
-                            fname.replace(" - ", "_")
-                            .replace(", ", "-")
-                            .replace(" ", "-")
-                            .lower()
-                        )
+                        fname = fname.replace(" - ", "_").replace(", ", "-").replace(" ", "-").lower()
 
-                    print(
-                        f"\nExporting image for {site}.\nThis may take several minutes..."
-                    )
+                    print(f"\nExporting image for {site}.\nThis may take several minutes...")
 
                 ############
                 # Plotting #
@@ -873,6 +792,4 @@ class imageexport_app(HBox):
 
         else:
             with self.status_info:
-                print(
-                    'Please draw a valid rectangle on the map, then press "Export imagery"'
-                )
+                print('Please draw a valid rectangle on the map, then press "Export imagery"')

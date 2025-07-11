@@ -2,20 +2,20 @@
 """
 This module is for processing DEA wetlands data, including Spatial WIT.
 
-License: The code in this notebook is licensed under the Apache 
-License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). 
-Digital Earth Australia data is licensed under the Creative Commons 
-by Attribution 4.0 license 
+License: The code in this notebook is licensed under the Apache
+License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+Digital Earth Australia data is licensed under the Creative Commons
+by Attribution 4.0 license
 (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, please post a question on the Open 
-Data Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the 
-GIS Stack Exchange 
+Contact: If you need assistance, please post a question on the Open
+Data Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the
+GIS Stack Exchange
 (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)using
 the `open-data-cube` tag (you can view previously asked questions
-here: https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, file one on 
+If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
 Last modified: March 2025
@@ -24,26 +24,23 @@ Last modified: March 2025
 
 # Import required packages
 
-import datetime
+import itertools
+import os
+import warnings
+
 import geopandas as gpd
 import imageio
-import itertools
-import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pandas as pd
-import shutil
-import warnings
 import xarray as xr
 
-import sys
-
-from .bandindices import calculate_indices
-from .datahandling import load_ard
-from .spatial import xr_rasterize
-from .dask import create_local_dask_cluster
-from .wetlands import normalise_wit
+from dea_tools.bandindices import calculate_indices
+from dea_tools.dask import create_local_dask_cluster
+from dea_tools.datahandling import load_ard
+from dea_tools.spatial import xr_rasterize
+from dea_tools.wetlands import normalise_wit
 
 # Create local dask cluster to improve data load time
 client = create_local_dask_cluster(return_client=True)
@@ -119,9 +116,7 @@ def WIT_drill(
     gpgon = datacube.utils.geometry.Geometry(gdf.geometry[0], crs=gdf.crs)
 
     # Define which spectral bands are being used in the analysis
-    bands = [
-        f"nbart_{band}" for band in ("blue", "green", "red", "nir", "swir_1", "swir_2")
-    ]
+    bands = [f"nbart_{band}" for band in ("blue", "green", "red", "nir", "swir_1", "swir_2")]
 
     if verbose_progress:
         print("Loading Landsat data")
@@ -168,9 +163,7 @@ def WIT_drill(
 
     # Locate and remove any observations which aren't in all three datasets
     missing = set()
-    for t1, t2 in itertools.product(
-        [ds_fc.time.values, ds_wo.time.values, ds_ls.time.values], repeat=2
-    ):
+    for t1, t2 in itertools.product([ds_fc.time.values, ds_wo.time.values, ds_ls.time.values], repeat=2):
         missing_ = set(t1) - set(t2)
         missing |= missing_
 
@@ -285,21 +278,21 @@ def classify_pixel(pv, npv, bs):
     """
     if pv > 2 / 3:
         return 8  # pv
-    elif npv > 2 / 3:
+    if npv > 2 / 3:
         return 0  # ng
-    elif bs > 2 / 3:
+    if bs > 2 / 3:
         return 4  # bs
-    elif npv > 1 / 3 and bs > 1 / 3 and pv < 1 / 3:
+    if npv > 1 / 3 and bs > 1 / 3 and pv < 1 / 3:
         return 1  # ng_bs
-    elif npv > 1 / 3 and pv > 1 / 3 and bs < 1 / 3:
+    if npv > 1 / 3 and pv > 1 / 3 and bs < 1 / 3:
         return 3  # ng_pv
-    elif npv > 1 / 3 and pv < 1 / 3 and bs < 1 / 3:
+    if npv > 1 / 3 and pv < 1 / 3 and bs < 1 / 3:
         return 2  # ng_mix
-    elif bs > 1 / 3 and pv > 1 / 3 and npv < 1 / 3:
+    if bs > 1 / 3 and pv > 1 / 3 and npv < 1 / 3:
         return 6  # bs_pv
-    elif bs > 1 / 3 and pv < 1 / 3 and npv < 1 / 3:
+    if bs > 1 / 3 and pv < 1 / 3 and npv < 1 / 3:
         return 5  # bs_mix
-    elif pv > 1 / 3 and npv < 1 / 3 and bs < 1 / 3:
+    if pv > 1 / 3 and npv < 1 / 3 and bs < 1 / 3:
         return 7  # pv_mix
     return -1
 
@@ -377,21 +370,19 @@ def spatial_wit(ds, wetland_name):
     ]
 
     # Define the colormap with your custom colors
-    cmap = mcolors.ListedColormap(
-        [
-            "#F1E8C9",  # ng
-            "#C0AB86",  # ng_bs
-            "#D6D2A7",  # ng_mix
-            "#BCD495",  # ng_pv
-            "#93724C",  # bs
-            "#9C895D",  # bs_mix
-            "#8F9C5C",  # bs_pv
-            "#9DBD74",  # pv_mix
-            "#8CC46B",  # pv
-            "#6ce6f8",  # wet
-            "#676dca",  # water
-        ]
-    )
+    cmap = mcolors.ListedColormap([
+        "#F1E8C9",  # ng
+        "#C0AB86",  # ng_bs
+        "#D6D2A7",  # ng_mix
+        "#BCD495",  # ng_pv
+        "#93724C",  # bs
+        "#9C895D",  # bs_mix
+        "#8F9C5C",  # bs_pv
+        "#9DBD74",  # pv_mix
+        "#8CC46B",  # pv
+        "#6ce6f8",  # wet
+        "#676dca",  # water
+    ])
 
     # Create a BoundedNorm to ensure correct mapping of data to the colormap
     norm = mcolors.Normalize(vmin=0, vmax=10)
@@ -407,9 +398,7 @@ def spatial_wit(ds, wetland_name):
     for t in ds.time:
         wetland_time_step = ds["wetland"].sel(time=t)
         date_str = str(t.values)[:10]  # Extract date as string
-        wetland_time_step.rio.to_raster(
-            f"deawetlands_outputs/{wetland_name}_{date_str}.tif"
-        )
+        wetland_time_step.rio.to_raster(f"deawetlands_outputs/{wetland_name}_{date_str}.tif")
 
     # Make one big plot
 
@@ -423,9 +412,7 @@ def spatial_wit(ds, wetland_name):
 
     time_step = ds["wetland"].isel(time=0)
     height, width = time_step.shape
-    fig, axes = plt.subplots(
-        num_rows, num_columns, figsize=(8 * num_columns * width / height, 8 * num_rows)
-    )
+    fig, axes = plt.subplots(num_rows, num_columns, figsize=(8 * num_columns * width / height, 8 * num_rows))
 
     if num_rows == 1:
         axes = axes.reshape(1, num_columns)
