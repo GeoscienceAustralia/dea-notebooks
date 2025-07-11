@@ -135,9 +135,9 @@ source = "vcs"
 [tool.hatch.version.raw-options]
 local_scheme = "no-local-version"
 
-###############################################################
-# Configuration required to apply code formatting and linting #
-###############################################################
+############################################################
+# Configuration required to apply code formatting, linting #
+############################################################
 
 [tool.ruff]
 target-version = "py310"
