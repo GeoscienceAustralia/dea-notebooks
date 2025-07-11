@@ -22,23 +22,22 @@ Last modified: April 2023
 
 # Import required packages
 import math
+from pathlib import Path
+
 import folium
-import numpy as np
-import pandas as pd
 import geopandas as gpd
 import matplotlib.patheffects as PathEffects
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import xarray as xr
 from matplotlib import colors as mcolours
 from matplotlib.animation import FuncAnimation
-from pathlib import Path
 from pyproj import Transformer
 from shapely.geometry import box
 from skimage.exposure import rescale_intensity
 from tqdm.auto import tqdm
 
-import odc.geo.xr
-from odc.ui import image_aspect
 from .spatial import add_geobox
 
 
@@ -188,11 +187,11 @@ def rgb(
     else:
         # If a float is supplied instead of an integer index, raise exception
         if isinstance(index, float):
-            raise Exception(f"Please supply `index` as either an integer or a list of integers")
+            raise Exception("Please supply `index` as either an integer or a list of integers")
 
         # If col argument is supplied as well as `index`, raise exception
         if "col" in kwargs:
-            raise Exception(f"Cannot supply both `index` and `col`; please remove one and try again")
+            raise Exception("Cannot supply both `index` and `col`; please remove one and try again")
 
         # Convert index to generic type list so that number of indices supplied
         # can be computed
@@ -521,9 +520,7 @@ def xr_animation(
 
         times_list = times.dt.strftime(show_date).values if show_date else [None] * len(times)
         text_list = show_text if is_sequence else [show_text] * len(times)
-        annotation_list = ["\n".join([str(i) for i in (a, b) if i]) for a, b in zip(times_list, text_list)]
-
-        return annotation_list
+        return ["\n".join([str(i) for i in (a, b) if i]) for a, b in zip(times_list, text_list)]
 
     def _update_frames(i, ax, extent, annotation_text, gdf, gdf_defaults, annotation_defaults, imshow_defaults):
         """
@@ -581,7 +578,7 @@ def xr_animation(
             f"a list of one or three bands that exist as "
             f"variables in `ds`, e.g. {list(ds.data_vars)}"
         )
-    elif isinstance(bands, str):
+    if isinstance(bands, str):
         bands = [bands]
 
     # Test if bands exist in dataset
@@ -591,7 +588,7 @@ def xr_animation(
 
     # Test if time dimension exists in dataset
     if "time" not in ds.dims:
-        raise ValueError(f"`ds` does not contain a 'time' dimension required for generating an animation")
+        raise ValueError("`ds` does not contain a 'time' dimension required for generating an animation")
 
     # Set default parameters
     outline = [PathEffects.withStroke(linewidth=2.5, foreground="black")]
@@ -856,8 +853,7 @@ def plot_variable_images(img_collection):
             raise ValueError(
                 "The {} dataset has no images to display for the given query parameters".format(img_collection.sensor)
             )
-        else:
-            raise ValueError("The supplied xarray dataset has no images to display for the given query parameters")
+        raise ValueError("The supplied xarray dataset has no images to display for the given query parameters")
 
     # Divide the number of images by 2 rounding up to calculate the
     # number of rows for the below figure are needed

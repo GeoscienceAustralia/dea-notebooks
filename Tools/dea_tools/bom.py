@@ -19,12 +19,13 @@ Last modified: March 2021
 """
 
 import datetime
-import pytz
-import ciso8601
 from types import SimpleNamespace
-import requests
+
+import ciso8601
 import lxml
 import lxml.etree
+import pytz
+import requests
 
 
 def get_stations(
@@ -126,10 +127,10 @@ def ui_select_station(stations, zoom=3, center=(-24, 138), **kw):
     """
     Create an interactive map for selecting river gauging stations.
     """
-    import ipywidgets as W
-    from IPython.display import display
-    import matplotlib.pyplot as plt
     import ipyleaflet as L
+    import ipywidgets as W
+    import matplotlib.pyplot as plt
+    from IPython.display import display
     from odc.ui import ui_poll
 
     dbg_display = W.Output()
@@ -243,7 +244,7 @@ def _fmt_time(time=None):
         time = (datetime.datetime(1980, 1, 1), datetime.datetime.now())
 
     t_start, t_end = (t.isoformat() for t in time)
-    return dict(t_start=t_start, t_end=t_end)
+    return {"t_start": t_start, "t_end": t_end}
 
 
 def _parse_float(x):

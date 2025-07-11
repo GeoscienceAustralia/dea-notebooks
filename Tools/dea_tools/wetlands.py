@@ -21,11 +21,12 @@ GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 Last modified: July 2024
 """
 
-import seaborn as sns
 import datetime
+
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 # disable DeprecationWarning for chained assignments in conversion to
 # datetime format

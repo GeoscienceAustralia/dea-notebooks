@@ -3,58 +3,47 @@ Digital Earth Australia Wetlands Insight Tool widget, which can be used to inter
 extract a stacked line plot using the wetlands insight tool on a wetland polygon.
 """
 
-# Import required packages
-import fiona
-import sys
-import datacube
-import warnings
-import matplotlib.pyplot as plt
-from datacube.utils.geometry import CRS
-from ipyleaflet import (
-    WMSLayer,
-    basemaps,
-    basemap_to_tiles,
-    Map,
-    DrawControl,
-    WidgetControl,
-    SearchControl,
-    Marker,
-    LayerGroup,
-    LayersControl,
-    GeoData,
-)
-from traitlets import Unicode
-from ipywidgets import (
-    GridspecLayout,
-    Button,
-    Layout,
-    HBox,
-    VBox,
-    HTML,
-    Output,
-)
-import json
-import geopandas as gpd
-from io import BytesIO
-import ipywidgets as widgets
 import datetime
-import seaborn as sns
+import json
+import warnings
+from io import BytesIO
 
-# from shapely.geometry import box, shape
+import fiona
+import geopandas as gpd
+import ipywidgets as widgets
 import matplotlib.dates as mdates
-
-from .widgetconstructors import (
-    create_html,
-    create_drawcontrol,
-    create_map,
-    create_datepicker,
-    create_inputtext,
-    create_checkbox,
-    create_dropdown,
+import matplotlib.pyplot as plt
+import seaborn as sns
+from ipyleaflet import (
+    GeoData,
+    LayerGroup,
+    Marker,
+    SearchControl,
+    basemap_to_tiles,
+    basemaps,
 )
-from ..dask import create_local_dask_cluster
-from ..wetlands import generate_low_quality_data_periods
-from ..wit_app import WIT_drill, spatial_wit
+from ipywidgets import (
+    HTML,
+    Button,
+    GridspecLayout,
+    HBox,
+    Layout,
+    Output,
+    VBox,
+)
+
+from dea_tools.app.widgetconstructors import (
+    create_checkbox,
+    create_datepicker,
+    create_drawcontrol,
+    create_dropdown,
+    create_html,
+    create_inputtext,
+    create_map,
+)
+from dea_tools.dask import create_local_dask_cluster
+from dea_tools.wetlands import generate_low_quality_data_periods
+from dea_tools.wit_app import WIT_drill, spatial_wit
 
 
 def make_box_layout():
@@ -336,7 +325,7 @@ class wit_app(HBox):
         uploaded_data = {f["name"]: {"content": f.content.tobytes()} for f in change.new}
 
         # Save to file
-        for uploaded_filename in uploaded_data.keys():
+        for uploaded_filename in uploaded_data:
             with open(uploaded_filename, "wb") as output_file:
                 content = uploaded_data[uploaded_filename]["content"]
                 output_file.write(content)
@@ -344,7 +333,7 @@ class wit_app(HBox):
         with self.progress_bar:
             try:
                 print("Loading vector data...", end="\r")
-                valid_files = [file for file in uploaded_data.keys() if file.lower().endswith((".shp", ".geojson"))]
+                valid_files = [file for file in uploaded_data if file.lower().endswith((".shp", ".geojson"))]
                 valid_file = valid_files[0]
                 wetlands_gdf = (
                     gpd.read_file(valid_file).to_crs("EPSG:4326").explode(index_parts=True).reset_index(drop=True)
@@ -434,7 +423,7 @@ class wit_app(HBox):
             client = create_local_dask_cluster(return_client=True, display_client=True)
 
         # Set any defaults
-        dask_chunks = dict(x=1000, y=1000, time=1)
+        dask_chunks = {"x": 1000, "y": 1000, "time": 1}
 
         self.progress_header.value = "<h3>" + ("Progress") + "</h3>"
 
@@ -459,7 +448,7 @@ class wit_app(HBox):
                 run_text = "selected polygon"
             else:
                 print(
-                    f"No polygon drawn or uploaded. Please select a polygon on the map, or upload a GeoJSON or Shapefile.",
+                    "No polygon drawn or uploaded. Please select a polygon on the map, or upload a GeoJSON or Shapefile.",
                     end="\r",
                 )
                 wetlands_gdf = None
@@ -467,10 +456,7 @@ class wit_app(HBox):
             # Run wetlands polygon drill
             df = None
 
-            if not self.wetland_name.endswith(".csv"):
-                output_csv = self.wetland_name + ".csv"
-            else:
-                output_csv = self.wetland_name
+            output_csv = self.wetland_name + ".csv" if not self.wetland_name.endswith(".csv") else self.wetland_name
 
             if wetlands_gdf is not None:
                 try:
@@ -588,7 +574,7 @@ class wit_app(HBox):
         # Export spatial WIT animation if checkbox is selected
         if self.spatial_wit and ds_wit is not None:
             try:
-                ds = spatial_wit(ds=ds_wit, wetland_name=self.wetland_name)
+                spatial_wit(ds=ds_wit, wetland_name=self.wetland_name)
                 print("Animation complete")
             except AttributeError:
                 print("No polygon selected")

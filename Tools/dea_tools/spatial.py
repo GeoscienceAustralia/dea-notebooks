@@ -21,38 +21,35 @@ Last modified: July 2024
 """
 
 # Import required packages
+import multiprocessing as mp
+import warnings
+
 import dask
 import fiona
-import warnings
-import collections
-import numpy as np
-import pandas as pd
-import xarray as xr
 import geopandas as gpd
+import numpy as np
+import odc.geo.xr
+import pandas as pd
 import rasterio.features
 import scipy.interpolate
-import multiprocessing as mp
-from scipy import ndimage as nd
-from scipy.spatial import cKDTree as KDTree
-from skimage.measure import label
-from rasterstats import zonal_stats
-from skimage.measure import find_contours
+import xarray as xr
+from geopy.exc import GeocoderServiceError, GeocoderUnavailable
 from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderUnavailable, GeocoderServiceError
+from odc.geo.crs import CRS
+from odc.geo.geom import Geometry
+from rasterstats import zonal_stats
+from scipy.spatial import cKDTree as KDTree
 from shapely.geometry import (
-    MultiPoint,
-    MultiLineString,
     LineString,
-    Polygon,
+    MultiLineString,
+    MultiPoint,
     MultiPolygon,
     Point,
-    shape,
+    Polygon,
     mapping,
+    shape,
 )
-
-import odc.geo.xr
-from odc.geo.geom import Geometry
-from odc.geo.crs import CRS
+from skimage.measure import find_contours, label
 
 
 def _geom_to_multipoint(geom):
@@ -71,7 +68,7 @@ def _geom_to_multipoint(geom):
     elif isinstance(geom, Point):
         points = [geom]
     elif isinstance(geom, MultiPoint):
-        points = [point for point in geom.geoms]
+        points = list(geom.geoms)
 
     return MultiPoint(points)
 
@@ -135,16 +132,11 @@ def points_on_line(gdf, index, distance=30):
     line_feature = gdf.loc[[index]].geometry
 
     # If multiple features are returned, take unary union
-    if line_feature.shape[0] > 0:
-        line_feature = line_feature.unary_union
-    else:
-        line_feature = line_feature.iloc[0]
+    line_feature = line_feature.unary_union if line_feature.shape[0] > 0 else line_feature.iloc[0]
 
     # Generate points along line and convert to geopandas.GeoDataFrame
     points_line = [line_feature.interpolate(i) for i in range(0, int(line_feature.length), distance)]
-    points_gdf = gpd.GeoDataFrame(geometry=points_line, crs=gdf.crs)
-
-    return points_gdf
+    return gpd.GeoDataFrame(geometry=points_line, crs=gdf.crs)
 
 
 def add_geobox(ds, crs=None):
@@ -175,7 +167,7 @@ def add_geobox(ds, crs=None):
 
     # Import the odc-geo package to add `.odc.x` attributes
     # to our input xarray object
-    import odc.geo.xr
+    import odc.geo.xr  # noqa
 
     # If a CRS is not found, use custom provided CRS
     if ds.odc.crs is None and crs is not None:
@@ -321,12 +313,7 @@ def xr_rasterize(
 
     # If an attribute column is specified, rasterise using vector
     # attribute values. Otherwise, rasterise into a boolean array
-    if attribute_col is not None:
-        # Use the geometry and attributes from `gdf` to create an iterable
-        shapes = zip(gdf_reproj.geometry, gdf_reproj[attribute_col])
-    else:
-        # Use geometry directly (will produce a boolean numpy array)
-        shapes = gdf_reproj.geometry
+    shapes = zip(gdf_reproj.geometry, gdf_reproj[attribute_col]) if attribute_col is not None else gdf_reproj.geometry
 
     # Rasterise shapes into a numpy array
     im = rasterio.features.rasterize(
@@ -490,18 +477,18 @@ def subpixel_contours(
     da = add_geobox(da, crs)
 
     # If z_values is supplied is not a list, convert to list:
-    z_values = z_values if (isinstance(z_values, list) or isinstance(z_values, np.ndarray)) else [z_values]
+    z_values = z_values if isinstance(z_values, [list, np.ndarray]) else [z_values]
 
     # If dask collection, load into memory
     if dask.is_dask_collection(da):
         if verbose:
-            print(f"Loading data into memory using Dask")
+            print("Loading data into memory using Dask")
         da = da.compute()
 
     # Test number of dimensions in supplied data array
     if len(da.shape) == 2:
         if verbose:
-            print(f"Operating in multiple z-value, single array mode")
+            print("Operating in multiple z-value, single array mode")
         dim = "z_value"
         contour_arrays = {_time_format(i, time_format): _contours_to_multiline(da, i, min_vertices) for i in z_values}
 
@@ -509,7 +496,7 @@ def subpixel_contours(
         # Test if only a single z-value is given when operating in
         # single z-value, multiple arrays mode
         if verbose:
-            print(f"Operating in single z-value, multiple arrays mode")
+            print("Operating in single z-value, multiple arrays mode")
         if len(z_values) > 1:
             raise ValueError("Please provide a single z-value when operating in single z-value, multiple arrays mode")
 
@@ -533,13 +520,12 @@ def subpixel_contours(
                     f"than the number of supplied `z_values` "
                     f"({len(z_values)})."
                 )
-            else:
-                raise ValueError(
-                    f"The provided `attribute_df` contains a different "
-                    f"number of rows ({len(attribute_df.index)}) "
-                    f"than the number of arrays along the '{dim}' "
-                    f"dimension ({len(da[dim])})."
-                )
+            raise ValueError(
+                f"The provided `attribute_df` contains a different "
+                f"number of rows ({len(attribute_df.index)}) "
+                f"than the number of arrays along the '{dim}' "
+                f"dimension ({len(da[dim])})."
+            )
 
     # Otherwise, use the contour keys as the only main attributes
     else:
@@ -578,7 +564,7 @@ def subpixel_contours(
             "values passed to `z_values` are valid and present "
             "in `da`"
         )
-    elif empty_contours.all() and errors == "ignore":
+    if empty_contours.all() and errors == "ignore":
         if verbose:
             print(
                 "Failed to generate any valid contours; verify that "
@@ -694,9 +680,9 @@ def idw(
 
     # Verify input and outputs have matching lengths
     if not (input_z.shape[0] == len(input_x) == len(input_y)):
-        raise ValueError(f"All of `input_z`, `input_x` and `input_y` must be the same length.")
+        raise ValueError("All of `input_z`, `input_x` and `input_y` must be the same length.")
     if not (len(output_x) == len(output_y)):
-        raise ValueError(f"Both `output_x` and `output_y` must be the same length.")
+        raise ValueError("Both `output_x` and `output_y` must be the same length.")
 
     # Verify k is smaller than total number of points, and non-zero
     if k > input_z.shape[0]:
@@ -704,8 +690,8 @@ def idw(
             f"The requested number of nearest neighbours (`k={k}`) "
             f"is smaller than the total number of points ({input_z.shape[0]})."
         )
-    elif k == 0:
-        raise ValueError(f"Interpolation based on `k=0` nearest neighbours is not valid.")
+    if k == 0:
+        raise ValueError("Interpolation based on `k=0` nearest neighbours is not valid.")
 
     # Create KDTree to efficiently find nearest neighbours
     points_xy = np.column_stack((input_y, input_x))
@@ -926,9 +912,7 @@ def xr_interpolate(
         interpolated_ds = interpolated_ds.interp_like(ds)
 
     # Ensure CRS is correctly set on output
-    interpolated_ds = interpolated_ds.odc.assign_crs(crs=ds.odc.crs)
-
-    return interpolated_ds
+    return interpolated_ds.odc.assign_crs(crs=ds.odc.crs)
 
 
 def interpolate_2d(ds, x_coords, y_coords, z_coords, method="linear", factor=1, verbose=False, **kwargs):
@@ -1125,9 +1109,7 @@ def largest_region(bool_array, **kwargs):
     largest_region_id = ids[np.argmax(counts)]
 
     # Produce a boolean array where 1 == the largest region
-    largest_region = blobs_labels == largest_region_id
-
-    return largest_region
+    return blobs_labels == largest_region_id
 
 
 def transform_geojson_wgs_to_epsg(geojson, EPSG):
@@ -1314,10 +1296,9 @@ def reverse_geocode(coords, site_classes=None, state_classes=None):
             # Return as site, state formatted string
             return f"{site}, {state}"
 
-        else:
-            # If no geocoding result, return N/E/S/W coordinates
-            print("No valid geocoded location; returning coordinates instead")
-            return f"{lat}, {lon}"
+        # If no geocoding result, return N/E/S/W coordinates
+        print("No valid geocoded location; returning coordinates instead")
+        return f"{lat}, {lon}"
 
     except (KeyError, AttributeError, GeocoderUnavailable, GeocoderServiceError):
         # If no geocoding result, return N/E/S/W coordinates
@@ -1362,8 +1343,7 @@ def hillshade(dem, elevation, azimuth, vert_exag=1, dx=30, dy=30):
 
     from matplotlib.colors import LightSource
 
-    hs = LightSource(azdeg=azimuth, altdeg=elevation).hillshade(dem, vert_exag=vert_exag, dx=dx, dy=dy)
-    return hs
+    return LightSource(azdeg=azimuth, altdeg=elevation).hillshade(dem, vert_exag=vert_exag, dx=dx, dy=dy)
 
 
 def sun_angles(dc, query):
@@ -1418,6 +1398,4 @@ def sun_angles(dc, query):
     )
 
     # Combine into new xarray.Dataset
-    sun_angles_ds = xr.merge([sun_elevation.rename("sun_elevation"), sun_azimuth.rename("sun_azimuth")])
-
-    return sun_angles_ds
+    return xr.merge([sun_elevation.rename("sun_elevation"), sun_azimuth.rename("sun_azimuth")])

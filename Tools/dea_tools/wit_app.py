@@ -24,25 +24,22 @@ Last modified: March 2025
 
 # Import required packages
 
-import datetime
+import itertools
+import os
+import warnings
+
 import geopandas as gpd
 import imageio
-import itertools
-import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pandas as pd
-import shutil
-import warnings
 import xarray as xr
 
-import sys
-
 from .bandindices import calculate_indices
+from .dask import create_local_dask_cluster
 from .datahandling import load_ard
 from .spatial import xr_rasterize
-from .dask import create_local_dask_cluster
 from .wetlands import normalise_wit
 
 # Create local dask cluster to improve data load time
@@ -281,21 +278,21 @@ def classify_pixel(pv, npv, bs):
     """
     if pv > 2 / 3:
         return 8  # pv
-    elif npv > 2 / 3:
+    if npv > 2 / 3:
         return 0  # ng
-    elif bs > 2 / 3:
+    if bs > 2 / 3:
         return 4  # bs
-    elif npv > 1 / 3 and bs > 1 / 3 and pv < 1 / 3:
+    if npv > 1 / 3 and bs > 1 / 3 and pv < 1 / 3:
         return 1  # ng_bs
-    elif npv > 1 / 3 and pv > 1 / 3 and bs < 1 / 3:
+    if npv > 1 / 3 and pv > 1 / 3 and bs < 1 / 3:
         return 3  # ng_pv
-    elif npv > 1 / 3 and pv < 1 / 3 and bs < 1 / 3:
+    if npv > 1 / 3 and pv < 1 / 3 and bs < 1 / 3:
         return 2  # ng_mix
-    elif bs > 1 / 3 and pv > 1 / 3 and npv < 1 / 3:
+    if bs > 1 / 3 and pv > 1 / 3 and npv < 1 / 3:
         return 6  # bs_pv
-    elif bs > 1 / 3 and pv < 1 / 3 and npv < 1 / 3:
+    if bs > 1 / 3 and pv < 1 / 3 and npv < 1 / 3:
         return 5  # bs_mix
-    elif pv > 1 / 3 and npv < 1 / 3 and bs < 1 / 3:
+    if pv > 1 / 3 and npv < 1 / 3 and bs < 1 / 3:
         return 7  # pv_mix
     return -1
 

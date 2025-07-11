@@ -10,26 +10,21 @@ Last modified: September 2021
 """
 
 # Load modules
-import os
-import dask
 import datacube
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-import matplotlib.pyplot as plt
+from datacube.utils.geometry import CRS
+from ipyleaflet import basemap_to_tiles, basemaps
 from odc.algo import xr_geomedian
 from odc.ui import select_on_a_map
-from dask.utils import parse_bytes
-from datacube.utils.geometry import CRS
-from datacube.utils.rio import configure_s3_access
-from datacube.utils.dask import start_local_dask
-from ipyleaflet import basemaps, basemap_to_tiles
+
+from dea_tools.coastal import tidal_tag
+from dea_tools.dask import create_local_dask_cluster
 
 # Load utility functions
-import sys
-from ..datahandling import load_ard, mostcommon_crs
-from ..coastal import tidal_tag
-from ..dask import create_local_dask_cluster
+from dea_tools.datahandling import load_ard, mostcommon_crs
 
 
 def run_filmstrip_app(

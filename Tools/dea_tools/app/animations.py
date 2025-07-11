@@ -5,62 +5,50 @@ produce animations for multiple DEA products.
 """
 
 # Import required packages
-import fiona
-import sys
-import datacube
-import warnings
-import matplotlib.pyplot as plt
-from datacube.utils.geometry import CRS
-from ipyleaflet import (
-    WMSLayer,
-    basemaps,
-    basemap_to_tiles,
-    Map,
-    DrawControl,
-    WidgetControl,
-    SearchControl,
-    Marker,
-    LayerGroup,
-    LayersControl,
-    GeoData,
-)
-from traitlets import Unicode
-from ipywidgets import (
-    GridspecLayout,
-    Button,
-    Layout,
-    HBox,
-    VBox,
-    HTML,
-    Output,
-)
-import json
-import itertools
-import numpy as np
-import geopandas as gpd
-from io import BytesIO
-import ipywidgets as widgets
 import datetime
-from skimage import exposure
-from skimage.filters import unsharp_mask
+import itertools
+import json
+import warnings
+from io import BytesIO
 
-from datacube.utils import masking
+import datacube
+import geopandas as gpd
+import ipywidgets as widgets
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from datacube.utils.geometry import Geometry
 from datacube.utils.masking import mask_invalid_data
-from .widgetconstructors import (
-    create_html,
-    create_drawcontrol,
-    create_map,
-    create_datepicker,
-    create_inputtext,
-    create_checkbox,
-    create_dropdown,
-    create_dea_wms_layer,
+from ipyleaflet import (
+    LayerGroup,
+    Marker,
+    SearchControl,
+    basemap_to_tiles,
+    basemaps,
 )
-from ..dask import create_local_dask_cluster
-from ..spatial import reverse_geocode
+from ipywidgets import (
+    HTML,
+    Button,
+    GridspecLayout,
+    HBox,
+    Layout,
+    Output,
+    VBox,
+)
+from skimage.filters import unsharp_mask
 
-import warnings
+from dea_tools.app.widgetconstructors import (
+    create_checkbox,
+    create_datepicker,
+    create_drawcontrol,
+    create_dropdown,
+    create_html,
+    create_map,
+)
+from dea_tools.coastal import get_coastlines
+from dea_tools.dask import create_local_dask_cluster
+from dea_tools.spatial import reverse_geocode
 
 warnings.filterwarnings("ignore")
 
@@ -285,12 +273,6 @@ def plot_data(self, fname):
 
 
 def deacoastlines_overlay(ds):
-    import geopandas as gpd
-    import pandas as pd
-    import matplotlib
-    from shapely.geometry import box, Point
-    from dea_tools.coastal import get_coastlines
-
     # Get bounding box of data
     xmin, ymin, xmax, ymax = ds.geobox.geographic_extent.boundingbox
     bounds = [xmin, ymin, xmax, ymax]
@@ -304,8 +286,8 @@ def deacoastlines_overlay(ds):
     deacl_gdf = deacl_gdf.dissolve("year")  # values("year", ascending=True)
 
     # Apply colours
-    norm = matplotlib.colors.Normalize(vmin=0, vmax=len(deacl_gdf.index))
-    cmap = matplotlib.cm.get_cmap("inferno")
+    norm = mpl.colors.Normalize(vmin=0, vmax=len(deacl_gdf.index))
+    cmap = mpl.cm.get_cmap("inferno")
     rgba = cmap(norm(deacl_gdf.reset_index().index))
     deacl_gdf["color"] = list(rgba)
     deacl_gdf["start_time"] = pd.to_datetime(deacl_gdf.index) + pd.DateOffset(months=0)
@@ -313,8 +295,7 @@ def deacoastlines_overlay(ds):
 
     if len(deacl_gdf.index) > 0:
         return deacl_gdf
-    else:
-        return None
+    return None
 
 
 class animation_app(HBox):

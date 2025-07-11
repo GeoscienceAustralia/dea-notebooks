@@ -50,7 +50,7 @@ def predict_tide(timepoints):
     constituents of the tidal spectrum and of the long period wave constituents
     of the tidal spectrum.
     """
-    from pyfes import Handler
+    from pyfes import Handler  # noqa
 
     lons, lats, times = tuple(np.array(timepoints).T)
     # aviso-fes requires naive UTC times in microseconds

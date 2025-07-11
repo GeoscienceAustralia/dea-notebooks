@@ -20,39 +20,33 @@ on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 Last modified: May 2021
 """
 
+import multiprocessing as mp
 import os
 import sys
+import time
+import warnings
+from abc import ABCMeta, abstractmethod
+from copy import deepcopy
+from datetime import timedelta
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import dask.array as da
+import dask.distributed as dd
+import geopandas as gpd
 import joblib
 import numpy as np
 import pandas as pd
 import xarray as xr
-import time
-import warnings
-from datetime import timedelta
-import geopandas as gpd
-from copy import deepcopy
-from tqdm.auto import tqdm
-import multiprocessing as mp
-import matplotlib.pyplot as plt
-
-from typing import Callable, Tuple, Any, Optional, List, Dict
-
-import dask.array as da
 from dask_ml.wrappers import ParallelPostFit
-import dask.distributed as dd
-from dask.diagnostics import ProgressBar
-
-from sklearn.cluster import KMeans
-from sklearn.utils import check_random_state
-from abc import ABCMeta, abstractmethod
-from sklearn.base import ClusterMixin
-from sklearn.mixture import GaussianMixture
-from sklearn.cluster import AgglomerativeClustering
-from sklearn.model_selection import KFold, ShuffleSplit
-from sklearn.model_selection import BaseCrossValidator
-
-from odc.geo.xr import assign_crs
 from odc.geo.geom import Geometry
+from odc.geo.xr import assign_crs
+from sklearn.base import ClusterMixin
+from sklearn.cluster import AgglomerativeClustering, KMeans
+from sklearn.mixture import GaussianMixture
+from sklearn.model_selection import BaseCrossValidator, KFold, ShuffleSplit
+from sklearn.utils import check_random_state
+from tqdm.auto import tqdm
+
 from .spatial import xr_rasterize
 
 
@@ -89,10 +83,7 @@ def sklearn_flatten(input_xr):
         input_xr = input_xr.to_array()
 
     # stack across pixel dimensions, handling timeseries if necessary
-    if "time" in input_xr.dims:
-        stacked = input_xr.stack(z=["x", "y", "time"])
-    else:
-        stacked = input_xr.stack(z=["x", "y"])
+    stacked = input_xr.stack(z=["x", "y", "time"]) if "time" in input_xr.dims else input_xr.stack(z=["x", "y"])
 
     # finding 'bands' dimensions in each pixel - these will not be
     # flattened as their context is important for sklearn
@@ -114,9 +105,7 @@ def sklearn_flatten(input_xr):
     # the dimension we are masking along ('z') needs to be the first
     # dimension in the underlying np array for the boolean indexing to work
     stacked = stacked.transpose("z", *pxdims)
-    input_np = stacked.data[~mask]
-
-    return input_np
+    return stacked.data[~mask]
 
 
 def sklearn_unflatten(output_np, input_xr):
@@ -157,10 +146,7 @@ def sklearn_unflatten(output_np, input_xr):
         input_xr = input_xr.to_array()
 
     # generate the same mask we used to create the input to the sklearn model
-    if "time" in input_xr.dims:
-        stacked = input_xr.stack(z=["x", "y", "time"])
-    else:
-        stacked = input_xr.stack(z=["x", "y"])
+    stacked = input_xr.stack(z=["x", "y", "time"]) if "time" in input_xr.dims else input_xr.stack(z=["x", "y"])
 
     pxdims = []
     for dim in stacked.dims:
@@ -191,9 +177,7 @@ def sklearn_unflatten(output_np, input_xr):
         ],
     )
 
-    output_xr = output_xr.unstack()
-
-    return output_xr
+    return output_xr.unstack()
 
 
 def fit_xr(model, input_xr):
@@ -216,8 +200,7 @@ def fit_xr(model, input_xr):
 
     """
 
-    model = model.fit(sklearn_flatten(input_xr))
-    return model
+    return model.fit(sklearn_flatten(input_xr))
 
 
 def predict_xr(
@@ -303,10 +286,10 @@ def predict_xr(
         # reshape for prediction
         input_data_flattened = da.array(input_data_flattened).transpose()
 
-        if clean == True:
+        if clean:
             input_data_flattened = da.where(da.isfinite(input_data_flattened), input_data_flattened, 0)
 
-        if (proba == True) & (persist == True):
+        if proba & persist:
             # persisting data so we don't require loading all the data twice
             input_data_flattened = input_data_flattened.persist()
 
@@ -315,7 +298,7 @@ def predict_xr(
         out_class = model.predict(input_data_flattened)
 
         # Mask out NaN or Inf values in results
-        if clean == True:
+        if clean:
             out_class = da.where(da.isfinite(out_class), out_class, 0)
 
         # Reshape when writing out
@@ -326,12 +309,12 @@ def predict_xr(
 
         output_xr = output_xr.to_dataset(name="Predictions")
 
-        if proba == True:
+        if proba:
             print("   probabilities...")
             out_proba = model.predict_proba(input_data_flattened)
 
             # return either one band with the max probability, or the whole probability array
-            if max_proba == True:
+            if max_proba:
                 print("   returning single probability band")
                 out_proba = da.max(out_proba, axis=1) * 100.0
                 out_proba = out_proba.reshape(len(y), len(x))
@@ -353,10 +336,10 @@ def predict_xr(
                 # merge in the probabilities
                 output_xr = xr.merge([output_xr, probabilities_dataset])
 
-            if clean == True:
+            if clean:
                 out_proba = da.where(da.isfinite(out_proba), out_proba, 0)
 
-        if return_input == True:
+        if return_input:
             print("   input features...")
             # unflatten the input_data_flattened array and append
             # to the output_xr containin the predictions
@@ -390,7 +373,7 @@ def predict_xr(
 
         return assign_crs(output_xr, str(crs))
 
-    if dask == True:
+    if dask:
         # convert model to dask predict
         model = ParallelPostFit(model)
         with joblib.parallel_backend("dask"):
@@ -478,7 +461,7 @@ def _get_training_data_for_shp(
 
     # remove dask chunks if supplied as using
     # mulitprocessing for parallization
-    if "dask_chunks" in dc_query.keys():
+    if "dask_chunks" in dc_query:
         dc_query.pop("dask_chunks", None)
 
     # set up query based on polygon
@@ -520,13 +503,13 @@ def _get_training_data_for_shp(
                 + " x and y dimensions."
             )
 
-    if return_coords == True:
+    if return_coords:
         # turn coords into a variable in the ds
         data["x_coord"] = data.x + 0 * data.y
         data["y_coord"] = data.y + 0 * data.x
 
     # append ID measurement to dataset for tracking failures
-    band = [m for m in data.data_vars][0]
+    band = list(data.data_vars)[0]
     _id = xr.zeros_like(data[band])
     data["id"] = _id
     data["id"] = data["id"] + gdf.iloc[index]["id"]
@@ -841,7 +824,7 @@ def collect_training_data(
     model_col_indices = [column_names.index(var_name) for var_name in idx_var]
     model_input = model_input[:, model_col_indices]
 
-    if clean == True:
+    if clean:
         num = np.count_nonzero(np.isnan(model_input).any(axis=1))
         model_input = model_input[~np.isnan(model_input).any(axis=1)]
         model_input = model_input[~np.isinf(model_input).any(axis=1)]

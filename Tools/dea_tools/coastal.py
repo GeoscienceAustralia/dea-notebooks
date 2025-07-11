@@ -22,28 +22,23 @@ Last modified: July 2024
 
 # Import required packages
 import os
-import pyproj
 import pathlib
 import warnings
-import scipy.interpolate
-import numpy as np
-import xarray as xr
-import pandas as pd
+from functools import partial
+
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-from scipy import stats
-from warnings import warn
-from functools import partial
-from shapely.geometry import box, shape
-from owslib.wfs import WebFeatureService
-
+import numpy as np
+import pandas as pd
+import pyproj
+import xarray as xr
 from odc.geo.crs import CRS
-from .datahandling import parallel_apply
-from .spatial import idw
-
-# Fix converters for tidal plot
+from owslib.wfs import WebFeatureService
 from pandas.plotting import register_matplotlib_converters
+from scipy import stats
+from shapely.geometry import box
+
+from .spatial import idw
 
 register_matplotlib_converters()
 
@@ -99,6 +94,7 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
     """
 
     import warnings
+
     from shapely.errors import ShapelyDeprecationWarning
     from shapely.geometry import Point
 
@@ -137,9 +133,7 @@ def transect_distances(transects_gdf, lines_gdf, mode="distance"):
             )
 
         # Calculate distances between valid start and end points
-        distance_df = point_df.apply(lambda x: x.start.distance(x.end) if x.start else None, axis=1)
-
-        return distance_df
+        return point_df.apply(lambda x: x.start.distance(x.end) if x.start else None, axis=1)
 
     # Run code after ignoring Shapely pre-v2.0 warnings
     with warnings.catch_warnings():
@@ -241,10 +235,10 @@ def _model_tides(
 
     import pyTMD.eop
     import pyTMD.io
-    import pyTMD.time
     import pyTMD.io.model
     import pyTMD.predict
     import pyTMD.spatial
+    import pyTMD.time
     import pyTMD.utilities
 
     # Get parameters for tide model; use custom definition file for
@@ -980,6 +974,7 @@ def model_tides(
     # Parallelise if either multiple models or multiple splits requested
     if parallel & ((len(models_to_process) > 1) | (parallel_splits > 1)):
         from concurrent.futures import ProcessPoolExecutor
+
         from tqdm import tqdm
 
         with ProcessPoolExecutor() as executor:
@@ -1414,9 +1409,8 @@ def pixel_tides(
         )
         return tides_highres, tides_lowres
 
-    else:
-        print("Returning low resolution tide array")
-        return tides_lowres
+    print("Returning low resolution tide array")
+    return tides_lowres
 
 
 def tidal_tag(
@@ -1482,8 +1476,6 @@ def tidal_tag(
     location used in the analysis).
 
     """
-
-    import odc.geo.xr
 
     warnings.warn(
         "This function has been moved to the `eo-tides` Python package, "
@@ -1560,8 +1552,7 @@ def tidal_tag(
 
     if return_tideposts:
         return ds, tidepost_lon, tidepost_lat
-    else:
-        return ds
+    return ds
 
 
 def tidal_stats(
@@ -1896,8 +1887,7 @@ def tidal_tag_otps(
 
     # Load tide modelling functions from either OTPS for pyfes
     try:
-        from otps import TimePoint
-        from otps import predict_tide
+        from otps import TimePoint, predict_tide
     except ImportError:
         from dea_tools.pyfes_model import TimePoint, predict_tide
 
@@ -1911,7 +1901,7 @@ def tidal_tag_otps(
         print(f"Using user-supplied tide modelling location: {tidepost_lon:.2f}, {tidepost_lat:.2f}")
 
     # Use the tidal model to compute tide heights for each observation:
-    print(f"Modelling tides using OTPS and the TPXO8 tidal model")
+    print("Modelling tides using OTPS and the TPXO8 tidal model")
     obs_datetimes = ds.time.data.astype("M8[s]").astype("O").tolist()
     obs_timepoints = [TimePoint(tidepost_lon, tidepost_lat, dt) for dt in obs_datetimes]
     obs_predictedtides = predict_tide(obs_timepoints)
@@ -1956,17 +1946,15 @@ def tidal_tag_otps(
 
         if return_tideposts:
             return ds, tidepost_lon, tidepost_lat
-        else:
-            return ds
+        return ds
 
-    else:
-        raise ValueError(
-            f"Tides could not be modelled for dataset centroid located "
-            f"at {tidepost_lon:.2f}, {tidepost_lat:.2f}. This can occur if "
-            f"this coordinate occurs over land. Please manually specify "
-            f"a tide modelling location located over water using the "
-            f"`tidepost_lat` and `tidepost_lon` parameters."
-        )
+    raise ValueError(
+        f"Tides could not be modelled for dataset centroid located "
+        f"at {tidepost_lon:.2f}, {tidepost_lat:.2f}. This can occur if "
+        f"this coordinate occurs over land. Please manually specify "
+        f"a tide modelling location located over water using the "
+        f"`tidepost_lat` and `tidepost_lon` parameters."
+    )
 
 
 def tidal_stats_otps(
@@ -2074,8 +2062,7 @@ def tidal_stats_otps(
 
     # Load tide modelling functions from either OTPS for pyfes
     try:
-        from otps import TimePoint
-        from otps import predict_tide
+        from otps import TimePoint, predict_tide
     except ImportError:
         from dea_tools.pyfes_model import TimePoint, predict_tide
 
@@ -2278,6 +2265,4 @@ def glint_angle(solar_azimuth, solar_zenith, view_azimuth, view_zenith):
     ) * np.cos(phi)
 
     # Convert to degrees
-    glint_array = np.degrees(np.arccos(glint_angle))
-
-    return glint_array
+    return np.degrees(np.arccos(glint_angle))

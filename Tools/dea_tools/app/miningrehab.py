@@ -10,25 +10,21 @@ Available functions:
 Last modified: September 2021
 """
 
-# Load modules
-from ipyleaflet import Map, GeoJSON, DrawControl, basemaps
-import datetime as dt
+import warnings
+
 import datacube
 import geopandas as gpd
-import numpy as np
+import ipywidgets as widgets
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import rasterio.features
-import IPython
-from IPython.display import display
-import warnings
-import ipywidgets as widgets
 from datacube.utils import masking
+from ipyleaflet import DrawControl, GeoJSON, Map, basemaps
+from IPython.display import display
 
-# Load utility functions
-import sys
-from ..datahandling import wofs_fuser
-from ..spatial import transform_geojson_wgs_to_epsg
+from dea_tools.datahandling import wofs_fuser
+from dea_tools.spatial import transform_geojson_wgs_to_epsg
 
 
 def load_miningrehab_data():

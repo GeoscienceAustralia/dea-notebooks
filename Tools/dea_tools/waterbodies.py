@@ -20,10 +20,10 @@ Last modified: March 2024
 """
 
 import geopandas as gpd
-from owslib.wfs import WebFeatureService
-from owslib.fes import PropertyIsEqualTo
-from owslib.etree import etree
 import pandas as pd
+from owslib.etree import etree
+from owslib.fes import PropertyIsEqualTo
+from owslib.wfs import WebFeatureService
 
 WFS_ADDRESS = "https://geoserver.dea.ga.gov.au/geoserver/wfs"
 LAYER_SELECT = {"v2": "DigitalEarthAustraliaWaterbodies_v2", "v3": "DigitalEarthAustraliaWaterbodies_v3"}
@@ -50,8 +50,7 @@ def get_waterbody(geohash: str, version: str = "v3") -> gpd.GeoDataFrame:
         filter=filterxml,
         outputFormat="json",
     )
-    wb_gpd = gpd.read_file(response)
-    return wb_gpd
+    return gpd.read_file(response)
 
 
 def get_waterbodies(bbox: tuple, crs="EPSG:4326", version: str = "v3") -> gpd.GeoDataFrame:
@@ -75,8 +74,7 @@ def get_waterbodies(bbox: tuple, crs="EPSG:4326", version: str = "v3") -> gpd.Ge
         bbox=tuple(bbox) + (crs,),
         outputFormat="json",
     )
-    wb_gpd = gpd.read_file(response)
-    return wb_gpd
+    return gpd.read_file(response)
 
 
 def get_geohashes(bbox: tuple = None, crs: str = "EPSG:4326", version: str = "v3") -> [str]:

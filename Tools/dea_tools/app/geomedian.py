@@ -6,7 +6,6 @@ the geomedian summary statistic.
 # Load modules
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import xarray as xr
 from odc.algo import xr_geomedian
@@ -237,7 +236,7 @@ def run_app():
         j, {"p1r": p1r, "p2r": p2r, "p3r": p3r, "p1g": p1g, "p2g": p2g, "p3g": p3g, "p1b": p1b, "p2b": p2b, "p3b": p3b}
     )
 
-    app_output = widgets.HBox([
+    return widgets.HBox([
         widgets.VBox([
             widgets.HBox([outh, widgets.VBox([p1r, p1g, p1b])]),
             widgets.HBox([outhh, widgets.VBox([p2r, p2g, p2b])]),
@@ -245,5 +244,3 @@ def run_app():
         ]),
         widgets.VBox([widgets.HBox([widgets.VBox([outf, outi]), widgets.VBox([outg, outii])]), outj]),
     ])
-
-    return app_output

@@ -26,21 +26,20 @@ import datetime
 import os
 import warnings
 import zipfile
-import requests
 from collections import Counter
 
-import rioxarray
 import numpy as np
+import odc.algo
+import odc.geo.xr
 import pandas as pd
-import xarray as xr
+import requests
+import rioxarray
 import sklearn.decomposition
+import xarray as xr
+from odc.algo import mask_cleanup
 from scipy.ndimage import binary_dilation
 from skimage.color import hsv2rgb, rgb2hsv
 from skimage.exposure import match_histograms
-
-import odc.geo.xr
-import odc.algo
-from odc.algo import mask_cleanup
 
 
 def _dc_query_only(**kw):
@@ -295,7 +294,7 @@ def load_ard(
         )
 
     # Determine whether products are all Landsat, all S2, or mixed
-    elif all([product in valid_ls for product in products]):
+    if all([product in valid_ls for product in products]):
         product_type = "ls"
     elif all([product in valid_s2 for product in products]):
         product_type = "s2"
@@ -364,7 +363,7 @@ def load_ard(
     # if a resampling dictionary (e.g. `resampling={'*': 'bilinear',
     # 'oa_fmask': 'mode'}` is passed instead we assume the user wants
     # to select custom resampling methods for each of their bands.
-    resampling = kwargs.get("resampling", None)
+    resampling = kwargs.get("resampling")
 
     if isinstance(resampling, str) and resampling not in (None, "nearest"):
         kwargs["resampling"] = {
@@ -513,7 +512,7 @@ def load_ard(
             )
 
     # Morphological filtering on cloud masks
-    if (mask_filters is not None) & (mask_pixel_quality != False):
+    if (mask_filters is not None) & mask_pixel_quality:
         if verbose:
             print(f"Applying morphological filters to pixel quality mask: {mask_filters}")
 
@@ -594,10 +593,9 @@ def load_ard(
         if verbose:
             print(f"Returning {len(ds.time)} time steps as a dask array")
         return ds
-    else:
-        if verbose:
-            print(f"Loading {len(ds.time)} time steps")
-        return ds.compute()
+    if verbose:
+        print(f"Loading {len(ds.time)} time steps")
+    return ds.compute()
 
 
 def mostcommon_crs(dc, product, query):
@@ -655,16 +653,15 @@ def mostcommon_crs(dc, product, query):
 
         return crs_mostcommon
 
-    else:
-        raise ValueError(
-            f"No CRS was returned as no data was found for "
-            f"the supplied product ({product}) and query. "
-            f"Please ensure that data is available for "
-            f"{product} for the spatial extents and time "
-            f"period specified in the query (e.g. by using "
-            f"the Data Cube Explorer for this datacube "
-            f"instance)."
-        )
+    raise ValueError(
+        f"No CRS was returned as no data was found for "
+        f"the supplied product ({product}) and query. "
+        f"Please ensure that data is available for "
+        f"{product} for the spatial extents and time "
+        f"period specified in the query (e.g. by using "
+        f"the Data Cube Explorer for this datacube "
+        f"instance)."
+    )
 
 
 def download_unzip(url, output_dir=None, remove_zip=True):
@@ -982,10 +979,7 @@ def parallel_apply(ds, dim, func, use_threads=False, *args, **kwargs):
     from tqdm import tqdm
 
     # Use threads or processes
-    if use_threads:
-        Executor = ThreadPoolExecutor
-    else:
-        Executor = ProcessPoolExecutor
+    Executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
 
     with Executor as executor:
         # Update func to add kwargs
@@ -1090,9 +1084,7 @@ def _brovey_pansharpen(ds, pan_band, band_weights=None):
 
     # Perform Brovey Transform in form of: band / total * panchromatic
     da_pansharpened = da_nopan / da_total * da_pan
-    ds_pansharpened = da_pansharpened.to_dataset("variable")
-
-    return ds_pansharpened
+    return da_pansharpened.to_dataset("variable")
 
 
 def _esri_pansharpen(ds, pan_band, band_weights=None):
@@ -1138,9 +1130,7 @@ def _esri_pansharpen(ds, pan_band, band_weights=None):
     # Calculate adjustment and apply to multispectral bands
     adj = da_pan - da_mean
     da_pansharpened = da_nopan + adj
-    ds_pansharpened = da_pansharpened.to_dataset("variable")
-
-    return ds_pansharpened
+    return da_pansharpened.to_dataset("variable")
 
 
 def _simple_mean_pansharpen(ds, pan_band):
@@ -1169,9 +1159,7 @@ def _simple_mean_pansharpen(ds, pan_band):
     da_pan = ds[pan_band]
 
     # Take mean of pan band and RGBs
-    ds_pansharpened = (ds_nopan + da_pan) / 2.0
-
-    return ds_pansharpened
+    return (ds_nopan + da_pan) / 2.0
 
 
 def _hsv_timestep_pansharpen(ds_i, pan_band):
@@ -1212,9 +1200,7 @@ def _hsv_timestep_pansharpen(ds_i, pan_band):
 
     # Add back into original array, reshape and return dataframe
     da_i_nopan[:] = pansharped_array
-    ds_pansharpened = da_i_nopan.to_dataset("variable")
-
-    return ds_pansharpened
+    return da_i_nopan.to_dataset("variable")
 
 
 def _pca_timestep_pansharpen(ds_i, pan_band, pca_rescaling="histogram"):
@@ -1274,9 +1260,7 @@ def _pca_timestep_pansharpen(ds_i, pan_band, pca_rescaling="histogram"):
 
     # Add back into original array, reshape and return dataframe
     da_2d_nopan[:] = pansharped_array
-    ds_pansharpened = da_2d_nopan.unstack("pixel").to_dataset("variable")
-
-    return ds_pansharpened
+    return da_2d_nopan.unstack("pixel").to_dataset("variable")
 
 
 def xr_pansharpen(
@@ -1526,6 +1510,4 @@ def load_reproject(
     )
 
     # Squeeze if only one band
-    da = da.squeeze()
-
-    return da
+    return da.squeeze()

@@ -23,7 +23,6 @@ Last modified: June 2022
 """
 
 import ipyleaflet as leaflet
-from ipyleaflet import LayersControl
 import ipywidgets as widgets
 from traitlets import Unicode
 
@@ -47,9 +46,7 @@ def create_datepicker(description="", value=None, layout={"width": "85%"}):
 
     """
 
-    date_picker = widgets.DatePicker(description=description, layout=layout, disabled=False, value=value)
-
-    return date_picker
+    return widgets.DatePicker(description=description, layout=layout, disabled=False, value=value)
 
 
 def create_inputtext(value, placeholder, description="", layout={"width": "85%"}):
@@ -75,11 +72,7 @@ def create_inputtext(value, placeholder, description="", layout={"width": "85%"}
 
     """
 
-    input_text = widgets.Text(
-        value=value, placeholder=placeholder, description=description, layout=layout, disabled=False
-    )
-
-    return input_text
+    return widgets.Text(value=value, placeholder=placeholder, description=description, layout=layout, disabled=False)
 
 
 def create_boundedfloattext(value, min_val, max_val, step_val, description="", layout={"width": "85%"}):
@@ -109,7 +102,7 @@ def create_boundedfloattext(value, min_val, max_val, step_val, description="", l
 
     """
 
-    float_text = widgets.BoundedFloatText(
+    return widgets.BoundedFloatText(
         value=value,
         min=min_val,
         max=max_val,
@@ -118,8 +111,6 @@ def create_boundedfloattext(value, min_val, max_val, step_val, description="", l
         layout=layout,
         disabled=False,
     )
-
-    return float_text
 
 
 def create_dropdown(options, value, description="", layout={"width": "85%"}):
@@ -145,15 +136,13 @@ def create_dropdown(options, value, description="", layout={"width": "85%"}):
 
     """
 
-    dropdown = widgets.Dropdown(
+    return widgets.Dropdown(
         options=options,
         value=value,
         description=description,
         layout=layout,
         disabled=False,
     )
-
-    return dropdown
 
 
 def create_checkbox(value, description="", layout={"width": "85%"}):
@@ -177,9 +166,7 @@ def create_checkbox(value, description="", layout={"width": "85%"}):
 
     """
 
-    checklist = widgets.Checkbox(value=value, description=description, layout=layout, disabled=False, indent=False)
-
-    return checklist
+    return widgets.Checkbox(value=value, description=description, layout=layout, disabled=False, indent=False)
 
 
 def create_html(value):
@@ -199,11 +186,9 @@ def create_html(value):
 
     """
 
-    html = widgets.HTML(
+    return widgets.HTML(
         value=value,
     )
-
-    return html
 
 
 def create_map(
@@ -242,9 +227,7 @@ def create_map(
     basemap_tiles = leaflet.basemap_to_tiles(basemap)
     basemap_tiles.name = basemap_name
 
-    m = leaflet.Map(center=map_center, zoom=zoom_level, basemap=basemap_tiles, scroll_wheel_zoom=True, **kwargs)
-
-    return m
+    return leaflet.Map(center=map_center, zoom=zoom_level, basemap=basemap_tiles, scroll_wheel_zoom=True, **kwargs)
 
 
 def create_dea_wms_layer(product, date, **params):
@@ -271,7 +254,7 @@ def create_dea_wms_layer(product, date, **params):
     class TimeWMSLayer(leaflet.WMSLayer):
         time = Unicode("").tag(sync=True, o=True)
 
-    time_wms = TimeWMSLayer(
+    return TimeWMSLayer(
         url="https://ows.dea.ga.gov.au/",
         layers=product,
         time=date,
@@ -280,8 +263,6 @@ def create_dea_wms_layer(product, date, **params):
         attribution="Digital Earth Australia",
         **params,
     )
-
-    return time_wms
 
 
 def create_drawcontrol(

@@ -20,6 +20,7 @@ Last modified: June 2023
 
 # Import required packages
 import warnings
+
 import numpy as np
 
 
@@ -271,12 +272,12 @@ def calculate_indices(ds, index=None, collection=None, custom_varname=None, norm
         # choose from the list of valid options
         if index is None:
             raise ValueError(
-                f"No remote sensing `index` was provided. Please "
+                "No remote sensing `index` was provided. Please "
                 "refer to the function \ndocumentation for a full "
                 "list of valid options for `index` (e.g. 'NDVI')"
             )
 
-        elif index in ["WI", "BAEI", "AWEI_ns", "AWEI_sh", "EVI", "LAI", "SAVI", "MSAVI"] and not normalise:
+        if index in ["WI", "BAEI", "AWEI_ns", "AWEI_sh", "EVI", "LAI", "SAVI", "MSAVI"] and not normalise:
             warnings.warn(
                 f"\nA coefficient-based index ('{index}') normally "
                 "applied to surface reflectance values in the \n"
@@ -305,7 +306,7 @@ def calculate_indices(ds, index=None, collection=None, custom_varname=None, norm
                 "using the correct spectral bands"
             )
 
-        elif collection == "ga_ls_3":
+        if collection == "ga_ls_3":
             # Dictionary mapping full data names to simpler 'red' alias names
             bandnames_dict = {
                 "nbart_nir": "nir",

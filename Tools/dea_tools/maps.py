@@ -19,11 +19,9 @@ GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 Last modified: July 2025
 """
 
-import numpy
-
 import folium
 import folium.plugins
-
+import numpy as np
 
 # Attempt to import datacube and raise an error if not available
 try:
@@ -112,7 +110,7 @@ def valid_data_mask(data):
         # adopted from odc.algo._rgba.to_rgba_np
         nodata = data_array.attrs.get("nodata")
         if data_array.dtype.kind == "f":
-            valid = ~numpy.isnan(data_array)
+            valid = ~np.isnan(data_array)
             if nodata is not None:
                 valid = valid & (data_array != nodata)
         elif nodata is not None:
@@ -308,7 +306,7 @@ def ipyleaflet_map(
     -------
     the newly created `ipyleaflet` map
     """
-    import ipyleaflet
+    import ipyleaflet  # noqa
 
     im = ipyleaflet_map_default(bounding_box(data), zoom=zoom, center=center, **ipyleaflet_map_kwargs)
 

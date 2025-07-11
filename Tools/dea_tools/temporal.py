@@ -19,20 +19,17 @@ GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 Last modified: May 2024
 """
 
-import sys
+import warnings
+
 import dask
 import dask.array as da
-import warnings
 import numpy as np
-import xarray as xr
 import pandas as pd
 import scipy.signal
-from scipy.signal import wiener
-from scipy.stats import t
-from packaging import version
-
-import odc.geo.xr
+import xarray as xr
 from odc.geo.xr import assign_crs
+from packaging import version
+from scipy.stats import t
 
 
 def allNaN_arg(da, dim, stat):
@@ -47,7 +44,7 @@ def allNaN_arg(da, dim, stat):
     dim : str
         Dimension over which to calculate argmax, argmin e.g. 'time'
     stat : str
-        The statistic to calculte, either 'min' for argmin()
+        The statistic to calculate, either 'min' for argmin()
         or 'max' for .argmax()
 
     Returns
@@ -60,12 +57,12 @@ def allNaN_arg(da, dim, stat):
     if stat == "max":
         y = da.fillna(float(da.min() - 1))
         y = y.argmax(dim=dim, skipna=True).where(~mask)
-        return y
 
     if stat == "min":
         y = da.fillna(float(da.max() + 1))
         y = y.argmin(dim=dim, skipna=True).where(~mask)
-        return y
+
+    return y
 
 
 def _vpos(da):
@@ -285,8 +282,7 @@ def xr_phenology(
     if dask.is_dask_collection(da):
         if version.parse(xr.__version__) < version.parse("0.16.0"):
             raise TypeError(
-                "Dask arrays are not currently supported by this function, "
-                + "run da.compute() before passing dataArray."
+                "Dask arrays are not currently supported by this function, run da.compute() before passing dataArray."
             )
         stats_dtype = {
             "SOS": np.int16,
@@ -309,11 +305,11 @@ def xr_phenology(
 
         lazy_phenology = da_all_time.map_blocks(
             xr_phenology,
-            kwargs=dict(
-                stats=stats,
-                method_sos=method_sos,
-                method_eos=method_eos,
-            ),
+            kwargs={
+                "stats": stats,
+                "method_sos": method_sos,
+                "method_eos": method_eos,
+            },
             template=xr.Dataset(template),
         )
 
@@ -445,7 +441,7 @@ def temporal_statistics(da, stats):
         if version.parse(xr.__version__) < version.parse("0.16.0"):
             raise TypeError(
                 "Dask arrays are only supported by this function if using, "
-                + "xarray v0.16, run da.compute() before passing dataArray."
+                "xarray v0.16, run da.compute() before passing dataArray."
             )
 
         # create a template that matches the final datasets dims & vars
@@ -812,9 +808,7 @@ def mad_outliers(da, dim="time", threshold=3.5):
     mad = abs_deviation.median(dim=dim)
 
     # Deviations greater than (threshold * MAD) are considered outliers
-    outliers = abs_deviation > (threshold * mad)
-
-    return outliers
+    return abs_deviation > (threshold * mad)
 
 
 def xr_regression(

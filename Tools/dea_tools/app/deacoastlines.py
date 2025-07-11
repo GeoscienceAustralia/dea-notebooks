@@ -4,51 +4,41 @@ interactively extract shoreline data using transects.
 """
 
 # Import required packages
-import fiona
-import os
-import sys
-import datacube
-import warnings
-import matplotlib.pyplot as plt
-from datacube.utils.geometry import CRS
-from ipyleaflet import (
-    WMSLayer,
-    basemaps,
-    basemap_to_tiles,
-    Map,
-    DrawControl,
-    WidgetControl,
-    LayerGroup,
-    LayersControl,
-    GeoData,
-)
-from traitlets import Unicode
-from ipywidgets import (
-    GridspecLayout,
-    Button,
-    Layout,
-    HBox,
-    VBox,
-    HTML,
-    Output,
-)
 import json
-import geopandas as gpd
+import os
+import warnings
 from io import BytesIO
+
+import fiona
+import geopandas as gpd
 import ipywidgets as widgets
-
-from .widgetconstructors import (
-    create_html,
-    create_drawcontrol,
-    create_map,
-    create_datepicker,
-    create_inputtext,
-    create_checkbox,
-    create_dropdown,
-    create_dea_wms_layer,
+import matplotlib.pyplot as plt
+from ipyleaflet import (
+    GeoData,
+    LayerGroup,
+    WMSLayer,
+    basemap_to_tiles,
+    basemaps,
 )
-from ..coastal import get_coastlines, transect_distances
+from ipywidgets import (
+    HTML,
+    Button,
+    GridspecLayout,
+    HBox,
+    Layout,
+    Output,
+    VBox,
+)
 
+from dea_tools.app.widgetconstructors import (
+    create_checkbox,
+    create_drawcontrol,
+    create_dropdown,
+    create_html,
+    create_inputtext,
+    create_map,
+)
+from dea_tools.coastal import get_coastlines, transect_distances
 
 WMS_ADDRESS = "https://geoserver.dea.ga.gov.au/geoserver/wms"
 
@@ -290,7 +280,7 @@ class transect_app(HBox):
         uploaded_data = {f["name"]: {"content": f.content.tobytes()} for f in change.new}
 
         # Save to file
-        for uploaded_filename in uploaded_data.keys():
+        for uploaded_filename in uploaded_data:
             with open(uploaded_filename, "wb") as output_file:
                 content = uploaded_data[uploaded_filename]["content"]
                 output_file.write(content)
@@ -298,7 +288,7 @@ class transect_app(HBox):
         with self.status_info:
             try:
                 print("Loading vector data...", end="\r")
-                valid_files = [file for file in uploaded_data.keys() if file.lower().endswith((".shp", ".geojson"))]
+                valid_files = [file for file in uploaded_data if file.lower().endswith((".shp", ".geojson"))]
                 valid_file = valid_files[0]
                 transect_gdf = (
                     gpd.read_file(valid_file).to_crs("EPSG:4326").explode(index_parts=True).reset_index(drop=True)
@@ -401,7 +391,7 @@ class transect_app(HBox):
                 run_text = "selected transect"
             else:
                 print(
-                    f"No transect drawn or uploaded. Please select a transect on the map, or upload a GeoJSON or ESRI Shapefile.",
+                    "No transect drawn or uploaded. Please select a transect on the map, or upload a GeoJSON or ESRI Shapefile.",
                     end="\r",
                 )
                 transect_gdf = None

@@ -20,12 +20,10 @@ on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 Last modified: May 2025
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
 from IPython.display import Image
-
-import matplotlib.pyplot as plt
 from matplotlib import colors as mcolours
 from matplotlib import patheffects
 from matplotlib.animation import FuncAnimation
@@ -422,9 +420,7 @@ def _get_layer_name(measurement, da, aliases=aliases):
 
     # Use provided measurement if able
     measurement = measurement.lower() if measurement else da.name
-    measurement = aliases[measurement] if measurement in aliases.keys() else measurement
-
-    return measurement
+    return aliases[measurement] if measurement in aliases.keys() else measurement
 
 
 def _descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
@@ -479,9 +475,7 @@ def _descriptors_colours(lc_colours, lc_colours_mapping, descriptor):
                 colours_dict[class_value] = colour_n_label
 
     # sort the colours dictionary by keys (i.e., the values of classes)
-    sorted_colours_dict = {key: colours_dict[key] for key in sorted(colours_dict.keys())}
-
-    return sorted_colours_dict
+    return {key: colours_dict[key] for key in sorted(colours_dict.keys())}
 
 
 def get_colour_scheme(measurement):
@@ -509,9 +503,9 @@ def get_colour_scheme(measurement):
 
     # ensure a valid colour scheme was requested
     assert (
-        (measurement in lc_colours.keys())  # either in main colour scheme dictionary
-        or (measurement in lc_colours_mapping.keys())  # or in mapping dictionary for descriptors
-        or (measurement in aliases.keys())  # or short aliases of descriptors
+        (measurement in lc_colours)  # either in main colour scheme dictionary
+        or (measurement in lc_colours_mapping)  # or in mapping dictionary for descriptors
+        or (measurement in aliases)  # or short aliases of descriptors
     ), (
         f'colour scheme must be one of {lc_colours.keys()} {lc_colours_mapping.keys()} {aliases.keys()} (got "{measurement}")'
     )
@@ -540,7 +534,7 @@ def _reduce_colour_scheme(colour_scheme):
 
     new_key = 2  # key 1 was added earlier and corresponds with "no data"
 
-    for key, value in colour_scheme.items():
+    for _key, value in colour_scheme.items():
         # get string with class name
         class_name = value[4]
 
@@ -571,7 +565,7 @@ def lc_colourmap(colour_scheme):
     """
 
     colour_arr = []  # empty list to be populated with colours
-    for key, value in colour_scheme.items():
+    for _key, value in colour_scheme.items():
         colour_arr.append(np.array(value[:-2]) / 255)  # add colour to list
 
     # create a colour map from the list of colours
@@ -662,7 +656,7 @@ def make_colourbar(fig, ax, measurement, labelsize=10, horizontal=False, animati
     if measurement == "level4":
         colour_scheme = lc_colours["level4_colourbar_labels"]  # use shorten labels dictionary
 
-        if animation == True:
+        if animation:
             # special spacing settings for level 4
             cax = fig.add_axes([
                 0.62,
@@ -674,7 +668,7 @@ def make_colourbar(fig, ax, measurement, labelsize=10, horizontal=False, animati
             # get level 4 colour bar colour map
             cb_cmap, cb_norm, cb_labels, cb_ticks = _legend_colourmap(colour_scheme)
 
-        elif animation == False:
+        elif not animation:
             # move plot over to make room for colourbar
             fig.subplots_adjust(right=0.825)
             # Settings for axis positions
@@ -950,7 +944,7 @@ def lc_animation(
     text_list = [False] * len(times_list)
     annotation_list = ["\n".join([str(i) for i in (a, b) if i]) for a, b in zip(times_list, text_list)]
 
-    if stacked_plot == True:  # if need to add stacked line plot on the right
+    if stacked_plot:  # if need to add stacked line plot on the right
         # Create table for stacked plot
         stacked_plot_table = _calc_class_ratio(da, measurement)
 
@@ -981,7 +975,7 @@ def lc_animation(
 
     else:  # i.e., stacked_plot == False
         # if plotting level 4 with colourbar
-        if measurement == "level4" and colour_bar == True:
+        if measurement == "level4" and colour_bar:
             # specific setting to fit level 4 colour bar beside the plot
             # we will plot the animation in the left hand plot
             # and put the colour bar on the right hand side
