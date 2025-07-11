@@ -47,7 +47,7 @@ from sklearn.model_selection import BaseCrossValidator, KFold, ShuffleSplit
 from sklearn.utils import check_random_state
 from tqdm.auto import tqdm
 
-from .spatial import xr_rasterize
+from dea_tools.spatial import xr_rasterize
 
 
 def sklearn_flatten(input_xr):

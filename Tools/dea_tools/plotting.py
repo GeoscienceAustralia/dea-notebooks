@@ -38,7 +38,7 @@ from shapely.geometry import box
 from skimage.exposure import rescale_intensity
 from tqdm.auto import tqdm
 
-from .spatial import add_geobox
+from dea_tools.spatial import add_geobox
 
 
 def rgb(

@@ -36,11 +36,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from .bandindices import calculate_indices
-from .dask import create_local_dask_cluster
-from .datahandling import load_ard
-from .spatial import xr_rasterize
-from .wetlands import normalise_wit
+from dea_tools.bandindices import calculate_indices
+from dea_tools.dask import create_local_dask_cluster
+from dea_tools.datahandling import load_ard
+from dea_tools.spatial import xr_rasterize
+from dea_tools.wetlands import normalise_wit
 
 # Create local dask cluster to improve data load time
 client = create_local_dask_cluster(return_client=True)

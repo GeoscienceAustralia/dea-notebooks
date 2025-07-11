@@ -38,7 +38,7 @@ from pandas.plotting import register_matplotlib_converters
 from scipy import stats
 from shapely.geometry import box
 
-from .spatial import idw
+from dea_tools.spatial import idw
 
 register_matplotlib_converters()
 
