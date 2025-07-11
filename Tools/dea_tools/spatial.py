@@ -477,7 +477,7 @@ def subpixel_contours(
     da = add_geobox(da, crs)
 
     # If z_values is supplied is not a list, convert to list:
-    z_values = z_values if isinstance(z_values, [list, np.ndarray]) else [z_values]
+    z_values = z_values if isinstance(z_values, (list, np.ndarray)) else [z_values]
 
     # If dask collection, load into memory
     if dask.is_dask_collection(da):
