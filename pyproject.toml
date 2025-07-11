@@ -33,7 +33,7 @@ dependencies = [
     # "ciso8601>=2.2.0",  # blocks Python 3.13 installation on Windows
     "dask>=2023.1.0",
     "dask-ml>=2023.3.24",
-    # "eo-tides>=0.7.4",  # requires notebook updates
+    "eo-tides>=0.8.0",
     "fiona>=1.10.0",
     "folium>=0.16.0",
     "geopandas>=0.10.0",
@@ -50,7 +50,6 @@ dependencies = [
     "packaging>=22.0",
     "pandas>=2.2.0",
     "pyproj>=3.7.0",
-    "pyTMD==2.1.6",
     "pytz>=2022.1",
     "rasterio>=1.3.11",
     "rasterstats>=0.16.0",
@@ -203,9 +202,7 @@ opencv-python = "cv2"
 # Project should not contain missing dependencies
 DEP001 = [
     "ciso8601",            # currently hard to install, candidate for removal
-    "datacube_ows",        # currently hard to install, candidate for removal
-    "otps",                # to fix with eo-tides refactor
-    "pyfes",               # to fix with eo-tides refactor
+    "datacube_ows",        # temporarily removed until dependency issue fixed at source
     "intertidal",          # to fix with Sandbox upgrade
     "osgeo",               # ignore due to confusion with gdal package
     "ipywidgets",          # covered by jupyter metapackage
@@ -218,13 +215,11 @@ DEP002 = [
     "pystac-client",       # included for local STAC support
     "odc-stac",            # included for local STAC support
     "planetary_computer",  # included for STAC support
-    "eo-tides",            # to fix with eo-tides refactor
     "odc-ui",              # ignore `odc.ui` not being recognised as `odc-ui`
     "numba",               # required to enforce minimum version of llvmlite
 ]
 # Project should not use transitive dependencies
 DEP003 = [
-    "pyTMD",               # to fix with eo-tides refactor
     "ipywidgets",          # covered by jupyter metapackage
     "IPython",             # covered by jupyter metapackage  
 ]
