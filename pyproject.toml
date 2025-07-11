@@ -121,7 +121,7 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build]
-sources = ["Tools"]
+sources = ["Tools/dea_tools"]
 include = [  # only include DEA Tools in package, not notebooks
   "Tools/dea_tools/**",
   "LICENSE",
