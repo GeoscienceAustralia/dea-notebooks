@@ -52,7 +52,7 @@ pip install dea-tools[jupyter]
 
 To install with other packages used in DEA Notebooks examples:
 ```console
-pip install dea-tools[jupyter,dask_gateway,hdstats,notebooks]
+pip install dea-tools[jupyter,stac,dask_gateway,hdstats,notebooks]
 ```
 
 You can also install `dea-tools` with *all* optional dependencies. **Note:** some of these dependencies are difficult to install. If you encounter issues, you may need to try the [Conda](#with-conda) instructions below.
