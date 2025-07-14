@@ -1,8 +1,11 @@
+<img src="https://raw.githubusercontent.com/GeoscienceAustralia/dea-notebooks/stable/Supplementary_data/dea_logo_wide.jpg" width="900" alt="Digital Earth Australia logo" />
+
 # DEA Tools Python package
 
-`dea_tools` is an open-source Python package providing functions and algorithms for geospatial analysis using Open Data Cube, Xarray, and Digital Earth Australia.
-It includes utilities for loading data, plotting, spatial and temporal analysis, and applying machine learning to satellite data.
+[![DOI](https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg)](https://doi.org/10.26186/145234) [![Apache license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Discord](https://img.shields.io/discord/1212501566326571070?label=Discord&logo=discord&logoColor=white&color=7289DA)](https://discord.com/invite/4hhBQVas5U)
 
+`dea-tools` is an open-source Python package providing functions and algorithms for geospatial analysis using Open Data Cube, Xarray, and Digital Earth Australia.
+It includes utilities for loading data, plotting, spatial and temporal analysis, and applying machine learning to satellite data.
 The package is organised into the following modules:
 
 * `dea_tools.datahandling`: Tools for loading and managing DEA data (e.g. combining products, handling CRSs, pansharpening)
@@ -21,7 +24,7 @@ The package is organised into the following modules:
 
 ## API documentation
 
-A rendered version of the `dea-tools` API is available on the DEA Knowledge Hub (https://knowledge.dea.ga.gov.au/notebooks/Tools/).
+A rendered version of the `dea-tools` API is available on the [DEA Knowledge Hub](https://knowledge.dea.ga.gov.au/notebooks/Tools/).
 
 ## Installation
 
