@@ -223,7 +223,7 @@ DEP002 = [
     "dea-tools",           # ignore dea-tools being mistaken for dependency
 ]
 # Project should not use transitive dependencies
-DEP003 = [   
+DEP003 = [
     "ipywidgets",          # part of jupyter metapackage
     "IPython",             # part of jupyter metapackage  
 ]
