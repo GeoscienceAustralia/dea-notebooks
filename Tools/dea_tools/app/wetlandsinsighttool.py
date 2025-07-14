@@ -42,8 +42,7 @@ from dea_tools.app.widgetconstructors import (
     create_map,
 )
 from dea_tools.dask import create_local_dask_cluster
-from dea_tools.wetlands import generate_low_quality_data_periods
-from dea_tools.wit_app import WIT_drill, spatial_wit
+from dea_tools.wetlands import generate_low_quality_data_periods, WIT_drill, spatial_wit
 
 
 def make_box_layout():
