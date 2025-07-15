@@ -38,6 +38,7 @@ def create_local_dask_cluster(
     configure_rio=True,
     n_workers=1,
     threads_per_worker=None,
+    memory_limit=0.95,
     **kwargs,
 ):
     """
@@ -67,6 +68,10 @@ def create_local_dask_cluster(
     threads_per_worker: int, optional
         Number of threads per each worker, by default this will be set to
         the number of cpus on the machine.
+    memory_limit: str, float, int, or None, optional
+        Sets the memory limit per worker. Default if 0.95 which
+        provides the cluster with 95% of the system memory.
+        To see other options: https://distributed.dask.org/en/stable/api.html#distributed.Client
     **kwargs:
         Additional keyword arguments passed to ``dask.distributed.Client``.
         For full options, see: https://distributed.dask.org/en/stable/api.html#distributed.Client
@@ -86,7 +91,12 @@ def create_local_dask_cluster(
             threads_per_worker = os.cpu_count()
 
     # Start client
-    client = dask.distributed.Client(n_workers=n_workers, threads_per_worker=threads_per_worker, **kwargs)
+    client = dask.distributed.Client(
+        n_workers=n_workers,
+        threads_per_worker=threads_per_worker,
+        memory_limit=memory_limit,
+        **kwargs
+    )
 
     # configure aws access
     if configure_rio:
@@ -149,7 +159,9 @@ def create_dask_gateway_cluster(profile="r5_L", workers=2):
 
         # limit username to alphanumeric characters
         # kubernetes pods won't launch if labels contain anything other than [a-Z, -, _]
-        options["jupyterhub_user"] = "".join(c if c.isalnum() else "-" for c in os.getenv("JUPYTERHUB_USER"))
+        options["jupyterhub_user"] = "".join(
+            c if c.isalnum() else "-" for c in os.getenv("JUPYTERHUB_USER")
+        )
 
         cluster = gateway.new_cluster(options)
         cluster.scale(workers)
