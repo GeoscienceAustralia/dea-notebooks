@@ -34,7 +34,7 @@ _IS_AWS = "AWS_ACCESS_KEY_ID" in os.environ or "AWS_DEFAULT_REGION" in os.enviro
 
 
 def create_local_dask_cluster(
-    display_client=True, return_client=False, n_workers=1, threads_per_worker=None
+    display_client=True, return_client=False, n_workers=1, threads_per_worker=None, **kwargs
 ):
     """
     Using the datacube utils function `start_local_dask`, generate
@@ -42,10 +42,7 @@ def create_local_dask_cluster(
 
     Example use :
 
-        import sys
-        sys.path.append("../Scripts")
         from dea_dask import create_local_dask_cluster
-
         create_local_dask_cluster()
 
     Parameters
@@ -80,7 +77,7 @@ def create_local_dask_cluster(
 
     # start client
     client = dask.distributed.Client(
-        n_workers=n_workers, threads_per_worker=threads_per_worker
+        n_workers=n_workers, threads_per_worker=threads_per_worker, **kwargs
     )
     
     # configure aws access
