@@ -68,9 +68,10 @@ def create_local_dask_cluster(
     threads_per_worker: int, optional
         Number of threads per each worker, by default this will be set to
         the number of cpus on the machine.
-    memory_limit: str, float, int, None,or optional
-        Sets the memory limit per worker. Default is "spare_mem", where 95 % of the available
-        system memory is split among the number of workers, allowing spare memory to be retained.
+    memory_limit: str, float, int, or None, optional
+        Sets the memory limit per worker. Default is 'spare_mem', where 95 % of the available
+        system memory is split among the number of workers, allowing spare memory to be withheld
+        from the cluster.
         To see other options: https://distributed.dask.org/en/stable/api.html#distributed.Client
     **kwargs:
         Additional keyword arguments passed to ``dask.distributed.Client``.
