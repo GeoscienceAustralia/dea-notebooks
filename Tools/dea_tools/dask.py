@@ -46,7 +46,7 @@ def create_local_dask_cluster(
         sys.path.append("../Scripts")
         from dea_dask import create_local_dask_cluster
 
-        create_local_dask_cluster(spare_mem='4Gb')
+        create_local_dask_cluster()
 
     Parameters
     ----------
