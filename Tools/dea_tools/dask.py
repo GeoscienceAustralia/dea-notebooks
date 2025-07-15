@@ -60,7 +60,7 @@ def create_local_dask_cluster(
     threads_per_worker: int, optional
         Number of threads per each worker, by default this will be set to
         the number of cpus on the machine.
-    kwargs: int, optional
+    kwargs:
         Additional keyword arguments passed to `dask.distributed.Client`
 
     """
