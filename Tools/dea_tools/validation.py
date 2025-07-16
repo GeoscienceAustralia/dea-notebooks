@@ -19,12 +19,11 @@ on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 Last modified: April 2023
 """
 
-import numpy as np
-import pandas as pd
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import mean_absolute_error
 from math import sqrt
+
+import pandas as pd
 from scipy import stats
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
 def eval_metrics(x, y, round=3, all_regress=False):
@@ -78,13 +77,11 @@ def eval_metrics(x, y, round=3, all_regress=False):
 
     # Additional regression params
     if all_regress:
-        stats_dict.update(
-            {
-                "Regression p-value": lin_reg.pvalue,
-                "Regression intercept": lin_reg.intercept,
-                "Regression standard error": lin_reg.stderr,
-            }
-        )
+        stats_dict.update({
+            "Regression p-value": lin_reg.pvalue,
+            "Regression intercept": lin_reg.intercept,
+            "Regression standard error": lin_reg.stderr,
+        })
 
     # Return as
     return pd.Series(stats_dict).round(round)

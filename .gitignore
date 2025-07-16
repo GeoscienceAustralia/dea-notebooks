@@ -5,6 +5,8 @@
 *.tif
 *.xml
 __pycache__
-Transitory_notebooks/
 Tools/gen
+dist
+.coverage
+uv.lock
 */local_data/*

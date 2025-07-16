@@ -12,6 +12,7 @@ Interactive widgets and apps that require little or no coding to run
    Exporting_satellite_images.ipynb
    Generating_satellite_animations.ipynb
    Mining_rehabilitation.ipynb
+   WIT_stacked_plot.ipynb
    
 Citing DEA Notebooks
 --------------------
