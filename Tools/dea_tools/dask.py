@@ -1,4 +1,4 @@
-## dea_dask.py
+# dea_dask.py
 """
 Tools for simplifying the creation of Dask clusters for parallelised computing.
 
@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one on
 GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: June 2022
+Last modified: July 2025
 
 """
 
@@ -24,61 +24,88 @@ import os
 from importlib.util import find_spec
 
 import dask
+import dask.distributed
 from aiohttp import ClientConnectionError
+from odc.io.cgroups import get_cpu_quota
+from odc.stac import configure_rio as cfg_rio
 
 _HAVE_PROXY = bool(find_spec("jupyter_server_proxy"))
-_IS_AWS = "AWS_ACCESS_KEY_ID" in os.environ or "AWS_DEFAULT_REGION" in os.environ
 
 
-def create_local_dask_cluster(spare_mem="3Gb", display_client=True, return_client=False):
+def create_local_dask_cluster(
+    display_client=True,
+    return_client=False,
+    configure_rio=True,
+    n_workers=1,
+    threads_per_worker=None,
+    memory_limit='spare_mem',
+    **kwargs,
+):
     """
-    Using the datacube utils function `start_local_dask`, generate
-    a local dask cluster. Automatically detects if on AWS or NCI.
+    Create a local Dask cluster for parallelised computing using ``dask.distributed.Client``.
 
-    Example use :
+    Example use:
 
-        import sys
-        sys.path.append("../Scripts")
         from dea_dask import create_local_dask_cluster
-
-        create_local_dask_cluster(spare_mem='4Gb')
+        create_local_dask_cluster()
 
     Parameters
     ----------
-    spare_mem : String, optional
-        The amount of memory, in Gb, to leave for the notebook to run.
-        This memory will not be used by the cluster. e.g '3Gb'
-    display_client : Bool, optional
+    display_client : bool, optional
         An optional boolean indicating whether to display a summary of
         the dask client, including a link to monitor progress of the
         analysis. Set to False to hide this display.
-    return_client : Bool, optional
+    return_client : bool, optional
         An optional boolean indicating whether to return the dask client
         object.
+    configure_rio : bool, optional
+       An optional boolean indicating whether to configure ``rasterio``
+       with cloud defaults and unsigned AWS access. Set to False to not
+       apply these defaults.
+    n_workers : int, optional
+        Number of workers to start, default is set to 1 which works well
+        with loading ODC data.
+    threads_per_worker: int, optional
+        Number of threads per each worker, by default this will be set to
+        the number of cpus on the machine.
+    memory_limit: str, float, int, or None, optional
+        Sets the memory limit per worker. Default is 'spare_mem', where 95 % of the available
+        system memory is split among the number of workers, allowing spare memory to be withheld
+        from the cluster.
+        To see other options: https://distributed.dask.org/en/stable/api.html#distributed.Client
+    **kwargs:
+        Additional keyword arguments passed to ``dask.distributed.Client``.
+        For full options, see: https://distributed.dask.org/en/stable/api.html#distributed.Client
 
     """
-    # Attempt to import datacube and raise an error if not available
-    try:
-        from datacube.utils.dask import start_local_dask
-        from datacube.utils.rio import configure_s3_access
-    except ImportError as e:
-        raise ImportError(
-            "`datacube` is required for `create_local_dask_cluster`. "
-            "Please install DEA Tools with the `[datacube]` extra, e.g.: "
-            "`pip install dea-tools[datacube]`"
-        ) from e
-
+    # Ensure that client links correctly launch on DEA Sandbox
     if _HAVE_PROXY:
         # Configure dashboard link to go over proxy
         prefix = os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/")
         dask.config.set({"distributed.dashboard.link": prefix + "proxy/{port}/status"})
 
-    # Start up a local cluster
-    client = start_local_dask(mem_safety_margin=spare_mem)
+    # Count cpus if threads_per_worker not provided
+    if threads_per_worker is None:
+        if get_cpu_quota() is not None:
+            threads_per_worker = round(get_cpu_quota())
+        else:
+            threads_per_worker = os.cpu_count()
 
-    if _IS_AWS:
-        # Configure GDAL for s3 access
-        configure_s3_access(aws_unsigned=True, client=client)
+    # by default split 95% of system memory by the n_workers.
+    if memory_limit =='spare_mem':
+        memory_limit = 0.95 / n_workers
+        
+    # Start client
+    client = dask.distributed.Client(
+        n_workers=n_workers,
+        threads_per_worker=threads_per_worker,
+        memory_limit=memory_limit,
+        **kwargs
+    )
+
+    # configure aws access
+    if configure_rio:
+        cfg_rio(cloud_defaults=True, aws={"aws_unsigned": True}, client=client)
 
     # Show the dask cluster settings
     if display_client:
@@ -86,9 +113,12 @@ def create_local_dask_cluster(spare_mem="3Gb", display_client=True, return_clien
 
         display(client)
 
-    # return the client as an object
+    # Return the client as an object
     if return_client:
         return client
+
+    # Otherwise return none
+    return None
 
 
 def create_dask_gateway_cluster(profile="r5_L", workers=2):
@@ -134,7 +164,9 @@ def create_dask_gateway_cluster(profile="r5_L", workers=2):
 
         # limit username to alphanumeric characters
         # kubernetes pods won't launch if labels contain anything other than [a-Z, -, _]
-        options["jupyterhub_user"] = "".join(c if c.isalnum() else "-" for c in os.getenv("JUPYTERHUB_USER"))
+        options["jupyterhub_user"] = "".join(
+            c if c.isalnum() else "-" for c in os.getenv("JUPYTERHUB_USER")
+        )
 
         cluster = gateway.new_cluster(options)
         cluster.scale(workers)
