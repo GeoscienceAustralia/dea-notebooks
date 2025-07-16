@@ -1,7 +1,7 @@
 [project]
 name = "dea-tools"
 dynamic = ["version"]
-description = "Functions and algorithms for analysing Digital Earth Australia data."
+description = "Open-source tools for geospatial analysis with Digital Earth Australia, Open Data Cube, and Xarray"
 authors = [
     { name = "Geoscience Australia", email = "earth.observation@ga.gov.au" }
 ]
