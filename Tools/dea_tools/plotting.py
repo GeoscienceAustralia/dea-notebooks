@@ -58,13 +58,13 @@ def rgb(
 ):
     """
     Takes an xarray dataset and plots RGB images using three imagery
-    bands (e.g ['nbart_red', 'nbart_green', 'nbart_blue']). The `index`
+    bands (e.g ['nbart_red', 'nbart_green', 'nbart_blue']). The ``index``
     parameter allows easily selecting individual or multiple images for
     RGB plotting. Images can be saved to file by specifying an output
-    path using `savefig_path`.
+    path using ``savefig_path``.
 
     This function was designed to work as an easier-to-use wrapper
-    around xarray's `.plot.imshow()` functionality.
+    around ``xarray``'s ``.plot.imshow()`` functionality.
 
     Last modified: September 2020
 
@@ -73,22 +73,22 @@ def rgb(
     ds : xarray Dataset
         A two-dimensional or multi-dimensional array to plot as an RGB
         image. If the array has more than two dimensions (e.g. multiple
-        observations along a 'time' dimension), either use `index` to
-        select one (`index=0`) or multiple observations
-        (`index=[0, 1]`), or create a custom faceted plot using e.g.
-        `col="time"`.
+        observations along a 'time' dimension), either use ``index`` to
+        select one (``index=0``) or multiple observations
+        (``index=[0, 1]``), or create a custom faceted plot using e.g.
+        ``col="time"``.
     bands : list of strings, optional
         A list of three strings giving the band names to plot. Defaults
-        to '['nbart_red', 'nbart_green', 'nbart_blue']'.
+        to ``['nbart_red', 'nbart_green', 'nbart_blue']``.
     index : integer or list of integers, optional
-        `index` can be used to select one (`index=0`) or multiple
-        observations (`index=[0, 1]`) from the input dataset for
+        `index` can be used to select one (``index=0``) or multiple
+        observations (``index=[0, 1]``) from the input dataset for
         plotting. If multiple images are requested these will be plotted
         as a faceted plot.
     index_dim : string, optional
         The dimension along which observations should be plotted if
-        multiple observations are requested using `index`. Defaults to
-        `time`.
+        multiple observations are requested using ``index``. Defaults to
+        ``time``.
     robust : bool, optional
         Produces an enhanced image where the colormap range is computed
         with 2nd and 98th percentiles instead of the extreme values.
@@ -97,8 +97,8 @@ def rgb(
         An tuple of two floats (between 0.00 and 1.00) that can be used
         to clip the colormap range to manually specified percentiles to
         get more control over the brightness and contrast of the image.
-        The default is None; '(0.02, 0.98)' is equivelent to
-        `robust=True`. If this parameter is used, `robust` will have no
+        The default is ``None``; '(0.02, 0.98)' is equivelent to
+        ``robust=True``. If this parameter is used, ``robust`` will have no
         effect.
     col_wrap : integer, optional
         The number of columns allowed in faceted plots. Defaults to 4.
@@ -118,21 +118,15 @@ def rgb(
         which does not export an image file.
     savefig_kwargs : dict, optional
         A dict of keyword arguments to pass to
-        `matplotlib.pyplot.savefig` when exporting an image file. For
+        ``matplotlib.pyplot.savefig`` when exporting an image file. For
         all available options, see:
         https://matplotlib.org/api/_as_gen/matplotlib.pyplot.savefig.html
     **kwargs : optional
-        Additional keyword arguments to pass to `xarray.plot.imshow()`.
+        Additional keyword arguments to pass to ``xarray.plot.imshow()``.
         For example, the function can be used to plot into an existing
-        matplotlib axes object by passing an `ax` keyword argument.
+        matplotlib axes object by passing an ``ax`` keyword argument.
         For more options, see:
         http://xarray.pydata.org/en/stable/generated/xarray.plot.imshow.html
-
-    Returns
-    -------
-    An RGB plot of one or multiple observations, and optionally an image
-    file written to file.
-
     """
 
     # Get names of x and y dims
@@ -266,11 +260,12 @@ def display_map(x, y, crs="EPSG:4326", margin=-0.5, zoom_bias=0):
 
     Returns
     -------
-    folium.Map : A map centered on the supplied coordinate bounds. A
-    rectangle is drawn on this map detailing the perimeter of the x, y
-    bounds.  A zoom level is calculated such that the resulting
-    viewport is the closest it can possibly get to the centered
-    bounding rectangle without clipping it.
+    map : folium.Map
+        A map centered on the supplied coordinate bounds. A rectangle is
+        drawn on this map detailing the perimeter of the x, y bounds.
+        A zoom level is calculated such that the resulting viewport
+        is the closest it can possibly get to the centered bounding
+        rectangle without clipping it.
     """
 
     # Convert each corner coordinates to lat-lon
@@ -369,32 +364,31 @@ def xr_animation(
         An optional tuple of two floats that can be used to clip one or
         three-band arrays by percentiles to produce a more vibrant,
         visually attractive image that is not affected by outliers/
-        extreme values. The default is `(0.02, 0.98)` which is
-        equivalent to xarray's `robust=True`. This parameter is ignored
-        completely if `vmin` and `vmax` are provided as kwargs to
-        `imshow_kwargs`.
+        extreme values. The default is ``(0.02, 0.98)`` which is
+        equivalent to xarray's ``robust=True`. This parameter is ignored
+        if ``vmin`` and ``vmax`` are provided as kwargs to ``imshow_kwargs``.
     image_proc_funcs : list of funcs, optional
         An optional list containing functions that will be applied to
         each animation frame (timestep) prior to animating. This can
         include image processing functions such as increasing contrast,
         unsharp masking, saturation etc. The function should take AND
-        return a `numpy.ndarray` with shape [y, x, bands]. If your
+        return a ``numpy.ndarray`` with shape [y, x, bands]. If your
         function has parameters, you can pass in custom values using
         a lambda function:
-        `image_proc_funcs=[lambda x: custom_func(x, param1=10)]`.
+        ``image_proc_funcs=[lambda x: custom_func(x, param1=10)]``.
     show_gdf: geopandas.GeoDataFrame, optional
         Vector data (e.g. ESRI shapefiles or GeoJSON) can be optionally
         plotted over the top of imagery by supplying a
         `geopandas.GeoDataFrame` object. To customise colours used to
         plot the vector features, create a new column in the
         GeoDataFrame called 'colors' specifying the colour used to plot
-        each feature: e.g. `gdf['colors'] = 'red'`.
+        each feature: e.g. ``gdf['colors'] = 'red'``.
         To plot vector features at specific moments in time during the
         animation, create new 'start_time' and/or 'end_time' columns in
         the GeoDataFrame that define the time range used to plot each
         feature. Dates can be provided in any string format that can be
         converted using the `pandas.to_datetime()`. e.g.
-         `gdf['end_time'] = ['2001', '2005-01', '2009-01-01']`
+        ``gdf['end_time'] = ['2001', '2005-01', '2009-01-01']``
     show_date : string or bool, optional
         An optional string or bool that defines how (or if) to plot
         date annotations for each animation frame. Defaults to
@@ -412,38 +406,38 @@ def xr_animation(
         for single-band animations. Defaults to True.
     gdf_kwargs : dict, optional
         An optional dictionary of keyword arguments to customise the
-        appearance of a `geopandas.GeoDataFrame` supplied to
-        `show_gdf`. Keyword arguments are passed to `GeoSeries.plot`
+        appearance of a ``geopandas.GeoDataFrame`` supplied to
+        ``show_gdf``. Keyword arguments are passed to ``GeoSeries.plot``
         (see http://geopandas.org/reference.html#geopandas.GeoSeries.plot).
-        For example: `gdf_kwargs = {'linewidth': 2}`.
+        For example: ``gdf_kwargs = {'linewidth': 2}``.
     annotation_kwargs : dict, optional
         An optional dict of keyword arguments for controlling the
         appearance of  text annotations. Keyword arguments are passed
-        to `matplotlib`'s `plt.annotate`
+        to ``matplotlib``'s ``plt.annotate``
         (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.annotate.html
-        for options). For example, `annotation_kwargs={'fontsize':20,
-        'color':'red', 'family':'serif'}.
+        for options). For example, ``annotation_kwargs={'fontsize':20,
+        'color':'red', 'family':'serif'}``.
     imshow_kwargs : dict, optional
         An optional dict of keyword arguments for controlling the
-        appearance of arrays passed to `matplotlib`'s `plt.imshow`
+        appearance of arrays passed to ``matplotlib``'s ``plt.imshow``
         (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.imshow.html
         for options). For example, a green colour scheme and custom
         stretch could be specified using:
-        `onebandplot_kwargs={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}`.
+        ``onebandplot_kwargs={'cmap':'Greens`, 'vmin':0.2, 'vmax':0.9}``.
         (some parameters like 'cmap' will only have an effect for
         single-band animations, not three-band RGB animations).
     colorbar_kwargs : dict, optional
         An optional dict of keyword arguments used to control the
         appearance of the colourbar. Keyword arguments are passed to
-        `matplotlib.pyplot.tick_params`
+        ``matplotlib.pyplot.tick_params``
         (see https://matplotlib.org/api/_as_gen/matplotlib.pyplot.tick_params.html
         for options). This can be used to customise the colourbar
         ticks, e.g. changing tick label colour depending on the
         background of the animation:
-        `colorbar_kwargs={'colors': 'black'}`.
+        ``colorbar_kwargs={'colors': 'black'}``.
     limit: int, optional
         An optional integer specifying how many animation frames to
-        render (e.g. `limit=50` will render the first 50 frames). This
+        render (e.g. ``limit=50`` will render the first 50 frames). This
         can be useful for quickly testing animations without rendering
         the entire time-series.
 

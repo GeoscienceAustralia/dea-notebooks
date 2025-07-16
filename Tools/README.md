@@ -1,45 +1,39 @@
-# dea-tools Python package
+<img src="https://raw.githubusercontent.com/GeoscienceAustralia/dea-notebooks/stable/Supplementary_data/dea_logo_wide.jpg" width="900" alt="Digital Earth Australia logo" />
 
-The `dea-tools` Python package provides a collection of functions and algorithms for geospatial analysis using Open Data Cube, Xarray, and Digital Earth Australia.
-It includes utilities for loading data, plotting, spatial and temporal analysis, and applying machine learning to satellite data.
+# DEA Tools Python package
 
-The package is organised into the following modules:
+[![DOI](https://img.shields.io/badge/DOI-10.26186/145234-0e7fbf.svg)](https://doi.org/10.26186/145234) [![Apache license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Discord](https://img.shields.io/discord/1212501566326571070?label=Discord&logo=discord&logoColor=white&color=7289DA)](https://discord.com/invite/4hhBQVas5U)
 
-* `dea_tools.datahandling`: Tools for loading and managing DEA data (e.g. combining products, handling CRSs, pansharpening)
-* `dea_tools.plotting`: Plotting tools for DEA data (e.g. RGB composites, animations, interactive maps)
-* `dea_tools.bandindices`: Functions to calculate remote sensing indices (e.g. NDVI, NDWI)
-* `dea_tools.spatial`: Spatial analysis utilities (e.g. rasterisation, vectorisation, contours, image processing)
-* `dea_tools.temporal`: Tools for temporal analysis (e.g. phenology, time-series statistics, multi-dimensional regression)
-* `dea_tools.classification`: Machine learning utilities (e.g. training and applying models on satellite data)
-* `dea_tools.dask`: Utilities for parallel processing with Dask (e.g. creating scalable Dask clusters)
-* `dea_tools.landcover`: Tools for accessing and visualising DEA Land Cover data
-* `dea_tools.coastal`: Coastal and intertidal analysis tools (e.g. tidal tagging, coastal change time series)
-* `dea_tools.bom`: Accessing Bureau of Meteorology water data (e.g. gauge and discharge data)
-* `dea_tools.waterbodies`: Accessing and analysing DEA Waterbodies data (e.g. loading waterbody time series)
-* `dea_tools.maps`: Tools for interactive mapping (e.g. folium and ipyleaflet maps)
-* `dea_tools.validation`: Tools for generating validation statistics (e.g. RMSE, R2, correlations)
+`dea-tools` is an open-source Python package for geospatial analysis of satellite data using Digital Earth Australia, Open Data Cube, and Xarray.
+It provides a broad set of utilities for loading, visualising, transforming, and analysing Earth Observation (EO) data across space and time.
+
+The package includes tools for:
+
+* 📦 **Data handling**: Load and combine DEA data products, manage projections and resolutions.
+* 🗺️ **Visualisation**: Create static and interactive maps, RGB plots, and animations.
+* 🛰️ **Remote sensing indices**: Calculate band indices such as NDVI, NDWI, and more.
+* 🌐 **Spatial and temporal analysis**: Apply raster/vector operations, extract contours, compute temporal stats, and model change over time.
+* 🤖 **Machine learning and segmentation**: Train and apply classifiers, or run image segmentation workflows.
+* ⚙️ **Parallel processing**: Set up Dask clusters for scalable processing of large datasets.
+* 🌏 **Domain-specific tools**: Analyse coastal change, intertidal zones, land cover, wetland and waterbody dynamics, and climate datasets.
 
 ## API documentation
 
-A rendered version of the `dea-tools` API is available on the DEA Knowledge Hub (https://knowledge.dea.ga.gov.au/notebooks/Tools/).
+Full API documentation describing the modules and functions available in `dea-tools` is available on the [DEA Knowledge Hub](https://knowledge.dea.ga.gov.au/notebooks/Tools/).
 
 ## Installation
 
 You can install `dea-tools` from PyPI with `pip` (https://pypi.org/project/dea-tools/).
-By default `dea-tools` will be installed with [minimal dependencies](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/pyproject.toml), which excludes `datacube` and other difficult to install packages.
+
+By default `dea-tools` will be installed with [minimal dependencies](https://github.com/GeoscienceAustralia/dea-notebooks/blob/develop/pyproject.toml), which excludes `datacube` and other difficult to install packages:
 
 ```console
 pip install dea-tools
 ```
 
-To install with `datacube` dependencies:
+To install with `datacube` dependencies (note that this requires access to a datacube database):
 ```console
 pip install dea-tools[datacube]
-```
-
-To install with additonal STAC-loading dependencies:
-```console
-pip install dea-tools[stac]
 ```
 
 To install with additonal Jupyter-related dependencies:
@@ -77,7 +71,7 @@ To work with this module on the DEA Sandbox or National Computational Infrastruc
 ```python
 import sys
 sys.path.insert(1, "../Tools/")
-import dea_tools.datahandling  # or some other submodule
+from dea_tools.datahandling import load_ard  # or some other function
 ```
 
 Alternatively, you can also do a local installation of `dea-tools`. To do this on the DEA Sandbox, run `pip` from the terminal from within your `dea-notebooks` directory:

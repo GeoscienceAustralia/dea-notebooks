@@ -38,7 +38,7 @@ def create_local_dask_cluster(
     configure_rio=True,
     n_workers=1,
     threads_per_worker=None,
-    memory_limit='spare_mem',
+    memory_limit="spare_mem",
     **kwargs,
 ):
     """
@@ -92,15 +92,15 @@ def create_local_dask_cluster(
             threads_per_worker = os.cpu_count()
 
     # by default split 95% of system memory by the n_workers.
-    if memory_limit =='spare_mem':
+    if memory_limit == "spare_mem":
         memory_limit = 0.95 / n_workers
-        
+
     # Start client
     client = dask.distributed.Client(
         n_workers=n_workers,
-        threads_per_worker=threads_per_worker,
+        threads_per_worker=int(threads_per_worker),
         memory_limit=memory_limit,
-        **kwargs
+        **kwargs,
     )
 
     # configure aws access
@@ -109,9 +109,16 @@ def create_local_dask_cluster(
 
     # Show the dask cluster settings
     if display_client:
-        from IPython.display import display
+        try:
+            from IPython.display import display  # Check if IPython is available
 
-        display(client)
+            display(client)
+        except ImportError:
+            raise ImportError(
+                "IPython is not installed, but display_client=True was requested. Either set \n"
+                "display_client=False, or install the required Jupyter dependencies \n"
+                "via: pip install dea-tools[jupyter]"
+            )
 
     # Return the client as an object
     if return_client:
