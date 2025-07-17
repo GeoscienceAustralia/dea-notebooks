@@ -331,10 +331,10 @@ def _create_vrt_3bands_comp(
         input_path_r = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{r_channel_band}.tif")
         input_path_g = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{g_channel_band}.tif")
         input_path_b = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{b_channel_band}.tif")
-        if all([_file_exists_s3(input_path_r),_file_exists_s3(input_path_g),_file_exists_s3(input_path_b)]):
+        if all([os.path.exists(input_path_r), os.path.exists(input_path_g), os.path.exists(input_path_b)]):
             log.info(f"{run_id}: Identifying input data from local file system:\n-{input_path_r}\n-{input_path_g}\n-{input_path_b}")
         else:
-            log.info(f"{run_id}: One or more input COGs not found")
+            log.info(f"{run_id}: One or more input COGs not found in local filesystem")
             return
         
     # define ouptut VRT name following the standardised naming: 
@@ -420,6 +420,70 @@ def _create_vrt_3bands_comp(
             os.makedirs(os.path.dirname(output_vrt), exist_ok=True) # technically it should always exist as it's the same of the continental COG
             log.info(f"{run_id}: Writing data locally: {output_vrt}")
             shutil.copy(temp_output_vrt, output_vrt)
+
+
+def create_vrt(
+    product,
+    version,
+    time,
+    freq,
+    cog_dir,
+    output_dir,
+    band = None,
+    col_scheme_dir = None,
+    r_channel_band = None,
+    g_channel_band = None,
+    b_channel_band = None,
+):
+    """
+    Create a VRT with color scheme, will select the method based on the product name and bands selected
+    If only 'band' is provided, apply categorical colour scheme based on 'product' name.
+    Otherwise, if the three channels bands are provided, a three-colour composite will be generated
+
+    Parameters:
+    -----------
+    product : str
+        DEA product name (e.g., 'ga_ls_landcover_class_cyear_3').
+    version : str
+        Product version (e.g., '2-0-0').
+    time : int or str
+        The target time of the mosaic, year if annual summaries (e.g., 2023),
+        year-month for seasonal (e.g., water observations nov_mar --> '2024-11')
+    freq : str
+        The frequency of the summary product (e.g.,P1Y).
+    cog_dir : str
+        path to directory with continental COG. E.g. 's3://dea-public-data/derivative/'
+    output_dir : str
+        local directory or s3 directory where to save ouptut. 
+    band : str
+        Band name (e.g., 'level4'). 
+        Use None (default) if need a three-bands composite
+    col_scheme_dir : str
+        path to folder containing json files with colour schemes.
+        Use None (default) for using the same directory of this python script.
+    r_channel_band : str
+        Band to use in the RED channel for a three-bands composite. 
+        Use None (default) if need a single-band categorical view
+    g_channel_band : str
+        Band to use in the GREEN channel for a three-bands composite. 
+        Use None (default) if need a single-band categorical view
+    b_channel_band : str
+        Band to use in the BLUE channel for a three-bands composite. 
+        Use None (default) if need a single-band categorical view
+    """
+
+    if product == 'ga_ls_landcover_class_cyear_3' and band:
+        _create_vrt_landcover(product,version,band,time,freq,cog_dir,output_dir,col_scheme_dir)
+
+    elif all([r_channel_band, g_channel_band, b_channel_band]):
+        _create_vrt_3bands_comp(product,version,time,freq,cog_dir,output_dir,r_channel_band,g_channel_band,b_channel_band,)
+
+    else:
+        log = logging.getLogger(__name__)
+        log.error("INPUT ERROR: make sure product exists."
+                  "Define either --band for categorical single-band data, "
+                  "or ALL r g b channel bands for composites.")
+        raise ValueError("Invalid input combination for VRT creation.")
 
 
 
@@ -510,56 +574,11 @@ def create_vrt_cli(
     g_channel_band = None,
     b_channel_band = None,
 ):
-    """
-    Create a VRT with color scheme, will select the method based on the product name and bands selected
-    If only 'band' is provided, apply categorical colour scheme based on 'product' name.
-    Otherwise, if the three channels bands are provided, a three-colour composite will be generated
-
-    Parameters:
-    -----------
-    product : str
-        DEA product name (e.g., 'ga_ls_landcover_class_cyear_3').
-    version : str
-        Product version (e.g., '2-0-0').
-    time : int or str
-        The target time of the mosaic, year if annual summaries (e.g., 2023),
-        year-month for seasonal (e.g., water observations nov_mar --> '2024-11')
-    freq : str
-        The frequency of the summary product (e.g.,P1Y).
-    cog_dir : str
-        path to directory with continental COG. E.g. 's3://dea-public-data/derivative/'
-    output_dir : str
-        local directory or s3 directory where to save ouptut. 
-    band : str
-        Band name (e.g., 'level4'). 
-        Use None (default) if need a three-bands composite
-    col_scheme_dir : str
-        path to folder containing json files with colour schemes.
-        Use None (default) for using the same directory of this python script.
-    r_channel_band : str
-        Band to use in the RED channel for a three-bands composite. 
-        Use None (default) if need a single-band categorical view
-    g_channel_band : str
-        Band to use in the GREEN channel for a three-bands composite. 
-        Use None (default) if need a single-band categorical view
-    b_channel_band : str
-        Band to use in the BLUE channel for a three-bands composite. 
-        Use None (default) if need a single-band categorical view
-    """
-
-    if product == 'ga_ls_landcover_class_cyear_3' and band:
-        _create_vrt_landcover(product,version,band,time,freq,cog_dir,output_dir,col_scheme_dir)
-
-    elif all([r_channel_band, g_channel_band, b_channel_band]):
-        _create_vrt_3bands_comp(product,version,time,freq,cog_dir,output_dir,r_channel_band,g_channel_band,b_channel_band,)
-
-    else:
-        log = logging.getLogger(__name__)
-        log.error("INPUT ERROR: make sure product exists."
-                  "Define either --band for categorical single-band data, "
-                  "or ALL r g b channel bands for composites.")
-        raise ValueError("Invalid input combination for VRT creation.")
-
+   create_vrt(
+       product,version,time,freq,cog_dir,
+       output_dir,band,col_scheme_dir,
+       r_channel_band,g_channel_band,b_channel_band,
+    )
 
 
 if __name__ == "__main__":
