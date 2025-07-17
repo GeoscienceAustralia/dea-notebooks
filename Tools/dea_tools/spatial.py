@@ -110,8 +110,9 @@ def points_on_line(gdf, index, distance=30):
     """
     Generates evenly-spaced point features along a specific line feature
     in a `geopandas.GeoDataFrame`.
-    Parameters:
-    -----------
+
+    Parameters
+    ----------
     gdf : geopandas.GeoDataFrame
         A `geopandas.GeoDataFrame` containing line features with an
         index and CRS.
@@ -121,8 +122,9 @@ def points_on_line(gdf, index, distance=30):
         A number giving the interval at which to generate points along
         the line feature. Defaults to 30, which will generate a point
         at every 30 metres along the line.
-    Returns:
-    --------
+
+    Returns
+    -------
     points_gdf : geopandas.GeoDataFrame
         A `geopandas.GeoDataFrame` containing point features at every
         `distance` along the selected line.
@@ -220,7 +222,7 @@ def xr_vectorize(
         Print debugging messages. Default True.
     **rasterio_kwargs :
         A set of keyword arguments to ``rasterio.features.shapes``.
-        Can include `mask` and `connectivity`.
+        For example, "mask" and "connectivity".
 
     Returns
     -------
@@ -289,7 +291,7 @@ def xr_rasterize(
         determined, provide a CRS using this parameter.
         (e.g. 'EPSG:3577').
     name : str, optional
-        An optional name used for the output ``xarray.DataArray`.
+        An optional name used for the output ``xarray.DataArray``.
     output_path : string, optional
         Provide an optional string file path to export the rasterized
         data as a GeoTIFF file.
@@ -350,16 +352,15 @@ def subpixel_contours(
     verbose=True,
 ):
     """
-    Uses `skimage.measure.find_contours` to extract multiple z-value
-    contour lines from a two-dimensional array (e.g. multiple elevations
-    from a single DEM), or one z-value for each array along a specified
-    dimension of a multi-dimensional array (e.g. to map waterlines
-    across time by extracting a 0 NDWI contour from each individual
-    timestep in an xarray timeseries).
+    Extracts multiple z-value contour lines from a two-dimensional array
+    (e.g. multiple elevations from a single DEM), or one z-value for
+    each array along a specified dimension of a multi-dimensional array
+    (e.g. to map waterlines across time by extracting a 0 NDWI contour
+    from each individual timestep in an ``xarray`` timeseries).
 
-    Contours are returned as a geopandas.GeoDataFrame with one row per
+    Contours are returned as a ``geopandas.GeoDataFrame`` with one row per
     z-value or one row per array along a specified dimension. The
-    `attribute_df` parameter can be used to pass custom attributes
+    ``attribute_df`` parameter can be used to pass custom attributes
     to the output contour features.
 
     Last modified: May 2023
@@ -386,11 +387,11 @@ def subpixel_contours(
     output_path : string, optional
         The path and filename for the output shapefile.
     attribute_df : pandas.Dataframe, optional
-        A pandas.Dataframe containing attributes to pass to the output
+        A ``pandas.Dataframe`` containing attributes to pass to the output
         contour features. The dataframe must contain either the same
-        number of rows as supplied `z_values` (in 'multiple z-value,
+        number of rows as supplied ``z_values`` (in 'multiple z-value,
         single array' mode), or the same number of rows as the number
-        of arrays along the `dim` dimension ('single z-value, multiple
+        of arrays along the ``dim`` dimension ('single z-value, multiple
         arrays mode').
     min_vertices : int, optional
         The minimum number of vertices required for a contour to be
@@ -420,8 +421,8 @@ def subpixel_contours(
     output_gdf : geopandas geodataframe
         A geopandas geodataframe object with one feature per z-value
         ('single array, multiple z-values' mode), or one row per array
-        along the dimension specified by the `dim` parameter ('single
-        z-value, multiple arrays' mode). If `attribute_df` was
+        along the dimension specified by the ``dim`` parameter ('single
+        z-value, multiple arrays' mode). If ``attribute_df`` was
         provided, these values will be included in the shapefile's
         attribute table.
     """
@@ -747,17 +748,17 @@ def xr_interpolate(
     **kwargs,
 ):
     """
-    This function takes a geopandas.GeoDataFrame points dataset
+    This function takes a ``geopandas.GeoDataFrame`` points dataset
     containing one or more numeric columns, and interpolates these points
     into the spatial extent of an existing xarray dataset. This can be
     useful for producing smooth raster surfaces from point data to
     compare directly against satellite data.
 
     Supported interpolation methods include "linear", "nearest" and
-    "cubic" (using `scipy.interpolate.griddata`), "rbf" (using
-    `scipy.interpolate.Rbf`), and "idw" (Inverse Distance Weighted
+    "cubic" (using ``scipy.interpolate.griddata``), "rbf" (using
+    ``scipy.interpolate.Rbf``), and "idw" (Inverse Distance Weighted
     interpolation using `k` nearest neighbours). Each numeric column
-    will be returned as a variable in the output xarray.Dataset.
+    will be returned as a variable in the output ``xarray.Dataset``.
 
     Last modified: March 2024
 
@@ -769,17 +770,17 @@ def xr_interpolate(
     gdf : geopandas.GeoDataFrame
         A dataset of spatial points including at least one numeric column.
         By default all numeric columns in this dataset will be spatially
-        interpolated into the extent of `ds`; specific columns can be
-        selected using `columns`. An warning will be raised if the points
-        in `gdf` do not overlap with the extent of `ds`.
+        interpolated into the extent of ``ds``; specific columns can be
+        selected using ``columns``. An warning will be raised if the points
+        in ``gdf`` do not overlap with the extent of ``ds``.
     columns : list, optional
-        An optional list of specific columns in gdf` to run the
+        An optional list of specific columns in ``gdf`` to run the
         interpolation on. These must all be of numeric data types.
     method : string, optional
         The method used to interpolate between point values. This string
-        is either passed to `scipy.interpolate.griddata` (for "linear",
+        is either passed to ``scipy.interpolate.griddata`` (for "linear",
         "nearest" and "cubic" methods), or used to specify Radial Basis
-        Function interpolation using `scipy.interpolate.Rbf` ("rbf"), or
+        Function interpolation using ``scipy.interpolate.Rbf`` ("rbf"), or
         Inverse Distance Weighted interpolation ("idw").
         Defaults to 'linear'.
     factor : int, optional
@@ -787,28 +788,28 @@ def xr_interpolate(
         interpolation extent to obtain faster interpolation times, before
         up-sampling the array back to the original dimensions of the
         data as a final step. For example, `factor=10` will interpolate
-        data into a grid that has one tenth of the resolution of `ds`.
+        data into a grid that has one tenth of the resolution of ``ds``.
         This will be significantly faster than interpolating at full
         resolution, but will potentially produce less accurate results.
     k : int, optional
         The number of nearest neighbours used to calculate weightings if
-        `method` is "idw". Defaults to 10; setting `k=1` is equivalent to
+        `method` is "idw". Defaults to 10; setting ``k=1`` is equivalent to
         "nearest" interpolation.
     crs : string or CRS object, optional
-        If `ds`'s coordinate reference system (CRS) cannot be determined,
+        If ``ds``'s coordinate reference system (CRS) cannot be determined,
         provide a CRS using this parameter (e.g. 'EPSG:3577').
     **kwargs :
         Optional keyword arguments to pass to either
-        `scipy.interpolate.griddata` (if `method` is "linear", "nearest"
-        or "cubic"), `scipy.interpolate.Rbf` (is `method` is "rbf"),
-        or `idw` (if method is "idw").
+        ``scipy.interpolate.griddata`` (if `method` is "linear", "nearest"
+        or "cubic"), ``scipy.interpolate.Rbf`` (is `method` is "rbf"),
+        or ``idw`` (if method is "idw").
 
     Returns
     -------
     interpolated_ds : xarray.Dataset
         An xarray.Dataset containing interpolated data with the same X
-        and Y coordinate pixel grid as `ds`, and a data variable for
-        each numeric column in `gdf`.
+        and Y coordinate pixel grid as ``ds``, and a data variable for
+        each numeric column in ``gdf``.
     """
 
     # Add GeoBox and odc.* accessor to array using `odc-geo`, and identify
@@ -915,167 +916,6 @@ def xr_interpolate(
     return interpolated_ds.odc.assign_crs(crs=ds.odc.crs)
 
 
-def interpolate_2d(ds, x_coords, y_coords, z_coords, method="linear", factor=1, verbose=False, **kwargs):
-    """
-    This function takes points with X, Y and Z coordinates, and
-    interpolates Z-values across the extent of an existing xarray
-    dataset. This can be useful for producing smooth surfaces from point
-    data that can be compared directly against satellite data derived
-    from an OpenDataCube query.
-
-    Supported interpolation methods include 'linear', 'nearest' and
-    'cubic (using `scipy.interpolate.griddata`), and 'rbf' (using
-    `scipy.interpolate.Rbf`).
-
-    NOTE: This function is deprecated and will be retired in a future
-    release. Please use `xr_interpolate` instead."
-
-    Last modified: February 2020
-
-    Parameters
-    ----------
-    ds : xarray DataArray or Dataset
-        A two-dimensional or multi-dimensional array from which x and y
-        dimensions will be copied and used for the area in which to
-        interpolate point data.
-    x_coords, y_coords : numpy array
-        Arrays containing X and Y coordinates for all points (e.g.
-        longitudes and latitudes).
-    z_coords : numpy array
-        An array containing Z coordinates for all points (e.g.
-        elevations). These are the values you wish to interpolate
-        between.
-    method : string, optional
-        The method used to interpolate between point values. This string
-        is either passed to `scipy.interpolate.griddata` (for 'linear',
-        'nearest' and 'cubic' methods), or used to specify Radial Basis
-        Function interpolation using `scipy.interpolate.Rbf` ('rbf').
-        Defaults to 'linear'.
-    factor : int, optional
-        An optional integer that can be used to subsample the spatial
-        interpolation extent to obtain faster interpolation times, then
-        up-sample this array back to the original dimensions of the
-        data as a final step. For example, setting `factor=10` will
-        interpolate data into a grid that has one tenth of the
-        resolution of `ds`. This approach will be significantly faster
-        than interpolating at full resolution, but will potentially
-        produce less accurate or reliable results.
-    verbose : bool, optional
-        Print debugging messages. Default False.
-    **kwargs :
-        Optional keyword arguments to pass to either
-        `scipy.interpolate.griddata` (if `method` is 'linear', 'nearest'
-        or 'cubic'), or `scipy.interpolate.Rbf` (is `method` is 'rbf').
-
-    Returns
-    -------
-    interp_2d_array : xarray DataArray
-        An xarray DataArray containing with x and y coordinates copied
-        from `ds_array`, and Z-values interpolated from the points data.
-    """
-
-    warnings.warn(
-        "This function is deprecated and will be retired in a future release. Please use `xr_interpolate` instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    # Extract xy and elev points
-    points_xy = np.vstack([x_coords, y_coords]).T
-
-    # Extract x and y coordinates to interpolate into.
-    # If `factor` is greater than 1, the coordinates will be subsampled
-    # for faster run-times. If the last x or y value in the subsampled
-    # grid aren't the same as the last x or y values in the original
-    # full resolution grid, add the final full resolution grid value to
-    # ensure data is interpolated up to the very edge of the array
-    if ds.x[::factor][-1].item() == ds.x[-1].item():
-        x_grid_coords = ds.x[::factor].values
-    else:
-        x_grid_coords = ds.x[::factor].values.tolist() + [ds.x[-1].item()]
-
-    if ds.y[::factor][-1].item() == ds.y[-1].item():
-        y_grid_coords = ds.y[::factor].values
-    else:
-        y_grid_coords = ds.y[::factor].values.tolist() + [ds.y[-1].item()]
-
-    # Create grid to interpolate into
-    grid_y, grid_x = np.meshgrid(x_grid_coords, y_grid_coords)
-
-    # Apply scipy.interpolate.griddata interpolation methods
-    if method in ("linear", "nearest", "cubic"):
-        # Interpolate x, y and z values
-        interp_2d = scipy.interpolate.griddata(
-            points=points_xy,
-            values=z_coords,
-            xi=(grid_y, grid_x),
-            method=method,
-            **kwargs,
-        )
-
-    # Apply Radial Basis Function interpolation
-    elif method == "rbf":
-        # Interpolate x, y and z values
-        rbf = scipy.interpolate.Rbf(x_coords, y_coords, z_coords, **kwargs)
-        interp_2d = rbf(grid_y, grid_x)
-
-    # Create xarray dataarray from the data and resample to ds coords
-    interp_2d_da = xr.DataArray(interp_2d, coords=[y_grid_coords, x_grid_coords], dims=["y", "x"])
-
-    # If factor is greater than 1, resample the interpolated array to
-    # match the input `ds` array
-    if factor > 1:
-        interp_2d_da = interp_2d_da.interp_like(ds)
-
-    return interp_2d_da
-
-
-def contours_to_arrays(gdf, col):
-    """
-    This function converts a polyline shapefile into an array with three
-    columns giving the X, Y and Z coordinates of each vertex. This data
-    can then be used as an input to interpolation procedures (e.g. using
-    a function like `interpolate_2d`.
-
-    Last modified: October 2021
-
-    Parameters
-    ----------
-    gdf : Geopandas GeoDataFrame
-        A GeoPandas GeoDataFrame of lines to convert into point
-        coordinates.
-    col : str
-        A string giving the name of the GeoDataFrame field to use as
-        Z-values.
-
-    Returns
-    -------
-    A numpy array with three columns giving the X, Y and Z coordinates
-    of each vertex in the input GeoDataFrame.
-
-    """
-
-    warnings.warn(
-        "This function is deprecated and will be retired in a future release. Please use `extract_vertices` instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    coords_zvals = []
-
-    for i in range(0, len(gdf)):
-        val = gdf.iloc[i][col]
-
-        try:
-            coords = np.concatenate([np.vstack(x.coords.xy).T for x in gdf.iloc[i].geometry.geoms])
-        except:
-            coords = np.vstack(gdf.iloc[i].geometry.coords.xy).T
-
-        coords_zvals.append(np.column_stack((coords, np.full(np.shape(coords)[0], fill_value=val))))
-
-    return np.concatenate(coords_zvals)
-
-
 def largest_region(bool_array, **kwargs):
     """
     Takes a boolean array and identifies the largest contiguous region of
@@ -1149,8 +989,7 @@ def zonal_stats_parallel(shp, raster, statistics, out_shp, ncpus, **kwargs):
         Path to the raster from which the statistics are calculated.
         This can be a virtual raster (.vrt).
     statistics: list
-        list of statistics to calculate. e.g.
-            ['min', 'max', 'median', 'majority', 'sum']
+        list of statistics to calculate. e.g. ['min', 'max', 'median', 'majority', 'sum']
     out_shp: str
         Path to export shapefile containing zonal statistics.
     ncpus: int
@@ -1224,7 +1063,7 @@ def reverse_geocode(coords, site_classes=None, state_classes=None):
 
         Site, State
 
-    E.g.: `reverse_geocode(coords=(-35.282163, 149.128835))`
+    E.g.: ``reverse_geocode(coords=(-35.282163, 149.128835))``
 
         'Canberra, Australian Capital Territory'
 
@@ -1238,25 +1077,17 @@ def reverse_geocode(coords, site_classes=None, state_classes=None):
         text location description. Because the contents of the geocoded
         address can vary greatly depending on location, these strings
         are tested against the address one by one until a match is made.
-        Defaults to: `['city', 'town', 'village', 'suburb', 'hamlet',
-                       'county', 'municipality']`.
+        Defaults to: ``['city', 'town', 'village', 'suburb', 'hamlet', 'county', 'municipality']``.
     state_classes : list of strings, optional
         A list of strings used to define the state part of the plain
         text location description. These strings are tested against the
         address one by one until a match is made. Defaults to:
-        `['state', 'territory']`.
+        ``['state', 'territory']``.
 
     Returns
     -------
-    If a valid geocoded address is found, a plain text location
-    description will be returned:
-
-        'Site, State'
-
-    If no valid address is found, formatted coordinates will be returned
-    instead:
-
-        'XX.XX S, XX.XX E'
+    If a valid geocoded address is found, a plain text location description will be returned: 'Site, State'
+    If no valid address is found, formatted coordinates will be returned instead: 'XX.XX S, XX.XX E'
 
     """
 
@@ -1311,8 +1142,8 @@ def hillshade(dem, elevation, azimuth, vert_exag=1, dx=30, dy=30):
     Calculate hillshade from an input Digital Elevation Model
     (DEM) array and a sun elevation and azimith.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     dem : numpy.array
         A 2D Digital Elevation Model array.
     elevation : int or float
@@ -1333,8 +1164,8 @@ def hillshade(dem, elevation, azimuth, vert_exag=1, dx=30, dy=30):
         The y-spacing (rows) of the input input DEM. This
         is typically the spatial resolution of the DEM.
 
-    Returns:
-    --------
+    Returns
+    -------
     hs : numpy.array
         A 2D hillshade array with values between 0-1, where
         0 is completely in shadow and 1 is completely
@@ -1399,3 +1230,17 @@ def sun_angles(dc, query):
 
     # Combine into new xarray.Dataset
     return xr.merge([sun_elevation.rename("sun_elevation"), sun_azimuth.rename("sun_azimuth")])
+
+
+def interpolate_2d(*args, **kwargs):
+    raise ImportError(
+        "The `interpolate_2d` function has been deprecated and is no longer available in this package.\n"
+        "Please use `xr_interpolate` instead."
+    )
+
+
+def contours_to_arrays(*args, **kwargs):
+    raise ImportError(
+        "The `contours_to_arrays` function has been deprecated and is no longer available in this package.\n"
+        "Please use `extract_vertices` instead."
+    )

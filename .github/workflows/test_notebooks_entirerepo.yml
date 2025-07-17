@@ -18,6 +18,11 @@ on:
   # Useful for on-demand testing or troubleshooting
   workflow_dispatch:
 
+# Ensure only one test workflow runs per branch/PR at a time
+concurrency:
+  group: ${{ github.ref }} # Group by branch or PR ref
+  cancel-in-progress: true # Cancel any in-progress runs if a new one starts
+
 permissions:
   id-token: write # Required for OIDC authentication to AWS
   contents: read

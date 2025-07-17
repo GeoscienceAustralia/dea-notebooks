@@ -21,11 +21,11 @@ Last modified: March 2021
 import datetime
 from types import SimpleNamespace
 
-import ciso8601
 import lxml
 import lxml.etree
 import pytz
 import requests
+from dateutil import parser
 
 
 def get_stations(
@@ -257,7 +257,7 @@ def _parse_float(x):
 
 
 def _parse_time(x):
-    t = ciso8601.parse_datetime(x).astimezone(pytz.utc)
+    t = parser.isoparse(x).astimezone(pytz.utc)
     return t.replace(tzinfo=None)
 
 

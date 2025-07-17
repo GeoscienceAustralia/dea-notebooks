@@ -46,9 +46,7 @@ def satellite_ds():
 )
 def test_xr_regresssion(satellite_ds, x, y, alternative):
     # Calculate statistics using `xr_regression`
-    stats_3d = xr_regression(
-        x=satellite_ds.nbart_red, y=satellite_ds.nbart_nir, alternative=alternative
-    )
+    stats_3d = xr_regression(x=satellite_ds.nbart_red, y=satellite_ds.nbart_nir, alternative=alternative)
 
     # Verify expected bands are in dataset
     assert "cov" in stats_3d.data_vars
