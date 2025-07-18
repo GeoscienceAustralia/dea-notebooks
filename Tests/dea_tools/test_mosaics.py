@@ -2,10 +2,11 @@ import os
 import tempfile
 import rasterio
 import pytest
-from mosaic_COGs import make_mosaic_cogs, create_vrt  
+from dea_tools.mosaics.mosaic_COGs import make_mosaic_cogs
+from dea_tools.mosaics.colour_scheme_VRTs import create_vrt  
 
 @pytest.fixture
-def test_params(tmp_path):
+def mosaic_test_params(tmp_path):
     return {
         "product": "ga_ls_landcover_class_cyear_3",
         "band": "level4",
@@ -25,41 +26,56 @@ def test_params(tmp_path):
         "list_tiles": ["x46y47", "x46y48"],  
     }
 
-def test_make_mosaic_and_validate(test_params):
-    make_mosaic_cogs(**test_params)
 
-    output_file = os.path.join(
-        test_params["output_dir"],
-        test_params["product"],
-        test_params["version"],
+@pytest.fixture
+def vrt_test_params_categorical(tmp_path):
+    return {
+        "product": "ga_ls_landcover_class_cyear_3",
+        "band": "level4",
+        "time": "2024",
+        "freq": "P1Y",
+        "version": "2-0-0",
+        "cog_dir": str(tmp_path),
+        "output_dir": str(tmp_path),
+        "col_scheme_dir": # TO-DO add this
+    }
+
+        
+def test_mosaic_vrt_creation(mosaic_test_params, vrt_test_params_categorical):
+    make_mosaic_cogs(**mosaic_test_params)
+
+    output_cog = os.path.join(
+        mosaic_test_params["output_dir"],
+        mosaic_test_params["product"],
+        mosaic_test_params["version"],
         "continental_mosaics",
-        f"{test_params['time']}--{test_params['freq']}",
-        f"{test_params['product']}_mosaic_{test_params['time']}--{test_params['freq']}_{test_params['band']}.tif"
+        f"{mosaic_test_params['time']}--{mosaic_test_params['freq']}",
+        f"{mosaic_test_params['product']}_mosaic_{mosaic_test_params['time']}--{mosaic_test_params['freq']}_{mosaic_test_params['band']}.tif"
     )
 
     # assert mosaic COG created
-    assert os.path.exists(output_file), "Output COG not found"
+    assert os.path.exists(output_cog), "Output COG not found"
 
     # try open file and validate raster integrity
-    with rasterio.open(output_file) as src:
+    with rasterio.open(output_cog) as src:
         assert src.count == 1, "Expected 1 band in mosaic"
         assert src.crs is not None, "CRS missing"
         assert src.width > 0 and src.height > 0, "Invalid raster dimensions"
         data = src.read(1)
         assert data.any(), "No data read from mosaic file"
-        
-def test_vrt_creation(tmp_path):
-    make_mosaic_cogs(**test_params)
 
-    mosaic_path = os.path.join(
-        test_params["output_dir"],
-        test_params["product"],
-        test_params["version"],
+    create_vrt(**vrt_test_params_categorical)
+
+    output_vrt_cat = os.path.join(
+        vrt_test_params_categorical["output_dir"],
+        vrt_test_params_categorical["product"],
+        vrt_test_params_categorical["version"],
         "continental_mosaics",
-        f"{test_params['time']}--{test_params['freq']}",
-        f"{test_params['product']}_mosaic_{test_params['time']}--{test_params['freq']}_{test_params['band']}.tif"
+        f"{vrt_test_params_categorical['time']}--{vrt_test_params_categorical['freq']}",
+        f"{vrt_test_params_categorical['product']}_mosaic_{vrt_test_params_categorical['time']}--{vrt_test_params_categorical['freq']}_{vrt_test_params_categorical['band']}.vrt"
     )
 
+    # assert mosaic COG created
+    assert os.path.exists(output_vrt_cat), "Output VRT not found"
 
-    # ADD CODE TO ACTUALLY TEST CREAT_VRT function
 
