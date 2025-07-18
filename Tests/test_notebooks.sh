@@ -39,6 +39,7 @@ if [ -z "$1" ]; then
         How_to_guides/Tidal_modelling.ipynb \
         How_to_guides/Using_load_ard.ipynb \
         How_to_guides/Virtual_products.ipynb \
+        Hot_to_guides/Generating_COG_mosaics.ipynb \
         Real_world_examples/Coastal_erosion.ipynb \
         Real_world_examples/Intertidal_elevation.ipynb
 
