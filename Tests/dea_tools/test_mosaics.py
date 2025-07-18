@@ -5,11 +5,11 @@ import pathlib
 import sys
 sys.path.insert(1, '../../Tools/')
 from dea_tools.mosaics.mosaic_COGs import make_mosaic_cogs
-from dea_tools.mosaics.colour_scheme_VRTs import create_vrt  
+from dea_tools.mosaics.colour_scheme_VRTs import create_vrt
 
-@pytest.fixture
-def mosaic_test_params(tmp_path):
-    return {
+
+def test_mosaic_vrt_creation_cat(tmp_path):
+    mosaic_params = {
         "product": "ga_ls_landcover_class_cyear_3",
         "band": "level4",
         "time": "2024",
@@ -25,15 +25,11 @@ def mosaic_test_params(tmp_path):
         "compression_lvl": 9,
         "aws_unsigned": True,
         "skip_existing": False,
-        "list_tiles": ["x46y47", "x46y48"],  
+        "list_tiles": ["x46y47", "x46y48"],
     }
 
-
-@pytest.fixture
-def vrt_test_params_categorical(tmp_path):
-    #relative path to test python script
-    col_scheme_dir = pathlib.Path(__file__).parent.parent.parent / "Supplementary_data" / "Colour_schemes"
-    return {
+    col_scheme_dir = pathlib.Path(__file__).parent.parent.parent / "Supplementary_data" / "Colour_schemes" # relative to where test script is
+    vrt_params = {
         "product": "ga_ls_landcover_class_cyear_3",
         "band": "level4",
         "time": "2024",
@@ -44,42 +40,114 @@ def vrt_test_params_categorical(tmp_path):
         "col_scheme_dir": str(col_scheme_dir.resolve()),
     }
 
-        
-def test_mosaic_vrt_creation(mosaic_test_params, vrt_test_params_categorical):
-    make_mosaic_cogs(**mosaic_test_params)
+    make_mosaic_cogs(**mosaic_params)
 
     output_cog = os.path.join(
-        mosaic_test_params["output_dir"],
-        mosaic_test_params["product"],
-        mosaic_test_params["version"],
+        mosaic_params["output_dir"],
+        mosaic_params["product"],
+        mosaic_params["version"],
         "continental_mosaics",
-        f"{mosaic_test_params['time']}--{mosaic_test_params['freq']}",
-        f"{mosaic_test_params['product']}_mosaic_{mosaic_test_params['time']}--{mosaic_test_params['freq']}_{mosaic_test_params['band']}.tif"
+        f"{mosaic_params['time']}--{mosaic_params['freq']}",
+        f"{mosaic_params['product']}_mosaic_{mosaic_params['time']}--{mosaic_params['freq']}_{mosaic_params['band']}.tif"
     )
 
-    # assert mosaic COG created
     assert os.path.exists(output_cog), "Output COG not found"
 
-    # try open file and validate raster integrity
     with rasterio.open(output_cog) as src:
         assert src.count == 1, "Expected 1 band in mosaic"
         assert src.crs is not None, "CRS missing"
         assert src.width > 0 and src.height > 0, "Invalid raster dimensions"
-        data = src.read(1)
-        assert data.any(), "No data read from mosaic file"
+        assert src.read(1).any(), "No data read from mosaic file"
 
-    create_vrt(**vrt_test_params_categorical)
+    create_vrt(**vrt_params)
 
-    output_vrt_cat = os.path.join(
-        vrt_test_params_categorical["output_dir"],
-        vrt_test_params_categorical["product"],
-        vrt_test_params_categorical["version"],
+    output_vrt = os.path.join(
+        vrt_params["output_dir"],
+        vrt_params["product"],
+        vrt_params["version"],
         "continental_mosaics",
-        f"{vrt_test_params_categorical['time']}--{vrt_test_params_categorical['freq']}",
-        f"{vrt_test_params_categorical['product']}_mosaic_{vrt_test_params_categorical['time']}--{vrt_test_params_categorical['freq']}_{vrt_test_params_categorical['band']}.vrt"
+        f"{vrt_params['time']}--{vrt_params['freq']}",
+        f"{vrt_params['product']}_mosaic_{vrt_params['time']}--{vrt_params['freq']}_{vrt_params['band']}.vrt"
     )
 
-    # assert mosaic COG created
-    assert os.path.exists(output_vrt_cat), "Output VRT not found"
+    assert os.path.exists(output_vrt), "Output VRT not found"
+
+    with rasterio.open(output_vrt) as vrt:
+        assert vrt.count == 1, "Expected 1 band in VRT"
+        assert vrt.crs is not None, "CRS missing"
+        assert vrt.width > 0 and vrt.height > 0, "Invalid VRT dimensions"
 
 
+
+def test_geomedian_rgb_mosaic_and_vrt(tmp_path):
+    product = "ga_ls8cls9c_gm_cyear_3"
+    version = "4-0-0"
+    year = "2024"
+    bands = ["nbart_red", "nbart_green", "nbart_blue"]
+    list_tiles = ["x46y47", "x46y48"]
+
+    # generate COGs for each RGB band
+    for band in bands:
+        make_mosaic_cogs(
+            product=product,
+            band=band,
+            time=year,
+            freq="P1Y",
+            version=version,
+            dataset_maturity="final",
+            product_dir="s3://dea-public-data/derivative/",
+            output_dir=str(tmp_path),
+            cog_blocksize=1024,
+            overview_count=7,
+            overview_resampling="BILINEAR",
+            compression_algo="ZSTD",
+            compression_lvl=9,
+            aws_unsigned=True,
+            skip_existing=False,
+            list_tiles=list_tiles
+        )
+
+        output_cog = os.path.join(
+            tmp_path,
+            product,
+            version,
+            "continental_mosaics",
+            f"{year}--P1Y",
+            f"{product}_mosaic_{year}--P1Y_{band}.tif"
+        )
+
+        assert os.path.exists(output_cog), f"COG not found for {band}"
+
+        with rasterio.open(output_cog) as src:
+            assert src.count == 1
+            assert src.crs is not None
+            assert src.width > 0 and src.height > 0
+            assert src.read(1).any(), f"No data in {band} band"
+
+    create_vrt(
+        product=product,
+        version=version,
+        time=year,
+        freq="P1Y",
+        cog_dir=str(tmp_path),
+        output_dir=str(tmp_path),
+        r_channel_band="nbart_red",
+        g_channel_band="nbart_green",
+        b_channel_band="nbart_blue"
+    )
+
+    output_vrt = os.path.join(
+        tmp_path,
+        product,
+        version,
+        "continental_mosaics",
+        f"{year}--P1Y",
+        f"{product}_mosaic_{year}--P1Y_{'-'.join(bands)}.vrt"
+    )
+
+    assert os.path.exists(output_vrt), "RGB VRT not found"
+
+    with rasterio.open(output_vrt) as vrt:
+        assert vrt.count == 3, "Expected 3 bands in composite VRT"
+        assert vrt.crs is not None, "CRS missing"
+        assert vrt.width > 0 and vrt.height > 0, "Invalid VRT dimensions"
