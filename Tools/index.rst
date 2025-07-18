@@ -46,6 +46,14 @@ Apps and widgets
    dea_tools.app.wetlandsinsighttool.py
    dea_tools.app.widgetconstructors
 
+``dea_tools.mosaics`` is a sub-module for generating COG mosaics and VRTs that add colour schemes to them.
+
+.. autosummary::
+   :toctree: gen
+
+    dea_tools.mosaics.mosaic_COGs
+    dea_tools.mosaics.colour_scheme_VRTs
+
 License
 -------
 
