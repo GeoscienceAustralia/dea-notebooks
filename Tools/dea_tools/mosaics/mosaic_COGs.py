@@ -1,3 +1,39 @@
+# mosaic_COGs.py
+"""
+Generate Cloud Optimised GeoTIFF (COG) mosaics for DEA tiled products.
+
+This module builds continental-scale mosaics by combining individual DEA tiles
+into a single Cloud Optimised GeoTIFF using GDAL tools (`gdalbuildvrt`, `gdal_translate`).
+It supports DEA's tiled product structure and naming conventions and can read from both
+local disk and public S3 buckets (e.g., `dea-public-data` or `dea-public-data-dev`).
+
+Input Format
+------------
+Input products must follow the DEA tiling convention:
+`s3://dea-public-data/derivative/<product>/<version>/<tile path>/<year>--<freq>/<product>_<tile path>_<year>--<freq>_<dataset maturity>_<band>.tif` 
+
+Output Format
+-------------
+Mosaics are saved as:
+`<output_dir>/<product>/<version>/continental_mosaics/<time>--<freq>/<product>_mosaic_<time>--<freq>_<band>.tif`
+
+License: The code in this module is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
+license (https://creativecommons.org/licenses/by/4.0/).
+
+Contact: If you need assistance, please post a question on the Open Data
+Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the GIS Stack
+Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
+using the `open-data-cube` tag (you can view previously asked questions
+here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
+
+If you would like to report an issue with this script, you can file one on
+GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+
+Last modified: July 2025
+"""
+
 import s3fs
 import os
 import subprocess
@@ -35,6 +71,10 @@ def _get_tiles(
     aws_unsigned,
     list_tiles = None, # example ['x25y41', 'x25y41']
 ):
+    """
+    Search for matching tile files from local or S3 paths based on product metadata.
+    Optionally filters to a subset of specified tiles (e.g., ['x25y41', 'x25y41']).
+    """
 
     tiles_pattern = (
         f"{product_dir}/"
@@ -69,6 +109,10 @@ def _get_tiles(
 
 
 def _get_vsicurlhttp_from_s3(s3_url):
+    """
+    Convert an S3 URL to a GDAL-compatible /vsicurl/ HTTPS path.
+    """
+    
     if "dea-public-data-dev/" in s3_url:
         return s3_url.replace(
             "dea-public-data-dev/",
@@ -408,7 +452,6 @@ def make_mosaic_cogs(
      help="Comma-separated list of tiles to include in the mosaic. Example: x25y41,x26y42. "
     "If omitted, all tiles will be used."
 )
-
 def make_mosaic_cogs_cli(
     product,
     band,
@@ -427,6 +470,11 @@ def make_mosaic_cogs_cli(
     skip_existing,
     list_tiles=None,
 ):
+    """
+    CLI entry point for generating DEA COG mosaics from tiled datasets.
+    Passes user inputs to the core mosaic generation function.
+    """
+    
     make_mosaic_cogs(
         product, band, time, freq, version, dataset_maturity,
         product_dir, output_dir, cog_blocksize, overview_count,
