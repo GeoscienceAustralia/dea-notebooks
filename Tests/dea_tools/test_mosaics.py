@@ -1,7 +1,9 @@
 import os
-import tempfile
 import rasterio
 import pytest
+import pathlib
+import sys
+sys.path.insert(1, '../../Tools/')
 from dea_tools.mosaics.mosaic_COGs import make_mosaic_cogs
 from dea_tools.mosaics.colour_scheme_VRTs import create_vrt  
 
@@ -29,6 +31,8 @@ def mosaic_test_params(tmp_path):
 
 @pytest.fixture
 def vrt_test_params_categorical(tmp_path):
+    #relative path to test python script
+    col_scheme_dir = pathlib.Path(__file__).parent.parent.parent / "Supplementary_data" / "Colour_schemes"
     return {
         "product": "ga_ls_landcover_class_cyear_3",
         "band": "level4",
@@ -37,7 +41,7 @@ def vrt_test_params_categorical(tmp_path):
         "version": "2-0-0",
         "cog_dir": str(tmp_path),
         "output_dir": str(tmp_path),
-        "col_scheme_dir": # TO-DO add this
+        "col_scheme_dir": str(col_scheme_dir.resolve()),
     }
 
         
