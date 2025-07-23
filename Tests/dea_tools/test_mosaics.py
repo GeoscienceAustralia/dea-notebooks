@@ -4,8 +4,8 @@ import pytest
 import pathlib
 import sys
 sys.path.insert(1, '../../Tools/')
-from dea_tools.mosaics.mosaic_COGs import make_mosaic_cogs
-from dea_tools.mosaics.colour_scheme_VRTs import create_vrt
+from dea_tools.mosaics.mosaic_COGs import make_cog_mosaics
+from dea_tools.mosaics.colour_scheme_VRTs import make_styling_vrt
 
 
 def test_mosaic_vrt_creation_cat(tmp_path):
@@ -40,7 +40,7 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "col_scheme_dir": str(col_scheme_dir.resolve()),
     }
 
-    make_mosaic_cogs(**mosaic_params)
+    make_cog_mosaics(**mosaic_params)
 
     output_cog = os.path.join(
         mosaic_params["output_dir"],
@@ -59,7 +59,7 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         assert src.width > 0 and src.height > 0, "Invalid raster dimensions"
         assert src.read(1).any(), "No data read from mosaic file"
 
-    create_vrt(**vrt_params)
+    make_styling_vrt(**vrt_params)
 
     output_vrt = os.path.join(
         vrt_params["output_dir"],
@@ -88,7 +88,7 @@ def test_geomedian_rgb_mosaic_and_vrt(tmp_path):
 
     # generate COGs for each RGB band
     for band in bands:
-        make_mosaic_cogs(
+        make_cog_mosaics(
             product=product,
             band=band,
             time=year,
@@ -124,7 +124,7 @@ def test_geomedian_rgb_mosaic_and_vrt(tmp_path):
             assert src.width > 0 and src.height > 0
             assert src.read(1).any(), f"No data in {band} band"
 
-    create_vrt(
+    make_styling_vrt(
         product=product,
         version=version,
         time=year,
