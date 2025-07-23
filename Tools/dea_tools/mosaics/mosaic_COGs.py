@@ -128,7 +128,7 @@ def _get_vsicurlhttp_from_s3(s3_url):
 
 
 
-def make_mosaic_cogs(
+def make_cog_mosaics(
     product,
     band,  
     time,
@@ -452,7 +452,7 @@ def make_mosaic_cogs(
      help="Comma-separated list of tiles to include in the mosaic. Example: x25y41,x26y42. "
     "If omitted, all tiles will be used."
 )
-def make_mosaic_cogs_cli(
+def make_cog_mosaic_cli(
     product,
     band,
     time,
@@ -475,7 +475,7 @@ def make_mosaic_cogs_cli(
     Passes user inputs to the core mosaic generation function.
     """
     
-    make_mosaic_cogs(
+    make_cog_mosaics(
         product, band, time, freq, version, dataset_maturity,
         product_dir, output_dir, cog_blocksize, overview_count,
         overview_resampling, compression_algo, compression_lvl,
@@ -483,4 +483,4 @@ def make_mosaic_cogs_cli(
     )
 
 if __name__ == "__main__":
-    make_mosaic_cogs_cli()
+    make_cog_mosaic_cli()

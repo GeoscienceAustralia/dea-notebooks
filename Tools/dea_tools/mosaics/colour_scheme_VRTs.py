@@ -473,7 +473,7 @@ def _create_vrt_3bands_comp(
             shutil.copy(temp_output_vrt, output_vrt)
 
 
-def create_vrt(
+def make_styling_vrt(
     product,
     version,
     time,
@@ -620,7 +620,7 @@ def create_vrt(
     required=False,
     help="Band to use in the BLUE channel for RGB composite e.g., 'nbart_blue')",
 )
-def create_vrt_cli(
+def make_styling_vrt_cli(
     product,
     version,
     time,
@@ -638,7 +638,7 @@ def create_vrt_cli(
     Passes user parameters to the main VRT creation function.
     """
 
-    create_vrt(
+    make_styling_vrt(
         product,version,time,freq,cog_dir,output_dir,
         band,col_scheme_dir,r_channel_band,
         g_channel_band,b_channel_band,
@@ -646,4 +646,4 @@ def create_vrt_cli(
 
 
 if __name__ == "__main__":
-    create_vrt_cli()
+    make_styling_vrt_cli()
