@@ -53,6 +53,8 @@ python mosaic_COGs.py \
   --list_tiles x25y41,x26y42,x27y43
 ```
 
+If DEA Tools package is installed, it is possible to run the function as CLI and replace `python mosaic_COGs.py` in the command above with only `make_cog_mosaic`.
+
 ## Generate colour VRTs
 
 Apply colour scheme to single-band categorical data.
@@ -84,3 +86,5 @@ python colour_scheme_VRTs.py \
   --g_channel_band nbart_green \
   --b_channel_band nbart_blue
 ```
+
+If DEA Tools package is installed, it is possible to run the function as CLI and replace `python colour_scheme_VRTs.py` in the command above with only `make_styling_vrt`.
