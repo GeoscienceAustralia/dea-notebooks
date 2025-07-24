@@ -289,6 +289,7 @@ def make_cog_mosaics(
 
             # Build VRT that will subsequently be used to generate COG
             log.info(f"{run_id}: Building virtual raster (VRT)")
+            os.environ['AWS_NO_SIGN_REQUEST'] = 'YES
             try:
                 subprocess.run(
                     ["gdalbuildvrt", vrt_name, "-input_file_list", file_list_name],
