@@ -293,7 +293,6 @@ def make_cog_mosaics(
                 subprocess.run(
                     ["gdalbuildvrt", vrt_name, "-input_file_list", file_list_name],
                     check=True,
-                    capture_output=True,
                     text=True,
                     stderr=subprocess.STDOUT,
                 )
