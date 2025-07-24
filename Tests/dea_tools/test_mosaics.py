@@ -101,7 +101,7 @@ def test_geomedian_rgb_mosaic_and_vrt(tmp_path):
             overview_count=7,
             overview_resampling="BILINEAR",
             compression_algo="ZSTD",
-           compression_level=9,
+            compression_level=9,
             aws_unsigned=True,
             skip_existing=False,
             list_tiles=list_tiles
