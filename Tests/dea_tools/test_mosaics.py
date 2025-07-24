@@ -3,7 +3,7 @@ import rasterio
 import pytest
 import pathlib
 import sys
-sys.path.insert(1, '../../Tools/')
+
 from dea_tools.mosaics.mosaic_COGs import make_cog_mosaics
 from dea_tools.mosaics.colour_scheme_VRTs import make_styling_vrt
 

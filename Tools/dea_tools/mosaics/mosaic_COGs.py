@@ -293,9 +293,11 @@ def make_cog_mosaics(
                 subprocess.run(
                     ["gdalbuildvrt", vrt_name, "-input_file_list", file_list_name],
                     check=True,
+                    capture_output=True,
+                    text=True,
                 )
             except subprocess.CalledProcessError as e:
-                log.error(f"{run_id}: gdalbuildvrt failed with error: {e}")
+                log.error(f"{run_id}: gdalbuildvrt failed with error: {e.stderr} {e.stdout}")
                 raise
 
             # Convert VRT to Cloud Optimized GeoTIFF (COG)
@@ -305,8 +307,8 @@ def make_cog_mosaics(
                 subprocess.run(
                     [
                         "gdal_translate",
-                        vrt_name,
-                        output_name,
+                        # vrt_name,
+                        # output_name,
                         "-co", "NUM_THREADS=ALL_CPUS",                        # Parallelisation
                         "-of", "COG",                                         # Output format
                         "-co", "BIGTIFF=YES",                                 # Allow large TIFFs
@@ -319,9 +321,11 @@ def make_cog_mosaics(
                         "-co", "PREDICTOR=YES",                               # Compression predictor
                     ],
                     check=True,
+                    capture_output=True,
+                    text=True,
                 )
             except subprocess.CalledProcessError as e:
-                log.error(f"{run_id}: gdal_translate failed with error: {e}")
+                log.error(f"{run_id}: gdal_translate failed with error: {e.stderr} {e.stdout}")
                 raise
             # fmt: on
 
