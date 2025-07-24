@@ -277,9 +277,9 @@ def make_cog_mosaics(
             log.info(f"{run_id}: Writing data to temporary folder: {temp_dir}")
 
             # Output paths for intermediate files
-            file_list_name = os.path.join(os.cwd(), f"{product}_{time}--{freq}_{band}_{version}.txt")
+            file_list_name = os.path.join(os.cwd(), f"{product}_{time}_{freq}_{band}_{version}.txt")
             vrt_name = os.path.join(os.cwd(), f"{product}_{time}--{freq}_{band}_{version}.vrt")
-            output_name = os.path.join(os.cwd(), f"{product}_mosaic_{time}--{freq}_{band}.tif")
+            output_name = os.path.join(os.cwd(), f"{product}_mosaic_{time}_{freq}_{band}.tif")
 
             # Write list of files to a temporary text file, so it can be
             # used as an input to `gdalbuildvrt`
