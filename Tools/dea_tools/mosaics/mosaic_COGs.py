@@ -294,6 +294,7 @@ def make_cog_mosaics(
             os.environ['CPL_CURL_VERBOSE']='YES'
             os.environ['CPL_VSIL_CURL_USE_HEAD']='FALSE'
             os.environ['AWS_DEFAULT_REGION']='ap-southeast-2'
+            os.environ['AWS_REGION']='ap-southeast-2'
             try:
                 subprocess.run(
                     ["gdalbuildvrt", vrt_name, "-input_file_list", file_list_name],
