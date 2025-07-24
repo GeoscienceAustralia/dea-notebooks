@@ -28,7 +28,8 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "list_tiles": ["x46y47", "x46y48"],
     }
 
-    col_scheme_dir = pathlib.Path(__file__).parent.parent.parent / "Supplementary_data" / "Colour_schemes" # relative to where test script is
+    col_scheme_dir = "Supplementary_data/Colour_schemes"
+
     vrt_params = {
         "product": "ga_ls_landcover_class_cyear_3",
         "band": "level4",
@@ -37,7 +38,7 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "version": "2-0-0",
         "cog_dir": str(tmp_path),
         "output_dir": str(tmp_path),
-        "col_scheme_dir": str(col_scheme_dir.resolve()),
+        "col_scheme_dir": col_scheme_dir,
     }
 
     make_cog_mosaics(**mosaic_params)

@@ -307,8 +307,8 @@ def make_cog_mosaics(
                 subprocess.run(
                     [
                         "gdal_translate",
-                        # vrt_name,
-                        # output_name,
+                        vrt_name,
+                        output_name,
                         "-co", "NUM_THREADS=ALL_CPUS",                        # Parallelisation
                         "-of", "COG",                                         # Output format
                         "-co", "BIGTIFF=YES",                                 # Allow large TIFFs
@@ -317,7 +317,7 @@ def make_cog_mosaics(
                         "-co", f"OVERVIEW_RESAMPLING={overview_resampling}",  # Resampling for overviews
                         "-co", f"OVERVIEW_COUNT={overview_count}",            # Number of overviews
                         "-co", f"COMPRESS={compression_algo}",                # Compression
-                        "-co", f"LEVEL={compression_level}",                    # Compression level
+                        "-co", f"LEVEL={compression_level}",                  # Compression level
                         "-co", "PREDICTOR=YES",                               # Compression predictor
                     ],
                     check=True,
