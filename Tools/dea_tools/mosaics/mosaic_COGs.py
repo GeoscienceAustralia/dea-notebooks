@@ -295,6 +295,7 @@ def make_cog_mosaics(
                     check=True,
                     capture_output=True,
                     text=True,
+                    stdout=PIPE, stderr=STDOUT,
                 )
             except subprocess.CalledProcessError as e:
                 log.error(f"{run_id}: gdalbuildvrt failed with error: {e.stderr} {e.stdout}")
