@@ -8,12 +8,13 @@ This submodule provides Python tools for generating Cloud Optimised GeoTIFF (COG
 ---
 
 # Usage examples
+
 ## Generate COG mosaics
 
-Continental mosaic of 2024 DEA Land Cover 2.0.
+To generate a continental mosaic of 2024 DEA Land Cover 2.0, first [install DEA Tools](https://github.com/GeoscienceAustralia/dea-notebooks/tree/develop/Tools#installation) and then run the command below:
 
 ```
-python mosaic_COGs.py \
+make_cog_mosaic \
   --product ga_ls_landcover_class_cyear_3 \
   --band level4 \
   --time 2024 \
@@ -26,15 +27,15 @@ python mosaic_COGs.py \
   --overview_count 7 \
   --overview_resampling MODE \
   --compression_algo ZSTD \
-  --compression_lvl 9 \
+  --compression_level 9 \
   --aws_unsigned \
   --skip_existing
 ```
 
-Mosaic only a few tiles.
+Mosaic only a few tiles:
 
 ```
-python mosaic_COGs.py \
+make_cog_mosaic \
   --product ga_ls_landcover_class_cyear_3 \
   --band level4 \
   --time 2024 \
@@ -47,13 +48,13 @@ python mosaic_COGs.py \
   --overview_count 7 \
   --overview_resampling MODE \
   --compression_algo ZSTD \
-  --compression_lvl 9 \
+  --compression_level 9 \
   --aws_unsigned \
   --skip_existing \
   --list_tiles x25y41,x26y42,x27y43
 ```
 
-If DEA Tools package is installed, it is possible to run the function as CLI and replace `python mosaic_COGs.py` in the command above with only `make_cog_mosaic`.
+If DEA Tools package is not installed, it is possible to run the analysis directly via the Python module by replacing `make_cog_mosaic` in the command above with `python mosaic_COGs.py`.
 
 ## Generate colour VRTs
 
@@ -61,7 +62,7 @@ Apply colour scheme to single-band categorical data.
 It is recommended to use the same path where the mosaics are as output directory for the VRTs. Because the VRTs look for the mosaic files in the folder where the VRTs are stored.
 
 ```
-python colour_scheme_VRTs.py \
+make_styling_vrt \
   --product ga_ls_landcover_class_cyear_3 \
   --time 2024 \
   --freq P1Y \
@@ -72,10 +73,10 @@ python colour_scheme_VRTs.py \
   --band level4
 ```
 
-For three-colours composites (in this example, RGB true-colour)
+For three-colours composites (in this example, RGB true-colour):
 
 ```
-python colour_scheme_VRTs.py \
+make_styling_vrt \
   --product ga_ls8cls9c_gm_cyear_3 \
   --time 2024 \
   --freq P1Y \
@@ -87,4 +88,4 @@ python colour_scheme_VRTs.py \
   --b_channel_band nbart_blue
 ```
 
-If DEA Tools package is installed, it is possible to run the function as CLI and replace `python colour_scheme_VRTs.py` in the command above with only `make_styling_vrt`.
+If DEA Tools package is not installed, it is possible to run the analysis directly via the Python module by replacing `make_styling_vrt` in the command above with `python colour_scheme_VRTs.py`.
