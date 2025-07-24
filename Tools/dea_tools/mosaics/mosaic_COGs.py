@@ -292,6 +292,7 @@ def make_cog_mosaics(
             os.environ['AWS_NO_SIGN_REQUEST'] = 'YES'
             os.environ['GDAL_DISABLE_READDIR_ON_OPEN']='YES'
             os.environ['CPL_CURL_VERBOSE']='YES'
+            os.environ['CPL_VSIL_CURL_USE_HEAD']='FALSE'
             try:
                 subprocess.run(
                     ["gdalbuildvrt", vrt_name, "-input_file_list", file_list_name],
