@@ -1,12 +1,12 @@
 # colour_scheme_VRTs.py
 """
-Tools for applying colour schemes and generating GDAL VRTs for mosaics of 
-Digital Earth Australia (DEA) products, including single-band categorical 
+Tools for applying colour schemes and generating GDAL VRTs for mosaics of
+Digital Earth Australia (DEA) products, including single-band categorical
 visualisations and three-band composites (e.g., RGB for true or false colour imagery).
 
-In case of categorical data, colour schemes are loaded from JSON files 
-containing RGBA values and labels. The module supports DEA’s mosaic output 
-structure and naming conventions and can operate on mosaic files stored 
+In case of categorical data, colour schemes are loaded from JSON files
+containing RGBA values and labels. The module supports DEA’s mosaic output
+structure and naming conventions and can operate on mosaic files stored
 locally or in the cloud (AWS's S3).
 
 License: The code in this module is licensed under the Apache License,
@@ -26,31 +26,24 @@ GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 Last modified: July 2025
 """
 
-
-import os
 import json
-import subprocess
-import click
 import logging
-import requests
-import tempfile
+import os
 import shutil
-from urllib.parse import urlparse
-import xml.etree.ElementTree as ET
+import subprocess
+import tempfile
 import xml.dom.minidom
+import xml.etree.ElementTree as ET
+
+import click
+import requests
+
+from dea_tools.mosaics.mosaic_COGs import _is_s3
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-
-
-def _is_s3(path):
-    """
-    Determine whether output location is on S3.
-    """
-    uu = urlparse(path)
-    return uu.scheme == "s3"
 
 
 def _file_exists_s3(url):
@@ -72,8 +65,7 @@ def _clean_label_dict(label):
     label = label.replace(">", "more than")
     label = label.replace("<", "less than")
     label = label.replace(":", "")
-    label = label.replace("\n", "")
-    return label
+    return label.replace("\n", "")
 
 
 def _get_lc_colour_scheme(band, json_dir=None):
@@ -85,9 +77,7 @@ def _get_lc_colour_scheme(band, json_dir=None):
     if json_dir:
         json_path = os.path.join(json_dir, json_filename)
     else:
-        script_dir = os.path.dirname(
-            os.path.abspath(__file__)
-        )  # directory of the script
+        script_dir = os.path.dirname(os.path.abspath(__file__))  # directory of the script
         json_path = os.path.join(script_dir, json_filename)
 
     with open(json_path, "r") as f:
@@ -118,16 +108,19 @@ def _create_vrt_landcover(
     Builds a VRT from a land cover mosaic, embeds colour palette,
     and saves output locally or to S3.
 
-    The COG path in the VRT is realtive to the VRT location
+    The COG path in the VRT will relative to the VRT location for
+    local COG directories, and absolute S3 paths for COGs on S3.
     """
 
     # first log
     log = logging.getLogger(__name__)
     input_params = locals()
     run_id = f"[{product}] [{version}] [{time}] [{band}]"
-    log.info(
-        f"Creating colour VRTs for Land Cover {run_id}: Using parameters {input_params}"
-    )
+    log.info(f"Creating colour VRTs for Land Cover {run_id}: Using parameters {input_params}")
+
+    # Determine if COG or output directories are located on S3
+    is_cog_dir_s3 = _is_s3(cog_dir)
+    is_out_dir_s3 = _is_s3(output_dir)
 
     # get rgb of land cover classification values as a dictionary
     rgb_values = _get_lc_colour_scheme(band, col_scheme_dir)
@@ -135,8 +128,7 @@ def _create_vrt_landcover(
     # get input continental COG path
     cog_dir = cog_dir.rstrip("/")
 
-    if _is_s3(cog_dir):
-        is_s3 = True
+    if is_cog_dir_s3:
         cog_dir = cog_dir.replace("s3://", "")
         cog_dir = cog_dir.rstrip("/")
         if "dea-public-data-dev/" in cog_dir:
@@ -145,9 +137,7 @@ def _create_vrt_landcover(
                 "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/",
             )
         elif "dea-public-data/" in cog_dir:
-            cog_dir = cog_dir.replace(
-                "dea-public-data/", "/vsicurl/https://data.dea.ga.gov.au/"
-            )
+            cog_dir = cog_dir.replace("dea-public-data/", "/vsicurl/https://data.dea.ga.gov.au/")
 
         cog_dir = f"{cog_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
         input_path = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{band}.tif"
@@ -157,17 +147,10 @@ def _create_vrt_landcover(
             log.info(f"{run_id}: No COG input found")
             return
     else:
-        is_s3 = False
-        cog_dir = os.path.join(
-            cog_dir, product, version, "continental_mosaics", f"{time}--{freq}"
-        )
-        input_path = os.path.join(
-            cog_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif"
-        )
+        cog_dir = os.path.join(cog_dir, product, version, "continental_mosaics", f"{time}--{freq}")
+        input_path = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif")
         if os.path.exists(input_path):
-            log.info(
-                f"{run_id}: Identifying input data from local file system: {input_path}"
-            )
+            log.info(f"{run_id}: Identifying input data from local file system: {input_path}")
         else:
             log.info(f"{run_id}: No COG input found")
             return
@@ -175,19 +158,13 @@ def _create_vrt_landcover(
     # define ouptut VRT name following the standardised naming:
     # /derivative/<product_id>/<version>/continental_mosaics/<time>/<product_id>_mosaic_<time>_<VRT name>.vrt
     output_dir = output_dir.rstrip("/")
-    if _is_s3(output_dir):
-        output_dir = (
-            f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
-        )
+    if is_out_dir_s3:
+        output_dir = f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
         output_vrt = f"{output_dir}/{product}_mosaic_{time}--{freq}_{band}.vrt"
         log.info(f"{run_id} - Output path: {output_vrt}")
     else:
-        output_dir = os.path.join(
-            output_dir, product, version, "continental_mosaics", f"{time}--{freq}"
-        )
-        output_vrt = os.path.join(
-            output_dir, f"{product}_mosaic_{time}--{freq}_{band}.vrt"
-        )
+        output_dir = os.path.join(output_dir, product, version, "continental_mosaics", f"{time}--{freq}")
+        output_vrt = os.path.join(output_dir, f"{product}_mosaic_{time}--{freq}_{band}.vrt")
         log.info(f"{run_id} - Output path: {output_vrt}")
 
     # Create a temporary directory to house files before syncing
@@ -195,9 +172,7 @@ def _create_vrt_landcover(
         log.info(f"{run_id}: Writing data to temporary folder: {temp_dir}")
 
         # Output paths for intermediate files
-        temp_output_vrt = os.path.join(
-            temp_dir, f"{product}_mosaic_{time}--{freq}_{band}.vrt"
-        )
+        temp_output_vrt = os.path.join(temp_dir, f"{product}_mosaic_{time}--{freq}_{band}.vrt")
 
         # build base VRT
         try:
@@ -212,12 +187,14 @@ def _create_vrt_landcover(
         tree = ET.parse(temp_output_vrt)
         root = tree.getroot()
 
-        # modify all <SourceFilename> elements to keep only the filename (relative path)
-        for src in root.findall(".//SourceFilename"):
-            full_path = src.text
-            filename = os.path.basename(full_path)
-            src.text = filename
-            src.set("relativeToVRT", "1")
+        # If COGs are not on S3, modify all <SourceFilename> elements to
+        # keep only the filename (relative path)
+        if not is_cog_dir_s3:
+            for src in root.findall(".//SourceFilename"):
+                full_path = src.text
+                filename = os.path.basename(full_path)
+                src.text = filename
+                src.set("relativeToVRT", "1")
 
         band_node = root.find("VRTRasterBand")
 
@@ -260,7 +237,7 @@ def _create_vrt_landcover(
         with open(temp_output_vrt, "w", encoding="utf-8") as f:
             f.write(cleaned_xml)
 
-        if is_s3:  # Copy output to S3
+        if is_out_dir_s3:  # Copy output to S3
             log.info(f"{run_id}: Writing VRT to S3: {output_vrt}")
 
             subprocess.run(
@@ -295,6 +272,7 @@ def _create_vrt_3bands_comp(
     r_channel_band,
     g_channel_band,
     b_channel_band,
+    vrt_name=None,
 ):
     """
     Create a three-band composite VRT from separate band COGs.
@@ -302,21 +280,21 @@ def _create_vrt_3bands_comp(
     Builds a multi-band VRT using specified red, green, and blue channels,
     and writes output locally or to S3.
 
-    The COGs paths in the VRT is realtive to the VRT location
+    The COG path in the VRT will relative to the VRT location for
+    local COG directories, and absolute S3 paths for COGs on S3.
     """
 
     # first log
     log = logging.getLogger(__name__)
     input_params = locals()
     run_id = f"[{product}] [{version}] [{time}] [{r_channel_band}] [{g_channel_band}] [{b_channel_band}]"
-    log.info(
-        f"Creating colour VRTs for Geomedian {run_id}: Using parameters {input_params}"
-    )
+    log.info(f"Creating colour VRTs for Geomedian {run_id}: Using parameters {input_params}")
 
-    # get input continental COG path
-    cog_dir = cog_dir.rstrip("/")
+    # Determine if COG or output directories are located on S3
+    is_cog_dir_s3 = _is_s3(cog_dir)
+    is_out_dir_s3 = _is_s3(output_dir)
 
-    if _is_s3(cog_dir):
+    if is_cog_dir_s3:
         cog_dir = cog_dir.replace("s3://", "")
         cog_dir = cog_dir.rstrip("/")
         if "dea-public-data-dev/" in cog_dir:
@@ -325,21 +303,18 @@ def _create_vrt_3bands_comp(
                 "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/",
             )
         elif "dea-public-data/" in cog_dir:
-            cog_dir = cog_dir.replace(
-                "dea-public-data/", "/vsicurl/https://data.dea.ga.gov.au/"
-            )
+            cog_dir = cog_dir.replace("dea-public-data/", "/vsicurl/https://data.dea.ga.gov.au/")
 
         cog_dir = f"{cog_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
         input_path_r = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{r_channel_band}.tif"
         input_path_g = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{g_channel_band}.tif"
         input_path_b = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{b_channel_band}.tif"
-        if all(
-            [
-                _file_exists_s3(input_path_r),
-                _file_exists_s3(input_path_g),
-                _file_exists_s3(input_path_b),
-            ]
-        ):
+
+        if all([
+            _file_exists_s3(input_path_r),
+            _file_exists_s3(input_path_g),
+            _file_exists_s3(input_path_b),
+        ]):
             log.info(
                 f"{run_id}: Identifying input data from S3 bucket:\n-{input_path_r}\n-{input_path_g}\n-{input_path_b}"
             )
@@ -347,25 +322,15 @@ def _create_vrt_3bands_comp(
             log.info(f"{run_id}: One or more input COGs not found")
             return
     else:
-        cog_dir = os.path.join(
-            cog_dir, product, version, "continental_mosaics", f"{time}--{freq}"
-        )
-        input_path_r = os.path.join(
-            cog_dir, f"{product}_mosaic_{time}--{freq}_{r_channel_band}.tif"
-        )
-        input_path_g = os.path.join(
-            cog_dir, f"{product}_mosaic_{time}--{freq}_{g_channel_band}.tif"
-        )
-        input_path_b = os.path.join(
-            cog_dir, f"{product}_mosaic_{time}--{freq}_{b_channel_band}.tif"
-        )
-        if all(
-            [
-                os.path.exists(input_path_r),
-                os.path.exists(input_path_g),
-                os.path.exists(input_path_b),
-            ]
-        ):
+        cog_dir = os.path.join(cog_dir, product, version, "continental_mosaics", f"{time}--{freq}")
+        input_path_r = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{r_channel_band}.tif")
+        input_path_g = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{g_channel_band}.tif")
+        input_path_b = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{b_channel_band}.tif")
+        if all([
+            os.path.exists(input_path_r),
+            os.path.exists(input_path_g),
+            os.path.exists(input_path_b),
+        ]):
             log.info(
                 f"{run_id}: Identifying input data from local file system:\n-{input_path_r}\n-{input_path_g}\n-{input_path_b}"
             )
@@ -373,25 +338,17 @@ def _create_vrt_3bands_comp(
             log.info(f"{run_id}: One or more input COGs not found in local filesystem")
             return
 
-    # define ouptut VRT name following the standardised naming:
+    # define output VRT name following the standardised naming:
     # /derivative/<product_id>/<version>/continental_mosaics/<time>/<product_id>_mosaic_<time>_<VRT name>.vrt
     output_dir = output_dir.rstrip("/")
-    if _is_s3(output_dir):
-        out_is_s3 = True
-        output_dir = (
-            f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
-        )
-        output_vrt = f"{output_dir}/{product}_mosaic_{time}--{freq}_{r_channel_band}-{g_channel_band}-{b_channel_band}.vrt"
+    vrt_name = vrt_name if vrt_name else f"{r_channel_band}-{g_channel_band}-{b_channel_band}"
+    if is_out_dir_s3:
+        output_dir = f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
+        output_vrt = f"{output_dir}/{product}_mosaic_{time}--{freq}_{vrt_name}.vrt"
         log.info(f"{run_id} - Output path: {output_vrt}")
     else:
-        out_is_s3 = False
-        output_dir = os.path.join(
-            output_dir, product, version, "continental_mosaics", f"{time}--{freq}"
-        )
-        output_vrt = os.path.join(
-            output_dir,
-            f"{product}_mosaic_{time}--{freq}_{r_channel_band}-{g_channel_band}-{b_channel_band}.vrt",
-        )
+        output_dir = os.path.join(output_dir, product, version, "continental_mosaics", f"{time}--{freq}")
+        output_vrt = os.path.join(output_dir, f"{product}_mosaic_{time}--{freq}_{vrt_name}.vrt")
         log.info(f"{run_id} - Output path: {output_vrt}")
 
     # Create a temporary directory to house files before syncing
@@ -426,12 +383,14 @@ def _create_vrt_3bands_comp(
         tree = ET.parse(temp_output_vrt)
         root = tree.getroot()
 
-        # modify all <SourceFilename> elements to keep only the filename (relative path)
-        for src in root.findall(".//SourceFilename"):
-            full_path = src.text
-            filename = os.path.basename(full_path)
-            src.text = filename
-            src.set("relativeToVRT", "1")
+        # If COGs are not on S3, modify all <SourceFilename> elements to
+        # keep only the filename (relative path)
+        if not is_cog_dir_s3:
+            for src in root.findall(".//SourceFilename"):
+                full_path = src.text
+                filename = os.path.basename(full_path)
+                src.text = filename
+                src.set("relativeToVRT", "1")
 
         # make xml more readable
         xml_str = ET.tostring(root, encoding="utf-8")
@@ -448,7 +407,7 @@ def _create_vrt_3bands_comp(
         with open(temp_output_vrt, "w", encoding="utf-8") as f:
             f.write(cleaned_xml)
 
-        if out_is_s3:  # Copy output to S3
+        if is_out_dir_s3:  # Copy output to S3
             log.info(f"{run_id}: Writing VRT to S3: {output_vrt}")
 
             subprocess.run(
@@ -485,6 +444,7 @@ def make_styling_vrt(
     r_channel_band=None,
     g_channel_band=None,
     b_channel_band=None,
+    vrt_name=None,
 ):
     """
     Create a virtual raster (VRT) for DEA products.
@@ -496,38 +456,52 @@ def make_styling_vrt(
     Parameters:
     -----------
     product : str
-        DEA product name (e.g., 'ga_ls_landcover_class_cyear_3').
+        DEA product name (e.g. 'ga_ls_landcover_class_cyear_3').
     version : str
-        Product version (e.g., '2-0-0').
+        Product version (e.g. '2-0-0').
     time : int or str
-        The target time of the mosaic, year if annual summaries (e.g., 2023),
+        The target time of the mosaic, year if annual summaries (e.g. 2023),
         year-month for seasonal (e.g., water observations nov_mar --> '2024-11')
     freq : str
-        The frequency of the summary product (e.g.,P1Y).
+        The frequency of the summary product (e.g. P1Y).
     cog_dir : str
-        path to directory with continental COG. E.g. 's3://dea-public-data/derivative/'
+        Path to directory with continental COG. E.g. 's3://dea-public-data/derivative/'
     output_dir : str
-        local directory or s3 directory where to save ouptut.
-    band : str
-        Band name (e.g., 'level4').
+        Local directory or s3 directory where to save ouptut.
+    band : str, optional
+        Band name (e.g. 'level4').
         Use None (default) if need a three-bands composite
-    col_scheme_dir : str
-        path to folder containing json files with colour schemes.
+    col_scheme_dir : str, optional
+        Path to folder containing json files with colour schemes.
         Use None (default) for using the same directory of this python script.
-    r_channel_band : str
+    r_channel_band : str, optional
         Band to use in the RED channel for a three-bands composite.
         Use None (default) if need a single-band categorical view
     g_channel_band : str
         Band to use in the GREEN channel for a three-bands composite.
         Use None (default) if need a single-band categorical view
-    b_channel_band : str
+    b_channel_band : str, optional
         Band to use in the BLUE channel for a three-bands composite.
         Use None (default) if need a single-band categorical view
+    vrt_name : str, optional
+        An optional name used for the output VRT. If not provided,
+        will default to {r_channel_band}-{g_channel_band}-{b_channel_band}.,
     """
+    # Set product and output paths to plain strings
+    # TODO: refactor code to use pathlib throughout
+    cog_dir = str(cog_dir)
+    output_dir = str(output_dir)
 
     if product == "ga_ls_landcover_class_cyear_3" and band:
         _create_vrt_landcover(
-            product, version, band, time, freq, cog_dir, output_dir, col_scheme_dir
+            product,
+            version,
+            band,
+            time,
+            freq,
+            cog_dir,
+            output_dir,
+            col_scheme_dir,
         )
 
     elif all([r_channel_band, g_channel_band, b_channel_band]):
@@ -541,6 +515,7 @@ def make_styling_vrt(
             r_channel_band,
             g_channel_band,
             b_channel_band,
+            vrt_name,
         )
 
     else:
@@ -620,6 +595,13 @@ def make_styling_vrt(
     required=False,
     help="Band to use in the BLUE channel for RGB composite e.g., 'nbart_blue')",
 )
+@click.option(
+    "--vrt_name",
+    type=str,
+    required=False,
+    help="An optional name used for the output three-band VRT. "
+    "If not provided, will default to {r_channel_band}-{g_channel_band}-{b_channel_band}.",
+)
 def make_styling_vrt_cli(
     product,
     version,
@@ -632,6 +614,7 @@ def make_styling_vrt_cli(
     r_channel_band=None,
     g_channel_band=None,
     b_channel_band=None,
+    vrt_name=None,
 ):
     """
     CLI entry point for creating VRT files with color schemes or composites.
@@ -639,9 +622,18 @@ def make_styling_vrt_cli(
     """
 
     make_styling_vrt(
-        product,version,time,freq,cog_dir,output_dir,
-        band,col_scheme_dir,r_channel_band,
-        g_channel_band,b_channel_band,
+        product,
+        version,
+        time,
+        freq,
+        cog_dir,
+        output_dir,
+        band,
+        col_scheme_dir,
+        r_channel_band,
+        g_channel_band,
+        b_channel_band,
+        vrt_name,
     )
 
 
