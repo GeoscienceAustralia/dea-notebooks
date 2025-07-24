@@ -291,6 +291,8 @@ def make_cog_mosaics(
             log.info(f"{run_id}: Building virtual raster (VRT)")
             os.environ['AWS_NO_SIGN_REQUEST'] = 'YES'
             os.environ['GDAL_DISABLE_READDIR_ON_OPEN']='YES'
+            os.environ['CPL_CURL_VERBOSE']='YES'
+            CPL_CURL_VERBOSE
             try:
                 subprocess.run(
                     ["gdalbuildvrt", vrt_name, "-input_file_list", file_list_name],
