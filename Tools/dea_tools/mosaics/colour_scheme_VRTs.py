@@ -137,7 +137,7 @@ def _create_vrt_landcover(
                 "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/",
             )
         elif "dea-public-data/" in cog_dir:
-            cog_dir = cog_dir.replace("dea-public-data/", "/vsicurl/https://data.dea.ga.gov.au/")
+            cog_dir = cog_dir.replace("dea-public-data/", "/vsicurl/https://dea-public-data.s3-ap-southeast-2.amazonaws.com/")
 
         cog_dir = f"{cog_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
         input_path = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{band}.tif"
@@ -303,7 +303,7 @@ def _create_vrt_3bands_comp(
                 "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/",
             )
         elif "dea-public-data/" in cog_dir:
-            cog_dir = cog_dir.replace("dea-public-data/", "/vsicurl/https://data.dea.ga.gov.au/")
+            cog_dir = cog_dir.replace("dea-public-data/", "/vsicurl/https://dea-public-data.s3-ap-southeast-2.amazonaws.com/")
 
         cog_dir = f"{cog_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
         input_path_r = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{r_channel_band}.tif"
