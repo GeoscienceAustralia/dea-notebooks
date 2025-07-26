@@ -26,9 +26,10 @@ import odc.geo.xr
 from math import sqrt
 from scipy import stats
 import geopandas as gpd
-from odc.geo.xr import assign_crs
+from .spatial import add_geobox
 from shapely.geometry import Point
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+
 
 
 def eval_metrics(x, y, round=3, all_regress=False):
@@ -94,25 +95,26 @@ def eval_metrics(x, y, round=3, all_regress=False):
     return pd.Series(stats_dict).round(round)
 
 
-def random_sampling(
+def random_sampling_xr(
     da, n=None,
     sampling="stratified_random",
     manual_class_ratios=None,
+    oversample_factor=5,
     out_fname=None,
-    oversample_factor=5
 ):
     """
     Efficient and scalable random sampling of a 2D classified xarray.DataArray.
     Returns a GeoDataFrame of point samples based on specified sampling strategy.
 
-    Params:
+    Parameters:
     -------
-    da: xarray.DataArray
+    da : xarray.DataArray
         A classified 2-dimensional xarray.DataArray
-    n: int
+    n : int
         Total number of points to sample. Ignored if providing
         a dictionary of {class:numofpoints} to 'manual_class_ratios'
-    sampling: str
+    sampling : str, , optional
+        The sampling strategy to use. Options include:
         'stratified_random' = Create points that are randomly
         distributed within each class, where each class has a
         number of points proportional to its relative area.
@@ -124,11 +126,25 @@ def random_sampling(
         'manual' = user definined, each class is allocated a
         specified number of points, supply a manual_class_ratio
         dictionary mapping number of points to each class
-    manual_class_ratios: dict
+    manual_class_ratios : dict, optional
         If setting sampling to 'manual', the provide a dictionary
         of type {'class': numofpoints} mapping the number of points
         to generate for each class.
-    out_fname: str
+    oversample_factor : float, optional (default=5)
+        A multiplier used to increase the number of random candidate pixels 
+        initially drawn when sampling very large classes (>1 billion pixels).
+        For such large classes, generating a full class mask in memory is inefficient.
+        Instead, the function randomly samples a subset of pixel coordinates and 
+        checks which ones match the target class. To reduce the chance of undersampling,
+        `oversample_factor` controls how many candidate coordinates are initially drawn.
+        For example, if 100 samples are required and `oversample_factor=5`, 
+        500 random (x, y) coordinates will be sampled first. Only those matching 
+        the class will be retained and then randomly subsampled down to the desired 
+        number of samples. If too few valid matches are found, a warning is issued.
+        Increasing this value can improve success rates when sampling sparse or 
+        spatially fragmented classes in large datasets, at the cost of more memory 
+        and computation.
+    out_fname : str, optional
         If providing a filepath name, e.g 'sample_points.shp', the
         function will export a shapefile/geojson of the sampling
         points to file.
@@ -138,7 +154,7 @@ def random_sampling(
     GeoPandas.Dataframe
 
     """
-
+    #perform checks on the inputs
     if sampling not in [
         "stratified_random",
         "equal_stratified_random",
@@ -169,6 +185,9 @@ def random_sampling(
         raise ValueError(
             f"Could not infer spatial dimensions. Found dims: {da.dims}")
     da = da.rename({x_dim: "x", y_dim: "y"})
+
+    # Ensure da has a .odc.* accessor using odc.geo.
+    da = add_geobox(da)
 
     #grab data as numpy arrays and count classes
     data = da.values
@@ -256,7 +275,7 @@ def random_sampling(
                 flat_idx = np.argwhere(class_mask).squeeze()
                 if flat_idx.size < sample_size:
                     print(
-                        f"Warning: not enough pixels in class  {cls} for given sample size, skipping")
+                        f"Warning: not enough pixels in class {cls} for given sample size, skipping")
                     continue
                 picked = np.random.choice(
                     flat_idx.shape[0], sample_size, replace=False)
@@ -269,6 +288,7 @@ def random_sampling(
     if len(samples) == 0:
         raise RuntimeError("No samples collected. Check input conditions.")
 
+    # Add samples to geodataframe
     df = pd.DataFrame(samples, columns=["y", "x", "class"])
     gdf = gpd.GeoDataFrame(
         df, geometry=gpd.points_from_xy(df.x, df.y), crs=f"EPSG:{da.odc.crs.epsg}"
