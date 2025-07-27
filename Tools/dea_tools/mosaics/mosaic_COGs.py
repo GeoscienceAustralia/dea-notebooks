@@ -55,6 +55,11 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
+from datacube.utils.rio import configure_s3_access
+
+configure_rio(cloud_defaults=True, aws={"aws_unsigned": True})
+configure_s3_access(cloud_defaults=True, aws_unsigned=True)
+
 
 def _is_s3(path):
     """
