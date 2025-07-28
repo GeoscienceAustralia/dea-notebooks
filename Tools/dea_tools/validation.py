@@ -135,10 +135,10 @@ def random_sampling_xr(
     oversample_factor : float, optional (default=5)
         A multiplier used to increase the number of random candidate pixels 
         initially drawn when sampling very large classes (>1 billion pixels).
-        For such large classes, generating a full class mask in memory is inefficient.
-        Instead, the function randomly samples a subset of pixel coordinates and 
-        checks which ones match the target class. To reduce the chance of undersampling,
-        `oversample_factor` controls how many candidate coordinates are initially drawn.
+        For such large classes, the function randomly samples a subset of
+        pixel coordinates and checks which ones match the target class. 
+        To reduce the chance of undersampling, `oversample_factor` controls 
+        how many candidate coordinates are initially drawn.
         For example, if 100 samples are required and `oversample_factor=5`, 
         500 random (x, y) coordinates will be sampled first. Only those matching 
         the class will be retained and then randomly subsampled down to the desired 
@@ -147,11 +147,11 @@ def random_sampling_xr(
         spatially fragmented classes in large datasets, at the cost of more memory 
         and computation.
     out_fname : str, optional
-        If providing a filepath name, e.g 'sample_points.shp', the
-        function will export a shapefile/geojson of the sampling
+        If providing a filepath name, e.g 'sample_points.geojson', the
+        function will export a geojson (or shapefile) of the sampling
         points to file.
     verbose: bool, optional (default=True)
-        If True, print statements will track progress.
+        If True, print statements will track progress and print warnings
 
     Output
     ------
@@ -206,7 +206,7 @@ def random_sampling_xr(
 
     if sampling == "random":
         
-        #first check num of samples doesn' exceed pixels
+        #first check num of samples doesn't exceed pixels
         total_valid = (~np.isnan(data)).sum()
         if n > total_valid:
             raise ValueError(
@@ -259,9 +259,8 @@ def random_sampling_xr(
 
             if verbose:
                 print(f"Class {cls}: sampling {sample_size} points")
-
-            class_mask = data == cls
-            class_count = class_mask.sum()
+            
+            class_count = (data == cls).sum()
             
             if (
                 class_count > 1e9
@@ -292,7 +291,7 @@ def random_sampling_xr(
                         samples.append((y, x, cls))
 
                 else:
-                    # If more matches than samples, then randomly sample the matches uso we get the
+                    # If more matches than samples, then randomly sample the matches so we get the
                     # the right number of samples.
                     idx = np.random.choice(np.arange(len(rand_y)), size=sample_size, replace=False)
                     for i in idx:
@@ -301,8 +300,8 @@ def random_sampling_xr(
                         samples.append((y, x, cls))
 
             else:
-                # if class size is less than a billion, then use class mask
-                # and sample
+                # if class size is less than a billion, then sample class mask
+                class_mask = data == cls
                 flat_indices = np.flatnonzero(class_mask)
                 
                 # Check if enough pixels exist
