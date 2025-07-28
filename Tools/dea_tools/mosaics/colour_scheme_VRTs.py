@@ -77,7 +77,9 @@ def _get_lc_colour_scheme(band, json_dir=None):
     if json_dir:
         json_path = os.path.join(json_dir, json_filename)
     else:
-        script_dir = os.path.dirname(os.path.abspath(__file__))  # directory of the script
+        script_dir = os.path.dirname(
+            os.path.abspath(__file__)
+        )  # directory of the script
         json_path = os.path.join(script_dir, json_filename)
 
     with open(json_path, "r") as f:
@@ -116,7 +118,9 @@ def _create_vrt_landcover(
     log = logging.getLogger(__name__)
     input_params = locals()
     run_id = f"[{product}] [{version}] [{time}] [{band}]"
-    log.info(f"Creating colour VRTs for Land Cover {run_id}: Using parameters {input_params}")
+    log.info(
+        f"Creating colour VRTs for Land Cover {run_id}: Using parameters {input_params}"
+    )
 
     # Determine if COG or output directories are located on S3
     is_cog_dir_s3 = _is_s3(cog_dir)
@@ -137,7 +141,10 @@ def _create_vrt_landcover(
                 "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/",
             )
         elif "dea-public-data/" in cog_dir:
-            cog_dir = cog_dir.replace("dea-public-data/", "/vsicurl/https://data.dea.ga.gov.au/")
+            cog_dir = cog_dir.replace(
+                "dea-public-data/",
+                "/vsicurl/https://dea-public-data.s3-ap-southeast-2.amazonaws.com/",
+            )
 
         cog_dir = f"{cog_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
         input_path = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{band}.tif"
@@ -147,10 +154,16 @@ def _create_vrt_landcover(
             log.info(f"{run_id}: No COG input found")
             return
     else:
-        cog_dir = os.path.join(cog_dir, product, version, "continental_mosaics", f"{time}--{freq}")
-        input_path = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif")
+        cog_dir = os.path.join(
+            cog_dir, product, version, "continental_mosaics", f"{time}--{freq}"
+        )
+        input_path = os.path.join(
+            cog_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif"
+        )
         if os.path.exists(input_path):
-            log.info(f"{run_id}: Identifying input data from local file system: {input_path}")
+            log.info(
+                f"{run_id}: Identifying input data from local file system: {input_path}"
+            )
         else:
             log.info(f"{run_id}: No COG input found")
             return
@@ -159,12 +172,18 @@ def _create_vrt_landcover(
     # /derivative/<product_id>/<version>/continental_mosaics/<time>/<product_id>_mosaic_<time>_<VRT name>.vrt
     output_dir = output_dir.rstrip("/")
     if is_out_dir_s3:
-        output_dir = f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
+        output_dir = (
+            f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
+        )
         output_vrt = f"{output_dir}/{product}_mosaic_{time}--{freq}_{band}.vrt"
         log.info(f"{run_id} - Output path: {output_vrt}")
     else:
-        output_dir = os.path.join(output_dir, product, version, "continental_mosaics", f"{time}--{freq}")
-        output_vrt = os.path.join(output_dir, f"{product}_mosaic_{time}--{freq}_{band}.vrt")
+        output_dir = os.path.join(
+            output_dir, product, version, "continental_mosaics", f"{time}--{freq}"
+        )
+        output_vrt = os.path.join(
+            output_dir, f"{product}_mosaic_{time}--{freq}_{band}.vrt"
+        )
         log.info(f"{run_id} - Output path: {output_vrt}")
 
     # Create a temporary directory to house files before syncing
@@ -172,7 +191,9 @@ def _create_vrt_landcover(
         log.info(f"{run_id}: Writing data to temporary folder: {temp_dir}")
 
         # Output paths for intermediate files
-        temp_output_vrt = os.path.join(temp_dir, f"{product}_mosaic_{time}--{freq}_{band}.vrt")
+        temp_output_vrt = os.path.join(
+            temp_dir, f"{product}_mosaic_{time}--{freq}_{band}.vrt"
+        )
 
         # build base VRT
         try:
@@ -288,7 +309,9 @@ def _create_vrt_3bands_comp(
     log = logging.getLogger(__name__)
     input_params = locals()
     run_id = f"[{product}] [{version}] [{time}] [{r_channel_band}] [{g_channel_band}] [{b_channel_band}]"
-    log.info(f"Creating colour VRTs for Geomedian {run_id}: Using parameters {input_params}")
+    log.info(
+        f"Creating colour VRTs for Geomedian {run_id}: Using parameters {input_params}"
+    )
 
     # Determine if COG or output directories are located on S3
     is_cog_dir_s3 = _is_s3(cog_dir)
@@ -303,18 +326,23 @@ def _create_vrt_3bands_comp(
                 "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/",
             )
         elif "dea-public-data/" in cog_dir:
-            cog_dir = cog_dir.replace("dea-public-data/", "/vsicurl/https://data.dea.ga.gov.au/")
+            cog_dir = cog_dir.replace(
+                "dea-public-data/",
+                "/vsicurl/https://dea-public-data.s3-ap-southeast-2.amazonaws.com/",
+            )
 
         cog_dir = f"{cog_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
         input_path_r = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{r_channel_band}.tif"
         input_path_g = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{g_channel_band}.tif"
         input_path_b = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{b_channel_band}.tif"
 
-        if all([
-            _file_exists_s3(input_path_r),
-            _file_exists_s3(input_path_g),
-            _file_exists_s3(input_path_b),
-        ]):
+        if all(
+            [
+                _file_exists_s3(input_path_r),
+                _file_exists_s3(input_path_g),
+                _file_exists_s3(input_path_b),
+            ]
+        ):
             log.info(
                 f"{run_id}: Identifying input data from S3 bucket:\n-{input_path_r}\n-{input_path_g}\n-{input_path_b}"
             )
@@ -322,15 +350,25 @@ def _create_vrt_3bands_comp(
             log.info(f"{run_id}: One or more input COGs not found")
             return
     else:
-        cog_dir = os.path.join(cog_dir, product, version, "continental_mosaics", f"{time}--{freq}")
-        input_path_r = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{r_channel_band}.tif")
-        input_path_g = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{g_channel_band}.tif")
-        input_path_b = os.path.join(cog_dir, f"{product}_mosaic_{time}--{freq}_{b_channel_band}.tif")
-        if all([
-            os.path.exists(input_path_r),
-            os.path.exists(input_path_g),
-            os.path.exists(input_path_b),
-        ]):
+        cog_dir = os.path.join(
+            cog_dir, product, version, "continental_mosaics", f"{time}--{freq}"
+        )
+        input_path_r = os.path.join(
+            cog_dir, f"{product}_mosaic_{time}--{freq}_{r_channel_band}.tif"
+        )
+        input_path_g = os.path.join(
+            cog_dir, f"{product}_mosaic_{time}--{freq}_{g_channel_band}.tif"
+        )
+        input_path_b = os.path.join(
+            cog_dir, f"{product}_mosaic_{time}--{freq}_{b_channel_band}.tif"
+        )
+        if all(
+            [
+                os.path.exists(input_path_r),
+                os.path.exists(input_path_g),
+                os.path.exists(input_path_b),
+            ]
+        ):
             log.info(
                 f"{run_id}: Identifying input data from local file system:\n-{input_path_r}\n-{input_path_g}\n-{input_path_b}"
             )
@@ -341,14 +379,22 @@ def _create_vrt_3bands_comp(
     # define output VRT name following the standardised naming:
     # /derivative/<product_id>/<version>/continental_mosaics/<time>/<product_id>_mosaic_<time>_<VRT name>.vrt
     output_dir = output_dir.rstrip("/")
-    vrt_name = vrt_name if vrt_name else f"{r_channel_band}-{g_channel_band}-{b_channel_band}"
+    vrt_name = (
+        vrt_name if vrt_name else f"{r_channel_band}-{g_channel_band}-{b_channel_band}"
+    )
     if is_out_dir_s3:
-        output_dir = f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
+        output_dir = (
+            f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
+        )
         output_vrt = f"{output_dir}/{product}_mosaic_{time}--{freq}_{vrt_name}.vrt"
         log.info(f"{run_id} - Output path: {output_vrt}")
     else:
-        output_dir = os.path.join(output_dir, product, version, "continental_mosaics", f"{time}--{freq}")
-        output_vrt = os.path.join(output_dir, f"{product}_mosaic_{time}--{freq}_{vrt_name}.vrt")
+        output_dir = os.path.join(
+            output_dir, product, version, "continental_mosaics", f"{time}--{freq}"
+        )
+        output_vrt = os.path.join(
+            output_dir, f"{product}_mosaic_{time}--{freq}_{vrt_name}.vrt"
+        )
         log.info(f"{run_id} - Output path: {output_vrt}")
 
     # Create a temporary directory to house files before syncing

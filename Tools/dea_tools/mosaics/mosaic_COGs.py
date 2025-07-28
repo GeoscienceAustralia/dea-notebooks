@@ -99,8 +99,12 @@ def _get_tiles(
 
     # Optionally filter list of tiles if requested
     if list_tiles:
-        xy_patterns = [xy.replace("y", "/y") for xy in list_tiles]  # i.e. from 'x25y41' to 'x25/y41'
-        tiles_list = [tile for tile in tiles_list if any(xy in tile for xy in xy_patterns)]
+        xy_patterns = [
+            xy.replace("y", "/y") for xy in list_tiles
+        ]  # i.e. from 'x25y41' to 'x25/y41'
+        tiles_list = [
+            tile for tile in tiles_list if any(xy in tile for xy in xy_patterns)
+        ]
 
     return tiles_list
 
@@ -112,10 +116,14 @@ def _get_vsicurlhttp_from_s3(s3_url):
 
     if "dea-public-data-dev/" in s3_url:
         return s3_url.replace(
-            "dea-public-data-dev/", "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/"
+            "dea-public-data-dev/",
+            "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/",
         )
     if "dea-public-data/" in s3_url:
-        return s3_url.replace("dea-public-data/", "/vsicurl/https://data.dea.ga.gov.au/")
+        return s3_url.replace(
+            "dea-public-data/",
+            "/vsicurl/https://https://dea-public-data.s3-ap-southeast-2.amazonaws.com/",
+        )
     raise ValueError(f"Unexpected S3 URL structure: {s3_url}")
 
 
@@ -226,12 +234,18 @@ def make_cog_mosaics(
     # /derivative/<product_id>/<version>/continental_mosaics/<time>/<product_id>_mosaic_<time>_<band name>.tif
     output_dir = output_dir.rstrip("/")
     if is_out_dir_s3:
-        output_dir = f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
+        output_dir = (
+            f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
+        )
         output_file_path = f"{output_dir}/{product}_mosaic_{time}--{freq}_{band}.tif"
         log.info(f"{run_id} Output path: {output_file_path}")
     else:
-        output_dir = os.path.join(output_dir, product, version, "continental_mosaics", f"{time}--{freq}")
-        output_file_path = os.path.join(output_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif")
+        output_dir = os.path.join(
+            output_dir, product, version, "continental_mosaics", f"{time}--{freq}"
+        )
+        output_file_path = os.path.join(
+            output_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif"
+        )
         log.info(f"{run_id} Output path: {output_file_path}")
 
     # Check if output file already exists
@@ -248,7 +262,9 @@ def make_cog_mosaics(
                 f"{run_id}: Output already exists at {output_file_path} and skip_existing=True. Skipping generation."
             )
             return
-        log.warning(f"{run_id}: Output already exists at {output_file_path} but skip_existing=False. Overwriting.")
+        log.warning(
+            f"{run_id}: Output already exists at {output_file_path} but skip_existing=False. Overwriting."
+        )
     else:
         log.info(f"{run_id}: Output does not exist. Proceeding with mosaic generation.")
 
@@ -277,9 +293,15 @@ def make_cog_mosaics(
             log.info(f"{run_id}: Writing data to temporary folder: {temp_dir}")
 
             # Output paths for intermediate files
-            file_list_name = os.path.join(temp_dir, f"{product}_{time}--{freq}_{band}_{version}.txt")
-            vrt_name = os.path.join(temp_dir, f"{product}_{time}--{freq}_{band}_{version}.vrt")
-            output_name = os.path.join(temp_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif")
+            file_list_name = os.path.join(
+                temp_dir, f"{product}_{time}--{freq}_{band}_{version}.txt"
+            )
+            vrt_name = os.path.join(
+                temp_dir, f"{product}_{time}--{freq}_{band}_{version}.vrt"
+            )
+            output_name = os.path.join(
+                temp_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif"
+            )
 
             # Write list of files to a temporary text file, so it can be
             # used as an input to `gdalbuildvrt`
@@ -293,11 +315,13 @@ def make_cog_mosaics(
                 subprocess.run(
                     ["gdalbuildvrt", vrt_name, "-input_file_list", file_list_name],
                     check=True,
-                    capture_output=True,
                     text=True,
+                    stderr=subprocess.STDOUT,
                 )
             except subprocess.CalledProcessError as e:
-                log.error(f"{run_id}: gdalbuildvrt failed with error: {e.stderr} {e.stdout}")
+                log.error(
+                    f"{run_id}: gdalbuildvrt failed with error: {e.stderr} {e.stdout}"
+                )
                 raise
 
             # Convert VRT to Cloud Optimized GeoTIFF (COG)
@@ -321,8 +345,8 @@ def make_cog_mosaics(
                         "-co", "PREDICTOR=YES",                               # Compression predictor
                     ],
                     check=True,
-                    capture_output=True,
                     text=True,
+                    stderr=subprocess.STDOUT,
                 )
             except subprocess.CalledProcessError as e:
                 log.error(f"{run_id}: gdal_translate failed with error: {e.stderr} {e.stdout}")
