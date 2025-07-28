@@ -96,11 +96,13 @@ def eval_metrics(x, y, round=3, all_regress=False):
 
 
 def random_sampling_xr(
-    da, n=None,
+    da,
+    n=None,
     sampling="stratified_random",
     manual_class_ratios=None,
     oversample_factor=5,
     out_fname=None,
+    verbose=True
 ):
     """
     Efficient and scalable random sampling of a 2D classified xarray.DataArray.
@@ -113,7 +115,7 @@ def random_sampling_xr(
     n : int
         Total number of points to sample. Ignored if providing
         a dictionary of {class:numofpoints} to 'manual_class_ratios'
-    sampling : str, , optional
+    sampling : str, optional
         The sampling strategy to use. Options include:
         'stratified_random' = Create points that are randomly
         distributed within each class, where each class has a
@@ -148,6 +150,8 @@ def random_sampling_xr(
         If providing a filepath name, e.g 'sample_points.shp', the
         function will export a shapefile/geojson of the sampling
         points to file.
+    verbose: bool, optional (default=True)
+        If True, print statements will track progress.
 
     Output
     ------
@@ -176,7 +180,7 @@ def random_sampling_xr(
         raise ValueError(
             "This function only accepts xarray.DataArrays as input")
 
-    # Standardize spatial dims
+    # Standardise spatial dims
     x_names = ["x", "longitude", "lon"]
     y_names = ["y", "latitude", "lat"]
     x_dim = next((dim for dim in da.dims if dim.lower() in x_names), None)
@@ -189,27 +193,36 @@ def random_sampling_xr(
     # Ensure da has a .odc.* accessor using odc.geo.
     da = add_geobox(da)
 
-    #grab data as numpy arrays and count classes
+    # grab data as numpy arrays and count classes
     data = da.values
+    
     unique_classes, class_counts = np.unique(
         data[~np.isnan(data)], return_counts=True)
+    
     unique_classes = unique_classes.astype(int)
 
+    #store our samples in a list
     samples = []
 
-    def unravel_sample(flat_idx):
-        y_idx, x_idx = np.unravel_index(flat_idx, data.shape)
-        return da["y"].values[y_idx], da["x"].values[x_idx]
-
     if sampling == "random":
+        
+        #first check num of samples doesn' exceed pixels
         total_valid = (~np.isnan(data)).sum()
         if n > total_valid:
             raise ValueError(
                 "Requested more samples than available valid pixels.")
-        print(f"Sampling {n} points")
+        
+        if verbose:
+            print(f"Sampling {n} points")
+        
+        # determine flat indices of the non-Nans
         flat_indices = np.flatnonzero(~np.isnan(data))
+        
+        # sample the flat indices
         sampled = np.random.choice(flat_indices, size=n, replace=False)
-        for idx in sampled:
+        
+        #get coords and class values from sample indices
+        for idx in sampled: 
             y, x = np.unravel_index(idx, data.shape)
             y_val = da["y"].values[y]
             x_val = da["x"].values[x]
@@ -217,30 +230,39 @@ def random_sampling_xr(
             samples.append((y_val, x_val, int(cls)))
 
     elif sampling in ["stratified_random", "equal_stratified_random", "manual"]:
+        
         if sampling == "equal_stratified_random":
+            # divide n by the number of classes
             n_per_class = int(np.ceil(n / len(unique_classes)))
             class_sample_sizes = {cls: n_per_class for cls in unique_classes}
+        
         elif sampling == "stratified_random":
+            # calculate relative proportions of classes.
             proportions = class_counts / class_counts.sum()
             class_sample_sizes = {
                 cls: int(np.round(n * prop))
                 for cls, prop in zip(unique_classes, proportions)
             }
+        
         elif sampling == "manual":
             if not isinstance(manual_class_ratios, dict):
                 raise ValueError(
                     "Must provide manual_class_ratios for manual sampling."
                 )
+            
             class_sample_sizes = {
                 int(k): int(v) for k, v in manual_class_ratios.items()
             }
 
         for cls in class_sample_sizes:
             sample_size = class_sample_sizes[cls]
-            print(f"Class {cls}: sampling {sample_size} points")
+
+            if verbose:
+                print(f"Class {cls}: sampling {sample_size} points")
 
             class_mask = data == cls
             class_count = class_mask.sum()
+            
             if (
                 class_count > 1e9
             ):  # For v. large classes, sample random coords first and check matches
@@ -252,19 +274,26 @@ def random_sampling_xr(
                 rand_y = np.random.choice(
                     np.arange(len(da.y)), n_try, replace=False)
                 
+                #find matches with class id
                 match = data[rand_y, rand_x] == cls
                 rand_y, rand_x = rand_y[match], rand_x[match]
-                if len(rand_y) < sample_size:
-                    print(f"Warning: insufficient matches for class {cls}, "
-                          f"try increasing oversampling. Returning {len(rand_y)-1} matches")
 
-                    idx = np.random.choice(np.arange(len(rand_y)), size=len(rand_y) - 1, replace=False)
+                # check if matches is less than requested sample size
+                #  and return samples with a warning
+                if len(rand_y) < sample_size:
+                    if verbose:
+                        print(f"Warning: insufficient matches for class {cls}, "
+                          f"try increasing oversampling. Returning {len(rand_y)} matches")
+
+                    idx = np.random.choice(np.arange(len(rand_y)), size=len(rand_y), replace=False)
                     for i in idx:
                         y = da["y"].values[rand_y[i]]
                         x = da["x"].values[rand_x[i]]
                         samples.append((y, x, cls))
 
                 else:
+                    # If more matches than samples, then randomly sample the matches uso we get the
+                    # the right number of samples.
                     idx = np.random.choice(np.arange(len(rand_y)), size=sample_size, replace=False)
                     for i in idx:
                         y = da["y"].values[rand_y[i]]
@@ -272,17 +301,24 @@ def random_sampling_xr(
                         samples.append((y, x, cls))
 
             else:
-                flat_idx = np.argwhere(class_mask).squeeze()
-                if flat_idx.size < sample_size:
-                    print(
-                        f"Warning: not enough pixels in class {cls} for given sample size, skipping")
+                # if class size is less than a billion, then use class mask
+                # and sample
+                flat_indices = np.flatnonzero(class_mask)
+                
+                # Check if enough pixels exist
+                if flat_indices.size < sample_size:
+                    if verbose:
+                        print(f"Warning: not enough pixels in class {cls} for given sample size, skipping")
                     continue
-                picked = np.random.choice(
-                    flat_idx.shape[0], sample_size, replace=False)
-                ys, xs = flat_idx[picked].T
-                for y_i, x_i in zip(ys, xs):
-                    y = da["y"].values[y_i]
-                    x = da["x"].values[x_i]
+                
+                # Randomly sample from those flat indices
+                sampled = np.random.choice(flat_indices, size=sample_size, replace=False)
+                
+                # Convert flat indices to (y, x), then to coordinates
+                for idx in sampled:
+                    y_idx, x_idx = np.unravel_index(idx, data.shape)
+                    y = da["y"].values[y_idx]
+                    x = da["x"].values[x_idx]
                     samples.append((y, x, cls))
 
     if len(samples) == 0:
