@@ -28,6 +28,13 @@ def _get_vsicurlhttp_from_s3(s3_url):
         raise ValueError(f"Unexpected S3 URL structure: {s3_url}")
 
 
+def _get_vsis3_from_s3(s3_url):
+    """
+    Convert an S3 URI to a GDAL-compatible /vsis3/ path.
+    """
+    return "/vsis3/" + s3_url
+
+
 def _file_exists_s3(url):
     """
     Return True if the remote file exists at the given /vsicurl/ or HTTPS URL.

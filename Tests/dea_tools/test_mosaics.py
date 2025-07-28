@@ -26,6 +26,7 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "aws_unsigned": True,
         "skip_existing": False,
         "list_tiles": ["x46y47", "x46y48"],
+        "vsi_method": "vsis3",
     }
 
     col_scheme_dir = "Supplementary_data/Colour_schemes"
@@ -105,7 +106,8 @@ def test_geomedian_rgb_mosaic_and_vrt(tmp_path):
             compression_level=9,
             aws_unsigned=True,
             skip_existing=False,
-            list_tiles=list_tiles
+            list_tiles=list_tiles,
+            vsi_method="vsis3",
         )
 
         output_cog = os.path.join(

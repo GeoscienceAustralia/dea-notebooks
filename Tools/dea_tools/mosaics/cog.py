@@ -50,7 +50,7 @@ import click
 import s3fs
 from odc.stac import configure_rio
 
-from dea_tools.mosaics.utils import _is_s3, _get_vsicurlhttp_from_s3
+from dea_tools.mosaics.utils import _is_s3, _get_vsicurlhttp_from_s3, _get_vsis3_from_s3
 
 logging.basicConfig(
     level=logging.INFO,
@@ -93,12 +93,8 @@ def _get_tiles(
 
     # Optionally filter list of tiles if requested
     if list_tiles:
-        xy_patterns = [
-            xy.replace("y", "/y") for xy in list_tiles
-        ]  # i.e. from 'x25y41' to 'x25/y41'
-        tiles_list = [
-            tile for tile in tiles_list if any(xy in tile for xy in xy_patterns)
-        ]
+        xy_patterns = [xy.replace("y", "/y") for xy in list_tiles]  # i.e. from 'x25y41' to 'x25/y41'
+        tiles_list = [tile for tile in tiles_list if any(xy in tile for xy in xy_patterns)]
 
     return tiles_list
 
@@ -120,6 +116,7 @@ def make_cog_mosaics(
     aws_unsigned,
     skip_existing,
     list_tiles=None,
+    vsi_method="vsicurl",
 ):
     """
     Generate a COG mosaic for a given tiled DEA product.
@@ -178,6 +175,10 @@ def make_cog_mosaics(
         List including tiles of interest to include in the output mosaic.
         For example: ['x25y41', 'x25y41'].
         Defaults to None --> use all tiles available.
+    vsi_method : str, optional
+        Whether to use "/vsicurl/" for HTTPS-based URIs in the interim
+        Virtual Raster ("vsicurl"), or "/vsis3/" for accessing data directly
+        from AWS S3 ("vsis3"). Default is "vsicurl".
 
     Notes:
     ------
@@ -210,18 +211,12 @@ def make_cog_mosaics(
     # /derivative/<product_id>/<version>/continental_mosaics/<time>/<product_id>_mosaic_<time>_<band name>.tif
     output_dir = output_dir.rstrip("/")
     if is_out_dir_s3:
-        output_dir = (
-            f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
-        )
+        output_dir = f"{output_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
         output_file_path = f"{output_dir}/{product}_mosaic_{time}--{freq}_{band}.tif"
         log.info(f"{run_id} Output path: {output_file_path}")
     else:
-        output_dir = os.path.join(
-            output_dir, product, version, "continental_mosaics", f"{time}--{freq}"
-        )
-        output_file_path = os.path.join(
-            output_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif"
-        )
+        output_dir = os.path.join(output_dir, product, version, "continental_mosaics", f"{time}--{freq}")
+        output_file_path = os.path.join(output_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif")
         log.info(f"{run_id} Output path: {output_file_path}")
 
     # Check if output file already exists
@@ -238,9 +233,7 @@ def make_cog_mosaics(
                 f"{run_id}: Output already exists at {output_file_path} and skip_existing=True. Skipping generation."
             )
             return
-        log.warning(
-            f"{run_id}: Output already exists at {output_file_path} but skip_existing=False. Overwriting."
-        )
+        log.warning(f"{run_id}: Output already exists at {output_file_path} but skip_existing=False. Overwriting.")
     else:
         log.info(f"{run_id}: Output does not exist. Proceeding with mosaic generation.")
 
@@ -259,8 +252,11 @@ def make_cog_mosaics(
         list_tiles=list_tiles,
     )
 
-    # Use /vsicurl/ path for `gdalbuildvrt` compatibility
-    tiles_list = [_get_vsicurlhttp_from_s3(tile) for tile in tiles_list]
+    # Use /vsicurl/ or /vsis3/ path for `gdalbuildvrt` compatibility
+    if vsi_method == "vsicurl":
+        tiles_list = [_get_vsicurlhttp_from_s3(tile) for tile in tiles_list]
+    elif vsi_method == "vsis3":
+        tiles_list = [_get_vsis3_from_s3(tile) for tile in tiles_list]
     log.info(f"{run_id}: Number of tiles to mosaic: {len(tiles_list)}")
 
     if len(tiles_list) > 0:
@@ -269,15 +265,9 @@ def make_cog_mosaics(
             log.info(f"{run_id}: Writing data to temporary folder: {temp_dir}")
 
             # Output paths for intermediate files
-            file_list_name = os.path.join(
-                temp_dir, f"{product}_{time}--{freq}_{band}_{version}.txt"
-            )
-            vrt_name = os.path.join(
-                temp_dir, f"{product}_{time}--{freq}_{band}_{version}.vrt"
-            )
-            output_name = os.path.join(
-                temp_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif"
-            )
+            file_list_name = os.path.join(temp_dir, f"{product}_{time}--{freq}_{band}_{version}.txt")
+            vrt_name = os.path.join(temp_dir, f"{product}_{time}--{freq}_{band}_{version}.vrt")
+            output_name = os.path.join(temp_dir, f"{product}_mosaic_{time}--{freq}_{band}.tif")
 
             # Write list of files to a temporary text file, so it can be
             # used as an input to `gdalbuildvrt`
@@ -295,9 +285,7 @@ def make_cog_mosaics(
                     stderr=subprocess.STDOUT,
                 )
             except subprocess.CalledProcessError as e:
-                log.error(
-                    f"{run_id}: gdalbuildvrt failed with error: {e.stderr} {e.stdout}"
-                )
+                log.error(f"{run_id}: gdalbuildvrt failed with error: {e.stderr} {e.stdout}")
                 raise
 
             # Convert VRT to Cloud Optimized GeoTIFF (COG)
