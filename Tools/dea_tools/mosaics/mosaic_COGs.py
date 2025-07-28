@@ -122,7 +122,7 @@ def _get_vsicurlhttp_from_s3(s3_url):
     if "dea-public-data/" in s3_url:
         return s3_url.replace(
             "dea-public-data/",
-            "/vsicurl/https://https://dea-public-data.s3-ap-southeast-2.amazonaws.com/",
+            "/vsicurl/https://data.dea.ga.gov.au/",
         )
     raise ValueError(f"Unexpected S3 URL structure: {s3_url}")
 

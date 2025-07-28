@@ -143,7 +143,7 @@ def _create_vrt_landcover(
         elif "dea-public-data/" in cog_dir:
             cog_dir = cog_dir.replace(
                 "dea-public-data/",
-                "/vsicurl/https://dea-public-data.s3-ap-southeast-2.amazonaws.com/",
+                "/vsicurl/https://data.dea.ga.gov.au/",
             )
 
         cog_dir = f"{cog_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
@@ -328,7 +328,7 @@ def _create_vrt_3bands_comp(
         elif "dea-public-data/" in cog_dir:
             cog_dir = cog_dir.replace(
                 "dea-public-data/",
-                "/vsicurl/https://dea-public-data.s3-ap-southeast-2.amazonaws.com/",
+                "/vsicurl/https://data.dea.ga.gov.au/",
             )
 
         cog_dir = f"{cog_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
