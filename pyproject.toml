@@ -117,8 +117,8 @@ dev = [
 ############################################################
 
 [project.scripts]
-make_styling_vrt = "dea_tools.mosaics.colour_scheme_VRTs:make_styling_vrt_cli"
-make_cog_mosaic = "dea_tools.mosaics.mosaic_COGs:make_cog_mosaic_cli"
+make_styling_vrt = "dea_tools.mosaics.vrt:make_styling_vrt_cli"
+make_cog_mosaic = "dea_tools.mosaics.cog:make_cog_mosaic_cli"
 
 ##################################################
 # Configuration required to build Python package #

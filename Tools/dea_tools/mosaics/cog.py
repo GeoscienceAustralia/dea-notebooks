@@ -1,4 +1,4 @@
-# mosaic_COGs.py
+# cog.py
 """
 Generate Cloud Optimised GeoTIFF (COG) mosaics for DEA tiled products.
 
@@ -9,12 +9,8 @@ local disk and public S3 buckets (e.g., `dea-public-data` or `dea-public-data-de
 
 Input Format
 ------------
-Input products must follow the DEA Collection 3 naming conventions and file structure, e.g.:
-`s3://dea-public-data/derivative/<product>/<version>/<tile path>/<year>--<freq>/<product>_<tile path>_<year>--<freq>_<dataset maturity>_<band>.tif`
-
-For more information:
-https://knowledge.dea.ga.gov.au/guides/reference/collection_3_naming/
-https://knowledge.dea.ga.gov.au/guides/reference/collection_3_summary_grid/
+Input products must follow the DEA tiling convention:
+`s3://dea-public-data/derivative/<product>/<version>/<tile path>/<year>--<freq>/<product>_<tile path>_<year>--<freq>_<dataset maturity>_<band>.tif` 
 
 Output Format
 -------------
@@ -50,18 +46,12 @@ import click
 import s3fs
 from odc.stac import configure_rio
 
+from dea_tools.mosaics.utils import _is_s3, _get_vsicurlhttp_from_s3
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-
-
-def _is_s3(path):
-    """
-    Determine whether output location is on S3.
-    """
-    uu = urlparse(path)
-    return uu.scheme == "s3"
 
 
 def _get_tiles(
@@ -107,24 +97,6 @@ def _get_tiles(
         ]
 
     return tiles_list
-
-
-def _get_vsicurlhttp_from_s3(s3_url):
-    """
-    Convert an S3 URL to a GDAL-compatible /vsicurl/ HTTPS path.
-    """
-
-    if "dea-public-data-dev/" in s3_url:
-        return s3_url.replace(
-            "dea-public-data-dev/",
-            "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/",
-        )
-    if "dea-public-data/" in s3_url:
-        return s3_url.replace(
-            "dea-public-data/",
-            "/vsicurl/https://data.dea.ga.gov.au/",
-        )
-    raise ValueError(f"Unexpected S3 URL structure: {s3_url}")
 
 
 def make_cog_mosaics(

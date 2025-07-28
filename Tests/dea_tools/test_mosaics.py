@@ -4,8 +4,8 @@ import pytest
 import pathlib
 import sys
 
-from dea_tools.mosaics.mosaic_COGs import make_cog_mosaics
-from dea_tools.mosaics.colour_scheme_VRTs import make_styling_vrt
+from dea_tools.mosaics.cog import make_cog_mosaics
+from dea_tools.mosaics.vrt import make_styling_vrt
 
 
 def test_mosaic_vrt_creation_cat(tmp_path):

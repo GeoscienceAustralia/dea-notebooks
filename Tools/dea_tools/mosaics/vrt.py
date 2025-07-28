@@ -1,12 +1,12 @@
-# colour_scheme_VRTs.py
+# vrt.py
 """
-Tools for applying colour schemes and generating GDAL VRTs for mosaics of
-Digital Earth Australia (DEA) products, including single-band categorical
+Tools for applying colour schemes and generating GDAL VRTs for mosaics of 
+Digital Earth Australia (DEA) products, including single-band categorical 
 visualisations and three-band composites (e.g., RGB for true or false colour imagery).
 
-In case of categorical data, colour schemes are loaded from JSON files
-containing RGBA values and labels. The module supports DEA’s mosaic output
-structure and naming conventions and can operate on mosaic files stored
+In case of categorical data, colour schemes are loaded from JSON files 
+containing RGBA values and labels. The module supports DEA’s mosaic output 
+structure and naming conventions and can operate on mosaic files stored 
 locally or in the cloud (AWS's S3).
 
 License: The code in this module is licensed under the Apache License,
@@ -26,6 +26,7 @@ GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 Last modified: July 2025
 """
 
+
 import json
 import logging
 import os
@@ -38,34 +39,13 @@ import xml.etree.ElementTree as ET
 import click
 import requests
 
-from dea_tools.mosaics.mosaic_COGs import _is_s3
+from dea_tools.mosaics.utils import _is_s3, _file_exists_s3, _get_vsicurlhttp_from_s3, _clean_label_dict
+
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-
-
-def _file_exists_s3(url):
-    """
-    Return True if the remote file exists at the given /vsicurl/ or HTTPS URL.
-    Specifically used for files in S3
-    """
-    if url.startswith("/vsicurl/"):
-        url = url.replace("/vsicurl/", "")
-    response = requests.head(url)
-    return response.status_code == 200
-
-
-def _clean_label_dict(label):
-    """
-    Clean and standardize label strings.
-    It might be needed for the land cover colour scheme dictionaries
-    """
-    label = label.replace(">", "more than")
-    label = label.replace("<", "less than")
-    label = label.replace(":", "")
-    return label.replace("\n", "")
 
 
 def _get_lc_colour_scheme(band, json_dir=None):
@@ -135,16 +115,7 @@ def _create_vrt_landcover(
     if is_cog_dir_s3:
         cog_dir = cog_dir.replace("s3://", "")
         cog_dir = cog_dir.rstrip("/")
-        if "dea-public-data-dev/" in cog_dir:
-            cog_dir = cog_dir.replace(
-                "dea-public-data-dev/",
-                "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/",
-            )
-        elif "dea-public-data/" in cog_dir:
-            cog_dir = cog_dir.replace(
-                "dea-public-data/",
-                "/vsicurl/https://data.dea.ga.gov.au/",
-            )
+        cog_dir = _get_vsicurlhttp_from_s3(cog_dir)
 
         cog_dir = f"{cog_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
         input_path = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{band}.tif"
@@ -320,16 +291,7 @@ def _create_vrt_3bands_comp(
     if is_cog_dir_s3:
         cog_dir = cog_dir.replace("s3://", "")
         cog_dir = cog_dir.rstrip("/")
-        if "dea-public-data-dev/" in cog_dir:
-            cog_dir = cog_dir.replace(
-                "dea-public-data-dev/",
-                "/vsicurl/https://dea-public-data-dev.s3-ap-southeast-2.amazonaws.com/",
-            )
-        elif "dea-public-data/" in cog_dir:
-            cog_dir = cog_dir.replace(
-                "dea-public-data/",
-                "/vsicurl/https://data.dea.ga.gov.au/",
-            )
+        cog_dir = _get_vsicurlhttp_from_s3(cog_dir)
 
         cog_dir = f"{cog_dir}/{product}/{version}/continental_mosaics/{time}--{freq}"
         input_path_r = f"{cog_dir}/{product}_mosaic_{time}--{freq}_{r_channel_band}.tif"
