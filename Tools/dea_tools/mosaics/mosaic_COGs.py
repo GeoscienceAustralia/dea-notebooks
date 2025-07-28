@@ -60,6 +60,9 @@ from datacube.utils.rio import configure_s3_access
 configure_rio(cloud_defaults=True, aws={"aws_unsigned": True})
 configure_s3_access(cloud_defaults=True, aws_unsigned=True)
 
+aws_region = os.environ.get('AWS_REGION')
+print(f"AWS_REGION: {aws_region}")
+
 
 def _is_s3(path):
     """
