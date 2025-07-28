@@ -9,8 +9,12 @@ local disk and public S3 buckets (e.g., `dea-public-data` or `dea-public-data-de
 
 Input Format
 ------------
-Input products must follow the DEA tiling convention:
-`s3://dea-public-data/derivative/<product>/<version>/<tile path>/<year>--<freq>/<product>_<tile path>_<year>--<freq>_<dataset maturity>_<band>.tif` 
+Input products must follow the DEA Collection 3 naming conventions and file structure, e.g.:
+`s3://dea-public-data/derivative/<product>/<version>/<tile path>/<year>--<freq>/<product>_<tile path>_<year>--<freq>_<dataset maturity>_<band>.tif`
+
+For more information:
+https://knowledge.dea.ga.gov.au/guides/reference/collection_3_naming/
+https://knowledge.dea.ga.gov.au/guides/reference/collection_3_summary_grid/
 
 Output Format
 -------------

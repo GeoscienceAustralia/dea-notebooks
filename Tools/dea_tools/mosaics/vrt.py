@@ -1,12 +1,12 @@
 # vrt.py
 """
-Tools for applying colour schemes and generating GDAL VRTs for mosaics of 
-Digital Earth Australia (DEA) products, including single-band categorical 
+Tools for applying colour schemes and generating GDAL VRTs for mosaics of
+Digital Earth Australia (DEA) products, including single-band categorical
 visualisations and three-band composites (e.g., RGB for true or false colour imagery).
 
-In case of categorical data, colour schemes are loaded from JSON files 
-containing RGBA values and labels. The module supports DEA’s mosaic output 
-structure and naming conventions and can operate on mosaic files stored 
+In case of categorical data, colour schemes are loaded from JSON files
+containing RGBA values and labels. The module supports DEA’s mosaic output
+structure and naming conventions and can operate on mosaic files stored
 locally or in the cloud (AWS's S3).
 
 License: The code in this module is licensed under the Apache License,
