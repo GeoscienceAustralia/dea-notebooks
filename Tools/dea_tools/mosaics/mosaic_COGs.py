@@ -289,12 +289,16 @@ def make_cog_mosaics(
 
             # Build VRT that will subsequently be used to generate COG
             log.info(f"{run_id}: Building virtual raster (VRT)")
-            os.environ['AWS_NO_SIGN_REQUEST'] = 'YES'
-            os.environ['GDAL_DISABLE_READDIR_ON_OPEN']='YES'
-            os.environ['CPL_CURL_VERBOSE']='YES'
-            os.environ['CPL_VSIL_CURL_USE_HEAD']='FALSE'
-            os.environ['AWS_DEFAULT_REGION']='ap-southeast-2'
-            os.environ['AWS_REGION']='ap-southeast-2'
+            # os.environ['AWS_NO_SIGN_REQUEST'] = 'YES'
+            # os.environ['GDAL_DISABLE_READDIR_ON_OPEN']='YES'
+            # os.environ['CPL_CURL_VERBOSE']='YES'
+            # os.environ['CPL_VSIL_CURL_USE_HEAD']='FALSE'
+            # os.environ['AWS_DEFAULT_REGION']='ap-southeast-2'
+            # os.environ['AWS_REGION']='ap-southeast-2'
+            # aws_region = os.environ.get('AWS_REGION')
+            # aws_defaultregion = os.environ.get('AWS_DEFAULT_REGION')
+            # aws_nosign = os.environ.get('AWS_NO_SIGN_REQUEST')
+            
             try:
                 subprocess.run(
                     ["gdalbuildvrt", vrt_name, "-input_file_list", file_list_name],
@@ -327,8 +331,8 @@ def make_cog_mosaics(
                         "-co", "PREDICTOR=YES",                               # Compression predictor
                     ],
                     check=True,
-                    capture_output=True,
                     text=True,
+                    stderr=subprocess.STDOUT,
                 )
             except subprocess.CalledProcessError as e:
                 log.error(f"{run_id}: gdal_translate failed with error: {e.stderr} {e.stdout}")
