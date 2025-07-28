@@ -8,7 +8,7 @@ from dea_tools.mosaics.mosaic_COGs import make_cog_mosaics
 from dea_tools.mosaics.colour_scheme_VRTs import make_styling_vrt
 
 
-def test_mosaic_vrt_creation_cat(tmp_path):
+def test_mosaic_vrt_creation_cat():
     mosaic_params = {
         "product": "ga_ls_landcover_class_cyear_3",
         "band": "level4",
@@ -17,7 +17,7 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "version": "2-0-0",
         "dataset_maturity": "final",
         "product_dir": "s3://dea-public-data/derivative/",
-        "output_dir": str(tmp_path),
+        "output_dir": "output",
         "cog_blocksize": 1024,
         "overview_count": 7,
         "overview_resampling": "MODE",
@@ -36,8 +36,8 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "time": "2024",
         "freq": "P1Y",
         "version": "2-0-0",
-        "cog_dir": str(tmp_path),
-        "output_dir": str(tmp_path),
+        "cog_dir": "output",
+        "output_dir": "output",
         "col_scheme_dir": col_scheme_dir,
     }
 
@@ -80,7 +80,7 @@ def test_mosaic_vrt_creation_cat(tmp_path):
 
 
 
-def test_geomedian_rgb_mosaic_and_vrt(tmp_path):
+def test_geomedian_rgb_mosaic_and_vrt():
     product = "ga_ls8cls9c_gm_cyear_3"
     version = "4-0-0"
     year = "2024"
@@ -97,7 +97,7 @@ def test_geomedian_rgb_mosaic_and_vrt(tmp_path):
             version=version,
             dataset_maturity="final",
             product_dir="s3://dea-public-data/derivative/",
-            output_dir=str(tmp_path),
+            output_dir="output",
             cog_blocksize=1024,
             overview_count=7,
             overview_resampling="BILINEAR",
@@ -109,7 +109,7 @@ def test_geomedian_rgb_mosaic_and_vrt(tmp_path):
         )
 
         output_cog = os.path.join(
-            tmp_path,
+            "output",
             product,
             version,
             "continental_mosaics",
@@ -130,15 +130,15 @@ def test_geomedian_rgb_mosaic_and_vrt(tmp_path):
         version=version,
         time=year,
         freq="P1Y",
-        cog_dir=str(tmp_path),
-        output_dir=str(tmp_path),
+        cog_dir="output",
+        output_dir="output",
         r_channel_band="nbart_red",
         g_channel_band="nbart_green",
         b_channel_band="nbart_blue"
     )
 
     output_vrt = os.path.join(
-        tmp_path,
+        "output",
         product,
         version,
         "continental_mosaics",
