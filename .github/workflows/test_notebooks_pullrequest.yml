@@ -38,7 +38,7 @@ jobs:
             How_to_guides/Land_cover_pixel_drill.ipynb
             How_to_guides/Imagery_on_web_map.ipynb
             How_to_guides/External_data_ERA5_Climate.ipynb
-            How_to_guides/Generating_COG_mosaics.ipynb  # temporarily ignore until S3 access issue is resolved
+            How_to_guides/Generating_COG_mosaics.ipynb
       - name: Print changed notebook files
         if: steps.changed-notebooks.outputs.any_changed == 'true'
         run: |
