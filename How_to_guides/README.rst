@@ -35,6 +35,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Polygon_drill.ipynb
    Polygonise_pixel_edges.ipynb
    Principal_component_analysis.ipynb
+   Random_sampling.ipynb
    Rasterize_vectorize.ipynb
    Reprojecting_data.ipynb
    Sunglint_masking.ipynb
