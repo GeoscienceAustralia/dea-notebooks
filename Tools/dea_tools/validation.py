@@ -92,7 +92,7 @@ def eval_metrics(x, y, round=3, all_regress=False):
     return pd.Series(stats_dict).round(round)
 
 
-def random_sampling_xr(
+def xr_random_sampling(
     da,
     n=None,
     sampling="stratified_random",

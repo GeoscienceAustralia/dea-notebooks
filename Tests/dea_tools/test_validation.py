@@ -4,7 +4,7 @@ import xarray as xr
 import geopandas as gpd
 from shapely.geometry import Point
 from odc.geo.xr import assign_crs
-from dea_tools.validation import random_sampling_xr
+from dea_tools.validation import xr_random_sampling
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def test_sample_counts_by_strategy(classified_da):
     """
     # first check that samples are created.
     n = 10
-    gdf = random_sampling_xr(classified_da, n=n, sampling="random")
+    gdf = xr_random_sampling(classified_da, n=n, sampling="random")
     assert isinstance(gdf, gpd.GeoDataFrame)
     assert not gdf.empty
     assert all(isinstance(geom, Point) for geom in gdf.geometry)
@@ -37,7 +37,7 @@ def test_sample_counts_by_strategy(classified_da):
 
     # Strategy 'stratified_random' - allow tolerance due to rounding or sparsity
     n_strat = 40
-    gdf_strat = random_sampling_xr(
+    gdf_strat = xr_random_sampling(
         classified_da, n=n_strat, sampling="stratified_random"
     )
     tolerance = 2
@@ -51,7 +51,7 @@ def test_sample_counts_by_strategy(classified_da):
     num_classes = len(unique_classes)
     expected_min = n_equal
     expected_max = num_classes * int(np.ceil(n_equal / num_classes))
-    gdf_equal = random_sampling_xr(
+    gdf_equal = xr_random_sampling(
         classified_da, n=n_equal, sampling="equal_stratified_random"
     )
     actual_equal = len(gdf_equal)
@@ -62,7 +62,7 @@ def test_sample_counts_by_strategy(classified_da):
     # Strategy 'manual' - expect close to manual sum, allow 1 pixel difference
     manual_ratios = {1: 5, 2: 10, 3: 5}
     expected_manual_total = sum(manual_ratios.values())
-    gdf_manual = random_sampling_xr(
+    gdf_manual = xr_random_sampling(
         classified_da, sampling="manual", manual_class_ratios=manual_ratios
     )
 
@@ -77,7 +77,7 @@ def test_stratified_random_proportional(classified_da):
     Ensure proportions of samples returned are close to the proportions
     in the data.
     """
-    gdf = random_sampling_xr(classified_da, n=40, sampling="stratified_random")
+    gdf = xr_random_sampling(classified_da, n=40, sampling="stratified_random")
     counts = gdf["class"].value_counts()
     total = counts.sum()
 
@@ -100,4 +100,4 @@ def test_oversample_error(classified_da):
     # Count how many valid pixels exist
     valid_pixel_count = np.isfinite(classified_da.values).sum()
     with pytest.raises(ValueError, match="more samples than available valid pixels"):
-        random_sampling_xr(classified_da, n=valid_pixel_count + 10, sampling="random")
+        xr_random_sampling(classified_da, n=valid_pixel_count + 10, sampling="random")
