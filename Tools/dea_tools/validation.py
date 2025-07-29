@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: April 2023
+Last modified: July 2025
 """
 
 from math import sqrt
@@ -105,8 +105,8 @@ def random_sampling_xr(
     Efficient and scalable random sampling of a 2D classified xarray.DataArray.
     Returns a GeoDataFrame of point samples based on specified sampling strategy.
 
-    Parameters:
-    -------
+    Parameters
+    ----------
     da : xarray.DataArray
         A classified 2-dimensional xarray.DataArray
     n : int
@@ -150,8 +150,8 @@ def random_sampling_xr(
     verbose: bool, optional (default=True)
         If True, print statements will track progress and print warnings
 
-    Output
-    ------
+    Returns
+    -------
     GeoPandas.Dataframe
 
     """
