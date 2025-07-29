@@ -152,7 +152,7 @@ def xr_random_sampling(
 
     Returns
     -------
-    GeoPandas.Dataframe
+    geopandas.GeoDataFrame
 
     """
     # perform checks on the inputs
