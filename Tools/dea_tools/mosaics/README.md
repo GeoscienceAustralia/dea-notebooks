@@ -2,8 +2,8 @@
 
 This submodule provides Python tools for generating Cloud Optimised GeoTIFF (COG) mosaics and applying colour schemes to DEA products. It includes two main scripts:
 
-- `mosaic_COGs.py`: Builds mosaics from DEA tiled products. Can either be used for continental mosaics, or a limited number of tiles (in this case, include `--list_tiles`)
-- `colour_scheme_VRTs.py`: Applies colour schemes and generates GDAL VRTs for the mosaics. Can either be used for single-band categorical data or three-colours composites.
+- `cog.py`: Builds mosaics from DEA tiled products. Can either be used for continental mosaics, or a limited number of tiles (in this case, include `--list_tiles`)
+- `vrt.py`: Applies colour schemes and generates GDAL VRTs for the mosaics. Can either be used for single-band categorical data or three-colours composites.
 
 ---
 
@@ -54,7 +54,7 @@ make_cog_mosaic \
   --list_tiles x25y41,x26y42,x27y43
 ```
 
-If DEA Tools package is not installed, it is possible to run the analysis directly via the Python module by replacing `make_cog_mosaic` in the command above with `python mosaic_COGs.py`.
+If DEA Tools package is not installed, it is possible to run the analysis directly via the Python module by replacing `make_cog_mosaic` in the command above with `python cog.py`.
 
 ## Generate colour VRTs
 
@@ -88,4 +88,4 @@ make_styling_vrt \
   --b_channel_band nbart_blue
 ```
 
-If DEA Tools package is not installed, it is possible to run the analysis directly via the Python module by replacing `make_styling_vrt` in the command above with `python colour_scheme_VRTs.py`.
+If DEA Tools package is not installed, it is possible to run the analysis directly via the Python module by replacing `make_styling_vrt` in the command above with `python vrt.py`.

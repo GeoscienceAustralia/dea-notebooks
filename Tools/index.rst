@@ -51,8 +51,8 @@ Apps and widgets
 .. autosummary::
    :toctree: gen
 
-    dea_tools.mosaics.mosaic_COGs
-    dea_tools.mosaics.colour_scheme_VRTs
+    dea_tools.mosaics.cog
+    dea_tools.mosaics.vrt
 
 License
 -------
