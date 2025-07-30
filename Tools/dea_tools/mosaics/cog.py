@@ -99,7 +99,7 @@ def _get_tiles(
     return tiles_list
 
 
-def make_cog_mosaics(
+def make_cog_mosaic(
     product,
     band,
     time,
@@ -486,7 +486,7 @@ def make_cog_mosaic_cli(
     list_tiles = list_tiles.split(",") if list_tiles else None
 
     # Run analysis function
-    make_cog_mosaics(
+    make_cog_mosaic(
         product,
         band,
         time,

@@ -4,7 +4,7 @@ import pytest
 import pathlib
 import sys
 
-from dea_tools.mosaics.cog import make_cog_mosaics
+from dea_tools.mosaics.cog import make_cog_mosaic
 from dea_tools.mosaics.vrt import make_styling_vrt
 
 
@@ -29,8 +29,6 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "vsi_method": "vsis3",
     }
 
-    col_scheme_dir = "Supplementary_data/Colour_schemes"
-
     vrt_params = {
         "product": "ga_ls_landcover_class_cyear_3",
         "band": "level4",
@@ -39,10 +37,9 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "version": "2-0-0",
         "cog_dir": str(tmp_path),
         "output_dir": str(tmp_path),
-        "col_scheme_dir": col_scheme_dir,
     }
 
-    make_cog_mosaics(**mosaic_params)
+    make_cog_mosaic(**mosaic_params)
 
     output_cog = os.path.join(
         mosaic_params["output_dir"],
@@ -90,7 +87,7 @@ def test_geomedian_rgb_mosaic_and_vrt(tmp_path):
 
     # generate COGs for each RGB band
     for band in bands:
-        make_cog_mosaics(
+        make_cog_mosaic(
             product=product,
             band=band,
             time=year,

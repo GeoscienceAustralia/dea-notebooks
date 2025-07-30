@@ -40,6 +40,7 @@ import click
 import requests
 
 from dea_tools.mosaics.utils import _is_s3, _file_exists_s3, _get_vsicurlhttp_from_s3, _clean_label_dict
+from dea_tools.mosaics.styling import lc_styling
 
 
 logging.basicConfig(
@@ -48,22 +49,22 @@ logging.basicConfig(
 )
 
 
-def _get_lc_colour_scheme(band, json_dir=None):
+def _get_lc_colour_scheme(band, style_json_path=None):
     """
-    Load land cover colour scheme JSON and clean labels for use.
+    Load land cover colour scheme dictionary and clean labels for use.
+    
+    Use style_json_path if needed to employ a colour scheme that 
+    is external to dea-tools.
     """
-    json_filename = f"lc_{band}_colours.json"
 
-    if json_dir:
-        json_path = os.path.join(json_dir, json_filename)
+    if style_json_path:
+        with open(style_json_path, "r") as f:
+            colour_dict = json.load(f)  
+            # Convert keys to integers
+            colour_dict = {int(k): v for k, v in colour_dict.items()}
+
     else:
-        script_dir = os.path.dirname(
-            os.path.abspath(__file__)
-        )  # directory of the script
-        json_path = os.path.join(script_dir, json_filename)
-
-    with open(json_path, "r") as f:
-        colour_dict = json.load(f)
+        colour_dict = lc_styling[f"lc_{band}_colours"]
 
     colour_dict_cleaned = {}
     for key, value in colour_dict.items():
@@ -82,7 +83,7 @@ def _create_vrt_landcover(
     freq,
     cog_dir,
     output_dir,
-    col_scheme_dir=None,
+    style_json_path=None,
 ):
     """
     Create a land cover VRT with colour scheme from COG input.
@@ -107,7 +108,7 @@ def _create_vrt_landcover(
     is_out_dir_s3 = _is_s3(output_dir)
 
     # get rgb of land cover classification values as a dictionary
-    rgb_values = _get_lc_colour_scheme(band, col_scheme_dir)
+    rgb_values = _get_lc_colour_scheme(band, style_json_path)
 
     # get input continental COG path
     cog_dir = cog_dir.rstrip("/")
@@ -197,7 +198,6 @@ def _create_vrt_landcover(
         # add ColorTable
         color_table = ET.SubElement(band_node, "ColorTable")
         for i in range(256):
-            i = str(i)
             if i in rgb_values:
                 r, g, b, a, _ = rgb_values[i]
             else:
@@ -211,7 +211,6 @@ def _create_vrt_landcover(
         # add CategoryNames
         cat_names = ET.SubElement(band_node, "CategoryNames")
         for i in range(256):
-            i = str(i)
             label = rgb_values[i][4] if i in rgb_values else "NA"
             ET.SubElement(cat_names, "Category").text = label
 
@@ -448,7 +447,7 @@ def make_styling_vrt(
     cog_dir,
     output_dir,
     band=None,
-    col_scheme_dir=None,
+    style_json_path=None,
     r_channel_band=None,
     g_channel_band=None,
     b_channel_band=None,
@@ -457,7 +456,7 @@ def make_styling_vrt(
     """
     Create a virtual raster (VRT) for DEA products.
 
-    If a single categorical band is specified, creates a landcover VRT with color scheme.
+    If a single categorical band is specified, creates a categorical VRT with color scheme.
     If red, green, and blue bands are all provided, creates a three-band composite VRT.
     Raises error if input combinations are invalid.
 
@@ -479,9 +478,13 @@ def make_styling_vrt(
     band : str, optional
         Band name (e.g. 'level4').
         Use None (default) if need a three-bands composite
-    col_scheme_dir : str, optional
-        Path to folder containing json files with colour schemes.
-        Use None (default) for using the same directory of this python script.
+    style_json_path : str, optional
+        Path to json file containing custom colour schemes.
+        The json file should be structured as a dictionary with 
+        integer or string values as keys and [R,G,B,A,label] as values. 
+        E.g. {"1":[255,255,255,0,"NA"]} for assigning a white colour 
+        and "NA" label to raster values equal to 1.
+        Use None (default) for using the default schemes in dea-tools.
     r_channel_band : str, optional
         Band to use in the RED channel for a three-bands composite.
         Use None (default) if need a single-band categorical view
@@ -509,7 +512,7 @@ def make_styling_vrt(
             freq,
             cog_dir,
             output_dir,
-            col_scheme_dir,
+            style_json_path,
         )
 
     elif all([r_channel_band, g_channel_band, b_channel_band]):
@@ -579,11 +582,15 @@ def make_styling_vrt(
     help="The categorical data band to add the colour to (e.g., 'level4')",
 )
 @click.option(
-    "--col_scheme_dir",
+    "--style_json_path",
     type=str,
     required=False,
-    help="Path to folder containing json files with colour schemes."
-    "Do not include this input if want to use the same directory of the python script",
+    help="Path to json file containing custom colour schemes. "
+    "The json file should be structured as a dictionary with "
+    "integer or string values as keys and [R,G,B,A,label] as values. "
+    "E.g. {'1':[255,255,255,0,'NA']} for assigning a white colour "
+    "and 'NA' label to raster values equal to 1. "
+    "Do not include this input if want to use the default schemes in dea-tools",
 )
 @click.option(
     "--r_channel_band",
@@ -618,7 +625,7 @@ def make_styling_vrt_cli(
     cog_dir,
     output_dir,
     band=None,
-    col_scheme_dir=None,
+    style_json_path=None,
     r_channel_band=None,
     g_channel_band=None,
     b_channel_band=None,
@@ -637,7 +644,7 @@ def make_styling_vrt_cli(
         cog_dir,
         output_dir,
         band,
-        col_scheme_dir,
+        style_json_path,
         r_channel_band,
         g_channel_band,
         b_channel_band,
