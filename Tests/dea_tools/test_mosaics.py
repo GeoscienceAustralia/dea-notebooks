@@ -29,8 +29,6 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "vsi_method": "vsis3",
     }
 
-    col_scheme_dir = "Supplementary_data/Colour_schemes"
-
     vrt_params = {
         "product": "ga_ls_landcover_class_cyear_3",
         "band": "level4",
@@ -39,7 +37,6 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "version": "2-0-0",
         "cog_dir": str(tmp_path),
         "output_dir": str(tmp_path),
-        "col_scheme_dir": col_scheme_dir,
     }
 
     make_cog_mosaic(**mosaic_params)
