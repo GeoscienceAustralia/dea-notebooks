@@ -112,6 +112,14 @@ dev = [
     "ruff>=0.1.0",
 ]
 
+############################################################
+# Allow for functions from scripts to be executed with CLI #
+############################################################
+
+[project.scripts]
+make_styling_vrt = "dea_tools.mosaics.vrt:make_styling_vrt_cli"
+make_cog_mosaic = "dea_tools.mosaics.cog:make_cog_mosaic_cli"
+
 ##################################################
 # Configuration required to build Python package #
 ##################################################
