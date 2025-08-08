@@ -7,3 +7,7 @@
 __pycache__
 Tools/gen
 */local_data/*
+dist
+.coverage
+.venv/
+uv.lock
