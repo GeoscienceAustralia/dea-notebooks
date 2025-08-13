@@ -2,20 +2,26 @@
 name: Test entire repo against DEA Sandbox image
 
 # This workflow tests the entire repository against DEA Sandbox "stable" image 
-# when Python code changes (i.e. DEA Tools changes) are proposed to the develop branch
+# when Python code changes (i.e. DEA Tools changes) are proposed to develop branch
 
 on:  
-  # Run whenever a pull request to the develop branch modifies Python files
-  # in DEA Tools. This catches potential issues early before changes are merged
+  # Run whenever a pull request to the develop branch modifies the DEA Tools Python
+  # package. This catches potential issues early before changes are merged
   pull_request:
     branches:
       - develop
     paths:
       - '**/*.py'
+      - 'pyproject.toml'
   
   # Allow manual triggering through the GitHub UI
   # Useful for on-demand testing or troubleshooting
   workflow_dispatch:
+
+# Ensure only one test workflow runs per branch/PR at a time
+concurrency:
+  group: ${{ github.ref }} # Group by branch or PR ref
+  cancel-in-progress: true # Cancel any in-progress runs if a new one starts
 
 permissions:
   id-token: write # Required for OIDC authentication to AWS

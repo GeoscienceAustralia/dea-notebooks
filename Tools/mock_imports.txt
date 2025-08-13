@@ -46,6 +46,7 @@ requests
 rios
 rioxarray
 rsgislib
+s3fs
 scikit_learn
 seaborn
 sklearn

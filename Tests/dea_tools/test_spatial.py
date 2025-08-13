@@ -182,9 +182,7 @@ def test_xr_rasterize(categorical_da, name):
     categorical_gdf = xr_vectorize(categorical_da)
 
     # Rasterize vector using attributes
-    rasterized_da = xr_rasterize(
-        gdf=categorical_gdf, da=categorical_da, attribute_col="attribute", name=name
-    )
+    rasterized_da = xr_rasterize(gdf=categorical_gdf, da=categorical_da, attribute_col="attribute", name=name)
 
     # Assert that output is an xarray.DataArray
     assert isinstance(rasterized_da, xr.DataArray)
@@ -293,9 +291,7 @@ def test_subpixel_contours_attribute_df(dem_da, z_values, expected):
     # Set up attribute dataframe (one row per elevation value above)
     attribute_df = pd.DataFrame({"foo": [1, 2, 3], "bar": ["a", "b", "c"]})
 
-    contours_gdf = subpixel_contours(
-        dem_da, z_values=z_values, attribute_df=attribute_df
-    )
+    contours_gdf = subpixel_contours(dem_da, z_values=z_values, attribute_df=attribute_df)
 
     # Verify correct columns are included in output
     assert "foo" in contours_gdf

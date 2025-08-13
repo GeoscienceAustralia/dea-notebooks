@@ -1,0 +1,243 @@
+[project]
+name = "dea-tools"
+dynamic = ["version"]
+description = "Open-source tools for geospatial analysis with Digital Earth Australia, Open Data Cube, and Xarray"
+authors = [
+    { name = "Geoscience Australia", email = "earth.observation@ga.gov.au" }
+]
+readme = "Tools/README.md"
+license = "Apache-2.0"
+keywords = [
+    "earth observation",
+    "satellite data",  
+    "geospatial analysis",
+    "remote sensing",
+    "digital earth australia",
+    "datacube",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: GIS",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "aiohttp>=3.5.0",
+    "dask>=2023.1.0",
+    "dask-ml>=2023.3.24",
+    "eo-tides>=0.8.0",
+    "fiona>=1.10.0",
+    "folium>=0.16.0",
+    "geopandas>=0.10.0",
+    "geopy>=2.0.0",
+    "imageio>=2.20.0",
+    "joblib>=1.0.0",
+    "lxml>=5.0.0",
+    "matplotlib>=3.8.0",
+    "numba>=0.57.0",
+    "numpy>=1.26.0",
+    "odc-algo>=1.0.0",
+    "odc-geo[tiff]>=0.4.7",
+    "odc-io>=0.2.2",
+    "odc-stac[botocore]>=0.3.0",
+    "OWSLib>=0.26.0",
+    "packaging>=22.0",
+    "pandas>=2.2.0",
+    "planetary_computer>=1.0.0",
+    "pyproj>=3.7.0",
+    "pystac-client>=0.8.3",
+    "python-dateutil>=2.8.2",
+    "pytz>=2022.1",
+    "rasterio>=1.3.11",
+    "rasterstats>=0.16.0",
+    "requests>=2.25.0",
+    "rioxarray>=0.10.0",
+    "s3fs>=2024.9.0",
+    "seaborn>=0.10.0",
+    "scikit-image>=0.22.0",
+    "scikit-learn>=1.4.0",
+    "scipy>=1.14.1",
+    "shapely>=2.0.5",
+    "traitlets>=5.0.0",
+    "tqdm>=4.55.0",
+    "xarray>=2022.3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/GeoscienceAustralia/dea-notebooks"
+Repository = "https://github.com/GeoscienceAustralia/dea-notebooks"
+
+[project.optional-dependencies]
+all = ["dea-tools[datacube,jupyter,dask_gateway,hdstats,notebooks]"]
+datacube = [
+    "datacube>=1.8.5",
+    "datacube-ows>=1.9.3",
+    "odc-ui>=0.2.1",
+]
+jupyter = [
+    "ipyleaflet>=0.17.0",
+    "jupyter>=1.0.0",
+]
+dask_gateway = [
+    "dask_gateway>=2023.1.0",
+]
+hdstats = [
+    "hdstats>=0.1.8.post1",
+]
+notebooks = [
+    "affine>=2.3.1",
+    "beautifulsoup4>=4.12.0",
+    "cmocean>=3.0.0",
+    "contextily>=1.3.0",
+    "gcsfs>=2022.1.0",
+    "ipyleaflet>=0.17.0",
+    "jupyter>=1.0.0",
+    "opencv-python>=4.6.0.66",
+    "pydotplus>=2.0.0",
+    "statsmodels>=0.14.0",
+    "sunriset>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "deptry>=0.20.0",
+    "pytest>=6.0.0",
+    "pytest-cov>=0.6",
+    "ruff>=0.1.0",
+]
+
+############################################################
+# Allow for functions from scripts to be executed with CLI #
+############################################################
+
+[project.scripts]
+make_styling_vrt = "dea_tools.mosaics.vrt:make_styling_vrt_cli"
+make_cog_mosaic = "dea_tools.mosaics.cog:make_cog_mosaic_cli"
+
+##################################################
+# Configuration required to build Python package #
+##################################################
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [  # only include DEA Tools in package, not notebooks
+  "Tools/dea_tools/**",
+  "LICENSE",
+  "pyproject.toml",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["Tools/dea_tools"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
+
+############################################################
+# Configuration required to apply code formatting, linting #
+############################################################
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+fix = false
+lint.select = [
+  "I",        # Import sorting
+  "W",        # PyCodeStyle warnings
+  "F",        # Pyflakes (unused vars, imports, etc.)
+  "E",        # pycodestyle (spacing, etc.)
+  "B006",     # Mutable default args
+  "B007",     # Reusing loop variables
+  "C4",       # Catch incorrect use of comprehensions, dict, list, etc
+  "ISC",      # Correct use of string concatenation
+  "ICN",      # Common import conventions
+  "RET",      # Good return practices
+  "SIM",      # Common simplification rules
+  "TID",      # Some good import practices
+]
+lint.ignore = [
+  "E501",     # Don't enforce line length
+  "SIM105",   # contextlib.suppress
+  "B006",     # Ignore mutable argument defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+"Tests/**" = [
+  "S101",     # Allow `assert` in test files
+]
+
+[tool.ruff.format]
+preview = true
+
+#############################################################
+# Configuration required to run tests and generate coverage #
+#############################################################
+
+[tool.pytest.ini_options]
+testpaths = ["Tests"]
+
+[tool.coverage.report]
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["Tools/dea_tools"]
+
+########################################################
+# Configuration required to check package dependencies #
+########################################################
+
+[tool.deptry]
+exclude = ["venv", ".venv", ".pytest_cache", ".direnv", "Tests/*", ".git"]
+
+[tool.deptry.package_module_name_map]
+ipython = "IPython"
+opencv-python = "cv2"
+beautifulsoup4 = "bs4"
+
+[tool.deptry.per_rule_ignores]
+# Project should not contain missing dependencies
+DEP001 = [
+    "ipywidgets",          # not actually missing, part of jupyter metapackage
+    "IPython",             # not actually missing, part of jupyter metapackage
+    "intertidal",          # to fix later; requires Sandbox upgrade
+    "osgeo",               # to fix later; requires gdal import 
+]
+# Project should not contain unused dependencies
+DEP002 = [
+    "pystac-client",       # included for local STAC support
+    "odc-stac",            # included for local STAC support
+    "planetary_computer",  # included for STAC support
+    "numba",               # included to enforce minimum version of llvmlite
+    "jupyter",             # included to install other jupyter packages
+    "sunriset",            # included for intertidal exposure notebook
+    "odc-ui",              # ignore odc.ui not being recognised as `odc-ui`
+    "dea-tools",           # ignore dea-tools being mistaken for dependency
+]
+# Project should not use transitive dependencies
+DEP003 = [
+    "ipywidgets",          # part of jupyter metapackage
+    "IPython",             # part of jupyter metapackage  
+]
+
+# To run code cov:
+# `uv run pytest --cov --cov-config=pyproject.toml --cov-report=term`
+# To run deptry:
+# `uv run deptry Tools`
+# `uv run deptry .`
