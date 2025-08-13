@@ -43,7 +43,7 @@ Apps and widgets
    dea_tools.app.geomedian
    dea_tools.app.imageexport
    dea_tools.app.miningrehab
-   dea_tools.app.wetlandsinsighttool.py
+   dea_tools.app.wetlandsinsighttool
    dea_tools.app.widgetconstructors
 
 ``dea_tools.mosaics`` is a sub-module for generating COG mosaics and VRTs that add colour schemes to them.
