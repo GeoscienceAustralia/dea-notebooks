@@ -10,9 +10,11 @@ contextily
 cv2
 dask
 dask-ml
+dask_ml
 dask_gateway
 datacube
 datacube-ows
+datacube_ows
 eo-tides
 fiona
 folium
@@ -32,6 +34,7 @@ lxml
 matplotlib
 numba
 numpy
+odc
 odc-algo
 odc-geo
 odc-io
@@ -39,6 +42,7 @@ odc-stac
 odc-ui
 opencv-python
 osgeo
+owslib
 OWSLib
 packaging
 pandas
@@ -56,6 +60,7 @@ s3fs
 scikit-image
 scikit-learn
 skimage
+sklearn
 scipy
 seaborn
 shapely
