@@ -27,7 +27,6 @@ import dask
 import dask.distributed
 from aiohttp import ClientConnectionError
 from odc.io.cgroups import get_cpu_quota
-from odc.stac import configure_rio as cfg_rio
 
 _HAVE_PROXY = bool(find_spec("jupyter_server_proxy"))
 
@@ -103,9 +102,16 @@ def create_local_dask_cluster(
         **kwargs,
     )
 
-    # configure aws access
+    # Configure AWS and GDAL/rasterio access. Use datacube `configure_s3_access`
+    # function preferentially if datacube is installed, as this function will
+    # choose the correct settings automatically. If datacube is not installed,
+    # use version of function from odc.loader > odc.stac.
     if configure_rio:
-        cfg_rio(cloud_defaults=True, aws={"aws_unsigned": True}, client=client)
+        try:
+            from datacube.utils.aws import configure_s3_access
+        except:
+            from odc.stac import configure_s3_access
+        configure_s3_access(cloud_defaults=True, aws_unsigned=True, client=client)
 
     # Show the dask cluster settings
     if display_client:
