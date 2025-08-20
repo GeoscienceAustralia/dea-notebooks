@@ -85,10 +85,7 @@ def create_local_dask_cluster(
 
     # Count cpus if threads_per_worker not provided
     if threads_per_worker is None:
-        if get_cpu_quota() is not None:
-            threads_per_worker = round(get_cpu_quota())
-        else:
-            threads_per_worker = os.cpu_count()
+        threads_per_worker = round(get_cpu_quota()) if get_cpu_quota() is not None else os.cpu_count()
 
     # by default split 95% of system memory by the n_workers.
     if memory_limit == "spare_mem":
@@ -109,7 +106,7 @@ def create_local_dask_cluster(
     if configure_rio:
         try:
             from datacube.utils.aws import configure_s3_access
-        except:
+        except ImportError:
             from odc.stac import configure_s3_access
         configure_s3_access(cloud_defaults=True, aws_unsigned=True, client=client)
 
@@ -177,9 +174,7 @@ def create_dask_gateway_cluster(profile="r5_L", workers=2):
 
         # limit username to alphanumeric characters
         # kubernetes pods won't launch if labels contain anything other than [a-Z, -, _]
-        options["jupyterhub_user"] = "".join(
-            c if c.isalnum() else "-" for c in os.getenv("JUPYTERHUB_USER")
-        )
+        options["jupyterhub_user"] = "".join(c if c.isalnum() else "-" for c in os.getenv("JUPYTERHUB_USER"))
 
         cluster = gateway.new_cluster(options)
         cluster.scale(workers)
