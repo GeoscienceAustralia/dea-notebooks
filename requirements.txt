@@ -1,0 +1,4 @@
+## dea-tools will install most required packages
+dea-tools==0.4.1
+dea-tools[jupyter]
+jupyter-resource-usage
