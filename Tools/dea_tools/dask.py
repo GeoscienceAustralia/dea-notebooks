@@ -110,7 +110,7 @@ def create_local_dask_cluster(
         
         except ImportError:
             from odc.stac import configure_s3_access
-            #notethat odc.stac version does not accept client param
+            # Note that odc.stac version does not accept client param
             configure_s3_access(cloud_defaults=True, aws_unsigned=True)
 
     # Show the dask cluster settings
