@@ -106,9 +106,12 @@ def create_local_dask_cluster(
     if configure_rio:
         try:
             from datacube.utils.aws import configure_s3_access
+            configure_s3_access(cloud_defaults=True, aws_unsigned=True, client=client)
+        
         except ImportError:
             from odc.stac import configure_s3_access
-        configure_s3_access(cloud_defaults=True, aws_unsigned=True, client=client)
+            #notethat odc.stac version does not accept client param
+            configure_s3_access(cloud_defaults=True, aws_unsigned=True)
 
     # Show the dask cluster settings
     if display_client:
