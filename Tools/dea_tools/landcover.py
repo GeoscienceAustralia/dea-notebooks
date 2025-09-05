@@ -19,7 +19,7 @@ on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Last modified: May 2025
 """
-import odc.geo
+import odc.geo.xr
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
