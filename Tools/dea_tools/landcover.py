@@ -19,7 +19,7 @@ on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Last modified: May 2025
 """
-
+import odc.geo
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -135,148 +135,34 @@ lc_colours = {
         62: (176, 218, 201, 255, "Natural Aquatic Vegetated: Scattered (1 to 4 %)"),
         63: (25, 173, 109, 255, "Natural Aquatic Vegetated: Woody Closed (> 65 %)"),
         64: (25, 173, 109, 255, "Natural Aquatic Vegetated: Woody Closed (> 65 %) Water > 3 months (semi-) permanent"),
-        65: (
-            25,
-            173,
-            109,
-            255,
-            "Natural Aquatic Vegetated: Woody Closed (> 65 %) Water < 3 months (temporary or seasonal)",
-        ),
+        65: (25, 173,109, 255, "Natural Aquatic Vegetated: Woody Closed (> 65 %) Water < 3 months (temporary or seasonal)" ),
         66: (53, 184, 132, 255, "Natural Aquatic Vegetated: Woody Open (40 to 65 %)"),
-        67: (
-            53,
-            184,
-            132,
-            255,
-            "Natural Aquatic Vegetated: Woody Open (40 to 65 %) Water > 3 months (semi-) permanent",
-        ),
-        68: (
-            53,
-            184,
-            132,
-            255,
-            "Natural Aquatic Vegetated: Woody Open (40 to 65 %) Water < 3 months (temporary or seasonal)",
-        ),
+        67: (53,184,132,255, "Natural Aquatic Vegetated: Woody Open (40 to 65 %) Water > 3 months (semi-) permanent"),
+        68: (53, 184,132,255,"Natural Aquatic Vegetated: Woody Open (40 to 65 %) Water < 3 months (temporary or seasonal)"),
         69: (93, 195, 155, 255, "Natural Aquatic Vegetated: Woody Open (15 to 40 %)"),
-        70: (
-            93,
-            195,
-            155,
-            255,
-            "Natural Aquatic Vegetated: Woody Open (15 to 40 %) Water > 3 months (semi-) permanent",
-        ),
-        71: (
-            93,
-            195,
-            155,
-            255,
-            "Natural Aquatic Vegetated: Woody Open (15 to 40 %) Water < 3 months (temporary or seasonal)",
-        ),
+        70: (93, 195,155,255, "Natural Aquatic Vegetated: Woody Open (15 to 40 %) Water > 3 months (semi-) permanent"),
+        71: (93, 195, 155, 255,"Natural Aquatic Vegetated: Woody Open (15 to 40 %) Water < 3 months (temporary or seasonal)"),
         72: (135, 206, 178, 255, "Natural Aquatic Vegetated: Woody Sparse (4 to 15 %)"),
-        73: (
-            135,
-            206,
-            178,
-            255,
-            "Natural Aquatic Vegetated: Woody Sparse (4 to 15 %) Water > 3 months (semi-) permanent",
-        ),
-        74: (
-            135,
-            206,
-            178,
-            255,
-            "Natural Aquatic Vegetated: Woody Sparse (4 to 15 %) Water < 3 months (temporary or seasonal)",
-        ),
+        73: (135,206,178,255,"Natural Aquatic Vegetated: Woody Sparse (4 to 15 %) Water > 3 months (semi-) permanent"),
+        74: (135,206,178,255,"Natural Aquatic Vegetated: Woody Sparse (4 to 15 %) Water < 3 months (temporary or seasonal)"),
         75: (176, 218, 201, 255, "Natural Aquatic Vegetated: Woody Scattered (1 to 4 %)"),
-        76: (
-            176,
-            218,
-            201,
-            255,
-            "Natural Aquatic Vegetated: Woody Scattered (1 to 4 %) Water > 3 months (semi-) permanent",
-        ),
-        77: (
-            176,
-            218,
-            201,
-            255,
-            "Natural Aquatic Vegetated: Woody Scattered (1 to 4 %) Water < 3 months (temporary or seasonal)",
-        ),
+        76: (176,218,201,255,"Natural Aquatic Vegetated: Woody Scattered (1 to 4 %) Water > 3 months (semi-) permanent"),
+        77: (176,218,201,255,"Natural Aquatic Vegetated: Woody Scattered (1 to 4 %) Water < 3 months (temporary or seasonal)"),
         78: (39, 204, 139, 255, "Natural Aquatic Vegetated: Herbaceous Closed (> 65 %)"),
-        79: (
-            39,
-            204,
-            139,
-            255,
-            "Natural Aquatic Vegetated: Herbaceous Closed (> 65 %) Water > 3 months (semi-) permanent",
-        ),
-        80: (
-            39,
-            204,
-            139,
-            255,
-            "Natural Aquatic Vegetated: Herbaceous Closed (> 65 %) Water < 3 months (temporary or seasonal)",
-        ),
+        79: (39,204,139,255,"Natural Aquatic Vegetated: Herbaceous Closed (> 65 %) Water > 3 months (semi-) permanent"),
+        80: (39,204,139,255,"Natural Aquatic Vegetated: Herbaceous Closed (> 65 %) Water < 3 months (temporary or seasonal)"),
         81: (66, 216, 159, 255, "Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %)"),
-        82: (
-            66,
-            216,
-            159,
-            255,
-            "Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %) Water > 3 months (semi-) permanent",
-        ),
-        83: (
-            66,
-            216,
-            159,
-            255,
-            "Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %) Water < 3 months (temporary or seasonal)",
-        ),
+        82: (66,216,159,255,"Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %) Water > 3 months (semi-) permanent"),
+        83: (66,216,159,255,"Natural Aquatic Vegetated: Herbaceous Open (40 to 65 %) Water < 3 months (temporary or seasonal)"),
         84: (99, 227, 180, 255, "Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %)"),
-        85: (
-            99,
-            227,
-            180,
-            255,
-            "Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %) Water > 3 months (semi-) permanent",
-        ),
-        86: (
-            99,
-            227,
-            180,
-            255,
-            "Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %) Water < 3 months (temporary or seasonal)",
-        ),
+        85: (99,227,180,255,"Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %) Water > 3 months (semi-) permanent"),
+        86: (99,227,180,255,"Natural Aquatic Vegetated: Herbaceous Open (15 to 40 %) Water < 3 months (temporary or seasonal)"),
         87: (135, 239, 201, 255, "Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %)"),
-        88: (
-            135,
-            239,
-            201,
-            255,
-            "Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %) Water > 3 months (semi-) permanent",
-        ),
-        89: (
-            135,
-            239,
-            201,
-            255,
-            "Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %) Water < 3 months (temporary or seasonal)",
-        ),
+        88: (135,239,201,255,"Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %) Water > 3 months (semi-) permanent"),
+        89: (135,239, 201, 255, "Natural Aquatic Vegetated: Herbaceous Sparse (4 to 15 %) Water < 3 months (temporary or seasonal)"),
         90: (171, 250, 221, 255, "Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %)"),
-        91: (
-            171,
-            250,
-            221,
-            255,
-            "Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %) Water > 3 months (semi-) permanent",
-        ),
-        92: (
-            171,
-            250,
-            221,
-            255,
-            "Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %) Water < 3 months (temporary or seasonal)",
-        ),
+        91: (171,250,221,255,"Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %) Water > 3 months (semi-) permanent"),
+        92: (171, 250, 221, 255, "Natural Aquatic Vegetated: Herbaceous Scattered (1 to 4 %) Water < 3 months (temporary or seasonal)"),
         93: (218, 92, 105, 255, "Artificial Surface:"),
         94: (243, 171, 105, 255, "Natural Surface:"),
         95: (255, 230, 140, 255, "Natural Surface: Sparsely vegetated"),
@@ -747,7 +633,7 @@ def plot_land_cover(
 
     cmap, norm = lc_colourmap(colour_scheme)
 
-    height, width = data.geobox.shape
+    height, width = data.odc.geobox.shape
     scale = width_pixels / width
 
     if year:
@@ -902,7 +788,6 @@ def lc_animation(
         Determines if animation plot should have tick marks and numbers
         on axes. Also removes white space around plot. Default: True
 
-
     Returns
     ---------
     A GIF (.gif) animation file.
@@ -921,12 +806,12 @@ def lc_animation(
     layer_cmap, layer_norm = lc_colourmap(colour_scheme)
 
     # Get info on dataset dimensions and define size of output
-    height, width = da.geobox.shape
+    height, width = da.odc.geobox.shape
     scale = width_pixels / width
-    left, bottom, right, top = da.geobox.extent.boundingbox
+    left, bottom, right, top = da.odc.geobox.extent.boundingbox
     extent = [left, right, bottom, top]
 
-    # settings for the label showed on top of the images
+    # Settings for the label showed on top of the images
     annotation_defaults = {
         "xy": (1, 1),
         "xycoords": "axes fraction",
