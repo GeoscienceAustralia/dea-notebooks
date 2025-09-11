@@ -43,7 +43,6 @@ from skimage.exposure import match_histograms
 
 from dea_tools.sar import apply_lee_filter
 
-
 # Valid ARD product groups
 VALID_PRODUCTS = {
     "ls": ["ga_ls5t_ard_3", "ga_ls7e_ard_3", "ga_ls8c_ard_3", "ga_ls9c_ard_3"],
@@ -143,10 +142,7 @@ def _validate_ard_products(products: list[str]) -> str:
     # Validate all provided products
     invalid = [p for p in products if p not in all_valid]
     if invalid:
-        raise ValueError(
-            f"Invalid products: {sorted(invalid)}. "
-            f"Valid options are: {sorted(all_valid)}."
-        )
+        raise ValueError(f"Invalid products: {sorted(invalid)}. Valid options are: {sorted(all_valid)}.")
     if input_products.issubset(valid_products["ls"]):
         return "ls"
     if input_products.issubset(valid_products["s2"]):
@@ -163,10 +159,7 @@ def _validate_ard_products(products: list[str]) -> str:
         return "mixed"
 
     # Catch combination of Sentinel-1 and optical sensors
-    raise ValueError(
-        "Loading a combination of Landsat/Sentinel-2 and Sentinel-1 "
-        "products is not currently supported."
-    )
+    raise ValueError("Loading a combination of Landsat/Sentinel-2 and Sentinel-1 products is not currently supported.")
 
 
 def _configure_masking(
@@ -183,15 +176,15 @@ def _configure_masking(
     Parameters
     ----------
     cloud_mask : str
-        Cloud mask to use.
+        Requested cloud mask.
     mask_contiguity : str or bool
-        Contiguity param to use.
+        Requested contiguity mask.
     fmask_categories : list of int
-        Pixel quality categories for Fmask.
+        Requested pixel quality categories for Fmask.
     s2cloudless_categories : list of str
-        Pixel quality categories for "s2cloudless".
+        Requested pixel quality categories for "s2cloudless".
     s1_mask_categories : list of str
-        Pixel quality categories for Sentinel-1's "mask".
+        Requested pixel quality categories for Sentinel-1's "mask".
     product_type : str
         Product type, e.g., 'ls', 's2', 'mixed'.
 
@@ -207,26 +200,16 @@ def _configure_masking(
 
     # Validate inputs
     if cloud_mask not in ("fmask", "s2cloudless"):
-        raise ValueError(
-            f"Unsupported cloud_mask '{cloud_mask}'. Must be 'fmask' or 's2cloudless'"
-        )
+        raise ValueError(f"Unsupported cloud_mask '{cloud_mask}'. Must be 'fmask' or 's2cloudless'")
 
     if mask_contiguity not in ("nbart", "nbar", True, False):
-        raise ValueError(
-            f"Unsupported mask_contiguity '{mask_contiguity}'. "
-            "Must be 'nbart', 'nbar', True, or False."
-        )
+        raise ValueError(f"Unsupported mask_contiguity '{mask_contiguity}'. Must be 'nbart', 'nbar', True, or False.")
 
-    if (mask_contiguity != False) & (product_type == "s1"):
-        raise ValueError(
-            "Contiguity masking is not supported for Sentinel-1 "
-            "products. Use `mask_contiguity=False`."
-        )
+    if mask_contiguity & (product_type == "s1"):
+        raise ValueError("Contiguity masking is not supported for Sentinel-1 products. Use `mask_contiguity=False`.")
 
     # Determine contiguity band
-    contiguity_band = (
-        "oa_nbar_contiguity" if mask_contiguity == "nbar" else "oa_nbart_contiguity"
-    )
+    contiguity_band = "oa_nbar_contiguity" if mask_contiguity == "nbar" else "oa_nbart_contiguity"
 
     # If product type is "s1", set pq_band to "mask"
     if product_type == "s1":
@@ -494,11 +477,7 @@ def load_ard(
             if contiguity_band.replace("oa_", "") in measurements
             else contiguity_band
         )
-        pq_band = (
-            pq_band.replace("oa_", "")
-            if pq_band.replace("oa_", "") in measurements
-            else pq_band
-        )
+        pq_band = pq_band.replace("oa_", "") if pq_band.replace("oa_", "") in measurements else pq_band
 
     # Use custom fuse function to ensure contiguity is combined correctly
     # when grouping data by solar day. Without this, contiguity data from
@@ -515,9 +494,7 @@ def load_ard(
 
     # Get list of data and mask bands so that we can later exclude
     # mask bands from being masked themselves
-    data_bands = [
-        band for band in measurements if band not in (pq_band, contiguity_band)
-    ]
+    data_bands = [band for band in measurements if band not in (pq_band, contiguity_band)]
     mask_bands = [band for band in measurements if band not in data_bands]
 
     #################
@@ -545,11 +522,7 @@ def load_ard(
 
         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
         if not ls7_slc_off and product == "ga_ls7e_ard_3":
-            datasets = [
-                i
-                for i in datasets
-                if normalise_dt(i.time.begin) < datetime.datetime(2003, 5, 31)
-            ]
+            datasets = [i for i in datasets if normalise_dt(i.time.begin) < datetime.datetime(2003, 5, 31)]
 
         # Add any returned datasets to list
         dataset_list.extend(datasets)
@@ -580,11 +553,8 @@ def load_ard(
     ################################
 
     if product_type == "s1":
-
         # Select backscatter bands containing HH, VV, VH, or HV
-        backscatter_bands = [
-            b for b in ds.data_vars if any(pol in b for pol in ("HH", "VV", "VH", "HV"))
-        ]
+        backscatter_bands = [b for b in ds.data_vars if any(pol in b for pol in ("HH", "VV", "VH", "HV"))]
 
         # Applee Lee filter with default 7 radius
         if apply_speckle_filter:
@@ -624,9 +594,7 @@ def load_ard(
         # Compute good data for each observation as % of total pixels
         if verbose:
             print(f"Counting good quality pixels for each time step using {cloud_mask}")
-        data_perc = pq_mask.sum(axis=[1, 2], dtype="int32") / (
-            pq_mask.shape[1] * pq_mask.shape[2]
-        )
+        data_perc = pq_mask.sum(axis=[1, 2], dtype="int32") / (pq_mask.shape[1] * pq_mask.shape[2])
         keep = (data_perc >= min_gooddata).persist()
 
         # Filter by `min_gooddata` to drop low quality observations
@@ -644,9 +612,7 @@ def load_ard(
     # Morphological filtering on cloud masks
     if (mask_filters is not None) & mask_pixel_quality:
         if verbose:
-            print(
-                f"Applying morphological filters to pixel quality mask: {mask_filters}"
-            )
+            print(f"Applying morphological filters to pixel quality mask: {mask_filters}")
 
         pq_mask = ~mask_cleanup(~pq_mask, mask_filters=mask_filters)
 
@@ -692,17 +658,11 @@ def load_ard(
 
     # Resolve dtype if set to "auto"
     if dtype == "auto":
-        if product_type == "s1":  # S1 data has native float dtype
-            dtype = "native"
-        else:
-            dtype = "native" if mask is None else "float32"
+        dtype = "native" if product_type == "s1" else "native" if mask is None else "float32"
 
     # Convert dtype if required
     if dtype != "native":
-        if product_type == "s1":  # use generic conversion as S1 is already float
-            ds_data = ds_data.astype(dtype)
-        else:
-            ds_data = odc.algo.to_float(ds_data, dtype=dtype)
+        ds_data = ds_data.astype(dtype) if product_type == "s1" else odc.algo.to_float(ds_data, dtype=dtype)
 
     # Put data and mask bands back together
     attrs = ds.attrs
