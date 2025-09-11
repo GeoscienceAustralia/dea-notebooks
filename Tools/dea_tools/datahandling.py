@@ -565,11 +565,14 @@ def load_ard(
                 ds[band] = apply_lee_filter(ds[band], size=radius)
 
         # Convert to decibels (clipping to ensure finite values are returned)
+        # Xarray will drop important attributes by default, so tell it not to
         if convert_db:
             if verbose:
                 print(f"Converting {backscatter_bands} to decibels")
             for band in backscatter_bands:
-                ds[band] = 10 * np.log10(ds[band].clip(min=1e-6))
+                with xr.set_options(keep_attrs=True):
+                    ds[band] = 10 * np.log10(ds[band].clip(min=1e-6))
+                    ds[band].attrs["units"] = "decibel power"
 
     ####################
     # Filter good data #
@@ -651,10 +654,7 @@ def load_ard(
 
     # Apply mask if provided
     if mask is not None:
-        if product_type == "s1":  # force keep_good_only to treat nodata as nan
-            ds_data = odc.algo.keep_good_only(ds_data, where=mask, nodata=np.nan)
-        else:
-            ds_data = odc.algo.keep_good_only(ds_data, where=mask)
+        ds_data = odc.algo.keep_good_only(ds_data, where=mask)
 
     # Resolve dtype if set to "auto"
     if dtype == "auto":

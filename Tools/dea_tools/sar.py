@@ -79,5 +79,6 @@ def apply_lee_filter(data_array, size=7):
         vectorize=True,
         dask="parallelized",
         output_dtypes=[data_array.dtype],
+        keep_attrs=True,
     )
     return filtered_data
