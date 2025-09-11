@@ -1,4 +1,4 @@
-# dea_datahandling.py
+# datahandling.py
 """
 Loading and manipulating Digital Earth Australia products and data
 using the Open Data Cube and xarray.
@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: April 2025
+Last modified: September 2025
 """
 
 import datetime
@@ -40,6 +40,16 @@ from odc.algo import mask_cleanup
 from scipy.ndimage import binary_dilation
 from skimage.color import hsv2rgb, rgb2hsv
 from skimage.exposure import match_histograms
+
+from dea_tools.sar import apply_lee_filter
+
+
+# Valid ARD product groups
+VALID_PRODUCTS = {
+    "ls": ["ga_ls5t_ard_3", "ga_ls7e_ard_3", "ga_ls8c_ard_3", "ga_ls9c_ard_3"],
+    "s2": ["ga_s2am_ard_3", "ga_s2bm_ard_3", "ga_s2cm_ard_3"],
+    "s1": ["ga_s1_nrb_iw_vv_vh_0", "ga_s1_nrb_iw_hh_0", "ga_s1_nrb_iw_vv_0"],
+}
 
 
 def _dc_query_only(**kw):
@@ -103,6 +113,142 @@ def _contiguity_fuser(dst: np.ndarray, src: np.ndarray) -> None:
     np.copyto(dst, src, where=np.isin(dst, (255, 0)))
 
 
+def _validate_ard_products(products: list[str]) -> str:
+    """
+    Validate and classify a list of Landsat, Sentinel-2,
+    or Sentinel-1 products provided to `load_ard`.
+
+    Parameters
+    ----------
+    products : list of str
+        Product names to validate.
+
+    Returns
+    -------
+    str
+        One of "ls", "s2", "s1", "mixed".
+    """
+    # Convert supported products to sets for easy validation
+    input_products = set(products)
+    valid_products = {k: set(v) for k, v in VALID_PRODUCTS.items()}
+    all_valid = {p for group in valid_products.values() for p in group}
+
+    # Raise error if empty list of products is provided
+    if not input_products:
+        raise ValueError(
+            "Please provide a list of Landsat, Sentinel-2, or Sentinel-1 "
+            f"Analysis Ready Data product names. Valid options are: {sorted(all_valid)}."
+        )
+
+    # Validate all provided products
+    invalid = [p for p in products if p not in all_valid]
+    if invalid:
+        raise ValueError(
+            f"Invalid products: {sorted(invalid)}. "
+            f"Valid options are: {sorted(all_valid)}."
+        )
+    if input_products.issubset(valid_products["ls"]):
+        return "ls"
+    if input_products.issubset(valid_products["s2"]):
+        return "s2"
+    if input_products.issubset(valid_products["s1"]):
+        return "s1"
+    if input_products.issubset(valid_products["ls"] | valid_products["s2"]):
+        warnings.warn(
+            "You have selected both Landsat and Sentinel-2 products. "
+            "This can produce unexpected results as these products use "
+            "the same names for different spectral bands (e.g. "
+            "Landsat and Sentinel-2's 'nbart_swir_2'); use with caution."
+        )
+        return "mixed"
+
+    # Catch combination of Sentinel-1 and optical sensors
+    raise ValueError(
+        "Loading a combination of Landsat/Sentinel-2 and Sentinel-1 "
+        "products is not currently supported."
+    )
+
+
+def _configure_masking(
+    cloud_mask: str,
+    mask_contiguity: str | bool,
+    fmask_categories: list[str],
+    s2cloudless_categories: list[str],
+    s1_mask_categories: list[str],
+    product_type: str,
+) -> tuple[str, list[str], str]:
+    """
+    Configure pixel quality and contiguity masking for ARD products.
+
+    Parameters
+    ----------
+    cloud_mask : str
+        Cloud mask to use.
+    mask_contiguity : str or bool
+        Contiguity param to use.
+    fmask_categories : list of int
+        Pixel quality categories for Fmask.
+    s2cloudless_categories : list of str
+        Pixel quality categories for "s2cloudless".
+    s1_mask_categories : list of str
+        Pixel quality categories for Sentinel-1's "mask".
+    product_type : str
+        Product type, e.g., 'ls', 's2', 'mixed'.
+
+    Returns
+    -------
+    pq_band : str
+        Name of the pixel quality band to load.
+    pq_categories : list of int
+        Categories to use for pixel quality masking.
+    contiguity_band : str
+        Name of the contiguity band to load.
+    """
+
+    # Validate inputs
+    if cloud_mask not in ("fmask", "s2cloudless"):
+        raise ValueError(
+            f"Unsupported cloud_mask '{cloud_mask}'. Must be 'fmask' or 's2cloudless'"
+        )
+
+    if mask_contiguity not in ("nbart", "nbar", True, False):
+        raise ValueError(
+            f"Unsupported mask_contiguity '{mask_contiguity}'. "
+            "Must be 'nbart', 'nbar', True, or False."
+        )
+
+    if (mask_contiguity != False) & (product_type == "s1"):
+        raise ValueError(
+            "Contiguity masking is not supported for Sentinel-1 "
+            "products. Use `mask_contiguity=False`."
+        )
+
+    # Determine contiguity band
+    contiguity_band = (
+        "oa_nbar_contiguity" if mask_contiguity == "nbar" else "oa_nbart_contiguity"
+    )
+
+    # If product type is "s1", set pq_band to "mask"
+    if product_type == "s1":
+        pq_band = "mask"
+        pq_categories = s1_mask_categories
+
+    # Otherwise, use either "fmask" or "s2cloudless"
+    elif cloud_mask == "fmask":
+        pq_band = "oa_fmask"
+        pq_categories = fmask_categories
+    elif cloud_mask == "s2cloudless":
+        if product_type in ("ls", "mixed"):
+            raise ValueError(
+                "The Sentinel-2 's2cloudless' cloud mask is not available for "
+                "Landsat products. Use `cloud_mask='fmask'`."
+            )
+        pq_band = "oa_s2cloudless_mask"
+        pq_categories = s2cloudless_categories
+
+    return pq_band, pq_categories, contiguity_band
+
+
 def load_ard(
     dc,
     products=None,
@@ -113,36 +259,44 @@ def load_ard(
     mask_contiguity=False,
     fmask_categories=["valid", "snow", "water"],
     s2cloudless_categories=["valid"],
+    s1_mask_categories=["valid"],
     ls7_slc_off=True,
+    apply_speckle_filter=False,
+    convert_db=False,
     dtype="auto",
-    predicate=None,
     verbose=True,
     **kwargs,
 ):
     """
-    Load multiple Geoscience Australia Landsat or Sentinel 2
-    Collection 3  Analysis Ready Data products (e.g. Landsat 5, 7, 8, 9; Sentinel 2A, 2B, 2C),
-    optionally apply pixel quality/cloud masking and contiguity masks,
-    and drop time steps that contain greater than a minimum proportion
-    of good quality (e.g. non-cloudy or shadowed) pixels.
+    Load multiple Geoscience Australia Landsat, Sentinel-2 or Sentinel-1 Analysis Ready Data products.
 
-    The function supports loading the following Landsat products:
+    The function can automatically mask data by pixel quality/cloud
+    masks, filter to good quality time steps (e.g. non-cloudy or
+    shadowed), and apply custom Sentinel-1 analysis steps (e.g
+    speckle filtering and decibel transformation).
+
+    Supported Landsat products:
         * ga_ls5t_ard_3
         * ga_ls7e_ard_3
         * ga_ls8c_ard_3
         * ga_ls9c_ard_3
 
-    And Sentinel-2 products:
+    Supported Sentinel-2 products:
         * ga_s2am_ard_3
         * ga_s2bm_ard_3
         * ga_s2cm_ard_3
 
-    Cloud masking can be performed using the Fmask (Function of Mask)
-    cloud mask for Landsat and Sentinel-2, and the s2cloudless
-    (Sentinel Hub cloud detector for Sentinel-2 imagery) cloud mask for
-    Sentinel-2.
+    Supported Sentinel-1 products:
+        * ga_s1_nrb_iw_vv_vh_0
+        * ga_s1_nrb_iw_hh_0
+        * ga_s1_nrb_iw_vv_0
 
-    Last modified: February 2025
+    Pixel quality masking can be performed using the "Fmask" (Function
+    of Mask) cloud mask for Landsat and Sentinel-2, the "s2cloudless"
+    (Sentinel Hub cloud detector for Sentinel-2) cloud mask for
+    Sentinel-2, and the "mask" shadow and layover mask for Sentinel-1.
+
+    Last modified: September 2025
 
     Parameters
     ----------
@@ -153,14 +307,15 @@ def load_ard(
         A list of product names to load. Valid options are
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3', 'ga_ls9c_ard_3']
         for Landsat, ['ga_s2am_ard_3', 'ga_s2bm_ard_3', 'ga_s2cm_ard_3']
-        for Sentinel 2.
+        for Sentinel-2, ['ga_s1_nrb_iw_vv_vh_0', 'ga_s1_nrb_iw_hh_0',
+        'ga_s1_nrb_iw_vv_0'] for Sentinel-1.
     cloud_mask : string, optional
-        The cloud mask used by the function. This is used for both
-        masking out poor quality pixels (e.g. clouds) if
+        The cloud mask used for masking Landsat and Sentinel-2 data. This
+        is used for both masking out poor quality pixels (e.g. clouds) if
         ``mask_pixel_quality=True``, and for calculating the
         ``min_gooddata`` percentage when dropping cloudy or low quality
         satellite observations. Two cloud masks are supported:
-            * ``'fmask'`` (default; available for Landsat, Sentinel-2)
+            * ``'fmask'`` (default; Landsat and Sentinel-2)
             * ``'s2cloudless'`` (Sentinel-2 only)
     min_gooddata : float, optional
         The minimum percentage of good quality pixels required for a
@@ -169,14 +324,12 @@ def load_ard(
         0.99 to return only observations with more than 99% good quality
         pixels).
     mask_pixel_quality : str or bool, optional
-        Whether to mask out poor quality (e.g. cloudy) pixels by setting
-        them as nodata. Depending on the choice of cloud mask, the
-        function will identify good quality pixels using the categories
-        passed to the ``fmask_categories`` or ``s2cloudless_categories``
-        params. Set to False to turn off pixel quality masking completely.
-        Poor quality pixels will be set to NaN (and convert all data to
-        `float32`) if  ``dtype='auto'``, or be set to the data's native
-        nodata value (usually -999) if ``dtype='native'`` (see ``dtype``
+        Whether to mask out poor quality pixels (for example, clouds or shadows).
+        Good quality pixels are defined by values passed to the ``fmask_categories``,
+        ``s2cloudless_categories`` or ``s1_mask_categories`` parameters.
+        Set to False to turn off pixel quality masking completely. Poor quality
+        pixels will be set to NaN if  ``dtype='auto'``, or be set to the data's
+        native nodata value (usually -999) if ``dtype='native'`` (see ``dtype``
         below for more details).
     mask_filters : iterable of tuples, optional
         Iterable tuples of morphological operations - ("<operation>", <radius>)
@@ -189,10 +342,10 @@ def load_ard(
         radius: int,
         e.g. ``mask_filters=[('erosion', 5), ("opening", 2), ("dilation", 2)]``
     mask_contiguity : str or bool, optional
-        Whether to mask out pixels that are missing data in any band
-        (i.e. "non-contiguous" pixels). This can be important for
-        generating clean composite datasets. The default of False will
-        not apply any contiguity mask.
+        Whether to mask out Landsat or Sentinel-2 pixels that are missing
+        data in any band (i.e. "non-contiguous" pixels). This can be important
+        for generating clean composite datasets. The default False will
+        not apply contiguity masking.
         If loading NBART data, set:
             * ``mask_contiguity='nbart'`` (or ``mask_contiguity=True``)
         If loading NBAR data, specify:
@@ -202,41 +355,48 @@ def load_ard(
         'dtype' below).
     fmask_categories : list, optional
         A list of Fmask cloud mask categories to consider as good
-        quality pixels when calculating ``min_gooddata`` and when masking
-        data by pixel quality if ``mask_pixel_quality=True``.
-        The default is ``['valid', 'snow', 'water']``; all other Fmask
-        categories ('cloud', 'shadow', 'nodata') will be treated as low
-        quality pixels. Choose from: 'nodata', 'valid', 'cloud',
+        quality pixels if ``mask_pixel_quality=True``, or when filtering by
+        ``min_gooddata``. Defaults to ``['valid', 'snow', 'water']``; all
+        other Fmask categories (e.g. 'cloud', 'shadow', 'nodata') will be
+        treated as low quality pixels. Choose from: 'nodata', 'valid', 'cloud',
         'shadow', 'snow', and 'water'.
     s2cloudless_categories : list, optional
         A list of s2cloudless cloud mask categories to consider as good
-        quality pixels when calculating ``min_gooddata`` and when masking
-        data by pixel quality if ``mask_pixel_quality=True``. The default
-        is ``['valid']``; all other s2cloudless categories ('cloud',
-        'nodata') will be treated as low quality pixels. Choose from:
-        'nodata', 'valid', or 'cloud'.
+        quality pixels if ``mask_pixel_quality=True``, or when filtering by
+        ``min_gooddata``. Defaults to ``['valid']``; all other s2cloudless
+        categories ('cloud', 'nodata') will be treated as low quality pixels.
+        Choose from: 'nodata', 'valid', or 'cloud'.
+    s1_mask_categories : list, optional
+        A list of Sentinel-1 mask categories to consider as good
+        quality pixels if ``mask_pixel_quality=True``, or when filtering by
+        ``min_gooddata``. Defaults to ``['valid']``; all other Sentinel-1
+        mask categories will be treated as low quality pixels.
+        Choose from: 'valid', 'shadow', 'layover', 'shadow and layover',
+        and 'invalid sample'.
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to
         True, which keeps all Landsat 7 observations > May 31 2003.
+    apply_speckle_filter : bool or int, optional
+        Whether to apply Lee speckle filtering to Sentinel-1 backscatter
+        bands (e.g. 'HH_gamma0', 'VV_gamma0', 'VH_gamma0', 'HV_gamma0').
+        If True, a Lee filter of radius 7 will be applied; pass an integer
+        to specify a custom radius.
+    convert_db : bool, optional
+        Whether to convert Sentinel-1 backscatter bands (e.g. 'HH_gamma0',
+        'VV_gamma0', 'VH_gamma0', 'HV_gamma0') from linear gamma0 to
+        decibels.
     dtype : string, optional
         Controls the data type/dtype that layers are coerced to after
-        loading. Valid values: 'native', 'auto', and 'float{16|32|64}'.
-        When 'auto' is used, the data will be converted to `float32`
-        if masking is used, otherwise data will be returned in the
-        native data type of the data. Be aware that if data is loaded
-        in its native dtype, nodata and masked pixels will be returned
-        with the data's native nodata value (typically -999), not NaN.
-    predicate : function, optional
-        DEPRECATED: Please use ``dataset_predicate`` instead.
-        An optional function that can be passed in to restrict the datasets that
-        are loaded. A predicate function should take a
-        ``datacube.model.Dataset`` object as an input (i.e. as returned
-        from ``dc.find_datasets``), and return a boolean. For example,
-        a predicate function could be used to return True for only
-        datasets acquired in January: `dataset.time.begin.month == 1`
+        loading. Valid values include 'native', 'auto', and 'float{16|32|64}'.
+        When 'auto' is used, Landsat and Sentinel-2 data will be
+        converted to `float32` if masking is used, otherwise data will
+        be returned in the native data type of the data. Be aware that
+        if Landsat and Sentinel-2 data is loaded in its native dtype,
+        nodata and masked pixels will be returned with the data's native
+        nodata value (typically -999), not NaN.
      verbose : bool, optional
-        If True, print progress statements during loading
+        If True, print progress statements during loading.
     **kwargs :
         A set of keyword arguments to `dc.load` that define the
         spatiotemporal query and load parameters used to extract data.
@@ -279,80 +439,18 @@ def load_ard(
     # Convert products to a list if it is passed as a string
     products = [products] if isinstance(products, str) else products
 
-    # Valid Landsat products
-    valid_ls = ["ga_ls5t_ard_3", "ga_ls7e_ard_3", "ga_ls8c_ard_3", "ga_ls9c_ard_3"]
-    valid_s2 = ["ga_s2am_ard_3", "ga_s2bm_ard_3", "ga_s2cm_ard_3"]
+    # Validate input products against supported and classify type
+    product_type = _validate_ard_products(products)
 
-    # Verify that products were provided
-    if not products:
-        raise ValueError(
-            f"Please provide a list of Landsat or Sentinel-2 Analysis Ready Data "
-            f"product names to load data from. Valid options are: "
-            f"{valid_ls + valid_s2}."
-        )
-
-    # Determine whether products are all Landsat, all S2, or mixed
-    if all([product in valid_ls for product in products]):
-        product_type = "ls"
-    elif all([product in valid_s2 for product in products]):
-        product_type = "s2"
-    elif all([product in valid_s2 + valid_ls for product in products]):
-        product_type = "mixed"
-
-        warnings.warn(
-            "You have selected a combination of Landsat and Sentinel-2 "
-            "products. This can produce unexpected results as these "
-            "products use the same names for different spectral bands "
-            "(e.g. Landsat and Sentinel-2's 'nbart_swir_2'); use with "
-            "caution."
-        )
-    else:
-        # If an invalid product is passed, raise error
-        invalid_products = [product for product in products if product not in valid_s2 + valid_ls]
-        raise ValueError(
-            f"The `load_ard` function only supports Landsat and "
-            f"Sentinel-2 Analysis Ready Data products; {invalid_products} is not supported. "
-            f"Valid options are: {valid_ls + valid_s2}."
-        )
-
-    # Set contiguity band depending on `mask_contiguity`;
-    # "oa_nbart_contiguity" if True, False or "nbart",
-    # "oa_nbar_contiguity" if "nbar"
-    if mask_contiguity in (True, False, "nbart"):
-        contiguity_band = "oa_nbart_contiguity"
-
-    elif mask_contiguity == "nbar":
-        contiguity_band = "oa_nbar_contiguity"
-
-    else:
-        raise ValueError(
-            f"Unsupported value '{mask_contiguity}' passed to "
-            "`mask_contiguity`. Please provide either 'nbart', 'nbar', "
-            "True, or False."
-        )
-
-    # Set pixel quality (PQ) band depending on `cloud_mask`
-    if cloud_mask == "fmask":
-        pq_band = "oa_fmask"
-        pq_categories = fmask_categories
-
-    elif cloud_mask == "s2cloudless":
-        pq_band = "oa_s2cloudless_mask"
-        pq_categories = s2cloudless_categories
-
-        # Raise error if s2cloudless is requested for Landsat products
-        if product_type in ["ls", "mixed"]:
-            raise ValueError(
-                "The 's2cloudless' cloud mask is not available for "
-                "Landsat products. Please set `mask_pixel_quality` to "
-                "'fmask' or False."
-            )
-    else:
-        raise ValueError(
-            f"Unsupported value '{cloud_mask}' passed to "
-            "`cloud_mask`. Please provide either 'fmask', "
-            "'s2cloudless', True, or False."
-        )
+    # Configure required pixel quality and contiguity masking params
+    pq_band, pq_categories, contiguity_band = _configure_masking(
+        cloud_mask=cloud_mask,
+        mask_contiguity=mask_contiguity,
+        fmask_categories=fmask_categories,
+        s2cloudless_categories=s2cloudless_categories,
+        s1_mask_categories=s1_mask_categories,
+        product_type=product_type,
+    )
 
     # To ensure that the categorical PQ/contiguity masking bands are
     # loaded using nearest neighbour resampling, we need to add these to
@@ -376,7 +474,7 @@ def load_ard(
     dask_chunks = kwargs.pop("dask_chunks", None)
 
     # Create a list of requested measurements so that we can eventually
-    # return only the measurements the user orignally asked for
+    # return only the measurements the user originally asked for
     requested_measurements = kwargs.pop("measurements", None)
 
     # Copy our measurements list so we can temporarily append extra PQ
@@ -396,7 +494,11 @@ def load_ard(
             if contiguity_band.replace("oa_", "") in measurements
             else contiguity_band
         )
-        pq_band = pq_band.replace("oa_", "") if pq_band.replace("oa_", "") in measurements else pq_band
+        pq_band = (
+            pq_band.replace("oa_", "")
+            if pq_band.replace("oa_", "") in measurements
+            else pq_band
+        )
 
     # Use custom fuse function to ensure contiguity is combined correctly
     # when grouping data by solar day. Without this, contiguity data from
@@ -413,7 +515,9 @@ def load_ard(
 
     # Get list of data and mask bands so that we can later exclude
     # mask bands from being masked themselves
-    data_bands = [band for band in measurements if band not in (pq_band, contiguity_band)]
+    data_bands = [
+        band for band in measurements if band not in (pq_band, contiguity_band)
+    ]
     mask_bands = [band for band in measurements if band not in data_bands]
 
     #################
@@ -422,18 +526,6 @@ def load_ard(
 
     # Pull out query params only to pass to dc.find_datasets
     query = _dc_query_only(**kwargs)
-
-    # If predicate is specified, use this function to filter the list
-    # of datasets prior to load
-    if verbose:
-        if predicate:
-            print(
-                "The 'predicate' parameter will be deprecated in future "
-                "versions of this function as this functionality has now "
-                "been added to Datacube itself. Please use "
-                "`dataset_predicate=...` instead."
-            )
-            query["dataset_predicate"] = predicate
 
     # Extract list of datasets for each product using query params
     dataset_list = []
@@ -453,7 +545,11 @@ def load_ard(
 
         # Remove Landsat 7 SLC-off observations if ls7_slc_off=False
         if not ls7_slc_off and product == "ga_ls7e_ard_3":
-            datasets = [i for i in datasets if normalise_dt(i.time.begin) < datetime.datetime(2003, 5, 31)]
+            datasets = [
+                i
+                for i in datasets
+                if normalise_dt(i.time.begin) < datetime.datetime(2003, 5, 31)
+            ]
 
         # Add any returned datasets to list
         dataset_list.extend(datasets)
@@ -479,12 +575,46 @@ def load_ard(
         **kwargs,
     )
 
+    ################################
+    # Apply Sentinel-1 corrections #
+    ################################
+
+    if product_type == "s1":
+
+        # Select backscatter bands containing HH, VV, VH, or HV
+        backscatter_bands = [
+            b for b in ds.data_vars if any(pol in b for pol in ("HH", "VV", "VH", "HV"))
+        ]
+
+        # Applee Lee filter with default 7 radius
+        if apply_speckle_filter:
+            radius = 7 if apply_speckle_filter is True else int(apply_speckle_filter)
+            if verbose:
+                print(f"Applying speckle filter (radius={radius}) to bands {backscatter_bands}")
+            for band in backscatter_bands:
+                ds[band] = apply_lee_filter(ds[band], size=radius)
+
+        # Convert to decibels (clipping to ensure finite values are returned)
+        if convert_db:
+            if verbose:
+                print(f"Converting {backscatter_bands} to decibels")
+            for band in backscatter_bands:
+                ds[band] = 10 * np.log10(ds[band].clip(min=1e-6))
+
     ####################
     # Filter good data #
     ####################
 
     # Calculate pixel quality mask
-    pq_mask = odc.algo.fmask_to_bool(ds[pq_band], categories=pq_categories)
+    # TEMPORARY hack to invert mask until s1 "mask" layer is updated to add a "valid" category
+    if (pq_band == "mask") & (pq_categories == ["valid"]):
+        pq_mask = odc.algo.fmask_to_bool(
+            ds[pq_band],
+            categories=["shadow", "layover", "shadow and layover", "invalid sample"],
+            invert=True,
+        )
+    else:
+        pq_mask = odc.algo.fmask_to_bool(ds[pq_band], categories=pq_categories)
 
     # The good data percentage calculation has to load all pixel quality
     # data, which can be slow. If the user has chosen no filtering
@@ -494,7 +624,9 @@ def load_ard(
         # Compute good data for each observation as % of total pixels
         if verbose:
             print(f"Counting good quality pixels for each time step using {cloud_mask}")
-        data_perc = pq_mask.sum(axis=[1, 2], dtype="int32") / (pq_mask.shape[1] * pq_mask.shape[2])
+        data_perc = pq_mask.sum(axis=[1, 2], dtype="int32") / (
+            pq_mask.shape[1] * pq_mask.shape[2]
+        )
         keep = (data_perc >= min_gooddata).persist()
 
         # Filter by `min_gooddata` to drop low quality observations
@@ -512,18 +644,11 @@ def load_ard(
     # Morphological filtering on cloud masks
     if (mask_filters is not None) & mask_pixel_quality:
         if verbose:
-            print(f"Applying morphological filters to pixel quality mask: {mask_filters}")
+            print(
+                f"Applying morphological filters to pixel quality mask: {mask_filters}"
+            )
 
         pq_mask = ~mask_cleanup(~pq_mask, mask_filters=mask_filters)
-
-        warnings.warn(
-            "As of `dea_tools` v0.3.0, pixel quality masks are "
-            "inverted before being passed to `mask_filters` (i.e. so "
-            "that good quality/clear pixels are False and poor quality "
-            "pixels/clouds are True). This means that 'dilation' will "
-            "now expand cloudy pixels, rather than shrink them as in "
-            "previous versions."
-        )
 
     ###############
     # Apply masks #
@@ -558,19 +683,26 @@ def load_ard(
     ds_data = ds[data_bands]
     ds_masks = ds[mask_bands]
 
-    # Mask data if either of the above masks were generated
+    # Apply mask if provided
     if mask is not None:
-        ds_data = odc.algo.keep_good_only(ds_data, where=mask)
+        if product_type == "s1":  # force keep_good_only to treat nodata as nan
+            ds_data = odc.algo.keep_good_only(ds_data, where=mask, nodata=np.nan)
+        else:
+            ds_data = odc.algo.keep_good_only(ds_data, where=mask)
 
-    # Automatically set dtype to either native or float32 depending
-    # on whether masking was requested
+    # Resolve dtype if set to "auto"
     if dtype == "auto":
-        dtype = "native" if mask is None else "float32"
+        if product_type == "s1":  # S1 data has native float dtype
+            dtype = "native"
+        else:
+            dtype = "native" if mask is None else "float32"
 
-    # Set nodata values using odc.algo tools to reduce peak memory
-    # use when converting data dtype
+    # Convert dtype if required
     if dtype != "native":
-        ds_data = odc.algo.to_float(ds_data, dtype=dtype)
+        if product_type == "s1":  # use generic conversion as S1 is already float
+            ds_data = ds_data.astype(dtype)
+        else:
+            ds_data = odc.algo.to_float(ds_data, dtype=dtype)
 
     # Put data and mask bands back together
     attrs = ds.attrs

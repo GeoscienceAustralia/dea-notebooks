@@ -27,6 +27,7 @@ Core modules
    dea_tools.validation
    dea_tools.waterbodies
    dea_tools.wetlands
+   dea_tools.sar
    
 Apps and widgets
 -----------------
@@ -45,6 +46,9 @@ Apps and widgets
    dea_tools.app.miningrehab
    dea_tools.app.wetlandsinsighttool
    dea_tools.app.widgetconstructors
+
+Other
+-----
 
 ``dea_tools.mosaics`` is a sub-module for generating COG mosaics and VRTs that add colour schemes to them.
 
