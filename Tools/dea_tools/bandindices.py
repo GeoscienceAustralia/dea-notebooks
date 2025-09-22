@@ -25,7 +25,16 @@ import numpy as np
 
 
 # Define custom functions
-def calculate_indices(ds, index=None, collection=None, custom_varname=None, normalise=True, drop=False, inplace=False):
+def calculate_indices(
+    ds,
+    index=None,
+    collection=None,
+    custom_varname=None,
+    normalise=True,
+    drop=False,
+    inplace=False,
+    verbose=True,
+):
     """
     Takes an xarray dataset containing spectral bands, calculates one of
     a set of remote sensing indices, and adds the resulting array as a
@@ -75,6 +84,8 @@ def calculate_indices(ds, index=None, collection=None, custom_varname=None, norm
         * ``'NDTI2'`` (Normalised Difference Turbidity Index, Lacaux et al., 2007)
         * ``'NDVI'`` (Normalised Difference Vegetation Index, Rouse 1973)
         * ``'NDWI'`` (Normalised Difference Water Index, McFeeters 1996)
+        * ``'NIRv'`` (Near-Infrared Reflectance of Vegetation, Badgley et al. 2017)
+        * ``'kNDVI'`` (Kernel Normalized Difference Vegetation Index, Camps-Valls et al. 2021)
         * ``'SAVI'`` (Soil Adjusted Vegetation Index, Huete 1988)
         * ``'TCB'`` (Tasseled Cap Brightness, Crist 1985)
         * ``'TCG'`` (Tasseled Cap Greeness, Crist 1985)
@@ -121,6 +132,8 @@ def calculate_indices(ds, index=None, collection=None, custom_varname=None, norm
         array in-place, adding bands to the input dataset. The default
         is `inplace=False`, which will instead make a new copy of the
         original data (and use twice the memory).
+    verbose : bool, optional
+        If True, print statements will be returned
 
     Returns
     -------
@@ -140,23 +153,33 @@ def calculate_indices(ds, index=None, collection=None, custom_varname=None, norm
     # Capture input band names in order to drop these if drop=True
     if drop:
         bands_to_drop = list(ds.data_vars)
-        print(f"Dropping bands {bands_to_drop}")
+        if verbose:
+            print(f"Dropping bands {bands_to_drop}")
 
     # Dictionary containing remote sensing index band recipes
     index_dict = {
         # Normalised Difference Vegation Index, Rouse 1973
         "NDVI": lambda ds: (ds.nir - ds.red) / (ds.nir + ds.red),
-        # Non-linear Normalised Difference Vegation Index,
+        # Kernel Normalised Difference Vegation Index,
         # Camps-Valls et al. 2021
         "kNDVI": lambda ds: np.tanh(((ds.nir - ds.red) / (ds.nir + ds.red)) ** 2),
         # Enhanced Vegetation Index, Huete 2002
-        "EVI": lambda ds: ((2.5 * (ds.nir - ds.red)) / (ds.nir + 6 * ds.red - 7.5 * ds.blue + 1)),
+        "EVI": lambda ds: (
+            (2.5 * (ds.nir - ds.red)) / (ds.nir + 6 * ds.red - 7.5 * ds.blue + 1)
+        ),
         # Leaf Area Index, Boegh 2002
-        "LAI": lambda ds: (3.618 * ((2.5 * (ds.nir - ds.red)) / (ds.nir + 6 * ds.red - 7.5 * ds.blue + 1)) - 0.118),
+        "LAI": lambda ds: (
+            3.618
+            * ((2.5 * (ds.nir - ds.red)) / (ds.nir + 6 * ds.red - 7.5 * ds.blue + 1))
+            - 0.118
+        ),
         # Soil Adjusted Vegetation Index, Huete 1988
         "SAVI": lambda ds: ((1.5 * (ds.nir - ds.red)) / (ds.nir + ds.red + 0.5)),
         # Mod. Soil Adjusted Vegetation Index, Qi et al. 1994
-        "MSAVI": lambda ds: ((2 * ds.nir + 1 - ((2 * ds.nir + 1) ** 2 - 8 * (ds.nir - ds.red)) ** 0.5) / 2),
+        "MSAVI": lambda ds: (
+            (2 * ds.nir + 1 - ((2 * ds.nir + 1) ** 2 - 8 * (ds.nir - ds.red)) ** 0.5)
+            / 2
+        ),
         # Normalised Difference Moisture Index, Gao 1996
         "NDMI": lambda ds: (ds.nir - ds.swir1) / (ds.nir + ds.swir1),
         # Normalised Burn Ratio, Lopez Garcia 1991
@@ -171,6 +194,9 @@ def calculate_indices(ds, index=None, collection=None, custom_varname=None, norm
         # Normalised Difference Tillage Index,
         # Van Deventer et al. 1997
         "NDTI": lambda ds: (ds.swir1 - ds.swir2) / (ds.swir1 + ds.swir2),
+        # Near-Infrared Reflectance of Vegetation,
+        # Badgley et al. 2017
+        "NIRv": lambda ds: ((ds.nir - ds.red) / (ds.nir + ds.red)) * ds.nir,
         # Normalised Difference Turbidity Index,
         # Lacaux et al., 2007
         "NDTI2": lambda ds: (ds.red - ds.green) / (ds.red + ds.green),
@@ -181,19 +207,32 @@ def calculate_indices(ds, index=None, collection=None, custom_varname=None, norm
         # Normalised Difference Built-Up Index, Zha 2003
         "NDBI": lambda ds: (ds.swir1 - ds.nir) / (ds.swir1 + ds.nir),
         # Built-Up Index, He et al. 2010
-        "BUI": lambda ds: ((ds.swir1 - ds.nir) / (ds.swir1 + ds.nir)) - ((ds.nir - ds.red) / (ds.nir + ds.red)),
+        "BUI": lambda ds: ((ds.swir1 - ds.nir) / (ds.swir1 + ds.nir))
+        - ((ds.nir - ds.red) / (ds.nir + ds.red)),
         # Built-up Area Extraction Index, Bouzekri et al. 2015
         "BAEI": lambda ds: (ds.red + 0.3) / (ds.green + ds.swir1),
         # New Built-up Index, Jieli et al. 2010
         "NBI": lambda ds: (ds.swir1 + ds.red) / ds.nir,
         # Bare Soil Index, Rikimaru et al. 2002
-        "BSI": lambda ds: ((ds.swir1 + ds.red) - (ds.nir + ds.blue)) / ((ds.swir1 + ds.red) + (ds.nir + ds.blue)),
+        "BSI": lambda ds: ((ds.swir1 + ds.red) - (ds.nir + ds.blue))
+        / ((ds.swir1 + ds.red) + (ds.nir + ds.blue)),
         # Automated Water Extraction Index (no shadows), Feyisa 2014
-        "AWEI_ns": lambda ds: (4 * (ds.green - ds.swir1) - (0.25 * ds.nir * +2.75 * ds.swir2)),
+        "AWEI_ns": lambda ds: (
+            4 * (ds.green - ds.swir1) - (0.25 * ds.nir * +2.75 * ds.swir2)
+        ),
         # Automated Water Extraction Index (shadows), Feyisa 2014
-        "AWEI_sh": lambda ds: (ds.blue + 2.5 * ds.green - 1.5 * (ds.nir + ds.swir1) - 0.25 * ds.swir2),
+        "AWEI_sh": lambda ds: (
+            ds.blue + 2.5 * ds.green - 1.5 * (ds.nir + ds.swir1) - 0.25 * ds.swir2
+        ),
         # Water Index, Fisher 2016
-        "WI": lambda ds: (1.7204 + 171 * ds.green + 3 * ds.red - 70 * ds.nir - 45 * ds.swir1 - 71 * ds.swir2),
+        "WI": lambda ds: (
+            1.7204
+            + 171 * ds.green
+            + 3 * ds.red
+            - 70 * ds.nir
+            - 45 * ds.swir1
+            - 71 * ds.swir2
+        ),
         # Tasseled Cap Wetness, Crist 1985
         "TCW": lambda ds: (
             0.0315 * ds.blue
@@ -277,7 +316,10 @@ def calculate_indices(ds, index=None, collection=None, custom_varname=None, norm
                 "list of valid options for `index` (e.g. 'NDVI')"
             )
 
-        if index in ["WI", "BAEI", "AWEI_ns", "AWEI_sh", "EVI", "LAI", "SAVI", "MSAVI"] and not normalise:
+        if (
+            index in ["WI", "BAEI", "AWEI_ns", "AWEI_sh", "EVI", "LAI", "SAVI", "MSAVI"]
+            and not normalise
+        ):
             warnings.warn(
                 f"\nA coefficient-based index ('{index}') normally "
                 "applied to surface reflectance values in the \n"
@@ -324,7 +366,9 @@ def calculate_indices(ds, index=None, collection=None, custom_varname=None, norm
             }
 
             # Rename bands in dataset to use simple names (e.g. 'red')
-            bands_to_rename = {a: b for a, b in bandnames_dict.items() if a in ds.variables}
+            bands_to_rename = {
+                a: b for a, b in bandnames_dict.items() if a in ds.variables
+            }
 
         elif collection == "ga_s2_3":
             # Dictionary mapping full data names to simpler 'red' alias names
@@ -348,7 +392,9 @@ def calculate_indices(ds, index=None, collection=None, custom_varname=None, norm
             }
 
             # Rename bands in dataset to use simple names (e.g. 'red')
-            bands_to_rename = {a: b for a, b in bandnames_dict.items() if a in ds.variables}
+            bands_to_rename = {
+                a: b for a, b in bandnames_dict.items() if a in ds.variables
+            }
 
         elif collection == "ga_gm_3":
             # Pass an empty dict as no bands need renaming
