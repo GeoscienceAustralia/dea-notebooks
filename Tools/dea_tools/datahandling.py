@@ -1501,7 +1501,7 @@ def load_reproject(
         resolution=resolution,
         tight=tight,
         resampling=resampling,
-        dst_nodata=np.NaN if masked else None,
+        dst_nodata=np.nan if masked else None,
         **reproject_kwds,
     )
 
