@@ -15,24 +15,21 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
-    
+
 Last modified: May 2024
 """
 
-import sys
+import warnings
+
 import dask
 import dask.array as da
-import hdstats
-import warnings
 import numpy as np
-import xarray as xr
 import pandas as pd
 import scipy.signal
-from scipy.signal import wiener
-from scipy.stats import t
+import xarray as xr
+from odc.geo.xr import assign_crs
 from packaging import version
-
-from datacube.utils.geometry import assign_crs
+from scipy.stats import t
 
 
 def allNaN_arg(da, dim, stat):
@@ -47,7 +44,7 @@ def allNaN_arg(da, dim, stat):
     dim : str
         Dimension over which to calculate argmax, argmin e.g. 'time'
     stat : str
-        The statistic to calculte, either 'min' for argmin()
+        The statistic to calculate, either 'min' for argmin()
         or 'max' for .argmax()
 
     Returns
@@ -60,12 +57,12 @@ def allNaN_arg(da, dim, stat):
     if stat == "max":
         y = da.fillna(float(da.min() - 1))
         y = y.argmax(dim=dim, skipna=True).where(~mask)
-        return y
 
     if stat == "min":
         y = da.fillna(float(da.max() + 1))
         y = y.argmin(dim=dim, skipna=True).where(~mask)
-        return y
+
+    return y
 
 
 def _vpos(da):
@@ -285,8 +282,7 @@ def xr_phenology(
     if dask.is_dask_collection(da):
         if version.parse(xr.__version__) < version.parse("0.16.0"):
             raise TypeError(
-                "Dask arrays are not currently supported by this function, "
-                + "run da.compute() before passing dataArray."
+                "Dask arrays are not currently supported by this function, run da.compute() before passing dataArray."
             )
         stats_dtype = {
             "SOS": np.int16,
@@ -302,27 +298,23 @@ def xr_phenology(
             "ROS": np.float32,
         }
         da_template = da.isel(time=0).drop("time")
-        template = xr.Dataset(
-            {
-                var_name: da_template.astype(var_dtype)
-                for var_name, var_dtype in stats_dtype.items()
-                if var_name in stats
-            }
-        )
+        template = xr.Dataset({
+            var_name: da_template.astype(var_dtype) for var_name, var_dtype in stats_dtype.items() if var_name in stats
+        })
         da_all_time = da.chunk({"time": -1})
 
         lazy_phenology = da_all_time.map_blocks(
             xr_phenology,
-            kwargs=dict(
-                stats=stats,
-                method_sos=method_sos,
-                method_eos=method_eos,
-            ),
+            kwargs={
+                "stats": stats,
+                "method_sos": method_sos,
+                "method_eos": method_eos,
+            },
             template=xr.Dataset(template),
         )
 
         try:
-            crs = da.geobox.crs
+            crs = da.odc.geobox.crs
             lazy_phenology = assign_crs(lazy_phenology, str(crs))
         except:
             pass
@@ -434,13 +426,22 @@ def temporal_statistics(da, stats):
         temporal statistics
 
     """
+    # Attempt to import hdstats and raise an error if not available
+    try:
+        import hdstats
+    except ImportError as e:
+        raise ImportError(
+            "`hdstats` is required for `temporal_statistics`. "
+            "Please install DEA Tools with the `[hdstats]` extra, e.g.: "
+            "`pip install dea-tools[hdstats]`"
+        ) from e
 
-    # if dask arrays then map the blocks
+    # If dask arrays then map the blocks
     if dask.is_dask_collection(da):
         if version.parse(xr.__version__) < version.parse("0.16.0"):
             raise TypeError(
                 "Dask arrays are only supported by this function if using, "
-                + "xarray v0.16, run da.compute() before passing dataArray."
+                "xarray v0.16, run da.compute() before passing dataArray."
             )
 
         # create a template that matches the final datasets dims & vars
@@ -478,12 +479,10 @@ def temporal_statistics(da, stats):
         da_all_time = da.chunk({"time": -1})
 
         # apply function across chunks
-        lazy_ds = da_all_time.map_blocks(
-            temporal_statistics, kwargs={"stats": stats}, template=template
-        )
+        lazy_ds = da_all_time.map_blocks(temporal_statistics, kwargs={"stats": stats}, template=template)
 
         try:
-            crs = da.geobox.crs
+            crs = da.odc.geobox.crs
             lazy_ds = assign_crs(lazy_ds, str(crs))
         except:
             pass
@@ -528,15 +527,11 @@ def temporal_statistics(da, stats):
         n3 = zz[:, :, 2]
 
         # intialise dataset with first statistic
-        ds = xr.DataArray(
-            n1, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
-        ).to_dataset(name=stats[0] + "_n1")
+        ds = xr.DataArray(n1, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]).to_dataset(name=stats[0] + "_n1")
 
         # add other datasets
         for i, j in zip([n2, n3], ["n2", "n3"]):
-            ds[stats[0] + "_" + j] = xr.DataArray(
-                i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
-            )
+            ds[stats[0] + "_" + j] = xr.DataArray(i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"])
     else:
         # simpler if first function isn't fourier transform
         first_func = stats_dict.get(str(stats[0]))
@@ -544,9 +539,7 @@ def temporal_statistics(da, stats):
         ds = first_func(da)
 
         # convert back to xarray dataset
-        ds = xr.DataArray(
-            ds, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
-        ).to_dataset(name=stats[0])
+        ds = xr.DataArray(ds, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]).to_dataset(name=stats[0])
 
     # loop through the other functions
     for stat in stats[1:]:
@@ -561,21 +554,17 @@ def temporal_statistics(da, stats):
             n3 = zz[:, :, 2]
 
             for i, j in zip([n1, n2, n3], ["n1", "n2", "n3"]):
-                ds[stat + "_" + j] = xr.DataArray(
-                    i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
-                )
+                ds[stat + "_" + j] = xr.DataArray(i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"])
 
         else:
             # Select a stats function from the dictionary
             # and add to the dataset
             stat_func = stats_dict.get(str(stat))
-            ds[stat] = xr.DataArray(
-                stat_func(da), attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
-            )
+            ds[stat] = xr.DataArray(stat_func(da), attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"])
 
     # try to add back the geobox
     try:
-        crs = da.geobox.crs
+        crs = da.odc.geobox.crs
         ds = assign_crs(ds, str(crs))
     except:
         pass
@@ -608,12 +597,8 @@ def time_buffer(input_date, buffer="30 days", output_format="%Y-%m-%d"):
         `input_date='2018-01-01'` and `buffer='30 days'`
     """
     # Use assertions to check we have the correct function input
-    assert isinstance(
-        input_date, str
-    ), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
-    assert isinstance(
-        buffer, str
-    ), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
+    assert isinstance(input_date, str), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
+    assert isinstance(buffer, str), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
 
     # Convert inputs to pandas format
     buffer = pd.Timedelta(buffer)
@@ -705,11 +690,7 @@ class LinregressResult:
 
     def __repr__(self):
         return "LinregressResult({})".format(
-            ", ".join(
-                "{}={}".format(k, getattr(self, k))
-                for k in dir(self)
-                if not k.startswith("_")
-            )
+            ", ".join("{}={}".format(k, getattr(self, k)) for k in dir(self) if not k.startswith("_"))
         )
 
 
@@ -744,8 +725,7 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
 
     """
     warnings.warn(
-        "This function is deprecated and will be retired in a future "
-        "release. Please use `xr_regression` instead.",
+        "This function is deprecated and will be retired in a future release. Please use `xr_regression` instead.",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -755,7 +735,6 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
 
     # 2. Add lag information if any, and shift the data accordingly
     if lagx != 0:
-
         # If x lags y by 1, x must be shifted 1 step backwards. But as the 'zero-th' value is nonexistant, xr
         # assigns it as invalid (nan). Hence it needs to be dropped:
         x = x.shift(**{first_dim: -lagx}).dropna(dim=first_dim)
@@ -764,7 +743,6 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
         x, y = xr.align(x, y)
 
     if lagy != 0:
-
         y = y.shift(**{first_dim: -lagy}).dropna(dim=first_dim)
         x, y = xr.align(x, y)
 
@@ -830,9 +808,7 @@ def mad_outliers(da, dim="time", threshold=3.5):
     mad = abs_deviation.median(dim=dim)
 
     # Deviations greater than (threshold * MAD) are considered outliers
-    outliers = abs_deviation > (threshold * mad)
-
-    return outliers
+    return abs_deviation > (threshold * mad)
 
 
 def xr_regression(
@@ -909,9 +885,7 @@ def xr_regression(
     assert dim in x.dims, f"Array `x` does not contain dimension '{dim}'."
 
     # Assert that both arrays have the same length along "dim"
-    assert len(x[dim]) == len(
-        y[dim]
-    ), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
+    assert len(x[dim]) == len(y[dim]), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
 
     # Apply optional outlier masking to x and y variable
     if outliers_y is not None:
@@ -949,7 +923,6 @@ def xr_regression(
     # Calculate p-values for different alternative hypotheses.
     # If data is dask, then delay computation of p-value
     if dask.is_dask_collection(cor):
-
         _pvalue_lazy = dask.delayed(_pvalue)
         pval = xr.DataArray(
             da.from_delayed(
@@ -969,18 +942,16 @@ def xr_regression(
         )
 
     # Combine into single dataset
-    regression_ds = xr.merge(
-        [
-            cov.rename("cov").astype(np.float32),
-            cor.rename("cor").astype(np.float32),
-            r2.rename("r2").astype(np.float32),
-            slope.rename("slope").astype(np.float32),
-            intercept.rename("intercept").astype(np.float32),
-            pval.rename("pvalue").astype(np.float32),
-            stderr.rename("stderr").astype(np.float32),
-            n.rename("n").astype(np.int16),
-        ]
-    )
+    regression_ds = xr.merge([
+        cov.rename("cov").astype(np.float32),
+        cor.rename("cor").astype(np.float32),
+        r2.rename("r2").astype(np.float32),
+        slope.rename("slope").astype(np.float32),
+        intercept.rename("intercept").astype(np.float32),
+        pval.rename("pvalue").astype(np.float32),
+        stderr.rename("stderr").astype(np.float32),
+        n.rename("n").astype(np.int16),
+    ])
 
     return regression_ds
 

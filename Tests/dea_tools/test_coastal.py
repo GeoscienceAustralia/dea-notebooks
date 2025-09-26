@@ -5,6 +5,7 @@ import xarray as xr
 
 from dea_tools.coastal import glint_angle
 
+
 @pytest.fixture()
 def angle_metadata_ds():
     """

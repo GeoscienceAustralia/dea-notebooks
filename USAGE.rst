@@ -39,6 +39,8 @@ Scientific papers
 
 - Nanson, R., Bishop-Taylor, R., Sagar, S., Lymburner, L., (2022). Geomorphic insights into Australia's coastal change using a national dataset derived from the multi-decadal Landsat archive. Estuarine, Coastal and Shelf Science, 265, p.107712. Available: https://doi.org/10.1016/j.ecss.2021.107712
 
+- Ochungo, P., Sagna, N., Neema, V., Akintayo, A., Athie, A., Kabiru, A., Ndiaye, A., Michaut, E., Merlo, S. and Lane, P., 2025. Shoreline dynamics and cultural heritage sites in Kenya, Tanzania, and Senegal: integrating remote sensing and archaeological knowledge. Journal of Maps, 21(1), p.2487454.
+
 - Pucino, N., Kennedy, D.M., Young, M. and Ierodiaconou, D., 2022. Assessing the accuracy of Sentinel-2 instantaneous subpixel shorelines using synchronous UAV ground truth surveys. Remote Sensing of Environment, 282, p.113293.
 
 - Short, M.A., Norman, R.S., Pillans, B., De Deckker, P., Usback, R., Opdyke, B.N., Ransley, T.R., Gray, S. and McPhail, D.C., 2020. Two centuries of water-level records at Lake George, NSW. Australian Journal of Earth Sciences, pp.1-20. https://www.tandfonline.com/doi/pdf/10.1080/08120099.2020.1821247

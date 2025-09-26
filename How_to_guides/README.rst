@@ -11,6 +11,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    ARD_overpass_predictor.ipynb
    Calculating_band_indices.ipynb
    Contour_extraction.ipynb
+   Continental_scale_animations.ipynb
    Detecting_seasonality.ipynb
    Downloading_data_with_STAC.ipynb
    Exporting_GeoTIFFs.ipynb
@@ -25,6 +26,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Land_cover_animated_plots.ipynb
    Land_cover_change_mapping.ipynb
    Land_cover_pixel_drill.ipynb
+   Land_cover_summary_statistics.ipynb
    Machine_learning_with_ODC.ipynb
    Masking_data.ipynb
    Opening_GeoTIFFs_NetCDFs.ipynb
@@ -33,6 +35,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Polygon_drill.ipynb
    Polygonise_pixel_edges.ipynb
    Principal_component_analysis.ipynb
+   Random_sampling.ipynb
    Rasterize_vectorize.ipynb
    Reprojecting_data.ipynb
    Sunglint_masking.ipynb
