@@ -57,6 +57,11 @@ jobs:
         with:
           image: ${{ matrix.image }}
 
+      - name: Log GitHub Actions Runner IP
+        run: |
+          echo "GitHub Actions runner public IP:"
+          curl https://ifconfig.me
+
       - name: Run tests against each DEA Notebooks section
         run: |
           sudo chown -R 1000:100 ./dea-notebooks

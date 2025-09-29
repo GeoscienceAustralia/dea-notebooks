@@ -24,6 +24,11 @@ jobs:
         with:
           path: dea-notebooks
 
+      - name: Log GitHub Actions Runner IP
+        run: |
+          echo "GitHub Actions runner public IP:"
+          curl https://ifconfig.me
+
       # Detects changed Jupyter Notebooks, excluding interactive notebooks
       - name: Get changed notebook files
         id: changed-notebooks
@@ -37,7 +42,7 @@ jobs:
             How_to_guides/Land_cover_pixel_drill.ipynb
             How_to_guides/Imagery_on_web_map.ipynb
             How_to_guides/External_data_ERA5_Climate.ipynb
-            How_to_guides/Generating_COG_mosaics.ipynb
+            # How_to_guides/Generating_COG_mosaics.ipynb
       - name: Print changed notebook files
         if: steps.changed-notebooks.outputs.any_changed == 'true'
         run: |

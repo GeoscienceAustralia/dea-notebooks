@@ -26,7 +26,7 @@ def test_mosaic_vrt_creation_cat(tmp_path):
         "aws_unsigned": True,
         "skip_existing": False,
         "list_tiles": ["x46y47", "x46y48"],
-        "vsi_method": "vsis3",
+        # "vsi_method": "vsis3",
     }
 
     vrt_params = {
