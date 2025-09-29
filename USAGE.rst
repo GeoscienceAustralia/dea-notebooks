@@ -43,8 +43,6 @@ Scientific papers
 
 - Pucino N, Kennedy DM, Young M and Ierodiaconou D (2022) 'Assessing the accuracy of Sentinel-2 instantaneous subpixel shorelines using synchronous UAV ground truth surveys', *Remote Sensing of Environment*, 282, 113293, doi.org/10.1016/j.rse.2022.113293. 
 
-- Ruscalleda-Alvarez J, Page GFM, Zdunic K and Prober SM (2025) 'Estimating woody vegetation cover in arid and semi-arid rangelands', *Ecological Indicators*, 177, 113741, doi.org/10.1016/j.ecolind.2025.113741. 
-
 - Short MA, Norman RS, Pillans B, De Deckker P, Usback R, Opdyke BN, Ransley TR, Gray S and McPhail DC (2020) 'Two centuries of water-level records at Lake George, NSW', *Australian Journal of Earth Sciences*, 68(4):453-472, doi.org/10.1080/08120099.2020.1821247.
 
 - Sutton A, Fisher A and Metternicht G (2022) 'Assessing the accuracy of Landsat vegetation fractional cover for monitoring Australian drylands', *Remote Sensing*', 14(24):6322. doi.org/10.3390/rs14246322.
