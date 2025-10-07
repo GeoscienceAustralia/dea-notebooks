@@ -387,7 +387,11 @@ def xr_phenology(
 
     return ds.drop("time")
 
-
+#---------------------------------------------------
+# Series of statistical functions referenced 
+# by the 'temporal_statistic' function below.
+# Note these were copied out of the hdstats library.
+#---------------------------------------------------
 def discordance(x, n=10):
     X = x.copy()
 
@@ -460,7 +464,7 @@ def complexity(x, normalize=True):
     z = np.diff(x)
 
     return np.einsum('ijk,ijk->ij', z, z)
-
+#------------------------------------------------
 
 def temporal_statistics(da, stats):
     """
