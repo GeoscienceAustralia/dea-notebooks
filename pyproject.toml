@@ -76,7 +76,7 @@ Homepage = "https://knowledge.dea.ga.gov.au/notebooks/Tools/"
 Repository = "https://github.com/GeoscienceAustralia/dea-notebooks"
 
 [project.optional-dependencies]
-all = ["dea-tools[datacube,jupyter,dask_gateway,hdstats,notebooks]"]
+all = ["dea-tools[datacube,jupyter,dask_gateway,notebooks]"]
 datacube = [
     "datacube>=1.8.5",
     "datacube-ows>=1.9.3",
@@ -90,9 +90,6 @@ jupyter = [
 ]
 dask_gateway = [
     "dask_gateway>=2023.1.0",
-]
-hdstats = [
-    "hdstats>=0.1.8.post1",
 ]
 notebooks = [
     "affine>=2.3.1",
