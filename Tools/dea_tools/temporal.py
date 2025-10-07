@@ -298,9 +298,13 @@ def xr_phenology(
             "ROS": np.float32,
         }
         da_template = da.isel(time=0).drop("time")
-        template = xr.Dataset({
-            var_name: da_template.astype(var_dtype) for var_name, var_dtype in stats_dtype.items() if var_name in stats
-        })
+        template = xr.Dataset(
+            {
+                var_name: da_template.astype(var_dtype)
+                for var_name, var_dtype in stats_dtype.items()
+                if var_name in stats
+            }
+        )
         da_all_time = da.chunk({"time": -1})
 
         lazy_phenology = da_all_time.map_blocks(
@@ -387,84 +391,133 @@ def xr_phenology(
 
     return ds.drop("time")
 
-#---------------------------------------------------
-# Series of statistical functions referenced 
-# by the 'temporal_statistic' function below.
+
+# ---------------------------------------------------
+# Series of statistical functions referenced
+# by 'temporal_statistics'.
 # Note these were copied out of the hdstats library.
-#---------------------------------------------------
+# ---------------------------------------------------
 def discordance(x, n=10):
+    """
+    Measure of local signal discordance by
+    removing low-frequency components from the input time series and
+    comparing each signal to a shared baseline.
+    """
     X = x.copy()
 
-    mX = np.mean(X, axis=(0,1))
+    mX = np.mean(X, axis=(0, 1))
     Y = np.fft.fft(mX)
     np.put(Y, range(n, mX.shape[0]), 0.0)
     mX = np.abs(np.fft.ifft(Y)).astype(np.float32)
 
     for i in range(X.shape[0]):
         for j in range(X.shape[1]):
-            Y = np.fft.fft(X[i,j,:])
+            Y = np.fft.fft(X[i, j, :])
             np.put(Y, range(n, mX.shape[0]), 0.0)
-            X[i,j,:] = np.real(np.fft.ifft(Y))
+            X[i, j, :] = np.real(np.fft.ifft(Y))
 
     X -= mX[np.newaxis, np.newaxis, :]
 
     return np.mean(X, axis=2)
 
+
 def fourier_mean(x, n=3, step=5):
+    """
+    Mean of the discrete Fourier transform coefficients
+    """
     result = np.empty((x.shape[0], x.shape[1], n), dtype=np.float32)
 
     for i in range(x.shape[0]):
         for j in range(x.shape[1]):
-            y = np.fft.fft(x[i,j,:])
+            y = np.fft.fft(x[i, j, :])
             for k in range(n):
-                result[i,j,k] = np.mean(np.abs(y[1+k*step:((k+1)*step+1) or None]))
+                result[i, j, k] = np.mean(
+                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
+                )
 
     return result
+
 
 def fourier_std(x, n=3, step=5):
+    """
+    Standard deviation of the discrete Fourier transform coefficients.
+    """
     result = np.empty((x.shape[0], x.shape[1], n), dtype=np.float32)
 
     for i in range(x.shape[0]):
         for j in range(x.shape[1]):
-            y = np.fft.fft(x[i,j,:])
+            y = np.fft.fft(x[i, j, :])
             for k in range(n):
-                result[i,j,k] = np.std(np.abs(y[1+k*step:((k+1)*step+1) or None]))
+                result[i, j, k] = np.std(
+                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
+                )
 
     return result
+
 
 def fourier_median(x, n=3, step=5):
+    """
+    Median of the discrete Fourier transform coefficients
+    """
     result = np.empty((x.shape[0], x.shape[1], n), dtype=np.float32)
 
     for i in range(x.shape[0]):
         for j in range(x.shape[1]):
-            y = np.fft.fft(x[i,j,:])
+            y = np.fft.fft(x[i, j, :])
             for k in range(n):
-                result[i,j,k] = np.median(np.abs(y[1+k*step:((k+1)*step+1) or None]))
+                result[i, j, k] = np.median(
+                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
+                )
 
     return result
 
+
 def mean_change(x):
+    """
+    Mean of the first-order discrete difference along the time dimension
+    """
     return np.mean(np.diff(x), axis=-1)
 
+
 def median_change(x):
+    """
+    Median of the first-order discrete difference along the time dimension
+    """
     return np.median(np.diff(x), axis=-1)
 
+
 def mean_abs_change(x):
+    """
+    Mean of the absolute first-order discrete difference along the time dimension
+    """
     return np.mean(np.abs(np.diff(x)), axis=-1)
 
+
 def mean_central_diff(x):
-    diff = (np.roll(x, 1, axis=2) - 2 * x + np.roll(x, -1, axis=2))/2.0
-    return np.mean(diff[:,:,1:-1], axis=2)
+    """
+    Mean second-order central difference,
+    approximating signal curvature or acceleration
+    """
+    diff = (np.roll(x, 1, axis=2) - 2 * x + np.roll(x, -1, axis=2)) / 2.0
+    return np.mean(diff[:, :, 1:-1], axis=2)
+
 
 def complexity(x, normalize=True):
+    """
+    Estimates temporal complexity by computing the first-order
+    difference across time.
+    """
     if normalize:
         s = np.std(x, axis=2)
-        x = (x-np.mean(x, axis=2)[:,:,np.newaxis]) / s[:,:,np.newaxis]
+        x = (x - np.mean(x, axis=2)[:, :, np.newaxis]) / s[:, :, np.newaxis]
 
     z = np.diff(x)
 
-    return np.einsum('ijk,ijk->ij', z, z)
-#------------------------------------------------
+    return np.einsum("ijk,ijk->ij", z, z)
+
+
+# ------------------------------------------------
+
 
 def temporal_statistics(da, stats):
     """
@@ -483,8 +536,8 @@ def temporal_statistics(da, stats):
     stats : list of str
         List of temporal statistics to compute. Available options include:
 
-        * ``'discordance'``: Computes a measure of local signal discordance by 
-          removing low-frequency components from the input time series and 
+        * ``'discordance'``: Computes a measure of local signal discordance by
+          removing low-frequency components from the input time series and
           comparing each signal to a shared baseline.
         * ``'f_std'``: Standard deviation of the discrete Fourier transform coefficients.
           Returns three layers: ``f_std_n1``, ``f_std_n2``, ``f_std_n3``.
@@ -495,9 +548,9 @@ def temporal_statistics(da, stats):
         * ``'mean_change'``: Mean of the first-order discrete difference along the time dimension.
         * ``'median_change'``: Median of the first-order discrete difference along the time dimension.
         * ``'abs_change'``: Mean of the absolute first-order discrete difference along the time dimension.
-        * ``'complexity'``: Estimates temporal complexity by computing the first-order 
+        * ``'complexity'``: Estimates temporal complexity by computing the first-order
           difference across time. Optionally normalizes each signal beforehand.
-        * ``'central_diff'``: Computes the mean second-order central difference, 
+        * ``'central_diff'``: Computes the mean second-order central difference,
           approximating signal curvature or acceleration.
 
     Returns
@@ -549,7 +602,9 @@ def temporal_statistics(da, stats):
         da_all_time = da.chunk({"time": -1})
 
         # apply function across chunks
-        lazy_ds = da_all_time.map_blocks(temporal_statistics, kwargs={"stats": stats}, template=template)
+        lazy_ds = da_all_time.map_blocks(
+            temporal_statistics, kwargs={"stats": stats}, template=template
+        )
 
         try:
             crs = da.odc.geobox.crs
@@ -595,18 +650,24 @@ def temporal_statistics(da, stats):
         n3 = zz[:, :, 2]
 
         # intialise dataset with first statistic
-        ds = xr.DataArray(n1, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]).to_dataset(name=stats[0] + "_n1")
+        ds = xr.DataArray(
+            n1, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
+        ).to_dataset(name=stats[0] + "_n1")
 
         # add other datasets
         for i, j in zip([n2, n3], ["n2", "n3"]):
-            ds[stats[0] + "_" + j] = xr.DataArray(i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"])
+            ds[stats[0] + "_" + j] = xr.DataArray(
+                i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
+            )
     else:
         # simpler if first function isn't fourier transform
         first_func = stats_dict.get(str(stats[0]))
         ds = first_func(da)
 
         # convert back to xarray dataset
-        ds = xr.DataArray(ds, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]).to_dataset(name=stats[0])
+        ds = xr.DataArray(
+            ds, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
+        ).to_dataset(name=stats[0])
 
     # loop through the other functions
     for stat in stats[1:]:
@@ -620,13 +681,20 @@ def temporal_statistics(da, stats):
             n3 = zz[:, :, 2]
 
             for i, j in zip([n1, n2, n3], ["n1", "n2", "n3"]):
-                ds[stat + "_" + j] = xr.DataArray(i, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim])
+                ds[stat + "_" + j] = xr.DataArray(
+                    i, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
+                )
 
         else:
             # Select a stats function from the dictionary
             # and add to the dataset
             stat_func = stats_dict.get(str(stat))
-            ds[stat] = xr.DataArray(stat_func(da), attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim])
+            ds[stat] = xr.DataArray(
+                stat_func(da),
+                attrs=attrs,
+                coords={x_dim: x, y_dim: y},
+                dims=[y_dim, x_dim],
+            )
 
     # try to add back the geobox
     try:
@@ -635,7 +703,7 @@ def temporal_statistics(da, stats):
     except:
         pass
 
-    return ds.where(~mask) #remask with all-nulls
+    return ds.where(~mask)  # remask with all-nulls
 
 
 def time_buffer(input_date, buffer="30 days", output_format="%Y-%m-%d"):
@@ -663,8 +731,12 @@ def time_buffer(input_date, buffer="30 days", output_format="%Y-%m-%d"):
         `input_date='2018-01-01'` and `buffer='30 days'`
     """
     # Use assertions to check we have the correct function input
-    assert isinstance(input_date, str), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
-    assert isinstance(buffer, str), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
+    assert isinstance(
+        input_date, str
+    ), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
+    assert isinstance(
+        buffer, str
+    ), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
 
     # Convert inputs to pandas format
     buffer = pd.Timedelta(buffer)
@@ -756,7 +828,11 @@ class LinregressResult:
 
     def __repr__(self):
         return "LinregressResult({})".format(
-            ", ".join("{}={}".format(k, getattr(self, k)) for k in dir(self) if not k.startswith("_"))
+            ", ".join(
+                "{}={}".format(k, getattr(self, k))
+                for k in dir(self)
+                if not k.startswith("_")
+            )
         )
 
 
@@ -951,7 +1027,9 @@ def xr_regression(
     assert dim in x.dims, f"Array `x` does not contain dimension '{dim}'."
 
     # Assert that both arrays have the same length along "dim"
-    assert len(x[dim]) == len(y[dim]), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
+    assert len(x[dim]) == len(
+        y[dim]
+    ), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
 
     # Apply optional outlier masking to x and y variable
     if outliers_y is not None:
@@ -1008,16 +1086,18 @@ def xr_regression(
         )
 
     # Combine into single dataset
-    regression_ds = xr.merge([
-        cov.rename("cov").astype(np.float32),
-        cor.rename("cor").astype(np.float32),
-        r2.rename("r2").astype(np.float32),
-        slope.rename("slope").astype(np.float32),
-        intercept.rename("intercept").astype(np.float32),
-        pval.rename("pvalue").astype(np.float32),
-        stderr.rename("stderr").astype(np.float32),
-        n.rename("n").astype(np.int16),
-    ])
+    regression_ds = xr.merge(
+        [
+            cov.rename("cov").astype(np.float32),
+            cor.rename("cor").astype(np.float32),
+            r2.rename("r2").astype(np.float32),
+            slope.rename("slope").astype(np.float32),
+            intercept.rename("intercept").astype(np.float32),
+            pval.rename("pvalue").astype(np.float32),
+            stderr.rename("stderr").astype(np.float32),
+            n.rename("n").astype(np.int16),
+        ]
+    )
 
     return regression_ds
 
