@@ -6,7 +6,6 @@ import datacube
 from datacube.utils.masking import mask_invalid_data
 from dea_tools.temporal import xr_regression
 
-
 @pytest.fixture()
 def satellite_ds():
     # Connect to datacube

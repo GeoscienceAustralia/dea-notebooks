@@ -91,9 +91,6 @@ jupyter = [
 dask_gateway = [
     "dask_gateway>=2023.1.0",
 ]
-hdstats = [
-    "hdstats>=0.1.8.post1",
-]
 notebooks = [
     "affine>=2.3.1",
     "beautifulsoup4>=4.12.0",
