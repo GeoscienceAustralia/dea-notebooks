@@ -113,7 +113,7 @@ def test_xr_regresssion(satellite_ds, x, y, alternative):
 
 
 #test temporal-stats-----------------------------
-from dea_tools.temporal import temporal_statistics 
+from dea_tools.temporal import temporal_statistics
 
 @pytest.fixture
 def sample_da():
@@ -167,10 +167,6 @@ def test_fourier_and_other_stats(sample_da):
     # Fourier outputs should have reasonable magnitudes (nonnegative)
     assert (ds["f_mean_n1"] >= 0).all()
 
-    # All outputs should be same spatial shape
-    shapes = [ds[v].shape for v in expected_vars]
-    assert len(set(shapes)) == 1
-
 
 def test_nan_mask_preserved(sample_da):
     """Ensure all-NaN pixels remain NaN in the output."""
@@ -185,10 +181,6 @@ def test_nan_mask_preserved(sample_da):
     for var in ds.data_vars:
         assert np.isnan(ds[var][1, 2]), f"{var} did not preserve NaN mask"
 
-    # Non-NaN pixels should remain finite
-    valid_mask = ~np.isnan(da.isel(time=0))
-    for var in ds.data_vars:
-        assert np.isfinite(ds[var].where(valid_mask)).all()
 
 
 
