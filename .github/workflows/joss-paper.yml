@@ -5,7 +5,7 @@ on:
     branches:
       - joss_paper  # working branch
     paths:
-      - "paper/**"     # only rebuild if something in /paper changes
+      - "Tools/paper/**"     # only rebuild if something in /paper changes
   workflow_dispatch:
 
 jobs:
@@ -21,18 +21,18 @@ jobs:
         uses: openjournals/openjournals-draft-action@master
         with:
           journal: joss
-          paper-path: paper/paper.md
+          paper-path: Tools/paper/paper.md
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: paper
-          path: paper/paper.pdf
+          path: Tools/paper/paper.pdf
 
       - name: Commit updated PDF
         uses: stefanzweifel/git-auto-commit-action@v4
         continue-on-error: true
         with:
           commit_message: "Auto-update generated JOSS draft PDF"
-          file_pattern: "paper/paper.pdf"
+          file_pattern: "Tools/paper/paper.pdf"
 
