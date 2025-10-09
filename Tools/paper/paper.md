@@ -1,5 +1,5 @@
 ---
-title: "dea-tools: geospatial analysis of satellite data using Digital Earth Australia, Open Data Cube, and Xarray."
+title: "dea-tools: Geospatial analysis of satellite data using Xarray, the Open Data Cube, and Digital Earth Australia"
 tags:
   - Python
   - Earth observation
@@ -23,7 +23,7 @@ bibliography: paper.bib
 
 # Summary
 
-`dea-tools` is an open-source Python package for geospatial analysis of satellite data using Digital Earth Australia, [Open Data Cube](https://www.opendatacube.org/) (ODC) and `xarray` [@Hoyer_xarray_N-D_labeled_2017]. It provides a broad set of utilities for loading, visualising, transforming, and analysing Earth Observation (EO) data across space and time
+`dea-tools` is an open-source Python package for geospatial analysis of satellite data using Digital Earth Australia, [Open Data Cube](https://www.opendatacube.org/) (ODC) and `xarray` [@Hoyer_xarray_N-D_labeled_2017]. It provides a broad set of utilities for loading, visualising, transforming, and analysing Earth Observation (EO) data across space and time.
 
 The package includes tools for:
 
@@ -37,7 +37,7 @@ The package includes tools for:
 
 # Statement of need
 
-Satellite remote sensing offers an unparalleled resource for
+Satellite remote sensing offers an unparalleled resource for...
 
 # Features
 
@@ -53,7 +53,7 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
     * Compute common statistical metrics with `eval_metric`
     * Generate random points over an xarray object with `xr_random_sampling`
 
-![Example extraction of random samples from a classified xarray.DataArray using two of the sampling strategies available in the xr_random_sampling function.\label{fig:sampling}](figures/xr_random_sampling.png)
+![Example extraction of random samples from a classified xarray.DataArray using two of the sampling strategies available in the `xr_random_sampling` function.\label{fig:sampling}](figures/xr_random_sampling.png)
 
 - Spatial analysis tools within `dea-tools.spatial`:
     * Vectorise xarray.DataArrays into geopandas.GeoDataFrames with `xr_vectorise`
@@ -69,12 +69,13 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
 ## Plotting
 
 The `dea-tools.plotting` library has extensive functionality for generating beautiful imagery from xarray objects.
+
 - RGB plots for true and false colour composite images with `rgb`
 - Highly customisable animations with `xr_animation`
 
 ## Integration with Open Data Cube libraries
 
-dea-tools works naively with odc-geo
+dea-tools works naively with `odc-geo` and `odc-stac`
 
 # Acknowledgements
 
