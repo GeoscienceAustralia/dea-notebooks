@@ -52,12 +52,15 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
 - Validation tools within `dea-tools.validation`:
     * Compute common statistical metrics with `eval_metric`
     * Generate random points over an xarray object with `xr_random_sampling`
+
+![Example extraction of random samples from a classified xarray.DataArray using two of the sampling strategies available in the xr_random_sampling function.\label{fig:sampling}](figures/xr_random_sampling.png)
+
 - Spatial analysis tools within `dea-tools.spatial`:
     * Vectorise xarray.DataArrays into geopandas.GeoDataFrames with `xr_vectorise`
     * Rasterize geopandas.GeoDataFrames into xarray.DataArrays with `xr_rasterize`
     * Extract subpixel contours from xarray.DataArrays with `subpixel_contours`
     * Interpolate point data stored in a geopandas.GeoDataFrame into an xarray.DataArray with `xr_interpolate`
-- Xarray wrappers for the full machine learning pipeline in in `dea-tools.classification`:
+- Xarray wrappers for the full machine learning pipeline in `dea-tools.classification`:
     * prepare data for ML predictions with `sklearn_flatten` and `sklearn_unflatten`
     * Fit models with `fit_xr`
     * ML predictions with `predict_xr`
