@@ -27,13 +27,13 @@ bibliography: paper.bib
 
 The package includes tools for:
 
-* 📦 **Data handling**: Load and combine DEA data products, manage projections and resolutions.
-* 🗺️ **Visualisation**: Create static and interactive maps, RGB plots, and animations.
-* 🛰️ **Remote sensing indices**: Calculate band indices such as NDVI, NDWI, and more.
-* 🌐 **Spatial and temporal analysis**: Apply raster/vector operations, extract contours, compute temporal stats, and model change over time.
-* 🤖 **Machine learning and segmentation**: Train and apply classifiers, or run image segmentation workflows.
-* ⚙️ **Parallel processing**: Set up Dask clusters for scalable processing of large datasets.
-* 🌏 **Domain-specific tools**: Analyse coastal change, intertidal zones, land cover, wetland and waterbody dynamics, and climate datasets. 
+* **Data handling**: Load and combine DEA data products, manage projections and resolutions.
+* **Visualisation**: Create static and interactive maps, RGB plots, and animations.
+* **Remote sensing indices**: Calculate band indices such as NDVI, NDWI, and more.
+* **Spatial and temporal analysis**: Apply raster/vector operations, extract contours, compute temporal stats, and model change over time.
+* **Machine learning and segmentation**: Train and apply classifiers, or run image segmentation workflows.
+* **Parallel processing**: Set up Dask clusters for scalable processing of large datasets.
+* **Domain-specific tools**: Analyse coastal change, intertidal zones, land cover, wetland and waterbody dynamics, and climate datasets. 
 
 # Statement of need
 
@@ -43,7 +43,8 @@ Satellite remote sensing offers an unparalleled resource for
 
 ## Analytical tools native to Xarray
 
-Flexible and powerful functionality for scientific analysis of xarray objects:
+Flexible and powerful functionality for scientific analysis with xarray objects:
+
 - Extracting time series statistics, using the module `dea-tools.temporal`:
     * Generic summary statistics on any time series with `temporal_statistics`
     * Phenology with `xr_phenology`
