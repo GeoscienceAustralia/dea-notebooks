@@ -122,6 +122,8 @@ The [dea-tools.plotting](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea
 - Highly customisable animations with `xr_animation`
 - RGB plots for true and false colour composite images with `rgb`
 
+![True and false colour composites generated with the `dea-tools.plotting.rgb` function, using DEA annual GeoMAD composite images from 2024.\label{fig:rgb}](figures/RGB_images.png)
+
 # Research projects
 
 `dea-tools` and the broader `dea-notebooks` repository supports a wide range of scientific applications, from agriculture and land cover mapping to wetland, coastal, and surface water monitoring, and climate and fire analysis. The package has already underpinned more than 25 peer-reviewed studies, demonstrating its robustness and adaptability across domains. Usage of the library is recorded [here](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst).
