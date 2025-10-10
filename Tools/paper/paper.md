@@ -96,7 +96,7 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
     * Compute common statistical metrics with `eval_metric`
     * Generate random points over an xarray object with `xr_random_sampling`
 
-![Example extraction of random samples from a classified xarray.DataArray using two of the sampling strategies available in the `xr_random_sampling` function.\label{fig:sampling}](figures/xr_random_sampling.png)
+![Example extraction of random samples from a classified xarray.DataArray using one of the sampling strategies available in the `xr_random_sampling` function.\label{fig:sampling}](figures/xr_random_sampling.png)
 
 - Spatial analysis tools within [dea-tools.spatial](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.spatial/):
     * Vectorise xarray.DataArrays into geopandas.GeoDataFrames with `xr_vectorise`
