@@ -74,7 +74,7 @@ The package enables users to:
 * Perform machine learning and segmentation workflows on geospatial datasets, with built-in training, fitting, and prediction tools that work seamlessly with xarray;
 * Generate publication-quality visualisations and animations;
 * Seamlessly convert between raster and vector formats using xarray–geopandas interoperation utilities.
-* Apply domain-specific tools: Analyse coastal change, intertidal zones, land cover, wetland and waterbody dynamics, and climate datasets.
+* Apply domain-specific tools: analyse coastal change, intertidal zones, land cover, wetland and waterbody dynamics, and climate datasets.
 
 The broader `dea-notebooks` repository, which includes `dea-tools`, provides extensive documentation as Jupyter notebooks including how-to guides and longer 'real-world' application examples. These include end-to-end workflows that demonstrate how to acquire satellite data via [odc-stac](https://github.com/opendatacube/odc-stac), process it using `dea-tools`, and visualize outputs interactively within JupyterLab. Together, `dea-tools` and `dea-notebooks` offer a reproducible, and fully managed framework for geospatial analysis in Python — bridging the gap between foundational geospatial libraries and applied EO research.
 
