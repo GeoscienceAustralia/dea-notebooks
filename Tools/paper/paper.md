@@ -78,9 +78,11 @@ The package enables users to:
 
 The broader `dea-notebooks` repository, which includes `dea-tools`, provides extensive documentation as Jupyter notebooks including how-to guides and longer 'real-world' application examples. These include end-to-end workflows that demonstrate how to acquire satellite data via [odc-stac](https://github.com/opendatacube/odc-stac), process it using `dea-tools`, and visualize outputs interactively within JupyterLab. Together, `dea-tools` and `dea-notebooks` offer a reproducible, and fully managed framework for geospatial analysis in Python — bridging the gap between foundational geospatial libraries and applied EO research.
 
+![`dea-tools` enables easy transitions between xarray and geopandas with the `xr_rasterize` and `xr_vectorize` functions.\label{fig:raster-vector}](figures/rasterize_vectorize.png)
+
 # Features
 
-Below we highlight a non-exhaustive list of funtionality within `dea-tools`. Note that each of the functions listed below has an accompanying Jupyter notebook outlining how to use the function.
+Below we highlight a non-exhaustive list of functionality within `dea-tools`. Note that each of the functions listed below has an accompanying Jupyter notebook outlining how to use the function.
 
 ## Analytical tools native to Xarray
 
