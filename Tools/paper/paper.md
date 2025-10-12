@@ -56,15 +56,15 @@ bibliography: paper.bib
 
 # Summary
 
-`dea-tools` is an open-source Python library that provides a comprehensive set of tools for analysing, visualising, and modelling geospatial and Earth observation data represented as xarray objects. Originally developed to support Digital Earth Australia (DEA) workflows, `dea-tools` now functions as a general-purpose library that can be used with any geospatial dataset. The package offers high-level utilities for spatial and temporal analysis, remote sensing index calculation, machine learning, and interactive visualisation, while integrating seamlessly with the Python geospatial stack (e.g. xarray, geopandas, numpy, and dask). Distributed as a pip-installable environment, `dea-tools` includes JupyterLab and related dependencies, providing a fully managed platform for scientific geospatial analysis on any machine. Embedded within the broader `dea-notebooks` repository, the package is supported by extensive documentation and example Jupyter notebooks demonstrating use of dea-tools functionality. Together, `dea-tools` and `dea-notebooks` enable reproducible, scalable, and accessible Earth observation science with Python.
+`dea-tools` is an open-source Python library that provides a comprehensive set of tools for analysing, visualising, and modelling geospatial and Earth observation data represented as xarray objects. Originally developed to support Digital Earth Australia (DEA) workflows, `dea-tools` now functions as a general-purpose library that can be used with any geospatial dataset. The package offers many utilities for spatial and temporal analysis, remote sensing index calculation, machine learning, and interactive visualisation, while integrating seamlessly with the Python geospatial stack (e.g. xarray, geopandas, and dask). Distributed as a pip-installable environment, `dea-tools` includes JupyterLab and related dependencies, providing a fully managed platform for scientific geospatial analysis on any machine. Embedded within the broader `dea-notebooks` repository, the package is supported by extensive documentation and example Jupyter notebooks demonstrating use of `dea-tools` functionality. Together, `dea-tools` and `dea-notebooks` enable reproducible, scalable, and accessible Earth observation science with Python.
 
 # Statement of need
 
-Modern Earth observation workflows often involve complex, multi-temporal, and multi-resolution datasets that demand integrated tools for efficient processing, analysis, and visualisation. While foundational libraries such as xarray, geopandas, and dask provide the building blocks, implementing complex analysis workflows still requires substantial coding effort to handle data loading and harmonisation, visualisation, spatio-temporal analysis, and modelling. The `dea-tools` library addresses this gap by providing a curated suite of high-level, well-documented functions that seamlessly integrate with these core libraries.
+Modern Earth observation workflows often involve complex, multi-temporal, and multi-resolution datasets that demand integrated tools for efficient loading, pre-processing, visualisation, and analysis. While foundational libraries such as `xarray`, `geopandas`, and `dask` provide the building blocks, implementing complex analysis workflows still requires substantial coding effort to handle the data processing pipeline. The `dea-tools` library addresses this gap by providing a curated suite of well-documented functions that seamlessly integrate with these core libraries.
 
-The `dea-tools` Python package provides a comprehensive, open-source toolkit for the analysis, and interpretation of geospatial and Earth observation (EO) data represented primarily as xarray objects. Developed by Digital Earth Australia (DEA) to streamline analysis of national-scale satellite datasets, `dea-tools` has since evolved into a flexible and general-purpose library that supports many geospatial workflows. It can now be used on any system and with any geospatial dataset, whether accessed from cloud-based catalogues via [odc-stac](https://github.com/opendatacube/odc-stac) or stored locally.
+The `dea-tools` Python package provides a comprehensive, open-source toolkit for the analysis, and interpretation of geospatial and Earth observation (EO) data represented primarily as xarray objects. Developed by Digital Earth Australia (DEA) to streamline analysis of national-scale satellite datasets, `dea-tools` has since evolved into a flexible and general-purpose library that supports many geospatial workflows. It can now be used on any system and with most gridded and vector based datasets, whether accessed from cloud-based catalogues via a Spatio-Temporal Asset Catalog (STAC), or stored locally.
 
-A major advantage of `dea-tools` is it comes bundled with all essential dependencies for scientific geospatial analysis, including JupyterLab, Jupyter notebooks, xarray, geopandas, numpy, dask, and other related ecosystem libraries. When deployed within a virtual environment, `dea-tools` therefore provides a **fully managed and ready-to-use geospatial analysis platform**. This design lowers the barrier to entry for new users, enabling a self-contained environment for exploration, visualisation, and large-scale satellite data processing.
+A major advantage of `dea-tools` is it comes bundled with all essential dependencies for scientific geospatial analysis, including JupyterLab, Jupyter notebooks, xarray, geopandas, NumPy, dask, and other related ecosystem libraries. When deployed within a virtual environment, `dea-tools` therefore provides a **fully managed and ready-to-use geospatial analysis environment**. This design lowers the barrier to entry for new users, enabling a self-contained environment for exploration, visualisation, and large-scale satellite data processing.
 
 The package enables users to:
 
@@ -76,13 +76,18 @@ The package enables users to:
 * Seamlessly convert between raster and vector formats using xarray–geopandas interoperation utilities.
 * Apply domain-specific tools: analyse coastal change, intertidal zones, land cover, wetland and waterbody dynamics, and climate datasets.
 
-The broader `dea-notebooks` repository, which includes `dea-tools`, provides extensive documentation as Jupyter notebooks including how-to guides and longer 'real-world' application examples. These include end-to-end workflows that demonstrate how to acquire satellite data via [odc-stac](https://github.com/opendatacube/odc-stac), process it using `dea-tools`, and visualize outputs interactively within JupyterLab. Together, `dea-tools` and `dea-notebooks` offer a reproducible, and fully managed framework for geospatial analysis in Python — bridging the gap between foundational geospatial libraries and applied EO research.
-
-![`dea-tools` enables easy transitions between xarray and geopandas with the `xr_rasterize` and `xr_vectorize` functions.\label{fig:raster-vector}](figures/rasterize_vectorize.png)
+The broader `dea-notebooks` repository, which includes `dea-tools`, provides extensive Jupyter notebook based documentation including how-to guides and longer real-world application examples. These include end-to-end workflows that demonstrate how to acquire satellite data via [odc-stac](https://github.com/opendatacube/odc-stac), process it using `dea-tools`, and visualize outputs interactively within JupyterLab. Together, `dea-tools` and `dea-notebooks` offer a reproducible, scalable, and fully managed framework for geospatial analysis in Python, bridging the gap between foundational geospatial libraries and applied EO research.
 
 # Features
 
 Below we highlight a non-exhaustive list of functionality within `dea-tools`. Note that each of the functions listed below has an accompanying Jupyter notebook outlining how to use the function.
+
+## Data handling
+
+Tools for loading and manipulating both DEA satellite data, along with other providers of geospatial data, stored within [dea-tools.datahandling](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.datahandling/)
+
+- `load_ard`: Load and combine multiple Geoscience Australia Landsat, Sentinel 2, or Sentinel-1 Analysis Ready Data products with `odc-stac` and optionally apply pixel quality, cloud masking and contiguity masks, and drop time steps that contain greater than a minimum proportion of good quality (e.g. non-cloudy or shadowed) pixels.
+- `load_reproject`:  Load and reproject all or part of a raster dataset (stored either locally or remotely) to match the crs/resolution of another dataset.
 
 ## Analytical tools native to Xarray
 
@@ -100,22 +105,17 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
 
 - Spatial analysis tools within [dea-tools.spatial](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.spatial/):
     * Vectorise xarray.DataArrays into geopandas.GeoDataFrames with `xr_vectorise`
-    * Rasterize geopandas.GeoDataFrames into xarray.DataArrays with `xr_rasterize`
+    * Rasterize geopandas.GeoDataFrames into xarray.DataArrays with `xr_rasterize` 
     * Extract subpixel contours from xarray.DataArrays with `subpixel_contours`
     * Interpolate point data stored in a geopandas.GeoDataFrame into an xarray.DataArray with `xr_interpolate`
+
+![`dea-tools` enables easy transitions between xarray and geopandas with the `xr_rasterize` and `xr_vectorize` functions.\label{fig:raster-vector}](figures/rasterize_vectorize.png)
+
 - Xarray wrappers for the full machine learning pipeline in [dea-tools.classification](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.classification/):
     * prepare data for ML predictions with `sklearn_flatten` and `sklearn_unflatten`
     * Fit models with `fit_xr`
     * ML predictions with `predict_xr`
     * Handle spatial autocorrelation in cross-validation workflows with `spatial_train_test_split` and `SKCV` (spatial k-fold cross validation)
-
-## Data handling
-
-Tools for loading and manipulating both DEA satellite data, along with other providers of geospatial data, stored within [dea-tools.datahandling](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.datahandling/)
-
-- load_ard
-- load_reproject
-- parallel_apply
 
 ## Plotting
 
