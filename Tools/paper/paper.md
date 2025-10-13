@@ -109,7 +109,7 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
     * Extract subpixel contours from xarray.DataArrays with `subpixel_contours`
     * Interpolate point data stored in a geopandas.GeoDataFrame into an xarray.DataArray with `xr_interpolate`
 
-![`dea-tools` enables easy transitions between xarray and geopandas with the `xr_rasterize` and `xr_vectorize` functions.\label{fig:raster-vector}](figures/rasterize_vectorize.png)
+![`dea-tools` enables easy transitions between xarray and geopandas with the `xr_rasterize` and `xr_vectorize` functions.Location is the Menindeee Lakes, New South Wales\label{fig:raster-vector}](figures/rasterize_vectorize.png)
 
 ## Machine Learning
 
@@ -126,7 +126,7 @@ The [dea-tools.plotting](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea
 - Highly customisable animations with `xr_animation`
 - RGB plots for true and false colour composite images with `rgb`
 
-![True and false colour composites generated with the `dea-tools.plotting.rgb` function, using DEA annual GeoMAD composite images from 2024.\label{fig:rgb}](figures/RGB_images.png)
+![True and false colour composites generated with the `dea-tools.plotting.rgb` function, using DEA annual GeoMAD composite images from 2024. Location is the Norman River, Queensland.\label{fig:rgb}](figures/RGB_images.png)
 
 # Research projects
 
