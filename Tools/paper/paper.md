@@ -105,7 +105,7 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
 
 ![`dea-tools` enables easy transitions between xarray and geopandas with the `xr_rasterize` and `xr_vectorize` functions.Location is the Menindeee Lakes, New South Wales\label{fig:raster-vector}](figures/rasterize_vectorize.png)
 
-## Machine Learning tools
+## Machine learning tools
 
 `dea-tools` providers a number of functions for simplifying machine learning with xarray
 
@@ -120,7 +120,7 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
 
 ![Example extraction of random samples from a classified xarray.DataArray using one of the sampling strategies available in the `xr_random_sampling` function.\label{fig:sampling}](figures/xr_random_sampling.png)
 
-## Plotting
+## Plotting tools
 
 The [dea-tools.plotting](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.plotting/) library has extensive functionality for generating beautiful imagery from xarray objects.
 
