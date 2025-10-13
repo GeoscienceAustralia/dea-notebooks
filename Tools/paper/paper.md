@@ -64,7 +64,7 @@ Modern Earth observation workflows often involve complex, multi-temporal, and mu
 
 The `dea-tools` Python package provides a comprehensive, open-source toolkit for the analysis, and interpretation of geospatial and Earth observation (EO) data represented primarily as xarray objects. Developed by Digital Earth Australia (DEA) to streamline analysis of national-scale satellite datasets, `dea-tools` has since evolved into a flexible and general-purpose library that supports many geospatial workflows. It can now be used on any system and with most gridded and vector based datasets, whether accessed from cloud-based catalogues via a Spatio-Temporal Asset Catalog (STAC), or stored locally.
 
-A major advantage of `dea-tools` is it comes bundled with all essential dependencies for scientific geospatial analysis, including [JupyterLab](https://jupyter.org/), Jupyter notebooks, xarray, geopandas, NumPy [harris2020array], dask, and many other related ecosystem libraries. When deployed within a virtual environment, `dea-tools` therefore provides a fully managed and ready-to-use geospatial analysis environment. This design lowers the barrier to entry for new users, enabling a self-contained environment for exploration, visualisation, and large-scale satellite data processing.
+A major advantage of `dea-tools` is it comes bundled with all essential dependencies for scientific geospatial analysis, including [JupyterLab](https://jupyter.org/), Jupyter notebooks, xarray, geopandas, NumPy [@harris2020array], dask, and many other related ecosystem libraries. When deployed within a virtual environment, `dea-tools` therefore provides a fully managed and ready-to-use geospatial analysis environment. This design lowers the barrier to entry for new users, enabling a self-contained environment for exploration, visualisation, and large-scale satellite data processing.
 
 The package enables users to:
 
@@ -97,12 +97,6 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
     * Generic summary statistics on any time series with `temporal_statistics`
     * Phenology with `xr_phenology`
     * Linear regression with `xr_regression`
-- Validation tools within [dea-tools.validation](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.validation/):
-    * Compute common statistical metrics with `eval_metric`
-    * Generate random points over an xarray object with `xr_random_sampling`
-
-![Example extraction of random samples from a classified xarray.DataArray using one of the sampling strategies available in the `xr_random_sampling` function.\label{fig:sampling}](figures/xr_random_sampling.png)
-
 - Spatial analysis tools within [dea-tools.spatial](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.spatial/):
     * Vectorise xarray.DataArrays into geopandas.GeoDataFrames with `xr_vectorise`
     * Rasterize geopandas.GeoDataFrames into xarray.DataArrays with `xr_rasterize` 
@@ -113,11 +107,18 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
 
 ## Machine Learning tools
 
+`dea-tools` providers a number of functions for simplifying machine learning with xarray
+
 - Xarray wrappers for the full machine learning pipeline in [dea-tools.classification](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.classification/):
     * prepare data for ML predictions with `sklearn_flatten` and `sklearn_unflatten`
     * Fit models with `fit_xr`
     * ML predictions with `predict_xr`
     * Handle spatial autocorrelation in cross-validation workflows with `spatial_train_test_split` and `SKCV` (spatial k-fold cross validation)
+ - Validation tools within [dea-tools.validation](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.validation/):
+    * Compute common statistical metrics with `eval_metric`
+    * Generate random points over an xarray object with `xr_random_sampling`
+
+![Example extraction of random samples from a classified xarray.DataArray using one of the sampling strategies available in the `xr_random_sampling` function.\label{fig:sampling}](figures/xr_random_sampling.png)
 
 ## Plotting
 
@@ -130,10 +131,6 @@ The [dea-tools.plotting](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea
 
 # Research projects
 
-`dea-tools` and the broader `dea-notebooks` repository supports a wide range of scientific applications, from agriculture and land cover mapping to wetland, coastal, and surface water monitoring, and climate and fire analysis. The package has already underpinned more than 25 peer-reviewed studies, demonstrating its robustness and adaptability across domains. Usage of the library is recorded [here](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst).
-
-# Acknowledgements
-
-Thanks
+`dea-tools` and the broader `dea-notebooks` repository supports a wide range of scientific applications, from agriculture and land cover mapping to wetland, coastal, and surface water monitoring, and climate and fire analysis. The `dea-notebooks` repository has already underpinned more than 25 peer-reviewed studies, demonstrating its robustness and adaptability across domains. Usage of the library is recorded [here](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/USAGE.rst).
 
 # References
