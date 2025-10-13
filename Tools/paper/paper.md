@@ -78,7 +78,7 @@ A major advantage of `dea-tools` is that it comes bundled with all essential dep
 * Convert between raster and vector formats using utilities that bridge xarray and geopandas;
 * Apply domain-specific tools to analyse coastal change, intertidal zones, land cover, wetland and waterbody dynamics, and climate datasets.
 
-The broader `dea-notebooks` repository, which includes `dea-tools`, provides extensive Jupyter notebook based documentation. This includes concise how-to guides for specific tasks as well as longer, real-world application exampled. These resources feature end-to-end workflows that demonstrate how to acquire satellite data via [odc-stac](https://github.com/opendatacube/odc-stac), process it using `dea-tools`, and visualize outputs interactively within JupyterLab. Together, `dea-tools` and `dea-notebooks` offer a reproducible, scalable, and fully managed framework for geospatial analysis in Python, bridging the gap between foundational geospatial libraries and applied EO research.
+The broader `dea-notebooks` repository, which includes `dea-tools`, provides extensive Jupyter notebook based documentation. This includes concise how-to guides for specific tasks as well as longer, real-world application examples. These resources feature end-to-end workflows that demonstrate how to acquire satellite data via [odc-stac](https://github.com/opendatacube/odc-stac), process it using `dea-tools`, and visualize outputs interactively within JupyterLab. Together, `dea-tools` and `dea-notebooks` offer a reproducible, scalable, and fully managed framework for geospatial analysis in Python, bridging the gap between foundational geospatial libraries and applied EO research.
 
 # Features
 
@@ -126,7 +126,7 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
 
 The [dea-tools.plotting](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.plotting/) library has extensive functionality for generating beautiful imagery from xarray objects:
 
-- Generate highly customisable animations to visualise changes over time in geospatial datasets using `xr_animation`;
+- Generate highly customisable animations to visualise changes over time in xarray datasets using `xr_animation`;
 - Create true and false colour composite images from satellite data using `rgb`.
 
 ![True and false colour composites generated with the `dea-tools.plotting.rgb` function, using DEA annual GeoMAD composite images from 2024. Location is the Norman River, Queensland.\label{fig:rgb}](figures/RGB_images.png)
