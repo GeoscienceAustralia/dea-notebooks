@@ -89,7 +89,7 @@ Tools for loading and manipulating both DEA satellite data, along with other pro
 - `load_ard`: Load and combine multiple Geoscience Australia Landsat, Sentinel 2, or Sentinel-1 Analysis Ready Data products with `odc-stac` and optionally apply pixel quality, cloud masking and contiguity masks, and drop time steps that contain greater than a minimum proportion of good quality (e.g. non-cloudy or shadowed) pixels.
 - `load_reproject`:  Load and reproject all or part of a raster dataset (stored either locally or remotely) to match the crs/resolution of another dataset.
 
-## Spatio-temporal analysis tools native to Xarray
+## Spatio-temporal analysis tools
 
 Flexible and powerful functionality for scientific analysis with xarray objects:
 
@@ -111,7 +111,7 @@ Flexible and powerful functionality for scientific analysis with xarray objects:
 
 ![`dea-tools` enables easy transitions between xarray and geopandas with the `xr_rasterize` and `xr_vectorize` functions.Location is the Menindeee Lakes, New South Wales\label{fig:raster-vector}](figures/rasterize_vectorize.png)
 
-## Machine Learning
+## Machine Learning tools
 
 - Xarray wrappers for the full machine learning pipeline in [dea-tools.classification](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.classification/):
     * prepare data for ML predictions with `sklearn_flatten` and `sklearn_unflatten`
