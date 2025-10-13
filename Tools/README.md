@@ -91,6 +91,11 @@ from dea_tools.plotting import rgb
 
 ## Citing DEA Tools
 
-If you use any of the notebooks, code or tools in this repository in your work, please reference them using the following citation:
+If you use any of the code or tools in this repository in your work, please reference them using the dea-tools citation:
+
+> Burton et al. (2025). dea-tools: Geospatial analysis of satellite data using Xarray, the Open Data Cube, and Digital Earth Australia. Journal of
+Open Source Software, ¿VOL?(¿ISSUE?), ¿PAGE? https://doi.org/10.xxxxxx/draft.
+
+and/or the `dea-notebooks` citation: 
 
 > Krause, C., Dunn, B., Bishop-Taylor, R., Adams, C., Burton, C., Alger, M., Chua, S., Phillips, C., Newey, V., Kouzoubov, K., Leith, A., Ayers, D., Hicks, A., DEA Notebooks contributors 2021. Digital Earth Australia notebooks and tools repository. Geoscience Australia, Canberra. https://doi.org/10.26186/145234
