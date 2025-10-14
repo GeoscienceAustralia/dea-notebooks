@@ -543,8 +543,19 @@ class wit_app(HBox):
                     hatch="//",
                 )
 
-                ax.xaxis.set_major_locator(mdates.MonthLocator())
-                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b-%Y"))
+                num_dates = df["date"].nunique()
+                
+                if num_dates > 20:
+                    # show only years
+                    ax.xaxis.set_major_locator(mdates.YearLocator())
+                    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+                else:
+                    # show months and years
+                    ax.xaxis.set_major_locator(mdates.MonthLocator())
+                    ax.xaxis.set_major_formatter(mdates.DateFormatter("%b-%Y"))
+
+                # ax.xaxis.set_major_locator(mdates.MonthLocator())
+                # ax.xaxis.set_major_formatter(mdates.DateFormatter("%b-%Y"))
 
                 # Rotates and right-aligns the x labels so they don't crowd each other.
                 for label in ax.get_xticklabels(which="major"):
