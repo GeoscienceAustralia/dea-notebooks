@@ -15,24 +15,21 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
-    
+
 Last modified: May 2024
 """
 
-import sys
+import warnings
+
 import dask
 import dask.array as da
-import hdstats
-import warnings
 import numpy as np
-import xarray as xr
 import pandas as pd
 import scipy.signal
-from scipy.signal import wiener
-from scipy.stats import t
+import xarray as xr
+from odc.geo.xr import assign_crs
 from packaging import version
-
-from datacube.utils.geometry import assign_crs
+from scipy.stats import t
 
 
 def allNaN_arg(da, dim, stat):
@@ -47,7 +44,7 @@ def allNaN_arg(da, dim, stat):
     dim : str
         Dimension over which to calculate argmax, argmin e.g. 'time'
     stat : str
-        The statistic to calculte, either 'min' for argmin()
+        The statistic to calculate, either 'min' for argmin()
         or 'max' for .argmax()
 
     Returns
@@ -60,12 +57,12 @@ def allNaN_arg(da, dim, stat):
     if stat == "max":
         y = da.fillna(float(da.min() - 1))
         y = y.argmax(dim=dim, skipna=True).where(~mask)
-        return y
 
     if stat == "min":
         y = da.fillna(float(da.max() + 1))
         y = y.argmin(dim=dim, skipna=True).where(~mask)
-        return y
+
+    return y
 
 
 def _vpos(da):
@@ -285,8 +282,7 @@ def xr_phenology(
     if dask.is_dask_collection(da):
         if version.parse(xr.__version__) < version.parse("0.16.0"):
             raise TypeError(
-                "Dask arrays are not currently supported by this function, "
-                + "run da.compute() before passing dataArray."
+                "Dask arrays are not currently supported by this function, run da.compute() before passing dataArray."
             )
         stats_dtype = {
             "SOS": np.int16,
@@ -313,16 +309,16 @@ def xr_phenology(
 
         lazy_phenology = da_all_time.map_blocks(
             xr_phenology,
-            kwargs=dict(
-                stats=stats,
-                method_sos=method_sos,
-                method_eos=method_eos,
-            ),
+            kwargs={
+                "stats": stats,
+                "method_sos": method_sos,
+                "method_eos": method_eos,
+            },
             template=xr.Dataset(template),
         )
 
         try:
-            crs = da.geobox.crs
+            crs = da.odc.geobox.crs
             lazy_phenology = assign_crs(lazy_phenology, str(crs))
         except:
             pass
@@ -396,51 +392,179 @@ def xr_phenology(
     return ds.drop("time")
 
 
+# ---------------------------------------------------
+# Series of statistical functions referenced
+# by 'temporal_statistics'.
+# Note these were copied out of the hdstats library.
+# ---------------------------------------------------
+def discordance(x, n=10):
+    """
+    Measure of local signal discordance by
+    removing low-frequency components from the input time series and
+    comparing each signal to a shared baseline.
+    """
+    X = x.copy()
+
+    mX = np.mean(X, axis=(0, 1))
+    Y = np.fft.fft(mX)
+    np.put(Y, range(n, mX.shape[0]), 0.0)
+    mX = np.abs(np.fft.ifft(Y)).astype(np.float32)
+
+    for i in range(X.shape[0]):
+        for j in range(X.shape[1]):
+            Y = np.fft.fft(X[i, j, :])
+            np.put(Y, range(n, mX.shape[0]), 0.0)
+            X[i, j, :] = np.real(np.fft.ifft(Y))
+
+    X -= mX[np.newaxis, np.newaxis, :]
+
+    return np.mean(X, axis=2)
+
+
+def fourier_mean(x, n=3, step=5):
+    """
+    Mean of the discrete Fourier transform coefficients
+    """
+    result = np.empty((x.shape[0], x.shape[1], n), dtype=np.float32)
+
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            y = np.fft.fft(x[i, j, :])
+            for k in range(n):
+                result[i, j, k] = np.mean(
+                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
+                )
+
+    return result
+
+
+def fourier_std(x, n=3, step=5):
+    """
+    Standard deviation of the discrete Fourier transform coefficients.
+    """
+    result = np.empty((x.shape[0], x.shape[1], n), dtype=np.float32)
+
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            y = np.fft.fft(x[i, j, :])
+            for k in range(n):
+                result[i, j, k] = np.std(
+                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
+                )
+
+    return result
+
+
+def fourier_median(x, n=3, step=5):
+    """
+    Median of the discrete Fourier transform coefficients
+    """
+    result = np.empty((x.shape[0], x.shape[1], n), dtype=np.float32)
+
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            y = np.fft.fft(x[i, j, :])
+            for k in range(n):
+                result[i, j, k] = np.median(
+                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
+                )
+
+    return result
+
+
+def mean_change(x):
+    """
+    Mean of the first-order discrete difference along the time dimension
+    """
+    return np.mean(np.diff(x), axis=-1)
+
+
+def median_change(x):
+    """
+    Median of the first-order discrete difference along the time dimension
+    """
+    return np.median(np.diff(x), axis=-1)
+
+
+def mean_abs_change(x):
+    """
+    Mean of the absolute first-order discrete difference along the time dimension
+    """
+    return np.mean(np.abs(np.diff(x)), axis=-1)
+
+
+def mean_central_diff(x):
+    """
+    Mean second-order central difference,
+    approximating signal curvature or acceleration
+    """
+    diff = (np.roll(x, 1, axis=2) - 2 * x + np.roll(x, -1, axis=2)) / 2.0
+    return np.mean(diff[:, :, 1:-1], axis=2)
+
+
+def complexity(x, normalize=True):
+    """
+    Estimates temporal complexity by computing the first-order
+    difference across time.
+    """
+    if normalize:
+        s = np.std(x, axis=2)
+        x = (x - np.mean(x, axis=2)[:, :, np.newaxis]) / s[:, :, np.newaxis]
+
+    z = np.diff(x)
+
+    return np.einsum("ijk,ijk->ij", z, z)
+
+
+# ------------------------------------------------
+
+
 def temporal_statistics(da, stats):
     """
-    Calculate various generic summary statistics on any timeseries.
+    Calculate various generic summary statistics on any time series.
 
-    This function uses the hdstats temporal library:
+    This function computes a range of temporal statistics over a 3D time series.
+    Many of the statistical methods are adapted from the `hdstats` package:
     https://github.com/daleroberts/hdstats/blob/master/hdstats/ts.pyx
 
-    Last modified June 2020
+    Last modified: October 2025
 
     Parameters
     ----------
-    da :  xarray.DataArray
-        DataArray should contain a 3D time series.
-    stats : list
-        List of temporal statistics to calculate. Options include:
+    da : xarray.DataArray
+        A 3D DataArray representing the time series
+    stats : list of str
+        List of temporal statistics to compute. Available options include:
 
-        * ``'discordance'``: TODO
-        * ``'f_std'``: std of discrete fourier transform coefficients, returns
-        three layers: f_std_n1, f_std_n2, f_std_n3
-        * ``'f_mean'``: mean of discrete fourier transform coefficients, returns
-        three layers: f_mean_n1, f_mean_n2, f_mean_n3
-        * ``'f_median'``: median of discrete fourier transform coefficients, returns
-        three layers: f_median_n1, f_median_n2, f_median_n3
-        * ``'mean_change'``: mean of discrete difference along time dimension
-        * ``'median_change'``: median of discrete difference along time dimension
-        * ``'abs_change'``: mean of absolute discrete difference along time dimension
-        * ``'complexity'``: TODO
-        * ``'central_diff'``: TODO
-        * ``'num_peaks'``: The number of peaks in the timeseries, defined with a local
-            window of size 10.  NOTE: This statistic is very slow
+        * ``'discordance'``: Computes a measure of local signal discordance by
+          removing low-frequency components from the input time series and
+          comparing each signal to a shared baseline.
+        * ``'f_std'``: Standard deviation of the discrete Fourier transform coefficients.
+          Returns three layers: ``f_std_n1``, ``f_std_n2``, ``f_std_n3``.
+        * ``'f_mean'``: Mean of the discrete Fourier transform coefficients.
+          Returns three layers: ``f_mean_n1``, ``f_mean_n2``, ``f_mean_n3``.
+        * ``'f_median'``: Median of the discrete Fourier transform coefficients.
+          Returns three layers: ``f_median_n1``, ``f_median_n2``, ``f_median_n3``.
+        * ``'mean_change'``: Mean of the first-order discrete difference along the time dimension.
+        * ``'median_change'``: Median of the first-order discrete difference along the time dimension.
+        * ``'abs_change'``: Mean of the absolute first-order discrete difference along the time dimension.
+        * ``'complexity'``: Estimates temporal complexity by computing the first-order
+          difference across time. Optionally normalizes each signal beforehand.
+        * ``'central_diff'``: Computes the mean second-order central difference,
+          approximating signal curvature or acceleration.
 
     Returns
     -------
     xarray.Dataset
-        Dataset containing variables for the selected
-        temporal statistics
-
+        A dataset containing one or more computed temporal statistics as variables.
     """
 
-    # if dask arrays then map the blocks
+    # If dask arrays then map the blocks
     if dask.is_dask_collection(da):
         if version.parse(xr.__version__) < version.parse("0.16.0"):
             raise TypeError(
                 "Dask arrays are only supported by this function if using, "
-                + "xarray v0.16, run da.compute() before passing dataArray."
+                "xarray v0.16, run da.compute() before passing dataArray."
             )
 
         # create a template that matches the final datasets dims & vars
@@ -483,7 +607,7 @@ def temporal_statistics(da, stats):
         )
 
         try:
-            crs = da.geobox.crs
+            crs = da.odc.geobox.crs
             lazy_ds = assign_crs(lazy_ds, str(crs))
         except:
             pass
@@ -494,33 +618,31 @@ def temporal_statistics(da, stats):
     stats = stats if isinstance(stats, list) else [stats]
 
     # grab all the attributes of the xarray
-    x, y, time, attrs = da.x, da.y, da.time, da.attrs
+    y_dim, x_dim = da.odc.spatial_dims
+    x, y, time, attrs = da[x_dim], da[y_dim], da.time, da.attrs
 
     # deal with any all-NaN pixels by filling with 0's
     mask = da.isnull().all("time")
     da = da.where(~mask, other=0)
 
     # ensure dim order is correct for functions
-    da = da.transpose("y", "x", "time").values
+    da = da.transpose(y_dim, x_dim, "time").values
 
     stats_dict = {
-        "discordance": lambda da: hdstats.discordance(da, n=10),
-        "f_std": lambda da: hdstats.fourier_std(da, n=3, step=5),
-        "f_mean": lambda da: hdstats.fourier_mean(da, n=3, step=5),
-        "f_median": lambda da: hdstats.fourier_median(da, n=3, step=5),
-        "mean_change": lambda da: hdstats.mean_change(da),
-        "median_change": lambda da: hdstats.median_change(da),
-        "abs_change": lambda da: hdstats.mean_abs_change(da),
-        "complexity": lambda da: hdstats.complexity(da),
-        "central_diff": lambda da: hdstats.mean_central_diff(da),
-        "num_peaks": lambda da: hdstats.number_peaks(da, 10),
+        "discordance": lambda da: discordance(da, n=10),
+        "f_std": lambda da: fourier_std(da, n=3, step=5),
+        "f_mean": lambda da: fourier_mean(da, n=3, step=5),
+        "f_median": lambda da: fourier_median(da, n=3, step=5),
+        "mean_change": lambda da: mean_change(da),
+        "median_change": lambda da: median_change(da),
+        "abs_change": lambda da: mean_abs_change(da),
+        "complexity": lambda da: complexity(da),
+        "central_diff": lambda da: mean_central_diff(da),
     }
 
-    print("   Statistics:")
     # if one of the fourier functions is first (or only)
     # stat in the list then we need to deal with this
     if stats[0] in ("f_std", "f_median", "f_mean"):
-        print("      " + stats[0])
         stat_func = stats_dict.get(str(stats[0]))
         zz = stat_func(da)
         n1 = zz[:, :, 0]
@@ -529,7 +651,7 @@ def temporal_statistics(da, stats):
 
         # intialise dataset with first statistic
         ds = xr.DataArray(
-            n1, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
+            n1, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
         ).to_dataset(name=stats[0] + "_n1")
 
         # add other datasets
@@ -540,17 +662,15 @@ def temporal_statistics(da, stats):
     else:
         # simpler if first function isn't fourier transform
         first_func = stats_dict.get(str(stats[0]))
-        print("      " + stats[0])
         ds = first_func(da)
 
         # convert back to xarray dataset
         ds = xr.DataArray(
-            ds, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
+            ds, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
         ).to_dataset(name=stats[0])
 
     # loop through the other functions
     for stat in stats[1:]:
-        print("      " + stat)
 
         # handle the fourier transform examples
         if stat in ("f_std", "f_median", "f_mean"):
@@ -562,7 +682,7 @@ def temporal_statistics(da, stats):
 
             for i, j in zip([n1, n2, n3], ["n1", "n2", "n3"]):
                 ds[stat + "_" + j] = xr.DataArray(
-                    i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
+                    i, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
                 )
 
         else:
@@ -570,17 +690,20 @@ def temporal_statistics(da, stats):
             # and add to the dataset
             stat_func = stats_dict.get(str(stat))
             ds[stat] = xr.DataArray(
-                stat_func(da), attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
+                stat_func(da),
+                attrs=attrs,
+                coords={x_dim: x, y_dim: y},
+                dims=[y_dim, x_dim],
             )
 
     # try to add back the geobox
     try:
-        crs = da.geobox.crs
+        crs = da.odc.geobox.crs
         ds = assign_crs(ds, str(crs))
     except:
         pass
 
-    return ds
+    return ds.where(~mask)  # remask with all-nulls
 
 
 def time_buffer(input_date, buffer="30 days", output_format="%Y-%m-%d"):
@@ -744,8 +867,7 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
 
     """
     warnings.warn(
-        "This function is deprecated and will be retired in a future "
-        "release. Please use `xr_regression` instead.",
+        "This function is deprecated and will be retired in a future release. Please use `xr_regression` instead.",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -755,7 +877,6 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
 
     # 2. Add lag information if any, and shift the data accordingly
     if lagx != 0:
-
         # If x lags y by 1, x must be shifted 1 step backwards. But as the 'zero-th' value is nonexistant, xr
         # assigns it as invalid (nan). Hence it needs to be dropped:
         x = x.shift(**{first_dim: -lagx}).dropna(dim=first_dim)
@@ -764,7 +885,6 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
         x, y = xr.align(x, y)
 
     if lagy != 0:
-
         y = y.shift(**{first_dim: -lagy}).dropna(dim=first_dim)
         x, y = xr.align(x, y)
 
@@ -830,9 +950,7 @@ def mad_outliers(da, dim="time", threshold=3.5):
     mad = abs_deviation.median(dim=dim)
 
     # Deviations greater than (threshold * MAD) are considered outliers
-    outliers = abs_deviation > (threshold * mad)
-
-    return outliers
+    return abs_deviation > (threshold * mad)
 
 
 def xr_regression(
@@ -949,7 +1067,6 @@ def xr_regression(
     # Calculate p-values for different alternative hypotheses.
     # If data is dask, then delay computation of p-value
     if dask.is_dask_collection(cor):
-
         _pvalue_lazy = dask.delayed(_pvalue)
         pval = xr.DataArray(
             da.from_delayed(

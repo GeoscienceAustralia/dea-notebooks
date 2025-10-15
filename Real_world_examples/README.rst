@@ -12,6 +12,7 @@ More complex case study workflows demonstrating how DEA can be used to address r
    Chlorophyll_monitoring.ipynb
    Coastal_erosion.ipynb
    Estimate_climate_driver_influence_on_rainfall.ipynb
+   Forecasting_vegetation_condition.ipynb
    Intertidal_elevation.ipynb
    Intertidal_exposure.ipynb
    Mapping_inundation_using_stream_gauges.ipynb

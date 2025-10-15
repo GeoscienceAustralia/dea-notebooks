@@ -16,7 +16,6 @@ Notebooks introducing DEA's satellite datasets and derived products, including h
    DEA_Water_Observations.ipynb
    DEA_Waterbodies.ipynb
    DEA_Coastlines.ipynb
-   DEA_High_and_Low_Tide_Imagery.ipynb
    DEA_Intertidal.ipynb
    DEA_Fuel_Moisture_Content.ipynb
 

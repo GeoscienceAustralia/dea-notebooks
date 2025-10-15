@@ -2,9 +2,10 @@ name: Publish dea-tools to PyPI
 
 on:
   push:
-    branches:
-      - develop
+    branches: [develop, uv_publish]
     paths:
+      - 'pyproject.toml'
+      - 'README_tools.md'
       - 'Tools/**'
       - '.github/workflows/publish.yml'
   release:
@@ -16,42 +17,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # Check out Git repository with full history
+      # Required for `hatchling-vcs` to get correct version
+      - name: Check out
+        uses: actions/checkout@v4
         with:
-          python-version: '3.11'  # Pin to <3.12 for compatibility with pip==22.0.4
-      
-      - name: Get history and tags for SCM versioning
-        run: |
-          git fetch --prune --unshallow
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-      
-      - name: Build dea-tools
-        run: |
-            python3 -m pip install setuptools_scm build
-            python3 -m setuptools_scm
-            cd Tools
-            python3 -m pip install pip==22.0.4
-            python3 -m pip install --use-feature=in-tree-build --no-deps .
-            python3 -c "import dea_tools; print(dea_tools.__version__)"
-            python3 -m build
+          fetch-depth: 0
 
-      - name: pypi-publish
-        # You may pin to the exact commit or the version.
-        # uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-        uses: pypa/gh-action-pypi-publish@v1.4.2
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          # PyPI access token
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          # The target directory for distribution
-          packages_dir: Tools/dist
-          # Check metadata before uploading
-          verify_metadata: true
-          # Do not fail if a Python package distribution exists in the target package index
-          skip_existing: false
-          # Show verbose output.
-          verbose: true
-          
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          version: "0.7.5"
+          enable-cache: "true"
+
+      # Setup Python environment with uv
+      - name: Setup Python environment and install dea-tools
+        run: uv sync
+
+      # Package will be built using version automatically
+      # generated from Git by `hatchling-vcs`
+      - name: Build package
+        run: uv build
+
+      # Publish to PyPI
+      - name: Publish package
+        run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}

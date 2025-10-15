@@ -1,53 +1,48 @@
 """
-Digital Earth Australia Wetlands Insight Tool widget, which can be used to interactively 
+Digital Earth Australia Wetlands Insight Tool widget, which can be used to interactively
 extract a stacked line plot using the wetlands insight tool on a wetland polygon.
 """
 
-# Import required packages
-import fiona
-import sys
-import datacube
-import warnings
-import matplotlib.pyplot as plt
-from datacube.utils.geometry import CRS
-from ipyleaflet import (
-    WMSLayer,
-    basemaps,
-    basemap_to_tiles,
-    Map,
-    DrawControl,
-    WidgetControl,
-    SearchControl,
-    Marker,
-    LayerGroup,
-    LayersControl,
-    GeoData,
-)
-from traitlets import Unicode
-from ipywidgets import (
-    GridspecLayout,
-    Button,
-    Layout,
-    HBox,
-    VBox,
-    HTML,
-    Output,
-)
-import json
-import geopandas as gpd
-from io import BytesIO
-import ipywidgets as widgets
 import datetime
-import seaborn as sns
+import json
+import warnings
+from io import BytesIO
 
-# from shapely.geometry import box, shape
+import fiona
+import geopandas as gpd
+import ipywidgets as widgets
 import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import seaborn as sns
+from ipyleaflet import (
+    GeoData,
+    LayerGroup,
+    Marker,
+    SearchControl,
+    basemap_to_tiles,
+    basemaps,
+)
+from ipywidgets import (
+    HTML,
+    Button,
+    GridspecLayout,
+    HBox,
+    Layout,
+    Output,
+    VBox,
+)
 
-sys.path.insert(1, "../Tools/")
-import dea_tools.app.widgetconstructors as deawidgets
+from dea_tools.app.widgetconstructors import (
+    create_checkbox,
+    create_datepicker,
+    create_drawcontrol,
+    create_dropdown,
+    create_html,
+    create_inputtext,
+    create_map,
+)
 from dea_tools.dask import create_local_dask_cluster
-from dea_tools.wetlands import generate_low_quality_data_periods
-from dea_tools.wit_app import WIT_drill, spatial_wit
+from dea_tools.wetlands import generate_low_quality_data_periods, WIT_drill, spatial_wit
 
 
 def make_box_layout():
@@ -69,7 +64,6 @@ def create_expanded_button(description, button_style):
 
 
 class wit_app(HBox):
-
     def __init__(self):
         super().__init__()
 
@@ -78,9 +72,7 @@ class wit_app(HBox):
         ######################
 
         enddate = datetime.datetime.today()
-        startdate = datetime.datetime(
-            year=enddate.year - 1, month=enddate.month, day=enddate.day
-        )
+        startdate = datetime.datetime(year=enddate.year - 1, month=enddate.month, day=enddate.day)
         self.startdate = startdate.strftime("%Y-%m-%d")
         self.enddate = enddate.strftime("%Y-%m-%d")
         self.wetland_name = "example WIT"
@@ -105,9 +97,7 @@ class wit_app(HBox):
         # Create the Header widget
         header_title_text = "<h3>Digital Earth Australia Wetlands Insight Tool </h3>"
         instruction_text = "Select parameters and draw a polygon on the map to extract a stacked line plot for a given area. Alternatively, <b>upload a shapefile or a GeoJSON</b> to extract a stacked line plot for your wetland of interest polygon."
-        self.header = deawidgets.create_html(
-            f"{header_title_text}<p>{instruction_text}</p>"
-        )
+        self.header = create_html(f"{header_title_text}<p>{instruction_text}</p>")
         self.header.layout = make_box_layout()
 
         #####################################
@@ -116,7 +106,6 @@ class wit_app(HBox):
 
         # Define the action to take once something is drawn on the map
         def update_geojson(target, action, geo_json):
-
             # Remove previously uploaded data if present
             self.gdf_uploaded = None
             fileupload_wetlands._counter = 0
@@ -142,15 +131,13 @@ class wit_app(HBox):
             # Test area size
             if self.max_size:
                 confirmation_text = '<span style="color: #33cc33"> <b>(Overriding maximum size limit; use with caution as may lead to memory issues)</b></span>'
-                self.header.value = (
-                    header_title_text + polyarea_text + confirmation_text
-                )
+                self.header.value = header_title_text + polyarea_text + confirmation_text
                 self.gdf_drawn = gdf
             elif area <= 2000:
-                confirmation_text = '<span style="color: #33cc33"> <b>(Area to extract falls within recommended limit)</b></span>'
-                self.header.value = (
-                    header_title_text + polyarea_text + confirmation_text
+                confirmation_text = (
+                    '<span style="color: #33cc33"> <b>(Area to extract falls within recommended limit)</b></span>'
                 )
+                self.header.value = header_title_text + polyarea_text + confirmation_text
                 self.gdf_drawn = gdf
             else:
                 warning_text = '<span style="color: #ff5050"> <b>(Area to extract is too large, please update your polygon)</b></span>'
@@ -164,7 +151,7 @@ class wit_app(HBox):
         self.dask_client = Output(layout=make_box_layout())
         self.progress_bar = Output(layout=make_box_layout())
         self.wit_plot = Output(layout=make_box_layout())
-        self.progress_header = deawidgets.create_html("")
+        self.progress_header = create_html("")
 
         #########################################
         # MAP WIDGET, DRAWING TOOLS, WMS LAYERS #
@@ -172,16 +159,14 @@ class wit_app(HBox):
 
         # Create drawing tools
         desired_drawtools = ["rectangle", "polygon"]
-        draw_control = deawidgets.create_drawcontrol(desired_drawtools)
+        draw_control = create_drawcontrol(desired_drawtools)
 
         # Begin by displaying an empty layer group, and update the group with desired WMS on interaction.
         self.map_layers = LayerGroup(layers=())
         self.map_layers.name = "Map Overlays"
 
         # Create map widget
-        self.m = deawidgets.create_map(
-            map_center=(-28, 135), zoom_level=4, basemap=basemaps.Esri.WorldImagery
-        )
+        self.m = create_map(map_center=(-28, 135), zoom_level=4, basemap=basemaps.Esri.WorldImagery)
         self.m.layout = make_box_layout()
 
         # Add tools to map widget
@@ -204,28 +189,22 @@ class wit_app(HBox):
         ############################
 
         # Create parameter widgets
-        startdate_picker = deawidgets.create_datepicker(
+        startdate_picker = create_datepicker(
             value=startdate,
         )
-        enddate_picker = deawidgets.create_datepicker(
+        enddate_picker = create_datepicker(
             value=enddate,
         )
-        wetland_name = deawidgets.create_inputtext(self.wetland_name, self.wetland_name)
-        # output_csv = deawidgets.create_inputtext(self.out_csv, self.out_csv)
-        output_plot = deawidgets.create_checkbox(self.out_plot, "Figure (.png)")
-        deaoverlay_dropdown = deawidgets.create_dropdown(
-            self.product_list, self.product_list[0][1]
-        )
+        wetland_name = create_inputtext(self.wetland_name, self.wetland_name)
+        # output_csv = create_inputtext(self.out_csv, self.out_csv)
+        output_plot = create_checkbox(self.out_plot, "Figure (.png)")
+        deaoverlay_dropdown = create_dropdown(self.product_list, self.product_list[0][1])
         run_button = create_expanded_button("Run", "info")
         fileupload_wetlands = widgets.FileUpload(accept="", multiple=True)
 
         # Expandable advanced section
-        max_size = deawidgets.create_checkbox(
-            self.max_size, "Enable", layout={"width": "95%"}
-        )
-        output_spatial_wit = deawidgets.create_checkbox(
-            self.spatial_wit, "Animation (.gif)"
-        )
+        max_size = create_checkbox(self.max_size, "Enable", layout={"width": "95%"})
+        output_spatial_wit = create_checkbox(self.spatial_wit, "Animation (.gif)")
 
         ####################################
         # UPDATE FUNCTIONS FOR EACH WIDGET #
@@ -247,16 +226,12 @@ class wit_app(HBox):
         ##################################
         # COLLECTION OF ALL APP CONTROLS #
         ##################################
-        expand_box = VBox(
-            [
-                HTML(
-                    "<b>Override maximum size limit:</b></br> (use with caution; may cause memory issues/crashes)"
-                ),
-                max_size,
-                HTML("<b>Spatial WIT animation:<b/>"),
-                output_spatial_wit,
-            ]
-        )
+        expand_box = VBox([
+            HTML("<b>Override maximum size limit:</b></br> (use with caution; may cause memory issues/crashes)"),
+            max_size,
+            HTML("<b>Spatial WIT animation:<b/>"),
+            output_spatial_wit,
+        ])
 
         expand = widgets.Accordion(
             children=[expand_box],
@@ -264,33 +239,29 @@ class wit_app(HBox):
         )
         expand.set_title(0, "Advanced")
 
-        parameter_selection = VBox(
-            [
-                HTML("<b>Start Date:</b>"),
-                startdate_picker,
-                HTML("<b>End Date:</b>"),
-                enddate_picker,
-                HTML("<b>Wetland Name:</b>"),
-                wetland_name,
-                # HTML("<b>Output CSV:</b>"),
-                # output_csv,
-                HTML("<b>Output Plot:</b>"),
-                output_plot,
-                HTML(
-                    "</br><i><b>Upload Polygon:</b></br>Upload a GeoJSON or"
-                    " Shapefile (<5 mb) containing a wetland polygon.</i>"
-                ),
-                fileupload_wetlands,
-                HTML("</br>"),
-                expand,
-            ]
-        )
-        map_selection = VBox(
-            [
-                HTML("</br><b>Map overlay:</b>"),
-                deaoverlay_dropdown,
-            ]
-        )
+        parameter_selection = VBox([
+            HTML("<b>Start Date:</b>"),
+            startdate_picker,
+            HTML("<b>End Date:</b>"),
+            enddate_picker,
+            HTML("<b>Wetland Name:</b>"),
+            wetland_name,
+            # HTML("<b>Output CSV:</b>"),
+            # output_csv,
+            HTML("<b>Output Plot:</b>"),
+            output_plot,
+            HTML(
+                "</br><i><b>Upload Polygon:</b></br>Upload a GeoJSON or"
+                " Shapefile (<5 mb) containing a wetland polygon.</i>"
+            ),
+            fileupload_wetlands,
+            HTML("</br>"),
+            expand,
+        ])
+        map_selection = VBox([
+            HTML("</br><b>Map overlay:</b>"),
+            deaoverlay_dropdown,
+        ])
         parameter_selection.layout = make_box_layout()
         map_selection.layout = make_box_layout()
 
@@ -344,39 +315,27 @@ class wit_app(HBox):
 
     # Set the output csv
     def update_fileupload_wetlands(self, change):
-
         # Clear any drawn data if present
         self.gdf_drawn = None
 
         # Temporary compatibility fix for ipywidget > 8.0
         # TODO: Update code to use new fileupload API documented here:
         # https://ipywidgets.readthedocs.io/en/latest/user_migration_guides.html#fileupload
-        uploaded_data = {
-            f["name"]: {"content": f.content.tobytes()} for f in change.new
-        }
+        uploaded_data = {f["name"]: {"content": f.content.tobytes()} for f in change.new}
 
         # Save to file
-        for uploaded_filename in uploaded_data.keys():
+        for uploaded_filename in uploaded_data:
             with open(uploaded_filename, "wb") as output_file:
                 content = uploaded_data[uploaded_filename]["content"]
                 output_file.write(content)
 
         with self.progress_bar:
-
             try:
-
                 print("Loading vector data...", end="\r")
-                valid_files = [
-                    file
-                    for file in uploaded_data.keys()
-                    if file.lower().endswith((".shp", ".geojson"))
-                ]
+                valid_files = [file for file in uploaded_data if file.lower().endswith((".shp", ".geojson"))]
                 valid_file = valid_files[0]
                 wetlands_gdf = (
-                    gpd.read_file(valid_file)
-                    .to_crs("EPSG:4326")
-                    .explode(index_parts=True)
-                    .reset_index(drop=True)
+                    gpd.read_file(valid_file).to_crs("EPSG:4326").explode(index_parts=True).reset_index(drop=True)
                 )
 
                 # Use ID column if it exists
@@ -387,9 +346,7 @@ class wit_app(HBox):
                     print(f"Uploaded '{valid_file}'; no 'id' column detected.")
 
                 # Create a geodata
-                geodata = GeoData(
-                    geo_dataframe=wetlands_gdf, style={"color": "black", "weight": 3}
-                )
+                geodata = GeoData(geo_dataframe=wetlands_gdf, style={"color": "black", "weight": 3})
 
                 # Add to map
                 xmin, ymin, xmax, ymax = wetlands_gdf.total_bounds
@@ -401,8 +358,7 @@ class wit_app(HBox):
 
             except IndexError:
                 print(
-                    "Cannot read uploaded files. Please ensure that data is "
-                    "in either GeoJSON or Shapefile format.",
+                    "Cannot read uploaded files. Please ensure that data is in either GeoJSON or Shapefile format.",
                     end="\r",
                 )
                 self.gdf_uploaded = None
@@ -445,7 +401,6 @@ class wit_app(HBox):
 
     # Update product
     def update_deaoverlay(self, change):
-
         self.product = change.new
 
         if self.product == "none":
@@ -457,7 +412,6 @@ class wit_app(HBox):
             self.map_layers.add_layer(layer)
 
     def run_app(self, change):
-
         # Clear progress bar and output areas before running
         self.progress_bar.clear_output()
         self.wit_plot.clear_output()
@@ -468,7 +422,7 @@ class wit_app(HBox):
             client = create_local_dask_cluster(return_client=True, display_client=True)
 
         # Set any defaults
-        dask_chunks = dict(x=1000, y=1000, time=1)
+        dask_chunks = {"x": 1000, "y": 1000, "time": 1}
 
         self.progress_header.value = "<h3>" + ("Progress") + "</h3>"
 
@@ -493,7 +447,7 @@ class wit_app(HBox):
                 run_text = "selected polygon"
             else:
                 print(
-                    f"No polygon drawn or uploaded. Please select a polygon on the map, or upload a GeoJSON or Shapefile.",
+                    "No polygon drawn or uploaded. Please select a polygon on the map, or upload a GeoJSON or Shapefile.",
                     end="\r",
                 )
                 wetlands_gdf = None
@@ -501,10 +455,7 @@ class wit_app(HBox):
             # Run wetlands polygon drill
             df = None
 
-            if not self.wetland_name.endswith(".csv"):
-                output_csv = self.wetland_name + ".csv"
-            else:
-                output_csv = self.wetland_name
+            output_csv = self.wetland_name + ".csv" if not self.wetland_name.endswith(".csv") else self.wetland_name
 
             if wetlands_gdf is not None:
                 try:
@@ -521,9 +472,7 @@ class wit_app(HBox):
                     print("No polygon selected")
 
             else:
-                print(
-                    "No valid polygon to process. Please select or draw a new polygon."
-                )
+                print("No valid polygon to process. Please select or draw a new polygon.")
 
         # close down the dask client
         client.shutdown()
@@ -539,7 +488,6 @@ class wit_app(HBox):
         # ---Plotting------------------------------
         if df is not None:
             with self.wit_plot:
-
                 fontsize = 17
                 plt.rcParams.update({"font.size": fontsize})
                 # set up color palette
@@ -624,9 +572,8 @@ class wit_app(HBox):
 
         # Export spatial WIT animation if checkbox is selected
         if self.spatial_wit and ds_wit is not None:
-
             try:
-                ds = spatial_wit(ds=ds_wit, wetland_name=self.wetland_name)
+                spatial_wit(ds=ds_wit, wetland_name=self.wetland_name)
                 print("Animation complete")
             except AttributeError:
                 print("No polygon selected")
