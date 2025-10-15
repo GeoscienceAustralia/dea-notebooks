@@ -103,7 +103,7 @@ Flexible and powerful tools for scientific analysis with `xarray` objects:
     * Extract detailed contours from `xarray.DataArrays` at subpixel resolution using `subpixel_contours`;
     * Interpolate point data stored in a `geopandas.GeoDataFrame` into an `xarray.DataArray` with `xr_interpolate`.
 
-![`dea-tools` enables easy transitions between gridded and vector formats using the `xr_rasterize` and `xr_vectorize` functions. Location: Menindeee Lakes, New South Wales.\label{fig:raster-vector}](figures/rasterize_vectorize.png)
+![`dea-tools` enables easy transitions between `xarray` and `geopandas` with the `xr_rasterize` and `xr_vectorize` functions. Location: Menindeee Lakes, New South Wales.\label{fig:raster-vector}](figures/rasterize_vectorize.png)
 
 ## Machine learning 
 
