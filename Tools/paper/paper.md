@@ -60,9 +60,9 @@ bibliography: paper.bib
 
 # Statement of need
 
-Modern Earth observation workflows often involve complex, multi-temporal, and multi-resolution datasets that demand integrated tools for efficient loading, pre-processing, visualisation, and analysis. While foundational libraries such as `xarray`, `geopandas`, and `dask` provide the building blocks, implementing efficient and scalable analysis workflows and processing pipelines still requires substantial coding effort. The `dea-tools` library addresses this gap by providing a curated suite of well-documented functions that streamline common geospatial tasks and integrate seamlessly with the Python geospatial stack.
+Modern Earth observation workflows often involve complex, multi-temporal, and multi-resolution datasets that demand integrated tools for efficient loading, pre-processing, visualisation, and analysis. While foundational libraries such as `xarray`, `geopandas`, and `dask` provide the building blocks, implementing efficient and scalable analysis workflows and processing pipelines still requires substantial coding effort. The `dea-tools` Python library addresses this gap by providing a curated suite of well-documented functions that streamline common geospatial tasks and integrate seamlessly with the Python geospatial stack.
 
-The `dea-tools` Python package is a comprehensive, open-source toolkit for analysing and interpreting geospatial and Earth observation data, primarily represented as `xarray` objects. Originally developed by DEA to support national-scale satellite data analysis, `dea-tools` has evolved into a flexible and general-purpose library that supports a wide range of geospatial workflows. It can be deployed across platforms and supports both gridded datasets (e.g. satellite imagery) and vector datasets (e.g. shapefiles or GeoJSON), whether accessed from cloud-based catalogues via Spatio-Temporal Asset Catalog (STAC) or stored locally.
+`dea-tools` is a comprehensive, open-source toolkit for analysing and interpreting geospatial and Earth observation data, primarily represented as `xarray` objects. Originally developed by DEA to support national-scale satellite data analysis, `dea-tools` has evolved into a flexible and general-purpose library that supports a wide range of geospatial workflows. It can be deployed across platforms and supports both gridded datasets (e.g. satellite imagery) and vector datasets (e.g. shapefiles or GeoJSON), whether accessed from cloud-based catalogues via Spatio-Temporal Asset Catalog (STAC) or stored locally.
 
 A major advantage of `dea-tools` is that it comes bundled with all essential dependencies for scientific geospatial analysis. These include [JupyterLab](https://jupyter.org/), Jupyter notebooks, `xarray`, `geopandas`, `NumPy` [@harris2020array], `dask`, and many other libraries from the Python geospatial ecosystem. When deployed within a virtual environment, `dea-tools` provides a ready-to-use and pre-configured platform for geospatial analysis, eliminating the need for manual setup or dependency management. This design lowers the barrier to entry for new users by offering a self-contained environment for exploration, visualisation, and large-scale satellite data processing.
 
@@ -70,7 +70,7 @@ A major advantage of `dea-tools` is that it comes bundled with all essential dep
 
 * Load, combine, and manage satellite or model datasets – including but not limited to DEA products – while handling reprojection and resolution harmonisation;
 * Conduct spatial and temporal analyses directly on `xarray` objects (e.g., extracting temporal statistics, linear regression, and interpolation);
-* Apply a large curated list of remote sensing indices such as Normalized Difference Vegetation Index (NDVI), the Normalized Difference Water Index (NDWI), etc.;
+* Apply a large curated list of remote sensing indices such as Normalised Difference Vegetation Index (NDVI), Normalised Difference Water Index (NDWI), etc.;
 * Perform machine learning and segmentation workflows on geospatial datasets using built-in tools for training, fitting, and prediction that integrates seamlessly with `xarray`;
 * Generate publication-quality visualisations and animations for both static and time-series data;
 * Convert between raster and vector formats with utilities that bridge `xarray` and `geopandas`;
@@ -87,7 +87,7 @@ The following is a non-exhaustive overview of key functionality available in `de
 Tools for loading and manipulating DEA satellite data, as well as data from other geospatial providers, are available in the [`dea-tools.datahandling`](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.datahandling/):
 
 - `load_ard`: Load and combine multiple Geoscience Australia Landsat, Sentinel-2, or Sentinel-1 Analysis Ready Data products using `odc-stac`. Optional features include pixel quality filtering, cloud and contiguity masking, and dropping time steps with a high proportion of poor-quality (e.g. cloudy or shadowed) pixels.
-- `load_reproject`:  Load and reproject all or part of a raster dataset (stored either locally or remotely) to match the coordinate reference system (CRS) and/or resolution of another dataset.
+- `load_reproject`:  Load and reproject all or part of a raster dataset (stored either locally or remotely) to match the coordinate reference system and/or resolution of another dataset.
 
 ## Spatio-temporal analysis 
 
@@ -103,7 +103,7 @@ Flexible and powerful tools for scientific analysis with `xarray` objects:
     * Extract detailed contours from `xarray.DataArrays` at subpixel resolution using `subpixel_contours`;
     * Interpolate point data stored in a `geopandas.GeoDataFrame` into an `xarray.DataArray` with `xr_interpolate`.
 
-![`dea-tools` enables easy transitions between `xarray` and `geopandas` with the `xr_rasterize` and `xr_vectorize` functions. Location: Menindeee Lakes, New South Wales.\label{fig:raster-vector}](figures/rasterize_vectorize.png)
+![`dea-tools` enables easy transitions between gridded and vector formats using the `xr_rasterize` and `xr_vectorize` functions. Location: Menindeee Lakes, New South Wales.\label{fig:raster-vector}](figures/rasterize_vectorize.png)
 
 ## Machine learning 
 
@@ -127,7 +127,7 @@ The [`dea-tools.plotting`](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/d
 - Generate highly customisable animations to visualise changes over time in `xarray` datasets using `xr_animation`;
 - Create true and false colour composite images from satellite data using `rgb`.
 
-![True and false colour composites generated with the `dea-tools.plotting.rgb` function, using DEA annual GeoMAD composite images from 2024. Location: Norman River, Queensland.\label{fig:rgb}](figures/RGB_images.png)
+![True and false colour composites generated with the `dea-tools.plotting.rgb` function, using DEA GeoMAD composite images from 2024. Location: Norman River, Queensland.\label{fig:rgb}](figures/RGB_images.png)
 
 # Research projects
 
