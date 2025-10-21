@@ -26,7 +26,7 @@ authors:
     orcid: 0000-
   - name: Gianluca Scortechini
     affiliation: 1
-    orcid: 0000-
+    orcid: 0000-0002-0149-4028
   - name: Sean Chua
     affiliation: 1
     orcid: 0000-
@@ -74,7 +74,8 @@ A major advantage of `dea-tools` is that it comes bundled with all essential dep
 * Perform machine learning and segmentation workflows on geospatial datasets using built-in tools for training, fitting, and prediction that integrates seamlessly with `xarray`;
 * Generate publication-quality visualisations and animations for both static and time-series data;
 * Convert between raster and vector formats with utilities that bridge `xarray` and `geopandas`;
-* Apply domain-specific tools to analyse coastal change, intertidal zones, land cover, wetland and waterbody dynamics, and climate datasets.
+* Apply domain-specific tools to analyse coastal change, intertidal zones, land cover, wetland and waterbody dynamics, and climate datasets;
+* Generate Cloud-Optimised GeoTIFF (COG) continental mosaics and create VRTs with styling included for effortless visualisation in GIS software; this functionality is provided by the [`mosaics` sub-module](https://github.com/GeoscienceAustralia/dea-notebooks/blob/stable/Tools/dea_tools/mosaics/README.md), which accesses product tiles directly from S3 without requiring `datacube` or `STAC`.
 
 The broader `dea-notebooks` repository, which includes `dea-tools`, provides extensive Jupyter notebook based documentation. This includes concise how-to guides for specific tasks as well as longer, real-world application examples. These resources feature end-to-end workflows that demonstrate how to acquire satellite data via [odc-stac](https://github.com/opendatacube/odc-stac), process it using `dea-tools`, and visualise outputs interactively within JupyterLab. Together, `dea-tools` and `dea-notebooks` offer a reproducible, scalable, and fully managed framework for geospatial analysis in Python, bridging the gap between foundational geospatial libraries and applied Earth observation research.
 
