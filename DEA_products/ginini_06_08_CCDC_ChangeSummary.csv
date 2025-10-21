@@ -1,0 +1,12 @@
+Component,Date,Type,Change_%,Description,ID
+pv,2006-05-01 23:42:38.630671,Gradual,-48.81,Reduction of photosynthetic vegetation,1
+npv,2006-06-18 23:43:19.954874,Gradual,-46.18,Increase in dry/non-photosynthetic vegetation,2
+wet,2006-06-18 23:43:19.954874,Gradual,209.79,Expansion of moist/wet surface areas,3
+water,2006-06-25 23:49:13.549275,Abrupt,295.53,Contraction of open water areas,4
+water,2006-07-27 23:49:40.148155,Gradual,525.23,Expansion of open water areas,5
+bs,2006-11-25 23:45:12.904449,Gradual,54.67,Increase in exposed bare ground,6
+bs,2007-04-02 23:45:33.773474,Abrupt,85.63,Increase in exposed bare ground,7
+pv,2007-04-25 23:51:12.147571,Abrupt,-20.42,Expansion of green vegetation,8
+water,2007-06-12 23:50:33.797096,Abrupt,NaN,Expansion of open water areas,9
+pv,2007-06-21 23:44:36.473762,Gradual,-22.07,Expansion of green vegetation,10
+bs,2007-08-31 23:49:40.705225,Abrupt,37.68,Increase in exposed bare ground,11
