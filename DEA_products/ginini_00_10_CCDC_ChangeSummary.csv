@@ -1,0 +1,36 @@
+Component,Date,Type,Change_%,Description,ID
+water,2000-05-08 23:42:49.967418,Abrupt,NaN,Contraction of open water areas,1
+wet,2000-05-15 23:48:35.324805,Abrupt,118.2,Expansion of moist/wet surface areas,2
+pv,2000-06-25 23:42:24.846675,Abrupt,-75.06,Reduction of photosynthetic vegetation,3
+water,2000-07-27 23:41:53.481601,Abrupt,87.65,Expansion of open water areas,4
+bs,2000-12-02 23:41:02.461123,Abrupt,-62.57,Decline in bare soil (possible vegetation regrowth),5
+pv,2001-03-31 23:46:36.651641,Abrupt,-10.24,Reduction of photosynthetic vegetation,6
+water,2001-05-11 23:40:38.429070,Abrupt,NaN,Contraction of open water areas,7
+pv,2001-07-30 23:39:51.469601,Abrupt,13.62,Expansion of green vegetation,8
+wet,2001-07-30 23:39:51.469601,Abrupt,-59.9,Drying trend in wet areas,9
+bs,2001-11-03 23:39:03.888393,Abrupt,49.17,Increase in exposed bare ground,10
+water,2002-05-05 23:45:19.204468,Abrupt,104321.41,Contraction of open water areas,11
+pv,2002-07-01 23:39:07.892111,Abrupt,-85.22,Reduction of photosynthetic vegetation,12
+npv,2002-07-01 23:39:07.892111,Abrupt,-85.79,Decline in dry vegetation,13
+wet,2002-09-10 23:44:24.502080,Abrupt,-65.69,Drying trend in wet areas,14
+npv,2002-09-10 23:44:24.502080,Abrupt,154.06,Increase in dry/non-photosynthetic vegetation,15
+npv,2003-01-09 23:39:02.789701,Abrupt,-16.11,Decline in dry vegetation,16
+pv,2003-01-09 23:39:02.789701,Abrupt,-37.78,Reduction of photosynthetic vegetation,17
+bs,2003-01-25 23:39:11.676560,Abrupt,294.77,Increase in exposed bare ground,18
+wet,2003-03-30 23:39:23.941628,Abrupt,NaN,Expansion of moist/wet surface areas,19
+bs,2004-01-27 23:35:19.314004,Abrupt,-26.0,Increase in exposed bare ground,20
+wet,2004-04-09 23:30:13.105878,Abrupt,3080.0,Expansion of moist/wet surface areas,21
+npv,2004-04-09 23:30:13.105878,Abrupt,3.1,Decline in dry vegetation,22
+npv,2004-09-16 23:34:34.680097,Abrupt,130.7,Increase in dry/non-photosynthetic vegetation,23
+bs,2004-12-21 23:36:29.453524,Abrupt,-49.64,Decline in bare soil (possible vegetation regrowth),24
+wet,2005-05-14 23:37:59.341617,Abrupt,240.66,Expansion of moist/wet surface areas,25
+pv,2005-05-14 23:37:59.341617,Abrupt,-7.81,Reduction of photosynthetic vegetation,26
+water,2005-05-14 23:37:59.341617,Abrupt,NaN,Contraction of open water areas,27
+water,2006-06-25 23:49:13.549275,Abrupt,295.53,Contraction of open water areas,28
+water,2006-08-12 23:49:52.511390,Abrupt,-98.88,Contraction of open water areas,29
+wet,2007-04-09 23:51:42.503789,Abrupt,737.22,Expansion of moist/wet surface areas,30
+pv,2007-04-25 23:51:12.147571,Abrupt,-20.42,Expansion of green vegetation,31
+bs,2008-12-07 23:40:29.568183,Abrupt,-72.98,Decline in bare soil (possible vegetation regrowth),32
+pv,2009-04-07 23:37:45.061213,Abrupt,-23.9,Reduction of photosynthetic vegetation,33
+wet,2009-04-30 23:43:57.255802,Abrupt,575.69,Drying trend in wet areas,34
+bs,2009-09-05 23:46:06.484712,Abrupt,69.43,Decline in bare soil (possible vegetation regrowth),35
