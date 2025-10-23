@@ -301,13 +301,9 @@ def xr_phenology(
             "ROS": np.float32,
         }
         da_template = da.isel(time=0).drop("time")
-        template = xr.Dataset(
-            {
-                var_name: da_template.astype(var_dtype)
-                for var_name, var_dtype in stats_dtype.items()
-                if var_name in stats
-            }
-        )
+        template = xr.Dataset({
+            var_name: da_template.astype(var_dtype) for var_name, var_dtype in stats_dtype.items() if var_name in stats
+        })
         da_all_time = da.chunk({"time": -1})
 
         lazy_phenology = da_all_time.map_blocks(
@@ -434,9 +430,7 @@ def fourier_mean(x, n=3, step=5):
         for j in range(x.shape[1]):
             y = np.fft.fft(x[i, j, :])
             for k in range(n):
-                result[i, j, k] = np.mean(
-                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
-                )
+                result[i, j, k] = np.mean(np.abs(y[1 + k * step : ((k + 1) * step + 1) or None]))
 
     return result
 
@@ -451,9 +445,7 @@ def fourier_std(x, n=3, step=5):
         for j in range(x.shape[1]):
             y = np.fft.fft(x[i, j, :])
             for k in range(n):
-                result[i, j, k] = np.std(
-                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
-                )
+                result[i, j, k] = np.std(np.abs(y[1 + k * step : ((k + 1) * step + 1) or None]))
 
     return result
 
@@ -468,9 +460,7 @@ def fourier_median(x, n=3, step=5):
         for j in range(x.shape[1]):
             y = np.fft.fft(x[i, j, :])
             for k in range(n):
-                result[i, j, k] = np.median(
-                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
-                )
+                result[i, j, k] = np.median(np.abs(y[1 + k * step : ((k + 1) * step + 1) or None]))
 
     return result
 
@@ -605,9 +595,7 @@ def temporal_statistics(da, stats):
         da_all_time = da.chunk({"time": -1})
 
         # apply function across chunks
-        lazy_ds = da_all_time.map_blocks(
-            temporal_statistics, kwargs={"stats": stats}, template=template
-        )
+        lazy_ds = da_all_time.map_blocks(temporal_statistics, kwargs={"stats": stats}, template=template)
 
         try:
             crs = da.odc.geobox.crs
@@ -653,28 +641,23 @@ def temporal_statistics(da, stats):
         n3 = zz[:, :, 2]
 
         # intialise dataset with first statistic
-        ds = xr.DataArray(
-            n1, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
-        ).to_dataset(name=stats[0] + "_n1")
+        ds = xr.DataArray(n1, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]).to_dataset(
+            name=stats[0] + "_n1"
+        )
 
         # add other datasets
         for i, j in zip([n2, n3], ["n2", "n3"]):
-            ds[stats[0] + "_" + j] = xr.DataArray(
-                i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
-            )
+            ds[stats[0] + "_" + j] = xr.DataArray(i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"])
     else:
         # simpler if first function isn't fourier transform
         first_func = stats_dict.get(str(stats[0]))
         ds = first_func(da)
 
         # convert back to xarray dataset
-        ds = xr.DataArray(
-            ds, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
-        ).to_dataset(name=stats[0])
+        ds = xr.DataArray(ds, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]).to_dataset(name=stats[0])
 
     # loop through the other functions
     for stat in stats[1:]:
-
         # handle the fourier transform examples
         if stat in ("f_std", "f_median", "f_mean"):
             stat_func = stats_dict.get(str(stat))
@@ -684,9 +667,7 @@ def temporal_statistics(da, stats):
             n3 = zz[:, :, 2]
 
             for i, j in zip([n1, n2, n3], ["n1", "n2", "n3"]):
-                ds[stat + "_" + j] = xr.DataArray(
-                    i, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
-                )
+                ds[stat + "_" + j] = xr.DataArray(i, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim])
 
         else:
             # Select a stats function from the dictionary
@@ -734,12 +715,8 @@ def time_buffer(input_date, buffer="30 days", output_format="%Y-%m-%d"):
         `input_date='2018-01-01'` and `buffer='30 days'`
     """
     # Use assertions to check we have the correct function input
-    assert isinstance(
-        input_date, str
-    ), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
-    assert isinstance(
-        buffer, str
-    ), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
+    assert isinstance(input_date, str), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
+    assert isinstance(buffer, str), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
 
     # Convert inputs to pandas format
     buffer = pd.Timedelta(buffer)
@@ -831,11 +808,7 @@ class LinregressResult:
 
     def __repr__(self):
         return "LinregressResult({})".format(
-            ", ".join(
-                "{}={}".format(k, getattr(self, k))
-                for k in dir(self)
-                if not k.startswith("_")
-            )
+            ", ".join("{}={}".format(k, getattr(self, k)) for k in dir(self) if not k.startswith("_"))
         )
 
 
@@ -1030,9 +1003,7 @@ def xr_regression(
     assert dim in x.dims, f"Array `x` does not contain dimension '{dim}'."
 
     # Assert that both arrays have the same length along "dim"
-    assert len(x[dim]) == len(
-        y[dim]
-    ), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
+    assert len(x[dim]) == len(y[dim]), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
 
     # Apply optional outlier masking to x and y variable
     if outliers_y is not None:
@@ -1089,18 +1060,16 @@ def xr_regression(
         )
 
     # Combine into single dataset
-    regression_ds = xr.merge(
-        [
-            cov.rename("cov").astype(np.float32),
-            cor.rename("cor").astype(np.float32),
-            r2.rename("r2").astype(np.float32),
-            slope.rename("slope").astype(np.float32),
-            intercept.rename("intercept").astype(np.float32),
-            pval.rename("pvalue").astype(np.float32),
-            stderr.rename("stderr").astype(np.float32),
-            n.rename("n").astype(np.int16),
-        ]
-    )
+    regression_ds = xr.merge([
+        cov.rename("cov").astype(np.float32),
+        cor.rename("cor").astype(np.float32),
+        r2.rename("r2").astype(np.float32),
+        slope.rename("slope").astype(np.float32),
+        intercept.rename("intercept").astype(np.float32),
+        pval.rename("pvalue").astype(np.float32),
+        stderr.rename("stderr").astype(np.float32),
+        n.rename("n").astype(np.int16),
+    ])
 
     return regression_ds
 
@@ -1227,10 +1196,7 @@ def xr_optical_flow(da, method="ilk", radius=20, parallel=True, **kwargs):
 
     # Otherwise, run in sequence
     else:
-        flow_results = [
-            _compute_flow(t)
-            for t in tqdm(indices, desc=f"Computing optical flow using {method}")
-        ]
+        flow_results = [_compute_flow(t) for t in tqdm(indices, desc=f"Computing optical flow using {method}")]
 
     # Combine results into xarray.Dataset
     flow_stacked = np.stack(flow_results)
