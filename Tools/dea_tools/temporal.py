@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: May 2024
+Last modified: October 2025
 """
 
 import warnings
@@ -30,6 +30,9 @@ import xarray as xr
 from odc.geo.xr import assign_crs
 from packaging import version
 from scipy.stats import t
+import concurrent.futures
+from tqdm import tqdm
+from skimage.registration import optical_flow_ilk, optical_flow_tvl1
 
 
 def allNaN_arg(da, dim, stat):
@@ -1154,4 +1157,88 @@ def calculate_stsad(vec, window_size=365, step=10, progress=None, window="hann")
         target_dim=window_size,
         progress=progress,
         window=window,
+    )
+
+
+def xr_optical_flow(da, method="ilk", radius=20, parallel=True, **kwargs):
+    """
+    Compute optical flow between consecutive time steps in an xarray DataArray.
+
+    Optical flow is computed for consecutive time pairs (t, t+1) using the
+    iterative Lucas-Kanade (ILK) method from scikit-image. This function
+    parallelises across time steps if requested.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        Input data with dimensions ("time", "y", "x") representing a temporal image sequence.
+    method : {"ilk", "tvl1"}, optional
+        Optical flow algorithm to use:
+        - "ilk": Iterative Lucas–Kanade (default, fast and robust)
+        - "tvl1": Total Variation L1 (more accurate but slower)
+    radius : int, optional
+        If `method="ilk"`, the radius of the window used by the optical flow algorithm.
+        Default is 20.
+    parallel : bool, optional
+        If True, computations are parallelised across time steps using
+        `concurrent.futures.ThreadPoolExecutor()`.
+    **kwargs : dict
+        Additional keyword arguments passed to `skimage.registration.optical_flow_ilk`
+        or `skimage.registration.optical_flow_tvl1`.
+
+    Returns
+    -------
+    xarray.Dataset
+        Dataset containing:
+        - ``v`` : Vertical (y-axis) component of optical flow.
+        - ``u`` : Horizontal (x-axis) component of optical flow.
+        Both have dimensions ("time", "y", "x") and coordinates matching the input.
+
+    """
+
+    # Select optical flow method
+    if method == "ilk":
+        flow_func = lambda a, b: optical_flow_ilk(a, b, radius=radius, **kwargs)
+    elif method == "tvl1":
+        flow_func = lambda a, b: optical_flow_tvl1(a, b, **kwargs)
+    else:
+        raise ValueError(f"Unsupported method '{method}'. Use 'ilk' or 'tvl1'.")
+
+    # Define worker function
+    def _compute_flow(t):
+        return flow_func(da.isel(time=t), da.isel(time=t + 1))
+
+    # Get x and y dim names
+    y_dim, x_dim = da.odc.spatial_dims
+
+    # Indices in the array to iterate over
+    indices = range(len(da.time) - 1)
+
+    # Run in parallel if requested
+    if parallel:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            flow_results = list(
+                tqdm(
+                    executor.map(_compute_flow, indices),
+                    total=len(indices),
+                    desc=f"Computing optical flow in parallel using {method}",
+                )
+            )
+
+    # Otherwise, run in sequence
+    else:
+        flow_results = [
+            _compute_flow(t)
+            for t in tqdm(indices, desc=f"Computing optical flow using {method}")
+        ]
+
+    # Combine results into xarray.Dataset
+    flow_stacked = np.stack(flow_results)
+
+    return xr.Dataset(
+        {
+            "v": (("time", y_dim, x_dim), flow_stacked[:, 0]),
+            "u": (("time", y_dim, x_dim), flow_stacked[:, 1]),
+        },
+        coords={"time": da.time[1:], y_dim: da[y_dim], x_dim: da[x_dim]},
     )
