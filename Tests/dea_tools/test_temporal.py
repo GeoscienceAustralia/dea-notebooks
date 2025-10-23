@@ -4,7 +4,7 @@ from scipy import stats
 import xarray as xr
 import datacube
 from datacube.utils.masking import mask_invalid_data
-from dea_tools.temporal import xr_regression
+from dea_tools.temporal import xr_regression, xr_optical_flow
 
 @pytest.fixture()
 def satellite_ds():
@@ -28,6 +28,21 @@ def satellite_ds():
     ds = mask_invalid_data(ds)
 
     return ds
+
+
+@pytest.fixture()
+def intertidal_da():
+    # Connect to datacube
+    dc = datacube.Datacube()
+
+    # Load available data 
+    return dc.load(
+        product="ga_s2ls_intertidal_cyear_3",
+        measurements=["elevation"],
+        y=(-34.75, -34.76),
+        x=(138.48, 138.51),
+        time=("2020", "2023"),
+    ).elevation    
 
 
 # Run test on different pixels and alternative hypotheses
@@ -182,8 +197,35 @@ def test_nan_mask_preserved(sample_da):
         assert np.isnan(ds[var][1, 2]), f"{var} did not preserve NaN mask"
 
 
+@pytest.mark.parametrize("method,parallel,radius", [
+    ("ilk", False, 20),
+    ("ilk", True, 20),
+    ("ilk", True, 10),
+    ("tvl1", False, 20),
+    ("tvl1", True, 20),
+])
+def test_xr_optical_flow_basic(intertidal_da, method, parallel, radius):
 
+    # Run the optical flow function
+    ds_flow = xr_optical_flow(intertidal_da, method=method, parallel=parallel, radius=radius)
 
+    # Check output type
+    assert isinstance(ds_flow, xr.Dataset)
 
+    # Check keys
+    assert "v" in ds_flow and "u" in ds_flow
 
+    # Check shapes
+    nt = len(intertidal_da.time)
+    ny, nx = intertidal_da.shape[1:]
+    assert ds_flow.v.shape == (nt - 1, ny, nx)
+    assert ds_flow.u.shape == (nt - 1, ny, nx)
 
+    # Check coordinates
+    np.testing.assert_array_equal(ds_flow.time.values, intertidal_da.time[1:].values)
+    np.testing.assert_array_equal(ds_flow.y.values, intertidal_da.y.values)
+    np.testing.assert_array_equal(ds_flow.x.values, intertidal_da.x.values)
+
+    # Check geobox
+    assert ds_flow.odc.geobox == intertidal_da.odc.geobox
+    
