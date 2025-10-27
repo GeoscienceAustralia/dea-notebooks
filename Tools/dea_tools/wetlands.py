@@ -414,7 +414,6 @@ def WIT_drill(
     ds_ls = load_ard(
         dc,
         products=["ga_ls9c_ard_3", "ga_ls8c_ard_3", "ga_ls7e_ard_3", "ga_ls5t_ard_3"],
-        # products=["ga_ls8c_ard_3", "ga_ls7e_ard_3", "ga_ls5t_ard_3"],
         ls7_slc_off=False,
         measurements=bands,
         geopolygon=gpgon,
