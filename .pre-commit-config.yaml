@@ -1,0 +1,12 @@
+ci:
+  skip: [check-duplicate-ipynb] 
+
+repos:
+  - repo: local
+    hooks:
+      - id: check-duplicate-ipynb
+        name: Check for duplicate .ipynb filenames
+        entry: bash .githooks/check_duplicate_ipynb.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

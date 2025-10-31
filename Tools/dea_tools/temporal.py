@@ -1,5 +1,5 @@
 ## dea_temporal.py
-'''
+"""
 Conducting temporal (time-domain) analyses on Digital Earth Australia.
 
 License: The code in this notebook is licensed under the Apache License,
@@ -8,27 +8,29 @@ Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
 
 Contact: If you need assistance, please post a question on the Open Data
-Cube Slack channel (http://slack.opendatacube.org/) or on the GIS Stack
+Cube Discord chat (https://discord.com/invite/4hhBQVas5U) or on the GIS Stack
 Exchange (https://gis.stackexchange.com/questions/ask?tags=open-data-cube)
 using the `open-data-cube` tag (you can view previously asked questions
 here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
 If you would like to report an issue with this script, file one on
-Github: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
-    
-Last modified: February 2023
-'''
+GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-import sys
+Last modified: May 2024
+"""
+
+import warnings
+
 import dask
+import dask.array as da
 import numpy as np
-import xarray as xr
 import pandas as pd
-import hdstats
 import scipy.signal
-from scipy.signal import wiener
+import xarray as xr
+from odc.geo.xr import assign_crs
 from packaging import version
-from datacube.utils.geometry import assign_crs
+from scipy.stats import t
+
 
 def allNaN_arg(da, dim, stat):
     """
@@ -42,7 +44,7 @@ def allNaN_arg(da, dim, stat):
     dim : str
         Dimension over which to calculate argmax, argmin e.g. 'time'
     stat : str
-        The statistic to calculte, either 'min' for argmin()
+        The statistic to calculate, either 'min' for argmin()
         or 'max' for .argmax()
 
     Returns
@@ -55,12 +57,12 @@ def allNaN_arg(da, dim, stat):
     if stat == "max":
         y = da.fillna(float(da.min() - 1))
         y = y.argmax(dim=dim, skipna=True).where(~mask)
-        return y
 
     if stat == "min":
         y = da.fillna(float(da.max() + 1))
         y = y.argmin(dim=dim, skipna=True).where(~mask)
-        return y
+
+    return y
 
 
 def _vpos(da):
@@ -185,7 +187,7 @@ def _los(da, eos, sos):
     LOS = Length of season (in DOY)
     """
     los = eos - sos
-    #handle negative values
+    # handle negative values
     los = xr.where(
         los >= 0,
         los,
@@ -226,7 +228,7 @@ def xr_phenology(
     ],
     method_sos="first",
     method_eos="last",
-    verbose=True
+    verbose=True,
 ):
     """
     Obtain land surface phenology metrics from an
@@ -280,8 +282,7 @@ def xr_phenology(
     if dask.is_dask_collection(da):
         if version.parse(xr.__version__) < version.parse("0.16.0"):
             raise TypeError(
-                "Dask arrays are not currently supported by this function, "
-                + "run da.compute() before passing dataArray."
+                "Dask arrays are not currently supported by this function, run da.compute() before passing dataArray."
             )
         stats_dtype = {
             "SOS": np.int16,
@@ -308,16 +309,16 @@ def xr_phenology(
 
         lazy_phenology = da_all_time.map_blocks(
             xr_phenology,
-            kwargs=dict(
-                stats=stats,
-                method_sos=method_sos,
-                method_eos=method_eos,
-            ),
+            kwargs={
+                "stats": stats,
+                "method_sos": method_sos,
+                "method_eos": method_eos,
+            },
             template=xr.Dataset(template),
         )
 
         try:
-            crs = da.geobox.crs
+            crs = da.odc.geobox.crs
             lazy_phenology = assign_crs(lazy_phenology, str(crs))
         except:
             pass
@@ -391,51 +392,179 @@ def xr_phenology(
     return ds.drop("time")
 
 
+# ---------------------------------------------------
+# Series of statistical functions referenced
+# by 'temporal_statistics'.
+# Note these were copied out of the hdstats library.
+# ---------------------------------------------------
+def discordance(x, n=10):
+    """
+    Measure of local signal discordance by
+    removing low-frequency components from the input time series and
+    comparing each signal to a shared baseline.
+    """
+    X = x.copy()
+
+    mX = np.mean(X, axis=(0, 1))
+    Y = np.fft.fft(mX)
+    np.put(Y, range(n, mX.shape[0]), 0.0)
+    mX = np.abs(np.fft.ifft(Y)).astype(np.float32)
+
+    for i in range(X.shape[0]):
+        for j in range(X.shape[1]):
+            Y = np.fft.fft(X[i, j, :])
+            np.put(Y, range(n, mX.shape[0]), 0.0)
+            X[i, j, :] = np.real(np.fft.ifft(Y))
+
+    X -= mX[np.newaxis, np.newaxis, :]
+
+    return np.mean(X, axis=2)
+
+
+def fourier_mean(x, n=3, step=5):
+    """
+    Mean of the discrete Fourier transform coefficients
+    """
+    result = np.empty((x.shape[0], x.shape[1], n), dtype=np.float32)
+
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            y = np.fft.fft(x[i, j, :])
+            for k in range(n):
+                result[i, j, k] = np.mean(
+                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
+                )
+
+    return result
+
+
+def fourier_std(x, n=3, step=5):
+    """
+    Standard deviation of the discrete Fourier transform coefficients.
+    """
+    result = np.empty((x.shape[0], x.shape[1], n), dtype=np.float32)
+
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            y = np.fft.fft(x[i, j, :])
+            for k in range(n):
+                result[i, j, k] = np.std(
+                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
+                )
+
+    return result
+
+
+def fourier_median(x, n=3, step=5):
+    """
+    Median of the discrete Fourier transform coefficients
+    """
+    result = np.empty((x.shape[0], x.shape[1], n), dtype=np.float32)
+
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            y = np.fft.fft(x[i, j, :])
+            for k in range(n):
+                result[i, j, k] = np.median(
+                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
+                )
+
+    return result
+
+
+def mean_change(x):
+    """
+    Mean of the first-order discrete difference along the time dimension
+    """
+    return np.mean(np.diff(x), axis=-1)
+
+
+def median_change(x):
+    """
+    Median of the first-order discrete difference along the time dimension
+    """
+    return np.median(np.diff(x), axis=-1)
+
+
+def mean_abs_change(x):
+    """
+    Mean of the absolute first-order discrete difference along the time dimension
+    """
+    return np.mean(np.abs(np.diff(x)), axis=-1)
+
+
+def mean_central_diff(x):
+    """
+    Mean second-order central difference,
+    approximating signal curvature or acceleration
+    """
+    diff = (np.roll(x, 1, axis=2) - 2 * x + np.roll(x, -1, axis=2)) / 2.0
+    return np.mean(diff[:, :, 1:-1], axis=2)
+
+
+def complexity(x, normalize=True):
+    """
+    Estimates temporal complexity by computing the first-order
+    difference across time.
+    """
+    if normalize:
+        s = np.std(x, axis=2)
+        x = (x - np.mean(x, axis=2)[:, :, np.newaxis]) / s[:, :, np.newaxis]
+
+    z = np.diff(x)
+
+    return np.einsum("ijk,ijk->ij", z, z)
+
+
+# ------------------------------------------------
+
+
 def temporal_statistics(da, stats):
     """
-    Calculate various generic summary statistics on any timeseries.
+    Calculate various generic summary statistics on any time series.
 
-    This function uses the hdstats temporal library:
+    This function computes a range of temporal statistics over a 3D time series.
+    Many of the statistical methods are adapted from the `hdstats` package:
     https://github.com/daleroberts/hdstats/blob/master/hdstats/ts.pyx
 
-    Last modified June 2020
+    Last modified: October 2025
 
     Parameters
     ----------
-    da :  xarray.DataArray
-        DataArray should contain a 3D time series.
-    stats : list
-        List of temporal statistics to calculate. Options include:
+    da : xarray.DataArray
+        A 3D DataArray representing the time series
+    stats : list of str
+        List of temporal statistics to compute. Available options include:
 
-        * ``'discordance'``: TODO
-        * ``'f_std'``: std of discrete fourier transform coefficients, returns 
-        three layers: f_std_n1, f_std_n2, f_std_n3
-        * ``'f_mean'``: mean of discrete fourier transform coefficients, returns 
-        three layers: f_mean_n1, f_mean_n2, f_mean_n3
-        * ``'f_median'``: median of discrete fourier transform coefficients, returns 
-        three layers: f_median_n1, f_median_n2, f_median_n3
-        * ``'mean_change'``: mean of discrete difference along time dimension
-        * ``'median_change'``: median of discrete difference along time dimension
-        * ``'abs_change'``: mean of absolute discrete difference along time dimension
-        * ``'complexity'``: TODO
-        * ``'central_diff'``: TODO
-        * ``'num_peaks'``: The number of peaks in the timeseries, defined with a local
-            window of size 10.  NOTE: This statistic is very slow
+        * ``'discordance'``: Computes a measure of local signal discordance by
+          removing low-frequency components from the input time series and
+          comparing each signal to a shared baseline.
+        * ``'f_std'``: Standard deviation of the discrete Fourier transform coefficients.
+          Returns three layers: ``f_std_n1``, ``f_std_n2``, ``f_std_n3``.
+        * ``'f_mean'``: Mean of the discrete Fourier transform coefficients.
+          Returns three layers: ``f_mean_n1``, ``f_mean_n2``, ``f_mean_n3``.
+        * ``'f_median'``: Median of the discrete Fourier transform coefficients.
+          Returns three layers: ``f_median_n1``, ``f_median_n2``, ``f_median_n3``.
+        * ``'mean_change'``: Mean of the first-order discrete difference along the time dimension.
+        * ``'median_change'``: Median of the first-order discrete difference along the time dimension.
+        * ``'abs_change'``: Mean of the absolute first-order discrete difference along the time dimension.
+        * ``'complexity'``: Estimates temporal complexity by computing the first-order
+          difference across time. Optionally normalizes each signal beforehand.
+        * ``'central_diff'``: Computes the mean second-order central difference,
+          approximating signal curvature or acceleration.
 
     Returns
     -------
     xarray.Dataset
-        Dataset containing variables for the selected
-        temporal statistics
-
+        A dataset containing one or more computed temporal statistics as variables.
     """
 
-    # if dask arrays then map the blocks
+    # If dask arrays then map the blocks
     if dask.is_dask_collection(da):
         if version.parse(xr.__version__) < version.parse("0.16.0"):
             raise TypeError(
                 "Dask arrays are only supported by this function if using, "
-                + "xarray v0.16, run da.compute() before passing dataArray."
+                "xarray v0.16, run da.compute() before passing dataArray."
             )
 
         # create a template that matches the final datasets dims & vars
@@ -478,7 +607,7 @@ def temporal_statistics(da, stats):
         )
 
         try:
-            crs = da.geobox.crs
+            crs = da.odc.geobox.crs
             lazy_ds = assign_crs(lazy_ds, str(crs))
         except:
             pass
@@ -489,33 +618,31 @@ def temporal_statistics(da, stats):
     stats = stats if isinstance(stats, list) else [stats]
 
     # grab all the attributes of the xarray
-    x, y, time, attrs = da.x, da.y, da.time, da.attrs
+    y_dim, x_dim = da.odc.spatial_dims
+    x, y, time, attrs = da[x_dim], da[y_dim], da.time, da.attrs
 
     # deal with any all-NaN pixels by filling with 0's
     mask = da.isnull().all("time")
     da = da.where(~mask, other=0)
 
     # ensure dim order is correct for functions
-    da = da.transpose("y", "x", "time").values
+    da = da.transpose(y_dim, x_dim, "time").values
 
     stats_dict = {
-        "discordance": lambda da: hdstats.discordance(da, n=10),
-        "f_std": lambda da: hdstats.fourier_std(da, n=3, step=5),
-        "f_mean": lambda da: hdstats.fourier_mean(da, n=3, step=5),
-        "f_median": lambda da: hdstats.fourier_median(da, n=3, step=5),
-        "mean_change": lambda da: hdstats.mean_change(da),
-        "median_change": lambda da: hdstats.median_change(da),
-        "abs_change": lambda da: hdstats.mean_abs_change(da),
-        "complexity": lambda da: hdstats.complexity(da),
-        "central_diff": lambda da: hdstats.mean_central_diff(da),
-        "num_peaks": lambda da: hdstats.number_peaks(da, 10),
+        "discordance": lambda da: discordance(da, n=10),
+        "f_std": lambda da: fourier_std(da, n=3, step=5),
+        "f_mean": lambda da: fourier_mean(da, n=3, step=5),
+        "f_median": lambda da: fourier_median(da, n=3, step=5),
+        "mean_change": lambda da: mean_change(da),
+        "median_change": lambda da: median_change(da),
+        "abs_change": lambda da: mean_abs_change(da),
+        "complexity": lambda da: complexity(da),
+        "central_diff": lambda da: mean_central_diff(da),
     }
 
-    print("   Statistics:")
     # if one of the fourier functions is first (or only)
     # stat in the list then we need to deal with this
     if stats[0] in ("f_std", "f_median", "f_mean"):
-        print("      " + stats[0])
         stat_func = stats_dict.get(str(stats[0]))
         zz = stat_func(da)
         n1 = zz[:, :, 0]
@@ -524,7 +651,7 @@ def temporal_statistics(da, stats):
 
         # intialise dataset with first statistic
         ds = xr.DataArray(
-            n1, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
+            n1, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
         ).to_dataset(name=stats[0] + "_n1")
 
         # add other datasets
@@ -535,17 +662,15 @@ def temporal_statistics(da, stats):
     else:
         # simpler if first function isn't fourier transform
         first_func = stats_dict.get(str(stats[0]))
-        print("      " + stats[0])
         ds = first_func(da)
 
         # convert back to xarray dataset
         ds = xr.DataArray(
-            ds, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
+            ds, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
         ).to_dataset(name=stats[0])
 
     # loop through the other functions
     for stat in stats[1:]:
-        print("      " + stat)
 
         # handle the fourier transform examples
         if stat in ("f_std", "f_median", "f_mean"):
@@ -557,7 +682,7 @@ def temporal_statistics(da, stats):
 
             for i, j in zip([n1, n2, n3], ["n1", "n2", "n3"]):
                 ds[stat + "_" + j] = xr.DataArray(
-                    i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
+                    i, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
                 )
 
         else:
@@ -565,23 +690,25 @@ def temporal_statistics(da, stats):
             # and add to the dataset
             stat_func = stats_dict.get(str(stat))
             ds[stat] = xr.DataArray(
-                stat_func(da), attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
+                stat_func(da),
+                attrs=attrs,
+                coords={x_dim: x, y_dim: y},
+                dims=[y_dim, x_dim],
             )
 
     # try to add back the geobox
     try:
-        crs = da.geobox.crs
+        crs = da.odc.geobox.crs
         ds = assign_crs(ds, str(crs))
     except:
         pass
 
-    return ds
+    return ds.where(~mask)  # remask with all-nulls
 
 
-def time_buffer(input_date, buffer='30 days', output_format='%Y-%m-%d'):
-
+def time_buffer(input_date, buffer="30 days", output_format="%Y-%m-%d"):
     """
-    Create a buffer of a given duration (e.g. days) around a time query. 
+    Create a buffer of a given duration (e.g. days) around a time query.
     Output is a string in the correct format for a datacube query.
 
     Parameters
@@ -589,36 +716,40 @@ def time_buffer(input_date, buffer='30 days', output_format='%Y-%m-%d'):
     input_date : str, yyyy-mm-dd
         Time to buffer
     buffer : str, optional
-        Default is '30 days', can be any string supported by the 
-        `pandas.Timedelta` function 
+        Default is '30 days', can be any string supported by the
+        `pandas.Timedelta` function
     output_format : str, optional
         Optional string giving the `strftime` format used to convert
-        buffered times to strings; defaults to '%Y-%m-%d' 
+        buffered times to strings; defaults to '%Y-%m-%d'
         (e.g. '2017-12-02')
-            
+
     Returns
     -------
     early_buffer, late_buffer : str
         A tuple of strings to pass to the datacube query function
-        e.g. `('2017-12-02', '2018-01-31')` for input 
-        `input_date='2018-01-01'` and `buffer='30 days'`  
+        e.g. `('2017-12-02', '2018-01-31')` for input
+        `input_date='2018-01-01'` and `buffer='30 days'`
     """
     # Use assertions to check we have the correct function input
-    assert isinstance(input_date, str), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
-    assert isinstance(buffer, str), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
-    
+    assert isinstance(
+        input_date, str
+    ), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
+    assert isinstance(
+        buffer, str
+    ), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
+
     # Convert inputs to pandas format
     buffer = pd.Timedelta(buffer)
     input_date = pd.to_datetime(input_date)
-    
+
     # Apply buffer
     early_buffer = input_date - buffer
     late_buffer = input_date + buffer
-    
+
     # Convert back to string using strftime
     early_buffer = early_buffer.strftime(output_format)
     late_buffer = late_buffer.strftime(output_format)
-    
+
     return early_buffer, late_buffer
 
 
@@ -632,7 +763,7 @@ def calculate_vector_stat(
     window="hann",
 ):
     """Calculates a vector statistic over a rolling window.
-    
+
     Parameters
     ----------
     vec : d-dimensional np.ndarray
@@ -652,7 +783,7 @@ def calculate_vector_stat(
         also want to use 'boxcar'. Any scipy window
         function is allowed (see documentation for scipy.signal.get_window
         for more information).
-        
+
     Returns
     -------
     (d / step)-dimensional np.ndarray
@@ -694,11 +825,14 @@ class LinregressResult:
         self.intercept = intercept
         self.pval = pval
         self.stderr = stderr
-    
+
     def __repr__(self):
-        return 'LinregressResult({})'.format(
-            ', '.join('{}={}'.format(k, getattr(self, k))
-                      for k in dir(self) if not k.startswith('_'))
+        return "LinregressResult({})".format(
+            ", ".join(
+                "{}={}".format(k, getattr(self, k))
+                for k in dir(self)
+                if not k.startswith("_")
+            )
         )
 
 
@@ -710,6 +844,9 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
 
     Datasets can be provided in any order, but note that the regression slope and intercept will be calculated
     for y with respect to x.
+
+    NOTE: This function is deprecated and will be retired in a future
+    release. Please use `xr_regression` instead."
 
     Parameters
     ----------
@@ -729,12 +866,17 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
         regression between the two datasets along their aligned first dimension.
 
     """
+    warnings.warn(
+        "This function is deprecated and will be retired in a future release. Please use `xr_regression` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
     # 1. Ensure that the data are properly alinged to each other.
     x, y = xr.align(x, y)
 
     # 2. Add lag information if any, and shift the data accordingly
     if lagx != 0:
-
         # If x lags y by 1, x must be shifted 1 step backwards. But as the 'zero-th' value is nonexistant, xr
         # assigns it as invalid (nan). Hence it needs to be dropped:
         x = x.shift(**{first_dim: -lagx}).dropna(dim=first_dim)
@@ -743,7 +885,6 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
         x, y = xr.align(x, y)
 
     if lagy != 0:
-
         y = y.shift(**{first_dim: -lagy}).dropna(dim=first_dim)
         x, y = xr.align(x, y)
 
@@ -761,12 +902,12 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
     cor = cov / (xstd * ystd)
 
     # 6. Compute regression slope and intercept:
-    slope = cov / (xstd ** 2)
+    slope = cov / (xstd**2)
     intercept = ymean - xmean * slope
 
     # 7. Compute P-value and standard error
     # Compute t-statistics
-    tstats = cor * np.sqrt(n - 2) / np.sqrt(1 - cor ** 2)
+    tstats = cor * np.sqrt(n - 2) / np.sqrt(1 - cor**2)
     stderr = slope / tstats
 
     from scipy.stats import t
@@ -777,14 +918,198 @@ def lag_linregress_3D(x, y, lagx=0, lagy=0, first_dim="time"):
     return LinregressResult(cov, cor, slope, intercept, pval, stderr)
 
 
+def mad_outliers(da, dim="time", threshold=3.5):
+    """
+    Identify outliers along an xarray dimension using Median Absolute
+    Deviation (MAD).
+
+    Parameters
+    ----------
+    da : xarray.DataArray)
+        The input data array with dimensions time, x, y.
+    dim : str, optional
+        An optional string giving the name of the dimension on which to
+        apply the MAD calculation. The default is 'time'.
+    threshold : float)
+        The number of MADs away from the median to consider an
+        observation an outlier.
+
+    Returns
+    -------
+    xarray.DataArray:
+        A boolean array with the same dimensions as input data, where
+        True indicates an outlier.
+    """
+    # Calculate the median along the time dimension
+    median = da.median(dim=dim)
+
+    # Calculate the absolute deviations from the median
+    abs_deviation = np.abs(da - median)
+
+    # Calculate MAD (median of absolute deviations)
+    mad = abs_deviation.median(dim=dim)
+
+    # Deviations greater than (threshold * MAD) are considered outliers
+    return abs_deviation > (threshold * mad)
+
+
+def xr_regression(
+    x,
+    y,
+    dim="time",
+    alternative="two-sided",
+    outliers_x=None,
+    outliers_y=None,
+):
+    """
+    Compare two multi-dimensional ``xr.Datarrays`` and calculate linear
+    least-squares regression along a dimension, returning slope,
+    intercept, p-value, standard error, covariance, correlation, and
+    valid observation counts (n).
+
+    Input arrays can have any number of dimensions, for example: a
+    one-dimensional time series (dims: time), or three-dimensional data
+    (dims: time, lat, lon). Regressions will be calculated for y with
+    respect to x.
+
+    Results should be equivelent to one-dimensional regression performed
+    using `scipy.stats.linregress`. Implementation inspired by:
+    https://hrishichandanpurkar.blogspot.com/2017/09/vectorized-functions-for-correlation.html
+
+    Parameters
+    ----------
+    x, y : xarray DataArray
+        Two xarray.DataArrays with any number of dimensions. Both arrays
+        should have the same length along the `dim` dimension. Regression
+        slope and intercept will be calculated for y with respect to x.
+    dim : str, optional
+        An optional string giving the name of the dimension along which
+        to compare datasets. The default is 'time'.
+    alternative : string, optional
+        Defines the alternative hypothesis. Default is 'two-sided'.
+        The following options are available:
+        * 'two-sided': slope of the regression line is nonzero
+        * 'less': slope of the regression line is less than zero
+        * 'greater':  slope of the regression line is greater than zero
+    outliers_x, outliers_y : bool or float, optional
+        Whether to mask out outliers in each input array prior to
+        regression calculation using MAD outlier detection. If True,
+        use a default threshold of 3.5 MAD to identify outliers. Custom
+        thresholds can be provided as a float.
+
+    Returns
+    -------
+    regression_ds : xarray.Dataset
+        A dataset comparing the two input datasets along their aligned
+        dimension, containing variables including covariance, correlation,
+        coefficient of determination, regression slope, intercept,
+        p-value and standard error, and number of valid observations (n).
+
+    """
+
+    def _pvalue(tstats, n, alternative):
+        """
+        Function for calculating p-values.
+        Can be made lazy by wrapping in `dask.delayed` to
+        avoid dask computation occuring too early.
+        """
+        if alternative == "two-sided":
+            pval = t.sf(np.abs(tstats), n - 2) * 2
+        elif alternative == "greater":
+            pval = t.sf(tstats, n - 2)
+        elif alternative == "less":
+            pval = t.cdf(np.abs(tstats), n - 2)
+
+        return pval
+
+    # Assert that "dim" is in both datasets
+    assert dim in y.dims, f"Array `y` does not contain dimension '{dim}'."
+    assert dim in x.dims, f"Array `x` does not contain dimension '{dim}'."
+
+    # Assert that both arrays have the same length along "dim"
+    assert len(x[dim]) == len(
+        y[dim]
+    ), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
+
+    # Apply optional outlier masking to x and y variable
+    if outliers_y is not None:
+        mad_thresh_y = 3.5 if outliers_y is True else outliers_y
+        y_outliers = mad_outliers(y, dim=dim, threshold=mad_thresh_y)
+        y = y.where(~y_outliers)
+
+    if outliers_x is not None:
+        mad_thresh_x = 3.5 if outliers_x is True else outliers_x
+        x_outliers = mad_outliers(x, dim=dim, threshold=mad_thresh_x)
+        x = x.where(~x_outliers)
+
+    # Compute data length, mean and standard deviation along dim
+    n = y.notnull().sum(dim=dim)
+    xmean = x.mean(dim=dim)
+    ymean = y.mean(dim=dim)
+    xstd = x.std(dim=dim)
+    ystd = y.std(dim=dim)
+
+    # Compute covariance, correlation and coefficient of determination
+    cov = ((x - xmean) * (y - ymean)).sum(dim=dim) / (n)
+    cor = cov / (xstd * ystd)
+    r2 = cor**2
+
+    # Compute regression slope and intercept
+    slope = cov / (xstd**2)
+    intercept = ymean - xmean * slope
+
+    # Compute t-statistics and standard error
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        tstats = cor * np.sqrt(n - 2) / np.sqrt(1 - cor**2)
+    stderr = slope / tstats
+
+    # Calculate p-values for different alternative hypotheses.
+    # If data is dask, then delay computation of p-value
+    if dask.is_dask_collection(cor):
+        _pvalue_lazy = dask.delayed(_pvalue)
+        pval = xr.DataArray(
+            da.from_delayed(
+                _pvalue_lazy(tstats, n, alternative),
+                shape=cor.shape,
+                dtype=cor.dtype,
+            ),
+            dims=cor.dims,
+            coords=cor.coords,
+        ).chunk(cor.chunksizes)
+
+    else:
+        pval = xr.DataArray(
+            _pvalue(tstats, n, alternative),
+            dims=cor.dims,
+            coords=cor.coords,
+        )
+
+    # Combine into single dataset
+    regression_ds = xr.merge(
+        [
+            cov.rename("cov").astype(np.float32),
+            cor.rename("cor").astype(np.float32),
+            r2.rename("r2").astype(np.float32),
+            slope.rename("slope").astype(np.float32),
+            intercept.rename("intercept").astype(np.float32),
+            pval.rename("pvalue").astype(np.float32),
+            stderr.rename("stderr").astype(np.float32),
+            n.rename("n").astype(np.int16),
+        ]
+    )
+
+    return regression_ds
+
+
 def calculate_sad(vec):
     """Calculates the surface area duration curve for a given vector of heights.
-    
+
     Parameters
     ----------
     vec : d-dimensional np.ndarray
         Vector of heights over time.
-    
+
     Returns
     -------
     d-dimensional np.ndarray
@@ -795,7 +1120,7 @@ def calculate_sad(vec):
 
 def calculate_stsad(vec, window_size=365, step=10, progress=None, window="hann"):
     """Calculates the short-time surface area duration curve for a given vector of heights.
-    
+
     Parameters
     ----------
     vec : d-dimensional np.ndarray
@@ -811,7 +1136,7 @@ def calculate_stsad(vec, window_size=365, step=10, progress=None, window="hann")
         also want to use 'boxcar'. Any scipy window
         function is allowed (see documentation for scipy.signal.get_window
         for more information).
-    
+
     Returns
     -------
     (d / step)-dimensional np.ndarray
@@ -830,4 +1155,3 @@ def calculate_stsad(vec, window_size=365, step=10, progress=None, window="hann")
         progress=progress,
         window=window,
     )
-
