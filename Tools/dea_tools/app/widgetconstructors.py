@@ -1,69 +1,60 @@
-'''
-Functions for defining widgets for interactive Digital Earth Australia notebooks. 
+"""
+Functions for defining widgets for interactive Digital Earth Australia notebooks.
 
-These functions are directly modified from 
-originals developed by Digital Earth Africa: 
+These functions are directly modified from
+originals developed by Digital Earth Africa:
 https://github.com/digitalearthafrica/deafrica-sandbox-notebooks/blob/main/Tools/deafrica_tools/app/widgetconstructors.py
 
-License: The code in this notebook is licensed under the Apache License, 
-Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth 
-Australia data is licensed under the Creative Commons by Attribution 4.0 
+License: The code in this notebook is licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0). Digital Earth
+Australia data is licensed under the Creative Commons by Attribution 4.0
 license (https://creativecommons.org/licenses/by/4.0/).
 
-Contact: If you need assistance, post a question on the Open Data Cube 
-Slack channel (http://slack.opendatacube.org/) or the GIS Stack Exchange 
-(https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using 
-the `open-data-cube` tag (you can view previously asked questions here: 
-https://gis.stackexchange.com/questions/tagged/open-data-cube). 
+Contact: If you need assistance, post a question on the Open Data Cube
+Discord chat (https://discord.com/invite/4hhBQVas5U) or the GIS Stack Exchange
+(https://gis.stackexchange.com/questions/ask?tags=open-data-cube) using
+the `open-data-cube` tag (you can view previously asked questions here:
+https://gis.stackexchange.com/questions/tagged/open-data-cube).
 
-If you would like to report an issue with this script, you can file one 
-on Github (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
+If you would like to report an issue with this script, you can file one
+on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
 Last modified: June 2022
-'''
+"""
 
 import ipyleaflet as leaflet
-from ipyleaflet import LayersControl
 import ipywidgets as widgets
 from traitlets import Unicode
 
 
-def create_datepicker(description='', value=None, layout={'width': '85%'}):
-    '''
+def create_datepicker(description="", value=None, layout={"width": "85%"}):
+    """
     Create a DatePicker widget
-    
+
     Last modified: October 2021
-    
+
     Parameters
     ----------
     description : string
         descirption label to attach
     layout : dictionary
         any layout commands for the widget
-        
+
     Returns
     -------
     date_picker : ipywidgets.widgets.widget_date.DatePicker
-        
-    '''
 
-    date_picker = widgets.DatePicker(description=description,
-                                     layout=layout,
-                                     disabled=False,
-                                     value=value)
+    """
 
-    return date_picker
+    return widgets.DatePicker(description=description, layout=layout, disabled=False, value=value)
 
 
-def create_inputtext(value,
-                     placeholder,
-                     description="",
-                     layout={'width': '85%'}):
-    '''
+def create_inputtext(value, placeholder, description="", layout={"width": "85%"}):
+    """
     Create a Text widget
-    
+
     Last modified: October 2021
-    
+
     Parameters
     ----------
     value : string
@@ -74,33 +65,22 @@ def create_inputtext(value,
         descirption label to attach
     layout : dictionary
         any layout commands for the widget
-        
+
     Returns
     -------
     input_text : ipywidgets.widgets.widget_string.Text
-        
-    '''
 
-    input_text = widgets.Text(value=value,
-                              placeholder=placeholder,
-                              description=description,
-                              layout=layout,
-                              disabled=False)
+    """
 
-    return input_text
+    return widgets.Text(value=value, placeholder=placeholder, description=description, layout=layout, disabled=False)
 
 
-def create_boundedfloattext(value,
-                            min_val,
-                            max_val,
-                            step_val,
-                            description="",
-                            layout={'width': '85%'}):
-    '''
+def create_boundedfloattext(value, min_val, max_val, step_val, description="", layout={"width": "85%"}):
+    """
     Create a BoundedFloatText widget
-    
+
     Last modified: October 2021
-    
+
     Parameters
     ----------
     value : float
@@ -115,14 +95,14 @@ def create_boundedfloattext(value,
         descirption label to attach
     layout : dictionary
         any layout commands for the widget
-        
+
     Returns
     -------
     float_text : ipywidgets.widgets.widget_float.BoundedFloatText
-        
-    '''
 
-    float_text = widgets.BoundedFloatText(
+    """
+
+    return widgets.BoundedFloatText(
         value=value,
         min=min_val,
         max=max_val,
@@ -132,15 +112,13 @@ def create_boundedfloattext(value,
         disabled=False,
     )
 
-    return float_text
 
-
-def create_dropdown(options, value, description="", layout={'width': '85%'}):
-    '''
+def create_dropdown(options, value, description="", layout={"width": "85%"}):
+    """
     Create a Dropdown widget
-    
+
     Last modified: October 2021
-    
+
     Parameters
     ----------
     options : list
@@ -151,14 +129,14 @@ def create_dropdown(options, value, description="", layout={'width': '85%'}):
         descirption label to attach
     layout : dictionary
         any layout commands for the widget
-        
+
     Returns
     -------
     dropdown : ipywidgets.widgets.widget_selection.Dropdown
-        
-    '''
 
-    dropdown = widgets.Dropdown(
+    """
+
+    return widgets.Dropdown(
         options=options,
         value=value,
         description=description,
@@ -166,15 +144,13 @@ def create_dropdown(options, value, description="", layout={'width': '85%'}):
         disabled=False,
     )
 
-    return dropdown
 
-
-def create_checkbox(value, description="", layout={'width': '85%'}):
-    '''
+def create_checkbox(value, description="", layout={"width": "85%"}):
+    """
     Create a Checkbox widget
-    
+
     Last modified: January 2022
-    
+
     Parameters
     ----------
     value : string
@@ -183,54 +159,50 @@ def create_checkbox(value, description="", layout={'width': '85%'}):
         description label to attach
     layout : dictionary
         any layout commands for the widget
-        
+
     Returns
     -------
     dropdown : ipywidgets.widgets.widget_selection.Dropdown
-        
-    '''
 
-    checklist = widgets.Checkbox(value=value,
-                                 description=description,
-                                 layout=layout,
-                                 disabled=False,
-                                 indent=False)
+    """
 
-    return checklist
+    return widgets.Checkbox(value=value, description=description, layout=layout, disabled=False, indent=False)
 
 
 def create_html(value):
-    '''
+    """
     Create a HTML widget
-    
+
     Last modified: October 2021
-    
+
     Parameters
     ----------
     value : string
         HTML text to display
-        
+
     Returns
     -------
     html : ipywidgets.widgets.widget_string.HTML
-        
-    '''
 
-    html = widgets.HTML(value=value,)
+    """
 
-    return html
+    return widgets.HTML(
+        value=value,
+    )
 
 
-def create_map(map_center=(-28, 135),
-               zoom_level=4,
-               basemap=leaflet.basemaps.OpenStreetMap.Mapnik,
-               basemap_name='Open Street Map',
-               **kwargs):
-    '''
+def create_map(
+    map_center=(-28, 135),
+    zoom_level=4,
+    basemap=leaflet.basemaps.OpenStreetMap.Mapnik,
+    basemap_name="Open Street Map",
+    **kwargs,
+):
+    """
     Create an interactive ipyleaflet map
-    
+
     Last modified: October 2021
-    
+
     Parameters
     ----------
     map_center : tuple
@@ -244,67 +216,57 @@ def create_map(map_center=(-28, 135),
         Defaults to Open Street Map (basemaps.OpenStreetMap.Mapnik)
     basemap_name : string
         Layer name for the basemap
-        
+
     Returns
     -------
     m : ipyleaflet.leaflet.Map
         interactive ipyleaflet map
-        
-    '''
+
+    """
 
     basemap_tiles = leaflet.basemap_to_tiles(basemap)
     basemap_tiles.name = basemap_name
 
-    m = leaflet.Map(center=map_center,
-                    zoom=zoom_level,
-                    basemap=basemap_tiles,
-                    scroll_wheel_zoom=True,
-                    **kwargs)
-
-    return m
+    return leaflet.Map(center=map_center, zoom=zoom_level, basemap=basemap_tiles, scroll_wheel_zoom=True, **kwargs)
 
 
 def create_dea_wms_layer(product, date, **params):
-    '''
+    """
     Create a Digital Earth Australia WMS layer to add to a map
-    
+
     Last modified: October 2021
-    
+
     Parameters
     ----------
     product : string
         The Digital Earth Australia product to load
-        (e.g. 'ga_ls8c_nbart_gm_cyear_3')
+        (e.g. 'ga_ls8cls9c_gm_cyear_3')
     date : string (yyyy-mm-dd format)
         The date to load the product for
-        
+
     Returns
     -------
     time_wms : ipyleaflet WMS layer
-        
-    '''
+
+    """
 
     # Load DEA WMS
     class TimeWMSLayer(leaflet.WMSLayer):
         time = Unicode("").tag(sync=True, o=True)
 
-    time_wms = TimeWMSLayer(
+    return TimeWMSLayer(
         url="https://ows.dea.ga.gov.au/",
         layers=product,
         time=date,
         format="image/png",
         transparent=True,
         attribution="Digital Earth Australia",
-        **params
+        **params,
     )
-
-    return time_wms
 
 
 def create_drawcontrol(
-    draw_controls=[
-        'rectangle', 'polygon', 'circle', 'polyline', 'marker', 'circlemarker'
-    ],
+    draw_controls=["rectangle", "polygon", "circle", "polyline", "marker", "circlemarker"],
     rectangle_options={},
     polygon_options={},
     circle_options={},
@@ -312,42 +274,42 @@ def create_drawcontrol(
     marker_options={},
     circlemarker_options={},
 ):
-    '''
+    """
     Create a draw control widget to add to ipyleaflet maps
-    
+
     Last modified: October 2021
-    
+
     Parameters
     ----------
     draw_controls : list
         List of draw controls to add to the map. Defaults to adding all
-        Viable options are 'rectangle', 'polygon', 'circle', 'polyline', 
+        Viable options are 'rectangle', 'polygon', 'circle', 'polyline',
         'marker', 'circlemarker'.
     rectangle_options : dict
-        Options to customise the appearence of the relevant shape. 
+        Options to customise the appearence of the relevant shape.
         Leave blank for default styling.
     polygon_options : dict
-        Options to customise the appearence of the relevant shape. 
+        Options to customise the appearence of the relevant shape.
         Leave blank for default styling.
     circle_options : dict
-        Options to customise the appearence of the relevant shape. 
+        Options to customise the appearence of the relevant shape.
         Leave blank for default styling.
     polyline_options : dict
-        Options to customise the appearence of the relevant shape. 
+        Options to customise the appearence of the relevant shape.
         Leave blank for default styling.
     marker_options : dict
-        Options to customise the appearence of the relevant shape. 
+        Options to customise the appearence of the relevant shape.
         Leave blank for default styling.
     circlemarker_options : dict
-        Options to customise the appearence of the relevant shape. 
+        Options to customise the appearence of the relevant shape.
         Leave blank for default styling.
-    
-        
+
+
     Returns
     -------
     draw_control : ipyleaflet.leaflet.DrawControl
-        
-    '''
+
+    """
 
     # Set defualt DE Africa styling options for polygons
     default_shapeoptions = {
@@ -356,34 +318,31 @@ def create_drawcontrol(
         "fillColor": "#336699",
         "fillOpacity": 0.4,
     }
-    default_drawerror = {
-        "color": "#FF6633",
-        "message": "Drawing error, clear all and try again"
-    }
+    default_drawerror = {"color": "#FF6633", "message": "Drawing error, clear all and try again"}
 
     # Set draw control appearence to DE Africa defaults
     # Do this if user has requested a control, but has not provided a corresponding options dict
 
-    if ('rectangle' in draw_controls) and (not rectangle_options):
+    if ("rectangle" in draw_controls) and (not rectangle_options):
         rectangle_options = {"shapeOptions": default_shapeoptions}
 
-    if ('polygon' in draw_controls) and (not polygon_options):
+    if ("polygon" in draw_controls) and (not polygon_options):
         polygon_options = {
             "shapeOptions": default_shapeoptions,
             "drawError": default_drawerror,
             "allowIntersection": False,
         }
 
-    if ('circle' in draw_controls) and (not circle_options):
+    if ("circle" in draw_controls) and (not circle_options):
         circle_options = {"shapeOptions": default_shapeoptions}
 
-    if ('polyline' in draw_controls) and (not polyline_options):
+    if ("polyline" in draw_controls) and (not polyline_options):
         polyline_options = {"shapeOptions": default_shapeoptions}
 
-    if ('marker' in draw_controls) and (not marker_options):
-        marker_options = {'shapeOptions': {'opacity': 1.0}}
+    if ("marker" in draw_controls) and (not marker_options):
+        marker_options = {"shapeOptions": {"opacity": 1.0}}
 
-    if ('circlemarker' in draw_controls) and (not circlemarker_options):
+    if ("circlemarker" in draw_controls) and (not circlemarker_options):
         circlemarker_options = {"shapeOptions": default_shapeoptions}
 
     # Instantiate draw control and add options

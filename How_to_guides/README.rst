@@ -5,12 +5,15 @@ A recipe book of simple code examples demonstrating how to perform common geospa
 
 .. toctree::
    :maxdepth: 1
-   :caption: How to guides
 
    Analyse_multiple_polygons.ipynb
    Animated_timeseries.ipynb
+   ARD_overpass_predictor.ipynb
    Calculating_band_indices.ipynb
+   COG_mosaics.ipynb
+   COG_overviews.ipynb
    Contour_extraction.ipynb
+   Continental_scale_animations.ipynb
    Detecting_seasonality.ipynb
    Downloading_data_with_STAC.ipynb
    Exporting_GeoTIFFs.ipynb
@@ -21,9 +24,11 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Generating_geomedian_composites.ipynb
    Image_segmentation.ipynb
    Imagery_on_web_map.ipynb
+   Interpolation.ipynb
    Land_cover_animated_plots.ipynb
    Land_cover_change_mapping.ipynb
    Land_cover_pixel_drill.ipynb
+   Land_cover_summary_statistics.ipynb
    Machine_learning_with_ODC.ipynb
    Masking_data.ipynb
    Opening_GeoTIFFs_NetCDFs.ipynb
@@ -32,6 +37,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Polygon_drill.ipynb
    Polygonise_pixel_edges.ipynb
    Principal_component_analysis.ipynb
+   Random_sampling.ipynb
    Rasterize_vectorize.ipynb
    Reprojecting_data.ipynb
    Sunglint_masking.ipynb
