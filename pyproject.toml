@@ -213,6 +213,7 @@ exclude = ["venv", ".venv", ".pytest_cache", ".direnv", "Tests/*", ".git"]
 
 [tool.deptry.package_module_name_map]
 ipython = "IPython"
+opencv-python = "cv2"
 beautifulsoup4 = "bs4"
 
 [tool.deptry.per_rule_ignores]
