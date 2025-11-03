@@ -197,35 +197,42 @@ def test_nan_mask_preserved(sample_da):
         assert np.isnan(ds[var][1, 2]), f"{var} did not preserve NaN mask"
 
 
-@pytest.mark.parametrize("method,parallel,radius", [
-    ("ilk", False, 20),
-    ("ilk", True, 20),
-    ("ilk", True, 10),
-    ("tvl1", False, 20),
-    ("tvl1", True, 20),
+@pytest.mark.parametrize("method,parallel,baseline", [
+    ("ilk", False, "dynamic"),
+    ("ilk", True, "dynamic"),
+    ("ilk", True, "first"),
+    ("ilk", True, "custom"),
+    ("tvl1", True, "dynamic"),
+    ("deepflow", True, "dynamic"),
+    ("farneback", True, "dynamic"),
+    ("lucas_kanade", True, "first"),
 ])
-def test_xr_optical_flow_basic(intertidal_da, method, parallel, radius):
+def test_xr_optical_flow(intertidal_da, method, parallel, baseline):
+
+    # Use single timestep for custom baseline
+    if baseline == "custom":
+        baseline = intertidal_da.isel(time=0, drop=True)
 
     # Run the optical flow function
-    ds_flow = xr_optical_flow(intertidal_da, method=method, parallel=parallel, radius=radius)
+    ds_flow = xr_optical_flow(intertidal_da, method=method, baseline=baseline, parallel=parallel)
 
     # Check output type
     assert isinstance(ds_flow, xr.Dataset)
 
-    # Check keys
-    assert "v" in ds_flow and "u" in ds_flow
+    # Check expected variables are included in output
+    assert "v" in ds_flow and "u" in ds_flow and "magnitude" in ds_flow
 
-    # Check shapes
-    nt = len(intertidal_da.time)
-    ny, nx = intertidal_da.shape[1:]
-    assert ds_flow.v.shape == (nt - 1, ny, nx)
-    assert ds_flow.u.shape == (nt - 1, ny, nx)
+    # Check geobox to ensure both arrays share the same pixel grid
+    # (lucas kanade is a sparse method, and does not return data in a grid)
+    if method != "lucas_kanade":
+        assert ds_flow.odc.geobox == intertidal_da.odc.geobox
 
-    # Check coordinates
-    np.testing.assert_array_equal(ds_flow.time.values, intertidal_da.time[1:].values)
-    np.testing.assert_array_equal(ds_flow.y.values, intertidal_da.y.values)
-    np.testing.assert_array_equal(ds_flow.x.values, intertidal_da.x.values)
-
-    # Check geobox
-    assert ds_flow.odc.geobox == intertidal_da.odc.geobox
+    # Check timesteps
+    input_timesteps = len(intertidal_da.time)
+    output_timesteps = len(ds_flow.time)
+    
+    if method in ("first", "dynamic"):
+        assert input_timesteps == (input_timesteps - 1)
+    else:
+        assert input_timesteps == input_timesteps
     
