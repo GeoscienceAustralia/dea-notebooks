@@ -10,6 +10,8 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Animated_timeseries.ipynb
    ARD_overpass_predictor.ipynb
    Calculating_band_indices.ipynb
+   COG_mosaics.ipynb
+   COG_overviews.ipynb
    Contour_extraction.ipynb
    Continental_scale_animations.ipynb
    Detecting_seasonality.ipynb

@@ -691,8 +691,8 @@ def collect_training_data(
     """
 
     # check the dtype of the class field
-    if gdf[field].dtype != int:
-        raise ValueError('The "field" column of the input vector must contain integer dtypes')
+    if not np.issubdtype(gdf[field].dtype, np.integer):
+        raise ValueError(f'The "{field}" column of the input vector must contain integer dtypes')
 
     # check for feature_func
     if feature_func is None:
