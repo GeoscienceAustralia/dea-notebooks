@@ -21,6 +21,7 @@ Core modules
    dea_tools.classification
    dea_tools.bom
    dea_tools.coastal
+   dea_tools.coreg
    dea_tools.dask
    dea_tools.landcover
    dea_tools.maps

@@ -3,7 +3,9 @@
 
 affine
 aiohttp
+arosics
 beautifulsoup4
+boto3
 bs4
 cmocean
 contextily
@@ -30,6 +32,7 @@ IPython
 ipywidgets
 joblib
 jupyter
+karios
 lxml
 matplotlib
 numba
@@ -51,6 +54,7 @@ pydotplus
 pyproj
 pystac-client
 python-dateutil
+pykrige
 pytz
 rasterio
 rasterstats
