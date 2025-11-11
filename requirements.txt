@@ -1,0 +1,4 @@
+## dea-tools will install most required packages
+dea-tools[notebooks]>0.4
+dask-labextension
+jupyter-resource-usage
