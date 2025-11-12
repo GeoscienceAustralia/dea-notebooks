@@ -31,7 +31,7 @@ from dateutil import parser
 def get_stations(
     time=None,
     observation="http://bom.gov.au/waterdata/services/parameters/Water Course Discharge",
-    url="http://www.bom.gov.au/waterdata/services",
+    url="https://www.bom.gov.au/waterdata/services"
 ):
     """Get list of stations
 
@@ -56,7 +56,7 @@ def get_station_data(
     station,
     time=None,
     observation="http://bom.gov.au/waterdata/services/parameters/Water Course Discharge",
-    url="http://www.bom.gov.au/waterdata/services",
+    url="https://www.bom.gov.au/waterdata/services"
 ):
     """
     Query Gauge Data.

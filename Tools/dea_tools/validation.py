@@ -98,8 +98,10 @@ def xr_random_sampling(
     sampling="stratified_random",
     manual_class_ratios=None,
     oversample_factor=5,
+    random_seed=None,
     out_fname=None,
     verbose=True,
+    
 ):
     """
     Efficient and scalable random sampling of a 2D classified xarray.DataArray.
@@ -143,6 +145,8 @@ def xr_random_sampling(
         Increasing this value can improve success rates when sampling sparse or
         spatially fragmented classes in large datasets, at the cost of more memory
         and computation.
+    random_seed : int | None, optional
+        Controls the random number generation for reproducibility.
     out_fname : str, optional
         If providing a filepath name, e.g 'sample_points.geojson', the
         function will export a geojson (or shapefile) of the sampling
@@ -175,6 +179,10 @@ def xr_random_sampling(
     if not isinstance(da, xr.DataArray):
         raise ValueError("This function only accepts xarray.DataArrays as input")
 
+    # --- Setup local RNG ---
+    # random_seed=None → entropy; int → reproducible
+    rng = np.random.default_rng(random_seed)
+    
     # Ensure da has a .odc.* accessor using odc.geo.
     da = add_geobox(da)
 
@@ -187,10 +195,10 @@ def xr_random_sampling(
     unique_classes, class_counts = np.unique(data[~np.isnan(data)], return_counts=True)
 
     unique_classes = unique_classes.astype(int)
-
+    
     # store our samples in a list
     samples = []
-
+    
     if sampling == "random":
         # first check num of samples doesn't exceed pixels
         total_valid = (~np.isnan(data)).sum()
@@ -204,7 +212,7 @@ def xr_random_sampling(
         flat_indices = np.flatnonzero(~np.isnan(data))
 
         # sample the flat indices
-        sampled = np.random.choice(flat_indices, size=n, replace=False)
+        sampled = rng.choice(flat_indices, size=n, replace=False)
 
         # get coords and class values from sample indices
         for idx in sampled:
@@ -242,9 +250,9 @@ def xr_random_sampling(
             if class_count > 1e9:  # For v. large classes, sample random coords first and check matches
                 # Try oversampling until we get enough
                 n_try = int(sample_size * oversample_factor)
-                rand_x = np.random.choice(np.arange(len(da.x)), n_try, replace=False)
 
-                rand_y = np.random.choice(np.arange(len(da.y)), n_try, replace=False)
+                rand_x = rng.choice(np.arange(len(da.x)), n_try, replace=False)
+                rand_y = rng.choice(np.arange(len(da.y)), n_try, replace=False)
 
                 # find matches with class id
                 match = data[rand_y, rand_x] == cls
@@ -258,8 +266,8 @@ def xr_random_sampling(
                             f"Warning: insufficient matches for class {cls}, "
                             f"try increasing oversampling. Returning {len(rand_y)} matches"
                         )
-
-                    idx = np.random.choice(np.arange(len(rand_y)), size=len(rand_y), replace=False)
+                    idx = rng.choice(np.arange(len(rand_y)), size=len(rand_y), replace=False)
+                    
                     for i in idx:
                         y = da[y_dim].values[rand_y[i]]
                         x = da[x_dim].values[rand_x[i]]
@@ -268,7 +276,8 @@ def xr_random_sampling(
                 else:
                     # If more matches than samples, then randomly sample the matches so we get the
                     # the right number of samples.
-                    idx = np.random.choice(np.arange(len(rand_y)), size=sample_size, replace=False)
+                    idx = rng.choice(np.arange(len(rand_y)), size=sample_size, replace=False)
+                    
                     for i in idx:
                         y = da[y_dim].values[rand_y[i]]
                         x = da[x_dim].values[rand_x[i]]
@@ -286,7 +295,7 @@ def xr_random_sampling(
                     continue
 
                 # Randomly sample from those flat indices
-                sampled = np.random.choice(flat_indices, size=sample_size, replace=False)
+                sampled = rng.choice(flat_indices, size=sample_size, replace=False)
 
                 # Convert flat indices to (y, x), then to coordinates
                 for idx in sampled:
