@@ -4,8 +4,8 @@ import xarray as xr
 import geopandas as gpd
 from shapely.geometry import Point
 from odc.geo.xr import assign_crs
+from geopandas import testing as gdf_testing
 from dea_tools.validation import xr_random_sampling
-
 
 @pytest.fixture
 def classified_da():
@@ -101,3 +101,23 @@ def test_oversample_error(classified_da):
     valid_pixel_count = np.isfinite(classified_da.values).sum()
     with pytest.raises(ValueError, match="more samples than available valid pixels"):
         xr_random_sampling(classified_da, n=valid_pixel_count + 10, sampling="random")
+
+def test_random_seed_reproducibility(classified_da):
+    """
+    Ensure that using the same random_seed produces identical samples,
+    and different seeds produce different samples.
+    """
+    n=20
+    
+    # Two runs with the same seed should match exactly
+    gdf1 = xr_random_sampling(classified_da, n=n, sampling="random", random_seed=42)
+    gdf2 = xr_random_sampling(classified_da, n=n, sampling="random", random_seed=42)
+    
+    gdf_testing.assert_geodataframe_equal(gdf1, gdf2, check_less_precise=True, check_geom_type=True)
+    
+    # Two runs with different seeds should differ
+    gdf3 = xr_random_sampling(classified_da, n=n, sampling="random", random_seed=99)
+    gdf4 = xr_random_sampling(classified_da, n=n, sampling="random", random_seed=42)
+    
+    identical = len(gdf3) == np.sum(gdf3['geometry'].geom_equals_exact(gdf4['geometry'], tolerance=0.1))
+    assert not identical, "Results unexpectedly identical for different random seeds."
