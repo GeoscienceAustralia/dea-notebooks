@@ -23,7 +23,7 @@ authors:
     orcid: 0009-0003-9882-9131
   - name: Caitlin Adams
     affiliation: 1
-    orcid: 0000-
+    orcid: 0000-0002-1357-7664
   - name: Gianluca Scortechini
     affiliation: 1
     orcid: 0000-0002-0149-4028
@@ -56,13 +56,13 @@ bibliography: paper.bib
 
 # Summary
 
-`dea-tools` is an open-source Python library that provides a comprehensive set of tools for analysing, visualising, and modelling geospatial and Earth observation data represented as `xarray` objects. Originally developed to support [Digital Earth Australia (DEA)](https://knowledge.dea.ga.gov.au/) workflows, `dea-tools` has evolved into a general-purpose library for use with any geospatial dataset. The package includes utilities for spatial and temporal analysis, remote sensing index calculation, machine learning, interactive visualisation, and integrates seamlessly with the Python geospatial stack (e.g. `xarray` [@Hoyer_xarray_N-D_labeled_2017], `geopandas` [@kelsey_jordahl_2020_3946761], and `dask` [@dask]). Distributed as a pip-installable environment, `dea-tools` includes JupyterLab and related dependencies, providing a fully managed platform for scientific geospatial analysis across computing environments. Embedded within the broader `dea-notebooks` [@krause2021dea] repository, the package is supported by extensive documentation and example Jupyter notebooks demonstrating the use of `dea-tools` functionality. Together, `dea-tools` and `dea-notebooks` support reproducible and scalable Earth observation science with Python.
+`dea-tools` is an open-source Python library that provides a comprehensive set of tools for analysing, visualising, and modelling geospatial and Earth observation data represented as `xarray` objects. Originally developed by [Geoscience Australia](https://www.ga.gov.au/) to support [Digital Earth Australia (DEA)](https://knowledge.dea.ga.gov.au/) workflows, `dea-tools` has evolved into a general-purpose library for use with any geospatial dataset. The package includes utilities for spatial and temporal analysis, remote sensing index calculation, machine learning, interactive visualisation, and integrates seamlessly with the Python geospatial stack (e.g. `xarray` [@Hoyer_xarray_N-D_labeled_2017], `geopandas` [@kelsey_jordahl_2020_3946761], and `dask` [@dask]). Distributed as a pip-installable environment, `dea-tools` includes JupyterLab and related dependencies, providing a fully managed platform for scientific geospatial analysis across computing environments. Embedded within the broader `dea-notebooks` [@krause2021dea] repository, the package is supported by extensive documentation and example Jupyter notebooks demonstrating the use of `dea-tools` functionality. Together, `dea-tools` and `dea-notebooks` support reproducible and scalable Earth observation science with Python.
 
 # Statement of need
 
 Modern Earth observation workflows often involve complex, multi-temporal, and multi-resolution datasets that demand integrated tools for efficient loading, pre-processing, visualisation, and analysis. While foundational libraries such as `xarray`, `geopandas`, and `dask` provide the building blocks, implementing efficient and scalable analysis workflows and processing pipelines still requires substantial coding effort. The `dea-tools` Python library addresses this gap by providing a curated suite of well-documented functions that streamline common geospatial tasks and integrate seamlessly with the Python geospatial stack.
 
-`dea-tools` is a comprehensive, open-source toolkit for analysing and interpreting geospatial and Earth observation data, primarily represented as `xarray` objects. Originally developed by DEA to support national-scale satellite data analysis, `dea-tools` has evolved into a flexible and general-purpose library that supports a wide range of geospatial workflows. It can be deployed across platforms and supports both gridded datasets (e.g. satellite imagery) and vector datasets (e.g. shapefiles or GeoJSON), whether accessed from cloud-based catalogues via Spatio-Temporal Asset Catalog (STAC) or stored locally.
+`dea-tools` is a comprehensive, open-source toolkit for analysing and interpreting geospatial and Earth observation data, primarily represented as `xarray` objects. Originally developed by Digital Earth Australia (DEA) to support national-scale satellite data analysis, `dea-tools` has evolved into a flexible and general-purpose library that supports a wide range of geospatial workflows. It can be deployed across platforms and supports both gridded datasets (e.g. satellite imagery) and vector datasets (e.g. shapefiles or GeoJSON), whether accessed from cloud-based catalogues via Spatio-Temporal Asset Catalog (STAC) or stored locally.
 
 A major advantage of `dea-tools` is that it comes bundled with all essential dependencies for scientific geospatial analysis. These include [JupyterLab](https://jupyter.org/), Jupyter notebooks, `xarray`, `geopandas`, `NumPy` [@harris2020array], `dask`, and many other libraries from the Python geospatial ecosystem. When deployed within a virtual environment, `dea-tools` provides a ready-to-use and pre-configured platform for geospatial analysis, eliminating the need for manual setup or dependency management. This design lowers the barrier to entry for new users by offering a self-contained environment for exploration, visualisation, and large-scale satellite data processing.
 
@@ -100,11 +100,11 @@ Flexible and powerful tools for scientific analysis with `xarray` objects:
     * Linear regression with `xr_regression`.
 - Spatial analysis tools within [`dea-tools.spatial`](https://knowledge.dea.ga.gov.au/notebooks/Tools/gen/dea_tools.spatial/):
     * Vectorise `xarray.DataArrays` into `geopandas.GeoDataFrames` with `xr_vectorize`;
-    * Rasterise `geopandas.GeoDataFrames` into `xarray.DataArrays` with `xr_rasterize` ;
+    * Rasterise `geopandas.GeoDataFrames` into `xarray.DataArrays` with `xr_rasterize`;
     * Extract detailed contours from `xarray.DataArrays` at subpixel resolution using `subpixel_contours`;
     * Interpolate point data stored in a `geopandas.GeoDataFrame` into an `xarray.DataArray` with `xr_interpolate`.
 
-![`dea-tools` enables easy transitions between `xarray` and `geopandas` with the `xr_rasterize` and `xr_vectorize` functions. Location: Menindeee Lakes, New South Wales.\label{fig:raster-vector}](figures/rasterize_vectorize.png)
+![`dea-tools` enables easy transitions between `xarray` and `geopandas` with the `xr_rasterize` and `xr_vectorize` functions. Location: Menindee Lakes, New South Wales.\label{fig:raster-vector}](figures/rasterize_vectorize.png)
 
 ## Machine learning 
 
