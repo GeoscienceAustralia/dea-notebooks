@@ -47,7 +47,7 @@ from dea_tools.sar import apply_lee_filter
 VALID_PRODUCTS = {
     "ls": ["ga_ls5t_ard_3", "ga_ls7e_ard_3", "ga_ls8c_ard_3", "ga_ls9c_ard_3"],
     "s2": ["ga_s2am_ard_3", "ga_s2bm_ard_3", "ga_s2cm_ard_3"],
-    "s1": ["ga_s1_nrb_iw_vv_vh_0", "ga_s1_nrb_iw_hh_0", "ga_s1_nrb_iw_vv_0"],
+    # "s1": ["ga_s1_nrb_iw_vv_vh_0", "ga_s1_nrb_iw_hh_0", "ga_s1_nrb_iw_vv_0"],
 }
 
 
@@ -251,12 +251,11 @@ def load_ard(
     **kwargs,
 ):
     """
-    Load multiple Geoscience Australia Landsat, Sentinel-2 or Sentinel-1 Analysis Ready Data products.
+    Load multiple Geoscience Australia Landsat or Sentinel-2 Analysis Ready Data products.
 
     The function can automatically mask data by pixel quality/cloud
-    masks, filter to good quality time steps (e.g. non-cloudy or
-    shadowed), and apply custom Sentinel-1 analysis steps (e.g
-    speckle filtering and decibel transformation).
+    masks, and filter to good quality time steps (e.g. non-cloudy or
+    shadowed).
 
     Supported Landsat products:
         * ga_ls5t_ard_3
@@ -269,17 +268,12 @@ def load_ard(
         * ga_s2bm_ard_3
         * ga_s2cm_ard_3
 
-    Supported Sentinel-1 products:
-        * ga_s1_nrb_iw_vv_vh_0
-        * ga_s1_nrb_iw_hh_0
-        * ga_s1_nrb_iw_vv_0
-
     Pixel quality masking can be performed using the "Fmask" (Function
-    of Mask) cloud mask for Landsat and Sentinel-2, the "s2cloudless"
+    of Mask) cloud mask for Landsat and Sentinel-2, and the "s2cloudless"
     (Sentinel Hub cloud detector for Sentinel-2) cloud mask for
-    Sentinel-2, and the "mask" shadow and layover mask for Sentinel-1.
+    Sentinel-2.
 
-    Last modified: September 2025
+    Last modified: December 2025
 
     Parameters
     ----------
@@ -290,8 +284,7 @@ def load_ard(
         A list of product names to load. Valid options are
         ['ga_ls5t_ard_3', 'ga_ls7e_ard_3', 'ga_ls8c_ard_3', 'ga_ls9c_ard_3']
         for Landsat, ['ga_s2am_ard_3', 'ga_s2bm_ard_3', 'ga_s2cm_ard_3']
-        for Sentinel-2, ['ga_s1_nrb_iw_vv_vh_0', 'ga_s1_nrb_iw_hh_0',
-        'ga_s1_nrb_iw_vv_0'] for Sentinel-1.
+        for Sentinel-2.
     cloud_mask : string, optional
         The cloud mask used for masking Landsat and Sentinel-2 data. This
         is used for both masking out poor quality pixels (e.g. clouds) if
@@ -349,13 +342,6 @@ def load_ard(
         ``min_gooddata``. Defaults to ``['valid']``; all other s2cloudless
         categories ('cloud', 'nodata') will be treated as low quality pixels.
         Choose from: 'nodata', 'valid', or 'cloud'.
-    s1_mask_categories : list, optional
-        A list of Sentinel-1 mask categories to consider as good
-        quality pixels if ``mask_pixel_quality=True``, or when filtering by
-        ``min_gooddata``. Defaults to ``['valid']``; all other Sentinel-1
-        mask categories will be treated as low quality pixels.
-        Choose from: 'valid', 'shadow', 'layover', 'shadow and layover',
-        and 'invalid sample'.
     ls7_slc_off : bool, optional
         An optional boolean indicating whether to include data from
         after the Landsat 7 SLC failure (i.e. SLC-off). Defaults to
