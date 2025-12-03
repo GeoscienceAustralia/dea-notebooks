@@ -203,7 +203,7 @@ def _dc_query_only(**kw):
 
 def _stac_query_load(kwargs: dict) -> tuple[dict, dict]:
     """
-    Split ``load_ard`` keyword arguements into query and load parameters.
+    Split ``load_ard`` keyword arguments into query and load parameters.
 
     Also handles the consistent creation of a EPSG:4326 query
     bounding box used to search for data using `pystac_client.
@@ -588,15 +588,16 @@ def load_ard(
      verbose : bool, optional
         If True, print progress statements during loading.
     **kwargs :
-        A set of keyword arguments to `dc.load` that define the
+        A set of keyword arguments to `dc.load` or `odc.stac.load` that define the
         spatiotemporal query and load parameters used to extract data.
         Keyword arguments can either be listed directly in the
         ``load_ard`` call like any other parameter (e.g.
-        ``measurements=['nbart_red']``), or by passing in a query kwarg
-        dictionary (e.g. ``**query``). Keywords can include ``measurements``,
-        ``x``, ``y``, ``time``, ``resolution``, ``resampling``, ``group_by``, ``crs``;
-        see the ``dc.load`` documentation for all possible options:
-        https://datacube-core.readthedocs.io/en/latest/api/indexed-data/generate/datacube.Datacube.load.html
+        ``resampling='bilinear'``), or by passing in a query kwarg
+        dictionary (e.g. ``**query``). Keywords depend on the approach being used
+        for loading (STAC or datacube), see the ``dc.load`` documentation for all possible options:
+        https://datacube-core.readthedocs.io/en/latest/api/indexed-data/generate/datacube.Datacube.load.html. 
+        Or the odc.stac.load documentation:
+        https://odc-stac.readthedocs.io/en/latest/_api/odc.stac.load.html
 
     Returns
     -------
@@ -608,7 +609,7 @@ def load_ard(
     -----
     The `load_ard` function is designed to allow loading multiple Analysis
     Ready satellite data products at once, and automatically apply cloud
-    masking and filtering. For loading non-satellite data products
+    masking and filtering. For loading non-satellite observation products
     (e.g. DEA Water Observations), use ``odc-stac`` or ``dc.load`` instead.
     """
     # Convert products to a list if it is passed as a string
@@ -634,37 +635,59 @@ def load_ard(
         stac_cfg = kwargs.pop("stac_cfg", product_cfg)
 
         # Raise helpful errors to assist with transition to STAC
-        if "dask_chunks" in kwargs:
+        dc_to_stac_errors = {
+            "dask_chunks": "chunks",
+            "measurements": "bands",
+            "output_crs": "crs",
+            "time": "datetime='2000/2001' (instead of time=('2000','2001'))",
+            "group_by": "groupby"
+        }
+    
+        for wrong, correct in dc_to_stac_errors.items():
+            if wrong in kwargs:
+                raise ValueError(
+                    f"When loading with STAC, `{wrong}` is not valid. "
+                    f"Please use `{correct}` instead."
+                )
+    
+        # STAC requires resolution as a single integer
+        if "resolution" in kwargs and isinstance(kwargs["resolution"], tuple):
             raise ValueError(
-                "When loading with STAC, please use `chunks` instead of `dask_chunks`."
-            )
-        if "measurements" in kwargs:
-            raise ValueError(
-                "When loading with STAC, please use `bands` instead of `measurements`."
-            )
-        if "output_crs" in kwargs:
-            raise ValueError(
-                "When loading with STAC, please use `crs` instead of `output_crs`."
-            )
-        if "time" in kwargs:
-            raise ValueError(
-                "When loading with STAC, please use `datetime='2000/2001'` instead of `time=('2000', '2001')`."
-            )
-        if "group_by" in kwargs:
-            raise ValueError(
-                "When loading with STAC, please use `groupby` instead of `group_by`."
-            )
-        if ("resolution" in kwargs) and isinstance(kwargs["resolution"], tuple):
-            raise ValueError(
-                "When loading with STAC, provide `resolution` as a single value (e.g. `resolution=30`) rather than a tuple (e.g. `resolution=(-30, 30)`)."
+                "When loading with STAC, provide `resolution` as a single value "
+                "(e.g., `resolution=30`) instead of a tuple "
+                "(e.g., `resolution=(-30, 30)`)."
             )
 
     else:
-        if verbose: print("Loading data with datacube")
+        if verbose: 
+            print("Loading data with datacube")
         method = "datacube"
         chunks_param = "dask_chunks"
         bands_param = "measurements"
+    
+        # Raise meaningful errors for any STAC-style kwargs
+        stac_to_dc_errors = {
+            "chunks": "dask_chunks",
+            "bands": "measurements",
+            "crs": "output_crs",
+            "datetime": "time=('2000','2001')",
+            "groupby": "group_by"
+        }
 
+        for wrong, correct in stac_to_dc_errors.items():
+            if wrong in kwargs:
+                raise ValueError(
+                    f"When loading with datacube, `{wrong}` is not valid. "
+                    f"Please use `{correct}` instead."
+                )
+    
+        # STAC-style 'resolution' (single int) vs datacube expects tuple
+        if "resolution" in kwargs and not isinstance(kwargs["resolution"], tuple):
+            raise ValueError(
+                "When loading with datacube, `resolution` must be a tuple "
+                "(e.g., `resolution=(-30, 30)`) rather than a single value."
+            )
+    
     #########
     # Setup #
     #########
