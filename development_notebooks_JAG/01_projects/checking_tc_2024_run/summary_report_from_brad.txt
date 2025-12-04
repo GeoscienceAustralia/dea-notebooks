@@ -1,0 +1,360 @@
+Full Comparison Summary for ga_ls_tc_pc_cyear_3
+Year: 2024, Band: *, Version: 2-0-0
+================================================================================
+
+Total files in original product: 9333
+Identical files: 9249
+Files with differences: 84
+Missing tiles: 0
+Errors encountered: 0
+Missing folder count: 0
+Time taken: 4h 4m 23.90s
+
+
+================================================================================
+FILES WITH DIFFERENCES (84):
+================================================================================
+
+File: ga_ls_tc_pc_cyear_3_x28y43_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x28/y43/2024--P1Y/ga_ls_tc_pc_cyear_3_x28y43_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x28/y43/2024--P1Y/ga_ls_tc_pc_cyear_3_x28y43_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x29y37_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x29/y37/2024--P1Y/ga_ls_tc_pc_cyear_3_x29y37_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x29/y37/2024--P1Y/ga_ls_tc_pc_cyear_3_x29y37_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x29y45_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x29/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x29y45_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x29/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x29y45_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x30y43_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x30/y43/2024--P1Y/ga_ls_tc_pc_cyear_3_x30y43_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x30/y43/2024--P1Y/ga_ls_tc_pc_cyear_3_x30y43_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x30y44_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x30/y44/2024--P1Y/ga_ls_tc_pc_cyear_3_x30y44_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x30/y44/2024--P1Y/ga_ls_tc_pc_cyear_3_x30y44_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x32y31_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x32/y31/2024--P1Y/ga_ls_tc_pc_cyear_3_x32y31_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x32/y31/2024--P1Y/ga_ls_tc_pc_cyear_3_x32y31_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x32y31_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x32/y31/2024--P1Y/ga_ls_tc_pc_cyear_3_x32y31_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x32/y31/2024--P1Y/ga_ls_tc_pc_cyear_3_x32y31_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x32y39_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x32/y39/2024--P1Y/ga_ls_tc_pc_cyear_3_x32y39_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x32/y39/2024--P1Y/ga_ls_tc_pc_cyear_3_x32y39_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x32y48_2024--P1Y_final_wet_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x32/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x32y48_2024--P1Y_final_wet_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x32/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x32y48_2024--P1Y_final_wet_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x33y39_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x33/y39/2024--P1Y/ga_ls_tc_pc_cyear_3_x33y39_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x33/y39/2024--P1Y/ga_ls_tc_pc_cyear_3_x33y39_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x34y39_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x34/y39/2024--P1Y/ga_ls_tc_pc_cyear_3_x34y39_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x34/y39/2024--P1Y/ga_ls_tc_pc_cyear_3_x34y39_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x35y45_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x35/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x35y45_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x35/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x35y45_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x35y47_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x35/y47/2024--P1Y/ga_ls_tc_pc_cyear_3_x35y47_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x35/y47/2024--P1Y/ga_ls_tc_pc_cyear_3_x35y47_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x36y48_2024--P1Y_final_wet_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x36/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x36y48_2024--P1Y_final_wet_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x36/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x36y48_2024--P1Y_final_wet_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x36y50_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x36/y50/2024--P1Y/ga_ls_tc_pc_cyear_3_x36y50_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x36/y50/2024--P1Y/ga_ls_tc_pc_cyear_3_x36y50_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x38y41_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x38/y41/2024--P1Y/ga_ls_tc_pc_cyear_3_x38y41_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x38/y41/2024--P1Y/ga_ls_tc_pc_cyear_3_x38y41_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x39y54_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x39/y54/2024--P1Y/ga_ls_tc_pc_cyear_3_x39y54_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x39/y54/2024--P1Y/ga_ls_tc_pc_cyear_3_x39y54_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x40y48_2024--P1Y_final_green_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x40/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x40y48_2024--P1Y_final_green_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x40/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x40y48_2024--P1Y_final_green_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x40y52_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x40/y52/2024--P1Y/ga_ls_tc_pc_cyear_3_x40y52_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x40/y52/2024--P1Y/ga_ls_tc_pc_cyear_3_x40y52_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x41y40_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x41/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x41y40_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x41/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x41y40_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x41y40_2024--P1Y_final_wet_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x41/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x41y40_2024--P1Y_final_wet_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x41/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x41y40_2024--P1Y_final_wet_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x42y45_2024--P1Y_final_wet_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x42/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x42y45_2024--P1Y_final_wet_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x42/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x42y45_2024--P1Y_final_wet_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x42y46_2024--P1Y_final_wet_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x42/y46/2024--P1Y/ga_ls_tc_pc_cyear_3_x42y46_2024--P1Y_final_wet_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x42/y46/2024--P1Y/ga_ls_tc_pc_cyear_3_x42y46_2024--P1Y_final_wet_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x43y55_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x43/y55/2024--P1Y/ga_ls_tc_pc_cyear_3_x43y55_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x43/y55/2024--P1Y/ga_ls_tc_pc_cyear_3_x43y55_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x43y55_2024--P1Y_final_wet_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x43/y55/2024--P1Y/ga_ls_tc_pc_cyear_3_x43y55_2024--P1Y_final_wet_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x43/y55/2024--P1Y/ga_ls_tc_pc_cyear_3_x43y55_2024--P1Y_final_wet_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x44y45_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x44/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x44y45_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x44/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x44y45_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x45y54_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x45/y54/2024--P1Y/ga_ls_tc_pc_cyear_3_x45y54_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x45/y54/2024--P1Y/ga_ls_tc_pc_cyear_3_x45y54_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x45y56_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x45/y56/2024--P1Y/ga_ls_tc_pc_cyear_3_x45y56_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x45/y56/2024--P1Y/ga_ls_tc_pc_cyear_3_x45y56_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x46y36_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x46/y36/2024--P1Y/ga_ls_tc_pc_cyear_3_x46y36_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x46/y36/2024--P1Y/ga_ls_tc_pc_cyear_3_x46y36_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x46y44_2024--P1Y_final_wet_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x46/y44/2024--P1Y/ga_ls_tc_pc_cyear_3_x46y44_2024--P1Y_final_wet_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x46/y44/2024--P1Y/ga_ls_tc_pc_cyear_3_x46y44_2024--P1Y_final_wet_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x46y57_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x46/y57/2024--P1Y/ga_ls_tc_pc_cyear_3_x46y57_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x46/y57/2024--P1Y/ga_ls_tc_pc_cyear_3_x46y57_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x47y37_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x47/y37/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y37_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x47/y37/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y37_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x47y41_2024--P1Y_final_wet_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x47/y41/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y41_2024--P1Y_final_wet_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x47/y41/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y41_2024--P1Y_final_wet_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x47y42_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x47/y42/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y42_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x47/y42/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y42_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x47y45_2024--P1Y_final_wet_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x47/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y45_2024--P1Y_final_wet_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x47/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y45_2024--P1Y_final_wet_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x47y46_2024--P1Y_final_wet_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x47/y46/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y46_2024--P1Y_final_wet_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x47/y46/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y46_2024--P1Y_final_wet_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x47y50_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x47/y50/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y50_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x47/y50/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y50_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x47y53_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x47/y53/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y53_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x47/y53/2024--P1Y/ga_ls_tc_pc_cyear_3_x47y53_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x48y50_2024--P1Y_final_green_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x48/y50/2024--P1Y/ga_ls_tc_pc_cyear_3_x48y50_2024--P1Y_final_green_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x48/y50/2024--P1Y/ga_ls_tc_pc_cyear_3_x48y50_2024--P1Y_final_green_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x48y52_2024--P1Y_final_wet_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x48/y52/2024--P1Y/ga_ls_tc_pc_cyear_3_x48y52_2024--P1Y_final_wet_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x48/y52/2024--P1Y/ga_ls_tc_pc_cyear_3_x48y52_2024--P1Y_final_wet_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x49y40_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x49/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x49y40_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x49/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x49y40_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x49y42_2024--P1Y_final_green_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x49/y42/2024--P1Y/ga_ls_tc_pc_cyear_3_x49y42_2024--P1Y_final_green_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x49/y42/2024--P1Y/ga_ls_tc_pc_cyear_3_x49y42_2024--P1Y_final_green_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x49y56_2024--P1Y_final_wet_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x49/y56/2024--P1Y/ga_ls_tc_pc_cyear_3_x49y56_2024--P1Y_final_wet_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x49/y56/2024--P1Y/ga_ls_tc_pc_cyear_3_x49y56_2024--P1Y_final_wet_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x50y35_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x50/y35/2024--P1Y/ga_ls_tc_pc_cyear_3_x50y35_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x50/y35/2024--P1Y/ga_ls_tc_pc_cyear_3_x50y35_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x50y40_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x50/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x50y40_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x50/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x50y40_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x50y48_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x50/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x50y48_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x50/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x50y48_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x52y33_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x52/y33/2024--P1Y/ga_ls_tc_pc_cyear_3_x52y33_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x52/y33/2024--P1Y/ga_ls_tc_pc_cyear_3_x52y33_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x52y36_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x52/y36/2024--P1Y/ga_ls_tc_pc_cyear_3_x52y36_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x52/y36/2024--P1Y/ga_ls_tc_pc_cyear_3_x52y36_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x52y36_2024--P1Y_final_wet_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x52/y36/2024--P1Y/ga_ls_tc_pc_cyear_3_x52y36_2024--P1Y_final_wet_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x52/y36/2024--P1Y/ga_ls_tc_pc_cyear_3_x52y36_2024--P1Y_final_wet_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x52y41_2024--P1Y_final_wet_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x52/y41/2024--P1Y/ga_ls_tc_pc_cyear_3_x52y41_2024--P1Y_final_wet_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x52/y41/2024--P1Y/ga_ls_tc_pc_cyear_3_x52y41_2024--P1Y_final_wet_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x53y31_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x53/y31/2024--P1Y/ga_ls_tc_pc_cyear_3_x53y31_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x53/y31/2024--P1Y/ga_ls_tc_pc_cyear_3_x53y31_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x53y40_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x53/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x53y40_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x53/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x53y40_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x53y40_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x53/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x53y40_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x53/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x53y40_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x53y43_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x53/y43/2024--P1Y/ga_ls_tc_pc_cyear_3_x53y43_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x53/y43/2024--P1Y/ga_ls_tc_pc_cyear_3_x53y43_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x53y50_2024--P1Y_final_green_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x53/y50/2024--P1Y/ga_ls_tc_pc_cyear_3_x53y50_2024--P1Y_final_green_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x53/y50/2024--P1Y/ga_ls_tc_pc_cyear_3_x53y50_2024--P1Y_final_green_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x54y28_2024--P1Y_final_green_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x54/y28/2024--P1Y/ga_ls_tc_pc_cyear_3_x54y28_2024--P1Y_final_green_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x54/y28/2024--P1Y/ga_ls_tc_pc_cyear_3_x54y28_2024--P1Y_final_green_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x54y34_2024--P1Y_final_green_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x54/y34/2024--P1Y/ga_ls_tc_pc_cyear_3_x54y34_2024--P1Y_final_green_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x54/y34/2024--P1Y/ga_ls_tc_pc_cyear_3_x54y34_2024--P1Y_final_green_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x54y43_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x54/y43/2024--P1Y/ga_ls_tc_pc_cyear_3_x54y43_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x54/y43/2024--P1Y/ga_ls_tc_pc_cyear_3_x54y43_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x55y30_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x55/y30/2024--P1Y/ga_ls_tc_pc_cyear_3_x55y30_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x55/y30/2024--P1Y/ga_ls_tc_pc_cyear_3_x55y30_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x55y30_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x55/y30/2024--P1Y/ga_ls_tc_pc_cyear_3_x55y30_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x55/y30/2024--P1Y/ga_ls_tc_pc_cyear_3_x55y30_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x55y45_2024--P1Y_final_wet_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x55/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x55y45_2024--P1Y_final_wet_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x55/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x55y45_2024--P1Y_final_wet_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x56y31_2024--P1Y_final_green_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x56/y31/2024--P1Y/ga_ls_tc_pc_cyear_3_x56y31_2024--P1Y_final_green_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x56/y31/2024--P1Y/ga_ls_tc_pc_cyear_3_x56y31_2024--P1Y_final_green_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x56y32_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x56/y32/2024--P1Y/ga_ls_tc_pc_cyear_3_x56y32_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x56/y32/2024--P1Y/ga_ls_tc_pc_cyear_3_x56y32_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x56y48_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x56/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x56y48_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x56/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x56y48_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x58y23_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x58/y23/2024--P1Y/ga_ls_tc_pc_cyear_3_x58y23_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x58/y23/2024--P1Y/ga_ls_tc_pc_cyear_3_x58y23_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x58y27_2024--P1Y_final_green_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x58/y27/2024--P1Y/ga_ls_tc_pc_cyear_3_x58y27_2024--P1Y_final_green_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x58/y27/2024--P1Y/ga_ls_tc_pc_cyear_3_x58y27_2024--P1Y_final_green_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x58y39_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x58/y39/2024--P1Y/ga_ls_tc_pc_cyear_3_x58y39_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x58/y39/2024--P1Y/ga_ls_tc_pc_cyear_3_x58y39_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x58y43_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x58/y43/2024--P1Y/ga_ls_tc_pc_cyear_3_x58y43_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x58/y43/2024--P1Y/ga_ls_tc_pc_cyear_3_x58y43_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x59y27_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x59/y27/2024--P1Y/ga_ls_tc_pc_cyear_3_x59y27_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x59/y27/2024--P1Y/ga_ls_tc_pc_cyear_3_x59y27_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x59y28_2024--P1Y_final_bright_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x59/y28/2024--P1Y/ga_ls_tc_pc_cyear_3_x59y28_2024--P1Y_final_bright_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x59/y28/2024--P1Y/ga_ls_tc_pc_cyear_3_x59y28_2024--P1Y_final_bright_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x59y28_2024--P1Y_final_green_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x59/y28/2024--P1Y/ga_ls_tc_pc_cyear_3_x59y28_2024--P1Y_final_green_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x59/y28/2024--P1Y/ga_ls_tc_pc_cyear_3_x59y28_2024--P1Y_final_green_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x59y38_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x59/y38/2024--P1Y/ga_ls_tc_pc_cyear_3_x59y38_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x59/y38/2024--P1Y/ga_ls_tc_pc_cyear_3_x59y38_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x59y48_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x59/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x59y48_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x59/y48/2024--P1Y/ga_ls_tc_pc_cyear_3_x59y48_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x60y28_2024--P1Y_final_green_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x60/y28/2024--P1Y/ga_ls_tc_pc_cyear_3_x60y28_2024--P1Y_final_green_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x60/y28/2024--P1Y/ga_ls_tc_pc_cyear_3_x60y28_2024--P1Y_final_green_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x60y40_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x60/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x60y40_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x60/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x60y40_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x61y38_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x61/y38/2024--P1Y/ga_ls_tc_pc_cyear_3_x61y38_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x61/y38/2024--P1Y/ga_ls_tc_pc_cyear_3_x61y38_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x62y42_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x62/y42/2024--P1Y/ga_ls_tc_pc_cyear_3_x62y42_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x62/y42/2024--P1Y/ga_ls_tc_pc_cyear_3_x62y42_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x63y36_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x63/y36/2024--P1Y/ga_ls_tc_pc_cyear_3_x63y36_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x63/y36/2024--P1Y/ga_ls_tc_pc_cyear_3_x63y36_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x63y41_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x63/y41/2024--P1Y/ga_ls_tc_pc_cyear_3_x63y41_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x63/y41/2024--P1Y/ga_ls_tc_pc_cyear_3_x63y41_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x63y45_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x63/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x63y45_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x63/y45/2024--P1Y/ga_ls_tc_pc_cyear_3_x63y45_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x64y37_2024--P1Y_final_wet_pc_10.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x64/y37/2024--P1Y/ga_ls_tc_pc_cyear_3_x64y37_2024--P1Y_final_wet_pc_10.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x64/y37/2024--P1Y/ga_ls_tc_pc_cyear_3_x64y37_2024--P1Y_final_wet_pc_10.tif
+
+File: ga_ls_tc_pc_cyear_3_x65y37_2024--P1Y_final_bright_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x65/y37/2024--P1Y/ga_ls_tc_pc_cyear_3_x65y37_2024--P1Y_final_bright_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x65/y37/2024--P1Y/ga_ls_tc_pc_cyear_3_x65y37_2024--P1Y_final_bright_pc_50.tif
+
+File: ga_ls_tc_pc_cyear_3_x67y35_2024--P1Y_final_bright_pc_90.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x67/y35/2024--P1Y/ga_ls_tc_pc_cyear_3_x67y35_2024--P1Y_final_bright_pc_90.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x67/y35/2024--P1Y/ga_ls_tc_pc_cyear_3_x67y35_2024--P1Y_final_bright_pc_90.tif
+
+File: ga_ls_tc_pc_cyear_3_x67y40_2024--P1Y_final_green_pc_50.tif
+  Path 1: dea-public-data/derivative/ga_ls_tc_pc_cyear_3/2-0-0/x67/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x67y40_2024--P1Y_final_green_pc_50.tif
+  Path 2: dea-public-data-dev/derivative/ga_ls_tc_pc_cyear_3_test/2-0-0/x67/y40/2024--P1Y/ga_ls_tc_pc_cyear_3_x67y40_2024--P1Y_final_green_pc_50.tif
+
+================================================================================
+MISSING FILES (0):
+================================================================================
+
+================================================================================
+FILES WITH ERRORS (0):
+================================================================================
