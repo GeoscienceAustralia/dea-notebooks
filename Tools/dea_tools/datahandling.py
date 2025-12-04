@@ -17,7 +17,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: September 2025
+Last modified: December 2025
 """
 
 from datetime import datetime, timezone
@@ -257,36 +257,35 @@ def _stac_query_load(kwargs: dict) -> tuple[dict, dict]:
 
     # If a bounding box is provided, use directly
     if "bbox" in kwargs:
-        query_bbox = kwargs["bbox"]
-        load_params["bbox"] = load_bbox
+        query_params["bbox"] = kwargs["bbox"].to_crs("EPSG:4326")
+        load_params["bbox"] = kwargs["bbox"]
 
     # If lon/lat are provided, convert to a bbox for querying
     elif "lon" in kwargs and "lat" in kwargs:
-        query_bbox = BoundingBox.from_xy(
+        query_params["bbox"] = BoundingBox.from_xy(
             x=kwargs["lon"], y=kwargs["lat"], crs="EPSG:4326"
-        )
+        ).to_crs("EPSG:4326")
 
     # If x/y are provided, convert to bbox for querying
     # Use provided CRS if it exists, but convert to EPSG:4326 for querying
     elif "x" in kwargs and "y" in kwargs:
         crs = kwargs.get("crs", "EPSG:4326")
-        query_bbox = BoundingBox.from_xy(x=kwargs["x"], y=kwargs["y"], crs=crs)
-
-    # If a geopolygon is provided, convert to bbox for querying
-    elif "geopolygon" in kwargs:
-        geopolygon = odc.stac._mdtools._normalize_geometry(kwargs["geopolygon"])
-        query_bbox = geopolygon.boundingbox
+        query_params["bbox"] = BoundingBox.from_xy(
+            x=kwargs["x"], y=kwargs["y"], crs=crs
+        ).to_crs("EPSG:4326")
 
     # If a geobox is provided, convert to bbox for querying
     elif "geobox" in kwargs:
-        query_bbox = kwargs["geobox"].boundingbox
+        query_params["bbox"] = kwargs["geobox"].boundingbox.to_crs("EPSG:4326")
 
     # If a dataset is provided via "like", convert to bbox for querying
     elif "like" in kwargs:
-        query_bbox = kwargs["like"].odc.geobox.boundingbox
+        query_params["bbox"] = kwargs["like"].odc.geobox.boundingbox.to_crs("EPSG:4326")
 
-    # Add EPSG:4326 bbox to query
-    query_params["bbox"] = query_bbox.to_crs("EPSG:4326")
+    # If a geopolygon is provided, pass actual geometry to "intersects" for querying
+    elif "geopolygon" in kwargs:
+        geopolygon = odc.stac._mdtools._normalize_geometry(kwargs["geopolygon"])
+        query_params["intersects"] = geopolygon.to_crs("EPSG:4326")
 
     return query_params, load_params
 
@@ -468,28 +467,30 @@ def load_ard(
     verbose=True,
     **kwargs,
 ):
-    """
-    Load multiple Geoscience Australia Landsat or Sentinel-2 Analysis Ready Data products.
+    """  
+    Load multiple Geoscience Australia Landsat or Sentinel-2 Analysis Ready Data (ARD) products.
 
-    The function can automatically mask data by pixel quality/cloud
-    masks, and filter to good quality time steps (e.g. non-cloudy or
-    shadowed).
-
-    Supported Landsat products:
+    This function supports automated pixel-quality/cloud masking,
+    filtering to retain only good-quality observations (e.g. non-cloudy
+    or non-shadowed), and advanced features such as selectively dropping
+    Landsat 7 SLC-off acquisitions.
+    
+    Only DEA ARD products are supported. For non-ARD datasets (e.g.
+    DEA Water Observations), use ``odc-stac`` or ``dc.load`` instead.
+    
+    Supported Landsat ARD products    
         * ga_ls5t_ard_3
         * ga_ls7e_ard_3
         * ga_ls8c_ard_3
         * ga_ls9c_ard_3
-
-    Supported Sentinel-2 products:
+    
+    Supported Sentinel-2 ARD products    
         * ga_s2am_ard_3
         * ga_s2bm_ard_3
         * ga_s2cm_ard_3
-
-    Pixel quality masking can be performed using the "Fmask" (Function
-    of Mask) cloud mask for Landsat and Sentinel-2, and the "s2cloudless"
-    (Sentinel Hub cloud detector for Sentinel-2) cloud mask for
-    Sentinel-2.
+        
+    Pixel-quality masking uses Fmask for Landsat and Sentinel-2, and
+    s2cloudless for Sentinel-2.    
 
     Last modified: December 2025
 
@@ -588,16 +589,15 @@ def load_ard(
      verbose : bool, optional
         If True, print progress statements during loading.
     **kwargs :
-        A set of keyword arguments to `dc.load` or `odc.stac.load` that define the
-        spatiotemporal query and load parameters used to extract data.
-        Keyword arguments can either be listed directly in the
-        ``load_ard`` call like any other parameter (e.g.
-        ``resampling='bilinear'``), or by passing in a query kwarg
-        dictionary (e.g. ``**query``). Keywords depend on the approach being used
-        for loading (STAC or datacube), see the ``dc.load`` documentation for all possible options:
-        https://datacube-core.readthedocs.io/en/latest/api/indexed-data/generate/datacube.Datacube.load.html. 
-        Or the odc.stac.load documentation:
-        https://odc-stac.readthedocs.io/en/latest/_api/odc.stac.load.html
+        A set of keyword arguments to `odc.stac.load` or `dc.load` that define
+        the spatiotemporal query and load parameters used to extract data.
+        Keyword arguments can either be listed directly in ``load_ard`` like
+        any other parameter (e.g. ``resampling='bilinear'``), or by passing
+        in a query kwarg dictionary (e.g. ``**query``). Keywords depend on the
+        approach being used for loading (STAC or datacube): see the ``odc.stac.load``
+        documentation: https://odc-stac.readthedocs.io/en/latest/_api/odc.stac.load.html
+        or ``dc.load`` documentation for all possible options:
+        https://datacube-core.readthedocs.io/en/latest/api/indexed-data/generate/datacube.Datacube.load.html
 
     Returns
     -------
@@ -605,12 +605,19 @@ def load_ard(
         An xarray.Dataset containing only satellite observations with
         a proportion of good quality pixels greater than `min_gooddata`.
 
-    Notes
-    -----
-    The `load_ard` function is designed to allow loading multiple Analysis
-    Ready satellite data products at once, and automatically apply cloud
-    masking and filtering. For loading non-satellite observation products
-    (e.g. DEA Water Observations), use ``odc-stac`` or ``dc.load`` instead.
+    Examples
+    --------
+    Load available ARD data from multiple Landsat collections:
+    
+    >>> ds = load_ard(
+    ...     dc=catalog,
+    ...     products=["ga_ls8c_ard_3", "ga_ls9c_ard_3"],
+    ...     bands=["nbart_green", "nbart_red", "nbart_blue"],
+    ...     lon=(149.06, 149.17),
+    ...     lat=(-35.27, -35.32),
+    ...     datetime="2025-06-27/2025-07-20",
+    ...     groupby="solar_day",
+    ... )    
     """
     # Convert products to a list if it is passed as a string
     products = [products] if isinstance(products, str) else products
@@ -626,7 +633,8 @@ def load_ard(
     ########################
 
     if isinstance(dc, pystac_client.client.Client):
-        if verbose: print("Loading data with STAC")
+        if verbose:
+            print("Loading data with STAC")
         method = "stac"
         chunks_param = "chunks"
         bands_param = "bands"
@@ -640,16 +648,16 @@ def load_ard(
             "measurements": "bands",
             "output_crs": "crs",
             "time": "datetime='2000/2001' (instead of time=('2000','2001'))",
-            "group_by": "groupby"
+            "group_by": "groupby",
         }
-    
+
         for wrong, correct in dc_to_stac_errors.items():
             if wrong in kwargs:
                 raise ValueError(
                     f"When loading with STAC, `{wrong}` is not valid. "
                     f"Please use `{correct}` instead."
                 )
-    
+
         # STAC requires resolution as a single integer
         if "resolution" in kwargs and isinstance(kwargs["resolution"], tuple):
             raise ValueError(
@@ -659,19 +667,19 @@ def load_ard(
             )
 
     else:
-        if verbose: 
+        if verbose:
             print("Loading data with datacube")
         method = "datacube"
         chunks_param = "dask_chunks"
         bands_param = "measurements"
-    
+
         # Raise meaningful errors for any STAC-style kwargs
         stac_to_dc_errors = {
             "chunks": "dask_chunks",
             "bands": "measurements",
             "crs": "output_crs",
             "datetime": "time=('2000','2001')",
-            "groupby": "group_by"
+            "groupby": "group_by",
         }
 
         for wrong, correct in stac_to_dc_errors.items():
@@ -680,14 +688,14 @@ def load_ard(
                     f"When loading with datacube, `{wrong}` is not valid. "
                     f"Please use `{correct}` instead."
                 )
-    
+
         # STAC-style 'resolution' (single int) vs datacube expects tuple
         if "resolution" in kwargs and not isinstance(kwargs["resolution"], tuple):
             raise ValueError(
                 "When loading with datacube, `resolution` must be a tuple "
                 "(e.g., `resolution=(-30, 30)`) rather than a single value."
             )
-    
+
     #########
     # Setup #
     #########
