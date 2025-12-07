@@ -31,6 +31,7 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     "aiohttp>=3.5.0",
     "click>=8.0.0",
+    "cql2>=0.2.0",
     "dask>=2023.1.0",
     "dask-ml>=2023.3.24",
     "eo-tides>=0.8.2",
