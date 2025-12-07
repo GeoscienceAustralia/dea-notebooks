@@ -11,3 +11,5 @@ dist
 uv.lock
 */local_data/*
 Scientific_workflows/*
+.vscode/
+.github/instructions/*
