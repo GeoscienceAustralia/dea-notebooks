@@ -1966,3 +1966,121 @@ def load_reproject(
 
     # Squeeze if only one band
     return da.squeeze()
+
+
+def stac_collections(catalog: pystac_client.Client, products: str | list[str]) -> pd.DataFrame:
+    """
+    Summarise key spatial and temporal metadata for a list of STAC collections.
+
+    Parameters
+    ----------
+    catalog : pystac_client.Client
+        An open STAC catalog or API endpoint.
+    products : str or list of str
+        A collection ID or list of IDs to summarise.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A table indexed by product ID, including:
+        - description : Collection description
+        - bbox : Spatial extent as minx, miny, maxx, maxy
+        - start_date : Start date of temporal extent
+        - end_date : End date of temporal extent
+        - license : Collection licence string
+    """
+    # Convert products to a list if it is passed as a string
+    products = [products] if isinstance(products, str) else products
+
+    # List to hold outputs
+    rows = []
+
+    # Iterate over products
+    for p in products:
+        # Search STAC for collection name
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            c = catalog.get_collection(p)
+
+        # Get spatial and temporal regions
+        s = c.extent.spatial.bboxes[0]
+        t = c.extent.temporal.intervals[0]
+
+        # Convert to human readable
+        rows.append({
+            "product": p,
+            "description": c.description,
+            "bbox": f"{s[0]:.2f}, {s[1]:.2f}, {s[2]:.2f}, {s[3]:.2f}",
+            "start_date": t[0].date() if t[0] else None,
+            "end_date": t[1].date() if t[1] else None,
+            "license": c.license,
+        })
+
+    # Return as dataframe with product index, sorted by start date
+    return pd.DataFrame(rows).set_index("product").sort_values("start_date")
+
+
+def stac_assets(catalog: pystac_client.Client, products: str | list[str]) -> pd.DataFrame:
+    """
+    Summarise the assets in one or more STAC collections/products.
+
+    Assets are based on the first STAC item found for each
+    collection/product.
+    
+    Parameters
+    ----------
+    catalog : pystac_client.Client
+        An open STAC catalog or API endpoint.
+    products : str or list of str
+        A collection ID or list of IDs to summarise assets for.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A table with product as index, and a row for each asset.
+    """
+    # Convert products to a list if it is passed as a string
+    products = [products] if isinstance(products, str) else products
+
+    # List to hold outputs
+    rows = []
+
+    # Iterate over every product
+    for p in products:
+
+        # Search the STAC catalog for an item
+        query = catalog.search(
+            collections=p,
+            max_items=1,
+        )
+        
+        # Convert to a list
+        item = list(query.items())[0]
+    
+        for name, asset in item.assets.items():
+        
+            roles = ", ".join(asset.roles) if asset.roles else None
+        
+            # eo:bands extension (if present)
+            bands = asset.extra_fields.get("eo:bands") or asset.extra_fields.get("bands")
+            if bands:
+                band_names = ", ".join(b.get("name", "") for b in bands)
+            else:
+                band_names = ""
+        
+            nodata = asset.extra_fields.get("nodata", "")
+            dtype = asset.extra_fields.get("type", "") or asset.extra_fields.get("dtype", "")
+        
+            rows.append(
+                dict(
+                    product=p,
+                    asset=name,
+                    roles=roles,
+                    band_names=band_names,
+                    nodata=nodata,
+                    dtype=dtype,
+                )
+            )
+
+    # Return as a dataframe with product and asset as indexes
+    return pd.DataFrame(rows).set_index(["product", "asset"])
