@@ -1968,7 +1968,7 @@ def load_reproject(
     return da.squeeze()
 
 
-def stac_collections(catalog: pystac_client.Client, products: list[str]) -> pd.DataFrame:
+def stac_collections(catalog: pystac_client.Client, products: str | list[str]) -> pd.DataFrame:
     """
     Summarise key spatial and temporal metadata for a list of STAC collections.
 
@@ -1976,7 +1976,7 @@ def stac_collections(catalog: pystac_client.Client, products: list[str]) -> pd.D
     ----------
     catalog : pystac_client.Client
         An open STAC catalog or API endpoint.
-    products : list of str
+    products : str or list of str
         A collection ID or list of IDs to summarise.
 
     Returns
@@ -2020,7 +2020,7 @@ def stac_collections(catalog: pystac_client.Client, products: list[str]) -> pd.D
     return pd.DataFrame(rows).set_index("product").sort_values("start_date")
 
 
-def stac_assets(catalog: pystac_client.Client, products: list[str]) -> pd.DataFrame:
+def stac_assets(catalog: pystac_client.Client, products: str | list[str]) -> pd.DataFrame:
     """
     Summarise the assets in one or more STAC collections/products.
 
@@ -2058,35 +2058,27 @@ def stac_assets(catalog: pystac_client.Client, products: list[str]) -> pd.DataFr
         item = list(query.items())[0]
     
         for name, asset in item.assets.items():
-            
-            # Asset-level fields
+        
             roles = ", ".join(asset.roles) if asset.roles else None
-            
+        
             # eo:bands extension (if present)
             bands = asset.extra_fields.get("eo:bands") or asset.extra_fields.get("bands")
             if bands:
-                # Try to extract meaningful summaries from bands list
-                band_names = ", ".join([b.get("name", "") for b in bands])
-                band_units = ", ".join([b.get("unit", "") for b in bands])
+                band_names = ", ".join(b.get("name", "") for b in bands)
             else:
-                band_names = None
-                band_units = None
-            
-            # Common spatial metadata (if present)
-            nodata = asset.extra_fields.get("nodata")
-            dtype = asset.extra_fields.get("type") or asset.extra_fields.get("dtype")
-    
+                band_names = ""
+        
+            nodata = asset.extra_fields.get("nodata", "")
+            dtype = asset.extra_fields.get("type", "") or asset.extra_fields.get("dtype", "")
+        
             rows.append(
                 dict(
                     product=p,
                     asset=name,
                     roles=roles,
                     band_names=band_names,
-    
-                    # Not currently supported, but hopefully soon
-                    # band_units=band_units,
-                    # nodata=nodata,
-                    # dtype=dtype,
+                    nodata=nodata,
+                    dtype=dtype,
                 )
             )
 
