@@ -1977,7 +1977,7 @@ def stac_collections(catalog: pystac_client.Client, products: list[str]) -> pd.D
     catalog : pystac_client.Client
         An open STAC catalog or API endpoint.
     products : list of str
-        Collection IDs to summarise.
+        A collection ID or list of IDs to summarise.
 
     Returns
     -------
@@ -1989,7 +1989,13 @@ def stac_collections(catalog: pystac_client.Client, products: list[str]) -> pd.D
         - end_date : End date of temporal extent
         - license : Collection licence string
     """
+    # Convert products to a list if it is passed as a string
+    products = [products] if isinstance(products, str) else products
+
+    # List to hold outputs
     rows = []
+
+    # Iterate over products
     for p in products:
         # Search STAC for collection name
         with warnings.catch_warnings():
@@ -2005,7 +2011,7 @@ def stac_collections(catalog: pystac_client.Client, products: list[str]) -> pd.D
             "product": p,
             "description": c.description,
             "bbox": f"{s[0]:.2f}, {s[1]:.2f}, {s[2]:.2f}, {s[3]:.2f}",
-            "start_date": t[0].date(),
+            "start_date": t[0].date() if t[0] else None,
             "end_date": t[1].date() if t[1] else None,
             "license": c.license,
         })
@@ -2016,64 +2022,73 @@ def stac_collections(catalog: pystac_client.Client, products: list[str]) -> pd.D
 
 def stac_assets(catalog: pystac_client.Client, products: list[str]) -> pd.DataFrame:
     """
-    Summarise the assets in a STAC collection/product.
+    Summarise the assets in one or more STAC collections/products.
 
-    Assets are listed from the first item found in the list
-    of products.
+    Assets are based on the first STAC item found for each
+    collection/product.
     
     Parameters
     ----------
     catalog : pystac_client.Client
         An open STAC catalog or API endpoint.
-    products : list of str
-        Collection IDs to load an item from.
+    products : str or list of str
+        A collection ID or list of IDs to summarise assets for.
 
     Returns
     -------
     pandas.DataFrame
-        A table where each row describes one asset.
+        A table with product as index, and a row for each asset.
     """
-    # Search the STAC catalog for an item
-    query = catalog.search(
-        collections=products,
-        max_items=1,
-    )
-    
-    # Convert to a list
-    item = list(query.items())[0]
-    
+    # Convert products to a list if it is passed as a string
+    products = [products] if isinstance(products, str) else products
+
+    # List to hold outputs
     rows = []
 
-    for name, asset in item.assets.items():
-        
-        # Asset-level fields
-        roles = ", ".join(asset.roles) if asset.roles else None
-        
-        # eo:bands extension (if present)
-        bands = asset.extra_fields.get("eo:bands") or asset.extra_fields.get("bands")
-        if bands:
-            # Try to extract meaningful summaries from bands list
-            band_names = ", ".join([b.get("name", "") for b in bands])
-            band_units = ", ".join([b.get("unit", "") for b in bands])
-        else:
-            band_names = None
-            band_units = None
-        
-        # Common spatial metadata (if present)
-        nodata = asset.extra_fields.get("nodata")
-        dtype = asset.extra_fields.get("type") or asset.extra_fields.get("dtype")
+    # Iterate over every product
+    for p in products:
 
-        rows.append(
-            dict(
-                asset=name,
-                roles=roles,
-                band_names=band_names,
-
-                # Not currently supported, but hopefully soon
-                # band_units=band_units,
-                # nodata=nodata,
-                # dtype=dtype,
-            )
+        # Search the STAC catalog for an item
+        query = catalog.search(
+            collections=p,
+            max_items=1,
         )
+        
+        # Convert to a list
+        item = list(query.items())[0]
     
-    return pd.DataFrame(rows).set_index("asset")
+        for name, asset in item.assets.items():
+            
+            # Asset-level fields
+            roles = ", ".join(asset.roles) if asset.roles else None
+            
+            # eo:bands extension (if present)
+            bands = asset.extra_fields.get("eo:bands") or asset.extra_fields.get("bands")
+            if bands:
+                # Try to extract meaningful summaries from bands list
+                band_names = ", ".join([b.get("name", "") for b in bands])
+                band_units = ", ".join([b.get("unit", "") for b in bands])
+            else:
+                band_names = None
+                band_units = None
+            
+            # Common spatial metadata (if present)
+            nodata = asset.extra_fields.get("nodata")
+            dtype = asset.extra_fields.get("type") or asset.extra_fields.get("dtype")
+    
+            rows.append(
+                dict(
+                    product=p,
+                    asset=name,
+                    roles=roles,
+                    band_names=band_names,
+    
+                    # Not currently supported, but hopefully soon
+                    # band_units=band_units,
+                    # nodata=nodata,
+                    # dtype=dtype,
+                )
+            )
+
+    # Return as a dataframe with product and asset as indexes
+    return pd.DataFrame(rows).set_index(["product", "asset"])
