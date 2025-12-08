@@ -9,7 +9,8 @@ The Beginners Guide contains introductory notebooks aimed at introducing Jupyter
    01_Jupyter_notebooks.ipynb
    02_DEA.ipynb
    03_Products_and_measurements.ipynb
-   04_Loading_data.ipynb
+   04a_Loading_data_STAC.ipynb
+   04b_Loading_data_datacube.ipynb
    05_Plotting.ipynb
    06_Basic_analysis.ipynb
    07_Intro_to_numpy.ipynb
