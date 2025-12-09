@@ -6,20 +6,17 @@ produce animations for multiple DEA products.
 
 # Import required packages
 import datetime
-import itertools
 import json
 import warnings
 from io import BytesIO
 
-import datacube
 import geopandas as gpd
 import ipywidgets as widgets
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from datacube.utils.geometry import Geometry
-from datacube.utils.masking import mask_invalid_data
+import pystac_client
 from ipyleaflet import (
     LayerGroup,
     Marker,
@@ -36,6 +33,7 @@ from ipywidgets import (
     Output,
     VBox,
 )
+from odc.geo import Geometry
 from skimage.filters import unsharp_mask
 
 from dea_tools.app.widgetconstructors import (
@@ -48,6 +46,8 @@ from dea_tools.app.widgetconstructors import (
 )
 from dea_tools.coastal import get_coastlines
 from dea_tools.dask import create_local_dask_cluster
+from dea_tools.datahandling import load_ard
+from dea_tools.plotting import xr_animation
 from dea_tools.spatial import reverse_geocode
 
 warnings.filterwarnings("ignore")
@@ -141,75 +141,60 @@ def update_map_layers(self, update_basemap=False):
 
 
 def extract_data(self):
-    # Connect to datacube database
-    dc = datacube.Datacube(app="Exporting satellite images")
-
     # Configure local dask cluster
     client = create_local_dask_cluster(return_client=True, display_client=True)
+
+    # Connect to STAC API
+    catalog = pystac_client.Client.open("https://explorer.dea.ga.gov.au/stac")
 
     # Convert to geopolygon
     geopolygon = Geometry(geom=self.gdf_drawn.geometry[0], crs=self.gdf_drawn.crs)
 
     # Create query after adjusting interval time to UTC by
-    # adding a UTC offset of -10 hours. This results issues
+    # adding a UTC offset of -10 hours. This resolves issues
     # on the east coast of Australia where satelite overpasses
     # can occur on either side of 24:00 hours UTC
-    start_date = np.datetime64(self.start_date) - np.timedelta64(10, "h")
-    end_date = np.datetime64(self.end_date) + np.timedelta64(14, "h")
+    start_dt = (np.datetime64(self.start_date) - np.timedelta64(10, "h")).astype("datetime64[s]").item()
+    end_dt = (np.datetime64(self.end_date) + np.timedelta64(14, "h")).astype("datetime64[s]").item()
+
+    # Create query params
     self.query_params = {
-        "time": (str(start_date), str(end_date)),
+        "datetime": f"{start_dt.isoformat()}Z/{end_dt.isoformat()}Z",
         "geopolygon": geopolygon,
     }
 
-    # Find matching datasets
-    dss = [dc.find_datasets(product=i, **self.query_params) for i in sat_params[self.dealayer]["products"]]
-    dss = list(itertools.chain.from_iterable(dss))
+    # Create load params
+    self.load_params = {
+        "bands": sat_params[self.dealayer]["styles"][self.style][1],
+        "resolution": self.resolution,
+        "crs": "utm",
+        "groupby": "solar_day",
+        "chunks": {"x": 2048, "y": 2048},
+        "resampling": {"*": "bilinear", "oa_fmask": "nearest", "fmask": "nearest"},
+        "fail_on_error": False,
+        "dtype": "float32",
+    }
 
-    # If data is found
-    if len(dss) > 0:
-        # Get CRS
-        crs = str(dss[0].crs)
+    # Load data
+    timeseries_ds = load_ard(
+        dc=catalog,
+        products=sat_params[self.dealayer]["products"],
+        min_gooddata=1.0 - (self.max_cloud_cover / 100),
+        ls7_slc_off=False,
+        mask_pixel_quality=self.cloud_mask,
+        **self.load_params,
+        **self.query_params,
+    )
 
-        self.load_params = {
-            "measurements": sat_params[self.dealayer]["styles"][self.style][1],
-            "resolution": (-self.resolution, self.resolution),
-            "output_crs": crs,
-            "group_by": "solar_day",
-            "dask_chunks": {"time": 1, "x": 2048, "y": 2048},
-            "resampling": {"*": "bilinear", "oa_fmask": "nearest", "fmask": "nearest"},
-            "skip_broken_datasets": True,
-        }
+    # If resampling freq specified
+    if self.resample_freq:
+        print(f"\nResampling data to {self.resample_freq} frequency")
+        timeseries_ds = timeseries_ds.resample(time=self.resample_freq).median()
 
-        # Load data
-        from dea_tools.datahandling import load_ard
-
-        timeseries_ds = load_ard(
-            dc=dc,
-            products=sat_params[self.dealayer]["products"],
-            min_gooddata=1.0 - (self.max_cloud_cover / 100),
-            ls7_slc_off=False,
-            mask_pixel_quality=self.cloud_mask,
-            **self.load_params,
-            **self.query_params,
-        )
-
-        # Set invalid nodata pixels to NaN
-        timeseries_ds = mask_invalid_data(timeseries_ds)
-
-        # If resampling freq specified
-        if self.resample_freq:
-            print(f"\nResampling data to {self.resample_freq} frequency")
-            timeseries_ds = timeseries_ds.resample(time=self.resample_freq).median()
-
-        # load into memory
-        timeseries_ds.load()
-
-    # Else if no data is returned, return None
-    else:
-        timeseries_ds = None
+    # load into memory
+    timeseries_ds.load()
 
     # Close down the dask client
-    #     client.shutdown()
     client.close()
 
     return timeseries_ds
@@ -248,8 +233,6 @@ def plot_data(self, fname):
         ]
     else:
         funcs_list = None
-
-    from dea_tools.plotting import xr_animation
 
     xr_animation(
         output_path=fname,
