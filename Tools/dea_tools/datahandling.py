@@ -1968,7 +1968,10 @@ def load_reproject(
     return da.squeeze()
 
 
-def stac_collections(catalog: pystac_client.Client, products: str | list[str]) -> pd.DataFrame:
+def stac_collections(
+    catalog: pystac_client.Client,
+    products: str | list[str] | None = None
+) -> pd.DataFrame:
     """
     Summarise key spatial and temporal metadata for a list of STAC collections.
 
@@ -1977,7 +1980,9 @@ def stac_collections(catalog: pystac_client.Client, products: str | list[str]) -
     catalog : pystac_client.Client
         An open STAC catalog or API endpoint.
     products : str or list of str
-        A collection ID or list of IDs to summarise.
+        A collection ID or list of IDs to summarise. By default, this
+        function will list all products in the list provided by:
+        https://explorer.dea.ga.gov.au/products.txt
 
     Returns
     -------
@@ -1989,6 +1994,13 @@ def stac_collections(catalog: pystac_client.Client, products: str | list[str]) -
         - end_date : End date of temporal extent
         - license : Collection licence string
     """
+    # If user doesn't supply a product list, return all products listed
+    # on explorer.
+    if products is None:
+        products = pd.read_csv('https://explorer.dea.ga.gov.au/products.txt',
+                            header=None)[0]
+        products = list(products.sort_values())
+        
     # Convert products to a list if it is passed as a string
     products = [products] if isinstance(products, str) else products
 
@@ -2017,7 +2029,7 @@ def stac_collections(catalog: pystac_client.Client, products: str | list[str]) -
         })
 
     # Return as dataframe with product index, sorted by start date
-    return pd.DataFrame(rows).set_index("product").sort_values("start_date")
+    return pd.DataFrame(rows).set_index("product").sort_index()
 
 
 def stac_assets(catalog: pystac_client.Client, products: str | list[str]) -> pd.DataFrame:
