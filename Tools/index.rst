@@ -28,7 +28,6 @@ Core modules
    dea_tools.waterbodies
    dea_tools.wetlands
    dea_tools.sar
-   dea_tools.masking
    
 Apps and widgets
 -----------------
