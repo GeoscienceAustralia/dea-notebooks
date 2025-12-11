@@ -32,7 +32,6 @@ def list_flag_names(variable):
 
 
 
-[docs]
 def describe_variable_flags(variable, with_pandas: bool = True) -> DataFrame | str:
     """
     Returns either a Pandas Dataframe (with_pandas=True - default) or a string
@@ -83,7 +82,6 @@ def _order_bitdefs_by_bits(bitdef):
 
 
 
-[docs]
 def make_mask(variable: Dataset | DataArray, **flags):
     """
     Returns a mask array, based on provided flags
@@ -136,7 +134,6 @@ def valid_data_mask(data):
 
 
 
-[docs]
 def mask_invalid_data(data, keep_attrs: bool = True):
     """
     Sets all `nodata` values to ``nan``.
