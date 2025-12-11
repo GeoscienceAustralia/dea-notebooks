@@ -433,7 +433,7 @@ def _get_training_data_for_shp(
     out_vars : List[List[str]]
         An empty list into which the data variable names are stored.
     dc_query : Dict
-        ODC query.
+        ODC query parameters.
     return_coords : bool
         Flag indicating whether to return coordinates in the dataset.
     feature_func : callable, optional
@@ -464,9 +464,13 @@ def _get_training_data_for_shp(
     if "dask_chunks" in dc_query:
         dc_query.pop("dask_chunks", None)
 
-    # set up query based on polygon
+    # ensure polygons are lat/lon for stac query
+    gdf = gdf.to_crs('EPSG:4326')
+    
+    # set up query based on polygon (stac api expects intersects=)
     geom = Geometry(geom=gdf.iloc[index].geometry, crs=gdf.crs)
-    q = {"geopolygon": geom}
+    q = {"bbox": geom.boundingbox}
+    
     # merge polygon query with user supplied query params
     dc_query.update(q)
 
@@ -619,12 +623,12 @@ def collect_training_data(
     time_delta: timedelta = None,
 ) -> Tuple[List[np.ndarray], List[str]]:
     """
-    This function provides methods for gathering training data from the ODC over
-    geometries stored within a geopandas geodataframe. The function will return a
+    This function provides methods for gathering training data from DEA's STAC API (using odc.stac)
+    over geometries stored within a geopandas geodataframe. The function will return a
     'model_input' array containing stacked training data arrays with all NaNs & Infs removed.
     In the instance where ncpus > 1, a parallel version of the function will be run
     (functions are passed to a mp.Pool()). This function can conduct zonal statistics if
-    the supplied shapefile contains polygons. The 'feature_func' parameter defines what
+    the supplied vector file contains polygons. The 'feature_func' parameter defines what
     features to produce.
 
     Parameters
@@ -632,26 +636,49 @@ def collect_training_data(
     gdf : geopandas geodataframe
         geometry data in the form of a geopandas geodataframe
     dc_query : dictionary
-        Datacube query object, should not contain lat and long (x or y)
-        variables as these are supplied by the 'gdf' variable
+        Query object containing loading and searching parameters. for example:
+            query = {
+                'datetime': datetime,
+                'resolution': resolution,
+                'crs': crs,
+                'groupby': 'solar_day'
+                }
+        Importantly, this dictionary should not contain spatial information
+        such as lat/lon, bbox, or geopolygon. The spatial component of 
+        the query is supplied by 'gdf' variable.
     ncpus : int
-        The number of cpus/processes over which to parallelize the gathering
+        The number of cpus over which to parallelize the gathering
         of training data (only if ncpus is > 1). Use 'mp.cpu_count()' to determine the number of
         cpus available on a machine. Defaults to 1.
-    return_coords : bool
-        If True, then the training data will contain two extra columns 'x_coord' and
-        'y_coord' corresponding to the x,y coordinate of each sample. This variable can
-        be useful for handling spatial autocorrelation between samples later in the ML workflow.
     feature_func : function
         A function for generating feature layers that is applied to the data within
         the bounds of the input geometry. The 'feature_func' must accept a 'dc_query'
         object, and return a single xarray.Dataset or xarray.DataArray containing
         2D coordinates (i.e x, y - no time dimension).
         e.g.
-            def feature_function(query):
-                dc = datacube.Datacube(app='feature_layers')
-                ds = dc.load(**query)
-                ds = ds.mean('time')
+            def custom_function(query):
+                # configure s3 access and connect to the pystac client
+                odc.stac.configure_s3_access(cloud_defaults=True, aws_unsigned=True)
+                catalog = pystac_client.Client.open("https://explorer.dea.ga.gov.au/stac")
+
+                # Search the STAC catalog for all items matching the supplied query.
+                # Search query is different from load query so we may need to remove some keys.
+                # 'collect_training_data' will add the spatial query automatically based
+                # on the boundaries of each geometry in the vector data (i.e. bbox=geom.boundingbox)
+                drop_keys = ['resolution', 'crs', 'groupby']
+                search_query = {k: v for k, v in query.items() if k not in drop_keys}
+
+                items = catalog.search(
+                    collections='ga_ls8cls9c_gm_cyear_3',
+                    **search_query
+                )
+
+                # Convert to a list
+                items = list(items.items())
+
+                # Load data using query
+                ds = odc.stac.load(items, **query)
+
                 return ds
     field : str
         Name of the column in the gdf that contains the class labels
@@ -659,15 +686,19 @@ def collect_training_data(
         An optional string giving the names of zonal statistics to calculate
         for each polygon. Default is None (all pixel values are returned). Supported
         values are 'mean', 'median', 'max', 'min'.
+    return_coords : bool
+        If True, then the training data will contain two extra columns 'x_coord' and
+        'y_coord' corresponding to the x,y coordinate of each sample. This variable can
+        be useful for handling spatial autocorrelation between samples later in the ML workflow.
     clean : bool
         Whether or not to remove missing values in the training dataset. If True,
         training labels with any NaNs or Infs in the feature layers will be dropped
         from the dataset.
     fail_threshold : float, default 0.02
-        Silent read fails on S3 can result in some rows of the returned data containing NaN values.
-        The'fail_threshold' fraction specifies a % of acceptable fails.
+        Silent read fails on S3 can sometimes result in rows of the returned data
+        containing NaN values. The'fail_threshold' fraction specifies a % of acceptable fails.
         e.g. Setting 'fail_threshold' to 0.05 means if >5% of the samples in the training dataset
-        fail then those samples will be reutnred to the multiprocessing queue. Below this fraction
+        fail then those samples will be returned to the multiprocessing queue. Below this fraction
         the function will accept the failures and return the results.
     fail_ratio: float
         A float between 0 and 1 that defines if a given training sample has failed.
@@ -835,7 +866,10 @@ def collect_training_data(
         print("Returning data without cleaning")
         print("Output shape: ", model_input.shape)
 
-    return column_names[0:-1], model_input
+    # Return data as a pandas dataframe
+    df = pd.DataFrame(data=model_input, columns=column_names[0:-1]).set_index(field)
+    
+    return df
 
 
 class KMeans_tree(ClusterMixin):
