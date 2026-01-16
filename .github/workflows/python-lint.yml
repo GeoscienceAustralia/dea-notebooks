@@ -26,4 +26,6 @@ jobs:
     steps:
         - name: Perform Bandit Analysis
           uses: PyCQA/bandit-action@v1
+          with:
+            severity: "high"
     
