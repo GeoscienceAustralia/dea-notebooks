@@ -27,7 +27,7 @@ jobs:
             -exec jupyter nbconvert --to python --output-dir converted_notebooks {} \;
 
       - name: Install Bandit
-        run: pip install bandit
+        run: pip install bandit[sarif]
 
       - name: Run Bandit (SARIF output)
         run: |
