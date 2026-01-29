@@ -35,3 +35,8 @@ jobs:
             -f sarif \
             -o bandit.sarif \
             -ll || true
+      
+      - name: Upload SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: bandit.sarif
