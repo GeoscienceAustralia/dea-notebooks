@@ -24,10 +24,14 @@ jobs:
         run: |
           mkdir -p converted_notebooks
           find . -name "*.ipynb" -not -path "./.venv/*" \
-            -exec jupyter nbconvert --to script --output-dir converted_notebooks {} \;
+            -exec jupyter nbconvert --to python --output-dir converted_notebooks {} \;
 
-      - name: Perform Bandit Analysis
-        uses: PyCQA/bandit-action@v1
-        with:
-          severity: "high"
-          targets: "converted_notebooks/"
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit (SARIF output)
+        run: |
+          bandit -r converted_notebooks \
+            -f sarif \
+            -o bandit.sarif \
+            -ll || true

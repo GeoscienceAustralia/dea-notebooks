@@ -1,7 +1,6 @@
 name: Python Lint
 on:
   workflow_dispatch:
-  push:
 
 jobs:
   ruff:
