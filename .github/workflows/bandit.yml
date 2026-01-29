@@ -1,0 +1,23 @@
+name: Bandit
+on:
+  workflow_dispatch:
+
+jobs:
+  convert_notebooks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Convert notebooks to Python
+        run: |
+          mkdir -p converted_notebooks
+          find . -name "*.ipynb" -not -path "./.venv/*" \
+            -exec jupyter nbconvert --to script --output-dir converted_notebooks {} \;
+
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Perform Bandit Analysis
+          uses: PyCQA/bandit-action@v1
+          with:
+            severity: "high"
+            targets: "converted_notebooks/"
+    
