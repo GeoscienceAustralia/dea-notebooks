@@ -1,14 +1,6 @@
 name: Python Lint
 on:
-  pull_request:
-    paths:
-    - '**.ipynb'
-    - '**.py'
   workflow_dispatch:
-  push:
-    paths:
-#    - '**.ipynb'
-#    - '**.py'
 
 jobs:
   ruff:
