@@ -413,7 +413,7 @@ def WIT_drill(
     # Load Landsat 5, 7 and 8 data. Not including Landsat 7 SLC off period (31-05-2003 to 06-04-2022)
     ds_ls = load_ard(
         dc,
-        products=["ga_ls8c_ard_3", "ga_ls7e_ard_3", "ga_ls5t_ard_3"],
+        products=["ga_ls9c_ard_3","ga_ls8c_ard_3", "ga_ls7e_ard_3", "ga_ls5t_ard_3"],
         ls7_slc_off=False,
         measurements=bands,
         geopolygon=gpgon,
