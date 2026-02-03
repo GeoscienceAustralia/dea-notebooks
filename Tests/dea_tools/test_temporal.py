@@ -4,7 +4,7 @@ from scipy import stats
 import xarray as xr
 import datacube
 from datacube.utils.masking import mask_invalid_data
-from dea_tools.temporal import xr_regression
+from dea_tools.temporal import xr_regression, xr_optical_flow
 
 @pytest.fixture()
 def satellite_ds():
@@ -28,6 +28,21 @@ def satellite_ds():
     ds = mask_invalid_data(ds)
 
     return ds
+
+
+@pytest.fixture()
+def intertidal_da():
+    # Connect to datacube
+    dc = datacube.Datacube()
+
+    # Load available data 
+    return dc.load(
+        product="ga_s2ls_intertidal_cyear_3",
+        measurements=["elevation"],
+        y=(-34.75, -34.76),
+        x=(138.48, 138.51),
+        time=("2020", "2023"),
+    ).elevation    
 
 
 # Run test on different pixels and alternative hypotheses
@@ -182,8 +197,42 @@ def test_nan_mask_preserved(sample_da):
         assert np.isnan(ds[var][1, 2]), f"{var} did not preserve NaN mask"
 
 
+@pytest.mark.parametrize("method,parallel,baseline", [
+    ("ilk", False, "dynamic"),
+    ("ilk", True, "dynamic"),
+    ("ilk", True, "first"),
+    ("ilk", True, "custom"),
+    ("tvl1", True, "dynamic"),
+    ("deepflow", True, "dynamic"),
+    ("farneback", True, "dynamic"),
+    ("lucas_kanade", True, "first"),
+])
+def test_xr_optical_flow(intertidal_da, method, parallel, baseline):
 
+    # Use single timestep for custom baseline
+    if baseline == "custom":
+        baseline = intertidal_da.isel(time=0, drop=True)
 
+    # Run the optical flow function
+    ds_flow = xr_optical_flow(intertidal_da, method=method, baseline=baseline, parallel=parallel)
 
+    # Check output type
+    assert isinstance(ds_flow, xr.Dataset)
 
+    # Check expected variables are included in output
+    assert "v" in ds_flow and "u" in ds_flow and "magnitude" in ds_flow
 
+    # Check geobox to ensure both arrays share the same pixel grid
+    # (lucas kanade is a sparse method, and does not return data in a grid)
+    if method != "lucas_kanade":
+        assert ds_flow.odc.geobox == intertidal_da.odc.geobox
+
+    # Check timesteps
+    input_timesteps = len(intertidal_da.time)
+    output_timesteps = len(ds_flow.time)
+    
+    if method in ("first", "dynamic"):
+        assert input_timesteps == (input_timesteps - 1)
+    else:
+        assert input_timesteps == input_timesteps
+    

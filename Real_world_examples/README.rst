@@ -21,6 +21,7 @@ More complex case study workflows demonstrating how DEA can be used to address r
    Seasonal_water_extents.ipynb
    Shipping_lane_identification.ipynb
    Surface_area_duration.ipynb
+   Tracking_sediment_flow.ipynb
    Turbidity_animated_timeseries.ipynb
    Urban_change_detection.ipynb
    Vegetation_phenology.ipynb

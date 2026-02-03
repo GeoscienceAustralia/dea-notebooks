@@ -16,13 +16,13 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: May 2024
+Last modified: October 2025
 """
 
 import warnings
 
 import dask
-import dask.array as da
+import dask.array as daskarray
 import numpy as np
 import pandas as pd
 import scipy.signal
@@ -30,6 +30,9 @@ import xarray as xr
 from odc.geo.xr import assign_crs
 from packaging import version
 from scipy.stats import t
+import concurrent.futures
+from tqdm import tqdm
+from skimage.registration import optical_flow_ilk, optical_flow_tvl1
 
 
 def allNaN_arg(da, dim, stat):
@@ -298,13 +301,9 @@ def xr_phenology(
             "ROS": np.float32,
         }
         da_template = da.isel(time=0).drop("time")
-        template = xr.Dataset(
-            {
-                var_name: da_template.astype(var_dtype)
-                for var_name, var_dtype in stats_dtype.items()
-                if var_name in stats
-            }
-        )
+        template = xr.Dataset({
+            var_name: da_template.astype(var_dtype) for var_name, var_dtype in stats_dtype.items() if var_name in stats
+        })
         da_all_time = da.chunk({"time": -1})
 
         lazy_phenology = da_all_time.map_blocks(
@@ -431,9 +430,7 @@ def fourier_mean(x, n=3, step=5):
         for j in range(x.shape[1]):
             y = np.fft.fft(x[i, j, :])
             for k in range(n):
-                result[i, j, k] = np.mean(
-                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
-                )
+                result[i, j, k] = np.mean(np.abs(y[1 + k * step : ((k + 1) * step + 1) or None]))
 
     return result
 
@@ -448,9 +445,7 @@ def fourier_std(x, n=3, step=5):
         for j in range(x.shape[1]):
             y = np.fft.fft(x[i, j, :])
             for k in range(n):
-                result[i, j, k] = np.std(
-                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
-                )
+                result[i, j, k] = np.std(np.abs(y[1 + k * step : ((k + 1) * step + 1) or None]))
 
     return result
 
@@ -465,9 +460,7 @@ def fourier_median(x, n=3, step=5):
         for j in range(x.shape[1]):
             y = np.fft.fft(x[i, j, :])
             for k in range(n):
-                result[i, j, k] = np.median(
-                    np.abs(y[1 + k * step : ((k + 1) * step + 1) or None])
-                )
+                result[i, j, k] = np.median(np.abs(y[1 + k * step : ((k + 1) * step + 1) or None]))
 
     return result
 
@@ -602,9 +595,7 @@ def temporal_statistics(da, stats):
         da_all_time = da.chunk({"time": -1})
 
         # apply function across chunks
-        lazy_ds = da_all_time.map_blocks(
-            temporal_statistics, kwargs={"stats": stats}, template=template
-        )
+        lazy_ds = da_all_time.map_blocks(temporal_statistics, kwargs={"stats": stats}, template=template)
 
         try:
             crs = da.odc.geobox.crs
@@ -650,28 +641,23 @@ def temporal_statistics(da, stats):
         n3 = zz[:, :, 2]
 
         # intialise dataset with first statistic
-        ds = xr.DataArray(
-            n1, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
-        ).to_dataset(name=stats[0] + "_n1")
+        ds = xr.DataArray(n1, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]).to_dataset(
+            name=stats[0] + "_n1"
+        )
 
         # add other datasets
         for i, j in zip([n2, n3], ["n2", "n3"]):
-            ds[stats[0] + "_" + j] = xr.DataArray(
-                i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"]
-            )
+            ds[stats[0] + "_" + j] = xr.DataArray(i, attrs=attrs, coords={"x": x, "y": y}, dims=["y", "x"])
     else:
         # simpler if first function isn't fourier transform
         first_func = stats_dict.get(str(stats[0]))
         ds = first_func(da)
 
         # convert back to xarray dataset
-        ds = xr.DataArray(
-            ds, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
-        ).to_dataset(name=stats[0])
+        ds = xr.DataArray(ds, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]).to_dataset(name=stats[0])
 
     # loop through the other functions
     for stat in stats[1:]:
-
         # handle the fourier transform examples
         if stat in ("f_std", "f_median", "f_mean"):
             stat_func = stats_dict.get(str(stat))
@@ -681,9 +667,7 @@ def temporal_statistics(da, stats):
             n3 = zz[:, :, 2]
 
             for i, j in zip([n1, n2, n3], ["n1", "n2", "n3"]):
-                ds[stat + "_" + j] = xr.DataArray(
-                    i, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim]
-                )
+                ds[stat + "_" + j] = xr.DataArray(i, attrs=attrs, coords={x_dim: x, y_dim: y}, dims=[y_dim, x_dim])
 
         else:
             # Select a stats function from the dictionary
@@ -731,12 +715,8 @@ def time_buffer(input_date, buffer="30 days", output_format="%Y-%m-%d"):
         `input_date='2018-01-01'` and `buffer='30 days'`
     """
     # Use assertions to check we have the correct function input
-    assert isinstance(
-        input_date, str
-    ), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
-    assert isinstance(
-        buffer, str
-    ), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
+    assert isinstance(input_date, str), "Input date must be a string in quotes in 'yyyy-mm-dd' format"
+    assert isinstance(buffer, str), "Buffer must be a string supported by `pandas.Timedelta`, e.g. '5 days'"
 
     # Convert inputs to pandas format
     buffer = pd.Timedelta(buffer)
@@ -828,11 +808,7 @@ class LinregressResult:
 
     def __repr__(self):
         return "LinregressResult({})".format(
-            ", ".join(
-                "{}={}".format(k, getattr(self, k))
-                for k in dir(self)
-                if not k.startswith("_")
-            )
+            ", ".join("{}={}".format(k, getattr(self, k)) for k in dir(self) if not k.startswith("_"))
         )
 
 
@@ -1027,9 +1003,7 @@ def xr_regression(
     assert dim in x.dims, f"Array `x` does not contain dimension '{dim}'."
 
     # Assert that both arrays have the same length along "dim"
-    assert len(x[dim]) == len(
-        y[dim]
-    ), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
+    assert len(x[dim]) == len(y[dim]), f"Arrays `x` and `y` have different lengths along dimension '{dim}'."
 
     # Apply optional outlier masking to x and y variable
     if outliers_y is not None:
@@ -1069,7 +1043,7 @@ def xr_regression(
     if dask.is_dask_collection(cor):
         _pvalue_lazy = dask.delayed(_pvalue)
         pval = xr.DataArray(
-            da.from_delayed(
+            daskarray.from_delayed(
                 _pvalue_lazy(tstats, n, alternative),
                 shape=cor.shape,
                 dtype=cor.dtype,
@@ -1086,18 +1060,16 @@ def xr_regression(
         )
 
     # Combine into single dataset
-    regression_ds = xr.merge(
-        [
-            cov.rename("cov").astype(np.float32),
-            cor.rename("cor").astype(np.float32),
-            r2.rename("r2").astype(np.float32),
-            slope.rename("slope").astype(np.float32),
-            intercept.rename("intercept").astype(np.float32),
-            pval.rename("pvalue").astype(np.float32),
-            stderr.rename("stderr").astype(np.float32),
-            n.rename("n").astype(np.int16),
-        ]
-    )
+    regression_ds = xr.merge([
+        cov.rename("cov").astype(np.float32),
+        cor.rename("cor").astype(np.float32),
+        r2.rename("r2").astype(np.float32),
+        slope.rename("slope").astype(np.float32),
+        intercept.rename("intercept").astype(np.float32),
+        pval.rename("pvalue").astype(np.float32),
+        stderr.rename("stderr").astype(np.float32),
+        n.rename("n").astype(np.int16),
+    ])
 
     return regression_ds
 
@@ -1155,3 +1127,329 @@ def calculate_stsad(vec, window_size=365, step=10, progress=None, window="hann")
         progress=progress,
         window=window,
     )
+
+
+def _ilk_optical_flow(a, b, feature_kwargs=None, **kwargs):
+    """Compute optical flow using the scikit-image `optical_flow_ilk` method."""
+
+    # Set default params for optical flow analysis
+    params = {"radius": 20}
+    params.update(kwargs)
+
+    # Run optical flow analysis
+    return optical_flow_ilk(a, b, **params)
+
+
+def _tvl1_optical_flow(a, b, feature_kwargs=None, **kwargs):
+    """Compute optical flow using the scikit-image `optical_flow_tvl1` method."""
+
+    # Run optical flow analysis
+    return optical_flow_tvl1(a, b, **kwargs)
+
+
+def _farneback_optical_flow(a, b, feature_kwargs=None, **kwargs):
+    """Compute optical flow using the OpenCV `cv.calcOpticalFlowFarneback` method."""
+
+    # Attempt to import OpenCV and raise an error if not available
+    try:
+        import cv2 as cv
+    except ImportError as e:
+        raise ImportError(
+            "`cv2` is required for optical flow analysis with `method='farneback'`. "
+            "Please install DEA Tools with the `[cv]` or `[notebooks]` extra, e.g.: "
+            "`pip install dea-tools[notebooks]`"
+        ) from e
+
+    # Set default params for optical flow analysis
+    params = {
+        "pyr_scale": 0.5,
+        "levels": 3,
+        "winsize": 15,
+        "iterations": 3,
+        "poly_n": 5,
+        "poly_sigma": 1.2,
+        "flags": 0,
+    }
+    params.update(kwargs)
+
+    # Run optical flow analysis
+    flow = cv.calcOpticalFlowFarneback(a, b, None, **params)
+    return flow[..., 1], flow[..., 0]
+
+
+def _deepflow_optical_flow(a, b, feature_kwargs=None, **kwargs):
+    """Compute optical flow using the OpenCV `cv.optflow.createOptFlow_DeepFlow` method."""
+
+    # Attempt to import OpenCV and raise an error if not available
+    try:
+        import cv2 as cv
+    except ImportError as e:
+        raise ImportError(
+            "`cv2` is required for optical flow analysis with `method='deepflow'`. "
+            "Please install DEA Tools with the `[cv]` or `[notebooks]` extra, e.g.: "
+            "`pip install dea-tools[notebooks]`"
+        ) from e
+
+    # Run optical flow analysis
+    flow = cv.optflow.createOptFlow_DeepFlow().calc(a, b, None)
+    return flow[..., 1], flow[..., 0]
+
+
+def _lucas_kanade_optical_flow(a, b, feature_kwargs=None, **kwargs):
+    """Compute optical flow using the OpenCV `cv.calcOpticalFlowPyrLK` method.
+
+    This is a sparse optical flow method, which will return optical flow
+    for a series of point locations identified using `cv.goodFeaturesToTrack`.
+    """
+    # Attempt to import OpenCV and raise an error if not available
+    try:
+        import cv2 as cv
+    except ImportError as e:
+        raise ImportError(
+            "`cv2` is required for optical flow analysis with `method='lucas_kanade'`. "
+            "Please install DEA Tools with the `[cv]` or `[notebooks]` extra, e.g.: "
+            "`pip install dea-tools[notebooks]`"
+        ) from e
+
+    # Use empty dict if nothing is provided
+    if feature_kwargs is None:
+        feature_kwargs = {}
+
+    # Set default params for feature extraction (ShiTomasi corner detection)
+    feature_params = {
+        "mask": None,
+        "maxCorners": 20000,
+        "qualityLevel": 0.1,
+        "minDistance": 10,
+        "blockSize": 15,
+    }
+    feature_params.update(feature_kwargs)
+
+    # Set default params for optical flow analysis
+    params = {
+        "winSize": (25, 25),
+        "maxLevel": 1,
+        "criteria": (cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 30, 0.03),
+    }
+    params.update(kwargs)
+
+    # Extract good features to track
+    p0 = cv.goodFeaturesToTrack(a, **feature_params)
+
+    # Raise error if no points were found
+    if p0 is None:
+        raise ValueError("No valid points to track found.")
+
+    # Run optical flow analysis
+    p1, st, _ = cv.calcOpticalFlowPyrLK(a, b, p0, None, **params)
+
+    # Compute displacement vectors
+    u = p1[:, 0, 0] - p0[:, 0, 0]  # horizontal displacement (x)
+    v = p1[:, 0, 1] - p0[:, 0, 1]  # vertical displacement (y)
+
+    # Mask out invalid values
+    v[st.squeeze() != 1] = np.nan
+    u[st.squeeze() != 1] = np.nan
+
+    return v, u, p1
+
+
+def xr_optical_flow(
+    da,
+    baseline="dynamic",
+    method="ilk",
+    rescale_units=False,
+    parallel=True,
+    feature_kwargs=None,
+    **kwargs,
+):
+    """
+    Compute optical flow between xarray.DataArray observations.
+
+    Optical flow can be computed using a variety of dense and sparse
+    methods from scikit-image or OpenCV. Several different baselines
+    are supported, including dynamic baselines where change is computed
+    between each consecutive pair of timesteps.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        Input data representing either a temporal image sequence, or a single
+        array that will be compared against `baseline`.
+    baseline : str or xr.DataArray, optional
+        Defines the baseline or reference array used to compute optical flow:
+            * "dynamic": Calculate optical flow independently on each pair of
+            timesteps, using the first array in each pair as the reference
+            * "first": Compare every timestep against the first timestep
+            * ``xr.DataArray``: Compare every timestep against a custom array
+    method : str, optional
+        Optical flow algorithm to use:
+        - "ilk": Dense iterative Lucas–Kanade (scikit-image, fast and robust)
+        - "tvl1": Dense Total Variation L1 (scikit-image, more accurate but slower)
+        - "farneback": Dense Gunnar Farneback dense optical flow (OpenCV)
+        - "deepflow": Dense DeepFlow (OpenCV, accurate but slower)
+        - "lucas_kanade": Sparse pyramidal Lucas–Kanade (OpenCV, uses goodFeaturesToTrack)
+    rescale_units : bool, optional
+        By default, ``u``, ``v`` and ``magnitude`` are returned in pixel
+        units. Optionally, results can instead be re-scaled by pixel
+        resolution to get outputs in real-world units (note however
+        that this can interfere with quiver plotting using ``xarray``.)
+    parallel : bool, optional
+        If True, computations are parallelised across time steps.
+    feature_kwargs : dict, optional
+        Extra keyword arguments passed to feature detection functions
+        (used only for sparse 'lucas_kanade' method).
+    **kwargs : dict
+        Additional keyword arguments passed to optical flow functions.
+
+    Returns
+    -------
+    xarray.Dataset
+        Dataset containing:
+        - ``v``: Vertical (y-axis) component of optical flow.
+        - ``u``: Horizontal (x-axis) component of optical flow.
+        - ``magnitude``: Euclidean norm of the vertical and horizontal
+        flow components, often representing either displacement distance
+        or speed.
+    """
+    # Get dimension names
+    y_dim, x_dim = da.odc.spatial_dims
+
+    # Determine if baseline is an array or a keyword
+    is_array = isinstance(baseline, xr.DataArray)
+    has_time = "time" in da.dims
+
+    # Define dict linking functions to each analysis method
+    method_dict = {
+        "ilk": _ilk_optical_flow,
+        "tvl1": _tvl1_optical_flow,
+        "farneback": _farneback_optical_flow,
+        "deepflow": _deepflow_optical_flow,
+        "lucas_kanade": _lucas_kanade_optical_flow,
+    }
+
+    # Select relevant function
+    try:
+        flow_func = method_dict[method]
+    except KeyError:
+        raise ValueError(
+            f"Unsupported method '{method}'. Use one of 'ilk', 'tvl1', 'farneback', 'deepflow', or 'lucas_kanade'."
+        )
+
+    # Raise error if a time series baseline is provided but `da` does not contain time
+    if not is_array and not has_time:
+        raise ValueError(
+            f"The '{baseline}' baseline option requires `da` to have a time dimension. "
+            "Provide time-series data to `da`, or use a different `baseline`."
+        )
+
+    # Raise error if a baseline array is provided, but
+    if is_array and "time" in baseline.dims:
+        if len(baseline.time) > 1:
+            raise ValueError(f"The provided `baseline` array must not contain multiple timesteps.")
+
+    # Raise error if "lucas_kanade" is provided alongside a "dynamic" baseline
+    if not is_array:
+        if (method == "lucas_kanade") and (baseline == "dynamic"):
+            raise ValueError(
+                "To ensure that consistent features are returned for all timesteps, "
+                "the `lucas_kanade` method is not compatible with `baseline='dynamic'`. "
+                "Try `baseline='first'` or pass a custom array to `baseline`."
+            )
+
+    # Rescale both array and baseline to 8 bit for analysis
+    da_min, da_max = da.min(), da.max()
+    da = ((da - da_min) / (da_max - da_min) * 255).astype(np.uint8)
+    if is_array:
+        baseline = ((baseline - da_min) / (da_max - da_min) * 255).astype(np.uint8)
+
+    # Determine indices to iterate over for different baseline options
+    if is_array and not has_time:
+        indices = [0]
+    elif is_array and has_time:
+        indices = range(len(da.time))
+    elif baseline in ("dynamic", "first"):
+        indices = range(1, len(da.time))
+    else:
+        raise ValueError(
+            f"Invalid baseline: {baseline}. Use one of 'dynamic', 'first', or provide a custom `xr.DataArray`."
+        )
+
+    def select_pair(t):
+        # Custom baseline arrray
+        if is_array:
+            return baseline, da.isel(time=t) if has_time else da
+
+        # First: Compare every array against the first array
+        if baseline == "first":
+            return da.isel(time=0), da.isel(time=t)
+
+        # Dynamic: Compare every array against the previous array
+        return da.isel(time=t - 1), da.isel(time=t)
+
+    def compute_flow(t):
+        # Select pairs of arrays to analyse
+        a, b = select_pair(t)
+
+        # Run optical flow analysis
+        flow_outputs = flow_func(a.values, b.values, feature_kwargs, **kwargs)
+
+        # Unpack outputs of function
+        try:
+            v, u = flow_outputs
+        except ValueError:
+            v, u, p1 = flow_outputs
+
+        # Optionally re-scale coordinates by resolution
+        if rescale_units:
+            v *= da.odc.geobox.resolution.y
+            u *= da.odc.geobox.resolution.x
+
+        # Add time dimension if necessary
+        if has_time:
+            b = b.expand_dims("time")
+            v, u = v[None], u[None]  # add time axis
+
+        # Return as xarray data
+        if method == "lucas_kanade":
+            # Convert point coordinates to spatial coordinates
+            x, y = da.odc.geobox.translate_pix(0.5, 0.5).affine * p1.squeeze().T
+
+            # Determine coords and dims
+            dims = ("time", "feature") if has_time else ("feature",)
+            coords = {"x": (("feature",), x), "y": (("feature",), y)}
+
+            # Add time coordinates if required
+            if has_time:
+                coords["time"] = b.time
+
+            return xr.Dataset(
+                data_vars={"v": (dims, v), "u": (dims, u)},
+                coords=coords,
+            )
+        else:
+            return xr.Dataset(
+                data_vars={"v": (b.dims, v), "u": (b.dims, u)},
+                coords=b.coords,
+            )
+
+    # Run analysis in parallel
+    if parallel:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            flow_results = list(
+                tqdm(
+                    executor.map(compute_flow, indices),
+                    total=len(indices),
+                    desc=f"Computing optical flow ({method}) in parallel",
+                )
+            )
+
+    # Run analysis in series
+    else:
+        flow_results = [compute_flow(t) for t in tqdm(indices, desc=f"Computing optical flow ({method})")]
+
+    # Combine all outputs
+    ds = flow_results[0] if len(flow_results) == 1 else xr.concat(flow_results, dim="time")
+
+    # Add magnitude
+    return ds.assign({"magnitude": (ds.u**2 + ds.v**2) ** 0.5})
