@@ -44,13 +44,9 @@ from dea_tools.dask import create_local_dask_cluster
 from dea_tools.datahandling import load_ard
 from dea_tools.spatial import xr_rasterize
 
-# Create local dask cluster to improve data load time
-client = create_local_dask_cluster(return_client=True)
-
 # disable DeprecationWarning for chained assignments in conversion to
 # datetime format
 pd.options.mode.chained_assignment = None  # default='warn'
-
 
 def normalise_wit(polygon_base_df):
     """
