@@ -488,8 +488,7 @@ class wit_app(HBox):
         # ---Plotting------------------------------
         if df is not None:
             with self.wit_plot:
-                fontsize = 17
-                plt.rcParams.update({"font.size": fontsize})
+
                 # set up color palette
                 pal = [
                     sns.xkcd_rgb["cobalt blue"],
@@ -543,8 +542,17 @@ class wit_app(HBox):
                     hatch="//",
                 )
 
-                ax.xaxis.set_major_locator(mdates.MonthLocator())
-                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b-%Y"))
+                # calculate how many years of data have been loaded 
+                date_range_years = (df["date"].max() - df["date"].min()).days / 365.25
+                
+                if date_range_years > 5:
+                    # show only years on x-axis
+                    ax.xaxis.set_major_locator(mdates.YearLocator())
+                    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+                else:
+                    # show months and years on x-axis 
+                    ax.xaxis.set_major_locator(mdates.MonthLocator())
+                    ax.xaxis.set_major_formatter(mdates.DateFormatter("%b-%Y"))
 
                 # Rotates and right-aligns the x labels so they don't crowd each other.
                 for label in ax.get_xticklabels(which="major"):
