@@ -94,6 +94,8 @@ def calculate_indices(
         * ``'TCG_GSO'`` (Tasseled Cap Greeness, Nedkov 2017)
         * ``'TCW_GSO'`` (Tasseled Cap Wetness, Nedkov 2017)
         * ``'WI'`` (Water Index, Fisher 2016)
+        * ``'kNDVI'`` (Non-linear Normalised Difference Vegation Index,
+                 Camps-Valls et al. 2021)
 
     collection : str
         An string that tells the function what data collection is
