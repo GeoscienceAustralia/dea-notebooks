@@ -44,13 +44,9 @@ from dea_tools.dask import create_local_dask_cluster
 from dea_tools.datahandling import load_ard
 from dea_tools.spatial import xr_rasterize
 
-# Create local dask cluster to improve data load time
-client = create_local_dask_cluster(return_client=True)
-
 # disable DeprecationWarning for chained assignments in conversion to
 # datetime format
 pd.options.mode.chained_assignment = None  # default='warn'
-
 
 def normalise_wit(polygon_base_df):
     """
@@ -396,7 +392,7 @@ def WIT_drill(
     # Connect to the datacube
     dc = datacube.Datacube(app="WIT_drill")
 
-    # load landsat 5,7,8 data
+    # load Landsat 5,7,8,9 data
     warnings.filterwarnings("ignore")
 
     # load wetland polygon and specify the coordinate reference system of the polygon
@@ -410,10 +406,10 @@ def WIT_drill(
     if verbose_progress:
         print("Loading Landsat data")
 
-    # Load Landsat 5, 7 and 8 data. Not including Landsat 7 SLC off period (31-05-2003 to 06-04-2022)
+    # Load Landsat 5, 7, 8 and 9 data. Not including Landsat 7 SLC off period (31-05-2003 to 06-04-2022)
     ds_ls = load_ard(
         dc,
-        products=["ga_ls8c_ard_3", "ga_ls7e_ard_3", "ga_ls5t_ard_3"],
+        products=["ga_ls9c_ard_3", "ga_ls8c_ard_3", "ga_ls7e_ard_3", "ga_ls5t_ard_3"],
         ls7_slc_off=False,
         measurements=bands,
         geopolygon=gpgon,
