@@ -15,6 +15,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: prod_pypi
 
     steps:
       # Check out Git repository with full history
