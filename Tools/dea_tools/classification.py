@@ -722,8 +722,8 @@ def collect_training_data(
 
     Returns
     --------
-    Two lists, a list of numpy.arrays containing classes and extracted data for
-    each pixel or polygon, and another containing the data variable names.
+    pandas.DataFrame where the index contains class labels and the columns
+    contain feature values
 
     """
     # --------Conduct various checks before running the function--------
