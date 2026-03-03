@@ -41,10 +41,10 @@ from dask_ml.wrappers import ParallelPostFit
 from odc.geo.geom import Geometry
 from odc.geo.xr import assign_crs
 from sklearn.base import ClusterMixin
-from sklearn.cluster import AgglomerativeClustering, KMeans
-from sklearn.mixture import GaussianMixture
-from sklearn.model_selection import BaseCrossValidator, KFold, ShuffleSplit
 from sklearn.utils import check_random_state
+from sklearn.mixture import GaussianMixture
+from sklearn.cluster import AgglomerativeClustering, KMeans
+from sklearn.model_selection import BaseCrossValidator, KFold, ShuffleSplit
 
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -70,7 +70,7 @@ def sklearn_flatten(input_xr, mask_nan=True):
         Dimensions other than 'x', 'y' and 'time' are unaffected by the
         flattening.
     mask_nan : bool
-        Masks NaN in the flattened output as sklearn cannot accept NaNs as input.
+        Masks NaNs in the flattened output as sklearn cannot accept NaNs as input.
         Defauts to True.
 
     Returns
@@ -439,29 +439,28 @@ def _get_training_data_for_shp(
     zonal_stats: Optional[str] = None,
     time_field: Optional[str] = None,
     time_delta: Optional[timedelta] = None,
-):
+) -> Tuple[List[str], List[Any]]:
+    
     """
     This is the core function that is triggered by `collect_training_data`.
     The `collect_training_data` function loops through geometries in a geopandas
-    geodataframe and runs the code within `_get_training_data_for_shp`.
-    Parameters are inherited from `collect_training_data`.
-    See that function for information on the other params not listed below.
+    geodataframe and runs this function. See `collect_training_data` for more
+    information on the parameters than is detailed below.
 
     Parameters
     ----------
-    gdf : gpd.GeoDataFrame
-        Geopandas GeoDataFrame containing geometries.
-    index : int
-        Index of the current geometry in the GeoDataFrame.
     row : gpd.GeoSeries
         GeoSeries representing the current row in the GeoDataFrame.
+    crs : pyrpoj.CRS
+        Coordinate reference system information extracted from a GeoDataFrame
+        e.g., crs=gdf.crs
     out_arrs : List[np.ndarray]
         An empty list into which the training data arrays are stored.
     out_vars : List[List[str]]
         An empty list into which the data variable names are stored.
     dc_query : Dict
-        ODC query.
-    return_coords : bool
+        ODC query object.
+    return_coords : boo
         Flag indicating whether to return coordinates in the dataset.
     feature_func : callable, optional
         Optional function to extract data based on `dc_query`. Defaults to None.
@@ -492,7 +491,7 @@ def _get_training_data_for_shp(
     if "dask_chunks" in dc_query:
         dc_query.pop("dask_chunks", None)
 
-    # set up query based on geometrys
+    # set up query based on row geometry
     geom = Geometry(geom=row["geometry"], crs=crs)
     dc_query.update({"geopolygon": geom})
 
@@ -512,12 +511,12 @@ def _get_training_data_for_shp(
     if len(data.data_vars) == 0:
         raise ValueError(
             "feature_func returned an empty dataset, "
-            "this can happen if the geometry is not within data bounds"
+            "this can happen if a geometry is not within data bounds"
         )
 
     # If the geometry type is a polygon extract all pixels
     if row["geometry"].geom_type != "Point":
-        # create polygon mask
+        # create polygon mask (requires gdf)
         dff = gpd.GeoDataFrame(row.to_frame().T, geometry="geometry", crs=crs)
         mask = xr_rasterize(dff, data)
         data = data.where(mask)
@@ -527,7 +526,7 @@ def _get_training_data_for_shp(
         t = data.dims["time"]
         if t > 1 and time_delta is None:
             raise ValueError(
-                f"feature_func returned dataset with {t} time steps. "
+                f"feature_func returned a dataset with {t} time steps. "
                 "Reduce to a 2D (x, y) dataset before returning."
             )
 
@@ -543,8 +542,8 @@ def _get_training_data_for_shp(
     data["_training_id"] = data["_training_id"] + row["_training_id"]
 
     # If no zonal stats were requested then extract all pixel values.
-    # Need to explicitly tell sklearn_flatten to not remove NaNs so user
-    # can decide to keep/remove data with some amount of nodata
+    # Need to explicitly tell 'sklearn_flatten' to not remove NaNs so user
+    # can decide to keep/remove data with some amount of nodata later
     if zonal_stats is None:
         flat_train = sklearn_flatten(data, mask_nan=False)
         flat_val = np.repeat(row[field], flat_train.shape[0])
@@ -570,7 +569,7 @@ def _get_training_data_parallel(
     dc_query: dict,
     ncpus: int,
     return_coords: bool,
-    feature_func: Optional[Callable] = None,
+    feature_func: callable = None,
     field: Optional[str] = None,
     zonal_stats: Optional[str] = None,
     time_field: Optional[str] = None,
@@ -579,7 +578,7 @@ def _get_training_data_parallel(
     """
     Function passing the '_get_training_data_for_shp' function
     to a mulitprocessing.Pool.
-    Inherits variables from 'collect_training_data()'.
+    Inherits variables from 'collect_training_data'.
 
     """
     # Check if dask-client is running
@@ -638,27 +637,31 @@ def _get_training_data_parallel(
 
 def collect_training_data(
     gdf: gpd.GeoDataFrame,
-    dc_query: dict,
+    dc_query: dict[str, Any],
     ncpus: int = 1,
     return_coords: bool = False,
     feature_func: callable = None,
     field: str = None,
-    zonal_stats: str = None,
+    zonal_stats: Optional[str] = None,
     clean: bool = True,
     fail_threshold: float = 0.02,
     fail_ratio: float = 0.5,
     max_retries: int = 3,
-    time_field: str = None,
-    time_delta: timedelta = None,
-) -> Tuple[List[np.ndarray], List[str]]:
+    time_field: Optional[str] = None,
+    time_delta: Optional[timedelta] = None,
+) -> pd.DataFrame:
     """
-    This function provides methods for gathering training data from the ODC over
+    This function provides methods for gathering training/validation data from the ODC over
     geometries stored within a geopandas geodataframe. The function will return a
-    'model_input' array containing stacked training data arrays with all NaNs & Infs removed.
-    In the instance where ncpus > 1, a parallel version of the function will be run
-    (functions are passed to a mp.Pool()). This function can conduct zonal statistics if
-    the supplied shapefile contains polygons. The 'feature_func' parameter defines what
-    features to produce.
+    pandas.DataFrame where the index will contain class labels and the columns will
+    contain feature values generated by a user-defined `feature_func`.
+
+    - In the instance where ncpus > 1, the function will automatically run in parallel.
+    - Zonal statistics are supported where the provided vector file contains polygons, or all pixel
+      values can be returned.
+    - Individual points/polygons can be loaded from different time ranges by passing both `time_field`
+      and `time_delta` variables, resulting in a time-range calculated as time_field +- time_delta
+    - Implements a retry queue for samples that may fail due to i/o limitations or s3 read failures.
 
     Parameters
     ----------
@@ -671,10 +674,6 @@ def collect_training_data(
         The number of cpus/processes over which to parallelize the gathering
         of training data (only if ncpus is > 1). Use 'mp.cpu_count()' to determine the number of
         cpus available on a machine. Defaults to 1.
-    return_coords : bool
-        If True, then the training data will contain two extra columns 'x_coord' and
-        'y_coord' corresponding to the x,y coordinate of each sample. This variable can
-        be useful for handling spatial autocorrelation between samples later in the ML workflow.
     feature_func : function
         A function for generating feature layers that is applied to the data within
         the bounds of the input geometry. The 'feature_func' must accept a 'dc_query'
@@ -688,14 +687,24 @@ def collect_training_data(
                 return ds
     field : str
         Name of the column in the gdf that contains the class labels
+    return_coords : bool
+        If True, then the training data will contain two extra columns 'x_coord' and
+        'y_coord' corresponding to the x,y coordinate of each sample.
     zonal_stats : string, optional
         An optional string giving the names of zonal statistics to calculate
         for each polygon. Default is None (all pixel values are returned). Supported
         values are 'mean', 'median', 'max', 'min'.
     clean : bool
-        Whether or not to remove missing values in the training dataset. If True,
+        Whether or not to remove missing values in the returned dataset. If True (default),
         training labels with any NaNs or Infs in the feature layers will be dropped
         from the dataset.
+    time_field : str, optional
+        Name of the column containing timestamp data in the input gdf. Defaults to None.
+        Note the time values must be in a datetime format that works with the `timedelta`
+        variable.
+    time_delta : timedelta, optional
+        Time delta used to match a data point with all the scenes falling between
+        `time_stamp - time_delta` and `time_stamp + time_delta`. Defaults to None.
     fail_threshold : float, default 0.02
         Silent read fails on S3 can result in some rows of the returned data containing NaN values.
         The'fail_threshold' fraction specifies a % of acceptable fails.
@@ -710,11 +719,6 @@ def collect_training_data(
     max_retries: int, default 3
         Maximum number of times to retry collecting samples. This number is invoked
         if the 'fail_threshold' is not reached.
-    time_field: str
-        The name of the attribute in the input dataframe containing capture timestamp
-    time_delta: time_delta
-        The size of the window used as timestamp +/- time_delta.
-        This is used to allow matching a single field data point with multiple scenes
 
     Returns
     --------
@@ -822,7 +826,7 @@ def collect_training_data(
 
     # this code block below iteratively retries failed rows
     # up to max_retries or until fail_threshold is
-    # reached - whichever occurs first
+    # reached, whichever occurs first.
     if ncpus > 1:
         i = 1
         while i <= max_retries:
@@ -898,7 +902,7 @@ def collect_training_data(
         if not np.issubdtype(model_input.dtype, np.number):
             raise TypeError("model_input must be numeric to apply cleaning")
 
-        # Build single invalid mask
+        # Build invalid mask
         invalid_mask = ~np.isfinite(model_input).all(axis=1)
         num_removed = np.count_nonzero(invalid_mask)
         model_input = model_input[~invalid_mask]
@@ -910,8 +914,9 @@ def collect_training_data(
         print("Returning data without cleaning")
         print("Output shape: ", model_input.shape)
 
-    # return a pandas dataframe
-    return pd.DataFrame(data=model_input, columns=column_names[0:-1]).set_index(field)
+    # return a pandas dataframe with classes as the index
+    df = pd.DataFrame(data=model_input, columns=column_names[0:-1]).set_index(field)
+    return df
 
 
 class KMeans_tree(ClusterMixin):
