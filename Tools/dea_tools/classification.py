@@ -453,7 +453,7 @@ def _get_training_data_for_shp(
         e.g., crs=gdf.crs
     dc_query : Dict
         ODC query object.
-    return_coords : boo
+    return_coords : bool
         Flag indicating whether to return coordinates in the dataset.
     feature_func : callable, optional
         Optional function to extract data based on `dc_query`. Defaults to None.
@@ -729,8 +729,8 @@ def collect_training_data(
 
     Returns
     --------
-    pandas.DataFrame where the index contains class labels and the columns
-    contain feature values
+    pandas.DataFrame
+        Where the index contains class labels and the columns contain feature values
 
     """
     # --------Conduct various checks before running the function--------
