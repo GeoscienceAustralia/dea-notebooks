@@ -430,8 +430,6 @@ class HiddenPrints:
 def _get_training_data_for_shp(
     row: gpd.GeoSeries,
     crs: pyproj.CRS,
-    out_arrs: List[np.ndarray],
-    out_vars: List[List[str]],
     dc_query: Dict,
     return_coords: bool,
     feature_func: Optional[callable] = None,
@@ -453,10 +451,6 @@ def _get_training_data_for_shp(
     crs : pyrpoj.CRS
         Coordinate reference system information extracted from a GeoDataFrame
         e.g., crs=gdf.crs
-    out_arrs : List[np.ndarray]
-        An empty list into which the training data arrays are stored.
-    out_vars : List[List[str]]
-        An empty list into which the data variable names are stored.
     dc_query : Dict
         ODC query object.
     return_coords : boo
@@ -559,15 +553,25 @@ def _get_training_data_for_shp(
             f"{zonal_stats} is not one of the supported reduce functions: 'mean','median','max','min'"
         )
 
-    out_arrs.append(stacked)
-    out_vars.append([field] + list(data.data_vars))
+    column_names = [field] + list(data.data_vars)
+
+    return column_names, stacked
+
+
+def _get_training_data_for_shp_unpacked(args):
+    """Thin wrapper to unpack args tuple for pool.imap."""
+    try:
+        return _get_training_data_for_shp(*args)
+    except Exception as e:
+        return e  # surface errors to parent instead of silently dropping
 
 
 def _get_training_data_parallel(
     gdf: gpd.GeoDataFrame,
     dc_query: dict,
     ncpus: int,
-    return_coords: bool,
+    chunksize: int = 1,
+    return_coords: bool = False,
     feature_func: callable = None,
     field: Optional[str] = None,
     zonal_stats: Optional[str] = None,
@@ -589,47 +593,45 @@ def _get_training_data_parallel(
 
     if zx is not None:
         raise ValueError(
-            "You have a Dask Client running, which prevents \nthis function from multiprocessing. Close the client."
+            "You have a Dask Client running, which prevents"
+            "this function from multiprocessing. Close the client."
         )
 
-    # instantiate lists that can be shared across processes
-    manager = mp.Manager()
-    results = manager.list()
-    column_names = manager.list()
-
-    # grab crs info
     crs = gdf.crs
+    rows = [row for _, row in gdf.iterrows()]
 
-    # progress bar
-    pbar = tqdm(total=len(gdf))
+    args = [
+        (
+            row,
+            crs,
+            dc_query,
+            return_coords,
+            feature_func,
+            field,
+            zonal_stats,
+            time_field,
+            time_delta,
+        )
+        for row in rows
+    ]
 
-    def update(*a):
-        pbar.update()
+    column_names, results = [], []
+    failed_indices = []
 
     with mp.Pool(ncpus) as pool:
-        for index, row in gdf.iterrows():
-            pool.apply_async(
-                _get_training_data_for_shp,
-                [
-                    row,
-                    crs,
-                    results,
-                    column_names,
-                    dc_query,
-                    return_coords,
-                    feature_func,
-                    field,
-                    zonal_stats,
-                    time_field,
-                    time_delta,
-                ],
-                callback=update,
-                error_callback=lambda e: print(f"Worker failed: {e}"),
-            )
-
-        pool.close()
-        pool.join()
-        pbar.close()
+        with tqdm(total=len(args)) as pbar:
+            for i, result in enumerate(
+                pool.imap(
+                    _get_training_data_for_shp_unpacked, args, chunksize=chunksize
+                )
+            ):
+                if isinstance(result, Exception):
+                    print(f"Worker failed on row {i}: {result}")
+                else:
+                    col_names, stacked = result
+                    column_names.append(col_names)
+                    results.append(stacked)
+                pbar.update()
 
     return column_names, results
 
@@ -638,6 +640,7 @@ def collect_training_data(
     gdf: gpd.GeoDataFrame,
     dc_query: dict[str, Any],
     ncpus: int = 1,
+    chunksize: int | None = 1,
     return_coords: bool = False,
     feature_func: callable = None,
     field: str = None,
@@ -673,6 +676,10 @@ def collect_training_data(
         The number of cpus/processes over which to parallelize the gathering
         of training data (only if ncpus is > 1). Use 'mp.cpu_count()' to determine the number of
         cpus available on a machine. Defaults to 1.
+    chunksize : int, optional
+        Number of items submitted to each worker per batch when using
+        multiprocessing. Larger values reduce inter-process overhead but
+        may worsen load balancing for uneven task runtimes.
     feature_func : function
         A function for generating feature layers that is applied to the data within
         the bounds of the input geometry. The 'feature_func' must accept a 'dc_query'
@@ -773,7 +780,7 @@ def collect_training_data(
         print("Collecting training data in serial mode")
         i = 0
 
-        # # list to store results
+        # list to store results
         results = []
         column_names = []
 
@@ -781,11 +788,9 @@ def collect_training_data(
         for index, row in gdf.iterrows():
             print(" Feature {:04}/{:04}\r".format(i + 1, len(gdf)), end="")
 
-            _get_training_data_for_shp(
+            col_names, stacked = _get_training_data_for_shp(
                 row,
                 gdf.crs,
-                results,
-                column_names,
                 dc_query,
                 return_coords,
                 feature_func,
@@ -794,6 +799,8 @@ def collect_training_data(
                 time_field,
                 time_delta,
             )
+            column_names.append(col_names)
+            results.append(stacked)
             i += 1
 
     else:
@@ -802,6 +809,7 @@ def collect_training_data(
             gdf=gdf,
             dc_query=dc_query,
             ncpus=ncpus,
+            chunksize=chunksize,
             return_coords=return_coords,
             feature_func=feature_func,
             field=field,
