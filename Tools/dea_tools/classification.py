@@ -517,10 +517,11 @@ def _get_training_data_for_shp(
     if "time" in data.dims:
         t = data.sizes["time"]
         if t > 1 and time_delta is None:
-            raise ValueError(
-                f"feature_func returned a dataset with {t} time steps. "
-                "Reduce to a 2D (x, y) dataset before returning."
-            )
+            # raise ValueError(
+            #     f"feature_func returned a dataset with {t} time steps. "
+            #     "Reduce to a 2D (x, y) dataset before returning."
+            # )
+            pass  ################################################################################  <- CHANGE
 
     if return_coords:
         # turn coords into a variable in the ds
@@ -535,7 +536,8 @@ def _get_training_data_for_shp(
 
     # If no zonal stats were requested then extract all pixel values.
     if zonal_stats is None:
-        stacked = data.to_dataframe().reset_index(drop=True)
+        #stacked = data.to_dataframe().reset_index(drop=True) ############################################## <---CHANGE
+        stacked = data.to_dataframe().reset_index()
         stacked[field] = row[field]
 
     elif zonal_stats in ["mean", "median", "max", "min"]:
