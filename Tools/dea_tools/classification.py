@@ -612,8 +612,7 @@ def _get_training_data_parallel(
         for row in rows
     ]
 
-    column_names, results = [], []
-    failed_indices = []
+    results = []
 
     with mp.Pool(ncpus) as pool:
         with tqdm(total=len(args)) as pbar:
