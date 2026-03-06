@@ -625,8 +625,6 @@ def _get_training_data_parallel(
                 if isinstance(stacked, Exception):
                     print(f"Worker failed on row {i}: {stacked}")
                 else:
-                    # col_names, stacked = result
-                    # column_names.append(col_names)
                     results.append(stacked)
                 pbar.update()
 
@@ -796,7 +794,7 @@ def collect_training_data(
                 time_field,
                 time_delta,
             )
-            # column_names.append(col_names)
+            
             results.append(stacked)
             i += 1
 
@@ -815,10 +813,10 @@ def collect_training_data(
             time_delta=time_delta,
         )
 
-    # Stack the extracted training data for each feature into a single array
     if not results:
         raise RuntimeError("No samples returned from feature extraction.")
-
+    
+    # join all results into a single df
     df = pd.concat(results)
 
     # this code block below iteratively retries failed rows
