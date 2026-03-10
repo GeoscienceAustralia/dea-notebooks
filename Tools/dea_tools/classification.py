@@ -543,7 +543,7 @@ def _get_training_data_for_shp(
     
     if 'spatial_ref' in stacked.columns:
             stacked = stacked.drop('spatial_ref', axis=1)
-    )
+    
     return stacked
 
 
