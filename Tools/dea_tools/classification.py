@@ -494,7 +494,7 @@ def _get_training_data_for_shp(
 
     # Use input feature function and run checks on output
     data = feature_func(dc_query)
-    print(data)
+    
     if not isinstance(data, (xr.Dataset, xr.DataArray)):
         raise TypeError("feature_func must return xarray Dataset or DataArray")
 
@@ -880,11 +880,11 @@ def collect_training_data(
         # Identify which columns have numeric data
         numeric_cols = df.select_dtypes(include=[np.number]).columns
     
-        # do we have any numeric columns to clean?
+        # do we have any numeric columns to clean
         if len(numeric_cols) == 0:
             print("No numeric columns to clean; leaving DataFrame unchanged.")
         else:
-            # Build invalid mask on numeric columns only: NaN or Inf
+            # Build invalid mask on numeric columns only, NaN or Inf
             invalid_mask = ~np.isfinite(df[numeric_cols]).all(axis=1)
             num_removed = invalid_mask.sum()
             df = df[~invalid_mask]
