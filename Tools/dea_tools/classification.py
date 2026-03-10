@@ -432,11 +432,11 @@ def _get_training_data_for_shp(
     crs: pyproj.CRS,
     dc_query: Dict,
     return_coords: bool,
-    feature_func: Optional[callable] = None,
+    return_time_coords: bool,
+    feature_func: callable = None,
     field: Optional[str] = None,
     zonal_stats: Optional[str] = None,
     time_field: Optional[str] = None,
-    time_delta: Optional[timedelta] = None,
 ) -> pd.DataFrame:
     """
     This is the core function that is triggered by `collect_training_data`.
@@ -454,7 +454,9 @@ def _get_training_data_for_shp(
     dc_query : Dict
         ODC query object.
     return_coords : bool
-        Flag indicating whether to return coordinates in the dataset.
+        Flag indicating whether to return x,y coordinates in the dataset.
+    return_time_coords : bool
+        Flag indicating whether to return time coordinates in the dataset
     feature_func : callable, optional
         Optional function to extract data based on `dc_query`. Defaults to None.
     field : str, optional
@@ -462,12 +464,11 @@ def _get_training_data_for_shp(
     zonal_stats : str, optional
         Zonal statistics method. Defaults to None.
     time_field : str, optional
-        Name of the column containing timestamp data in the input gdf. Defaults to None.
-        Note the time values must be in a datetime format that works with the `timedelta`
-        variable.
-    time_delta : timedelta, optional
-        Time delta used to match a data point with all the scenes falling between
-        `time_stamp - time_delta` and `time_stamp + time_delta`. Defaults to None.
+        Name of the column containing time(range) data in the input gdf, for the case where each row
+        should load from a different time(range). If loading from the same time(range) for
+        all rows, then its preferable to pass time as a key:variable in the 'dc_query'.
+        Note the time values must be in a format that datacube.load() accepts. For example, as a
+        tuple with strings ('2017-01-01', '2017-01-31'). Defaults to None.
 
     Returns
     --------
@@ -487,16 +488,13 @@ def _get_training_data_for_shp(
     geom = Geometry(geom=row["geometry"], crs=crs)
     dc_query.update({"geopolygon": geom})
 
-    # Update time range if a time window is specified
-    if time_delta is not None:
-        timestamp = getattr(row, time_field)
-        start_time = timestamp - time_delta
-        end_time = timestamp + time_delta
-        dc_query.update({"time": (start_time, end_time)})
+    if time_field is not None:
+        timerange = getattr(row, time_field)
+        dc_query.update({"time": timerange})
 
     # Use input feature function and run checks on output
     data = feature_func(dc_query)
-
+    print(data)
     if not isinstance(data, (xr.Dataset, xr.DataArray)):
         raise TypeError("feature_func must return xarray Dataset or DataArray")
 
@@ -513,26 +511,20 @@ def _get_training_data_for_shp(
         mask = xr_rasterize(dff, data)
         data = data.where(mask)
 
-    # Check that feature_func has removed time
-    if "time" in data.dims:
-        t = data.sizes["time"]
-        if t > 1 and time_delta is None:
-            raise ValueError(
-                f"feature_func returned a dataset with {t} time steps. "
-                "Reduce to a 2D (x, y) dataset before returning."
-            )
-
     if return_coords:
         # turn coords into a variable in the ds
         data["x_coord"] = data.x + 0 * data.y
         data["y_coord"] = data.y + 0 * data.x
-
+    
     # append ID measurement to dataset for tracking failures
     band = list(data.data_vars)[0]
-    _id = xr.zeros_like(data[band])
-    data["_training_id"] = _id
+    data["_training_id"] = xr.zeros_like(data[band])
     data["_training_id"] = data["_training_id"] + row["_training_id"]
 
+    if 'time' in data.sizes:
+        if return_time_coords:
+            data['time_coord'] = data.time
+    
     # If no zonal stats were requested then extract all pixel values.
     if zonal_stats is None:
         stacked = data.to_dataframe().reset_index(drop=True)
@@ -540,18 +532,18 @@ def _get_training_data_for_shp(
 
     elif zonal_stats in ["mean", "median", "max", "min"]:
         method_to_call = getattr(data, zonal_stats)
-        stacked = method_to_call(['x', 'y']) #will keep time as dim if present
+        stacked = method_to_call(['x', 'y']) # will keep time as dim if present
         stacked = stacked.to_dataframe().reset_index(drop=True)
         stacked[field] = row[field]
-        
+       
     else:
         raise Exception(
             f"{zonal_stats} is not one of the supported reduce functions: 'mean','median','max','min'"
         )
-
+    
     if 'spatial_ref' in stacked.columns:
             stacked = stacked.drop('spatial_ref', axis=1)
-
+    )
     return stacked
 
 
@@ -569,11 +561,11 @@ def _get_training_data_parallel(
     ncpus: int,
     chunksize: int = 1,
     return_coords: bool = False,
+    return_time_coords: bool = False,
     feature_func: callable = None,
     field: Optional[str] = None,
     zonal_stats: Optional[str] = None,
-    time_field: Optional[str] = None,
-    time_delta: Optional[int] = None,
+    time_field: Optional[str] = None
 ) -> pd.DataFrame:
     """
     Function passing the '_get_training_data_for_shp' function
@@ -603,11 +595,11 @@ def _get_training_data_parallel(
             crs,
             dc_query,
             return_coords,
+            return_time_coords,
             feature_func,
             field,
             zonal_stats,
-            time_field,
-            time_delta,
+            time_field
         )
         for row in rows
     ]
@@ -636,6 +628,7 @@ def collect_training_data(
     ncpus: int = 1,
     chunksize: int | None = 1,
     return_coords: bool = False,
+    return_time_coords: bool = False,
     feature_func: callable = None,
     field: str = None,
     zonal_stats: Optional[str] = None,
@@ -644,7 +637,6 @@ def collect_training_data(
     fail_ratio: float = 0.5,
     max_retries: int = 2,
     time_field: Optional[str] = None,
-    time_delta: Optional[timedelta] = None,
 ) -> pd.DataFrame:
     """
     This function provides methods for gathering training/validation data from the ODC over
@@ -666,11 +658,10 @@ def collect_training_data(
         can optionally contain a column with time stamps, specified with the`time_field` param.
     dc_query : dictionary
         Datacube query object, should not contain lat and long (x or y) variables as these
-        are supplied by the 'gdf' variable. 
+        are supplied by the geopolygon column in the 'gdf'. 
     ncpus : int
         The number of cpus/processes over which to parallelize the gathering
-        of training data (only if ncpus is > 1). Use 'mp.cpu_count()' to determine the number of
-        cpus available on a machine. Defaults to 1.
+        of training data (only if ncpus is > 1). Defaults to 1.
     chunksize : int, optional
         Number of items submitted to each worker per batch when using
         multiprocessing. Larger values reduce inter-process overhead but
@@ -689,24 +680,24 @@ def collect_training_data(
     field : str
         Name of the column in the gdf that contains the class labels
     return_coords : bool
-        If True, then the training data will contain two extra columns 'x_coord' and
+        If True, then the output data will contain two extra columns 'x_coord' and
         'y_coord' corresponding to the x,y coordinate of each sample.
+    return_time_coords : bool
+        If True, then the output data will contain an extra column 'time_coord',
+        corresponding to the time stamp of each sample.
     zonal_stats : string, optional
         An optional string giving the names of zonal statistics to calculate
         for each polygon. Default is None (all pixel values are returned). Supported
         values are 'mean', 'median', 'max', 'min'.
     clean : bool
         Whether or not to remove missing values in the returned dataset. If True (default),
-        training labels with any NaNs or Infs in the feature layers will be dropped
-        from the dataset.
+        rows with any NaNs or Infs in any numeric columns will be dropped from the dataset.
     time_field : str, optional
-        Name of the column containing timestamp data in the input gdf. Defaults to None.
-        Note the time values must be in a datetime format that works with the `timedelta`
-        variable. If time_field and time_delta aren't provided, then the dc_query object
-        will require a 'time' value if the feature func loads from the datacube. 
-    time_delta : timedelta, optional
-        Time delta used to match a data point with all the scenes falling between
-        `time_stamp - time_delta` and `time_stamp + time_delta`. Defaults to None.
+        Name of the column containing time(range) data in the input gdf, for the case where each row
+        should load from a different time(range). If loading from the same time(range) for
+        all rows, then its preferable to pass time as a key:variable in the 'dc_query'.
+        Note the time values must be in a format that datacube.load() accepts. For example, as a
+        tuple with strings ('2017-01-01', '2017-01-31'). Defaults to None.
     fail_threshold : float, default 0.05
         Silent read fails on S3 can result in some rows of the returned data containing NaN values.
         The'fail_threshold' fraction specifies a % of acceptable fails.
@@ -748,18 +739,15 @@ def collect_training_data(
         )
 
     # check time-field params
-    if (time_field is None) != (time_delta is None):
-        raise ValueError(
-            "'time_field' and 'time_delta' must either both be provided or both be None."
-        )
+    if time_field is not None:
 
-    if time_delta is not None:
+        if 'time' in dc_query:
+            raise ValueError(
+                f"You have passed both 'dc_query['time']' and 'time_field', "
+                "only pass one of these options")
 
         if time_field not in gdf.columns:
             raise ValueError(f"Column '{time_field}' not found in GeoDataFrame")
-
-        if not pd.api.types.is_datetime64_any_dtype(gdf[time_field]):
-            raise TypeError("time_field needs to contain datatime objects")
 
     if zonal_stats:
         print(f"Applying zonal statistic: {zonal_stats}")
@@ -787,11 +775,11 @@ def collect_training_data(
                 gdf.crs,
                 dc_query,
                 return_coords,
+                return_time_coords,
                 feature_func,
                 field,
                 zonal_stats,
-                time_field,
-                time_delta,
+                time_field
             )
             
             results.append(stacked)
@@ -805,11 +793,11 @@ def collect_training_data(
             ncpus=ncpus,
             chunksize=chunksize,
             return_coords=return_coords,
+            return_time_coords=return_time_coords,
             feature_func=feature_func,
             field=field,
             zonal_stats=zonal_stats,
-            time_field=time_field,
-            time_delta=time_delta,
+            time_field=time_field
         )
 
     if not results:
@@ -866,11 +854,11 @@ def collect_training_data(
                     dc_query=dc_query,
                     ncpus=ncpus,
                     return_coords=return_coords,
+                    return_time_coords=return_time_coords,
                     feature_func=feature_func,
                     field=field,
                     zonal_stats=zonal_stats,
                     time_field=time_field,
-                    time_delta=time_delta,
                 )
 
                 # Stack the extracted training data for each feature into a single array
@@ -884,22 +872,25 @@ def collect_training_data(
             else:
                 break
 
-    # -----------------------------------------------
+    # -----------------------------------------------    
     # remove id column
     df = df.drop('_training_id', axis=1)
 
     if clean:
-        # Ensure numeric dtype
-        if not all(np.issubdtype(dtype, np.number) for dtype in df.dtypes):
-            raise TypeError("model_input must be numeric to apply cleaning")
-        
-        # Build invalid mask
-        invalid_mask = ~df.apply(np.isfinite).all(axis=1)
-        num_removed = invalid_mask.sum()
-        df = df[~invalid_mask]
-        
-        print(f"Removed {num_removed} rows with NaNs or Infs")
-        print("Output shape:", df.shape)
+        # Identify which columns have numeric data
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+    
+        # do we have any numeric columns to clean?
+        if len(numeric_cols) == 0:
+            print("No numeric columns to clean; leaving DataFrame unchanged.")
+        else:
+            # Build invalid mask on numeric columns only: NaN or Inf
+            invalid_mask = ~np.isfinite(df[numeric_cols]).all(axis=1)
+            num_removed = invalid_mask.sum()
+            df = df[~invalid_mask]
+    
+            print(f"Removed {num_removed} rows with NaNs or Infs in numeric columns")
+            print("Output shape:", df.shape)
     
     else:
         print("Returning data without cleaning")
