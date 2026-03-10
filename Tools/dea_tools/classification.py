@@ -536,8 +536,8 @@ def _get_training_data_for_shp(
 
     # If no zonal stats were requested then extract all pixel values.
     if zonal_stats is None:
-        #stacked = data.to_dataframe().reset_index(drop=True) ############################################## <---CHANGE
-        stacked = data.to_dataframe().reset_index()
+        stacked = data.to_dataframe().reset_index(drop=True) ############################################## <---CHANGE
+        #stacked = data.to_dataframe().reset_index()
         stacked[field] = row[field]
 
     elif zonal_stats in ["mean", "median", "max", "min"]:
