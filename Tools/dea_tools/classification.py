@@ -51,15 +51,14 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from dea_tools.spatial import xr_rasterize
 
 
-def sklearn_flatten(input_xr, mask_nan=True):
+def sklearn_flatten(input_xr):
     """
     Reshape a DataArray or Dataset with spatial (and optionally
     temporal) structure into an np.array with the spatial and temporal
     dimensions flattened into one dimension.
 
     This flattening procedure enables DataArrays and Datasets to be used
-    to train and predict
-    with sklearn models.
+    to train and predict with sklearn models.
 
     Last modified: September 2019
 
@@ -69,9 +68,6 @@ def sklearn_flatten(input_xr, mask_nan=True):
         Must have dimensions 'x' and 'y', may have dimension 'time'.
         Dimensions other than 'x', 'y' and 'time' are unaffected by the
         flattening.
-    mask_nan : bool
-        Masks NaNs in the flattened output as sklearn cannot accept NaNs as input.
-        Defauts to True.
 
     Returns
     ----------
@@ -113,7 +109,7 @@ def sklearn_flatten(input_xr, mask_nan=True):
     # the dimension we are masking along ('z') needs to be the first
     # dimension in the underlying np array for the boolean indexing to work
     stacked = stacked.transpose("z", *pxdims)
-    return stacked.data[~mask] if mask_nan else stacked.data
+    return stacked.data[~mask]
 
 
 def sklearn_unflatten(output_np, input_xr):
