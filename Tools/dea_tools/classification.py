@@ -647,8 +647,8 @@ def collect_training_data(
     - In the instance where ncpus > 1, the function will automatically run in parallel.
     - Zonal statistics are supported where the provided vector file contains polygons, otherwise all
       pixel values are returned.
-    - Individual points/polygons can be loaded from different time ranges by passing both `time_field`
-      and `time_delta` variables, resulting in a time-range calculated as time_field +- time_delta
+    - Individual points/polygons can be loaded from different time ranges by passing the `time_field`
+      parameter.
     - Implements a retry queue for samples that may fail due to i/o limitations or s3 read failures.
 
     Parameters
