@@ -8,7 +8,7 @@ from pandas.testing import assert_frame_equal
 from dea_tools.classification import collect_training_data
 
 # --- feature function MUST be top level for multiprocessing ---
-def _feature_func(query):
+def feature_func(query):
     dc = datacube.Datacube(app="pytest_training_data")
 
     ds = dc.load(
@@ -40,22 +40,24 @@ def dc_query():
     }
 
 @pytest.fixture
-def serial_result(point_gdf, dc_query, _feature_func):
+def serial_result(point_gdf, dc_query):
+    
     return collect_training_data(
         gdf=point_gdf,
         dc_query=dc_query,
         ncpus=1,
-        feature_func=_feature_func,
+        feature_func=feature_func,
         field="class",
     )
 
 @pytest.fixture
-def parallel_result(point_gdf, dc_query, _feature_func):
+def parallel_result(point_gdf, dc_query):
+    
     return collect_training_data(
         gdf=point_gdf,
         dc_query=dc_query,
         ncpus=2,
-        feature_func=_feature_func,
+        feature_func=feature_func,
         field="class",
     )
 
