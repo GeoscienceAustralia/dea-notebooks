@@ -34,6 +34,7 @@ import geopandas as gpd
 from tqdm.auto import tqdm
 import multiprocessing as mp
 import dask.distributed as dd
+from functools import partial
 from datetime import datetime, timedelta
 from abc import ABCMeta, abstractmethod
 from dask_ml.wrappers import ParallelPostFit
@@ -543,19 +544,10 @@ def _get_training_data_for_shp(
     return stacked
 
 
-def _get_training_data_for_shp_unpacked(args):
-    """Thin wrapper to unpack args tuple for pool.imap."""
-    try:
-        return _get_training_data_for_shp(*args)
-    except Exception as e:
-        return e  # surface errors to parent instead of silently dropping
-
-
 def _get_training_data_parallel(
     gdf: gpd.GeoDataFrame,
     dc_query: dict,
     ncpus: int,
-    chunksize: int = 1,
     return_coords: bool = False,
     return_time_coords: bool = False,
     feature_func: callable = None,
@@ -583,46 +575,53 @@ def _get_training_data_parallel(
         )
 
     crs = gdf.crs
-    rows = [row for _, row in gdf.iterrows()]
-
-    args = [
-        (
-            row,
-            crs,
-            dc_query,
-            return_coords,
-            return_time_coords,
-            feature_func,
-            field,
-            zonal_stats,
-            time_field
-        )
-        for row in rows
-    ]
-
+    
+    # instantiate results list
     results = []
 
+    # progress bar
+    pbar = tqdm(total=len(gdf))
+
+    # what to do with the results
+    def results_update(df):
+        results.append(df)
+        pbar.update()
+
+    # What to do with errors
+    def handle_error(index, e):
+        print(f"Worker failed on row {index}", str(e))
+        pbar.update()
+
     with mp.Pool(ncpus) as pool:
-        with tqdm(total=len(args)) as pbar:
-            for i, stacked in enumerate(
-                pool.imap(
-                    _get_training_data_for_shp_unpacked, args, chunksize=chunksize
-                )
-            ):
-                if isinstance(stacked, Exception):
-                    print(f"Worker failed on row {i}: {stacked}")
-                else:
-                    results.append(stacked)
-                pbar.update()
+        for index, row in gdf.iterrows():
+            pool.apply_async(
+                _get_training_data_for_shp,
+                [
+                    row,
+                    crs,
+                    dc_query,
+                    return_coords,
+                    return_time_coords,
+                    feature_func,
+                    field,
+                    zonal_stats,
+                    time_field
+                ],
+                callback=results_update,
+                error_callback=partial(handle_error, index)
+            )
+
+        pool.close()
+        pool.join()
+    
+    pbar.close()
 
     return results
-
 
 def collect_training_data(
     gdf: gpd.GeoDataFrame,
     dc_query: dict[str, Any],
     ncpus: int = 1,
-    chunksize: int | None = 1,
     return_coords: bool = False,
     return_time_coords: bool = False,
     feature_func: callable = None,
@@ -658,10 +657,6 @@ def collect_training_data(
     ncpus : int
         The number of cpus/processes over which to parallelize the gathering
         of training data (only if ncpus is > 1). Defaults to 1.
-    chunksize : int, optional
-        Number of items submitted to each worker per batch when using
-        multiprocessing. Larger values reduce inter-process overhead but
-        may worsen load balancing for uneven task runtimes.
     feature_func : function
         A function for generating feature layers that is applied to the data within
         the bounds of the input geometry. The 'feature_func' must accept a 'dc_query'
@@ -787,7 +782,6 @@ def collect_training_data(
             gdf=gdf,
             dc_query=dc_query,
             ncpus=ncpus,
-            chunksize=chunksize,
             return_coords=return_coords,
             return_time_coords=return_time_coords,
             feature_func=feature_func,
