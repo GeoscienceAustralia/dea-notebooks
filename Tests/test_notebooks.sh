@@ -26,7 +26,7 @@ if [ -z "$1" ]; then
         How_to_guides/Contour_extraction.ipynb \
         How_to_guides/Calculating_band_indices.ipynb \
         How_to_guides/Exporting_GeoTIFFs.ipynb \
-        How_to_guides/Detecting_seasonality.ipynb \
+        # How_to_guides/Detecting_seasonality.ipynb \  # temporarily removed due to S3 access bug (works on Sandbox)
         How_to_guides/Generating_composites.ipynb \
         How_to_guides/Image_segmentation.ipynb \
         How_to_guides/Interpolation.ipynb \
@@ -39,7 +39,7 @@ if [ -z "$1" ]; then
         How_to_guides/Tidal_modelling.ipynb \
         How_to_guides/Using_load_ard.ipynb \
         How_to_guides/Virtual_products.ipynb \
-        # How_to_guides/Generating_COG_mosaics.ipynb \  # temporarily removed until S3 access bug is fixed
+        # How_to_guides/Generating_COG_mosaics.ipynb \  temporarily removed due to S3 access bug (works on Sandbox)
         Real_world_examples/Coastal_erosion.ipynb \
         Real_world_examples/Intertidal_elevation.ipynb
 
@@ -62,7 +62,9 @@ elif [ "$1" = "how_to_guides" ]; then
         --ignore How_to_guides/External_data_ERA5_Climate.ipynb \
         --ignore How_to_guides/Imagery_on_web_map.ipynb \
         --ignore How_to_guides/Continental_scale_animations.ipynb \
-        --ignore How_to_guides/Generating_COG_mosaics.ipynb  # temporarily removed until S3 access bug is fixed
+        --ignore How_to_guides/Detecting_seasonality.ipynb \  # temporarily removed due to S3 access bug (works on Sandbox)
+        --ignore How_to_guides/COG_overviews.ipynb \  # temporarily removed due to S3 access bug (works on Sandbox)
+        --ignore How_to_guides/Generating_COG_mosaics.ipynb  # temporarily removed due to S3 access bug (works on Sandbox)
 
 elif [ "$1" = "real_world_examples" ]; then
     echo "Testing Real_world_examples..."
