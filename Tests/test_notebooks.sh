@@ -18,7 +18,7 @@ if [ -z "$1" ]; then
     echo "No parameter provided. Running default tests..."
     
     # Run pytest on default subset of notebooks, ignoring specific ones
-    # Generating_COG_mosaics.ipynb and Detecting_seasonality.ipynb
+    # COG_mosaics.ipynb and Detecting_seasonality.ipynb
     # temporarily removed due to S3 access bug (works on Sandbox)
     pytest --durations=20 --nbval-lax \
         Beginners_guide \
@@ -66,7 +66,7 @@ elif [ "$1" = "how_to_guides" ]; then
         --ignore How_to_guides/Continental_scale_animations.ipynb \
         --ignore How_to_guides/Detecting_seasonality.ipynb \
         --ignore How_to_guides/COG_overviews.ipynb \
-        --ignore How_to_guides/Generating_COG_mosaics.ipynb
+        --ignore How_to_guides/COG_mosaics.ipynb
 
 elif [ "$1" = "real_world_examples" ]; then
     echo "Testing Real_world_examples..."
