@@ -73,7 +73,7 @@ def test_serial_parallel_equivalent(
 ):
     assert_frame_equal(
         serial_result,
-        parallel_result
+        parallel_result.sort_index() #parallel not always in order.
     )
 
 
