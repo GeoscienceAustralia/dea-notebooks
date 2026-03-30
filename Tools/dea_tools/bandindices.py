@@ -15,7 +15,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: June 2023
+Last modified: March 2026
 """
 
 # Import required packages
@@ -87,6 +87,8 @@ def calculate_indices(
         * ``'NIRv'`` (Near-Infrared Reflectance of Vegetation, Badgley et al. 2017)
         * ``'kNDVI'`` (Kernel Normalized Difference Vegetation Index, Camps-Valls et al. 2021)
         * ``'SAVI'`` (Soil Adjusted Vegetation Index, Huete 1988)
+        * ``'SRVI'`` (Symbolic Regression Vegetation Index, Chrysostomou 2026)
+        * ``'SRWI'`` (Symbolic Regression Water Index, Chrysostomou 2026)
         * ``'TCB'`` (Tasseled Cap Brightness, Crist 1985)
         * ``'TCG'`` (Tasseled Cap Greeness, Crist 1985)
         * ``'TCW'`` (Tasseled Cap Wetness, Crist 1985)
@@ -105,7 +107,6 @@ def calculate_indices(
 
         * ``'ga_ls_3'`` (for GA Landsat Collection 3)
         * ``'ga_s2_3'`` (for GA Sentinel 2 Collection 3)
-        * ``'ga_gm_3'`` (for GA Geomedian Collection 3)
 
     custom_varname : str, optional
         By default, the original dataset will be returned with
@@ -293,6 +294,12 @@ def calculate_indices(
         "FMR": lambda ds: (ds.swir1 / ds.nir),
         # Iron Oxide Ratio, Segal 1982
         "IOR": lambda ds: (ds.red / ds.blue),
+        # Symbolic Regression Water Index, Chrysostomou 2026
+        "SRWI": lambda ds: ((ds.green + ds.blue) - (ds.nir + ds.swir1))
+        / ((ds.green + ds.blue) + (ds.nir + ds.swir1)),
+        # Symbolic Regression Vegetation Index, Chrysostomou 2026
+        "SRVI": lambda ds: ((2 * ds.nir) - (3 * ds.red))
+        / (ds.nir + ds.red + (0.5 * (ds.green + ds.swir1))),
     }
 
     # If index supplied is not a list, convert to list. This allows us to
@@ -341,7 +348,7 @@ def calculate_indices(
         if collection is None:
             raise ValueError(
                 "'No `collection` was provided. Please specify "
-                "either 'ga_ls_3', 'ga_s2_3' or 'ga_gm_3' "
+                "either 'ga_ls_3' or 'ga_s2_3' "
                 "to ensure the function calculates indices "
                 "using the correct spectral bands"
             )
@@ -394,16 +401,12 @@ def calculate_indices(
                 a: b for a, b in bandnames_dict.items() if a in ds.variables
             }
 
-        elif collection == "ga_gm_3":
-            # Pass an empty dict as no bands need renaming
-            bands_to_rename = {}
-
         # Raise error if no valid collection name is provided:
         else:
             raise ValueError(
                 f"'{collection}' is not a valid option for "
                 "`collection`. Please specify either \n"
-                "'ga_ls_3', 'ga_s2_3' or 'ga_gm_3'"
+                "'ga_ls_3' or 'ga_s2_3'"
             )
 
         # Apply index function
