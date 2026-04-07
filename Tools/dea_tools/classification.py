@@ -17,37 +17,35 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: February 2026
+Last modified: May 2021
 """
 
+import multiprocessing as mp
 import os
 import sys
 import time
-import pyproj
-import joblib
 import warnings
+from abc import ABCMeta, abstractmethod
+from copy import deepcopy
+from datetime import timedelta
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import dask.array as da
+import dask.distributed as dd
+import geopandas as gpd
+import joblib
 import numpy as np
 import pandas as pd
 import xarray as xr
-import dask.array as da
-import geopandas as gpd
-from tqdm.auto import tqdm
-import multiprocessing as mp
-import dask.distributed as dd
-from functools import partial
-from datetime import datetime, timedelta
-from abc import ABCMeta, abstractmethod
 from dask_ml.wrappers import ParallelPostFit
-
 from odc.geo.geom import Geometry
 from odc.geo.xr import assign_crs
 from sklearn.base import ClusterMixin
-from sklearn.utils import check_random_state
-from sklearn.mixture import GaussianMixture
 from sklearn.cluster import AgglomerativeClustering, KMeans
+from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import BaseCrossValidator, KFold, ShuffleSplit
-
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from sklearn.utils import check_random_state
+from tqdm.auto import tqdm
 
 from dea_tools.spatial import xr_rasterize
 
@@ -59,7 +57,8 @@ def sklearn_flatten(input_xr):
     dimensions flattened into one dimension.
 
     This flattening procedure enables DataArrays and Datasets to be used
-    to train and predict with sklearn models.
+    to train and predict
+    with sklearn models.
 
     Last modified: September 2019
 
@@ -84,11 +83,7 @@ def sklearn_flatten(input_xr):
         input_xr = input_xr.to_array()
 
     # stack across pixel dimensions, handling timeseries if necessary
-    stacked = (
-        input_xr.stack(z=["x", "y", "time"])
-        if "time" in input_xr.dims
-        else input_xr.stack(z=["x", "y"])
-    )
+    stacked = input_xr.stack(z=["x", "y", "time"]) if "time" in input_xr.dims else input_xr.stack(z=["x", "y"])
 
     # finding 'bands' dimensions in each pixel - these will not be
     # flattened as their context is important for sklearn
@@ -151,11 +146,7 @@ def sklearn_unflatten(output_np, input_xr):
         input_xr = input_xr.to_array()
 
     # generate the same mask we used to create the input to the sklearn model
-    stacked = (
-        input_xr.stack(z=["x", "y", "time"])
-        if "time" in input_xr.dims
-        else input_xr.stack(z=["x", "y"])
-    )
+    stacked = input_xr.stack(z=["x", "y", "time"]) if "time" in input_xr.dims else input_xr.stack(z=["x", "y"])
 
     pxdims = []
     for dim in stacked.dims:
@@ -296,9 +287,7 @@ def predict_xr(
         input_data_flattened = da.array(input_data_flattened).transpose()
 
         if clean:
-            input_data_flattened = da.where(
-                da.isfinite(input_data_flattened), input_data_flattened, 0
-            )
+            input_data_flattened = da.where(da.isfinite(input_data_flattened), input_data_flattened, 0)
 
         if proba & persist:
             # persisting data so we don't require loading all the data twice
@@ -330,24 +319,18 @@ def predict_xr(
                 out_proba = da.max(out_proba, axis=1) * 100.0
                 out_proba = out_proba.reshape(len(y), len(x))
 
-                out_proba = xr.DataArray(
-                    out_proba, coords={"x": x, "y": y}, dims=["y", "x"]
-                )
+                out_proba = xr.DataArray(out_proba, coords={"x": x, "y": y}, dims=["y", "x"])
                 output_xr["Probabilities"] = out_proba
             else:
                 print("   returning class probability array")
                 out_proba = out_proba * 100.0
-                class_names = (
-                    model.classes_
-                )  # Get the unique class names from the fitted classifier
+                class_names = model.classes_  # Get the unique class names from the fitted classifier
 
                 # Loop through each class (band)
                 probabilities_dataset = xr.Dataset()
                 for i, class_name in enumerate(class_names):
                     reshaped_band = out_proba[:, i].reshape(len(y), len(x))
-                    reshaped_da = xr.DataArray(
-                        reshaped_band, coords={"x": x, "y": y}, dims=["y", "x"]
-                    )
+                    reshaped_da = xr.DataArray(reshaped_band, coords={"x": x, "y": y}, dims=["y", "x"])
                     probabilities_dataset[f"prob_{class_name}"] = reshaped_da
 
                 # merge in the probabilities
@@ -368,9 +351,7 @@ def predict_xr(
             if len(input_data_flattened.shape[1:]):
                 output_px_shape = input_data_flattened.shape[1:]
 
-            output_features = input_data_flattened.reshape(
-                (len(stacked.z), *output_px_shape)
-            )
+            output_features = input_data_flattened.reshape((len(stacked.z), *output_px_shape))
 
             # set the stacked coordinate to match the input
             output_features = xr.DataArray(
@@ -385,9 +366,7 @@ def predict_xr(
             # convert to dataset and rename arrays
             output_features = output_features.to_dataset(dim="output_dim_0")
             data_vars = list(input_xr.data_vars)
-            output_features = output_features.rename(
-                {i: j for i, j in zip(output_features.data_vars, data_vars)}
-            )
+            output_features = output_features.rename({i: j for i, j in zip(output_features.data_vars, data_vars)})
 
             # merge with predictions
             output_xr = xr.merge([output_xr, output_features], compat="override")
@@ -398,14 +377,10 @@ def predict_xr(
         # convert model to dask predict
         model = ParallelPostFit(model)
         with joblib.parallel_backend("dask"):
-            output_xr = _predict_func(
-                model, input_xr, persist, proba, max_proba, clean, return_input
-            )
+            output_xr = _predict_func(model, input_xr, persist, proba, max_proba, clean, return_input)
 
     else:
-        output_xr = _predict_func(
-            model, input_xr, persist, proba, max_proba, clean, return_input
-        ).compute()
+        output_xr = _predict_func(model, input_xr, persist, proba, max_proba, clean, return_input).compute()
 
     return output_xr
 
@@ -425,35 +400,42 @@ class HiddenPrints:
 
 
 def _get_training_data_for_shp(
+    gdf: gpd.GeoDataFrame,
+    index: int,
     row: gpd.GeoSeries,
-    crs: pyproj.CRS,
+    out_arrs: List[np.ndarray],
+    out_vars: List[List[str]],
     dc_query: Dict,
     return_coords: bool,
-    return_time_coords: bool,
-    feature_func: callable = None,
+    feature_func: Optional[callable] = None,
     field: Optional[str] = None,
     zonal_stats: Optional[str] = None,
     time_field: Optional[str] = None,
-) -> pd.DataFrame:
+    time_delta: Optional[timedelta] = None,
+):
     """
     This is the core function that is triggered by `collect_training_data`.
     The `collect_training_data` function loops through geometries in a geopandas
-    geodataframe and runs this function. See `collect_training_data` for more
-    information on the parameters than is detailed below.
+    geodataframe and runs the code within `_get_training_data_for_shp`.
+    Parameters are inherited from `collect_training_data`.
+    See that function for information on the other params not listed below.
 
     Parameters
     ----------
+    gdf : gpd.GeoDataFrame
+        Geopandas GeoDataFrame containing geometries.
+    index : int
+        Index of the current geometry in the GeoDataFrame.
     row : gpd.GeoSeries
         GeoSeries representing the current row in the GeoDataFrame.
-    crs : pyrpoj.CRS
-        Coordinate reference system information extracted from a GeoDataFrame
-        e.g., crs=gdf.crs
+    out_arrs : List[np.ndarray]
+        An empty list into which the training data arrays are stored.
+    out_vars : List[List[str]]
+        An empty list into which the data variable names are stored.
     dc_query : Dict
-        ODC query object.
+        ODC query.
     return_coords : bool
-        Flag indicating whether to return x,y coordinates in the dataset.
-    return_time_coords : bool
-        Flag indicating whether to return time coordinates in the dataset
+        Flag indicating whether to return coordinates in the dataset.
     feature_func : callable, optional
         Optional function to extract data based on `dc_query`. Defaults to None.
     field : str, optional
@@ -461,52 +443,65 @@ def _get_training_data_for_shp(
     zonal_stats : str, optional
         Zonal statistics method. Defaults to None.
     time_field : str, optional
-        Name of the column containing time(range) data in the input gdf, for the case where each row
-        should load from a different time(range). If loading from the same time(range) for
-        all rows, then its preferable to pass time as a key:variable in the 'dc_query'.
-        Note the time values must be in a format that datacube.load() accepts. For example, as a
-        tuple with strings ('2017-01-01', '2017-01-31'). Defaults to None.
+        Name of the column containing timestamp data in the input gdf. Defaults to None.
+    time_delta : timedelta, optional
+        Time delta used to match a data point with all the scenes falling between
+        `time_stamp - time_delta` and `time_stamp + time_delta`. Defaults to None.
+
 
     Returns
     --------
-    pd.DataFrame
+    Two lists, a list of numpy.arrays containing classes and extracted data for
+    each pixel or polygon, and another containing the data variable names.
 
     """
 
     # prevent function altering dictionary kwargs
-    dc_query = {**dc_query}  # shallow copy is faster
+    dc_query = deepcopy(dc_query)
 
     # remove dask chunks if supplied as using
-    # mulitprocessing for parallelisation
+    # mulitprocessing for parallization
     if "dask_chunks" in dc_query:
         dc_query.pop("dask_chunks", None)
 
-    # set up query based on row geometry
-    geom = Geometry(geom=row["geometry"], crs=crs)
-    dc_query.update({"geopolygon": geom})
+    # set up query based on polygon
+    geom = Geometry(geom=gdf.iloc[index].geometry, crs=gdf.crs)
+    q = {"geopolygon": geom}
+    # merge polygon query with user supplied query params
+    dc_query.update(q)
 
-    if time_field is not None:
-        timerange = getattr(row, time_field)
-        dc_query.update({"time": timerange})
+    # Update time range if a time window is specified
+    if time_delta is not None:
+        timestamp = gdf.loc[index][time_field]
+        start_time = timestamp - time_delta
+        end_time = timestamp + time_delta
+        timestamp = {"time": (start_time, end_time)}
+        # merge time query with user supplied query params
+        dc_query.update(timestamp)
 
-    # Use input feature function and run checks on output
+    # Use input feature function
     data = feature_func(dc_query)
 
-    if not isinstance(data, (xr.Dataset, xr.DataArray)):
-        raise TypeError("feature_func must return xarray Dataset or DataArray")
+    # if no data is present then return
+    if len(data) == 0:
+        return
 
-    if len(data.data_vars) == 0:
-        raise ValueError(
-            "feature_func returned an empty dataset, "
-            "this can happen if a geometry is not within data bounds"
-        )
-
-    # If the geometry type is a polygon extract all pixels
-    if row["geometry"].geom_type != "Point":
-        # create polygon mask (requires gdf)
-        dff = gpd.GeoDataFrame(row.to_frame().T, geometry="geometry", crs=crs)
-        mask = xr_rasterize(dff, data)
+    if gdf.iloc[[index]].geometry.geom_type.values != "Point":
+        # If the geometry type is a polygon extract all pixels
+        # create polygon mask
+        mask = xr_rasterize(gdf.iloc[[index]], data)
         data = data.where(mask)
+
+    # Check that feature_func has removed time
+    if "time" in data.dims:
+        t = data.dims["time"]
+        if t > 1 and time_delta is not None:
+            raise ValueError(
+                "After running the feature_func, the dataset still has "
+                + str(t)
+                + " time-steps, dataset must only have"
+                + " x and y dimensions."
+            )
 
     if return_coords:
         # turn coords into a variable in the ds
@@ -515,50 +510,46 @@ def _get_training_data_for_shp(
 
     # append ID measurement to dataset for tracking failures
     band = list(data.data_vars)[0]
-    data["_training_id"] = xr.zeros_like(data[band])
-    data["_training_id"] = data["_training_id"] + row["_training_id"]
+    _id = xr.zeros_like(data[band])
+    data["id"] = _id
+    data["id"] = data["id"] + gdf.iloc[index]["id"]
 
-    if "time" in data.sizes:
-        if return_time_coords:
-            data["time_coord"] = data.time
-
-    # If no zonal stats were requested then extract all pixel values.
+    # If no zonal stats were requested then extract all pixel values
     if zonal_stats is None:
-        stacked = data.to_dataframe().reset_index(drop=True)
-        stacked[field] = row[field]
+        flat_train = sklearn_flatten(data)
+        flat_val = np.repeat(row[field], flat_train.shape[0])
+        stacked = np.hstack((np.expand_dims(flat_val, axis=1), flat_train))
 
     elif zonal_stats in ["mean", "median", "max", "min"]:
         method_to_call = getattr(data, zonal_stats)
-        stacked = method_to_call(["x", "y"])  # will keep time as dim if present
-        stacked = stacked.to_dataframe().reset_index(drop=True)
-        stacked[field] = row[field]
+        flat_train = method_to_call()
+        flat_train = flat_train.to_array()
+        stacked = np.hstack((row[field], flat_train))
 
     else:
         raise Exception(
-            f"{zonal_stats} is not one of the supported reduce functions: 'mean','median','max','min'"
+            zonal_stats + " is not one of the supported" + " reduce functions ('mean','median','max','min')"
         )
 
-    if "spatial_ref" in stacked.columns:
-        stacked = stacked.drop("spatial_ref", axis=1)
-
-    return stacked
+    out_arrs.append(stacked)
+    out_vars.append([field] + list(data.data_vars))
 
 
 def _get_training_data_parallel(
     gdf: gpd.GeoDataFrame,
-    dc_query: dict,
+    dc_query: str,
     ncpus: int,
-    return_coords: bool = False,
-    return_time_coords: bool = False,
-    feature_func: callable = None,
+    return_coords: bool,
+    feature_func: Optional[Callable] = None,
     field: Optional[str] = None,
     zonal_stats: Optional[str] = None,
     time_field: Optional[str] = None,
-) -> pd.DataFrame:
+    time_delta: Optional[int] = None,
+) -> Tuple[List[str], List[Any]]:
     """
     Function passing the '_get_training_data_for_shp' function
     to a mulitprocessing.Pool.
-    Inherits variables from 'collect_training_data'.
+    Inherits variables from 'collect_training_data()'.
 
     """
     # Check if dask-client is running
@@ -570,26 +561,18 @@ def _get_training_data_parallel(
 
     if zx is not None:
         raise ValueError(
-            "You have a Dask Client running, which prevents"
-            "this function from multiprocessing. Close the client."
+            "You have a Dask Client running, which prevents \nthis function from multiprocessing. Close the client."
         )
 
-    crs = gdf.crs
-
-    # instantiate results list
-    results = []
+    # instantiate lists that can be shared across processes
+    manager = mp.Manager()
+    results = manager.list()
+    column_names = manager.list()
 
     # progress bar
     pbar = tqdm(total=len(gdf))
 
-    # what to do with the results
-    def results_update(df):
-        results.append(df)
-        pbar.update()
-
-    # What to do with errors
-    def handle_error(index, e):
-        print(f"Worker failed on row {index}", str(e))
+    def update(*a):
         pbar.update()
 
     with mp.Pool(ncpus) as pool:
@@ -597,159 +580,131 @@ def _get_training_data_parallel(
             pool.apply_async(
                 _get_training_data_for_shp,
                 [
+                    gdf,
+                    index,
                     row,
-                    crs,
+                    results,
+                    column_names,
                     dc_query,
                     return_coords,
-                    return_time_coords,
                     feature_func,
                     field,
                     zonal_stats,
                     time_field,
+                    time_delta,
                 ],
-                callback=results_update,
-                error_callback=partial(handle_error, index),
+                callback=update,
             )
 
         pool.close()
         pool.join()
+        pbar.close()
 
-    pbar.close()
-
-    return results
+    return column_names, results
 
 
 def collect_training_data(
     gdf: gpd.GeoDataFrame,
-    dc_query: dict[str, Any],
+    dc_query: dict,
     ncpus: int = 1,
     return_coords: bool = False,
-    return_time_coords: bool = False,
     feature_func: callable = None,
     field: str = None,
-    zonal_stats: Optional[str] = None,
+    zonal_stats: str = None,
     clean: bool = True,
-    fail_threshold: float = 0.05,
+    fail_threshold: float = 0.02,
     fail_ratio: float = 0.5,
-    max_retries: int = 2,
-    time_field: Optional[str] = None,
-) -> pd.DataFrame:
+    max_retries: int = 3,
+    time_field: str = None,
+    time_delta: timedelta = None,
+) -> Tuple[List[np.ndarray], List[str]]:
     """
-    This function provides methods for gathering training/validation data from the ODC over
+    This function provides methods for gathering training data from the ODC over
     geometries stored within a geopandas geodataframe. The function will return a
-    pandas.DataFrame where the index contains class labels and the columns contain
-    feature values generated by a user-defined `feature_func`.
-
-    - In the instance where ncpus > 1, the function will automatically run in parallel.
-    - Zonal statistics are supported where the provided vector file contains polygons, otherwise all
-      pixel values are returned.
-    - Individual points/polygons can be loaded from different time ranges by passing the `time_field`
-      parameter.
-    - Implements a retry queue for samples that may fail due to i/o limitations or s3 read failures.
+    'model_input' array containing stacked training data arrays with all NaNs & Infs removed.
+    In the instance where ncpus > 1, a parallel version of the function will be run
+    (functions are passed to a mp.Pool()). This function can conduct zonal statistics if
+    the supplied shapefile contains polygons. The 'feature_func' parameter defines what
+    features to produce.
 
     Parameters
     ----------
     gdf : geopandas geodataframe
-        geometry data in the form of a geopandas geodataframe. Must contain a class labels column,
-        can optionally contain a column with time stamps, specified with the`time_field` param.
+        geometry data in the form of a geopandas geodataframe
     dc_query : dictionary
-        Datacube query object, should not contain lat and long (x or y) variables as these
-        are supplied by the geopolygon column in the 'gdf'.
+        Datacube query object, should not contain lat and long (x or y)
+        variables as these are supplied by the 'gdf' variable
     ncpus : int
         The number of cpus/processes over which to parallelize the gathering
-        of training data (only if ncpus is > 1). Defaults to 1.
+        of training data (only if ncpus is > 1). Use 'mp.cpu_count()' to determine the number of
+        cpus available on a machine. Defaults to 1.
+    return_coords : bool
+        If True, then the training data will contain two extra columns 'x_coord' and
+        'y_coord' corresponding to the x,y coordinate of each sample. This variable can
+        be useful for handling spatial autocorrelation between samples later in the ML workflow.
     feature_func : function
         A function for generating feature layers that is applied to the data within
         the bounds of the input geometry. The 'feature_func' must accept a 'dc_query'
-        object, and return a single xarray.Dataset or xarray.DataArray:
-
+        object, and return a single xarray.Dataset or xarray.DataArray containing
+        2D coordinates (i.e x, y - no time dimension).
+        e.g.
             def feature_function(query):
                 dc = datacube.Datacube(app='feature_layers')
                 ds = dc.load(**query)
                 ds = ds.mean('time')
                 return ds
-
     field : str
         Name of the column in the gdf that contains the class labels
-    return_coords : bool
-        If True, then the output data will contain two extra columns 'x_coord' and
-        'y_coord' corresponding to the x,y coordinate of each sample.
-    return_time_coords : bool
-        If True, then the output data will contain an extra column 'time_coord',
-        corresponding to the time stamp of each sample.
     zonal_stats : string, optional
         An optional string giving the names of zonal statistics to calculate
         for each polygon. Default is None (all pixel values are returned). Supported
         values are 'mean', 'median', 'max', 'min'.
     clean : bool
-        Whether or not to remove missing values in the returned dataset. If True (default),
-        rows with any NaNs or Infs in any numeric columns will be dropped from the dataset.
-    time_field : str, optional
-        Name of the column containing time(range) data in the input gdf, for the case where each row
-        should load from a different time(range). If loading from the same time(range) for
-        all rows, then its preferable to pass time as a key:variable in the 'dc_query'.
-        Note the time values must be in a format that datacube.load() accepts. For example, as a
-        tuple with strings ('2017-01-01', '2017-01-31'). Defaults to None.
-    fail_threshold : float, default 0.05
+        Whether or not to remove missing values in the training dataset. If True,
+        training labels with any NaNs or Infs in the feature layers will be dropped
+        from the dataset.
+    fail_threshold : float, default 0.02
         Silent read fails on S3 can result in some rows of the returned data containing NaN values.
         The'fail_threshold' fraction specifies a % of acceptable fails.
         e.g. Setting 'fail_threshold' to 0.05 means if >5% of the samples in the training dataset
-        fail then those samples will be returned to the multiprocessing queue. Below this fraction
+        fail then those samples will be reutnred to the multiprocessing queue. Below this fraction
         the function will accept the failures and return the results.
     fail_ratio: float
         A float between 0 and 1 that defines if a given training sample has failed.
         Default is 0.5, which means if 50 % of the measurements in a given sample return null
         values, and the number of total fails is more than the fail_threshold, the samplewill be
         passed to the retry queue.
-    max_retries: int, default 2
+    max_retries: int, default 3
         Maximum number of times to retry collecting samples. This number is invoked
         if the 'fail_threshold' is not reached.
+    time_field: str
+        The name of the attribute in the input dataframe containing capture timestamp
+    time_delta: time_delta
+        The size of the window used as timestamp +/- time_delta.
+        This is used to allow matching a single field data point with multiple scenes
 
     Returns
     --------
-    pandas.DataFrame
-        Where the index contains class labels and the columns contain feature values
+    Two lists, a list of numpy.arrays containing classes and extracted data for
+    each pixel or polygon, and another containing the data variable names.
 
     """
-    # --------Conduct various checks before running the function--------
-    if feature_func is None:
-        raise ValueError(
-            "Please supply a feature layer function through the "
-            + "parameter 'feature_func'"
-        )
-
-    if field is None:
-        raise ValueError("Parameter 'field' must be provided")
-
-    if field not in gdf.columns:
-        raise ValueError(f"Column '{field}' not found in GeoDataFrame")
 
     # check the dtype of the class field
     if not np.issubdtype(gdf[field].dtype, np.integer):
-        raise ValueError(
-            f'The "{field}" column of the input vector must contain integer dtypes'
-        )
+        raise ValueError(f'The "{field}" column of the input vector must contain integer dtypes')
 
-    # check time-field params
-    if time_field is not None:
+    # check for feature_func
+    if feature_func is None:
+        raise ValueError("Please supply a feature layer function through the " + "parameter 'feature_func'")
 
-        if "time" in dc_query:
-            raise ValueError(
-                f"You have passed both 'dc_query['time']' and 'time_field', "
-                "only pass one of these options"
-            )
+    if zonal_stats is not None:
+        print("Taking zonal statistic: " + zonal_stats)
 
-        if time_field not in gdf.columns:
-            raise ValueError(f"Column '{time_field}' not found in GeoDataFrame")
-
-    if zonal_stats:
-        print(f"Applying zonal statistic: {zonal_stats}")
-
-    # ----------------------------------------------------------------
     # add unique id to gdf to help with indexing failed rows
     # during multiprocessing
-    gdf = gdf.copy()  # only modify copy
-    gdf["_training_id"] = np.arange(len(gdf))
+    # if zonal_stats is not None:
+    gdf["id"] = range(0, len(gdf))
 
     if ncpus == 1:
         # progress indicator
@@ -758,106 +713,104 @@ def collect_training_data(
 
         # list to store results
         results = []
+        column_names = []
 
         # loop through polys and extract training data
         for index, row in gdf.iterrows():
             print(" Feature {:04}/{:04}\r".format(i + 1, len(gdf)), end="")
 
-            stacked = _get_training_data_for_shp(
+            _get_training_data_for_shp(
+                gdf,
+                index,
                 row,
-                gdf.crs,
+                results,
+                column_names,
                 dc_query,
                 return_coords,
-                return_time_coords,
                 feature_func,
                 field,
                 zonal_stats,
                 time_field,
+                time_delta,
             )
-
-            results.append(stacked)
             i += 1
 
     else:
         print("Collecting training data in parallel mode")
-        results = _get_training_data_parallel(
+        column_names, results = _get_training_data_parallel(
             gdf=gdf,
             dc_query=dc_query,
             ncpus=ncpus,
             return_coords=return_coords,
-            return_time_coords=return_time_coords,
             feature_func=feature_func,
             field=field,
             zonal_stats=zonal_stats,
             time_field=time_field,
+            time_delta=time_delta,
         )
 
-    if not results:
-        raise RuntimeError("No samples returned from feature extraction.")
+    # column names are appended during each iteration
+    # but they are identical, grab only the first instance
+    column_names = column_names[0]
 
-    # join all results into a single df
-    df = pd.concat(results)
+    # Stack the extracted training data for each feature into a single array
+    model_input = np.vstack(results)
 
     # this code block below iteratively retries failed rows
     # up to max_retries or until fail_threshold is
-    # reached, whichever occurs first.
+    # reached - whichever occurs first
     if ncpus > 1:
         i = 1
         while i <= max_retries:
-            # Find % of fails (null values) in data
-            dff = df.set_index("_training_id")
+            # Find % of fails (null values) in data. Use Pandas for simplicity
+            df = pd.DataFrame(data=model_input[:, 0:-1], index=model_input[:, -1])
             # how many nan values per id?
-            num_nans = dff.isnull().sum(axis=1)
+            num_nans = df.isnull().sum(axis=1)
             num_nans = num_nans.groupby(num_nans.index).sum()
             # how many valid values per id?
-            num_valid = dff.notnull().sum(axis=1)
+            num_valid = df.notnull().sum(axis=1)
             num_valid = num_valid.groupby(num_valid.index).sum()
             # find fail rate
             perc_fail = num_nans / (num_nans + num_valid)
             fail_ids = perc_fail[perc_fail > fail_ratio]
-
             fail_rate = len(fail_ids) / len(gdf)
 
-            print(
-                "Percentage of possible fails after run "
-                + str(i)
-                + " = "
-                + str(round(fail_rate * 100, 2))
-                + " %"
-            )
+            print("Percentage of possible fails after run " + str(i) + " = " + str(round(fail_rate * 100, 2)) + " %")
 
             if fail_rate > fail_threshold:
                 print("Recollecting samples that failed")
 
                 fail_ids = list(fail_ids.index)
-
-                # keep only the ids in df object that didn't fail
-                df = df.loc[~df["_training_id"].isin(fail_ids)]
+                # keep only the ids in model_input object that didn't fail
+                model_input = model_input[~np.isin(model_input[:, -1], fail_ids)]
 
                 # index out the fail_ids from the original gdf
-                gdf_rerun = gdf.loc[gdf["_training_id"].isin(fail_ids)]
+                gdf_rerun = gdf.loc[gdf["id"].isin(fail_ids)]
                 gdf_rerun = gdf_rerun.reset_index(drop=True)
 
-                time.sleep(3)  # sleep for 3s to rest api
+                time.sleep(5)  # sleep for 5s to rest api
 
                 # recollect failed rows
-                results_again = _get_training_data_parallel(
+                (
+                    column_names_again,
+                    results_again,
+                ) = _get_training_data_parallel(
                     gdf=gdf_rerun,
                     dc_query=dc_query,
                     ncpus=ncpus,
                     return_coords=return_coords,
-                    return_time_coords=return_time_coords,
                     feature_func=feature_func,
                     field=field,
                     zonal_stats=zonal_stats,
                     time_field=time_field,
+                    time_delta=time_delta,
                 )
 
                 # Stack the extracted training data for each feature into a single array
-                df_again = pd.concat(results_again)
+                model_input_again = np.vstack(results_again)
 
                 # merge results of the re-run with original run
-                df = pd.concat([df, df_again])
+                model_input = np.vstack((model_input, model_input_again))
 
                 i += 1
 
@@ -865,30 +818,24 @@ def collect_training_data(
                 break
 
     # -----------------------------------------------
+
     # remove id column
-    df = df.drop("_training_id", axis=1)
+    idx_var = column_names[0:-1]
+    model_col_indices = [column_names.index(var_name) for var_name in idx_var]
+    model_input = model_input[:, model_col_indices]
 
     if clean:
-        # Identify which columns have numeric data
-        numeric_cols = df.select_dtypes(include=[np.number]).columns
-
-        # do we have any numeric columns to clean
-        if len(numeric_cols) == 0:
-            print("No numeric columns to clean; leaving DataFrame unchanged.")
-        else:
-            # Build invalid mask on numeric columns only, NaN or Inf
-            invalid_mask = ~np.isfinite(df[numeric_cols]).all(axis=1)
-            num_removed = invalid_mask.sum()
-            df = df[~invalid_mask]
-
-            print(f"Removed {num_removed} rows with NaNs or Infs in numeric columns")
-            print("Output shape:", df.shape)
+        num = np.count_nonzero(np.isnan(model_input).any(axis=1))
+        model_input = model_input[~np.isnan(model_input).any(axis=1)]
+        model_input = model_input[~np.isinf(model_input).any(axis=1)]
+        print("Removed " + str(num) + " rows wth NaNs &/or Infs")
+        print("Output shape: ", model_input.shape)
 
     else:
         print("Returning data without cleaning")
-        print("Output shape: ", df.shape)
+        print("Output shape: ", model_input.shape)
 
-    return df.set_index(field)
+    return column_names[0:-1], model_input
 
 
 class KMeans_tree(ClusterMixin):
@@ -919,8 +866,7 @@ class KMeans_tree(ClusterMixin):
         # make child models
         if n_levels > 1:
             self.branches = [
-                KMeans_tree(n_levels=n_levels - 1, n_clusters=n_clusters, **kwargs)
-                for _ in range(n_clusters)
+                KMeans_tree(n_levels=n_levels - 1, n_clusters=n_clusters, **kwargs) for _ in range(n_clusters)
             ]
 
     def fit(self, X, y=None, sample_weight=None):
@@ -952,11 +898,7 @@ class KMeans_tree(ClusterMixin):
                 # fit child models on their corresponding partition of the training set
                 self.branches[clu].fit(
                     X[labels_old == clu],
-                    sample_weight=(
-                        sample_weight[labels_old == clu]
-                        if sample_weight is not None
-                        else None
-                    ),
+                    sample_weight=(sample_weight[labels_old == clu] if sample_weight is not None else None),
                 )
                 self.labels_[labels_old == clu] += self.branches[clu].labels_
 
@@ -992,24 +934,13 @@ class KMeans_tree(ClusterMixin):
             for clu in range(self.n_clusters):
                 result[rescpy == clu] += self.branches[clu].predict(
                     X[rescpy == clu],
-                    sample_weight=(
-                        sample_weight[rescpy == clu]
-                        if sample_weight is not None
-                        else None
-                    ),
+                    sample_weight=(sample_weight[rescpy == clu] if sample_weight is not None else None),
                 )
 
         return result
 
 
-def spatial_clusters(
-    coordinates,
-    method="Hierarchical",
-    max_distance=None,
-    n_groups=None,
-    verbose=False,
-    **kwargs,
-):
+def spatial_clusters(coordinates, method="Hierarchical", max_distance=None, n_groups=None, verbose=False, **kwargs):
     """
     Create spatial groups on coorindate data using either KMeans clustering
     or a Gaussian Mixture model
@@ -1043,28 +974,21 @@ def spatial_clusters(
         raise ValueError("Method must be one of: 'Hierarchical','KMeans' or 'GMM'")
 
     if (method in ["GMM", "KMeans"]) & (n_groups is None):
-        raise ValueError(
-            "The 'GMM' and 'KMeans' methods requires explicitly setting 'n_groups'"
-        )
+        raise ValueError("The 'GMM' and 'KMeans' methods requires explicitly setting 'n_groups'")
 
     if (method == "Hierarchical") & (max_distance is None):
         raise ValueError("The 'Hierarchical' method requires setting max_distance")
 
     if method == "Hierarchical":
         cluster_label = AgglomerativeClustering(
-            n_clusters=None,
-            linkage="complete",
-            distance_threshold=max_distance,
-            **kwargs,
+            n_clusters=None, linkage="complete", distance_threshold=max_distance, **kwargs
         ).fit_predict(coordinates)
 
     if method == "KMeans":
         cluster_label = KMeans(n_clusters=n_groups, **kwargs).fit_predict(coordinates)
 
     if method == "GMM":
-        cluster_label = GaussianMixture(n_components=n_groups, **kwargs).fit_predict(
-            coordinates
-        )
+        cluster_label = GaussianMixture(n_components=n_groups, **kwargs).fit_predict(coordinates)
     if verbose:
         print("n clusters = " + str(len(np.unique(cluster_label))))
 
@@ -1293,9 +1217,7 @@ def spatial_train_test_split(
 
     if kfold_method == "SpatialKFold":
         if n_splits is None:
-            raise ValueError(
-                "n_splits parameter requires an integer value, eg. 'n_splits=5'"
-            )
+            raise ValueError("n_splits parameter requires an integer value, eg. 'n_splits=5'")
         if (test_size is not None) or (train_size is not None):
             warnings.warn(
                 "With the 'SpatialKFold' method, controlling the test/train ratio "
@@ -1346,11 +1268,7 @@ def _partition_by_sum(array, parts):
     """
     array = np.atleast_1d(array).ravel()
     if parts > array.size:
-        raise ValueError(
-            "Cannot partition an array of size {} into {} parts of equal sum.".format(
-                array.size, parts
-            )
-        )
+        raise ValueError("Cannot partition an array of size {} into {} parts of equal sum.".format(array.size, parts))
     cumulative_sum = array.cumsum()
     # Ideally, we want each part to have the same number of points (total /
     # parts).
@@ -1361,11 +1279,7 @@ def _partition_by_sum(array, parts):
     # Check for repeated split points, which indicates that there is no way to
     # split the array.
     if np.unique(indices).size != indices.size:
-        raise ValueError(
-            "Could not find partition points to split the array into {} parts of equal sum.".format(
-                parts
-            )
-        )
+        raise ValueError("Could not find partition points to split the array into {} parts of equal sum.".format(parts))
     return indices
 
 
@@ -1423,11 +1337,7 @@ class _BaseSpatialCrossValidator(BaseCrossValidator, metaclass=ABCMeta):
             The testing set indices for that split.
         """
         if X.shape[1] != 2:
-            raise ValueError(
-                "X (the coordinate data) must have exactly 2 columns ({} given).".format(
-                    X.shape[1]
-                )
-            )
+            raise ValueError("X (the coordinate data) must have exactly 2 columns ({} given).".format(X.shape[1]))
         for train, test in super().split(X, y, groups):
             yield train, test
 
@@ -1561,9 +1471,7 @@ class _SpatialShuffleSplit(_BaseSpatialCrossValidator):
             **kwargs,
         )
         if balance < 1:
-            raise ValueError(
-                "The *balance* argument must be >= 1. To disable balance, use 1."
-            )
+            raise ValueError("The *balance* argument must be >= 1. To disable balance, use 1.")
         self.test_size = test_size
         self.train_size = train_size
         self.random_state = random_state
@@ -1622,12 +1530,7 @@ class _SpatialShuffleSplit(_BaseSpatialCrossValidator):
                 test_points = np.where(np.isin(labels, cluster_ids[test_clusters]))[0]
                 # The proportion of data points assigned to each group should
                 # be close the proportion of clusters assigned to each group.
-                balance.append(
-                    abs(
-                        train_points.size / test_points.size
-                        - train_clusters.size / test_clusters.size
-                    )
-                )
+                balance.append(abs(train_points.size / test_points.size - train_clusters.size / test_clusters.size))
                 test_sets.append(test_points)
             best = np.argmin(balance)
             yield test_sets[best]
@@ -1709,11 +1612,7 @@ class _SpatialKFold(_BaseSpatialCrossValidator):
         )
 
         if n_splits < 2:
-            raise ValueError(
-                "Number of splits must be >=2 for clusterKFold. Given {}.".format(
-                    n_splits
-                )
-            )
+            raise ValueError("Number of splits must be >=2 for clusterKFold. Given {}.".format(n_splits))
         self.test_size = test_size
         self.shuffle = shuffle
         self.random_state = random_state
