@@ -12,6 +12,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    Calculating_band_indices.ipynb
    COG_mosaics.ipynb
    COG_overviews.ipynb
+   Collect_training_and_validation_data.ipynb
    Contour_extraction.ipynb
    Continental_scale_animations.ipynb
    Detecting_seasonality.ipynb
