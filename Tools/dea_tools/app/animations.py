@@ -18,7 +18,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from datacube.utils.geometry import Geometry
+from odc.geo.geom import Geometry
 from datacube.utils.masking import mask_invalid_data
 from ipyleaflet import (
     LayerGroup,

@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-from datacube.utils.geometry import CRS
+from odc.geo import CRS, Geometry
 from ipyleaflet import basemap_to_tiles, basemaps
 from odc.algo import xr_geomedian
 from odc.ui import select_on_a_map
@@ -117,6 +117,9 @@ def run_filmstrip_app(
     # Plot interactive map to select area
     basemap = basemap_to_tiles(basemaps.Esri.WorldImagery)
     geopolygon = select_on_a_map(height="600px", layers=(basemap,), center=centre_coords, zoom=12)
+
+    # Convert older style geopolygon to odc-geo
+    geopolygon = Geometry(geom=geopolygon.geom, crs=geopolygon.crs)
 
     # Set centre coords based on most recent selection to re-focus
     # subsequent data selections
