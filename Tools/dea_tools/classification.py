@@ -533,6 +533,9 @@ def _get_training_data_for_shp(
     # Use input feature function and run checks on output
     data = feature_func(dc_query)
 
+    # infer coordinate names
+    x_name, y_name = _find_xy_coords(data)
+
     if not isinstance(data, (xr.Dataset, xr.DataArray)):
         raise TypeError("feature_func must return xarray Dataset or DataArray")
 
@@ -549,10 +552,7 @@ def _get_training_data_for_shp(
         mask = xr_rasterize(dff, data)
         data = data.where(mask)
 
-    if return_coords:
-        # infer coordinate names
-        x_name, y_name = _find_xy_coords(data)
-    
+    if return_coords:    
         # turn coords into variables
         data["x_coord"] = data[x_name] + 0 * data[y_name]
         data["y_coord"] = data[y_name] + 0 * data[x_name]
@@ -574,10 +574,7 @@ def _get_training_data_for_shp(
 
     elif zonal_stats in ["mean", "median", "max", "min"]:
         method_to_call = getattr(data, zonal_stats)
-        if 'x' in data.coords and 'y' in data.coords:
-            stacked = method_to_call(["x", "y"])  # will keep time as dim if present
-        else: 
-            stacked = method_to_call(["longitude", "latitude"]) 
+        stacked = method_to_call([x_name, y_name])  # will keep time as dim if present
         stacked = stacked.to_dataframe().reset_index(drop=True)
         stacked[field] = row[field]
 
