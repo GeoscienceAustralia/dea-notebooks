@@ -514,8 +514,8 @@ def _get_training_data_for_shp(
             data["x_coord"] = data.x + 0 * data.y
             data["y_coord"] = data.y + 0 * data.x   
         else:
-            data["x_coord"] = data.longitude
-            data["y_coord"] = data.latitude
+            data["x_coord"] = data.longitude + 0 * data.latitude
+            data["y_coord"] = data.latitude + 0 * data.longitude 
 
     # append ID measurement to dataset for tracking failures
     band = list(data.data_vars)[0]
@@ -533,7 +533,10 @@ def _get_training_data_for_shp(
 
     elif zonal_stats in ["mean", "median", "max", "min"]:
         method_to_call = getattr(data, zonal_stats)
-        stacked = method_to_call(["x", "y"])  # will keep time as dim if present
+        if 'x' in data.coords and 'y' in data.coords:
+            stacked = method_to_call(["x", "y"])  # will keep time as dim if present
+        else: 
+            stacked = method_to_call(["longitude", "latitude"]) 
         stacked = stacked.to_dataframe().reset_index(drop=True)
         stacked[field] = row[field]
 
@@ -659,6 +662,8 @@ def collect_training_data(
     dc_query : dictionary
         Datacube query object, should not contain lat and long (x or y) variables as these
         are supplied by the geopolygon column in the 'gdf'.
+        N.B.: if the query includes a lat/lon `output_crs`, it is necessary to specify the 
+        `resolution` as lat/lon degrees too.
     ncpus : int
         The number of cpus/processes over which to parallelize the gathering
         of training data (only if ncpus is > 1). Defaults to 1.
