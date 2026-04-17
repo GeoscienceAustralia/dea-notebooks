@@ -514,8 +514,8 @@ def _get_training_data_for_shp(
             data["x_coord"] = data.x + 0 * data.y
             data["y_coord"] = data.y + 0 * data.x   
         else:
-            data["x_coord"] = data.longitude + 0 * data.latitude
-            data["y_coord"] = data.latitude + 0 * data.longitude
+            data["x_coord"] = data.longitude
+            data["y_coord"] = data.latitude
 
     # append ID measurement to dataset for tracking failures
     band = list(data.data_vars)[0]
