@@ -510,7 +510,7 @@ def _get_training_data_for_shp(
 
     if return_coords:
         # turn coords into a variable in the 
-        if 'x' in ds_ard.coords and 'y' in ds_ard.coords:
+        if 'x' in data.coords and 'y' in data.coords:
             data["x_coord"] = data.x + 0 * data.y
             data["y_coord"] = data.y + 0 * data.x   
         else:
