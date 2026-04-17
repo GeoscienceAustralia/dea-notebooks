@@ -35,7 +35,7 @@ from tqdm.auto import tqdm
 import multiprocessing as mp
 import dask.distributed as dd
 from functools import partial
-from datetime import datetime, timedelta
+from datetime import datetime
 from abc import ABCMeta, abstractmethod
 from dask_ml.wrappers import ParallelPostFit
 
