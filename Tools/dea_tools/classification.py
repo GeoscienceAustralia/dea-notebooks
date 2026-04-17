@@ -551,7 +551,7 @@ def _get_training_data_for_shp(
 
     if return_coords:
         # infer coordinate names
-        x_name, y_name = find_xy_coords(data)
+        x_name, y_name = _find_xy_coords(data)
     
         # turn coords into variables
         data["x_coord"] = data[x_name] + 0 * data[y_name]
