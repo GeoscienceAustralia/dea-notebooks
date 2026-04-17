@@ -509,9 +509,13 @@ def _get_training_data_for_shp(
         data = data.where(mask)
 
     if return_coords:
-        # turn coords into a variable in the ds
-        data["x_coord"] = data.x + 0 * data.y
-        data["y_coord"] = data.y + 0 * data.x
+        # turn coords into a variable in the 
+        if 'x' in ds_ard.coords and 'y' in ds_ard.coords:
+            data["x_coord"] = data.x + 0 * data.y
+            data["y_coord"] = data.y + 0 * data.x   
+        else:
+            data["x_coord"] = data.longitude + 0 * data.latitude
+            data["y_coord"] = data.latitude + 0 * data.longitude
 
     # append ID measurement to dataset for tracking failures
     band = list(data.data_vars)[0]
