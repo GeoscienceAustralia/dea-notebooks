@@ -424,6 +424,47 @@ class HiddenPrints:
         sys.stdout = self._original_stdout
 
 
+def _find_xy_coords(data):
+    """
+    Infer x and y coordinate names from an xarray Dataset or DataArray
+    using lowercase substring matching.
+
+    Parameters
+    ----------
+    data : xr.Dataset or xr.DataArray
+
+    Returns
+    -------
+    tuple
+        (x_coord_name, y_coord_name)
+
+    Raises
+    ------
+    ValueError
+        If x or y coordinates cannot be inferred.
+    """
+
+    X_TOKENS = ("lon", "x", "east")
+    Y_TOKENS = ("lat", "y", "north")
+
+    x_coord = None
+    y_coord = None
+
+    for cname in data.coords:
+        name = cname.lower()
+
+        if x_coord is None and any(token in name for token in X_TOKENS):
+            x_coord = cname
+
+        if y_coord is None and any(token in name for token in Y_TOKENS):
+            y_coord = cname
+
+    if x_coord is None or y_coord is None:
+        raise ValueError("Could not infer x/y coords")
+
+    return x_coord, y_coord
+
+
 def _get_training_data_for_shp(
     row: gpd.GeoSeries,
     crs: pyproj.CRS,
@@ -509,13 +550,13 @@ def _get_training_data_for_shp(
         data = data.where(mask)
 
     if return_coords:
-        # turn coords into a variable in the 
-        if 'x' in data.coords and 'y' in data.coords:
-            data["x_coord"] = data.x + 0 * data.y
-            data["y_coord"] = data.y + 0 * data.x   
-        else:
-            data["x_coord"] = data.longitude + 0 * data.latitude
-            data["y_coord"] = data.latitude + 0 * data.longitude 
+        # infer coordinate names
+        x_name, y_name = find_xy_coords(data)
+    
+        # turn coords into variables
+        data["x_coord"] = data[x_name] + 0 * data[y_name]
+        data["y_coord"] = data[y_name] + 0 * data[x_name]
+
 
     # append ID measurement to dataset for tracking failures
     band = list(data.data_vars)[0]
