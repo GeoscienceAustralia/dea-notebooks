@@ -35,7 +35,7 @@ from tqdm.auto import tqdm
 import multiprocessing as mp
 import dask.distributed as dd
 from functools import partial
-from datetime import datetime, timedelta
+from datetime import datetime
 from abc import ABCMeta, abstractmethod
 from dask_ml.wrappers import ParallelPostFit
 
@@ -424,6 +424,47 @@ class HiddenPrints:
         sys.stdout = self._original_stdout
 
 
+def _find_xy_coords(data):
+    """
+    Infer x and y coordinate names from an xarray Dataset or DataArray
+    using lowercase substring matching.
+
+    Parameters
+    ----------
+    data : xr.Dataset or xr.DataArray
+
+    Returns
+    -------
+    tuple
+        (x_coord_name, y_coord_name)
+
+    Raises
+    ------
+    ValueError
+        If x or y coordinates cannot be inferred.
+    """
+
+    X_TOKENS = ("lon", "x", "east")
+    Y_TOKENS = ("lat", "y", "north")
+
+    x_coord = None
+    y_coord = None
+
+    for cname in data.coords:
+        name = cname.lower()
+
+        if x_coord is None and any(token in name for token in X_TOKENS):
+            x_coord = cname
+
+        if y_coord is None and any(token in name for token in Y_TOKENS):
+            y_coord = cname
+
+    if x_coord is None or y_coord is None:
+        raise ValueError("Could not infer x/y coords")
+
+    return x_coord, y_coord
+
+
 def _get_training_data_for_shp(
     row: gpd.GeoSeries,
     crs: pyproj.CRS,
@@ -492,6 +533,9 @@ def _get_training_data_for_shp(
     # Use input feature function and run checks on output
     data = feature_func(dc_query)
 
+    # infer coordinate names
+    x_name, y_name = _find_xy_coords(data)
+
     if not isinstance(data, (xr.Dataset, xr.DataArray)):
         raise TypeError("feature_func must return xarray Dataset or DataArray")
 
@@ -508,10 +552,11 @@ def _get_training_data_for_shp(
         mask = xr_rasterize(dff, data)
         data = data.where(mask)
 
-    if return_coords:
-        # turn coords into a variable in the ds
-        data["x_coord"] = data.x + 0 * data.y
-        data["y_coord"] = data.y + 0 * data.x
+    if return_coords:    
+        # turn coords into variables
+        data["x_coord"] = data[x_name] + 0 * data[y_name]
+        data["y_coord"] = data[y_name] + 0 * data[x_name]
+
 
     # append ID measurement to dataset for tracking failures
     band = list(data.data_vars)[0]
@@ -529,7 +574,7 @@ def _get_training_data_for_shp(
 
     elif zonal_stats in ["mean", "median", "max", "min"]:
         method_to_call = getattr(data, zonal_stats)
-        stacked = method_to_call(["x", "y"])  # will keep time as dim if present
+        stacked = method_to_call([x_name, y_name])  # will keep time as dim if present
         stacked = stacked.to_dataframe().reset_index(drop=True)
         stacked[field] = row[field]
 
@@ -655,6 +700,8 @@ def collect_training_data(
     dc_query : dictionary
         Datacube query object, should not contain lat and long (x or y) variables as these
         are supplied by the geopolygon column in the 'gdf'.
+        N.B.: if the query includes a lat/lon `output_crs`, it is necessary to specify the 
+        `resolution` as lat/lon degrees too.
     ncpus : int
         The number of cpus/processes over which to parallelize the gathering
         of training data (only if ncpus is > 1). Defaults to 1.
