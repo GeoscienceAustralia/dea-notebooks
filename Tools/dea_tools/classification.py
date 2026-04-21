@@ -26,6 +26,7 @@ import time
 import pyproj
 import joblib
 import warnings
+import odc.geo
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -424,47 +425,6 @@ class HiddenPrints:
         sys.stdout = self._original_stdout
 
 
-def _find_xy_coords(data):
-    """
-    Infer x and y coordinate names from an xarray Dataset or DataArray
-    using lowercase substring matching.
-
-    Parameters
-    ----------
-    data : xr.Dataset or xr.DataArray
-
-    Returns
-    -------
-    tuple
-        (x_coord_name, y_coord_name)
-
-    Raises
-    ------
-    ValueError
-        If x or y coordinates cannot be inferred.
-    """
-
-    X_TOKENS = ("lon", "x", "east")
-    Y_TOKENS = ("lat", "y", "north")
-
-    x_coord = None
-    y_coord = None
-
-    for cname in data.coords:
-        name = cname.lower()
-
-        if x_coord is None and any(token in name for token in X_TOKENS):
-            x_coord = cname
-
-        if y_coord is None and any(token in name for token in Y_TOKENS):
-            y_coord = cname
-
-    if x_coord is None or y_coord is None:
-        raise ValueError("Could not infer x/y coords")
-
-    return x_coord, y_coord
-
-
 def _get_training_data_for_shp(
     row: gpd.GeoSeries,
     crs: pyproj.CRS,
@@ -533,9 +493,19 @@ def _get_training_data_for_shp(
     # Use input feature function and run checks on output
     data = feature_func(dc_query)
 
-    # infer coordinate names
-    x_name, y_name = _find_xy_coords(data)
-
+    # infer spatial coordinate names
+    # first, assign to a single variable, as odc.spatial_dims may return None
+    coord_names = data.odc.spatial_dims
+    
+    if coord_names is None:
+        raise ValueError(
+            "Could not infer spatial dimensions. "
+            "Only spatial dimension names recognised by odc.spatial_dims are supported."
+        )
+    
+    # now safe to assign to two variables
+    y_name, x_name = coord_names
+    
     if not isinstance(data, (xr.Dataset, xr.DataArray)):
         raise TypeError("feature_func must return xarray Dataset or DataArray")
 
