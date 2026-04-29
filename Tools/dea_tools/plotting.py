@@ -34,12 +34,13 @@ from pyproj import Transformer
 from shapely.geometry import box
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolours
+import matplotlib.patches as mpatches
 import matplotlib.patheffects as PathEffects
 from matplotlib.animation import FuncAnimation
 
 from skimage.exposure import rescale_intensity
 from dea_tools.spatial import add_geobox
-
+from datacube.utils import masking
 
 def rgb(
     ds,
@@ -826,49 +827,38 @@ def plot_wo(wo, legend=True, **plot_kwargs):
     -------
     plot
     """
-    cmap = mcolours.ListedColormap(
-        [
-            np.array([150, 150, 110]) / 255,  # dry - 0
-            np.array([0, 0, 0]) / 255,  # nodata, - 1
-            np.array([119, 104, 87]) / 255,  # terrain - 16
-            np.array([89, 88, 86]) / 255,  # cloud_shadow - 32
-            np.array([216, 215, 214]) / 255,  # cloud - 64
-            np.array([242, 220, 180]) / 255,  # cloudy terrain - 80
-            np.array([79, 129, 189]) / 255,  # water - 128
-            np.array([51, 82, 119]) / 255,  # shady water - 160
-            np.array([186, 211, 242]) / 255,  # cloudy water - 192
-        ]
-    )
-    bounds = [
-        0,
-        1,
-        16,
-        32,
-        64,
-        80,
-        128,
-        160,
-        192,
-        255,
-    ]
-    norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
-    cblabels = [
-        "dry",
-        "nodata",
-        "terrain",
-        "cloud shadow",
-        "cloud",
-        "cloudy terrain",
-        "water",
-        "shady water",
-        "cloudy water",
-    ]
+    # first, mask non-contiguous pixels (i.e., where not all bands have valid data)
+    contig_mask = masking.make_mask(wo, noncontiguous=False)   # boolean
+    wo = wo.where(contig_mask) 
 
+    # map classes and colours
+    wo_classes = {
+        0:   ("Dry",                     np.array([150, 150, 110]) / 255),
+        1:   ("No Data",                 np.array([0, 0, 0]) / 255),
+        8:   ("Terrain Shadow",          np.array([(63, 54, 46)]) / 255),
+        16:  ("High Slope",              np.array([119, 104, 87]) / 255),
+        32:  ("Cloud Shadow",            np.array([89, 88, 86]) / 255),
+        64:  ("Cloud",                   np.array([216, 215, 214]) / 255),
+        128: ("Water",                   np.array([79, 129, 189]) / 255),
+        160: ("Water and Cloud Shadow",  np.array([51, 82, 119]) / 255),
+        192: ("Water and Cloud",         np.array([186, 211, 242]) / 255),
+    }
+
+    # define a colour map and bounds of pixel values to assing to each colour
+    values = sorted(wo_classes.keys())
+    colours = [wo_classes[v][1] for v in values]
+
+    cmap = mcolours.ListedColormap(colours)
+    bounds = values + [255]
+    norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
+
+    # plot
     try:
-        im = wo.plot.imshow(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
+        im = wo.plot.imshow(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs) 
     except AttributeError:
         im = wo.plot(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
 
+    # fix colourbar ticks + labels
     if legend:
         try:
             cb = im.colorbar
@@ -876,7 +866,9 @@ def plot_wo(wo, legend=True, **plot_kwargs):
             cb = im.cbar
         ticks = cb.get_ticks()
         cb.set_ticks(ticks[:-1] + np.diff(ticks) / 2)
+        cblabels = [wo_classes[v][0] for v in values]
         cb.set_ticklabels(cblabels)
+
     return im
 
 
