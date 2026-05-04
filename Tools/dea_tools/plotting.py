@@ -40,7 +40,6 @@ from matplotlib.animation import FuncAnimation
 
 from skimage.exposure import rescale_intensity
 from dea_tools.spatial import add_geobox
-from datacube.utils import masking
 
 def rgb(
     ds,
@@ -828,8 +827,13 @@ def plot_wo(wo, legend=True, **plot_kwargs):
     plot
     """
     # first, mask non-contiguous pixels (i.e., where not all bands have valid data)
-    contig_mask = masking.make_mask(wo, noncontiguous=False)   # boolean
-    wo = wo.where(contig_mask) 
+    flags = wo.flags_definition
+    defn = flags["noncontiguous"]
+    bit = defn["bits"]
+    false_val = int(next(k for k, v in defn["values"].items() if v is False))
+    
+    contig_mask = (wo.astype("uint32") & (1 << bit)) == (false_val << bit)
+    wo = wo.where(contig_mask)
 
     # map classes and colours
     wo_classes = {
