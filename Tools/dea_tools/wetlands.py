@@ -38,6 +38,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import xarray as xr
+from odc.geo.geom import Geometry
 
 from dea_tools.bandindices import calculate_indices
 from dea_tools.dask import create_local_dask_cluster
@@ -396,9 +397,9 @@ def WIT_drill(
     warnings.filterwarnings("ignore")
 
     # load wetland polygon and specify the coordinate reference system of the polygon
-    if isinstance(gdf, datacube.utils.geometry._base.Geometry):
+    if isinstance(gdf, Geometry):
         gdf = gpd.GeoDataFrame({"col1": ["name"], "geometry": gdf.geom}, crs=gdf.crs)
-    gpgon = datacube.utils.geometry.Geometry(gdf.geometry[0], crs=gdf.crs)
+    gpgon = Geometry(gdf.geometry[0], crs=gdf.crs)
 
     # Define which spectral bands are being used in the analysis
     bands = [f"nbart_{band}" for band in ("blue", "green", "red", "nir", "swir_1", "swir_2")]
