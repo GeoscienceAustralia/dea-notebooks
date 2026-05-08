@@ -88,7 +88,6 @@ Conferences
 Courses and training
 --------------------
 - Australian National University 2022,  Centre for Water and Landscape Dynamics `(WALD) <http://wald.anu.edu.au/>`_ under contract for `Geoscience Australia <https://www.ga.gov.au/>`_, 2022. `Digital Earth Australia for Geospatial Analysts <https://anu-wald.github.io/dea_course/about/>`_. Materials available under Apache 2.0 Licence `here <https://github.com/ANU-WALD/dea_course>`_ and link to github repository: https://github.com/ANU-WALD/dea_training.
-- Australian National University, 2025,'ENGN3903: environmental sensing, mapping and modelling',  School of Engineering. https://programsandcourses.anu.edu.au/2025/course/ENGN3903.
 - Flinders University, 2021, 2022, 'Remote sensing for all disciplines', Undergrad and postgrad course, https://handbook.flinders.edu.au/topics/2022/STEM2001.
 - Swinburne University of Technology 2023, 2024, 2025, 'Earth observation and data analysis short course', Space Technology and Industry Institute, https://events.humanitix.com/short-course-earth-observation-data-analysis, 'Earth Observation and Data Analysis Short Course', 2023, https://www.swinburne.edu.au/events/2023/10/earth-observation-data-analysis-short-course/.
 - University of New England 2026, 'GISC331: Earth observation', https://www.une.edu.au/study/units/earth-observation-gisc331.
