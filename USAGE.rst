@@ -6,7 +6,7 @@ If you have used material from this repository, please reference them using this
 
     Krause, C, Dunn, B, Bishop-Taylor, R, Adams, C, Burton C, Alger, M, Chua, S, Phillips, C, Newey, V, 
     Kouzoubov, K, Leith, A, Ayers, D & Hicks A 2021 'DEA Notebooks contributors', *Digital Earth Australia 
-    notebooks and tools repository*, Geoscience Australia, Canberra. https://doi.org/10.26186/145234.
+    notebooks and tools repository*, Geoscience Australia, Canberra, https://doi.org/10.26186/145234.
 
 Scientific papers
 -----------------
