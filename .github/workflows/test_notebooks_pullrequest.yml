@@ -38,6 +38,9 @@ jobs:
             How_to_guides/Imagery_on_web_map.ipynb
             How_to_guides/External_data_ERA5_Climate.ipynb
             How_to_guides/COG_mosaics.ipynb
+            Interactive_apps/Change_filmstrips.ipynb
+            Interactive_apps/Exporting_satellite_images.ipynb
+            Interactive_apps/Generating_satellite_animations.ipynb
       - name: Print changed notebook files
         if: steps.changed-notebooks.outputs.any_changed == 'true'
         run: |
