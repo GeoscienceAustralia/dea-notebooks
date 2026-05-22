@@ -1,13 +1,6 @@
 name: Publish dea-tools to PyPI
 
 on:
-  push:
-    branches: [develop, uv_publish]
-    paths:
-      - 'pyproject.toml'
-      - 'README_tools.md'
-      - 'Tools/**'
-      - '.github/workflows/publish.yml'
   release:
     types: [published]
   workflow_dispatch:
