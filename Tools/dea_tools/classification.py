@@ -26,6 +26,7 @@ import time
 import pyproj
 import joblib
 import warnings
+import odc.geo
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -35,7 +36,7 @@ from tqdm.auto import tqdm
 import multiprocessing as mp
 import dask.distributed as dd
 from functools import partial
-from datetime import datetime, timedelta
+from datetime import datetime
 from abc import ABCMeta, abstractmethod
 from dask_ml.wrappers import ParallelPostFit
 
@@ -492,6 +493,19 @@ def _get_training_data_for_shp(
     # Use input feature function and run checks on output
     data = feature_func(dc_query)
 
+    # infer spatial coordinate names
+    # first, assign to a single variable, as odc.spatial_dims may return None
+    coord_names = data.odc.spatial_dims
+    
+    if coord_names is None:
+        raise ValueError(
+            "Could not infer spatial dimensions. "
+            "Only spatial dimension names recognised by odc.spatial_dims are supported."
+        )
+    
+    # now safe to assign to two variables
+    y_name, x_name = coord_names
+    
     if not isinstance(data, (xr.Dataset, xr.DataArray)):
         raise TypeError("feature_func must return xarray Dataset or DataArray")
 
@@ -508,10 +522,11 @@ def _get_training_data_for_shp(
         mask = xr_rasterize(dff, data)
         data = data.where(mask)
 
-    if return_coords:
-        # turn coords into a variable in the ds
-        data["x_coord"] = data.x + 0 * data.y
-        data["y_coord"] = data.y + 0 * data.x
+    if return_coords:    
+        # turn coords into variables
+        data["x_coord"] = data[x_name] + 0 * data[y_name]
+        data["y_coord"] = data[y_name] + 0 * data[x_name]
+
 
     # append ID measurement to dataset for tracking failures
     band = list(data.data_vars)[0]
@@ -529,7 +544,7 @@ def _get_training_data_for_shp(
 
     elif zonal_stats in ["mean", "median", "max", "min"]:
         method_to_call = getattr(data, zonal_stats)
-        stacked = method_to_call(["x", "y"])  # will keep time as dim if present
+        stacked = method_to_call([x_name, y_name])  # will keep time as dim if present
         stacked = stacked.to_dataframe().reset_index(drop=True)
         stacked[field] = row[field]
 
@@ -655,6 +670,8 @@ def collect_training_data(
     dc_query : dictionary
         Datacube query object, should not contain lat and long (x or y) variables as these
         are supplied by the geopolygon column in the 'gdf'.
+        N.B.: if the query includes a lat/lon `output_crs`, it is necessary to specify the 
+        `resolution` as lat/lon degrees too.
     ncpus : int
         The number of cpus/processes over which to parallelize the gathering
         of training data (only if ncpus is > 1). Defaults to 1.

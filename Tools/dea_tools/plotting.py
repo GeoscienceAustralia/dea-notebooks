@@ -16,30 +16,30 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, file one on
 GitHub: https://github.com/GeoscienceAustralia/dea-notebooks/issues/new
 
-Last modified: April 2023
+Last modified: April 2026
 
 """
 
 # Import required packages
 import math
-from pathlib import Path
-
 import folium
-import geopandas as gpd
-import matplotlib.patheffects as PathEffects
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-from matplotlib import colors as mcolours
-from matplotlib.animation import FuncAnimation
+import geopandas as gpd
+import contextily as ctx
+from pathlib import Path
+from tqdm.auto import tqdm
 from pyproj import Transformer
 from shapely.geometry import box
+import matplotlib.pyplot as plt
+from matplotlib import colors as mcolours
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as PathEffects
+from matplotlib.animation import FuncAnimation
+
 from skimage.exposure import rescale_intensity
-from tqdm.auto import tqdm
-
 from dea_tools.spatial import add_geobox
-
 
 def rgb(
     ds,
@@ -171,7 +171,14 @@ def rgb(
                 "call"
             )
 
-        img = da.plot.imshow(x=x_dim, y=y_dim, robust=robust, col_wrap=col_wrap, **aspect_size_kwarg, **kwargs)
+        img = da.plot.imshow(
+            x=x_dim,
+            y=y_dim,
+            robust=robust,
+            col_wrap=col_wrap,
+            **aspect_size_kwarg,
+            **kwargs,
+        )
         if titles is not None:
             for ax, title in zip(img.axs.flat, titles):
                 ax.set_title(title)
@@ -181,11 +188,15 @@ def rgb(
     else:
         # If a float is supplied instead of an integer index, raise exception
         if isinstance(index, float):
-            raise Exception("Please supply `index` as either an integer or a list of integers")
+            raise Exception(
+                "Please supply `index` as either an integer or a list of integers"
+            )
 
         # If col argument is supplied as well as `index`, raise exception
         if "col" in kwargs:
-            raise Exception("Cannot supply both `index` and `col`; please remove one and try again")
+            raise Exception(
+                "Cannot supply both `index` and `col`; please remove one and try again"
+            )
 
         # Convert index to generic type list so that number of indices supplied
         # can be computed
@@ -202,7 +213,13 @@ def rgb(
         # If multiple index values are supplied, plot as a faceted plot
         if len(index) > 1:
             img = da.plot.imshow(
-                x=x_dim, y=y_dim, robust=robust, col=index_dim, col_wrap=col_wrap, **aspect_size_kwarg, **kwargs
+                x=x_dim,
+                y=y_dim,
+                robust=robust,
+                col=index_dim,
+                col_wrap=col_wrap,
+                **aspect_size_kwarg,
+                **kwargs,
             )
             if titles is not None:
                 for ax, title in zip(img.axs.flat, titles):
@@ -211,7 +228,9 @@ def rgb(
         # If only one index is supplied, squeeze out index_dim and plot as a
         # single panel
         else:
-            img = da.squeeze(dim=index_dim).plot.imshow(robust=robust, **aspect_size_kwarg, **kwargs)
+            img = da.squeeze(dim=index_dim).plot.imshow(
+                robust=robust, **aspect_size_kwarg, **kwargs
+            )
             if titles is not None:
                 for ax, title in zip(img.axs.flat, titles):
                     ax.set_title(title)
@@ -275,8 +294,14 @@ def display_map(x, y, crs="EPSG:4326", margin=-0.5, zoom_bias=0):
     all_longitude, all_latitude = transformer.transform(all_x, all_y)
 
     # Calculate zoom level based on coordinates
-    lat_zoom_level = _degree_to_zoom_level(min(all_latitude), max(all_latitude), margin=margin) + zoom_bias
-    lon_zoom_level = _degree_to_zoom_level(min(all_longitude), max(all_longitude), margin=margin) + zoom_bias
+    lat_zoom_level = (
+        _degree_to_zoom_level(min(all_latitude), max(all_latitude), margin=margin)
+        + zoom_bias
+    )
+    lon_zoom_level = (
+        _degree_to_zoom_level(min(all_longitude), max(all_longitude), margin=margin)
+        + zoom_bias
+    )
     zoom_level = min(lat_zoom_level, lon_zoom_level)
 
     # Identify centre point for plotting
@@ -284,7 +309,10 @@ def display_map(x, y, crs="EPSG:4326", margin=-0.5, zoom_bias=0):
 
     # Create map
     interactive_map = folium.Map(
-        location=center, zoom_start=zoom_level, tiles="http://mt1.google.com/vt/lyrs=y&z={z}&x={x}&y={y}", attr="Google"
+        location=center,
+        zoom_start=zoom_level,
+        tiles="http://mt1.google.com/vt/lyrs=y&z={z}&x={x}&y={y}",
+        attr="Google",
     )
 
     # Create bounding box coordinates to overlay on map
@@ -297,7 +325,9 @@ def display_map(x, y, crs="EPSG:4326", margin=-0.5, zoom_bias=0):
     ]
 
     # Add bounding box as an overlay
-    interactive_map.add_child(folium.features.PolyLine(locations=line_segments, color="red", opacity=0.8))
+    interactive_map.add_child(
+        folium.features.PolyLine(locations=line_segments, color="red", opacity=0.8)
+    )
 
     # Add clickable lat-lon popup box
     interactive_map.add_child(folium.features.LatLngPopup())
@@ -317,6 +347,8 @@ def xr_animation(
     show_date="%d %b %Y",
     show_text=None,
     show_colorbar=True,
+    basemap=None,
+    basemap_opacity=1.0,
     gdf_kwargs={},
     annotation_kwargs={},
     imshow_kwargs={},
@@ -404,6 +436,16 @@ def xr_animation(
     show_colorbar : bool, optional
         An optional boolean indicating whether to include a colourbar
         for single-band animations. Defaults to True.
+    basemap : contextily tile provider, optional
+        Optional web tile basemap to draw **beneath** the animated imagery
+        using ``contextily.add_basemap``. 
+        The value should be a Contextily provider, e.g.
+        ``contextily.providers.Esri.WorldImagery`` or any custom
+        provider supported by Contextily. To disable basemaps, leave this
+        parameter as ``None`` (default).
+    basemap_opacity : float, optional
+        Opacity of the basemap, expressed as a value between 0 and 1.
+        Lower values make the basemap more transparent.
     gdf_kwargs : dict, optional
         An optional dictionary of keyword arguments to customise the
         appearance of a ``geopandas.GeoDataFrame`` supplied to
@@ -466,7 +508,7 @@ def xr_animation(
                 gdf[time_col] = np.nan
 
             # Convert values to datetimes and fill gaps with relevant time value
-            gdf[time_col] = pd.to_datetime(gdf[time_col], errors="ignore")
+            gdf[time_col] = pd.to_datetime(gdf[time_col])
             gdf[time_col] = gdf[time_col].fillna(time_val)
 
         return gdf
@@ -482,7 +524,9 @@ def xr_animation(
 
         # Initialise color bar using plot min and max values
         img = ax.imshow(np.array([[vmin, vmax]]), **imshow_defaults)
-        fig.colorbar(img, cax=cax, orientation="horizontal", ticks=np.linspace(vmin, vmax, 2))
+        fig.colorbar(
+            img, cax=cax, orientation="horizontal", ticks=np.linspace(vmin, vmax, 2)
+        )
 
         # Fine-tune appearance of colorbar
         cax.xaxis.set_ticks_position("top")
@@ -512,11 +556,25 @@ def xr_animation(
                 f"of timesteps in `ds` (n={len(times)})"
             )
 
-        times_list = times.dt.strftime(show_date).values if show_date else [None] * len(times)
+        times_list = (
+            times.dt.strftime(show_date).values if show_date else [None] * len(times)
+        )
         text_list = show_text if is_sequence else [show_text] * len(times)
-        return ["\n".join([str(i) for i in (a, b) if i]) for a, b in zip(times_list, text_list)]
+        return [
+            "\n".join([str(i) for i in (a, b) if i])
+            for a, b in zip(times_list, text_list)
+        ]
 
-    def _update_frames(i, ax, extent, annotation_text, gdf, gdf_defaults, annotation_defaults, imshow_defaults):
+    def _update_frames(
+        i,
+        ax,
+        extent,
+        annotation_text,
+        gdf,
+        gdf_defaults,
+        annotation_defaults,
+        imshow_defaults,
+    ):
         """
         Animation called by `matplotlib.animation.FuncAnimation` to
         animate each frame in the animation. Plots array and any text
@@ -524,9 +582,25 @@ def xr_animation(
         on the times specified in 'start_time' and 'end_time' columns.
         """
 
-        # Clear previous frame to optimise render speed and plot imagery
-        ax.clear()
-        ax.imshow(array[i, ...].clip(0.0, 1.0), extent=extent, vmin=0.0, vmax=1.0, **imshow_defaults)
+        if basemap is None:
+            # Clear previous frame to optimise render speed and plot imagery
+            ax.clear()
+        else:
+            # Preserve basemap, clear foreground artists only
+            for im in ax.images[1:]:
+                im.remove()
+            for coll in ax.collections[:]:
+                coll.remove()
+            for txt in ax.texts[:]:
+                txt.remove()
+
+        ax.imshow(
+            array[i, ...].clip(0.0, 1.0),
+            extent=extent,
+            vmin=0.0,
+            vmax=1.0,
+            **imshow_defaults,
+        )
 
         # Add annotation text
         ax.annotate(annotation_text[i], **annotation_defaults)
@@ -537,7 +611,9 @@ def xr_animation(
             time_i = ds.time.isel(time=i).values
 
             # Subset geodataframe using start and end dates
-            gdf_subset = show_gdf.loc[(show_gdf.start_time <= time_i) & (show_gdf.end_time >= time_i)]
+            gdf_subset = show_gdf.loc[
+                (show_gdf.start_time <= time_i) & (show_gdf.end_time >= time_i)
+            ]
 
             if len(gdf_subset.index) > 0:
                 # Set color to geodataframe field if supplied
@@ -578,11 +654,15 @@ def xr_animation(
     # Test if bands exist in dataset
     missing_bands = [b for b in bands if b not in ds.data_vars]
     if missing_bands:
-        raise ValueError(f"Band(s) {missing_bands} do not exist as variables in `ds` {list(ds.data_vars)}")
+        raise ValueError(
+            f"Band(s) {missing_bands} do not exist as variables in `ds` {list(ds.data_vars)}"
+        )
 
     # Test if time dimension exists in dataset
     if "time" not in ds.dims:
-        raise ValueError("`ds` does not contain a 'time' dimension required for generating an animation")
+        raise ValueError(
+            "`ds` does not contain a 'time' dimension required for generating an animation"
+        )
 
     # Set default parameters
     outline = [PathEffects.withStroke(linewidth=2.5, foreground="black")]
@@ -618,7 +698,11 @@ def xr_animation(
     # Prepare geodataframe
     if show_gdf is not None:
         show_gdf = show_gdf.to_crs(ds.odc.geobox.crs)
-        show_gdf = gpd.clip(show_gdf, mask=box(left, bottom, right, top)).reindex(show_gdf.index).dropna(how="all")
+        show_gdf = (
+            gpd.clip(show_gdf, mask=box(left, bottom, right, top))
+            .reindex(show_gdf.index)
+            .dropna(how="all")
+        )
         show_gdf = _start_end_times(show_gdf, ds)
 
     # Convert data to 4D numpy array of shape [time, y, x, bands]
@@ -630,7 +714,11 @@ def xr_animation(
     if image_proc_funcs:
         print("Applying custom image processing functions")
         for i, array_i in tqdm(
-            enumerate(array), total=len(ds.time), leave=False, bar_format=bar_format, unit=" frames"
+            enumerate(array),
+            total=len(ds.time),
+            leave=False,
+            bar_format=bar_format,
+            unit=" frames",
         ):
             for func in image_proc_funcs:
                 array_i = func(array_i)
@@ -653,6 +741,21 @@ def xr_animation(
     fig, ax = plt.subplots()
     fig.set_size_inches(width * scale / 72, height * scale / 72, forward=True)
     fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+
+    # Add static basemap ONCE (if requested)
+    if basemap is not None:
+        # explicitily set bounds as contextily
+        # can't get this from imshow
+        ax.set_xlim(left, right)
+        ax.set_ylim(bottom, top)
+        ctx.add_basemap(
+            ax,
+            source=basemap,
+            crs=f"EPSG:{ds.odc.geobox.crs.epsg}",
+            attribution="",
+            attribution_size=1,
+            alpha=basemap_opacity
+        )
 
     # Optionally add colorbar
     if show_colorbar & (len(bands) == 1):
@@ -723,47 +826,43 @@ def plot_wo(wo, legend=True, **plot_kwargs):
     -------
     plot
     """
-    cmap = mcolours.ListedColormap([
-        np.array([150, 150, 110]) / 255,  # dry - 0
-        np.array([0, 0, 0]) / 255,  # nodata, - 1
-        np.array([119, 104, 87]) / 255,  # terrain - 16
-        np.array([89, 88, 86]) / 255,  # cloud_shadow - 32
-        np.array([216, 215, 214]) / 255,  # cloud - 64
-        np.array([242, 220, 180]) / 255,  # cloudy terrain - 80
-        np.array([79, 129, 189]) / 255,  # water - 128
-        np.array([51, 82, 119]) / 255,  # shady water - 160
-        np.array([186, 211, 242]) / 255,  # cloudy water - 192
-    ])
-    bounds = [
-        0,
-        1,
-        16,
-        32,
-        64,
-        80,
-        128,
-        160,
-        192,
-        255,
-    ]
-    norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
-    cblabels = [
-        "dry",
-        "nodata",
-        "terrain",
-        "cloud shadow",
-        "cloud",
-        "cloudy terrain",
-        "water",
-        "shady water",
-        "cloudy water",
-    ]
+    # first, mask non-contiguous pixels (i.e., where not all bands have valid data)
+    flags = wo.flags_definition
+    defn = flags["noncontiguous"]
+    bit = defn["bits"]
+    false_val = int(next(k for k, v in defn["values"].items() if v is False))
+    
+    contig_mask = (wo.astype("uint32") & (1 << bit)) == (false_val << bit)
+    wo = wo.where(contig_mask)
 
+    # map classes and colours
+    wo_classes = {
+        0:   ("Dry",                     np.array([150, 150, 110]) / 255),
+        1:   ("No Data",                 np.array([0, 0, 0]) / 255),
+        8:   ("Terrain Shadow",          np.array([(63, 54, 46)]) / 255),
+        16:  ("High Slope",              np.array([119, 104, 87]) / 255),
+        32:  ("Cloud Shadow",            np.array([89, 88, 86]) / 255),
+        64:  ("Cloud",                   np.array([216, 215, 214]) / 255),
+        128: ("Water",                   np.array([79, 129, 189]) / 255),
+        160: ("Water and Cloud Shadow",  np.array([51, 82, 119]) / 255),
+        192: ("Water and Cloud",         np.array([186, 211, 242]) / 255),
+    }
+
+    # define a colour map and bounds of pixel values to assing to each colour
+    values = sorted(wo_classes.keys())
+    colours = [wo_classes[v][1] for v in values]
+
+    cmap = mcolours.ListedColormap(colours)
+    bounds = values + [255]
+    norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
+
+    # plot
     try:
-        im = wo.plot.imshow(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
+        im = wo.plot.imshow(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs) 
     except AttributeError:
         im = wo.plot(cmap=cmap, norm=norm, add_colorbar=legend, **plot_kwargs)
 
+    # fix colourbar ticks + labels
     if legend:
         try:
             cb = im.colorbar
@@ -771,7 +870,9 @@ def plot_wo(wo, legend=True, **plot_kwargs):
             cb = im.cbar
         ticks = cb.get_ticks()
         cb.set_ticks(ticks[:-1] + np.diff(ticks) / 2)
+        cblabels = [wo_classes[v][0] for v in values]
         cb.set_ticklabels(cblabels)
+
     return im
 
 
@@ -792,14 +893,16 @@ def plot_fmask(fmask, legend=True, **plot_kwargs):
     -------
     plot
     """
-    cmap = mcolours.ListedColormap([
-        np.array([0, 0, 0]) / 255,  # nodata - 0
-        np.array([132, 162, 120]) / 255,  # clear - 1
-        np.array([208, 207, 206]) / 255,  # cloud - 2
-        np.array([70, 70, 51]) / 255,  # cloud_shadow - 3
-        np.array([224, 237, 255]) / 255,  # snow - 4
-        np.array([71, 91, 116]) / 255,  # water - 5
-    ])
+    cmap = mcolours.ListedColormap(
+        [
+            np.array([0, 0, 0]) / 255,  # nodata - 0
+            np.array([132, 162, 120]) / 255,  # clear - 1
+            np.array([208, 207, 206]) / 255,  # cloud - 2
+            np.array([70, 70, 51]) / 255,  # cloud_shadow - 3
+            np.array([224, 237, 255]) / 255,  # snow - 4
+            np.array([71, 91, 116]) / 255,  # water - 5
+        ]
+    )
     bounds = [0, 1, 2, 3, 4, 5, 6]
     norm = mcolours.BoundaryNorm(np.array(bounds) - 0.1, cmap.N)
     cblabels = ["nodata", "clear", "cloud", "shadow", "snow", "water"]
@@ -845,9 +948,13 @@ def plot_variable_images(img_collection):
     if plot_count == 0:
         if hasattr(img_collection, "sensor"):
             raise ValueError(
-                "The {} dataset has no images to display for the given query parameters".format(img_collection.sensor)
+                "The {} dataset has no images to display for the given query parameters".format(
+                    img_collection.sensor
+                )
             )
-        raise ValueError("The supplied xarray dataset has no images to display for the given query parameters")
+        raise ValueError(
+            "The supplied xarray dataset has no images to display for the given query parameters"
+        )
 
     # Divide the number of images by 2 rounding up to calculate the
     # number of rows for the below figure are needed

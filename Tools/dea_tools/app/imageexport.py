@@ -16,7 +16,7 @@ import ipywidgets as widgets
 import matplotlib.pyplot as plt
 import numpy as np
 from datacube.utils import masking
-from datacube.utils.geometry import Geometry
+from odc.geo.geom import Geometry
 from ipyleaflet import (
     LayerGroup,
     Marker,
