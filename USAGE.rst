@@ -69,6 +69,8 @@ Scientific papers
 
 - Tsai, YLS & Tseng, KH 2023, 'Monitoring multidecadal coastline change and reconstructing tidal flat topography', *International Journal of Applied Earth Observation and Geoinformation*, vol. 118, https://doi.org/10.1016/j.jag.2023.103260.
 
+- Turner, RS, Lasne, OJD, Lv, L, Osmond, HL, Cockburn, A, Kruuk, LEB & Youngentob, KN 2026, 'Using Landsat satellite imagery to investigate spatial and temporal variation in life history traits in a long-term study population of superb fairy-wrens Malurus cyaneus', *Ecology and Evolution*, vol. 16, no. 6, p. e73852, doi.org/10.1002/ece3.73852.
+
 - Wellington, MJ, Lawes, R & Kuhnert, P 2023, 'A framework for modelling spatio-temporal trends in crop production using generalised additive models', *Computers and Electronics in Agriculture*, vol. 212, https://doi.org/10.1016/j.compag.2023.108111.
 
 - Wellington, MJ & Renzullo, LJ 2021, 'High-dimensional satellite image compositing and statistics for enhanced irrigated crop mapping', *Remote Sensing*, vol. 13, no. 7, https://doi.org/10.3390/rs13071300.
