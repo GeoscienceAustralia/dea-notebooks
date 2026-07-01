@@ -67,7 +67,13 @@ Scientific papers
 
 - Teng, J, Penton, DJ, Ticehurst, C, Sengupta, A, Freebairn, A, Marvanek, S, Vaze, J, Gibbs, M, Streeton, N, Karim, F & Morton, S 2022, 'A comprehensive assessment of floodwater depth estimation models in semiarid regions', *Water Resources Research*, vol. 58, no. 11, https://doi.org/10.1029/2022WR032031.
 
+- Toqeer, A, Hall, A, Horta, A, Habiba, U & Wassens, S 2026, 'Long-term automated mapping of woody-vegetation dynamics in hydrologically altered floodplains: an Open Data Cube workflow using Digital Earth Australia', *Remote Sensing*, vol. 18, no. 13, doi.org/10.3390/rs18132069.
+
+- Toqeer, A, Hall, A, Horta, A & Wassens, S 2025, 'Towards automated monitoring of woody plant encroachment on floodplains: a remote sensing and hydrology framework', paper presented to *The 6th Spatial Data Science Symposium*, online, 2025, https://zenodo.org/records/17621351.
+
 - Tsai, YLS & Tseng, KH 2023, 'Monitoring multidecadal coastline change and reconstructing tidal flat topography', *International Journal of Applied Earth Observation and Geoinformation*, vol. 118, https://doi.org/10.1016/j.jag.2023.103260.
+
+- Turner, RS, Lasne, OJD, Lv, L, Osmond, HL, Cockburn, A, Kruuk, LEB & Youngentob, KN 2026, 'Using Landsat satellite imagery to investigate spatial and temporal variation in life history traits in a long-term study population of superb fairy-wrens Malurus cyaneus', *Ecology and Evolution*, vol. 16, no. 6, p. e73852, doi.org/10.1002/ece3.73852.
 
 - Wellington, MJ, Lawes, R & Kuhnert, P 2023, 'A framework for modelling spatio-temporal trends in crop production using generalised additive models', *Computers and Electronics in Agriculture*, vol. 212, https://doi.org/10.1016/j.compag.2023.108111.
 
