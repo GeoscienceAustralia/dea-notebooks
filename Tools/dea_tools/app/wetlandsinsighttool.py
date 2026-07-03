@@ -119,7 +119,13 @@ class wit_app(HBox):
             io = BytesIO(binary_data)
             io.seek(0)
             gdf = gpd.read_file(io)
-            gdf.crs = "EPSG:4326"
+            # ipyleaflet draw controls always return WGS84 (EPSG:4326)
+            # geometries. Set the CRS if it is missing, otherwise reproject
+            # to EPSG:4326 rather than blindly overwriting the CRS label.
+            if gdf.crs is None:
+                gdf.crs = "EPSG:4326"
+            else:
+                gdf = gdf.to_crs("EPSG:4326")
 
             # Convert to Albers and compute area
             gdf_drawn_albers = gdf.copy().to_crs("EPSG:3577")

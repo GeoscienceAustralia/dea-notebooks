@@ -8,12 +8,16 @@ import geopandas as gpd
 import datacube
 from datacube.utils.masking import mask_invalid_data
 
+from shapely.geometry import box
+
 from dea_tools.spatial import (
     subpixel_contours,
     xr_vectorize,
     xr_rasterize,
     xr_interpolate,
     idw,
+    check_crs_match,
+    zonal_stats_parallel,
 )
 from dea_tools.validation import eval_metrics
 
@@ -518,3 +522,68 @@ def test_xr_interpolate(dem_da, points_gdf, method):
                 method=method,
                 k=10,
             )
+
+
+# ----------------------------------------------------------------------
+# CRS consistency guards
+# ----------------------------------------------------------------------
+
+
+def test_check_crs_match_matching():
+    # Equivalent CRSs (including different but equivalent representations)
+    # should pass without raising.
+    check_crs_match("EPSG:3577", "EPSG:3577")
+    check_crs_match("EPSG:4326", 4326)
+
+
+def test_check_crs_match_mismatch():
+    # Differing CRSs must raise a clear ValueError.
+    with pytest.raises(ValueError, match="CRS mismatch"):
+        check_crs_match("EPSG:4326", "EPSG:3577")
+
+
+def test_check_crs_match_undefined():
+    # An undefined (None) CRS on either side must raise.
+    with pytest.raises(ValueError, match="no CRS"):
+        check_crs_match(None, "EPSG:3577")
+    with pytest.raises(ValueError, match="no CRS"):
+        check_crs_match("EPSG:3577", None)
+
+
+def _write_raster(path, crs):
+    """Write a small single-band GeoTIFF in the requested CRS."""
+    data = np.arange(100, dtype="float32").reshape(10, 10)
+    da = xr.DataArray(
+        data,
+        dims=("y", "x"),
+        coords={
+            "x": np.linspace(0, 900, 10),
+            "y": np.linspace(900, 0, 10),
+        },
+    )
+    da = da.rio.write_crs(crs)
+    da.rio.to_raster(path)
+
+
+def test_zonal_stats_parallel_crs_mismatch(tmp_path):
+    # A raster and vector in different CRSs must raise a clear error rather
+    # than silently producing empty or incorrect statistics.
+    raster_path = tmp_path / "raster.tif"
+    _write_raster(raster_path, "EPSG:3577")
+
+    zones = gpd.GeoDataFrame(
+        {"id": [1]},
+        geometry=[box(0.0, 0.0, 1.0, 1.0)],
+        crs="EPSG:4326",
+    )
+    shp_path = tmp_path / "zones.shp"
+    zones.to_file(shp_path)
+
+    with pytest.raises(ValueError, match="CRS mismatch"):
+        zonal_stats_parallel(
+            shp=str(shp_path),
+            raster=str(raster_path),
+            statistics=["mean"],
+            out_shp=str(tmp_path / "out.shp"),
+            ncpus=1,
+        )

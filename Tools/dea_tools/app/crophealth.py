@@ -194,7 +194,10 @@ def run_crophealth_app(ds):
             # Convert the drawn geometry to pixel coordinates
             geom_selectedarea = transform_geojson_wgs_to_epsg(
                 geo_json,
-                EPSG=3577,  # hard-coded to be same as case-study data
+                # Derive the CRS from the loaded dataset so the drawn polygon
+                # always aligns with the pixel grid used for masking below,
+                # rather than assuming a hard-coded EPSG code.
+                EPSG=ds.geobox.crs.epsg,
             )
 
             # Construct a mask to only select pixels within the drawn polygon

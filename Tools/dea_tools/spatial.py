@@ -30,6 +30,7 @@ import geopandas as gpd
 import numpy as np
 import odc.geo.xr
 import pandas as pd
+import rasterio
 import rasterio.features
 import scipy.interpolate
 import xarray as xr
@@ -974,11 +975,81 @@ def transform_geojson_wgs_to_epsg(geojson, EPSG):
     return gg.__geo_interface__
 
 
+def _normalise_crs(crs):
+    """
+    Convert a CRS-like input into an ``odc.geo.crs.CRS`` object, returning
+    ``None`` if the input is undefined. Accepts EPSG strings/integers, WKT
+    strings, and any object exposing a ``to_wkt`` method (e.g. rasterio,
+    fiona, or pyproj CRS objects).
+    """
+    if crs is None:
+        return None
+    if isinstance(crs, int):
+        crs = f"EPSG:{crs}"
+    elif hasattr(crs, "to_wkt"):
+        crs = crs.to_wkt()
+    return CRS(crs)
+
+
+def check_crs_match(crs_a, crs_b, names=("first", "second")):
+    """
+    Verify that two coordinate reference systems (CRSs) match, raising a
+    descriptive error if they do not.
+
+    This guards against a common source of silent errors in geospatial
+    workflows: operations such as zonal statistics or masking that assume
+    their vector and raster inputs share a CRS, and which otherwise return
+    empty or incorrect results when the inputs are misaligned.
+
+    Parameters
+    ----------
+    crs_a, crs_b :
+        Any CRS-like inputs accepted by ``odc.geo.crs.CRS`` (e.g. an EPSG
+        string such as ``"EPSG:3577"``, an integer EPSG code, a WKT string,
+        or an existing rasterio/fiona/pyproj/odc CRS object). A value of
+        ``None`` indicates an undefined CRS and will raise an error.
+    names : tuple of str, optional
+        Human-readable labels for the two inputs, used in error messages.
+
+    Raises
+    ------
+    ValueError
+        If either CRS is undefined (``None``), or if the two CRSs differ.
+    """
+    name_a, name_b = names
+    crs_a_norm = _normalise_crs(crs_a)
+    crs_b_norm = _normalise_crs(crs_b)
+
+    if crs_a_norm is None or crs_b_norm is None:
+        undefined = name_a if crs_a_norm is None else name_b
+        raise ValueError(
+            f"Unable to compare CRSs: the {undefined} dataset has no CRS "
+            f"defined. Please ensure both datasets have a valid CRS before "
+            f"proceeding."
+        )
+
+    if crs_a_norm != crs_b_norm:
+        raise ValueError(
+            f"CRS mismatch: the {name_a} dataset uses {crs_a_norm} while the "
+            f"{name_b} dataset uses {crs_b_norm}. Reproject one of the "
+            f"datasets so that both share the same CRS before proceeding "
+            f"(e.g. using GeoDataFrame.to_crs(...) for vector data or "
+            f"DataArray.odc.reproject(...) for raster data)."
+        )
+
+
 def zonal_stats_parallel(shp, raster, statistics, out_shp, ncpus, **kwargs):
     """
     Summarizing raster datasets based on vector geometries in parallel.
     Each cpu recieves an equal chunk of the dataset.
     Utilizes the perrygeo/rasterstats package.
+
+    .. note::
+        The vector ``shp`` and the ``raster`` must share the same
+        coordinate reference system (CRS). ``rasterstats`` does not
+        reproject its inputs, so a mismatch would silently produce empty
+        or incorrect statistics. This function validates that both inputs
+        share a CRS and raises a ``ValueError`` if they do not.
 
     Parameters
     ----------
@@ -1033,7 +1104,17 @@ def zonal_stats_parallel(shp, raster, statistics, out_shp, ncpus, **kwargs):
                     "geometry": mapping(shape(elem["geometry"])),
                 })
 
+    # Read the raster CRS up front so we can validate it against the
+    # vector zones before doing any (expensive) parallel processing.
+    with rasterio.open(raster) as src:
+        raster_crs = src.crs
+
     with fiona.open(shp) as zones:
+        # Ensure the vector zones and raster share a CRS. rasterstats does
+        # not reproject, so a mismatch would silently produce empty or
+        # incorrect statistics; fail early with a clear error instead.
+        check_crs_match(zones.crs, raster_crs, names=("zones (vector)", "raster"))
+
         jobs = []
 
         # create manager dictionary (polygon ids=keys, stats=entries)
