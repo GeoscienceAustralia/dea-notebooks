@@ -51,6 +51,8 @@ Scientific papers
 
 - McCarroll, RJ, Kennedy, DM & Ierodiaconou, D 2025, 'Morphologically adaptive modelling of sea level rise induced coastal erosion impacts for south-east Australia', *Marine Geology*, vol. 488, https://doi.org/10.1016/j.margeo.2025.107602.
 
+- McLaughlin, D., Doyle, T.B., Asbridge, E.F & Rogers, K 2026, 'A framework for using coastal monitoring data: a fordune case study', *Ocean & Coastal Management*, vol. 272, https://doi.org/10.1016/j.ocecoaman.2025.107989.
+
 - Nanson, R, Bishop-Taylor, R, Sagar, S & Lymburner, L 2022, 'Geomorphic insights into Australia's coastal change using a national dataset derived from the multi-decadal landsat archive', *Estuarine, Coastal and Shelf Science*, vol. 265, https://doi.org/10.1016/j.ecss.2021.107712.
 
 - Ochungo, P, Sagna, N, Neema, V, Akintayo, A, Athie, A, Kabiru, A, Ndiaye, A, Michaut, E, Merlo, S & Lane, P 2025, 'Shoreline dynamics and cultural heritage sites in Kenya, Tanzania, and Senegal: integrating remote sensing and archaeological knowledge', *Journal of Maps*, vol. 21, no. 1, https://doi.org/10.1080/17445647.2025.2487454.
