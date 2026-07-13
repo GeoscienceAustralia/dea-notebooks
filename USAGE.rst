@@ -43,13 +43,19 @@ Scientific papers
 
 - Gonçalves, RVS, Asbridge, E, Kelleway, JJ, Lucas, R & Rogers, K 2026, 'Climate‐driven mangrove dieback and recovery: a case study in Albert and Leichhardt Rivers, Australia', *Remote Sensing in Ecology and Conservation*, https://doi.org/10.1002/rse2.70080.
 
+- Grieger, R, Johnston-Bates, J, Sutton, A & Capon, SJ 2026, 'Patterns in understorey vegetation of a semi-arid terminal wetland over 20 years in response to flood and drought', *Diversity*, vol. 18, no. 5, https://doi.org/10.3390/d18050274.
+
 - Hou, J, Sharples, W, Tarpanelli, A, Renzullo, L, Woldemeskel, F & Carrara, E 2026, 'Advancing Near-Real-Time flood inundation mapping in Australia', *Water Resources Research*, vol. 62, no. 2, https://doi.org/10.1029/2025WR040640.
 
 - Krause, CE, Newey, V, Alger, MJ & Lymburner, L 2021, 'Mapping and monitoring the multi-decadal dynamics of Australia’s open waterbodies using landsat', *Remote Sensing*, vol. 13, no. 8, https://doi.org/10.3390/rs13081437.
 
+- Ma, S, Li, Z & Taylor, JA 2026, 'Landsat30-AU: A Vision-Language Dataset for Australian Landsat Imagery', in S Koenig, C Jenkins & ME Taylor (eds), *Fortieth AAAI Conference on Artificial Intelligence*, Singapore, vol. 40, pp. 7809–17, https://doi.org/10.1609/aaai.v40i10.37724.
+
 - Malan, N, Roughan, M, Hemming, M & Ingleton, T 2024, 'Quantifying coastal freshwater extremes during unprecedented rainfall using long timeseries multi-platform salinity observations', *Nature Communications*, vol. 15, no. 1, https://doi.org/10.1038/s41467-023-44398-2.
 
 - McCarroll, RJ, Kennedy, DM & Ierodiaconou, D 2025, 'Morphologically adaptive modelling of sea level rise induced coastal erosion impacts for south-east Australia', *Marine Geology*, vol. 488, https://doi.org/10.1016/j.margeo.2025.107602.
+
+- McLaughlin, D, Doyle, TB, Asbridge, EF & Rogers, K 2026, 'A framework for using coastal monitoring data: a foredune case study', *Ocean and Coastal Management*, vol. 272, https://doi.org/10.1016/j.ocecoaman.2025.107989.
 
 - Nanson, R, Bishop-Taylor, R, Sagar, S & Lymburner, L 2022, 'Geomorphic insights into Australia's coastal change using a national dataset derived from the multi-decadal landsat archive', *Estuarine, Coastal and Shelf Science*, vol. 265, https://doi.org/10.1016/j.ecss.2021.107712.
 
@@ -73,7 +79,7 @@ Scientific papers
 
 - Tsai, YLS & Tseng, KH 2023, 'Monitoring multidecadal coastline change and reconstructing tidal flat topography', *International Journal of Applied Earth Observation and Geoinformation*, vol. 118, https://doi.org/10.1016/j.jag.2023.103260.
 
-- Turner, RS, Lasne, OJD, Lv, L, Osmond, HL, Cockburn, A, Kruuk, LEB & Youngentob, KN 2026, 'Using Landsat satellite imagery to investigate spatial and temporal variation in life history traits in a long-term study population of superb fairy-wrens Malurus cyaneus', *Ecology and Evolution*, vol. 16, no. 6, p. e73852, doi.org/10.1002/ece3.73852.
+- Turner, RS, Lasne, OJD, Lv, L, Osmond, HL, Cockburn, A, Kruuk, LEB & Youngentob, KN 2026, 'Using Landsat satellite imagery to investigate spatial and temporal variation in life history traits in a long-term study population of superb fairy-wrens Malurus cyaneus', *Ecology and Evolution*, vol. 16, no. 6, p. e73852, https://doi.org/10.1002/ece3.73852.
 
 - Wellington, MJ, Lawes, R & Kuhnert, P 2023, 'A framework for modelling spatio-temporal trends in crop production using generalised additive models', *Computers and Electronics in Agriculture*, vol. 212, https://doi.org/10.1016/j.compag.2023.108111.
 
