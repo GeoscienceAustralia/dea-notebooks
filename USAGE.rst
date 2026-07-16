@@ -15,8 +15,6 @@ Scientific papers
 
 - Adame, MF, Kavehei, E, Dunn, B, Jackson, S, Duncan, P, Minjerribah-Moorgumpin Elders In, C, Cahill, J, Nadji, N, Brown, CJ & Lymburner, L 2026, 'Improving wetland management through First Nations' knowledge and a spatial visualisation tool', *Ambio*, https://doi.org/10.1007/s13280-025-02326-2.
 
-- Bierman, P & Spillman, C 2026, *Considerations for the development of a coastal erosion warning service*, Bureau Research Report no. 126, Australian Government Bureau of Meteorology, ISBN: 978-1-923469-20-4, https://www.bom.gov.au/sites/default/files/2026-06/considerations-development-coastal-erosion-warning-service-brr-126.pdf. 
-
 - Bishop-Taylor, R, Nanson, R, Sagar, S & Lymburner, L 2021, 'Mapping Australia's dynamic coastline at mean sea level using three decades of Landsat imagery', *Remote Sensing of Environment*, vol. 267, https://doi.org/10.1016/j.rse.2021.112734.
 
 - Bishop-Taylor, R, Sagar, S, Lymburner, L, Alam, I & Sixsmith, J 2019, 'Sub-pixel waterline extraction: characterising accuracy and sensitivity to indices and spectra', *Remote Sensing*, vol. 11, no. 24, https://doi.org/10.3390/rs11242984.
