@@ -316,3 +316,137 @@ def xr_random_sampling(
         gdf.to_file(out_fname)
 
     return gdf
+
+
+def confusion_matrix_accuracy(
+    df,
+    ref_col,
+    pred_col,
+    class_names=None,
+    class_order=None,
+):
+    """
+    Computes a confusion matrix using a reference (ground truth)
+    column and a predicted column from a pandas DataFrame
+    It extends the standard confusion matrix by including:
+        - Producer's accuracy (per-class recall; 1 - omission error)
+        - User's accuracy (per-class precision; 1 - commission error)
+        - Overall accuracy
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Input dataframe.
+    ref_col : str
+        Reference/ground-truth column.
+    pred_col : str
+        Predicted class column.
+    class_names : sequence, optional
+        Class names corresponding to integer labels.
+        Example:
+            class_names=["Water", "Forest", "Urban"]
+
+        implies:
+            0 -> Water
+            1 -> Forest
+            2 -> Urban
+
+    class_order : sequence, optional
+        Explicit ordering of classes. Useful when not all
+        classes occur in the data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A confusion matrix with counts, producer's accuracy, user's accuracy,
+        and overall accuracy. Rows represent actual classes, columns
+        represent predicted classes, with additional rows/columns for metrics.
+    
+    """
+
+    # Determine classes
+    if class_order is None:
+        classes = sorted(
+            set(df[ref_col].dropna())
+            | set(df[pred_col].dropna())
+        )
+    else:
+        classes = list(class_order)
+
+    # Create crosstab
+    cm = pd.crosstab(
+        pd.Categorical(df[ref_col], categories=classes),
+        pd.Categorical(df[pred_col], categories=classes),
+        rownames=["Actual"],
+        colnames=["Predicted"],
+        margins=True,
+    )
+
+    # Producer's accuracy
+    producer_acc = []
+
+    for cls in classes:
+        row_total = cm.loc[cls, "All"]
+
+        if row_total > 0:
+            producer_acc.append(
+                cm.loc[cls, cls] / row_total * 100
+            )
+        else:
+            producer_acc.append(np.nan)
+
+    producer_acc.append(np.nan)
+
+    cm["Producer's"] = producer_acc
+
+    # User's accuracy
+    users_acc = {}
+
+    for cls in classes:
+        col_total = cm.loc["All", cls]
+
+        if col_total > 0:
+            users_acc[cls] = (
+                cm.loc[cls, cls] / col_total * 100
+            )
+        else:
+            users_acc[cls] = np.nan
+
+    users_acc["All"] = np.nan
+
+    overall_accuracy = (
+        np.trace(cm.loc[classes, classes].values)
+        / cm.loc["All", "All"]
+        * 100
+    )
+
+    users_acc["Producer's"] = overall_accuracy
+
+    cm.loc["User's"] = users_acc
+
+    # Rename total
+    cm = cm.rename(
+        columns={"All": "Total"},
+        index={"All": "Total"},
+    )
+
+    # Replace integer labels with names
+    if class_names is not None:
+
+        label_map = {
+            label: name
+            for label, name in zip(classes, class_names)
+        }
+
+        cm = cm.rename(
+            index=label_map,
+            columns=label_map,
+        )
+
+    # Replace meaningless cells nans
+    cm.loc["User's", "Total"] = np.nan
+    cm.loc["Total", "Producer's"] = np.nan
+
+    return cm.round(2)
+
+
