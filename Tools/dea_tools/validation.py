@@ -449,4 +449,258 @@ def confusion_matrix_accuracy(
 
     return cm.round(2)
 
+def estimate_olofsson_area(
+    confusion_df: pd.DataFrame,
+    map_area_df: pd.DataFrame,
+    class_col: str = "class",
+    area_col: str = "map_area",
+    rows_are_reference: bool = True,
+    z: float = 1.96,
+    clip_ci: bool = True,
+):
+    """
+    Estimate class areas and 95% uncertainty intervals following
+    Olofsson et al. (2014), for stratified random sampling where map
+    classes are the strata.
+
+    Parameters
+    ----------
+    confusion_df : pandas.DataFrame
+        Confusion/error matrix containing sample counts.
+        The core class-by-class counts are extracted using the class
+        labels in map_area_df.
+
+        If rows_are_reference=True, rows are reference/actual classes
+        and columns are map/predicted classes, as in many sklearn-style
+        or validation summary matrices.
+
+        If rows_are_reference=False, rows are map/predicted classes
+        and columns are reference/actual classes, which is the orientation
+        used in Olofsson et al. notation.
+
+    map_area_df : pandas.DataFrame
+        DataFrame containing class labels and mapped areas. The mapped
+        areas can be pixel counts, hectares, square kilometres, etc.
+        Output areas will be in the same units as area_col.
+
+    class_col : str, default "class"
+        Column in map_area_df containing class labels.
+
+    area_col : str, default "map_area"
+        Column in map_area_df containing mapped class areas.
+
+    rows_are_reference : bool, default True
+        Whether rows of confusion_df are reference/actual classes and
+        columns are map/predicted classes.
+
+    z : float, default 1.96
+        Normal quantile for the confidence interval. Use 1.96 for an
+        approximate 95% interval.
+
+    clip_ci : bool, default True
+        If True, lower confidence bounds are clipped to 0 and upper bounds
+        are clipped to total mapped area.
+
+    Returns
+    -------
+    results : pandas.DataFrame
+        One row per class with mapped area, estimated reference area,
+        standard error, and confidence interval.
+
+    area_proportion_matrix : pandas.DataFrame
+        Estimated error matrix in terms of area proportions.
+        Rows are map classes, columns are reference classes.
+
+    count_matrix_map_reference : pandas.DataFrame
+        Cleaned count matrix oriented as rows=map classes,
+        columns=reference classes.
+
+    Notes
+    -----
+    For map stratum i and reference class j:
+
+        W_i        = mapped area proportion of class i
+        n_ij       = sample count in map class i and reference class j
+        n_i        = sample count in map class i
+        p_hat_ij   = W_i * n_ij / n_i
+
+    Estimated reference-class proportion for class k:
+
+        p_hat_.k = sum_i p_hat_ik
+
+    Standard error of estimated area proportion:
+
+        SE(p_hat_.k) =
+            sqrt( sum_i W_i^2 * (n_ik / n_i) * (1 - n_ik / n_i) / (n_i - 1) )
+
+    Estimated area:
+
+        A_hat_k = A_total * p_hat_.k
+
+    Standard error of area:
+
+        SE(A_hat_k) = A_total * SE(p_hat_.k)
+
+    Approximate confidence interval:
+
+        A_hat_k +/- z * SE(A_hat_k)
+    """
+
+    # 1. Validate and prepare map areas
+    if class_col not in map_area_df.columns:
+        raise ValueError(f"map_area_df must contain class column '{class_col}'.")
+
+    if area_col not in map_area_df.columns:
+        raise ValueError(f"map_area_df must contain area column '{area_col}'.")
+
+    areas = (
+        map_area_df[[class_col, area_col]]
+        .dropna(subset=[class_col, area_col])
+        .copy()
+    )
+    areas[class_col] = areas[class_col].astype(str)
+    areas[area_col] = pd.to_numeric(areas[area_col], errors="raise")
+
+    if (areas[area_col] < 0).any():
+        raise ValueError("Mapped areas must be non-negative.")
+
+    if areas[class_col].duplicated().any():
+        duplicates = areas.loc[areas[class_col].duplicated(), class_col].tolist()
+        raise ValueError(f"Duplicate class labels in map_area_df: {duplicates}")
+
+    classes = areas[class_col].tolist()
+    map_area = areas.set_index(class_col)[area_col].astype(float)
+
+    total_area = map_area.sum()
+    if total_area <= 0:
+        raise ValueError("Total mapped area must be greater than zero.")
+
+    W = map_area / total_area
+
+    # 2. Clean and extract the class-by-class counts from confusion_df
+    cm = confusion_df.copy()
+
+    # If class labels are in a column rather than the index, use that column.
+    # This handles exported tables where the first column stores actual labels.
+    if not set(classes).issubset(set(map(str, cm.index))):
+        for possible_label_col in [class_col, "Actual", "actual", "Reference", "reference"]:
+            if possible_label_col in cm.columns:
+                candidate = cm.set_index(possible_label_col)
+                if set(classes).issubset(set(map(str, candidate.index))):
+                    cm = candidate
+                    break
+
+    cm.index = cm.index.map(str)
+    cm.columns = cm.columns.map(str)
+
+    missing_rows = sorted(set(classes) - set(cm.index))
+    missing_cols = sorted(set(classes) - set(cm.columns))
+
+    if missing_rows or missing_cols:
+        raise ValueError(
+            "Could not find all class labels in the confusion matrix. "
+            f"Missing rows: {missing_rows}. Missing columns: {missing_cols}."
+        )
+
+    # Extract only class rows and class columns, dropping totals and accuracy.
+    count_matrix = cm.loc[classes, classes].apply(pd.to_numeric, errors="raise")
+
+    # Olofsson notation expects rows=map classes and columns=reference classes.
+    if rows_are_reference:
+        count_matrix_map_reference = count_matrix.T
+    else:
+        count_matrix_map_reference = count_matrix.copy()
+
+    count_matrix_map_reference = count_matrix_map_reference.astype(float)
+    count_matrix_map_reference.index.name = "map_class"
+    count_matrix_map_reference.columns.name = "reference_class"
+
+    if (count_matrix_map_reference < 0).any().any():
+        raise ValueError("Confusion matrix counts must be non-negative.")
+
+    # ------------------------------------------------------------------
+    # 3. Compute Olofsson area-proportion matrix
+    # ------------------------------------------------------------------
+    n_i = count_matrix_map_reference.sum(axis=1)
+
+    if (n_i <= 0).any():
+        empty = n_i[n_i <= 0].index.tolist()
+        raise ValueError(
+            "Each mapped class stratum must have at least one validation sample. "
+            f"No samples found for: {empty}"
+        )
+
+    # p_raw_ij = n_ij / n_i
+    p_raw = count_matrix_map_reference.div(n_i, axis=0)
+
+    # p_hat_ij = W_i * n_ij / n_i
+    area_proportion_matrix = p_raw.mul(W, axis=0)
+    area_proportion_matrix.index.name = "map_class"
+    area_proportion_matrix.columns.name = "reference_class"
+
+    # Estimated reference class proportions are the column totals.
+    estimated_area_proportion = area_proportion_matrix.sum(axis=0)
+
+    # ------------------------------------------------------------------
+    # 4. Standard errors and confidence intervals
+    # ------------------------------------------------------------------
+    se_prop = pd.Series(index=classes, dtype=float)
+
+    for klass in classes:
+        prop_in_stratum = p_raw[klass]
+
+        # Eq. 10 requires n_i - 1 in the denominator. If a stratum has
+        # only one sample, variance is undefined for that stratum.
+        valid = n_i > 1
+
+        if not valid.all():
+            invalid_classes = n_i[~valid].index.tolist()
+            raise ValueError(
+                "At least two samples per mapped class are required to estimate "
+                "the stratified variance. Classes with n_i <= 1: "
+                f"{invalid_classes}"
+            )
+
+        var_prop_k = (
+            (W.loc[classes] ** 2)
+            * prop_in_stratum.loc[classes]
+            * (1.0 - prop_in_stratum.loc[classes])
+            / (n_i.loc[classes] - 1.0)
+        ).sum()
+
+        se_prop.loc[klass] = np.sqrt(var_prop_k)
+
+    estimated_area = estimated_area_proportion * total_area
+    se_area = se_prop * total_area
+    ci_half_width = z * se_area
+    ci_lower = estimated_area - ci_half_width
+    ci_upper = estimated_area + ci_half_width
+
+    if clip_ci:
+        ci_lower = ci_lower.clip(lower=0)
+        ci_upper = ci_upper.clip(upper=total_area)
+
+    mapped_area = map_area.loc[classes]
+    mapped_area_proportion = W.loc[classes]
+
+    results = pd.DataFrame(
+        {
+            "class": classes,
+            "mapped_area": mapped_area.values,
+            "mapped_area_proportion": mapped_area_proportion.values,
+            "estimated_area": estimated_area.loc[classes].values,
+            "estimated_area_proportion": estimated_area_proportion.loc[classes].values,
+            "standard_error_area": se_area.loc[classes].values,
+            "standard_error_proportion": se_prop.loc[classes].values,
+            "ci_lower": ci_lower.loc[classes].values,
+            "ci_upper": ci_upper.loc[classes].values,
+            "ci_half_width": ci_half_width.loc[classes].values,
+            "area_difference_estimated_minus_mapped": (
+                estimated_area.loc[classes] - mapped_area.loc[classes]
+            ).values,
+            "sample_n_map_stratum": n_i.loc[classes].values,
+        }
+    )
+
+    return results
 
