@@ -16,7 +16,7 @@ here: https://gis.stackexchange.com/questions/tagged/open-data-cube).
 If you would like to report an issue with this script, you can file one
 on GitHub (https://github.com/GeoscienceAustralia/dea-notebooks/issues/new).
 
-Last modified: July 2025
+Last modified: August 2026
 """
 
 from math import sqrt
@@ -81,11 +81,13 @@ def eval_metrics(x, y, round=3, all_regress=False):
 
     # Additional regression params
     if all_regress:
-        stats_dict.update({
-            "Regression p-value": lin_reg.pvalue,
-            "Regression intercept": lin_reg.intercept,
-            "Regression standard error": lin_reg.stderr,
-        })
+        stats_dict.update(
+            {
+                "Regression p-value": lin_reg.pvalue,
+                "Regression intercept": lin_reg.intercept,
+                "Regression standard error": lin_reg.stderr,
+            }
+        )
 
     # Return as
     return pd.Series(stats_dict).round(round)
@@ -100,7 +102,6 @@ def xr_random_sampling(
     random_seed=None,
     out_fname=None,
     verbose=True,
-    
 ):
     """
     Efficient and scalable random sampling of a 2D classified xarray.DataArray.
@@ -181,7 +182,7 @@ def xr_random_sampling(
     # --- Setup local RNG ---
     # random_seed=None → entropy; int → reproducible
     rng = np.random.default_rng(random_seed)
-    
+
     # Ensure da has a .odc.* accessor using odc.geo.
     da = add_geobox(da)
 
@@ -194,10 +195,10 @@ def xr_random_sampling(
     unique_classes, class_counts = np.unique(data[~np.isnan(data)], return_counts=True)
 
     unique_classes = unique_classes.astype(int)
-    
+
     # store our samples in a list
     samples = []
-    
+
     if sampling == "random":
         # first check num of samples doesn't exceed pixels
         total_valid = (~np.isnan(data)).sum()
@@ -230,13 +231,20 @@ def xr_random_sampling(
         elif sampling == "stratified_random":
             # calculate relative proportions of classes.
             proportions = class_counts / class_counts.sum()
-            class_sample_sizes = {cls: int(np.round(n * prop)) for cls, prop in zip(unique_classes, proportions)}
+            class_sample_sizes = {
+                cls: int(np.round(n * prop))
+                for cls, prop in zip(unique_classes, proportions)
+            }
 
         elif sampling == "manual":
             if not isinstance(manual_class_ratios, dict):
-                raise ValueError("Must provide manual_class_ratios for manual sampling.")
+                raise ValueError(
+                    "Must provide manual_class_ratios for manual sampling."
+                )
 
-            class_sample_sizes = {int(k): int(v) for k, v in manual_class_ratios.items()}
+            class_sample_sizes = {
+                int(k): int(v) for k, v in manual_class_ratios.items()
+            }
 
         for cls in class_sample_sizes:
             sample_size = class_sample_sizes[cls]
@@ -246,7 +254,9 @@ def xr_random_sampling(
 
             class_count = (data == cls).sum()
 
-            if class_count > 1e9:  # For v. large classes, sample random coords first and check matches
+            if (
+                class_count > 1e9
+            ):  # For v. large classes, sample random coords first and check matches
                 # Try oversampling until we get enough
                 n_try = int(sample_size * oversample_factor)
 
@@ -265,8 +275,10 @@ def xr_random_sampling(
                             f"Warning: insufficient matches for class {cls}, "
                             f"try increasing oversampling. Returning {len(rand_y)} matches"
                         )
-                    idx = rng.choice(np.arange(len(rand_y)), size=len(rand_y), replace=False)
-                    
+                    idx = rng.choice(
+                        np.arange(len(rand_y)), size=len(rand_y), replace=False
+                    )
+
                     for i in idx:
                         y = da[y_dim].values[rand_y[i]]
                         x = da[x_dim].values[rand_x[i]]
@@ -275,8 +287,10 @@ def xr_random_sampling(
                 else:
                     # If more matches than samples, then randomly sample the matches so we get the
                     # the right number of samples.
-                    idx = rng.choice(np.arange(len(rand_y)), size=sample_size, replace=False)
-                    
+                    idx = rng.choice(
+                        np.arange(len(rand_y)), size=sample_size, replace=False
+                    )
+
                     for i in idx:
                         y = da[y_dim].values[rand_y[i]]
                         x = da[x_dim].values[rand_x[i]]
@@ -290,7 +304,9 @@ def xr_random_sampling(
                 # Check if enough pixels exist
                 if flat_indices.size < sample_size:
                     if verbose:
-                        print(f"Warning: not enough pixels in class {cls} for given sample size, skipping")
+                        print(
+                            f"Warning: not enough pixels in class {cls} for given sample size, skipping"
+                        )
                     continue
 
                 # Randomly sample from those flat indices
@@ -308,7 +324,9 @@ def xr_random_sampling(
 
     # Add samples to geodataframe
     df = pd.DataFrame(samples, columns=["y", "x", "class"])
-    gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.x, df.y), crs=f"EPSG:{da.odc.crs.epsg}")
+    gdf = gpd.GeoDataFrame(
+        df, geometry=gpd.points_from_xy(df.x, df.y), crs=f"EPSG:{da.odc.crs.epsg}"
+    )
     gdf = gdf.drop(["x", "y"], axis=1)
 
     if out_fname:
@@ -321,8 +339,8 @@ def confusion_matrix_accuracy(
     df: pd.DataFrame,
     ref_col: str,
     pred_col: str,
-    class_names: list=None,
-    class_order: list=None
+    class_names: list = None,
+    class_order: list = None,
 ):
     """
     Computes a confusion matrix using a reference (ground truth)
@@ -360,15 +378,12 @@ def confusion_matrix_accuracy(
         A confusion matrix with counts, producer's accuracy, user's accuracy,
         and overall accuracy. Rows represent actual classes, columns
         represent predicted classes, with additional rows/columns for metrics.
-    
+
     """
 
     # Determine classes
     if class_order is None:
-        classes = sorted(
-            set(df[ref_col].dropna())
-            | set(df[pred_col].dropna())
-        )
+        classes = sorted(set(df[ref_col].dropna()) | set(df[pred_col].dropna()))
     else:
         classes = list(class_order)
 
@@ -388,9 +403,7 @@ def confusion_matrix_accuracy(
         row_total = cm.loc[cls, "All"]
 
         if row_total > 0:
-            producer_acc.append(
-                cm.loc[cls, cls] / row_total * 100
-            )
+            producer_acc.append(cm.loc[cls, cls] / row_total * 100)
         else:
             producer_acc.append(np.nan)
 
@@ -405,18 +418,14 @@ def confusion_matrix_accuracy(
         col_total = cm.loc["All", cls]
 
         if col_total > 0:
-            users_acc[cls] = (
-                cm.loc[cls, cls] / col_total * 100
-            )
+            users_acc[cls] = cm.loc[cls, cls] / col_total * 100
         else:
             users_acc[cls] = np.nan
 
     users_acc["All"] = np.nan
 
     overall_accuracy = (
-        np.trace(cm.loc[classes, classes].values)
-        / cm.loc["All", "All"]
-        * 100
+        np.trace(cm.loc[classes, classes].values) / cm.loc["All", "All"] * 100
     )
 
     users_acc["Producer's"] = overall_accuracy
@@ -432,10 +441,7 @@ def confusion_matrix_accuracy(
     # Replace integer labels with names if requested
     if class_names is not None:
 
-        label_map = {
-            label: name
-            for label, name in zip(classes, class_names)
-        }
+        label_map = {label: name for label, name in zip(classes, class_names)}
 
         cm = cm.rename(
             index=label_map,
@@ -447,6 +453,7 @@ def confusion_matrix_accuracy(
     cm.loc["Total", "Producer's"] = np.nan
 
     return cm.round(2)
+
 
 def estimate_olofsson_area(
     confusion_df: pd.DataFrame,
@@ -461,6 +468,7 @@ def estimate_olofsson_area(
     Estimate class areas and 95% uncertainty intervals following
     Olofsson et al. (2014), for stratified random sampling where map
     classes are the strata.
+
     Recommeded to be used in conjuction with "confusion_matrix_accuracy"
 
     Parameters
@@ -514,9 +522,7 @@ def estimate_olofsson_area(
         raise ValueError(f"map_area_df must contain area column '{area_col}'.")
 
     areas = (
-        map_area_df[[class_col, area_col]]
-        .dropna(subset=[class_col, area_col])
-        .copy()
+        map_area_df[[class_col, area_col]].dropna(subset=[class_col, area_col]).copy()
     )
     areas[class_col] = areas[class_col].astype(str)
     areas[area_col] = pd.to_numeric(areas[area_col], errors="raise")
@@ -553,7 +559,7 @@ def estimate_olofsson_area(
 
     # Extract only class rows and class columns, dropping totals and accuracy columns
     count_matrix = cm.loc[classes, classes].apply(pd.to_numeric, errors="raise")
-    
+
     # Olofsson notation expects rows=map classes and columns=reference classes.
     if rows_are_reference:
         count_matrix_map_reference = count_matrix.T
@@ -567,7 +573,7 @@ def estimate_olofsson_area(
     if (count_matrix_map_reference < 0).any().any():
         raise ValueError("Confusion matrix counts must be non-negative.")
 
-    # Compute Olofsson area-proportion matrix (these are the sums of the 
+    # Compute Olofsson area-proportion matrix (these are the sums of the
     # reference labels per-class)
     n_i = count_matrix_map_reference.sum(axis=1)
 
@@ -607,7 +613,7 @@ def estimate_olofsson_area(
         # Estimated proportion of reference class k within each map stratum
         # p_ik = n_ik / n_i
         p_ik = p_raw[klass]
-    
+
         # Eq. 10 (Olofsson et al., 2014):
         # Var(p̂_.k) = Σ_i [ W_i² × p_ik × (1 - p_ik) / (n_i - 1) ]
         # where:
@@ -615,12 +621,7 @@ def estimate_olofsson_area(
         #   p_ik  = proportion of validation samples in map class i
         #           belonging to reference class k
         #   n_i   = number of validation samples in map class i
-        variance_terms = (
-            W**2
-            * p_ik
-            * (1.0 - p_ik)
-            / (n_i - 1.0)
-        )
+        variance_terms = W**2 * p_ik * (1.0 - p_ik) / (n_i - 1.0)
 
         variance_proportion = variance_terms.sum()
         se_prop.loc[klass] = np.sqrt(variance_proportion)
@@ -639,7 +640,7 @@ def estimate_olofsson_area(
     mapped_area = map_area.loc[classes]
     mapped_area_proportion = W.loc[classes]
 
-    #return a pandas dataframe
+    # return a pandas dataframe
     results = pd.DataFrame(
         {
             "class": classes,
@@ -651,9 +652,8 @@ def estimate_olofsson_area(
             "standard_error_proportion": se_prop.loc[classes].values,
             "ci_lower": ci_lower.loc[classes].values,
             "ci_upper": ci_upper.loc[classes].values,
-            "ci_half_width": ci_half_width.loc[classes].values
+            "ci_half_width": ci_half_width.loc[classes].values,
         }
     )
 
     return results
-

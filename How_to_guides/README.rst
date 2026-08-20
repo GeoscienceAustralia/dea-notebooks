@@ -14,6 +14,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
    COG_overviews.ipynb
    Collect_training_and_validation_data.ipynb
    Contour_extraction.ipynb
+   Confusion_matrix.ipynb
    Continental_scale_animations.ipynb
    Detecting_seasonality.ipynb
    Downloading_data_with_STAC.ipynb
