@@ -20,7 +20,6 @@ Last modified: July 2025
 """
 
 from math import sqrt
-
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -319,11 +318,11 @@ def xr_random_sampling(
 
 
 def confusion_matrix_accuracy(
-    df,
-    ref_col,
-    pred_col,
-    class_names=None,
-    class_order=None,
+    df: pd.DataFrame,
+    ref_col: str,
+    pred_col: str,
+    class_names: list=None,
+    class_order: list=None
 ):
     """
     Computes a confusion matrix using a reference (ground truth)
@@ -430,7 +429,7 @@ def confusion_matrix_accuracy(
         index={"All": "Total"},
     )
 
-    # Replace integer labels with names
+    # Replace integer labels with names if requested
     if class_names is not None:
 
         label_map = {
@@ -462,6 +461,7 @@ def estimate_olofsson_area(
     Estimate class areas and 95% uncertainty intervals following
     Olofsson et al. (2014), for stratified random sampling where map
     classes are the strata.
+    Recommeded to be used in conjuction with "confusion_matrix_accuracy"
 
     Parameters
     ----------
@@ -470,6 +470,9 @@ def estimate_olofsson_area(
         The core class-by-class counts are extracted using the class
         labels in map_area_df.
 
+        Recommeded to use dea-tools.validation.confusion_matrix_accucary for
+        passing in this parameter.
+
         If rows_are_reference=True, rows are reference/actual classes
         and columns are map/predicted classes, as in many sklearn-style
         or validation summary matrices.
@@ -477,26 +480,20 @@ def estimate_olofsson_area(
         If rows_are_reference=False, rows are map/predicted classes
         and columns are reference/actual classes, which is the orientation
         used in Olofsson et al. notation.
-
     map_area_df : pandas.DataFrame
         DataFrame containing class labels and mapped areas. The mapped
         areas can be pixel counts, hectares, square kilometres, etc.
         Output areas will be in the same units as area_col.
-
     class_col : str, default "class"
         Column in map_area_df containing class labels.
-
     area_col : str, default "map_area"
         Column in map_area_df containing mapped class areas.
-
     rows_are_reference : bool, default True
         Whether rows of confusion_df are reference/actual classes and
         columns are map/predicted classes.
-
     z : float, default 1.96
         Normal quantile for the confidence interval. Use 1.96 for an
-        approximate 95% interval.
-
+        95% interval.
     clip_ci : bool, default True
         If True, lower confidence bounds are clipped to 0 and upper bounds
         are clipped to total mapped area.
@@ -507,46 +504,9 @@ def estimate_olofsson_area(
         One row per class with mapped area, estimated reference area,
         standard error, and confidence interval.
 
-    area_proportion_matrix : pandas.DataFrame
-        Estimated error matrix in terms of area proportions.
-        Rows are map classes, columns are reference classes.
-
-    count_matrix_map_reference : pandas.DataFrame
-        Cleaned count matrix oriented as rows=map classes,
-        columns=reference classes.
-
-    Notes
-    -----
-    For map stratum i and reference class j:
-
-        W_i        = mapped area proportion of class i
-        n_ij       = sample count in map class i and reference class j
-        n_i        = sample count in map class i
-        p_hat_ij   = W_i * n_ij / n_i
-
-    Estimated reference-class proportion for class k:
-
-        p_hat_.k = sum_i p_hat_ik
-
-    Standard error of estimated area proportion:
-
-        SE(p_hat_.k) =
-            sqrt( sum_i W_i^2 * (n_ik / n_i) * (1 - n_ik / n_i) / (n_i - 1) )
-
-    Estimated area:
-
-        A_hat_k = A_total * p_hat_.k
-
-    Standard error of area:
-
-        SE(A_hat_k) = A_total * SE(p_hat_.k)
-
-    Approximate confidence interval:
-
-        A_hat_k +/- z * SE(A_hat_k)
     """
 
-    # 1. Validate and prepare map areas
+    # Validate and prepare map areas
     if class_col not in map_area_df.columns:
         raise ValueError(f"map_area_df must contain class column '{class_col}'.")
 
@@ -577,19 +537,8 @@ def estimate_olofsson_area(
 
     W = map_area / total_area
 
-    # 2. Clean and extract the class-by-class counts from confusion_df
+    # Ensure confusion matrix and map-areas have same classes
     cm = confusion_df.copy()
-
-    # If class labels are in a column rather than the index, use that column.
-    # This handles exported tables where the first column stores actual labels.
-    if not set(classes).issubset(set(map(str, cm.index))):
-        for possible_label_col in [class_col, "Actual", "actual", "Reference", "reference"]:
-            if possible_label_col in cm.columns:
-                candidate = cm.set_index(possible_label_col)
-                if set(classes).issubset(set(map(str, candidate.index))):
-                    cm = candidate
-                    break
-
     cm.index = cm.index.map(str)
     cm.columns = cm.columns.map(str)
 
@@ -602,9 +551,9 @@ def estimate_olofsson_area(
             f"Missing rows: {missing_rows}. Missing columns: {missing_cols}."
         )
 
-    # Extract only class rows and class columns, dropping totals and accuracy.
+    # Extract only class rows and class columns, dropping totals and accuracy columns
     count_matrix = cm.loc[classes, classes].apply(pd.to_numeric, errors="raise")
-
+    
     # Olofsson notation expects rows=map classes and columns=reference classes.
     if rows_are_reference:
         count_matrix_map_reference = count_matrix.T
@@ -618,9 +567,8 @@ def estimate_olofsson_area(
     if (count_matrix_map_reference < 0).any().any():
         raise ValueError("Confusion matrix counts must be non-negative.")
 
-    # ------------------------------------------------------------------
-    # 3. Compute Olofsson area-proportion matrix
-    # ------------------------------------------------------------------
+    # Compute Olofsson area-proportion matrix (these are the sums of the 
+    # reference labels per-class)
     n_i = count_matrix_map_reference.sum(axis=1)
 
     if (n_i <= 0).any():
@@ -630,9 +578,11 @@ def estimate_olofsson_area(
             f"No samples found for: {empty}"
         )
 
+    # Divide the reference sums by per-class counts
     # p_raw_ij = n_ij / n_i
     p_raw = count_matrix_map_reference.div(n_i, axis=0)
 
+    # create the area-prortion matrix by multiplying by the class-weights
     # p_hat_ij = W_i * n_ij / n_i
     area_proportion_matrix = p_raw.mul(W, axis=0)
     area_proportion_matrix.index.name = "map_class"
@@ -641,35 +591,41 @@ def estimate_olofsson_area(
     # Estimated reference class proportions are the column totals.
     estimated_area_proportion = area_proportion_matrix.sum(axis=0)
 
-    # ------------------------------------------------------------------
-    # 4. Standard errors and confidence intervals
-    # ------------------------------------------------------------------
+    # Standard errors and confidence intervals
     se_prop = pd.Series(index=classes, dtype=float)
 
+    # Eq. 10 requires at least two validation samples in every map stratum.
+    invalid_classes = n_i[n_i <= 1].index.tolist()
+    if invalid_classes:
+        raise ValueError(
+            "At least two samples per mapped class are required to estimate "
+            "the stratified variance. Classes with n_i <= 1: "
+            f"{invalid_classes}"
+        )
+
     for klass in classes:
-        prop_in_stratum = p_raw[klass]
+        # Estimated proportion of reference class k within each map stratum
+        # p_ik = n_ik / n_i
+        p_ik = p_raw[klass]
+    
+        # Eq. 10 (Olofsson et al., 2014):
+        # Var(p̂_.k) = Σ_i [ W_i² × p_ik × (1 - p_ik) / (n_i - 1) ]
+        # where:
+        #   W_i   = proportion of total mapped area in map class i
+        #   p_ik  = proportion of validation samples in map class i
+        #           belonging to reference class k
+        #   n_i   = number of validation samples in map class i
+        variance_terms = (
+            W**2
+            * p_ik
+            * (1.0 - p_ik)
+            / (n_i - 1.0)
+        )
 
-        # Eq. 10 requires n_i - 1 in the denominator. If a stratum has
-        # only one sample, variance is undefined for that stratum.
-        valid = n_i > 1
+        variance_proportion = variance_terms.sum()
+        se_prop.loc[klass] = np.sqrt(variance_proportion)
 
-        if not valid.all():
-            invalid_classes = n_i[~valid].index.tolist()
-            raise ValueError(
-                "At least two samples per mapped class are required to estimate "
-                "the stratified variance. Classes with n_i <= 1: "
-                f"{invalid_classes}"
-            )
-
-        var_prop_k = (
-            (W.loc[classes] ** 2)
-            * prop_in_stratum.loc[classes]
-            * (1.0 - prop_in_stratum.loc[classes])
-            / (n_i.loc[classes] - 1.0)
-        ).sum()
-
-        se_prop.loc[klass] = np.sqrt(var_prop_k)
-
+    # calculate for each class the area and confidences
     estimated_area = estimated_area_proportion * total_area
     se_area = se_prop * total_area
     ci_half_width = z * se_area
@@ -683,6 +639,7 @@ def estimate_olofsson_area(
     mapped_area = map_area.loc[classes]
     mapped_area_proportion = W.loc[classes]
 
+    #return a pandas dataframe
     results = pd.DataFrame(
         {
             "class": classes,
@@ -694,11 +651,7 @@ def estimate_olofsson_area(
             "standard_error_proportion": se_prop.loc[classes].values,
             "ci_lower": ci_lower.loc[classes].values,
             "ci_upper": ci_upper.loc[classes].values,
-            "ci_half_width": ci_half_width.loc[classes].values,
-            "area_difference_estimated_minus_mapped": (
-                estimated_area.loc[classes] - mapped_area.loc[classes]
-            ).values,
-            "sample_n_map_stratum": n_i.loc[classes].values,
+            "ci_half_width": ci_half_width.loc[classes].values
         }
     )
 
