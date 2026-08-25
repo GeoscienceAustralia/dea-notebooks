@@ -23,6 +23,8 @@ Scientific papers
 
 - Burton, CA, Rifai, SW, Renzullo, LJ & Van Dijk, AIJM 2024, 'Enhancing long-Term vegetation monitoring in Australia: A new approach for harmonising the Advanced Very High Resolution Radiometer normalised-difference vegetation (NVDI) with MODIS NDVI', *Earth System Science Data*, vol. 16, no. 10, pp. 4389-416, https://doi.org/10.5194/essd-16-4389-2024.
 
+- Charerntantanakul, W, Yebra, M, Dawson, HR, Nicotra, AB, Cunningham, SA & Brookhouse, MT 2025, 'Forest cover and canopy health mapping in Australian subalpine landscape: supervised machine learning models for Sentinel-2 and Landsat images', *GIScience & Remote Sensing*, vol. 62, no. 1, https://doi.org/10.1080/15481603.2025.2517922.
+
 - Chatzopoulos-Vouzoglanis, K, Reinke, KJ, Soto-Berelov, M & Jones, SD 2024, 'Are fire intensity and burn severity associated? Advancing our understanding of FRP and NBR metrics from Himawari-8/9 and Sentinel-2', *International Journal of Applied Earth Observation and Geoinformation*, vol. 127, https://doi.org/10.1016/j.jag.2024.103673.
 
 - Chen, Y, Guerschman, J, Shendryk, Y, Henry, D & Harrison, MT 2021, 'Estimating pasture biomass using sentinel-2 imagery and machine learning', *Remote Sensing*, vol. 13, no. 4, pp. 1-20, https://doi.org/10.3390/rs13040603.
