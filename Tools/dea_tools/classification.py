@@ -530,7 +530,7 @@ def _get_training_data_for_shp(
 
     # append ID measurement to dataset for tracking failures
     band = list(data.data_vars)[0]
-    data["_training_id"] = xr.zeros_like(data[band])
+    data["_training_id"] = xr.zeros_like(data[band], dtype=int)
     data["_training_id"] = data["_training_id"] + row["_training_id"]
 
     if "time" in data.sizes:

@@ -6,6 +6,7 @@ A recipe book of simple code examples demonstrating how to perform common geospa
 .. toctree::
    :maxdepth: 1
 
+   Accuracy_assessment.ipynb
    Analyse_multiple_polygons.ipynb
    Animated_timeseries.ipynb
    ARD_overpass_predictor.ipynb
