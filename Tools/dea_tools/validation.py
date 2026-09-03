@@ -132,7 +132,7 @@ def xr_random_sampling(
         If setting sampling to 'manual', the provide a dictionary
         of type {'class': numofpoints} mapping the number of points
         to generate for each class.
-    min_sample_size: int, optional
+    min_sample_size : int, optional
         Only used when sampling="stratified_random'. If provided,
         this will ensure that each class has at least this number
         of samples, even if the proportional allocation (based on relative area)
