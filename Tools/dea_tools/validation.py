@@ -247,11 +247,11 @@ def xr_random_sampling(
 
             # ensure minimum sample size per class
             if min_sample_size is not None:
-                for cls in class_sample_sizes:
-                    if class_sample_sizes[cls] < min_sample_size:
+                for cls, count in class_sample_sizes.items():
+                    if count < min_sample_size:
                         if verbose:
                             print(
-                                f"Class {cls}: increasing sample size from {class_sample_sizes[cls]} to {min_sample_size}."
+                                f"Class {cls}: increasing sample size from {count} to {min_sample_size}."
                             )
                         class_sample_sizes[cls] = min_sample_size
 
