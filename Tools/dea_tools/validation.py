@@ -133,8 +133,13 @@ def xr_random_sampling(
         of type {'class': numofpoints} mapping the number of points
         to generate for each class.
     min_sample_size: int, optional
-        Only used when sampling="stratified_random'. If provided, this will ensure that each class has at least
-        this number of samples, even if the proportional allocation (based on relative area) would otherwise be smaller. Classes with fewer available pixels than the requested sample size will still be capped at the number of available pixels (i.e. a warning will still be raised if there aren't enough pixels to sample).
+        Only used when sampling="stratified_random'. If provided,
+        this will ensure that each class has at least this number
+        of samples, even if the proportional allocation (based on relative area)
+        would otherwise be smaller. Classes with fewer available pixels
+        than the requested sample size will still be capped at the number of
+        available pixels (i.e. a warning will still be raised if
+        there aren't enough pixels to sample).
     oversample_factor : float, optional (default=5)
         A multiplier used to increase the number of random candidate pixels
         initially drawn when sampling very large classes (>1 billion pixels).
