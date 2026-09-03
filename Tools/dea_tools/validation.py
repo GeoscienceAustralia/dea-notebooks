@@ -98,6 +98,7 @@ def xr_random_sampling(
     n=None,
     sampling="stratified_random",
     manual_class_ratios=None,
+    min_sample_size=None,
     oversample_factor=5,
     random_seed=None,
     out_fname=None,
@@ -131,6 +132,14 @@ def xr_random_sampling(
         If setting sampling to 'manual', the provide a dictionary
         of type {'class': numofpoints} mapping the number of points
         to generate for each class.
+    min_sample_size : int, optional
+        Only used when sampling="stratified_random'. If provided,
+        this will ensure that each class has at least this number
+        of samples, even if the proportional allocation (based on relative area)
+        would otherwise be smaller. Classes with fewer available pixels
+        than the requested sample size will still be capped at the number of
+        available pixels (i.e. a warning will still be raised if
+        there aren't enough pixels to sample).
     oversample_factor : float, optional (default=5)
         A multiplier used to increase the number of random candidate pixels
         initially drawn when sampling very large classes (>1 billion pixels).
@@ -235,6 +244,16 @@ def xr_random_sampling(
                 cls: int(np.round(n * prop))
                 for cls, prop in zip(unique_classes, proportions)
             }
+
+            # ensure minimum sample size per class
+            if min_sample_size is not None:
+                for cls, count in class_sample_sizes.items():
+                    if count < min_sample_size:
+                        if verbose:
+                            print(
+                                f"Class {cls}: increasing sample size from {count} to {min_sample_size}."
+                            )
+                        class_sample_sizes[cls] = min_sample_size
 
         elif sampling == "manual":
             if not isinstance(manual_class_ratios, dict):
