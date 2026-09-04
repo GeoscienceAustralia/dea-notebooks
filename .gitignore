@@ -11,3 +11,7 @@ dist
 .coverage
 .venv/
 uv.lock
+*/local_data/*
+Scientific_workflows/*
+.vscode/
+.github/instructions/*
