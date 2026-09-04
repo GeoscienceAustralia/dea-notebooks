@@ -180,8 +180,10 @@ def rgb(
             **kwargs,
         )
         if titles is not None:
-            for ax, title in zip(img.axs.flat, titles):
-                ax.set_title(title)
+            # Single-panel plots return a matplotlib `AxesImage` (no `.axs`),
+            # so set the title on its parent axes directly
+            title = titles[0] if isinstance(titles, (list, tuple)) else titles
+            img.axes.set_title(title)
 
     # If values provided for `index`, extract corresponding observations and
     # plot as either single image or facet plot
@@ -232,8 +234,10 @@ def rgb(
                 robust=robust, **aspect_size_kwarg, **kwargs
             )
             if titles is not None:
-                for ax, title in zip(img.axs.flat, titles):
-                    ax.set_title(title)
+                # Single-panel plots return a matplotlib `AxesImage` (no `.axs`),
+                # so set the title on its parent axes directly
+                title = titles[0] if isinstance(titles, (list, tuple)) else titles
+                img.axes.set_title(title)
 
     # If an export path is provided, save image to file. Individual and
     # faceted plots have a different API (figure vs fig) so we get around this
