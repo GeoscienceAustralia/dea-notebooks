@@ -23,21 +23,23 @@ Last modified: July 2025
 
 
 import datetime
-
 import itertools
 import os
-import shutil
+# import shutil
 import warnings
+from dataclasses import dataclass
 
 import geopandas as gpd
-import imageio
+# import imageio 
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import rioxarray # added
 import xarray as xr
+from matplotlib.patches import Patch # added
 from odc.geo.geom import Geometry
 
 from dea_tools.bandindices import calculate_indices
@@ -48,6 +50,184 @@ from dea_tools.spatial import xr_rasterize
 # disable DeprecationWarning for chained assignments in conversion to
 # datetime format
 pd.options.mode.chained_assignment = None  # default='warn'
+
+@dataclass(frozen=True)
+class WITScheme:
+    """
+    Class codes, labels and colours for a spatial WIT classification.
+
+    The position of a label in `labels` is its class code, so `labels[3]`
+    is the label for pixels with value 3 in the 'wetland' band.
+    """
+
+    name: str
+    labels: tuple
+    colors: tuple
+
+    @property
+    def codes(self):
+        return tuple(range(len(self.labels)))
+
+    @property
+    def cmap(self):
+        return mcolors.ListedColormap(self.colors)
+
+    @property
+    def norm(self):
+        n = len(self.colors)
+        return mcolors.BoundaryNorm(np.arange(n + 1) - 0.5, n)
+
+    @property
+    def legend_handles(self):
+        return [Patch(facecolor=c, label=l)
+                for c, l in zip(self.colors, self.labels)]
+
+    def _bary(self, npv, bs, pv):
+        """Barycentric (npv, bs, pv) to cartesian, with npv at the apex."""
+        top = np.array([0.5, np.sqrt(3) / 2])
+        left = np.array([0.0, 0.0])
+        right = np.array([1.0, 0.0])
+        return npv * top + bs * left + pv * right
+
+    def draw_legend(self, ax, orientation="horizontal"):
+        """
+        Draw the scheme's classes on the given axes.
+
+        The simple scheme is drawn as a row or column of labelled swatches.
+        The detailed scheme is drawn as a ternary diagram, which shows how the
+        nine cover classes divide the space of possible fractional cover
+        mixes, with wet and water as separate swatches — they are not
+        fractional and override the cover class where present.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Axes to draw into. Its ticks and frame are removed.
+        orientation : {"horizontal", "vertical"}, optional
+            Layout to use. "horizontal" suits a wide strip below a figure;
+            "vertical" suits a narrow or roughly square cell.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+        """
+        import matplotlib.patches as mpatches
+
+        if orientation not in ("horizontal", "vertical"):
+            raise ValueError(
+                f"orientation must be 'horizontal' or 'vertical', got {orientation!r}"
+            )
+
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+        if self.name == "simple":
+            if orientation == "horizontal":
+                for i, (label, color) in enumerate(zip(self.labels, self.colors)):
+                    ax.add_patch(
+                        mpatches.Rectangle(
+                            (i, 0), 0.25, 0.25, facecolor=color,
+                            edgecolor="black", linewidth=0.5,
+                        )
+                    )
+                    ax.text(i + 0.33, 0.125, label,
+                            ha="left", va="center", fontsize=11)
+                ax.set_xlim(-0.1, len(self.labels))
+                ax.set_ylim(-0.15, 0.4)
+            else:
+                for i, (label, color) in enumerate(zip(self.labels, self.colors)):
+                    y = -i * 0.3
+                    ax.add_patch(
+                        mpatches.Rectangle(
+                            (0, y), 0.22, 0.22, facecolor=color,
+                            edgecolor="black", linewidth=0.5,
+                        )
+                    )
+                    ax.text(0.3, y + 0.11, label,
+                            ha="left", va="center", fontsize=11)
+                ax.set_xlim(-0.1, 2.0)
+                ax.set_ylim(-0.3 * len(self.labels) + 0.05, 0.3)
+            ax.set_aspect("equal")
+            return ax
+
+        # Detailed: nine regions in (npv, bs, pv) barycentric coordinates.
+        t = 1 / 3
+        regions = {
+            0: [(1, 0, 0), (2 * t, t, 0), (2 * t, 0, t)],                    # dry veg
+            4: [(0, 1, 0), (t, 2 * t, 0), (0, 2 * t, t)],                    # bare soil
+            8: [(0, 0, 1), (t, 0, 2 * t), (0, t, 2 * t)],                    # green veg
+            1: [(2 * t, t, 0), (t, 2 * t, 0), (t, t, t), (2 * t, t, 0)],     # dry & bare
+            3: [(2 * t, 0, t), (t, 0, 2 * t), (t, t, t), (2 * t, 0, t)],     # dry & green
+            6: [(0, 2 * t, t), (0, t, 2 * t), (t, t, t), (0, 2 * t, t)],     # bare & green
+            2: [(2 * t, t, 0), (2 * t, 0, t), (t, t, t)],                    # dry mix
+            5: [(t, 2 * t, 0), (0, 2 * t, t), (t, t, t)],                    # bare mix
+            7: [(t, 0, 2 * t), (0, t, 2 * t), (t, t, t)],                    # green mix
+        }
+
+        for code, corners in regions.items():
+            xy = np.array([self._bary(*c) for c in corners])
+            ax.add_patch(
+                mpatches.Polygon(
+                    xy, facecolor=self.colors[code],
+                    edgecolor="black", linewidth=0.5,
+                )
+            )
+
+        for corner, label, ha, va in [
+            ((1, 0, 0), self.labels[0], "center", "bottom"),
+            ((0, 1, 0), self.labels[4], "right", "top"),
+            ((0, 0, 1), self.labels[8], "left", "top"),
+        ]:
+            x, y = self._bary(*corner)
+            ax.text(x, y + (0.04 if va == "bottom" else -0.04), label,
+                    ha=ha, va=va, fontsize=10)
+
+        # Wet and water are not fractional, so they sit outside the triangle.
+        for i, code in enumerate([9, 10]):
+            y = 0.55 - i * 0.16
+            ax.add_patch(
+                mpatches.Rectangle(
+                    (1.12, y), 0.12, 0.09, facecolor=self.colors[code],
+                    edgecolor="black", linewidth=0.5,
+                )
+            )
+            ax.text(1.28, y + 0.045, self.labels[code],
+                    ha="left", va="center", fontsize=10)
+
+        ax.set_xlim(-0.25, 1.75)
+        ax.set_ylim(-0.1, 1.05)
+        ax.set_aspect("equal")
+        return ax
+        
+WIT_SCHEMES = {
+    "simple": WITScheme(
+        name="simple",
+        labels=("dry veg", "bare soil", "green veg", "wet", "water"),
+        colors=("#F1E8C9", "#93724C", "#8CC46B", "#6CE6F8", "#676DCA"),
+    ),
+    "detailed": WITScheme(
+        name="detailed",
+        labels=(
+            "dry veg",                 # 0  ng
+            "dry veg and bare mix",    # 1  ng_bs
+            "dry mix",                 # 2  ng_mix
+            "dry veg and green veg",   # 3  ng_pv
+            "bare soil",               # 4  bs
+            "bare soil mix",           # 5  bs_mix
+            "bare soil and green veg", # 6  bs_pv
+            "green veg mix",           # 7  pv_mix
+            "green veg",               # 8  pv
+            "wet",                     # 9
+            "water",                   # 10
+        ),
+        colors=(
+            "#F1E8C9", "#C0AB86", "#D6D2A7", "#BCD495", "#93724C",
+            "#9C895D", "#8F9C5C", "#9DBD74", "#8CC46B", "#6CE6F8", "#676DCA",
+        ),
+    ),
+}
 
 def normalise_wit(polygon_base_df):
     """
@@ -540,243 +720,979 @@ def WIT_drill(
 
     return ds_wit, polygon_base_df
 
+# Notes on ambiguous pixels
+# -------------------------
+# Both classification schemes contain a small number of pixels that cannot be
+# assigned unambiguously. In the simple scheme, two or more fractions may be
+# exactly equal; `argmax` resolves these towards the lowest class code, so an
+# npv == bs pixel is reported as dry veg. In the detailed scheme, a pixel sitting
+# exactly on a 1/3 or 2/3 boundary satisfies none of the nine conditions and is
+# returned as NaN.
 
-def classify_pixel(pv, npv, bs):
+# These behaviours are deterministic and are not configurable. A tie means the
+# data does not distinguish the classes, so any rule is arbitrary; fixing the
+# rule keeps outputs comparable between users. On Hird Swamp (2014, 96,112
+# in-polygon pixel-timesteps) each case affects under 1% of pixels: 730 ties in
+# the simple scheme, 716 unclassified in the detailed scheme. Unclassified
+# pixels do not contribute to the seasonal observation counts and so make it
+# marginally more likely that a cell falls below MIN_OBS and is blanked.
+
+def _classify_simple(pv, npv, bs):
     """
-    This function sorts the fractional cover values into their classes to be used in Spatial WIT.
+    Dominant fractional cover class: 0 = dry veg, 1 = bare soil, 2 = green veg.
 
-    Last modified March 2025
-
-    Parameters
-    ----------
-    pv : array
-        Array containing values for the photosynthetic (green) vegetation class.
-    npv : array
-        Array containing values for the non-photosynthetic (dry) vegetation class.
-    bs : array
-        Array containing values for the base soil class.
-
-    Returns
-    -------
-    integer
-        Integer values to assign each of the fractional cover classes (https://knowledge.dea.ga.gov.au/data/product/dea-fractional-cover-landsat/).
-
+    Ties are broken towards the lowest class code, so an exact npv == bs pixel
+    is reported as dry veg. FC values are integer percentages before
+    normalisation, so exact ties do occur, though they are rare.
     """
-    if pv > 2 / 3:
-        return 8  # pv
-    if npv > 2 / 3:
-        return 0  # ng
-    if bs > 2 / 3:
-        return 4  # bs
-    if npv > 1 / 3 and bs > 1 / 3 and pv < 1 / 3:
-        return 1  # ng_bs
-    if npv > 1 / 3 and pv > 1 / 3 and bs < 1 / 3:
-        return 3  # ng_pv
-    if npv > 1 / 3 and pv < 1 / 3 and bs < 1 / 3:
-        return 2  # ng_mix
-    if bs > 1 / 3 and pv > 1 / 3 and npv < 1 / 3:
-        return 6  # bs_pv
-    if bs > 1 / 3 and pv < 1 / 3 and npv < 1 / 3:
-        return 5  # bs_mix
-    if pv > 1 / 3 and npv < 1 / 3 and bs < 1 / 3:
-        return 7  # pv_mix
-    return -1
+    # fillna(-1) keeps argmax from raising on all-NaN pixels; those pixels are
+    # removed again by the `valid` mask in spatial_wit.
+    stack = xr.concat([npv, bs, pv], dim="fc").fillna(-1)
+    return stack.argmax("fc")
 
 
-def spatial_wit(ds, wetland_name):
+def _classify_detailed(pv, npv, bs):
     """
-    Takes Wetlands Insight Tool classifications and represents them in a spatial way. The
-    same caveats for those classifications apply (see Dunn et al., 2023 and DEA
-    Wetlands Insight Tool notebook). The water and wet classes are binary and the
-    vegetation fractional cover classes are percentages per pixel, with the spatial
-    representation scaled accordingly.
+    Nine-class fractional cover classification.
 
-    Last modified: March 2025
+    Conditions are evaluated in order and the first match wins, so the result
+    is deterministic. A fraction of exactly 1/3 is treated as not co-dominant,
+    so a pixel at pv = 1/3, npv = 0.53, bs = 0.14 is classified as dry mix
+    rather than dry veg and green veg. Exact thirds are common because
+    fractional cover arrives as integer percentages, which frequently sum to
+    99.
+
+    A pixel with all three fractions at exactly 1/3 has no dominant component,
+    satisfies no condition, and is returned as NaN. 
+    """
+    conds = [
+        pv > 2 / 3,
+        npv > 2 / 3,
+        bs > 2 / 3,
+        (npv > 1 / 3) & (bs > 1 / 3) & (pv <= 1 / 3),
+        (npv > 1 / 3) & (pv > 1 / 3) & (bs <= 1 / 3),
+        (npv > 1 / 3) & (pv <= 1 / 3) & (bs <= 1 / 3),
+        (bs > 1 / 3) & (pv > 1 / 3) & (npv <= 1 / 3),
+        (bs > 1 / 3) & (pv <= 1 / 3) & (npv <= 1 / 3),
+        (pv > 1 / 3) & (npv <= 1 / 3) & (bs <= 1 / 3),
+    ]
+    codes = [8, 0, 4, 1, 3, 2, 6, 5, 7]
+
+    out = np.select(
+        [c.values for c in conds], codes, default=np.nan
+    ).astype("float64")
+    return xr.DataArray(out, coords=pv.coords, dims=pv.dims)
+
+def spatial_wit(ds, scheme="simple"):
+    """
+    Turn Wetlands Insight Tool cover fractions into a categorical map.
+
+    Fractional cover is renormalised per pixel so pv + npv + bs sums to 1, the
+    dominant class is found, and 'wet' and 'water' are layered on top as the
+    two highest class codes. The same caveats as the timeseries WIT apply
+    (see Dunn et al., 2023).
 
     Parameters
     ----------
     ds : xarray.Dataset
-        An xarray dataset containing values for each cover class (open water, wet, pv, npv, bs).
-
-    wetland_name : string
-        Value to be used when naming the output files.
+        WIT cube with 'pv', 'npv', 'bs', 'wet' and 'water' bands, as returned
+        by `WIT_drill`. Not modified.
+    scheme : str, optional
+        'simple' for three fractional cover classes plus wet and water, or
+        'detailed' for the nine-class breakdown plus wet and water.
 
     Returns
     -------
-    output_path :
-        File path where the GIF animation will be saved.
-
-
+    ds_spatial : xarray.Dataset
+        Copy of `ds` with an added categorical 'wetland' band. Timesteps where
+        every pixel is missing are dropped.
+    scheme : WITScheme
+        Codes, labels, colours, cmap, norm and legend handles for the result.
     """
-    # Remove time steps where all values are missing (i.e. NaNs)
-    ds = ds.dropna(dim="time", how="all")
+    if scheme not in WIT_SCHEMES:
+        raise ValueError(
+            f"Unknown scheme {scheme!r}; expected one of {sorted(WIT_SCHEMES)}"
+        )
+    scheme = WIT_SCHEMES[scheme]
 
-    # Calculate the sum of the fractional cover values for pv, npv and bs then normalise
-    # the values for each class
-    fraction_sum = ds["pv"] + ds["npv"] + ds["bs"]
-    ds["pv"] = ds["pv"] / fraction_sum
-    ds["npv"] = ds["npv"] / fraction_sum
-    ds["bs"] = ds["bs"] / fraction_sum
+    ds_spatial = ds.dropna(dim="time", how="all").copy()
+    if ds_spatial.sizes["time"] == 0:
+        raise ValueError("No timesteps remain after dropping all-missing observations.")
 
-    # Apply the classification function to the dataset across all time, y, x
-    fc_class = xr.apply_ufunc(
-        classify_pixel,
-        ds["pv"],
-        ds["npv"],
-        ds["bs"],
-        vectorize=True,
+    # Renormalise FC, guarding against 0/0 where wet or water has zeroed all
+    # three fractions.
+    fc_sum = ds_spatial["pv"] + ds_spatial["npv"] + ds_spatial["bs"]
+    valid = fc_sum > 0
+    pv = (ds_spatial["pv"] / fc_sum).where(valid)
+    npv = (ds_spatial["npv"] / fc_sum).where(valid)
+    bs = (ds_spatial["bs"] / fc_sum).where(valid)
+
+    classify = _classify_simple if scheme.name == "simple" else _classify_detailed
+    wetland = classify(pv, npv, bs).where(valid)
+
+    # Wet and water take the two highest codes in every scheme.
+    water_code = len(scheme.labels) - 1
+    wet_code = water_code - 1
+    wetland = xr.where(ds_spatial["wet"] == 1, wet_code, wetland)
+    wetland = xr.where(ds_spatial["water"] == 1, water_code, wetland)
+
+    # xr.where drops coords that are not on both inputs; put the CRS back so
+    # the band can still be written as a GeoTIFF.
+    if "spatial_ref" in ds_spatial.coords:
+        wetland = wetland.assign_coords(spatial_ref=ds_spatial.spatial_ref)
+
+    ds_spatial["wetland"] = wetland
+    return ds_spatial, scheme
+
+def plot_wit_timesteps(
+    da, scheme, ncols=4, max_panels=16, title=None, output_path=None, dpi=200):
+    """
+    Plot individual timesteps of a categorical WIT band as a grid of panels.
+
+    Intended for a short window — a flood event, a watering action, a single
+    season — where each observation is worth looking at. Beyond about sixteen
+    panels the individual maps become too small to read; use `animate_wit` or
+    the seasonal composites for longer periods instead.
+
+    The legend is placed in a trailing empty cell where the panel count leaves
+    one, and in a row of its own below the panels otherwise.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        A categorical band such as `ds_spatial["wetland"]`, already sliced to
+        the period of interest.
+    scheme : WITScheme
+        The scheme the band was produced with.
+    ncols : int, optional
+        Number of panels per row.
+    max_panels : int, optional
+        Refuse to plot more than this many timesteps.
+    title : str, optional
+        Figure title. The date range covered is appended beneath it.
+    output_path : str, optional
+        If given, the figure is saved here.
+    dpi : int, optional
+        Resolution used when saving.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+
+    Raises
+    ------
+    ValueError
+        If `da` has no timesteps, or more than `max_panels`.
+
+    Example
+    -------
+    >>> ds_spatial, scheme = spatial_wit(ds_wit, scheme="simple")
+    >>> fig = plot_wit_timesteps(
+    ...     ds_spatial["wetland"].sel(time=slice("2014-06-01", "2014-12-01")),
+    ...     scheme,
+    ...     title="Hird Swamp",
+    ... )
+    """
+    n = da.sizes.get("time", 0)
+    if n == 0:
+        raise ValueError("No observations in `da` — widen the time slice.")
+    if n > max_panels:
+        raise ValueError(
+            f"{n} timesteps selected; this plot is only legible up to about "
+            f"{max_panels}. Narrow the slice, or use animate_wit or the "
+            "seasonal composites for longer periods."
+        )
+
+    nrows = int(np.ceil(n / ncols))
+    inline_legend = (nrows * ncols - n) >= 1
+    leg_ratio = 0.25 if scheme.name == "simple" else 1.0
+
+    if inline_legend:
+        fig_height = nrows * 3.2
+        gs_rows, ratios = nrows, [1] * nrows
+    else:
+        fig_height = nrows * 3.2 + leg_ratio * 3.2
+        gs_rows, ratios = nrows + 1, [1] * nrows + [leg_ratio]
+
+    fig = plt.figure(figsize=(ncols * 3.2, fig_height), constrained_layout=True)
+    gs = fig.add_gridspec(gs_rows, ncols, height_ratios=ratios)
+
+    for t in range(n):
+        ax = fig.add_subplot(gs[t // ncols, t % ncols])
+        da.isel(time=t).plot.imshow(
+            cmap=scheme.cmap, norm=scheme.norm, ax=ax, add_colorbar=False
+        )
+        ax.set_aspect("equal")
+        ax.set_box_aspect(1)
+        ax.set_title(
+            pd.to_datetime(da.time.values[t]).strftime("%d-%m-%Y"), fontsize=10
+        )
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    if inline_legend:
+        ax_leg = fig.add_subplot(gs[n // ncols, n % ncols])
+        scheme.draw_legend(ax_leg, orientation="vertical")
+    else:
+        ax_leg = fig.add_subplot(gs[nrows, :])
+        scheme.draw_legend(ax_leg, orientation="horizontal")
+
+    start = pd.to_datetime(da.time.values[0]).strftime("%d %b %Y")
+    end = pd.to_datetime(da.time.values[-1]).strftime("%d %b %Y")
+    span = f"{start} to {end}"
+    fig.suptitle(f"{title}\n{span}" if title else span, fontsize=14)
+
+    if output_path:
+        fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
+
+    return fig
+
+def plot_wit_season_year(
+    sc, scheme, years=None, da=None, title=None, output_path=None,
+    cell_width=2.6, dpi=200,
+):
+    """
+    Plot modal class for every season of every year as a year x season matrix.
+
+    Rows are season-years and columns are DJF, MAM, JJA and SON, so reading
+    down a column shows how one season changed over the record and reading
+    across a row shows one year's annual cycle. Cells with fewer than
+    `min_obs` clear observations are left blank.
+
+    Modal class is shown without purity here. Use
+    `plot_wit_seasonal_climatology` to see how consistent each class
+    assignment is.
+
+    Before plotting, the number of clear observations available in each season
+    is printed. Observation density varies widely across Australia, so this is
+    worth checking — a wetland in a cloudier region may not have enough
+    observations to support seasonal composites at the default `min_obs`.
+
+    Parameters
+    ----------
+    sc : xarray.Dataset
+        Output of `wit_seasonal_composites`.
+    scheme : WITScheme
+        The scheme the composites were produced with.
+    years : int or sequence of int, optional
+        Season-years to plot. Defaults to all years in `sc`.
+    da : xarray.DataArray, optional
+        The band the composites were built from, such as
+        `ds_spatial["wetland"]`. If given, observation counts per month are
+        printed as well as per season.
+    title : str, optional
+        Figure title.
+    output_path : str, optional
+        If given, the figure is saved here.
+    cell_width : float, optional
+        Width of each panel in inches. Panel height follows the data's aspect
+        ratio so the wetland keeps its true proportions.
+    dpi : int, optional
+        Resolution used when saving.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+
+    Raises
+    ------
+    ValueError
+        If none of the requested years are present in `sc`.
+    """
+    seasons = ["DJF", "MAM", "JJA", "SON"]
+    sy_season = [str(s) for s in sc.sy_season.values]
+    sy_year = [int(y) for y in sc.season_year.values]
+
+    all_years = sorted(set(sy_year))
+    if years is None:
+        years = all_years
+    else:
+        if isinstance(years, (int, np.integer)):
+            years = [int(years)]
+        years = sorted(int(y) for y in years)
+        missing = [y for y in years if y not in all_years]
+        if missing:
+            warnings.warn(
+                f"No data for season-year(s) {missing}; available: "
+                f"{all_years[0]}–{all_years[-1]}.",
+                stacklevel=2,
+            )
+        years = [y for y in years if y in all_years]
+        if not years:
+            raise ValueError(
+                f"None of the requested years are in the composites. "
+                f"Available: {all_years[0]}–{all_years[-1]}."
+            )
+
+    lookup = {(y, s): i for i, (y, s) in enumerate(zip(sy_year, sy_season))}
+
+    # Observation counts. Restrict to the polygon footprint — pixels outside
+    # it count as zero and would drag the median down.
+    inside = sc["sy_modal"].notnull().any("time")
+    print(f"Clear observations per season (min_obs = {sc.attrs.get('min_obs', '?')}):")
+    for yr in years:
+        row = []
+        for sn in seasons:
+            i = lookup.get((yr, sn))
+            if i is None:
+                row.append(f"{sn} —")
+            else:
+                med = float(sc["sy_n"].isel(time=i).where(inside).median())
+                row.append(f"{sn} {med:.0f}")
+        print(f"  {yr}:  " + "   ".join(row))
+
+    if da is not None:
+        months = pd.to_datetime(da.time.values).month
+        counts = pd.Series(months).value_counts().sort_index()
+        names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        print("\nObservations per month, whole record:")
+        print("  " + "  ".join(
+            f"{names[m - 1]} {counts.get(m, 0)}" for m in range(1, 13)
+        ))
+    print()
+
+    # Size cells to the data's own aspect ratio. With set_aspect("equal") a
+    # mismatched cell is padded with white, which is where gaps come from.
+    ny, nx = sc["sy_modal"].isel(time=0).shape
+    cell_height = cell_width * (ny / nx) + 0.25  # headroom for labels
+
+    leg_ratio = 0.35 if scheme.name == "simple" else 1.0
+    fig = plt.figure(
+        figsize=(4 * cell_width, len(years) * cell_height + leg_ratio * cell_height),
+        constrained_layout=True,
+    )
+    fig.set_constrained_layout_pads(w_pad=0.02, h_pad=0.02, wspace=0.01, hspace=0.01)
+    gs = fig.add_gridspec(
+        len(years) + 1, 4, height_ratios=[1] * len(years) + [leg_ratio]
+    )
+    axes = [[fig.add_subplot(gs[r, c]) for c in range(4)] for r in range(len(years))]
+
+    for r, yr in enumerate(years):
+        for c, sn in enumerate(seasons):
+            ax = axes[r][c]
+            i = lookup.get((yr, sn))
+
+            if i is None or bool(sc["sy_modal"].isel(time=i).isnull().all()):
+                # No such quarter, or every pixel below min_obs.
+                ax.set_xticks([])
+                ax.set_yticks([])
+                for spine in ax.spines.values():
+                    spine.set_visible(False)
+            else:
+                sc["sy_modal"].isel(time=i).plot.imshow(
+                    cmap=scheme.cmap, norm=scheme.norm, ax=ax, add_colorbar=False
+                )
+                ax.set_aspect("equal")
+                ax.set_xticks([])
+                ax.set_yticks([])
+
+            ax.set_title("")
+            ax.set_xlabel("")
+            ax.set_ylabel("")
+
+        # Year label in the left margin. Set on the axes rather than a rendered
+        # panel so it survives rows where every season is blank.
+        axes[r][0].set_ylabel(
+            str(yr), fontsize=11, rotation=0, labelpad=22, va="center"
+        )
+
+    for c, sn in enumerate(seasons):
+        axes[0][c].set_title(sn, fontsize=12)
+
+    ax_leg = fig.add_subplot(gs[len(years), :])
+    scheme.draw_legend(ax_leg, orientation="horizontal")
+
+    if title:
+        fig.suptitle(title, fontsize=14)
+    if output_path:
+        fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
+
+    return fig
+    
+def write_class_geotiffs(da, output_dir=".", prefix="wetland", crs="EPSG:3577"):
+    """
+    Write a categorical WIT band to one uint8 GeoTIFF per timestep.
+
+    Class codes are written as-is and missing pixels become 255, so the files
+    can be loaded straight into a GIS and styled with the class labels from the
+    scheme used to produce them. Note that GeoTIFFs carry no legend — record
+    which scheme was used alongside the files.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        A categorical band such as `ds_spatial["wetland"]`. May have a time
+        dimension, in which case one file is written per timestep, or be a
+        single timestep already selected with `.isel(time=...)`.
+    output_dir : str, optional
+        Directory to write into. Created if it does not exist.
+    prefix : str, optional
+        Filename prefix. Files are named `<prefix>_<YYYY-MM-DD>.tif`, or
+        `<prefix>.tif` if `da` has no time coordinate.
+    crs : str, optional
+        CRS to write. Used only if `da` does not already carry one.
+
+    Returns
+    -------
+    list of str
+        Paths written, in time order.
+
+    Example
+    -------
+    >>> ds_spatial, scheme = spatial_wit(ds_wit, scheme="simple")
+    >>> paths = write_class_geotiffs(
+    ...     ds_spatial["wetland"].isel(time=slice(0, 5)),
+    ...     output_dir="geotiffs",
+    ...     prefix="hird_swamp",
+    ... )
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    if "time" in da.dims:
+        slices = [(da.isel(time=i), str(da.time.values[i])[:10])
+                  for i in range(da.sizes["time"])]
+    else:
+        stamp = str(da.time.values)[:10] if "time" in da.coords else None
+        slices = [(da, stamp)]
+
+    paths = []
+    for arr, stamp in slices:
+        name = f"{prefix}_{stamp}.tif" if stamp else f"{prefix}.tif"
+        path = os.path.join(output_dir, name)
+
+        # 255 as nodata: class codes go no higher than 10, so there is no clash.
+        out = arr.fillna(255).astype("uint8")
+        if out.rio.crs is None:
+            out = out.rio.write_crs(crs)
+        out = out.rio.write_nodata(255)
+        out.rio.to_raster(path, compress="deflate")
+
+        paths.append(path)
+
+    return paths
+
+def wit_seasonal_composites(da, scheme, min_obs=3, min_obs_clim=1):
+    """
+    Summarise a categorical WIT band by season.
+
+    Two summaries are produced. The season-year composite treats each season of
+    each year separately, showing how the wetland behaved in a particular
+    season. The climatology pools all occurrences of a season across the whole
+    record, showing the wetland's typical behaviour in that season.
+
+    For each pixel the modal (most frequent) class is reported along with its
+    purity: the share of clear observations that fell in the modal class. A
+    purity near 1 means the pixel was consistently that class; a purity near
+    1/n means the observations were split and the modal class is close to
+    arbitrary. The two should always be read together — a modal class shown
+    without its purity implies more confidence than the data supports.
+
+    Ties are resolved towards the lowest class code, so a pixel with an even
+    2-2 split reports the lower-numbered class at a purity of 0.5.
+
+    Seasons are the standard Australian quarters, with December grouped
+    forward into the following year's summer (DJF).
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        A categorical band such as `ds_spatial["wetland"]`, with a time
+        dimension.
+    scheme : WITScheme
+        The scheme `da` was produced with, as returned by `spatial_wit`.
+    min_obs : int, optional
+        Minimum clear observations for a season-year pixel. A single season of
+        a single year typically has only a handful of clear observations, so
+        the modal class is fragile below this. Pixels below it are NaN.
+    min_obs_clim : int, optional
+        Minimum clear observations for a climatology pixel. The climatology
+        pools a season across the whole record, so over a multi-decade run
+        this is far from binding — it excludes pixels that are almost always
+        cloud-affected, where a high purity would otherwise imply confidence
+        the sample does not support. Set it to 1 when testing over a single
+        year, where no pixel will reach 10.
+
+    Returns
+    -------
+    xarray.Dataset
+        Season-year variables on a `time` dimension:
+          sy_modal, sy_purity, sy_n
+        Climatology variables on a `season` dimension (DJF, MAM, JJA, SON):
+          clim_modal, clim_purity, clim_n
+        Season-year time steps also carry `sy_season` and `season_year`
+          coordinates for labelling.
+    """
+    if "time" not in da.dims:
+        raise ValueError("`da` must have a time dimension.")
+
+    codes = list(scheme.codes)
+
+    # Season-year: QS-DEC starts quarters in December, so DJF stays intact.
+    counts = xr.concat(
+        [(da == c).resample(time="QS-DEC").sum() for c in codes], dim="cls"
+    ).assign_coords(cls=codes)
+
+    sy_n = counts.sum("cls")
+    enough = sy_n >= min_obs
+    sy_modal = counts.idxmax("cls").where(enough)
+    sy_purity = (counts.max("cls") / sy_n).where(enough)
+
+    # Label each quarter. December belongs to the next year's summer.
+    stamps = pd.to_datetime(sy_modal.time.values)
+    season_of = {12: "DJF", 3: "MAM", 6: "JJA", 9: "SON"}
+    seasons = [season_of[d.month] for d in stamps]
+    season_years = [d.year + 1 if d.month == 12 else d.year for d in stamps]
+
+    # Climatology: pool every occurrence of each season.
+    clim_counts = xr.concat(
+        [(da == c).groupby("time.season").sum("time") for c in codes], dim="cls"
+    ).assign_coords(cls=codes)
+
+    # groupby sorts seasons alphabetically; restore calendar order.
+    clim_counts = clim_counts.sel(season=["DJF", "MAM", "JJA", "SON"])
+    clim_n = clim_counts.sum("cls")
+    enough_clim = clim_n >= min_obs_clim
+    clim_modal = clim_counts.idxmax("cls").where(enough_clim)
+    clim_purity = (clim_counts.max("cls") / clim_n).where(enough_clim)
+
+    out = xr.Dataset(
+        {
+            "sy_modal": sy_modal,
+            "sy_purity": sy_purity,
+            "sy_n": sy_n,
+            "clim_modal": clim_modal,
+            "clim_purity": clim_purity,
+            "clim_n": clim_n,
+        }
+    )
+    out = out.assign_coords(
+        sy_season=("time", seasons),
+        season_year=("time", season_years),
+    )
+    out.attrs["min_obs"] = min_obs
+    out.attrs["min_obs_clim"] = min_obs_clim
+    out.attrs["scheme"] = scheme.name
+    return out
+
+
+
+def plot_wit_seasonal_climatology(
+    sc, scheme, title=None, output_path=None, purity_vmin=0.2, dpi=200
+):
+    """
+    Plot the seasonal climatology as modal class over purity.
+
+    The top row shows the most likely class for each season, pooled across the
+    whole record. The bottom row shows purity: the share of clear observations
+    that fell in the modal class. The two must be read together — a pixel can
+    have a confident-looking modal class at a purity of barely over 1/n, which
+    means the observations were split and the class shown is close to
+    arbitrary. Dark areas in the purity row mark where the top row should not
+    be trusted.
+
+    Parameters
+    ----------
+    sc : xarray.Dataset
+        Output of `wit_seasonal_composites`.
+    scheme : WITScheme
+        The scheme the composites were produced with.
+    title : str, optional
+        Figure title.
+    output_path : str, optional
+        If given, the figure is saved here.
+    purity_vmin : float, optional
+        Lower limit of the purity colour scale. The default of 0.2 suits a
+        five-class scheme; for the detailed scheme a lower value spreads the
+        range more usefully.
+    dpi : int, optional
+        Resolution used when saving.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    seasons = ["DJF", "MAM", "JJA", "SON"]
+
+    fig, axes = plt.subplots(
+        2, 4, figsize=(16, 8.5), squeeze=False, constrained_layout=True
     )
 
-    fc_class = fc_class.where(fc_class != -1, np.nan)
-
-    # Add the new classification band to the dataset
-    ds["fc_class"] = fc_class
-
-    # Make a new band called wetland that combines all the fractional cover classes
-    # with the water and wet classes
-    # i.e. water == 10, wet == 9, all other areas retain original FC class
-    wetland = ds["fc_class"].where((ds["water"] == 0) | ds["water"].isnull(), 10)
-    ds["wetland"] = wetland
-    wetland = ds["wetland"].where((ds["wet"] == 0) | ds["wet"].isnull(), 9)
-    ds["wetland"] = wetland
-
-    # Define labels for each class
-    class_labels = [
-        "dry veg",  # ng
-        "dry veg and bare mix",  # ng_bs
-        "dry mix",  # ng_mix
-        "dry veg and green veg",  # ng_pv
-        "bare soil",  # bs
-        "bare soil mix",  # bs_mix
-        "bare soil and green veg",  # bs_pv
-        "green veg mix",  # pv_mix
-        "green veg",  # pv
-        "wet",
-        "water",
-    ]
-
-    # Define the colormap with your custom colors
-    cmap = mcolors.ListedColormap([
-        "#F1E8C9",  # ng
-        "#C0AB86",  # ng_bs
-        "#D6D2A7",  # ng_mix
-        "#BCD495",  # ng_pv
-        "#93724C",  # bs
-        "#9C895D",  # bs_mix
-        "#8F9C5C",  # bs_pv
-        "#9DBD74",  # pv_mix
-        "#8CC46B",  # pv
-        "#6ce6f8",  # wet
-        "#676dca",  # water
-    ])
-
-    # Create a BoundedNorm to ensure correct mapping of data to the colormap
-    norm = mcolors.Normalize(vmin=0, vmax=10)
-
-    # Create a directory to save the frames
-    os.makedirs("deawetlands_outputs", exist_ok=True)
-
-    # Clean the input name to remove spaces
-    wetland_name = wetland_name.replace(" ", "_")
-
-    # Save all the time steps
-
-    for t in ds.time:
-        wetland_time_step = ds["wetland"].sel(time=t)
-        date_str = str(t.values)[:10]  # Extract date as string
-        wetland_time_step.rio.to_raster(f"deawetlands_outputs/{wetland_name}_{date_str}.tif")
-
-    # Make one big plot
-
-    num_time_steps = ds.sizes["time"]
-
-    # Set the number of columns as the number of time steps if less than 10
-    num_columns = min(num_time_steps, 10)
-
-    # Calculate the number of rows
-    num_rows = (num_time_steps + num_columns - 1) // num_columns
-
-    time_step = ds["wetland"].isel(time=0)
-    height, width = time_step.shape
-    fig, axes = plt.subplots(num_rows, num_columns, figsize=(8 * num_columns * width / height, 8 * num_rows))
-
-    if num_rows == 1:
-        axes = axes.reshape(1, num_columns)
-    elif num_columns == 1:
-        axes = axes.reshape(num_rows, 1)
-
-    # Hide any unused axes
-    for i in range(num_rows * num_columns):
-        if i >= num_time_steps:
-            fig.delaxes(axes.flatten()[i])
-
-    # Plot time steps
-    for t in range(num_time_steps):
-        time_step = ds["wetland"].isel(time=t)
-        time_ns = ds["time"].isel(time=t).values.item()
-        time_date = pd.to_datetime(time_ns, unit="ns")
-        time_date_str = time_date.strftime("%d-%m-%Y")
-        row_idx = t // num_columns
-        col_idx = t % num_columns
-        time_step.plot.imshow(
-            cmap=cmap,
-            norm=norm,
-            ax=axes[row_idx, col_idx],  # Assign subplot
-            add_colorbar=False,  # Avoid multiple colorbars
+    for c, sn in enumerate(seasons):
+        sc["clim_modal"].sel(season=sn).plot.imshow(
+            cmap=scheme.cmap, norm=scheme.norm, ax=axes[0][c], add_colorbar=False
         )
-        axes[row_idx, col_idx].set_aspect("auto")  # keep aspect
-        axes[row_idx, col_idx].set_title(f"{time_date_str}")
+        axes[0][c].set_title(sn, fontsize=12)
 
-    plt.tight_layout()
-    plt.savefig(f"{wetland_name}_time_steps.png", dpi=72)
-
-    # Make a gif
-
-    # loop through each time step, creating and saving a frame
-    num_time_steps = ds.sizes["time"]
-    frames = []
-
-    for t in range(num_time_steps):
-        time_step = ds["wetland"].isel(time=t)
-        height, width = time_step.shape
-        fig, ax = plt.subplots(figsize=(8, 8 * height / width))  # dynamic aspect ratio
-
-        time_ns = ds["time"].isel(time=t).values.item()
-        time_date = pd.to_datetime(time_ns, unit="ns")
-        time_date_str = time_date.strftime("%d-%m-%Y")
-
-        time_step.plot.imshow(
-            cmap=cmap,
-            norm=norm,
-            ax=ax,
-            add_colorbar=False,  # Avoid multiple colorbars
-            # interpolation='none'
+        im = sc["clim_purity"].sel(season=sn).plot.imshow(
+            ax=axes[1][c],
+            vmin=purity_vmin,
+            vmax=1.0,
+            cmap="magma",
+            add_colorbar=False,
         )
-        ax.set_aspect("auto")  # keep aspect
-        plt.title(f"Time:{time_date_str}")
+        axes[1][c].set_title(f"{sn} — purity", fontsize=11)
 
-        # Rotates and right-aligns the x labels so they don't crowd each other.
-        for label in ax.get_xticklabels(which="major"):
-            label.set(rotation=30, horizontalalignment="right")
+    for ax in axes.flat:
+        ax.set_aspect("equal")
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+        ax.set_xticks([])
+        ax.set_yticks([])
 
-        # Save the frame
-        frame_path = f"deawetlands_outputs/{wetland_name}_{time_date_str}.png"
-        plt.savefig(frame_path, bbox_inches="tight")
-        frames.append(frame_path)
-        plt.close(fig)
+    axes[0][0].set_ylabel("most likely class", fontsize=11, rotation=90, labelpad=12)
+    axes[1][0].set_ylabel("purity", fontsize=11, rotation=90, labelpad=12)
 
-    # make the gif
-    output_path = f"{wetland_name}_animation.gif"
-    with imageio.get_writer(output_path, mode="I", duration=0.7, loop=0) as writer:
-        for frame_path in frames:
-            image = imageio.imread(frame_path)
-            writer.append_data(image)
+    fig.legend(
+        handles=scheme.legend_handles,
+        loc="upper center",
+        ncol=min(len(scheme.labels), 6),
+        fontsize=9,
+        frameon=False,
+        bbox_to_anchor=(0.5, 0.53),
+    )
+    fig.colorbar(im, ax=axes[1], shrink=0.7, label="share of obs in modal class")
 
-    # print("GIF saved as 'wetland_animation.gif'")
+    if title:
+        fig.suptitle(title, fontsize=14)
+    if output_path:
+        fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
 
-    # clean up
-    # for frame_path in frames:
-    #    os.remove(frame_path)
-    # shutil.rmtree("frames")
+    return fig
+
+def animate_wit(
+    ds_spatial,
+    scheme,
+    output_path=None,
+    fps=8,
+    width_pixels=600,
+    limit=None,
+):
+    """
+    Animate a categorical WIT band as a map through time.
+
+    Uses `dea_tools.plotting.xr_animation`. Writes MP4 if the ffmpeg binary is
+    available and GIF otherwise; GIFs of a full Landsat record are large, so
+    prefer MP4 where possible.
+
+    No colourbar is drawn. On a single-band animation `xr_animation` produces a
+    continuous colourbar — a smooth ramp through the class colours — which is
+    misleading for categorical data and cannot be relabelled through the
+    available arguments. Use `scheme.legend_handles` to caption the animation
+    instead.
+
+    Parameters
+    ----------
+    ds_spatial : xarray.Dataset
+        Output of `spatial_wit`, containing a 'wetland' band.
+    scheme : WITScheme
+        The scheme the band was produced with.
+    output_path : str, optional
+        Path to write. The extension is replaced with '.mp4' or '.gif' to match
+        what is actually written. Defaults to 'wit_animation'.
+    fps : int, optional
+        Frames per second.
+    width_pixels : int, optional
+        Output width; height follows the data's aspect ratio.
+    limit : int, optional
+        Animate only the first `limit` timesteps. Useful for a quick check
+        before committing to a full record.
+
+    Returns
+    -------
+    str
+        The path written.
+    """
+    from matplotlib import animation
+
+    from dea_tools.plotting import xr_animation
+
+    has_ffmpeg = "ffmpeg" in animation.writers.list()
+    ext = "mp4" if has_ffmpeg else "gif"
+
+    if output_path is None:
+        output_path = "wit_animation"
+    output_path = f"{os.path.splitext(output_path)[0]}.{ext}"
+
+    if not has_ffmpeg:
+        warnings.warn(
+            "ffmpeg not found; writing GIF instead of MP4. Expect a large file "
+            "at this frame count.",
+            stacklevel=2,
+        )
+
+    da = ds_spatial[["wetland"]]
+    if limit is not None:
+        da = da.isel(time=slice(0, limit))
+
+    n = len(scheme.labels)
+    xr_animation(
+        ds=da,
+        bands=["wetland"],
+        output_path=output_path,
+        width_pixels=width_pixels,
+        interval=int(1000 / fps),
+        show_date="%d %b %Y",
+        show_colorbar=False,
+        # vmin/vmax are required: supplying them disables percentile_stretch,
+        # which would otherwise rescale the class codes into nonsense. This
+        # maps [-0.5, n-0.5] linearly onto n colours, so each integer class
+        # lands mid-bin — equivalent to the scheme's BoundaryNorm.
+        imshow_kwargs={"cmap": scheme.cmap, "vmin": -0.5, "vmax": n - 0.5},
+    )
 
     return output_path
+
+def animate_wit_with_timeseries(
+    ds_spatial,
+    scheme,
+    polygon_base_df,
+    output_path=None,
+    fps=8,
+    limit=None,
+    dpi=110,
+):
+    """
+    Animate the categorical map beside the WIT stack plot, with a moving cursor.
+
+    The left panel steps through the classified map; the right panel shows the
+    whole-of-polygon WIT timeseries with a cursor marking the frame being
+    displayed. This ties the spatial pattern to the summary statistic — a jump
+    in the water fraction on the right can be traced to where the water
+    appeared on the left.
+
+    Built on `matplotlib.animation.FuncAnimation` rather than `xr_animation`,
+    which animates a single image axis and cannot express the second panel.
+
+    Parameters
+    ----------
+    ds_spatial : xarray.Dataset
+        Output of `spatial_wit`, containing a 'wetland' band.
+    scheme : WITScheme
+        The scheme the band was produced with.
+    polygon_base_df : pandas.DataFrame
+        Normalised WIT timeseries from `WIT_drill`, with 'date', 'water',
+        'wet', 'norm_bs', 'norm_npv' and 'norm_pv' columns.
+    output_path : str, optional
+        Path to write. The extension is replaced to match the writer used.
+        Defaults to 'wit_sidebyside'.
+    fps : int, optional
+        Frames per second.
+    limit : int, optional
+        Animate only the first `limit` timesteps.
+    dpi : int, optional
+        Output resolution.
+
+    Returns
+    -------
+    str
+        The path written.
+    """
+    from matplotlib import animation
+
+    has_ffmpeg = "ffmpeg" in animation.writers.list()
+    ext = "mp4" if has_ffmpeg else "gif"
+
+    if output_path is None:
+        output_path = "wit_sidebyside"
+    output_path = f"{os.path.splitext(output_path)[0]}.{ext}"
+
+    da = ds_spatial["wetland"]
+    if limit is not None:
+        da = da.isel(time=slice(0, limit))
+
+    df = polygon_base_df.copy()
+    if not isinstance(df.index, pd.DatetimeIndex):
+        df = df.set_index("date")
+    df = df.sort_index()
+
+    # The cursor is only meaningful if the two sources share timestamps.
+    map_times = pd.to_datetime(da.time.values)
+    missing = map_times.difference(df.index)
+    if len(missing):
+        raise ValueError(
+            f"{len(missing)} map timesteps are absent from polygon_base_df "
+            f"(first: {missing[0]}). The cursor would not match the map — "
+            "check both came from the same WIT_drill call."
+        )
+
+    cols = ["water", "wet", "norm_bs", "norm_npv", "norm_pv"]
+    colors = ["#676DCA", "#6CE6F8", "#93724C", "#F1E8C9", "#8CC46B"]
+    labels = ["water", "wet", "bare soil", "dry veg", "green veg"]
+    dates = df.index
+
+    # Build the figure once and swap image data per frame. Much faster than
+    # re-rendering, and the fixed axes boxes avoid layout drift.
+    fig, (ax_map, ax_wit) = plt.subplots(
+        1,
+        2,
+        figsize=(14, 6),
+        gridspec_kw={"width_ratios": [1, 2]},
+        constrained_layout=True,
+    )
+
+    im = da.isel(time=0).plot.imshow(
+        cmap=scheme.cmap, norm=scheme.norm, ax=ax_map, add_colorbar=False
+    )
+    ax_map.set_aspect("equal")
+    ax_map.set_xlabel("")
+    ax_map.set_ylabel("")
+    ax_map.set_xticks([])
+    ax_map.set_yticks([])
+    map_title = ax_map.set_title("")
+
+    ax_wit.stackplot(dates, *[df[c] for c in cols], colors=colors, labels=labels)
+    cursor = ax_wit.axvline(dates[0], color="red", linewidth=1.5)
+    ax_wit.set_xlim(dates.min(), dates.max())
+    ax_wit.set_ylim(0, 1)
+    ax_wit.set_ylabel("Fraction")
+    ax_wit.set_title("Wetlands Insight Tool")
+    ax_wit.legend(loc="upper left", fontsize=7, ncol=5, framealpha=0.6)
+
+    def update(t):
+        frame = da.isel(time=t)
+        d = pd.to_datetime(frame.time.values)
+        im.set_data(frame.values)
+        map_title.set_text(d.strftime("%d %b %Y"))
+        cursor.set_xdata([d, d])
+        return im, map_title, cursor
+
+    anim = animation.FuncAnimation(
+        fig, update, frames=da.sizes["time"], interval=int(1000 / fps), blit=False
+    )
+
+    if has_ffmpeg:
+        anim.save(
+            output_path, writer=animation.FFMpegWriter(fps=fps, bitrate=3000), dpi=dpi
+        )
+    else:
+        warnings.warn("ffmpeg not found; writing GIF instead of MP4.", stacklevel=2)
+        anim.save(output_path, writer=animation.PillowWriter(fps=fps), dpi=70)
+
+    plt.close(fig)
+    return output_path
+
+def draw_polygon(center=(-25, 134), zoom=3.5, max_area_km2=2000):
+    """
+    Show a map for drawing a wetland polygon interactively.
+
+    Run this in one cell, draw a polygon or rectangle using the tools on the
+    left of the map, then pass the returned map to `polygon_from_map` in a
+    later cell to get a GeoDataFrame.
+
+    Drawing is a convenience for users without a polygon file to hand. A
+    mapped wetland boundary from a shapefile will usually be more defensible
+    than a hand-drawn outline, particularly if results are going to be
+    reported.
+
+    Parameters
+    ----------
+    center : tuple, optional
+        Starting (latitude, longitude) for the map. Defaults to the
+        Murray-Darling Basin.
+    zoom : int, optional
+        Starting zoom level.
+    max_area_km2 : float, optional
+        Largest polygon `polygon_from_map` will accept. Loading Landsat,
+        Water Observations and Fractional Cover for a large area will exhaust
+        the memory available on the DEA Sandbox.
+
+    Returns
+    -------
+    ipyleaflet.Map
+        Display this to draw. Pass it to `polygon_from_map` afterwards.
+    """
+    try:
+        from ipyleaflet import DrawControl, Map, basemap_to_tiles, basemaps
+    except ImportError as e:
+        raise ImportError(
+            "`ipyleaflet` is required for `draw_polygon`. Load a polygon file "
+            "with geopandas instead, or install ipyleaflet."
+        ) from e
+
+    m = Map(center=center, zoom=zoom, scroll_wheel_zoom=True)
+    m.add_layer(basemap_to_tiles(basemaps.Esri.WorldImagery))
+
+    draw = DrawControl(
+        polygon={"shapeOptions": {"color": "#6bc2e5", "fillOpacity": 0.2}},
+        rectangle={"shapeOptions": {"color": "#6bc2e5", "fillOpacity": 0.2}},
+        circle={},
+        circlemarker={},
+        polyline={},
+        marker={},
+        edit=True,
+        remove=True,
+    )
+
+    # Keep every shape drawn; polygon_from_map takes the last one.
+    shapes = []
+
+    def _on_draw(target, action, geo_json):
+        if action == "created":
+            shapes.append(geo_json)
+
+    draw.on_draw(_on_draw)
+    m.add_control(draw)
+
+    # Stash on the map object so polygon_from_map can find them.
+    m._wit_shapes = shapes
+    m._wit_max_area_km2 = max_area_km2
+
+    return m
+
+
+def polygon_from_map(m):
+    """
+    Convert a polygon drawn with `draw_polygon` into a GeoDataFrame.
+
+    The drawn shape is reprojected from EPSG:4326 to EPSG:3577, which is what
+    `WIT_drill` expects.
+
+    Parameters
+    ----------
+    m : ipyleaflet.Map
+        The map returned by `draw_polygon`, after a polygon has been drawn.
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        Single-row frame in EPSG:3577, ready to pass to `WIT_drill`.
+
+    Raises
+    ------
+    ValueError
+        If nothing has been drawn, or the polygon is larger than the map's
+        `max_area_km2`.
+    """
+    shapes = getattr(m, "_wit_shapes", None)
+    if not shapes:
+        raise ValueError(
+            "No polygon drawn. Use the polygon or rectangle tool on the map, "
+            "then run this cell again."
+        )
+
+    if len(shapes) > 1:
+        warnings.warn(
+            f"{len(shapes)} shapes drawn; using the most recent one.",
+            stacklevel=2,
+        )
+
+    gdf = gpd.GeoDataFrame.from_features([shapes[-1]], crs="EPSG:4326")
+    gdf = gdf.to_crs("EPSG:3577")
+
+    # Albers is equal-area, so this is a fair area in square metres.
+    area_km2 = gdf.geometry.area.iloc[0] / 1e6
+    limit = getattr(m, "_wit_max_area_km2", 2000)
+    if area_km2 > limit:
+        raise ValueError(
+            f"Drawn polygon is {area_km2:.0f} km2, above the {limit:.0f} km2 "
+            "limit. Loading three datasets over an area this large may "
+            "exhaust the memory available on the Sandbox. Draw a "
+            "smaller polygon, or raise max_area_km2 in draw_polygon if you "
+            "are running elsewhere."
+        )
+
+    print(f"Polygon area: {area_km2:.1f} km2")
+    return gdf[["geometry"]]
